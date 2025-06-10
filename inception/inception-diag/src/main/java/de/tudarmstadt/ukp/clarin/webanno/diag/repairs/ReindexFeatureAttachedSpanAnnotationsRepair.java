@@ -30,8 +30,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogLevel;
@@ -53,25 +52,25 @@ public class ReindexFeatureAttachedSpanAnnotationsRepair
     }
 
     @Override
-    public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public void repair(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
         Map<FeatureStructure, FeatureStructure> nonIndexed = getNonIndexedFSesWithOwner(aCas);
 
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
+        for (var layer : annotationService.listAnnotationLayer(aDocument.getProject())) {
             if (!(SpanLayerSupport.TYPE.equals(layer.getType())
                     && layer.getAttachFeature() != null)) {
                 continue;
             }
 
-            int count = 0;
+            var count = 0;
 
             // Go over the layer that has an attach feature (e.g. Token) and make sure that it is
             // filled
             // attach -> e.g. Token
             // anno -> e.g. Lemma
-            for (AnnotationFS attach : select(aCas,
-                    getType(aCas, layer.getAttachType().getName()))) {
-                AnnotationFS anno = getFeature(attach, layer.getAttachFeature().getName(),
+            for (var attach : select(aCas, getType(aCas, layer.getAttachType().getName()))) {
+                var anno = getFeature(attach, layer.getAttachFeature().getName(),
                         AnnotationFS.class);
                 if (anno != null && nonIndexed.containsKey(anno)) {
                     aCas.addFsToIndexes(anno);

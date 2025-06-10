@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Annotation, DiamAjax, Offsets, VID, LazyDetailGroup } from '@inception-project/inception-js-api'
-import { DiamLoadAnnotationsOptions, DiamSelectAnnotationOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
+import { Annotation, DiamAjax, Offsets, VID, LazyDetailGroup, DiamAjaxConnectOptions, DiamLoadAnnotationsOptions, DiamSelectAnnotationOptions } from '@inception-project/inception-js-api'
 
 declare const Wicket: any
 
@@ -31,9 +30,16 @@ const TRANSPORT_BUFFER: any = (document as any).DIAM_TRANSPORT_BUFFER
 
 export class DiamAjaxImpl implements DiamAjax {
   private ajaxEndpoint: string
+  private csrfToken: string
 
-  constructor (ajaxEndpoint: string) {
-    this.ajaxEndpoint = ajaxEndpoint
+  constructor (options: string | DiamAjaxConnectOptions) {
+    if (options instanceof String || typeof options === 'string') {
+      this.ajaxEndpoint = options as string
+    }
+    else {
+      this.ajaxEndpoint = options.url
+      this.csrfToken = options.csrfToken
+    }
   }
 
   /**
@@ -76,15 +82,24 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
-  scrollTo (args: { id?: VID, offset?: Offsets }): void {
+  scrollTo (args: { docId?: number, id?: VID, offset?: Offsets, offsets?: Array<Offsets> }): void {
+    let effectiveOffsets: Array<Offsets> | undefined
+    if (args.offset) {
+      effectiveOffsets = [args.offset]
+    }
+    else {
+      effectiveOffsets = args.offsets
+    }
+
     DiamAjaxImpl.performAjaxCall(() => {
       Wicket.Ajax.ajax({
         m: 'POST',
         u: this.ajaxEndpoint,
         ep: {
           action: 'scrollTo',
+          docId: args.docId,
           id: args.id,
-          offset: args.offset
+          offsets: JSON.stringify(effectiveOffsets)
         }
       })
     })

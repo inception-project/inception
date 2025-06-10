@@ -32,7 +32,8 @@ public class MetadataSuggestion
         super(builder.id, builder.generation, builder.age, builder.recommenderId,
                 builder.recommenderName, builder.layerId, builder.feature, builder.documentName,
                 builder.label, builder.uiLabel, builder.score, builder.scoreExplanation,
-                builder.autoAcceptMode, builder.hidingFlags);
+                builder.autoAcceptMode, builder.hidingFlags, builder.correction,
+                builder.correctionExplanation);
     }
 
     @Override
@@ -79,6 +80,8 @@ public class MetadataSuggestion
                 .withUiLabel(uiLabel) //
                 .withScore(score) //
                 .withScoreExplanation(scoreExplanation) //
+                .withCorrection(correction) //
+                .withCorrectionExplanation(correctionExplanation) //
                 .withAutoAcceptMode(getAutoAcceptMode()) //
                 .withHidingFlags(getHidingFlags());
     }
@@ -99,6 +102,8 @@ public class MetadataSuggestion
         private String scoreExplanation;
         private AutoAcceptMode autoAcceptMode;
         private int hidingFlags;
+        boolean correction;
+        private String correctionExplanation;
 
         private Builder()
         {
@@ -205,6 +210,18 @@ public class MetadataSuggestion
         public Builder withHidingFlags(int aFlags)
         {
             this.hidingFlags = aFlags;
+            return this;
+        }
+
+        public Builder withCorrection(boolean aCorrection)
+        {
+            this.correction = aCorrection;
+            return this;
+        }
+
+        public Builder withCorrectionExplanation(String aCorrectionExplanation)
+        {
+            this.correctionExplanation = aCorrectionExplanation;
             return this;
         }
 

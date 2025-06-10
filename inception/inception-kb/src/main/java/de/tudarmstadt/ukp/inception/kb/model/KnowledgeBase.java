@@ -492,6 +492,20 @@ public class KnowledgeBase
         }
     }
 
+    public void applyProfile(KnowledgeBaseProfile aProfile)
+    {
+        setType(aProfile.getType());
+        setName(aProfile.getName());
+        setFullTextSearchIri(aProfile.getAccess().getFullTextSearchIri());
+        setDefaultLanguage(aProfile.getDefaultLanguage());
+        setDefaultDatasetIri(aProfile.getDefaultDataset());
+        setReification(aProfile.getReification());
+
+        applyRootConcepts(aProfile);
+        applyMapping(aProfile.getMapping());
+        applyAdditionalLanguages(aProfile);
+    }
+
     public void applyAdditionalLanguages(KnowledgeBaseProfile aProfile)
     {
         if (aProfile.getAdditionalLanguages() == null) {

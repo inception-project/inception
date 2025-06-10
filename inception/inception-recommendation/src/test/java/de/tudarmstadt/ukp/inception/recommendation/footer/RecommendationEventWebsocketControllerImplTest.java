@@ -17,20 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.footer;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.lang.invoke.MethodHandles.lookup;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_PASSWORD;
-import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_USER_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.slf4j.LoggerFactory.getLogger;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import java.io.File;
-import java.util.Map;
 
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,26 +42,20 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
-import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.socket.client.standard.StandardWebSocketClient;
-import org.springframework.web.socket.messaging.WebSocketStompClient;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
@@ -74,39 +65,44 @@ import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
+import de.tudarmstadt.ukp.inception.support.logging.LogLevel;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
-import de.tudarmstadt.ukp.inception.support.test.websocket.WebSocketSessionTestHandler;
+import de.tudarmstadt.ukp.inception.support.test.websocket.WebSocketStompTestClient;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
-import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest( //
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, //
+        webEnvironment = RANDOM_PORT, //
         properties = { //
+                "server.address=127.0.0.1", //
                 "spring.main.banner-mode=off", //
                 "websocket.enabled=true", //
                 "websocket.recommender-events.enabled=true" })
 @SpringBootApplication( //
         exclude = { //
-                LiquibaseAutoConfiguration.class })
+                LiquibaseAutoConfiguration.class, //
+                SearchServiceAutoConfiguration.class, //
+                EventLoggingAutoConfiguration.class })
 @ImportAutoConfiguration({ //
-        CasStorageServiceAutoConfiguration.class, //
-        DocumentServiceAutoConfiguration.class, //
-        DocumentImportExportServiceAutoConfiguration.class, //
         CasDoctorAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
-        WebsocketSecurityConfig.class, //
         WebsocketAutoConfiguration.class, //
+        WebsocketSecurityConfig.class, //
         ProjectServiceAutoConfiguration.class, //
+        DocumentServiceAutoConfiguration.class, //
+        CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
-        AnnotationSchemaServiceAutoConfiguration.class })
+        AnnotationSchemaServiceAutoConfiguration.class, //
+        DocumentImportExportServiceAutoConfiguration.class })
 @EntityScan({ //
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model", //
@@ -118,7 +114,6 @@ class RecommendationEventWebsocketControllerImplTest
     private static final String USER = "user";
     private static final String PASS = "pass";
 
-    private WebSocketStompClient stompClient;
     private @LocalServerPort int port;
     private String websocketUrl;
 
@@ -128,23 +123,15 @@ class RecommendationEventWebsocketControllerImplTest
     private @Autowired UserDao userService;
     private @Autowired ApplicationEventPublisher appEventPublisher;
 
-    // temporarily store data for test project
     private static @TempDir File repositoryDir;
-    private static Project project;
+
     private static User user;
+    private static Project project;
 
     @BeforeEach
     void setup() throws Exception
     {
-        // create websocket client
         websocketUrl = "ws://localhost:" + port + WS_ENDPOINT;
-
-        var wsClient = new StandardWebSocketClient();
-        wsClient.setUserProperties(Map.of( //
-                WS_AUTHENTICATION_USER_NAME, USER, //
-                WS_AUTHENTICATION_PASSWORD, PASS));
-        stompClient = new WebSocketStompClient(wsClient);
-        stompClient.setMessageConverter(new MappingJackson2MessageConverter());
 
         setupOnce();
     }
@@ -176,30 +163,16 @@ class RecommendationEventWebsocketControllerImplTest
     @Test
     void thatSubscriptionWithoutProjectPermissionIsRejected() throws Exception
     {
-        projectService.revokeRole(project, user, PermissionLevel.MANAGER);
+        projectService.revokeRole(project, user, MANAGER);
 
         var channel = "/topic" + RecommendationEventWebsocketControllerImpl.getChannel(project,
                 user.getUsername());
-        var sessionHandler = WebSocketSessionTestHandler.builder() //
-                .subscribe(channel) //
-                .afterConnected(this::sendTestMessage) //
-                .expect(RRecommenderLogMessage.class, (headers, msg) -> {
-                    assertThat(msg.getMessage()).isEqualTo("Test message");
-                }) //
-                .build();
 
-        var session = stompClient.connectAsync(websocketUrl, sessionHandler).get(10, SECONDS);
-
-        Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
-
-        sessionHandler
-                .assertError(msg -> assertThat(msg).containsIgnoringCase("Failed to send message"));
-
-        try {
-            session.disconnect();
-        }
-        catch (Exception e) {
-            // Ignore exceptions during disconnect
+        try (var client = new WebSocketStompTestClient(USER, PASS)) {
+            client.expectSuccessfulConnection().connect(websocketUrl);
+            client.expectError(
+                    "Failed to send message to ExecutorSubscribableChannel[clientInboundChannel]")
+                    .subscribe(channel);
         }
     }
 
@@ -209,92 +182,60 @@ class RecommendationEventWebsocketControllerImplTest
     {
         var channel = "/topic" + RecommendationEventWebsocketControllerImpl.getChannel(project,
                 "USER_WITHOUT_ACCESS");
-        var sessionHandler = WebSocketSessionTestHandler.builder() //
-                .subscribe(channel) //
-                .afterConnected(this::sendTestMessage) //
-                .expect(RRecommenderLogMessage.class, (headers, msg) -> {
-                    assertThat(msg.getMessage()).isEqualTo("Test message");
-                }) //
-                .build();
 
-        var session = stompClient.connectAsync(websocketUrl, sessionHandler).get(10, SECONDS);
-
-        Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
-
-        sessionHandler
-                .assertError(msg -> assertThat(msg).containsIgnoringCase("Failed to send message"));
-
-        try {
-            session.disconnect();
-        }
-        catch (Exception e) {
-            // Ignore exceptions during disconnect
+        try (var client = new WebSocketStompTestClient(USER, PASS)) {
+            client.expectSuccessfulConnection().connect(websocketUrl);
+            client.expectError(
+                    "Failed to send message to ExecutorSubscribableChannel[clientInboundChannel]")
+                    .subscribe(channel);
         }
     }
 
-    @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
     @Test
     void thatSubscriptionWithProjectPermissionIsAccepted() throws Exception
     {
-        projectService.assignRole(project, user, PermissionLevel.MANAGER);
+        projectService.assignRole(project, user, MANAGER);
 
         var channel = "/topic" + RecommendationEventWebsocketControllerImpl.getChannel(project,
                 user.getUsername());
-        var sessionHandler = WebSocketSessionTestHandler.builder() //
-                .subscribe(channel) //
-                .afterConnected(this::sendTestMessage)
-                .expect(RRecommenderLogMessage.class, (headers, msg) -> {
-                    assertThat(msg.getMessage()).isEqualTo("Test message");
-                }) //
-                .build();
 
-        var session = stompClient.connectAsync(websocketUrl, sessionHandler).get(10, SECONDS);
-        Awaitility.await().atMost(20, SECONDS).until(sessionHandler::messagesProcessed);
+        var message = new RRecommenderLogMessage(LogLevel.INFO, "Test message");
 
-        sessionHandler.assertSuccess();
-
-        try {
-            session.disconnect();
-        }
-        catch (Exception e) {
-            // Ignore exceptions during disconnect
-        }
-    }
-
-    private void sendTestMessage()
-    {
-        appEventPublisher.publishEvent(
-                RecommenderTaskNotificationEvent.builder(this, project, user.getUsername()) //
-                        .withMessage(LogMessage.info(this, "Test message")) //
-                        .build());
-    }
-
-    @Configuration
-    public static class WebsocketSecurityTestConfig
-        extends WebsocketSecurityConfig
-    {
-        @Autowired
-        public WebsocketSecurityTestConfig(ApplicationContext aContext,
-                ExtensiblePermissionEvaluator aPermissionEvaluator)
-        {
-            super(aContext, aPermissionEvaluator);
+        try (var client = new WebSocketStompTestClient(USER, PASS)) {
+            client.expectSuccessfulConnection().connect(websocketUrl);
+            client.subscribe(channel);
+            client.expect(message).perform(() -> {
+                appEventPublisher.publishEvent(
+                        RecommenderTaskNotificationEvent.builder(this, project, user.getUsername()) //
+                                .withMessage(LogMessage.info(this, "Test message")) //
+                                .build());
+            });
         }
     }
 
     @SpringBootConfiguration
-    public static class WebsocketBrokerTestConfig
+    public static class SpringConfig
     {
+        @Bean
+        public ChannelInterceptor csrfChannelInterceptor()
+        {
+            // Disable CSRF
+            return new ChannelInterceptor()
+            {
+            };
+        }
+
         @Bean
         public ApplicationContextProvider applicationContextProvider()
         {
             return new ApplicationContextProvider();
         }
 
-        @Bean(name = "authenticationProvider")
-        public DaoAuthenticationProvider internalAuthenticationProvider(PasswordEncoder aEncoder,
+        @Bean
+        public DaoAuthenticationProvider authenticationProvider(PasswordEncoder aEncoder,
                 @Lazy UserDetailsManager aUserDetailsManager)
         {
-            DaoAuthenticationProvider authProvider = new InceptionDaoAuthenticationProvider();
+            var authProvider = new InceptionDaoAuthenticationProvider();
             authProvider.setUserDetailsService(aUserDetailsManager);
             authProvider.setPasswordEncoder(aEncoder);
             return authProvider;
@@ -304,13 +245,13 @@ class RecommendationEventWebsocketControllerImplTest
         @Bean
         public SecurityFilterChain wsFilterChain(HttpSecurity aHttp) throws Exception
         {
-            aHttp.securityMatcher(WebsocketConfig.WS_ENDPOINT);
-            aHttp.authorizeHttpRequests() //
+            aHttp.securityMatcher(WS_ENDPOINT);
+            aHttp.authorizeHttpRequests(rules -> rules //
                     .requestMatchers("/**").authenticated() //
-                    .anyRequest().denyAll();
-            aHttp.sessionManagement() //
-                    .sessionCreationPolicy(STATELESS);
-            aHttp.httpBasic();
+                    .anyRequest().denyAll());
+            aHttp.sessionManagement(session -> session //
+                    .sessionCreationPolicy(STATELESS));
+            aHttp.httpBasic(withDefaults());
             return aHttp.build();
         }
     }

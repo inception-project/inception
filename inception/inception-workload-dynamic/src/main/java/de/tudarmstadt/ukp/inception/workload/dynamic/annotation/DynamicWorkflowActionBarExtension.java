@@ -22,9 +22,11 @@ import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExten
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
@@ -36,18 +38,21 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
  * {@link DynamicWorkloadManagerAutoConfiguration#dynamicWorkflowActionBarExtension}
  * </p>
  */
+@Order(1000)
 public class DynamicWorkflowActionBarExtension
     implements ActionBarExtension
 {
     private final WorkloadManagementService workloadManagementService;
     private final ProjectService projectService;
+    private final UserDao userService;
 
     @Autowired
     public DynamicWorkflowActionBarExtension(WorkloadManagementService aWorkloadManagementService,
-            ProjectService aProjectService)
+            ProjectService aProjectService, UserDao aUserService)
     {
         workloadManagementService = aWorkloadManagementService;
         projectService = aProjectService;
+        userService = aUserService;
     }
 
     @Override
@@ -65,17 +70,18 @@ public class DynamicWorkflowActionBarExtension
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {
-        // #Issue 1813 fix
-        if (aPage.getModelObject().getProject() == null) {
+        // Issue #1813 fix
+        var project = aPage.getModelObject().getProject();
+        if (project == null) {
             return false;
         }
 
         // Curator are excluded from the feature
-        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID
-                .equals(workloadManagementService.loadOrCreateWorkloadManagerConfiguration(
-                        aPage.getModelObject().getProject()).getType())
-                && !projectService.hasRole(aPage.getModelObject().getUser(),
-                        aPage.getModelObject().getProject(), CURATOR);
+        var sessionOwner = userService.getCurrentUser();
+        var workloadConfig = workloadManagementService
+                .loadOrCreateWorkloadManagerConfiguration(project);
+        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadConfig.getType())
+                && !projectService.hasRole(sessionOwner, project, CURATOR);
     }
 
     @Override

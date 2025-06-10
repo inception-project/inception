@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -55,6 +56,8 @@ import org.eclipse.rdf4j.rio.Rio;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -62,6 +65,8 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class SPARQLQueryBuilderLocalTestScenarios
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     static final String TURTLE_PREFIX = String.join("\n", //
             "@base <http://example.org/> .", //
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .", //
@@ -174,35 +179,35 @@ public class SPARQLQueryBuilderLocalTestScenarios
             "    <#implicit-property-1> 'value1' .");
 
     static final String DATA_DEPRECATED = """
-                                          <#class-1>
-                                              rdf:type rdfs:Class ;
-                                              rdfs:label 'Class 1' ;
-                                              owl:deprecated true .
-                                          <#class-2>
-                                              rdf:type rdfs:Class ;
-                                              rdfs:label 'Class 2' ;
-                                              owl:deprecated false .
-                                          <#class-3>
-                                              rdf:type rdfs:Class ;
-                                              rdfs:label 'Class 3' ;
-                                              owl:deprecated 'lala' .
-                                          <#class-4>
-                                              rdf:type rdfs:Class ;
-                                              rdfs:label 'Class 4' ;
-                                              owl:deprecated 0 .
-                                          <#class-5>
-                                              rdf:type rdfs:Class ;
-                                              rdfs:label 'Class 5' ;
-                                              owl:deprecated 1 .
-                                          <#instance-1>
-                                              rdf:type <#class-1> ;
-                                              rdfs:label 'Instance 1' ;
-                                              owl:deprecated true .
-                                          <#property-1>
-                                              rdf:type rdf:Property ;
-                                              rdfs:label 'Property 1' ;
-                                              owl:deprecated true .
-                                          """;
+            <#class-1>
+                rdf:type rdfs:Class ;
+                rdfs:label 'Class 1' ;
+                owl:deprecated true .
+            <#class-2>
+                rdf:type rdfs:Class ;
+                rdfs:label 'Class 2' ;
+                owl:deprecated false .
+            <#class-3>
+                rdf:type rdfs:Class ;
+                rdfs:label 'Class 3' ;
+                owl:deprecated 'lala' .
+            <#class-4>
+                rdf:type rdfs:Class ;
+                rdfs:label 'Class 4' ;
+                owl:deprecated 0 .
+            <#class-5>
+                rdf:type rdfs:Class ;
+                rdfs:label 'Class 5' ;
+                owl:deprecated 1 .
+            <#instance-1>
+                rdf:type <#class-1> ;
+                rdfs:label 'Instance 1' ;
+                owl:deprecated true .
+            <#property-1>
+                rdf:type rdf:Property ;
+                rdfs:label 'Property 1' ;
+                owl:deprecated true .
+            """;
 
     private KnowledgeBase kb;
 
@@ -224,8 +229,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
     public void testWatcher(TestInfo aTestInfo)
     {
         String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
-        System.out.printf("\n=== %s === %s =====================\n", methodName,
-                aTestInfo.getDisplayName());
+        LOG.info("=== {} === {} =====================", methodName, aTestInfo.getDisplayName());
 
         suspendSslVerification();
     }
@@ -1330,7 +1334,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
         // Detect the file format
         var format = Rio.getParserFormatForFileName(aFilename).orElse(RDFXML);
 
-        System.out.printf("Loading %s data from %s%n", format, aFilename);
+        LOG.info("Loading {} data from {}", format, aFilename);
 
         // Load files into the repository
         try (var is = new FileInputStream(aFilename)) {

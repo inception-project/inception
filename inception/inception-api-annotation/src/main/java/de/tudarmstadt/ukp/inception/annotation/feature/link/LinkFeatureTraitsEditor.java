@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
-import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.DEFAULT_LINK_MULTIPLICITY;
-import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.DEFAULT_LINK_DIFF_MODE;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.DEFAULT_LINK_MULTIPLICITY_MODE;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.MULTIPLE_TARGETS_ONE_ROLE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 
@@ -139,6 +140,11 @@ public class LinkFeatureTraitsEditor
         compareMode.setOutputMarkupPlaceholderTag(true);
         compareMode.add(visibleWhen(traits.map(Traits::isEnableRoleLabels)));
         form.add(compareMode);
+
+        var diffMode = new DropDownChoice<LinkFeatureDiffMode>("diffMode",
+                asList(LinkFeatureDiffMode.values()), new EnumChoiceRenderer<>(this));
+        diffMode.setOutputMarkupPlaceholderTag(true);
+        form.add(diffMode);
     }
 
     private List<Tag> listTags()
@@ -166,7 +172,8 @@ public class LinkFeatureTraitsEditor
                 .forEach(result.getDefaultSlots()::add);
 
         result.setEnableRoleLabels(t.isEnableRoleLabels());
-        result.setCompareMode(t.getCompareMode());
+        result.setCompareMode(t.getMultiplicityMode());
+        result.setDiffMode(t.getDiffMode());
 
         return result;
     }
@@ -182,15 +189,16 @@ public class LinkFeatureTraitsEditor
         var enableRoleLabels = traits.getObject().isEnableRoleLabels();
 
         t.setEnableRoleLabels(enableRoleLabels);
+        t.setDiffMode(traits.getObject().getDiffMode());
 
         if (enableRoleLabels) {
             // only set default slot values for tagsets if the role labels are enabled
             traits.getObject().getDefaultSlots().stream().map(tag -> tag.getId())
                     .forEach(t.getDefaultSlots()::add);
-            t.setCompareMode(traits.getObject().getCompareMode());
+            t.setMultiplicityMode(traits.getObject().getCompareMode());
         }
         else {
-            t.setCompareMode(ONE_TARGET_MULTIPLE_ROLES);
+            t.setMultiplicityMode(MULTIPLE_TARGETS_ONE_ROLE);
         }
 
         getFeatureSupport().writeTraits(feature.getObject(), t);
@@ -214,7 +222,8 @@ public class LinkFeatureTraitsEditor
 
         private List<Tag> defaultSlots = new ArrayList<>();
         private boolean enableRoleLabels;
-        private LinkFeatureMultiplicityMode compareMode = DEFAULT_LINK_MULTIPLICITY;
+        private LinkFeatureMultiplicityMode compareMode = DEFAULT_LINK_MULTIPLICITY_MODE;
+        private LinkFeatureDiffMode diffMode = DEFAULT_LINK_DIFF_MODE;
 
         public List<Tag> getDefaultSlots()
         {
@@ -244,6 +253,16 @@ public class LinkFeatureTraitsEditor
         public void setCompareMode(LinkFeatureMultiplicityMode aCompareMode)
         {
             compareMode = aCompareMode;
+        }
+
+        public void setDiffMode(LinkFeatureDiffMode aDiffMode)
+        {
+            diffMode = aDiffMode;
+        }
+
+        public LinkFeatureDiffMode getDiffMode()
+        {
+            return diffMode;
         }
     }
 }

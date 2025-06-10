@@ -17,7 +17,7 @@
  */
 
 import { Rectangle } from './Rectangle'
-import { JsonVGlyph, JsonVChunk } from './VModelJsonDeserializer'
+import { type JsonVGlyph, type JsonVChunk } from './VModelJsonDeserializer'
 import { VPage } from './VPage'
 
 export class VGlyph {

@@ -31,9 +31,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -59,7 +59,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -83,6 +82,7 @@ import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
 import de.tudarmstadt.ukp.inception.project.export.task.backup.BackupProjectExportTask;
 import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportRequest;
 import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportTask;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -98,7 +98,7 @@ public class ProjectExportServiceImpl
 {
     public static final String EXPORTED_PROJECT = "exportedproject";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final Duration CLEANUP_INTERVAL = Duration.ofMinutes(5);
     private static final Duration STALE_EXPORT_EXPIRY = Duration.ofMinutes(30);
@@ -108,6 +108,7 @@ public class ProjectExportServiceImpl
     private final ExecutorService taskExecutorService;
     private final ScheduledExecutorService cleaningScheduler;
     private final ApplicationContext applicationContext;
+    private final SchedulingService schedulingService;
 
     private final List<ProjectExporter> exportersProxy;
     private List<ProjectExporter> exporters;
@@ -115,11 +116,12 @@ public class ProjectExportServiceImpl
     @Autowired
     public ProjectExportServiceImpl(ApplicationContext aApplicationContext,
             @Lazy @Autowired(required = false) List<ProjectExporter> aExporters,
-            @Autowired ProjectService aProjectService)
+            @Autowired ProjectService aProjectService, SchedulingService aSchedulingService)
     {
         applicationContext = aApplicationContext;
         exportersProxy = aExporters;
         projectService = aProjectService;
+        schedulingService = aSchedulingService;
 
         taskExecutorService = Executors.newFixedThreadPool(4);
 
@@ -152,7 +154,7 @@ public class ProjectExportServiceImpl
             Set<Class<? extends ProjectExporter>> exporterClasses = new HashSet<>();
             for (ProjectExporter init : exps) {
                 if (exporterClasses.add(init.getClass())) {
-                    log.debug("Found project exporter: {}",
+                    LOG.debug("Found project exporter: {}",
                             ClassUtils.getAbbreviatedName(init.getClass(), 20));
                 }
                 else {
@@ -216,7 +218,7 @@ public class ProjectExportServiceImpl
                 catch (IOException e) {
                     aMonitor.addMessage(LogMessage.error(this,
                             "Unable to delete temporary export directory [%s]", exportTempDir));
-                    log.error("Unable to delete temporary export directory [{}]", exportTempDir);
+                    LOG.error("Unable to delete temporary export directory [{}]", exportTempDir);
                 }
             }
         }
@@ -245,9 +247,12 @@ public class ProjectExportServiceImpl
         var exportersSeen = new HashSet<Class<? extends ProjectExporter>>();
         Set<ProjectExporter> exportersDeferred = SetUtils.newIdentityHashSet();
 
-        ExportedProject exProject = new ExportedProject();
+        var exProject = new ExportedProject();
         exProject.setName(aRequest.getProject().getName());
+        exProject.setSlug(aRequest.getProject().getSlug());
 
+        // Exporting without suspension is probably ok
+        // try (var ctx = schedulingService.whileSuspended(aRequest.getProject())) {
         try {
             while (!deque.isEmpty()) {
                 var exporter = deque.pop();
@@ -258,13 +263,13 @@ public class ProjectExportServiceImpl
                 }
 
                 if (exportersSeen.containsAll(exporter.getExportDependencies())) {
-                    log.debug("Applying project exporter: {}", exporter);
+                    LOG.debug("Applying project exporter: {}", exporter);
                     exporter.exportData(aRequest, aMonitor, exProject, aZip);
                     exportersSeen.add(exporter.getClass());
                     exportersDeferred.clear();
                 }
                 else {
-                    log.debug(
+                    LOG.debug(
                             "Deferring project exporter as dependencies are not yet fulfilled: [{}]",
                             exporter);
                     deque.add(exporter);
@@ -294,19 +299,19 @@ public class ProjectExportServiceImpl
     {
         long start = currentTimeMillis();
 
-        Deque<ProjectExporter> deque = new LinkedList<>(exporters);
-        Set<Class<? extends ProjectExporter>> initsSeen = new HashSet<>();
+        var deque = new LinkedList<ProjectExporter>(exporters);
+        var initsSeen = new HashSet<Class<? extends ProjectExporter>>();
         Set<ProjectExporter> initsDeferred = SetUtils.newIdentityHashSet();
 
-        Project project = new Project();
+        var project = new Project();
 
-        try {
-            ExportedProject exProject = loadExportedProject(aZip);
+        try (var ctx = schedulingService.whileSuspended(project)) {
+            var exProject = loadExportedProject(aZip);
 
             project.setName(exProject.getName());
 
             // Old projects do not have a slug, so we derive one from the project name
-            String slug = exProject.getSlug();
+            var slug = exProject.getSlug();
             if (isBlank(slug)) {
                 slug = projectService.deriveSlugFromName(exProject.getName());
             }
@@ -319,7 +324,7 @@ public class ProjectExportServiceImpl
 
             // Apply the importers
             while (!deque.isEmpty()) {
-                ProjectExporter importer = deque.pop();
+                var importer = deque.pop();
 
                 if (initsDeferred.contains(importer)) {
                     throw new IllegalStateException("Circular initializer dependencies in "
@@ -327,13 +332,13 @@ public class ProjectExportServiceImpl
                 }
 
                 if (initsSeen.containsAll(importer.getImportDependencies())) {
-                    log.debug("Applying project importer: {}", importer);
+                    LOG.debug("Applying project importer: {}", importer);
                     importer.importData(aRequest, project, exProject, aZip);
                     initsSeen.add(importer.getClass());
                     initsDeferred.clear();
                 }
                 else {
-                    log.debug(
+                    LOG.debug(
                             "Deferring project exporter as dependencies are not yet fulfilled: [{}]",
                             importer);
                     deque.add(importer);
@@ -345,7 +350,7 @@ public class ProjectExportServiceImpl
             throw new ProjectExportException("Project import failed", e);
         }
 
-        log.info("Imported project [{}]({}) ({})", project.getName(), project.getId(),
+        LOG.info("Imported project {} ({})", project,
                 formatDurationWords(currentTimeMillis() - start, true, true));
 
         return project;
@@ -384,7 +389,7 @@ public class ProjectExportServiceImpl
     public ProjectExportTaskHandle startProjectExportTask(FullProjectExportRequest aRequest,
             String aUsername)
     {
-        BackupProjectExportTask task = new BackupProjectExportTask(aRequest, aUsername);
+        var task = new BackupProjectExportTask(aRequest, aUsername);
 
         return startTask(task);
     }
@@ -394,13 +399,10 @@ public class ProjectExportServiceImpl
             FullProjectExportRequest aRequest, String aUsername)
     {
         var request = new CuratedDocumentsProjectExportRequest(aRequest.getProject());
-        request.setFilenameTag(aRequest.getFilenameTag());
         request.setFormat(aRequest.getFormat());
         request.setIncludeInProgress(aRequest.isIncludeInProgress());
 
-        CuratedDocumentsProjectExportTask task = new CuratedDocumentsProjectExportTask(request,
-                aUsername);
-
+        var task = new CuratedDocumentsProjectExportTask(request, aUsername);
         return startTask(task);
     }
 
@@ -410,7 +412,7 @@ public class ProjectExportServiceImpl
         ProjectExportTaskHandle handle = aTask.getHandle();
 
         // This autowires the task fields manually.
-        AutowireCapableBeanFactory factory = applicationContext.getAutowireCapableBeanFactory();
+        var factory = applicationContext.getAutowireCapableBeanFactory();
         factory.autowireBean(aTask);
         factory.initializeBean(aTask, "transientTask");
 
@@ -422,7 +424,7 @@ public class ProjectExportServiceImpl
     @Override
     public ProjectExportRequest_ImplBase getExportRequest(ProjectExportTaskHandle aHandle)
     {
-        TaskInfo task = tasks.get(aHandle);
+        var task = tasks.get(aHandle);
 
         if (task == null) {
             return null;
@@ -434,7 +436,7 @@ public class ProjectExportServiceImpl
     @Override
     public ProjectExportTaskMonitor getTaskMonitor(ProjectExportTaskHandle aHandle)
     {
-        TaskInfo task = tasks.get(aHandle);
+        var task = tasks.get(aHandle);
 
         if (task == null) {
             return null;
@@ -456,7 +458,7 @@ public class ProjectExportServiceImpl
     @Override
     public boolean cancelTask(ProjectExportTaskHandle aHandle)
     {
-        TaskInfo task = tasks.get(aHandle);
+        var task = tasks.get(aHandle);
 
         if (task == null) {
             return false;
@@ -465,20 +467,20 @@ public class ProjectExportServiceImpl
         boolean cancelled = task.future.cancel(true);
 
         if (cancelled) {
-            log.debug("Cancelled running export");
+            LOG.debug("Cancelled running export");
         }
         else {
-            log.debug("Cancelled completed export");
+            LOG.debug("Cancelled completed export");
         }
 
         File exportedFile = task.task.getMonitor().getExportedFile();
         if (exportedFile != null && exportedFile.exists()) {
-            log.debug("Deleted exported file {}", exportedFile);
+            LOG.debug("Deleted exported file {}", exportedFile);
             try {
                 FileUtils.forceDelete(exportedFile);
             }
             catch (IOException ex) {
-                log.error("Unable to clean up cancelled exported file [{}]:", exportedFile, ex);
+                LOG.error("Unable to clean up cancelled exported file [{}]:", exportedFile, ex);
             }
         }
 
@@ -501,7 +503,7 @@ public class ProjectExportServiceImpl
             // Remove task info from the tasks map one hour after completion/failure/etc.
             long age = System.currentTimeMillis() - monitor.getEndTime();
             if (age > STALE_EXPORT_EXPIRY.toMillis()) {
-                log.info("Cleaning up stale export task for project [{}]:",
+                LOG.info("Cleaning up stale export task for project [{}]:",
                         e.getValue().task.getRequest().getProject().getName());
                 tasks.remove(e.getKey());
                 e.getValue().task.destroy();
@@ -511,7 +513,7 @@ public class ProjectExportServiceImpl
                         FileUtils.forceDelete(exportedFile);
                     }
                     catch (IOException ex) {
-                        log.error("Unable to clean up stale exported file [{}]:", exportedFile, ex);
+                        LOG.error("Unable to clean up stale exported file [{}]:", exportedFile, ex);
                     }
                 }
             }

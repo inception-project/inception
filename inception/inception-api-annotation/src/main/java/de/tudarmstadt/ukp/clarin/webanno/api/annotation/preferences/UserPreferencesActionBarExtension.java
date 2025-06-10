@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorSta
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
-@Order(10000)
+@Order(ActionBarExtension.ORDER_SETTINGS)
 @Component
 public class UserPreferencesActionBarExtension
     implements ActionBarExtension

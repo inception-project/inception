@@ -113,11 +113,10 @@ public class BratAnnotationEditor
     @Override
     protected AnnotationEditorProperties getProperties()
     {
-        var props = new AnnotationEditorProperties();
+        var props = super.getProperties();
         // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
         // defined in main.ts
         props.setEditorFactory("Brat.factory()");
-        props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
         props.setStylesheetSources(asList(referenceToUrl(servletContext, BratCssReference.get())));
         props.setScriptSources(asList(referenceToUrl(servletContext, BratResourceReference.get())));
         return props;

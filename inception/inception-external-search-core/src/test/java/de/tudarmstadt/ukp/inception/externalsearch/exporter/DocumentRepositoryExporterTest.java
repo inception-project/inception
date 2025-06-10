@@ -79,7 +79,8 @@ public class DocumentRepositoryExporterTest
     {
         // Export the project
         var exportRequest = new FullProjectExportRequest(project, null, false);
-        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var monitor = new ProjectExportTaskMonitor(project, null, "test",
+                exportRequest.getFilenamePrefix());
         var exportedProject = new ExportedProject();
         var file = mock(ZipOutputStream.class);
 
@@ -89,7 +90,10 @@ public class DocumentRepositoryExporterTest
         var captor = ArgumentCaptor.forClass(DocumentRepository.class);
         doNothing().when(externalSearchService).createOrUpdateDocumentRepository(captor.capture());
 
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         var zipFile = mock(ZipFile.class);
         sut.importData(importRequest, project, exportedProject, zipFile);
 

@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
  * @forRemoval 35.0
  */
 @Deprecated(forRemoval = true)
-@Order(0)
+@Order(ActionBarExtension.ORDER_DOCUMENT_NAVIGATOR)
 public class CurationSidebarDocumentNavigatorActionBarExtension
     implements ActionBarExtension
 {

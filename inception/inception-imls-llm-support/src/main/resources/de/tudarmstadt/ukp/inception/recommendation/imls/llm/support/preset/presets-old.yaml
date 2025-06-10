@@ -1,0 +1,99 @@
+- name: Extract named entities from sentenes
+  promptingMode: per-sentence
+  format: json
+  extractionMode: mentions-from-json
+  prompt: |-
+    Identify all named entities in the following text.
+
+    {% if tags %}
+    Label each entity using one of the following labels:
+    {% for tag, description in tags.items() %}
+    * {{- tag -}} {%if description %}: {{- description -}}{% endif %}{% endfor %}
+    {% endif %}
+
+    Text:
+    ```
+    {{ text }}
+    ```
+
+- name: Extract named entities from sentenes (dynamic few-shot)
+  promptingMode: per-sentence
+  format: json
+  extractionMode: mentions-from-json
+  prompt: |-
+    Identify all named entities in the following text and return them as JSON.
+
+    {% if tags %}
+    Label each entity using one of the following labels:
+    {% for tag, description in tags.items() %}
+    * {{- tag -}} {%if description %}: {{- description -}}{% endif %}{% endfor %}
+    {% endif %}
+
+    {% if examples %}
+    {% for example in examples %}
+    Text:
+    ```
+    {{ example.getText() }}
+    ```
+
+    Response:
+    {{ example.getLabelledMentions() | tojson }}
+    {% endfor %}
+
+    Text:
+    {% endif %}
+
+    ```
+    {{ text }}
+    ```
+
+    {% if examples %}
+    Response:
+    {% endif %}
+
+
+- name: Summarize each sentence in a word
+  promptingMode: per-sentence
+  extractionMode: response-as-label
+  prompt: |-
+    Summarize the following text in a single word.
+
+    Text:
+    ```
+    {{ text }}
+    ```
+
+- name: Summarize document
+  promptingMode: per-document
+  extractionMode: response-as-label
+  prompt: |-
+    Briefly describe what the following text is about.
+
+    Text:
+    ```
+    {{ text }}
+    ```
+
+- name: Summarize annotated spans
+  promptingMode: per-document
+  extractionMode: response-as-label
+  prompt: |-
+    Briefly summarize the following text.
+
+    Text:
+    ```
+    {% for x in cas.select('custom.Span') %}
+    {{ x }}
+    {% endfor %}
+    ```
+
+- name: Disambiguate in sentence
+  promptingMode: per-annotation
+  extractionMode: response-as-label
+  prompt: |-
+    Very briefly describe the meaning of `{{ text }}` in the following text.
+
+    Text:
+    ```
+    {{ sentence }}
+    ```

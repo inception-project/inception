@@ -65,7 +65,7 @@ public final class MtasUtils
 
     public static int decodeFSAddress(BytesRef aBytesRef)
     {
-        ByteBuffer buffer = ByteBuffer.allocate(4).put(aBytesRef.bytes, aBytesRef.offset,
+        var buffer = ByteBuffer.allocate(4).put(aBytesRef.bytes, aBytesRef.offset,
                 aBytesRef.length);
         // Cast to buffer to permit code to run on Java 8.
         // See: https://github.com/inception-project/inception/issues/1828#issuecomment-717047584

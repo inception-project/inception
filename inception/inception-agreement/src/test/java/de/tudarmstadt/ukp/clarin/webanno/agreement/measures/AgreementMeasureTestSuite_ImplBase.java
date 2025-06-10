@@ -65,13 +65,12 @@ import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistryImpl;
-import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
 
 @ExtendWith(MockitoExtension.class)
 public class AgreementMeasureTestSuite_ImplBase
@@ -180,14 +179,60 @@ public class AgreementMeasureTestSuite_ImplBase
 
         var user1 = createCas(createMultiValueStringTestTypeSystem());
         user1.setDocumentText("This is a test.");
-        AnnotationBuilder.buildAnnotation(user1, MULTI_VALUE_SPAN_TYPE) //
+        buildAnnotation(user1, MULTI_VALUE_SPAN_TYPE) //
                 .at(0, 4) //
                 .withFeature("values", asList("a")) //
                 .buildAndAddToIndexes();
 
         var user2 = createCas(createMultiValueStringTestTypeSystem());
         user2.setDocumentText("This is a test.");
-        AnnotationBuilder.buildAnnotation(user2, MULTI_VALUE_SPAN_TYPE) //
+        buildAnnotation(user2, MULTI_VALUE_SPAN_TYPE) //
+                .at(0, 4) //
+                .withFeature("values", asList("a", "b")) //
+                .buildAndAddToIndexes();
+
+        AgreementMeasure<R> measure = aSupport.createMeasure(feature, traits);
+
+        return measure.getAgreement(Map.of( //
+                "user1", user1, //
+                "user2", user2));
+    }
+
+    public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
+    R selfOverlappingAgreement(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
+    {
+        var layer = new AnnotationLayer(MULTI_VALUE_SPAN_TYPE, MULTI_VALUE_SPAN_TYPE,
+                SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
+        layer.setId(1l);
+        layers.add(layer);
+
+        var feature = new AnnotationFeature(project, layer, "values", "values",
+                CAS.TYPE_NAME_STRING_ARRAY);
+        feature.setId(1l);
+        feature.setLinkMode(NONE);
+        feature.setMode(ARRAY);
+        features.add(feature);
+
+        var traits = aSupport.createTraits();
+
+        var user1 = createCas(createMultiValueStringTestTypeSystem());
+        user1.setDocumentText("This is a test.");
+        buildAnnotation(user1, MULTI_VALUE_SPAN_TYPE) //
+                .at(0, 4) //
+                .withFeature("values", asList("a")) //
+                .buildAndAddToIndexes();
+        buildAnnotation(user1, MULTI_VALUE_SPAN_TYPE) //
+                .at(0, 7) //
+                .withFeature("values", asList("a")) //
+                .buildAndAddToIndexes();
+        buildAnnotation(user1, MULTI_VALUE_SPAN_TYPE) //
+                .at(0, 7) //
+                .withFeature("values", asList("b")) //
+                .buildAndAddToIndexes();
+
+        var user2 = createCas(createMultiValueStringTestTypeSystem());
+        user2.setDocumentText("This is a test.");
+        buildAnnotation(user2, MULTI_VALUE_SPAN_TYPE) //
                 .at(0, 4) //
                 .withFeature("values", asList("a", "b")) //
                 .buildAndAddToIndexes();

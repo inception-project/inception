@@ -53,7 +53,7 @@ public interface SchedulerWebsocketController
     {
         var properties = new Properties();
         properties.setProperty(PARAM_PROJECT, String.valueOf(aProjectId));
-        var replacer = new PropertyPlaceholderHelper("{", "}", null, false);
+        var replacer = new PropertyPlaceholderHelper("{", "}", null, null, false);
         var topic = replacer.replacePlaceholders(PROJECT_TASKS_TOPIC_TEMPLATE, properties);
         return topic;
     }

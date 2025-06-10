@@ -25,6 +25,16 @@ import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 public interface ActionBarExtension
     extends Extension<AnnotationPageBase>
 {
+    public static final int ORDER_DOCUMENT_NAVIGATOR = 0;
+    public static final int ORDER_UNDO = 1000;
+    public static final int ORDER_PAGING = 2000;
+    public static final int ORDER_GUIDELINES = 3000;
+    public static final int ORDER_SCRIPT_DIRECTION = 4000;
+    public static final int ORDER_WORKFLOW = 5000;
+    public static final int ORDER_RECOMMENDER = 6000;
+    public static final int ORDER_SETTINGS = 7000;
+    public static final int ORDER_CLOSE_SESSION = 10000;
+
     public static final String ROLE_NAVIGATOR = "navigator";
 
     @Override

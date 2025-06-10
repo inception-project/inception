@@ -37,6 +37,8 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.NumberTextField;
+import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -51,7 +53,7 @@ import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFileInput;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFileInputField;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -76,7 +78,7 @@ public class StringMatchingRecommenderTraitsEditor
     private final StringMatchingRecommenderTraits traits;
 
     private GazeteerList gazeteers;
-    private BootstrapFileInput uploadField;
+    private BootstrapFileInputField uploadField;
 
     public StringMatchingRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
@@ -87,7 +89,7 @@ public class StringMatchingRecommenderTraitsEditor
         var form = new Form<StringMatchingRecommenderTraits>(MID_FORM,
                 CompoundPropertyModel.of(Model.of(traits)))
         {
-            private static final long serialVersionUID = -3109239605742291123L;
+            private static final long serialVersionUID = -1L;
 
             @Override
             protected void onSubmit()
@@ -96,6 +98,7 @@ public class StringMatchingRecommenderTraitsEditor
                 toolFactory.writeTraits(aRecommender.getObject(), traits);
             }
         };
+        add(form);
 
         var ignoreCase = new CheckBox("ignoreCase");
         ignoreCase.setOutputMarkupId(true);
@@ -103,7 +106,13 @@ public class StringMatchingRecommenderTraitsEditor
                 .map(Recommender::getFeature) //
                 .map(this::isStringBasedFeature)));
         form.add(ignoreCase);
-        add(form);
+
+        form.add(new NumberTextField<>("minLength", Integer.class) //
+                .setMinimum(1) //
+                .setMaximum(500) //
+                .setStep(1));
+
+        form.add(new TextField<>("excludePattern", String.class));
 
         gazeteers = new GazeteerList("gazeteers", LoadableDetachableModel.of(this::listGazeteers));
         gazeteers.add(visibleWhen(getModel().map(Recommender::getId).isPresent()));
@@ -114,9 +123,9 @@ public class StringMatchingRecommenderTraitsEditor
         config.allowedFileExtensions(asList("txt"));
         config.showPreview(false);
         config.showUpload(true);
-        uploadField = new BootstrapFileInput("upload", new ListModel<>(), config)
+        uploadField = new BootstrapFileInputField("upload", new ListModel<>(), config)
         {
-            private static final long serialVersionUID = -7072183979425490246L;
+            private static final long serialVersionUID = -1L;
 
             @Override
             protected void onSubmit(AjaxRequestTarget aTarget)
@@ -195,7 +204,7 @@ public class StringMatchingRecommenderTraitsEditor
     public class GazeteerList
         extends WebMarkupContainer
     {
-        private static final long serialVersionUID = -2049981253344229438L;
+        private static final long serialVersionUID = -1L;
 
         private ListView<Gazeteer> gazeteerList;
 
@@ -207,7 +216,7 @@ public class StringMatchingRecommenderTraitsEditor
 
             gazeteerList = new ListView<Gazeteer>("gazeteer", aChoices)
             {
-                private static final long serialVersionUID = 2827701590781214260L;
+                private static final long serialVersionUID = -1L;
 
                 @Override
                 protected void populateItem(ListItem<Gazeteer> aItem)

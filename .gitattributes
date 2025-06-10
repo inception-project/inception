@@ -24,3 +24,7 @@
 *.ser binary
 *.png binary
 *.jpg binary
+*.pptx binary
+*.svg binary
+*.mp4 binary
+*.mp3 binary

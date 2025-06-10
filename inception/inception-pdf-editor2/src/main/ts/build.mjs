@@ -17,7 +17,7 @@
  */
 import esbuild from 'esbuild'
 import esbuildSvelte from 'esbuild-svelte'
-import sveltePreprocess from 'svelte-preprocess'
+import { sveltePreprocess } from 'svelte-preprocess'
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 import { sassPlugin } from 'esbuild-sass-plugin'
@@ -36,10 +36,11 @@ const defaults = {
   entryPoints: ['src/main.ts'],
   globalName: 'PdfAnnotationEditor',
   outfile: `${outbase}/PdfAnnotationEditor.min.js`,
+  format: 'iife',
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
-  target: 'es2018',
+  target: 'es2019',
   loader: { '.ts': 'ts' },
   logLevel: 'info',
   plugins: [

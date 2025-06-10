@@ -139,11 +139,19 @@ public abstract class ArcSuggestionSupport_ImplBase
 
                 var position = group.getPosition();
 
+                // FIXME: Looks like we need to implement not hiding relations if stacking is
+                // enabled.
+
                 // If any annotation at this position has a non-null label for this feature,
                 // then we hide the suggestion group
                 for (var annotationFS : groupedAnnotations.get(position)) {
+                    var label = annotationFS.getFeatureValueAsString(feat);
                     if (annotationFS.getFeatureValueAsString(feat) != null) {
                         for (var suggestion : group) {
+                            if (suggestion.isCorrection() && !suggestion.labelEquals(label)) {
+                                continue;
+                            }
+
                             suggestion.hide(FLAG_OVERLAP);
                         }
                     }

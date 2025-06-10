@@ -30,6 +30,7 @@ import java.util.TreeMap;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.jcas.cas.AnnotationBase;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
@@ -46,13 +47,7 @@ public class Configuration
 
     private final Position position;
     final Map<String, AID> fsAddresses = new TreeMap<>();
-    private Map<String, List<AID>> extras;
-
-    /**
-     * Flag indicating that there is at least once CAS group containing more than one annotation at
-     * this position - i.e. a stacked annotation.
-     */
-    private boolean stacked = false;
+    private Map<String, List<AID>> duplicates;
 
     public String getRepresentativeCasGroupId()
     {
@@ -74,9 +69,13 @@ public class Configuration
         return position;
     }
 
-    public boolean isStacked()
+    /**
+     * @return flag indicating that there is at least once CAS group containing more than one
+     *         annotation with the same values at this position - i.e. a duplicate annotation.
+     */
+    public boolean containsDuplicates()
     {
-        return stacked;
+        return duplicates != null;
     }
 
     /**
@@ -87,12 +86,11 @@ public class Configuration
     {
         var old = fsAddresses.put(aCasGroupId, aAID);
         if (old != null) {
-            if (extras == null) {
-                extras = new TreeMap<>();
+            if (duplicates == null) {
+                duplicates = new TreeMap<>();
             }
-            var list = extras.computeIfAbsent(aCasGroupId, $ -> new ArrayList<AID>());
+            var list = duplicates.computeIfAbsent(aCasGroupId, $ -> new ArrayList<AID>());
             list.add(old);
-            stacked = true;
         }
     }
 
@@ -112,10 +110,10 @@ public class Configuration
         return e.getValue();
     }
 
-    public FeatureStructure getRepresentative(Map<String, CAS> aCasMap)
+    public AnnotationBase getRepresentative(Map<String, CAS> aCasMap)
     {
         var e = fsAddresses.entrySet().iterator().next();
-        return selectFsByAddr(aCasMap.get(e.getKey()), e.getValue().addr);
+        return (AnnotationBase) selectFsByAddr(aCasMap.get(e.getKey()), e.getValue().addr);
     }
 
     public AID getAID(String aCasGroupId)
@@ -136,11 +134,11 @@ public class Configuration
             return true;
         }
 
-        if (extras == null) {
+        if (duplicates == null) {
             return false;
         }
 
-        var list = extras.get(aCasGroupId);
+        var list = duplicates.get(aCasGroupId);
         if (list == null) {
             return false;
         }
@@ -184,8 +182,8 @@ public class Configuration
         var allFs = new ArrayList<FeatureStructure>();
         allFs.add(ICasUtil.selectFsByAddr(cas, aid.addr));
 
-        if (extras != null) {
-            var list = extras.get(aCasGroupId);
+        if (duplicates != null) {
+            var list = duplicates.get(aCasGroupId);
             if (list != null) {
                 for (var eAid : list) {
                     allFs.add(ICasUtil.selectFsByAddr(cas, eAid.addr));
@@ -205,28 +203,40 @@ public class Configuration
     public String toString()
     {
         var sb = new StringBuilder();
-        sb.append('[');
-        for (var e : fsAddresses.entrySet()) {
-            if (sb.length() > 1) {
-                sb.append(", ");
-            }
-            sb.append(e.getKey());
-            sb.append(": ");
-            sb.append(e.getValue());
-            if (extras != null) {
-                sb.append(" (extras: ");
-                for (var entries : extras.entrySet()) {
-                    sb.append(" {");
-                    sb.append(entries.getKey());
-                    sb.append(entries.getValue().stream().map(String::valueOf)
-                            .collect(joining(", ")));
-                    sb.append("} ");
+        if (!fsAddresses.isEmpty()) {
+            for (var e : fsAddresses.entrySet()) {
+                if (sb.length() > 1) {
+                    sb.append(", ");
                 }
-                sb.append(")");
+
+                sb.append(e.getKey());
+                sb.append(": ");
+                sb.append(e.getValue());
+                if (duplicates != null) {
+                    sb.append(" (duplicates: ");
+                    for (var entries : duplicates.entrySet()) {
+                        sb.append(" {");
+                        sb.append(entries.getKey());
+                        sb.append(entries.getValue().stream() //
+                                .map(String::valueOf) //
+                                .collect(joining(", ")));
+                        sb.append("} ");
+                    }
+                    sb.append(")");
+                }
             }
+
+            sb.insert(0, " ~= [");
+            sb.insert(0, getRepresentativeAID());
+            sb.append("]");
         }
-        sb.append("] -> ");
-        sb.append(getRepresentativeAID());
+        else {
+            sb.append("empty");
+        }
+
+        sb.insert(0, ": ");
+        sb.insert(0, position);
+
         return sb.toString();
     }
 }

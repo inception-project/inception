@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     /*
      * Licensed to the Technische Universität Darmstadt under one
      * or more contributor license agreements.  See the NOTICE file
@@ -19,17 +21,41 @@
 
     import { AnnotatedText, Span } from "@inception-project/inception-js-api";
 
-    export let data: AnnotatedText
-    export let span: Span
+    interface Props {
+        data: AnnotatedText;
+        span: Span;
+    }
+
+    let { data, span }: Props = $props();
 
     const maxLength = 100
     const showTextAfter = true // Experimental
 
-    $: begin = span.offsets[0][0]
-    $: end = span.offsets[0][1]
-    $: text = data.text.substring(begin, end).trim().replace(/\s+/g, ' ')
-    $: textAfter = (showTextAfter && text.length < maxLength) ? 
-        data.text.substring(end, end + maxLength - text.length).trim().replace(/\s+/g, ' ') : ''
+    let begin : number = $state()
+    let end : number = $state()
+    let text : string = $state()
+    let textAfter : string = $state()
+
+    run(() => {
+        begin = span.offsets[0][0]
+        end = span.offsets[0][1]
+        let rawText = data.text.substring(begin, end).replace(/\s+/g, ' ')
+        
+        let trimmedText = rawText.trimEnd()
+        text = trimmedText
+        
+        if (showTextAfter && trimmedText.length < maxLength) {
+            let rawTextAfter = data.text.substring(end, end + maxLength - trimmedText.length).replace(/\s+/g, ' ')
+            let trimmedTextAfter = rawTextAfter.trimStart()
+            if (rawText.length > trimmedText.length || rawTextAfter.length > trimmedTextAfter.length) {
+                trimmedTextAfter = ' ' + trimmedTextAfter
+            }
+            textAfter = trimmedTextAfter.trimEnd()
+        }
+        else {
+            textAfter = ''
+        }
+    });
 </script>
 
 {#if text.length === 0}
@@ -40,10 +66,7 @@
     <span>{text.substring(0, 50)}</span>
     <span class="text-muted trailing-text">…</span>
 {:else}
-    <span style="overflow-wrap: normal;">{text}</span>
-    {#if textAfter.length > 0}
-        <span class="text-muted trailing-text">{textAfter}</span>
-    {/if}
+    <span style="overflow-wrap: normal;">{text}</span>{#if textAfter.length > 0}<span class="text-muted trailing-text">{textAfter}</span>{/if}
 {/if}
 
 <style lang="scss">
@@ -52,5 +75,6 @@
         width: 0px;
         display: inline-block;
         white-space: nowrap;
+        white-space-collapse: preserve;
     }
 </style>

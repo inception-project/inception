@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static java.util.Arrays.asList;
@@ -249,7 +249,7 @@ public class CurationEditorExtension
                 sourceAnnotation, feature.getName(), aVid.getSlot());
 
         // open created/updates FS in annotation detail editor panel
-        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getResultFSAddress());
+        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.targetAddress());
         aState.getSelection().selectSpan(mergedAnno);
     }
 
@@ -263,7 +263,7 @@ public class CurationEditorExtension
                 sourceAnnotation);
 
         // open created/updates FS in annotation detail editor panel
-        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getResultFSAddress());
+        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.targetAddress());
         aState.getSelection().selectArc(mergedAnno);
     }
 
@@ -277,13 +277,13 @@ public class CurationEditorExtension
                 sourceAnnotation);
 
         // open created/updates FS in annotation detail editor panel
-        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.getResultFSAddress());
+        var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.targetAddress());
         aState.getSelection().selectSpan(mergedAnno);
     }
 
     @Override
-    public List<VLazyDetailGroup> lookupLazyDetails(SourceDocument aDocument, User aUser, CAS aCas,
-            VID aVid, AnnotationLayer aLayer)
+    public List<VLazyDetailGroup> lookupLazyDetails(SourceDocument aDocument, User aDataOwner,
+            CAS aCas, VID aVid, AnnotationLayer aLayer)
     {
         var detailGroups = new ArrayList<VLazyDetailGroup>();
 
@@ -314,8 +314,8 @@ public class CurationEditorExtension
             var nonCuratableFeatures = features.stream() //
                     .filter(f -> !f.isCuratable()) //
                     .toList();
-            lookupFeaturesAcrossAnnotators(aDocument, aUser, aCas, aLayer, vid, srcUser, srcCas,
-                    nonCuratableFeatures).forEach(detailGroups::add);
+            lookupFeaturesAcrossAnnotators(aDocument, aDataOwner, aCas, aLayer, vid, srcUser,
+                    srcCas, nonCuratableFeatures).forEach(detailGroups::add);
         }
         catch (IOException e) {
             LOG.error("Unable to load lazy details", e);
@@ -328,8 +328,8 @@ public class CurationEditorExtension
     }
 
     private List<VLazyDetailGroup> lookupFeaturesAcrossAnnotators(SourceDocument aDocument,
-            User aUser, CAS aCas, AnnotationLayer aLayer, VID vid, String srcUser, CAS srcCas,
-            List<AnnotationFeature> nonCuratableFeatures)
+            User aDataOwner, CAS aCas, AnnotationLayer aLayer, VID vid, String aSrcUser,
+            CAS aSrcCas, List<AnnotationFeature> aNonCuratableFeatures)
     {
         var sessionOwner = userRepository.getCurrentUsername();
         var selectedUsers = curationSidebarService.listUsersReadyForCuration(sessionOwner,
@@ -339,12 +339,12 @@ public class CurationEditorExtension
             return emptyList();
         }
 
-        var casses = collectCasses(aDocument, aUser, aCas, selectedUsers);
+        var casses = collectCasses(aDocument, aDataOwner, aCas, selectedUsers);
 
-        var srcAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
+        var srcAnnotation = selectAnnotationByAddr(aSrcCas, vid.getId());
         var casDiff = createDiff(casses, aLayer, srcAnnotation.getBegin(), srcAnnotation.getEnd());
 
-        var maybeConfiguration = casDiff.toResult().findConfiguration(srcUser, srcAnnotation);
+        var maybeConfiguration = casDiff.toResult().findConfiguration(aSrcUser, srcAnnotation);
         if (maybeConfiguration.isEmpty()) {
             return emptyList();
         }
@@ -355,7 +355,7 @@ public class CurationEditorExtension
         for (var user : configuration.getCasGroupIds()) {
             var group = new VLazyDetailGroup(user);
             var fs = configuration.getFs(user, casses);
-            for (var f : nonCuratableFeatures) {
+            for (var f : aNonCuratableFeatures) {
                 featureSupportRegistry.findExtension(f).ifPresent(support -> {
                     var label = support.renderFeatureValue(f, fs);
                     if (isNotBlank(label)) {
@@ -371,13 +371,13 @@ public class CurationEditorExtension
         return detailGroups;
     }
 
-    private Map<String, CAS> collectCasses(SourceDocument aDocument, User aUser, CAS aCas,
+    private Map<String, CAS> collectCasses(SourceDocument aDocument, User aDataOwner, CAS aCas,
             List<User> selectedUsers)
     {
         var casses = new LinkedHashMap<String, CAS>();
 
         // This is the CAS that the user can actively edit
-        casses.put(aUser.getUsername(), aCas);
+        casses.put(aDataOwner.getUsername(), aCas);
 
         for (var user : selectedUsers) {
             try {
@@ -393,10 +393,10 @@ public class CurationEditorExtension
         return casses;
     }
 
-    private CasDiff createDiff(Map<String, CAS> casses, AnnotationLayer aLayer, int aBegin,
+    private CasDiff createDiff(Map<String, CAS> aCasses, AnnotationLayer aLayer, int aBegin,
             int aEnd)
     {
         var adapters = getDiffAdapters(annotationService, asList(aLayer));
-        return doDiff(adapters, casses, aBegin, aEnd);
+        return doDiff(adapters, aCasses, aBegin, aEnd);
     }
 }

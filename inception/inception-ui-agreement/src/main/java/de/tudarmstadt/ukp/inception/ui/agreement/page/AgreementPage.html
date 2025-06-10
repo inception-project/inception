@@ -31,9 +31,9 @@
               </span>
             </div>
             <div class="card-body scrolling d-flex flex-column">
-              <div class="form-row form-floating" wicket:enclosure="feature">
-                <select wicket:id="feature" class="form-select"/>
-                <label wicket:for="feature"><wicket:label key="feature"/></label>
+              <div class="form-row form-floating" wicket:enclosure="layerAndFeature">
+                <select wicket:id="layerAndFeature" class="form-select"/>
+                <label wicket:for="layerAndFeature"><wicket:label key="feature"/></label>
               </div>
               <div class="form-row form-floating" wicket:enclosure="measure">
                 <select wicket:id="measure" class="form-select"/>
@@ -63,9 +63,28 @@
             </div>
             <div class="card-footer flex-h-container">
               <div class="flex-content text-end">
-                <button wicket:id="export" class="btn btn-secondary">
-                  <i class="fas fa-file-download me-2"/><wicket:message key="export"/>
-                </button>
+                <div class="btn-group dropup">
+                  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-download me-2"/><wicket:message key="export"/>
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li>
+                      <a wicket:id="exportJson" class="dropdown-item">
+                        <wicket:message key="exportJson"/>
+                      </a>
+                    </li>
+                    <li>
+                      <a wicket:id="exportCsv" class="dropdown-item">
+                        <wicket:message key="exportCsv"/>
+                      </a>
+                    </li>
+                    <li>
+                      <a wicket:id="exportCsvDiff" class="dropdown-item">
+                        <wicket:message key="exportCsvDiff"/>
+                      </a>
+                    </li>
+                  </ul>
+                </div>
                 <button wicket:id="calculatePairwiseAgreement" class="btn btn-primary">
                   <i class="fas fa-play me-2"/><wicket:message key="calculatePairwiseAgreement"/>
                 </button>

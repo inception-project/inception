@@ -23,7 +23,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class DocumentMetadataLayerSupportPropertiesImpl
     implements DocumentMetadataLayerSupportProperties
 {
-    private boolean enabled;
+    private boolean enabled = true;
 
     @Override
     public boolean isEnabled()

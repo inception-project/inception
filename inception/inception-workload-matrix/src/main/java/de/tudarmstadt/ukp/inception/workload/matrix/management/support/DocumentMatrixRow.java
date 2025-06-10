@@ -117,15 +117,16 @@ public class DocumentMatrixRow
 
         SourceDocumentState state = sourceDocument.getState();
 
-        if (!(CURATION_IN_PROGRESS == state || CURATION_FINISHED == state)
-                && finishedCount >= requiredCount) {
-            state = ANNOTATION_FINISHED;
-        }
-        else if (newCount == requiredCount) {
-            state = SourceDocumentState.NEW;
-        }
-        else if (inProgressCount > 0 || finishedCount > 0) {
-            state = SourceDocumentState.ANNOTATION_IN_PROGRESS;
+        if (!(CURATION_IN_PROGRESS == state || CURATION_FINISHED == state)) {
+            if (finishedCount >= requiredCount) {
+                state = ANNOTATION_FINISHED;
+            }
+            else if (newCount == requiredCount) {
+                state = SourceDocumentState.NEW;
+            }
+            else if (inProgressCount > 0 || finishedCount > 0) {
+                state = SourceDocumentState.ANNOTATION_IN_PROGRESS;
+            }
         }
 
         return state;

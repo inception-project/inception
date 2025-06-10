@@ -20,8 +20,10 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
+import static de.tudarmstadt.ukp.inception.support.uima.FeatureStructureBuilder.buildFS;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
+import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 
 import java.io.File;
@@ -37,8 +39,8 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.dkpro.core.io.conll.Conll2006Reader;
@@ -46,7 +48,7 @@ import org.dkpro.core.io.xmi.XmiReader;
 
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XReader;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
@@ -55,6 +57,7 @@ public class CurationTestUtils
     public static final String TARGET_FEATURE = "target";
     public static final String ROLE_FEATURE = "role";
     public static final String LINKS_FEATURE = "links";
+    public static final String ALT_LINKS_FEATURE = "altLinks";
     public static final String HOST_TYPE = "webanno.custom.LinkHost";
     public static final String LINK_TYPE = "webanno.custom.LinkType";
 
@@ -138,7 +141,7 @@ public class CurationTestUtils
                 WebannoTsv2Reader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
         CAS cas;
         if (aType != null) {
-            var builtInTypes = TypeSystemDescriptionFactory.createTypeSystemDescription();
+            var builtInTypes = createTypeSystemDescription();
             List<TypeSystemDescription> allTypes = new ArrayList<>();
             allTypes.add(builtInTypes);
             allTypes.add(aType);
@@ -161,8 +164,7 @@ public class CurationTestUtils
                 XmiReader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
         CAS jcas;
         if (aType != null) {
-            TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
-                    .createTypeSystemDescription();
+            TypeSystemDescription builtInTypes = createTypeSystemDescription();
             List<TypeSystemDescription> allTypes = new ArrayList<>();
             allTypes.add(builtInTypes);
             allTypes.add(aType);
@@ -193,7 +195,7 @@ public class CurationTestUtils
         hostTD.addFeature(LINKS_FEATURE, "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(), false);
 
         typeSystems.add(tsd);
-        typeSystems.add(TypeSystemDescriptionFactory.createTypeSystemDescription());
+        typeSystems.add(createTypeSystemDescription());
 
         return mergeTypeSystems(typeSystems);
     }
@@ -218,7 +220,7 @@ public class CurationTestUtils
         }
 
         typeSystems.add(tsd);
-        typeSystems.add(TypeSystemDescriptionFactory.createTypeSystemDescription());
+        typeSystems.add(createTypeSystemDescription());
 
         return mergeTypeSystems(typeSystems);
     }
@@ -268,18 +270,29 @@ public class CurationTestUtils
                 .buildAndAddToIndexes();
     }
 
+    public static FeatureStructure makeLinkFS(JCas aCas, int aTargetBegin, int aTargetEnd)
+    {
+        var filler = new NamedEntity(aCas, aTargetBegin, aTargetEnd);
+        filler.addToIndexes();
+
+        return linkTo(null, filler);
+
+    }
+
     public static FeatureStructure makeLinkFS(JCas aCas, String aRole, int aTargetBegin,
             int aTargetEnd)
     {
-        var token1 = new Token(aCas, aTargetBegin, aTargetEnd);
-        token1.addToIndexes();
+        var filler = new NamedEntity(aCas, aTargetBegin, aTargetEnd);
+        filler.addToIndexes();
 
-        var linkType = aCas.getTypeSystem().getType(LINK_TYPE);
-        var linkA1 = aCas.getCas().createFS(linkType);
-        linkA1.setStringValue(linkType.getFeatureByBaseName(ROLE_FEATURE), aRole);
-        linkA1.setFeatureValue(linkType.getFeatureByBaseName(TARGET_FEATURE), token1);
-        aCas.getCas().addFsToIndexes(linkA1);
+        return linkTo(aRole, filler);
+    }
 
-        return linkA1;
+    public static FeatureStructure linkTo(String aRole, Annotation aFiller)
+    {
+        return buildFS(aFiller.getJCas().getCas(), LINK_TYPE) //
+                .withFeature(ROLE_FEATURE, aRole) //
+                .withFeature(TARGET_FEATURE, aFiller) //
+                .buildAndAddToIndexes();
     }
 }

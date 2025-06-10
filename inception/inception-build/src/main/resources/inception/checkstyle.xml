@@ -33,7 +33,7 @@
   <module name="SuppressWithPlainTextCommentFilter"/>
 
   <module name="LineLength">
-    <property name="max" value="120"/>
+    <property name="max" value="140"/>
     <property name="ignorePattern" value="^package.*|^import.*|JavaCCOptions|a href|href|http://|https://|ftp://|&quot;[ ]?[)}]*[,;]?$"/>
   </module>
 

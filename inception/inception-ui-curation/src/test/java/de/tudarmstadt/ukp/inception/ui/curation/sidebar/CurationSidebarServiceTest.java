@@ -36,8 +36,8 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -67,15 +67,15 @@ public class CurationSidebarServiceTest
 
     private @Autowired TestEntityManager testEntityManager;
 
-    private @MockBean DocumentService documentService;
-    private @MockBean SessionRegistry sessionRegistry;
-    private @MockBean ProjectService projectService;
-    private @MockBean UserDao userRegistry;
-    private @MockBean CasStorageService casStorageService;
-    private @MockBean CurationService curationService;
-    private @MockBean CurationMergeService curationMergeService;
-    private @MockBean CurationSidebarProperties curationSidebarProperties;
-    private @MockBean CurationDocumentService curationDocumentService;
+    private @MockitoBean DocumentService documentService;
+    private @MockitoBean SessionRegistry sessionRegistry;
+    private @MockitoBean ProjectService projectService;
+    private @MockitoBean UserDao userRegistry;
+    private @MockitoBean CasStorageService casStorageService;
+    private @MockitoBean CurationService curationService;
+    private @MockitoBean CurationMergeService curationMergeService;
+    private @MockitoBean CurationSidebarProperties curationSidebarProperties;
+    private @MockitoBean CurationDocumentService curationDocumentService;
 
     private Project testProject;
     private SourceDocument testDocument;

@@ -85,6 +85,7 @@ public abstract class ArcPosition_ImplBase<T extends ArcPosition_ImplBase<?>>
         return targetEnd;
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public boolean equals(Object o)
     {

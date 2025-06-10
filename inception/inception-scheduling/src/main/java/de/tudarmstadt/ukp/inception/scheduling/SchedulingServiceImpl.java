@@ -19,22 +19,28 @@ package de.tudarmstadt.ukp.inception.scheduling;
 
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
+import static java.lang.System.currentTimeMillis;
+import static java.lang.System.identityHashCode;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.Validate;
@@ -76,6 +82,7 @@ public class SchedulingServiceImpl
     private final List<Task> enqueuedTasks;
     private final List<Task> pendingAcknowledgement;
     private final Set<Project> deletionPending;
+    private final Map<Project, AtomicInteger> suspended;
 
     @Autowired
     public SchedulingServiceImpl(ApplicationContext aApplicationContext,
@@ -89,6 +96,7 @@ public class SchedulingServiceImpl
         enqueuedTasks = Collections.synchronizedList(new ArrayList<>());
         pendingAcknowledgement = Collections.synchronizedList(new ArrayList<>());
         deletionPending = Collections.synchronizedSet(new LinkedHashSet<>());
+        suspended = Collections.synchronizedMap(new LinkedHashMap<>());
         watchdog = Executors.newScheduledThreadPool(1);
         watchdog.scheduleAtFixedRate(this::scheduleEligibleTasks, 5, 5, SECONDS);
         watchdog.scheduleAtFixedRate(this::cleanUpTasks, 10, 10, SECONDS);
@@ -97,7 +105,14 @@ public class SchedulingServiceImpl
     private void beforeExecute(Thread aThread, Runnable aRunnable)
     {
         Validate.notNull(aRunnable, "Task cannot be null");
-        runningTasks.add((Task) aRunnable);
+        synchronized (runningTasks) {
+            if (!runningTasks.contains((Task) aRunnable)) {
+                runningTasks.add((Task) aRunnable);
+            }
+            else {
+                LOG.warn("Task running: {}", aRunnable);
+            }
+        }
         LOG.debug("Starting task: {} ", aRunnable);
     }
 
@@ -115,12 +130,17 @@ public class SchedulingServiceImpl
 
     private void handleTaskEnded(Task aTask)
     {
-        runningTasks.remove(aTask);
-        if (aTask.getMonitor().isCancelled() || !aTask.getScope().isDestroyOnEnd()) {
-            pendingAcknowledgement.add(aTask);
+        synchronized (runningTasks) {
+            runningTasks.remove(aTask);
         }
-        else {
-            aTask.destroy();
+
+        synchronized (pendingAcknowledgement) {
+            // if (aTask.getMonitor().isCancelled() || !aTask.getScope().isDestroyOnEnd()) {
+            pendingAcknowledgement.add(aTask);
+            // }
+            // else {
+            // aTask.destroy();
+            // }
         }
     }
 
@@ -227,13 +247,17 @@ public class SchedulingServiceImpl
                 // the incoming task supersedes them).
                 tasksToUnqueue.add(enqueuedTask);
                 break;
+            case QUEUE_THIS:
+                // Queue this task to be run potentially after other matching tasks have been
+                // completed
+                break;
             case NO_MATCH:
                 // Ignore
                 break;
             }
         }
 
-        for (Task taskToUnqueue : tasksToUnqueue) {
+        for (var taskToUnqueue : tasksToUnqueue) {
             LOG.debug("Matching task already queued - unqueuing exsting: [{}] in favor of "
                     + "incoming [{}]", taskToUnqueue, aTask);
             enqueuedTasks.remove(taskToUnqueue);
@@ -257,9 +281,111 @@ public class SchedulingServiceImpl
             return;
         }
 
+        if (aTask.getProject() != null && suspended.containsKey(aTask.getProject())) {
+            LOG.debug("Tasks for project suspended - adding to queue: [{}]", aTask);
+            enqueuedTasks.add(aTask);
+            return;
+        }
+
         schedule(aTask);
 
         logState();
+    }
+
+    @Override
+    public void suspendTasks(Project aProject) throws TimeoutException
+    {
+        synchronized (suspended) {
+            var suspendCount = suspended.computeIfAbsent(aProject, v -> new AtomicInteger(0));
+            suspendCount.incrementAndGet();
+            LOG.debug("Suspending tasks for {} [{}] [{}]", aProject, identityHashCode(aProject),
+                    suspendCount);
+        }
+
+        waitForProjectTasksToEnd(aProject, Duration.ofMinutes(1), true);
+    }
+
+    private void waitForProjectTasksToEnd(Project aProject, Duration aTimeout,
+            boolean aResumeOnTimeout)
+        throws TimeoutException
+    {
+        var startTime = currentTimeMillis();
+        var timeoutMillis = aTimeout.toMillis();
+
+        while (runningTasks.stream()
+                .anyMatch(t -> aProject.getId() != null ? aProject.equals(t.getProject())
+                        : aProject == t.getProject())) {
+            // LOG.trace("Waiting for running tasks to end on project {}", aProject);
+
+            if (currentTimeMillis() - startTime > timeoutMillis) {
+                var msg = new StringBuilder();
+                msg.append("Waiting for tasks related to project ");
+                msg.append(aProject);
+                msg.append(" to finish took longer than ");
+                msg.append(aTimeout);
+                msg.append("\n");
+                msg.append("The following tasks are still running:\n");
+                runningTasks.stream() //
+                        .filter(t -> aProject.equals(t.getProject())) //
+                        .forEach(t -> {
+                            msg.append("- ").append(t).append("\n");
+                            for (var frame : t.getThread().getStackTrace()) {
+                                msg.append("  ");
+                                msg.append(frame);
+                                msg.append("\n");
+                            }
+                        });
+
+                if (aResumeOnTimeout) {
+                    resumeTasks(aProject);
+                }
+
+                throw new TimeoutException(msg.toString());
+            }
+
+            try {
+                Thread.sleep(50);
+            }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                LOG.error("Thread was interrupted while waiting for tasks to end on project {}",
+                        aProject, e);
+                throw new IllegalStateException(
+                        "Thread was interrupted while waiting for tasks to end on project ["
+                                + aProject.getName() + "]");
+            }
+        }
+    }
+
+    @Override
+    public void resumeTasks(Project aProject)
+    {
+        synchronized (suspended) {
+            var suspendCount = suspended.get(aProject);
+            if (suspendCount != null) {
+                LOG.debug("Resuming tasks for {} [{}] [{}]", aProject, identityHashCode(aProject),
+                        suspendCount);
+                if (suspendCount.decrementAndGet() == 0) {
+                    suspended.remove(aProject);
+                    scheduleEligibleTasks();
+                }
+            }
+        }
+    }
+
+    @Override
+    public SuspensionContext whileSuspended(Project aProject) throws TimeoutException
+    {
+        suspendTasks(aProject);
+
+        return new SuspensionContext()
+        {
+            @Override
+            public void close()
+            {
+                resumeTasks(aProject);
+            }
+        };
     }
 
     private MatchResult matchTask(Task aTask, Task aEnqueueTask)
@@ -305,6 +431,19 @@ public class SchedulingServiceImpl
 
     private synchronized void cleanUpTasks()
     {
+        pendingAcknowledgement.removeIf(runnable -> {
+            var task = (Task) runnable;
+
+            if (task.getScope().isDestroyOnEnd()
+                    && currentTimeMillis() - task.getMonitor().getEndTime() > 5000) {
+                LOG.debug("Destroying self-destrucing task after quiet period: {}", task);
+                task.destroy();
+                return true;
+            }
+
+            return false;
+        });
+
         // var activeSessionCount = 0;
         var activeUsers = new HashSet<String>();
         for (var principal : sessionRegistry.getAllPrincipals()) {
@@ -339,14 +478,24 @@ public class SchedulingServiceImpl
 
     private synchronized void scheduleEligibleTasks()
     {
-        Iterator<Task> i = enqueuedTasks.iterator();
+        var i = enqueuedTasks.iterator();
 
         while (i.hasNext()) {
-            Task t = i.next();
-            if (!getScheduledAndRunningTasks().contains(t) && t.isReadyToStart()) {
-                i.remove();
-                schedule(t);
+            var t = i.next();
+            if (!t.isReadyToStart()) {
+                continue;
             }
+
+            if (getScheduledAndRunningTasks().contains(t)) {
+                continue;
+            }
+
+            if (t.getProject() != null && suspended.containsKey(t.getProject())) {
+                continue;
+            }
+
+            i.remove();
+            schedule(t);
         }
 
         logState();
@@ -392,11 +541,15 @@ public class SchedulingServiceImpl
     }
 
     @Override
-    public synchronized void stopAllTasksMatching(Predicate<Task> aPredicate)
+    public synchronized int stopAllTasksMatching(Predicate<Task> aPredicate)
     {
+        AtomicInteger count = new AtomicInteger();
+
         enqueuedTasks.removeIf(task -> {
             if (aPredicate.test(task)) {
+                LOG.debug("Destroying queued task: {}", task);
                 task.destroy();
+                count.incrementAndGet();
                 return true;
             }
             return false;
@@ -405,7 +558,9 @@ public class SchedulingServiceImpl
         executor.getQueue().removeIf(runnable -> {
             var task = (Task) runnable;
             if (aPredicate.test(task)) {
+                LOG.debug("Destroying scheduled task: {}", task);
                 task.destroy();
+                count.incrementAndGet();
                 return true;
             }
             return false;
@@ -413,7 +568,9 @@ public class SchedulingServiceImpl
 
         runningTasks.forEach(task -> {
             if (aPredicate.test(task)) {
+                LOG.debug("Canceling running task: {}", task);
                 task.getMonitor().cancel();
+                count.incrementAndGet();
                 // The task will be destroyed if necessary by the afterExecute callback
             }
         });
@@ -421,22 +578,48 @@ public class SchedulingServiceImpl
         pendingAcknowledgement.removeIf(runnable -> {
             var task = (Task) runnable;
             if (aPredicate.test(task)) {
+                LOG.debug("Destroying ack-pending task: {}", task);
                 task.destroy();
+                count.incrementAndGet();
                 return true;
             }
             return false;
         });
+
+        return count.get();
     }
 
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     @EventListener
-    public void beforeProjectRemoved(BeforeProjectRemovedEvent aEvent) throws IOException
+    public void onBeforeProjectRemoved(BeforeProjectRemovedEvent aEvent) throws TimeoutException
     {
         deletionPending.add(aEvent.getProject());
         stopAllTasksForProject(aEvent.getProject());
+        var timeout = Duration.ofMinutes(1);
+        try {
+            waitForProjectTasksToEnd(aEvent.getProject(), timeout, false);
+        }
+        catch (TimeoutException e) {
+            LOG.warn(
+                    "Running tasks for project {} did not terminate after {} - trying to interrupt them",
+                    aEvent.getProject(), timeout);
+            // Try interrupting running threads
+            runningTasks.forEach(task -> {
+                try {
+                    LOG.warn("Interrupting: {}", task);
+                    task.getThread().interrupt();
+                }
+                catch (Throwable t) {
+                    LOG.error("Error while interrupting hanging task {}", t, e);
+                }
+            });
+            waitForProjectTasksToEnd(aEvent.getProject(), timeout, false);
+        }
     }
 
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     @EventListener
-    public void afterProjectRemoved(AfterProjectRemovedEvent aEvent) throws IOException
+    public void onAfterProjectRemoved(AfterProjectRemovedEvent aEvent) throws IOException
     {
         stopAllTasksForProject(aEvent.getProject());
         deletionPending.remove(aEvent.getProject());
@@ -530,10 +713,19 @@ public class SchedulingServiceImpl
 
     private void logState()
     {
-        getEnqueuedTasks().forEach(t -> LOG.debug("Queued      : {}", t));
-        getScheduledTasks().forEach(t -> LOG.debug("Scheduled   : {}", t));
-        getRunningTasks().forEach(t -> LOG.debug("Running     : {}", t));
-        getTasksPendingAcknowledgment().forEach(t -> LOG.debug("Pending ack : {}", t));
+        if (LOG.isDebugEnabled()) {
+            var lines = new ArrayList<String>();
+            getEnqueuedTasks().forEach(t -> lines.add("  Queued      : " + t));
+            getScheduledTasks().forEach(t -> lines.add("  Scheduled   : " + t));
+            getRunningTasks().forEach(t -> lines.add("  Running     : " + t));
+            suspended.forEach((p, c) -> lines.add("  Suspended   : " + p + " [" + c + "]"));
+            deletionPending.forEach(p -> lines.add("  Deleting    : " + p));
+            getTasksPendingAcknowledgment().forEach(t -> lines.add("  Pending ack : " + t));
+            if (!lines.isEmpty()) {
+                LOG.debug("Scheduler state:");
+                lines.forEach(LOG::debug);
+            }
+        }
     }
 
     @Override

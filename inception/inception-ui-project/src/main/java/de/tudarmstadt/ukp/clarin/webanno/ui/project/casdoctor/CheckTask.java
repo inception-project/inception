@@ -38,7 +38,6 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class CheckTask
@@ -81,100 +80,99 @@ public class CheckTask
         var project = getProject();
 
         var sourceDocuments = documentService.listSourceDocuments(project);
+        try (var progress = getMonitor().openScope("documents", sourceDocuments.size())) {
+            for (var sd : sourceDocuments) {
+                progress.update(up -> up.increment() //
+                        .addMessage(LogMessage.info(this, "Processing [%s]...", sd.getName())));
 
-        var monitor = getMonitor();
-        var progress = 0;
-        var maxProgress = sourceDocuments.size();
-
-        for (var sd : sourceDocuments) {
-            progress++;
-
-            monitor.setProgressWithMessage(progress, maxProgress,
-                    LogMessage.info(this, "Processing [%s]...", sd.getName()));
-            if (monitor.isCancelled()) {
-                monitor.setState(TaskState.CANCELLED);
-            }
-
-            // Check INITIAL CAS
-            {
-                var messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
-
-                try {
-                    objectCount++;
-                    casStorageService.forceActionOnCas(sd, INITIAL_CAS_PSEUDO_USER,
-                            (doc, user) -> createOrReadInitialCasWithoutSavingOrChecks(doc,
-                                    messageSet),
-                            (cas) -> casDoctor.analyze(project, cas, messageSet.getMessages()), //
-                            false);
-                }
-                catch (Exception e) {
-                    messageSet.add(
-                            LogMessage.error(getClass(), "Error checking initial CAS for [%s]: %s",
-                                    sd.getName(), e.getMessage()));
-                    LOG.error("Error checking initial CAS for [{}]", sd.getName(), e);
+                if (getMonitor().isCancelled()) {
+                    break;
                 }
 
-                noticeIfThereAreNoMessages(messageSet);
-                getMessageSets().add(messageSet);
-            }
+                // Check INITIAL CAS
+                {
+                    var messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
 
-            // Check CURATION_USER CAS
-            {
-                var messageSet = new LogMessageSet(sd.getName() + " [" + CURATION_USER + "]");
-                try {
-                    objectCount++;
-                    casStorageService.forceActionOnCas(sd, CURATION_USER,
-                            (doc, user) -> casStorageService.readCas(doc, user,
-                                    UNMANAGED_NON_INITIALIZING_ACCESS),
-                            (cas) -> casDoctor.analyze(project, cas, messageSet.getMessages()), //
-                            false);
-                }
-                catch (FileNotFoundException e) {
-                    // If there is no CAS for the curation user, then curation has not started yet.
-                    // This is not a problem, so we can ignore it.
-                    messageSet.add(
-                            LogMessage.info(getClass(), "Curation seems to have not yet started."));
-                }
-                catch (Exception e) {
-                    messageSet.add(LogMessage.error(getClass(),
-                            "Error checking annotations for [%s] for [%s]: %s", CURATION_USER,
-                            sd.getName(), e.getMessage()));
-                    LOG.error("Error checking annotations for [{}] for [{}]", CURATION_USER,
-                            sd.getName(), e);
-                }
-
-                noticeIfThereAreNoMessages(messageSet);
-                getMessageSets().add(messageSet);
-            }
-
-            // Check regular annotator CASes
-            for (var ad : documentService.listAnnotationDocuments(sd)) {
-                var messageSet = new LogMessageSet(sd.getName() + " [" + ad.getUser() + "]");
-                try {
-                    if (documentService.existsCas(ad)) {
+                    try {
                         objectCount++;
-                        casStorageService.forceActionOnCas(ad.getDocument(), ad.getUser(),
-                                (doc, user) -> casStorageService.readCas(doc, user,
-                                        UNMANAGED_NON_INITIALIZING_ACCESS),
-                                (cas) -> casDoctor.analyze(project, cas, messageSet.getMessages()), //
+                        casStorageService.forceActionOnCas(sd, INITIAL_CAS_PSEUDO_USER,
+                                (doc, user) -> createOrReadInitialCasWithoutSavingOrChecks(doc,
+                                        messageSet),
+                                (doc, user, cas) -> casDoctor.analyze(doc, user, cas,
+                                        messageSet.getMessages()), //
                                 false);
                     }
-                }
-                catch (Exception e) {
-                    messageSet.add(LogMessage.error(getClass(),
-                            "Error checking annotations of user [%s] for [%s]: %s", ad.getUser(),
-                            sd.getName(), e.getMessage()));
-                    LOG.error("Error checking annotations of user [{}] for [{}]", ad.getUser(),
-                            sd.getName(), e);
+                    catch (Exception e) {
+                        messageSet.add(LogMessage.error(getClass(),
+                                "Error checking initial CAS for [%s]: %s", sd.getName(),
+                                e.getMessage()));
+                        LOG.error("Error checking initial CAS for [{}]", sd.getName(), e);
+                    }
+
+                    noticeIfThereAreNoMessages(messageSet);
+                    getMessageSets().add(messageSet);
                 }
 
-                noticeIfThereAreNoMessages(messageSet);
-                getMessageSets().add(messageSet);
+                // Check CURATION_USER CAS
+                {
+                    var messageSet = new LogMessageSet(sd.getName() + " [" + CURATION_USER + "]");
+                    try {
+                        objectCount++;
+                        casStorageService.forceActionOnCas(sd, CURATION_USER,
+                                (doc, user) -> casStorageService.readCas(doc, user,
+                                        UNMANAGED_NON_INITIALIZING_ACCESS),
+                                (doc, user, cas) -> casDoctor.analyze(doc, user, cas,
+                                        messageSet.getMessages()), //
+                                false);
+                    }
+                    catch (FileNotFoundException e) {
+                        // If there is no CAS for the curation user, then curation has not started
+                        // yet.
+                        // This is not a problem, so we can ignore it.
+                        messageSet.add(LogMessage.info(getClass(),
+                                "Curation seems to have not yet started."));
+                    }
+                    catch (Exception e) {
+                        messageSet.add(LogMessage.error(getClass(),
+                                "Error checking annotations for [%s] for [%s]: %s", CURATION_USER,
+                                sd.getName(), e.getMessage()));
+                        LOG.error("Error checking annotations for [{}] for [{}]", CURATION_USER,
+                                sd.getName(), e);
+                    }
+
+                    noticeIfThereAreNoMessages(messageSet);
+                    getMessageSets().add(messageSet);
+                }
+
+                // Check regular annotator CASes
+                for (var ad : documentService.listAnnotationDocuments(sd)) {
+                    var messageSet = new LogMessageSet(sd.getName() + " [" + ad.getUser() + "]");
+                    try {
+                        if (documentService.existsCas(ad)) {
+                            objectCount++;
+                            casStorageService.forceActionOnCas(ad.getDocument(), ad.getUser(),
+                                    (doc, user) -> casStorageService.readCas(doc, user,
+                                            UNMANAGED_NON_INITIALIZING_ACCESS),
+                                    (doc, user, cas) -> casDoctor.analyze(doc, user, cas,
+                                            messageSet.getMessages()), //
+                                    false);
+                        }
+                    }
+                    catch (Exception e) {
+                        messageSet.add(LogMessage.error(getClass(),
+                                "Error checking annotations of user [%s] for [%s]: %s",
+                                ad.getUser(), sd.getName(), e.getMessage()));
+                        LOG.error("Error checking annotations of user [{}] for [{}]", ad.getUser(),
+                                sd.getName(), e);
+                    }
+
+                    noticeIfThereAreNoMessages(messageSet);
+                    getMessageSets().add(messageSet);
+                }
             }
-        }
 
-        monitor.setProgressWithMessage(progress, maxProgress,
-                LogMessage.info(this, "Checks complete"));
+            progress.update(up -> up.addMessage(LogMessage.info(this, "Checks complete")));
+        }
     }
 
     public int getObjectCount()

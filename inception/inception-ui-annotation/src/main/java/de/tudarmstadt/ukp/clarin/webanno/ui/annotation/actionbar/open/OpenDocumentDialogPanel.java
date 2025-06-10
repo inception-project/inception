@@ -192,7 +192,8 @@ public class OpenDocumentDialogPanel
     @OnEvent
     public void onSourceDocumentOpenDocumentEvent(AnnotationDocumentOpenDocumentEvent aEvent)
     {
-        var documents = listDocuments().stream().map(AnnotationDocument::getDocument)
+        var documents = listDocuments().stream() //
+                .map(AnnotationDocument::getDocument) //
                 .collect(toList());
 
         state.getObject().setDocument(aEvent.getAnnotationDocument().getDocument(), documents);

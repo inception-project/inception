@@ -35,7 +35,7 @@ public class DocxToCas
     {
         CasXmlHandler handler = new CasXmlHandler(aJCas);
         handler.captureText(true);
-        
+
         try {
             var parser = XmlParserUtils.newSaxParser();
             parser.parse(new InputSource(aInputStream), handler);

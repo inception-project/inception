@@ -122,7 +122,6 @@ public class StatisticsAnnotationSidebar
 
     private List<LayerStatistics> layerStatsList;
     private List<AnnotationFeature> features;
-    // private List<AnnotationLayer> layers;
     Set<Long> hiddenLayerIds;
 
     private CompoundPropertyModel<StatisticsOptions> statisticsOptions = CompoundPropertyModel

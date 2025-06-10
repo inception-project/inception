@@ -36,9 +36,9 @@ public class NotifyingProjectExportTaskMonitor
     private MProjectExportStateUpdate lastUpdate;
 
     public NotifyingProjectExportTaskMonitor(Project aProject, ProjectExportTaskHandle aHandle,
-            String aTitle, SimpMessagingTemplate aMsgTemplate)
+            String aTitle, String aFilenamePrefix, SimpMessagingTemplate aMsgTemplate)
     {
-        super(aProject, aHandle, aTitle);
+        super(aProject, aHandle, aTitle, aFilenamePrefix);
         msgTemplate = aMsgTemplate;
     }
 

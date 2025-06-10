@@ -1,7 +1,3 @@
-// Copyright 2019
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-// Technische Universität Darmstadt
-// 
 // Licensed to the Technische Universität Darmstadt under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -25,11 +21,17 @@
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `format.tei.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
 ====
 
-The link:https://tei-c.org/guidelines/p5/[TEI P5 XML] format is a widely used standard format. It is a very complex format and furthermore is often extended for specific corpora.
+The link:https://tei-c.org/guidelines/p5/[TEI P5 XML] format is a widely used standard format.
+It is a very complex format and furthermore is often extended for specific corpora.
 
-When importing TEI files using this format, the XML structure of the document is retained. This allows {product-name} to render the document layout in HTML-based editors that support layout. However, TEI elements are **only** used for layout purposes. They do not become editable annotations in {product-name}.
+When importing TEI files using this format, the XML structure of the document is retained.
+This allows {product-name} to render the document layout in HTML-based editors that support layout. 
+However, TEI elements are **only** used for layout purposes.
+They do not become editable annotations in {product-name}.
 
-To export an annotated TEI document, use e.g. <<sect_formats_uimajson>> or <<sect_formats_uimajson,UIMA CAS JSON>>. The resulting exported files then contain the annotations as well as the entire TEI XML structure also in the form of annotations. They can be loaded and processed in Java using the link:https://github.com/apache/uima-uimaj#readme[Apache UIMA Java SDK] (both flavors) or in Python using link:https://pypi.org/project/dkpro-cassis/[DKPro Cassis] (only the XML 1.0 flavor).
+To export an annotated TEI document, use e.g. <<sect_formats_uimajson>> or <<sect_formats_uimajson,UIMA CAS JSON>>.
+The resulting exported files then contain the annotations as well as the entire TEI XML structure also in the form of annotations.
+They can be loaded and processed in Java using the link:https://github.com/apache/uima-uimaj#readme[Apache UIMA Java SDK] (both flavors) or in Python using link:https://pypi.org/project/dkpro-cassis/[DKPro Cassis] (only the XML 1.0 flavor).
 
 It is not possible to export an annotated TEI document as TEI XML including the annotations. 
 

@@ -30,7 +30,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.scheduling.Progress;
-import de.tudarmstadt.ukp.inception.scheduling.TaskMonitor;
 
 public interface SearchService
 {
@@ -90,8 +89,6 @@ public interface SearchService
             SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
             AnnotationFeature aAnnotationFeature, long aOffset, long aCount)
         throws IOException, ExecutionException;
-
-    void reindex(Project aproject, TaskMonitor aMonitor) throws IOException;
 
     /**
      * This method is only for testing. It allows waiting until the indexing process has completed

@@ -84,7 +84,8 @@ public class DefaultPreferenceExporterTest
     {
         // Export the project
         var exportRequest = new FullProjectExportRequest(project, null, false);
-        var monitor = new ProjectExportTaskMonitor(project, null, "test");
+        var monitor = new ProjectExportTaskMonitor(project, null, "test",
+                exportRequest.getFilenamePrefix());
         var exportedProject = new ExportedProject();
         var file = mock(ZipOutputStream.class);
 
@@ -95,8 +96,11 @@ public class DefaultPreferenceExporterTest
                 .forClass(DefaultProjectPreference.class);
         doNothing().when(preferencesService).saveDefaultProjectPreference(captor.capture());
 
-        ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
+        var zipFile = mock(ZipFile.class);
         sut.importData(importRequest, project, exportedProject, zipFile);
 
         return captor;

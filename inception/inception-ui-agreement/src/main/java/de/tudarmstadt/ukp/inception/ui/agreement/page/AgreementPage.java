@@ -27,13 +27,19 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
+import static java.util.Comparator.naturalOrder;
+import static java.util.Comparator.nullsFirst;
+import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -60,6 +66,7 @@ import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementService;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
@@ -69,14 +76,17 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.event.Pairwise
 import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePairwiseAgreementTask;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePerDocumentAgreementTask;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.users.ProjectUserPermissionChoiceRenderer;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -114,11 +124,13 @@ public class AgreementPage
     private WebMarkupContainer resultsContainer;
     // private LambdaAjaxBehavior refreshResultsBehavior;
     private AjaxDownloadBehavior downloadBehavior;
-    private DropDownChoice<AnnotationFeature> featureList;
+    private DropDownChoice<Pair<AnnotationLayer, AnnotationFeature>> featureList;
     private DropDownChoice<Pair<String, String>> measureDropDown;
     private LambdaAjaxButton<AgreementFormModel> calculatePairwiseAgreementButton;
     private LambdaAjaxButton<AgreementFormModel> calculatePerDocumentAgreement;
-    private LambdaAjaxButton<AgreementFormModel> exportDiffButton;
+    private LambdaAjaxButton<AgreementFormModel> exportCsvDiffButton;
+    private LambdaAjaxButton<AgreementFormModel> exportJsonButton;
+    private LambdaAjaxButton<AgreementFormModel> exportCsvButton;
     private WebMarkupContainer traitsContainer;
 
     public AgreementPage(final PageParameters aPageParameters)
@@ -164,7 +176,7 @@ public class AgreementPage
 
         queue(new EmptyPanel(MID_TRAITS));
 
-        queue(featureList = makeFeatureChoice("feature"));
+        queue(featureList = makeFeatureChoice("layerAndFeature"));
         queue(measureDropDown = makeMeasuresDropdown("measure"));
 
         queue(new CheckBox("compareWithCurator").setOutputMarkupId(true));
@@ -192,10 +204,20 @@ public class AgreementPage
         calculatePerDocumentAgreement.add(enabledWhen(this::isMeasureSupportingMoreThanTwoRaters));
         queue(calculatePerDocumentAgreement);
 
-        exportDiffButton = new LambdaAjaxButton<>("export", this::actionExportDiff);
-        exportDiffButton.triggerAfterSubmit();
-        exportDiffButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
-        queue(exportDiffButton);
+        exportCsvDiffButton = new LambdaAjaxButton<>("exportCsvDiff", this::actionExportDiff);
+        exportCsvDiffButton.triggerAfterSubmit();
+        exportCsvDiffButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
+        queue(exportCsvDiffButton);
+
+        exportJsonButton = new LambdaAjaxButton<>("exportJson", this::actionExportJson);
+        exportJsonButton.triggerAfterSubmit();
+        exportJsonButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
+        queue(exportJsonButton);
+
+        exportCsvButton = new LambdaAjaxButton<>("exportCsv", this::actionExportCsv);
+        exportCsvButton.triggerAfterSubmit();
+        exportCsvButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
+        queue(exportCsvButton);
 
         if (featureList.getChoices().size() == 1) {
             featureList.setModelObject(featureList.getChoices().get(0));
@@ -242,13 +264,14 @@ public class AgreementPage
         return documentService.listSourceDocuments(getProject());
     }
 
-    private DropDownChoice<AnnotationFeature> makeFeatureChoice(String aId)
+    private DropDownChoice<Pair<AnnotationLayer, AnnotationFeature>> makeFeatureChoice(String aId)
     {
-        var choice = new DropDownChoice<AnnotationFeature>(aId);
+        var choice = new DropDownChoice<Pair<AnnotationLayer, AnnotationFeature>>(aId);
         choice.setOutputMarkupId(true);
         choice.setChoices(LoadableDetachableModel.of(this::getEligibleFeatures));
-        choice.setChoiceRenderer(new LambdaChoiceRenderer<AnnotationFeature>(
-                feature -> feature.getLayer().getUiName() + " : " + feature.getUiName()));
+        choice.setChoiceRenderer(new LambdaChoiceRenderer<Pair<AnnotationLayer, AnnotationFeature>>(
+                pair -> pair.getKey().getUiName() + " : "
+                        + (pair.getValue() != null ? pair.getValue().getUiName() : "<position>")));
         choice.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                 this::actionSelectFeature));
         return choice;
@@ -272,7 +295,9 @@ public class AgreementPage
                 if (getModelObject() != null) {
                     AgreementMeasureSupport ams = agreementRegistry
                             .getAgreementMeasureSupport(getModelObject().getKey());
-                    newTraits = ams.createTraitsEditor(MID_TRAITS, featureList.getModel(),
+                    var layer = featureList.getModel().map(Pair::getKey);
+                    var feature = featureList.getModel().map(Pair::getValue);
+                    newTraits = ams.createTraitsEditor(MID_TRAITS, layer, feature,
                             Model.of((DefaultAgreementTraits) ams.createTraits()));
                 }
                 else {
@@ -285,7 +310,8 @@ public class AgreementPage
         dropdown.setChoiceRenderer(new ChoiceRenderer<>("value"));
         dropdown.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                 _target -> _target.add(calculatePairwiseAgreementButton,
-                        calculatePerDocumentAgreement, exportDiffButton, traitsContainer)));
+                        calculatePerDocumentAgreement, exportCsvDiffButton, exportJsonButton,
+                        exportCsvButton, traitsContainer)));
         return dropdown;
     }
 
@@ -343,27 +369,20 @@ public class AgreementPage
         preselectBestAgreementMeasures();
 
         aTarget.add(measureDropDown, calculatePerDocumentAgreement,
-                calculatePairwiseAgreementButton, traitsContainer, exportDiffButton);
+                calculatePairwiseAgreementButton, traitsContainer, exportCsvDiffButton,
+                exportJsonButton, exportCsvButton);
     }
 
     private void actionExportDiff(AjaxRequestTarget aTarget, Form<AgreementFormModel> aForm)
     {
         var filename = getProject().getSlug() + "-diff.csv";
-        downloadBehavior.initiate(aTarget, filename, new PipedStreamResource((os) -> {
-            var sessionOwner = userRepository.getCurrentUser();
-            var model = aForm.getModelObject();
-            var project = getProject();
-            var annotators = getAnnotators(model);
-            var traits = getTraits();
-            var documents = agreementService
-                    .getDocumentsToEvaluate(project, model.documents, traits).keySet().stream()
-                    .toList();
-
+        downloadBehavior.initiate(aTarget, filename, new PipedStreamResource(os -> {
             // PipedStreamResource runs the lambda in a separate thread, so we need to make
             // sure the MDC is correctly set up here.
-            try (var ctx = new DefaultMdcSetup(repositoryProperties, getProject(), sessionOwner)) {
-                agreementService.exportDiff(os, model.feature, getTraits(), sessionOwner, documents,
-                        annotators);
+            var sessionOwner = userRepository.getCurrentUser();
+            var project = getProject();
+            try (var ctx = new DefaultMdcSetup(repositoryProperties, project, sessionOwner)) {
+                exportDiff(os, aForm.getModelObject());
             }
             catch (Exception e) {
                 os.write("Unexpected error during export, see log for details.".getBytes(UTF_8));
@@ -373,6 +392,93 @@ public class AgreementPage
 
     }
 
+    private void exportDiff(OutputStream os, AgreementFormModel model) throws IOException
+    {
+        var annotators = getAnnotators(model);
+        var feature = model.layerAndFeature.getValue();
+        var layer = feature == null ? model.layerAndFeature.getKey() : feature.getLayer();
+        var selectedDocuments = model.documents;
+        var traits = getTraits();
+
+        agreementService.exportDiff(os, layer, feature, traits, selectedDocuments, annotators);
+    }
+
+    private void actionExportJson(AjaxRequestTarget aTarget, Form<AgreementFormModel> aForm)
+    {
+        var model = aForm.getModelObject();
+        var feature = model.layerAndFeature.getValue();
+        var layer = feature == null ? model.layerAndFeature.getKey() : feature.getLayer();
+
+        if (!SpanLayerSupport.TYPE.equals(layer.getType())) {
+            warn("Curently only supported for span layers");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        var project = getProject();
+        var annotators = getAnnotators(model);
+        var selectedDocuments = model.documents;
+        var traits = getTraits();
+
+        var filename = project.getSlug() + "-" + layer.getName();
+        if (feature != null) {
+            filename += "-" + feature.getName();
+        }
+        filename += ".json";
+
+        downloadBehavior.initiate(aTarget, filename, new PipedStreamResource(os -> {
+            // PipedStreamResource runs the lambda in a separate thread, so we need to make
+            // sure the MDC is correctly set up here.
+            var sessionOwner = userRepository.getCurrentUser();
+            try (var ctx = new DefaultMdcSetup(repositoryProperties, project, sessionOwner)) {
+                agreementService.exportSpanLayerDataAsJson(os, layer, feature, traits,
+                        selectedDocuments, annotators);
+            }
+            catch (Exception e) {
+                os.write("Unexpected error during export, see log for details.".getBytes(UTF_8));
+                LOG.error("Unexpected error while exporting diff", e);
+            }
+        }));
+    }
+
+    private void actionExportCsv(AjaxRequestTarget aTarget, Form<AgreementFormModel> aForm)
+    {
+        var model = aForm.getModelObject();
+        var feature = model.layerAndFeature.getValue();
+        var layer = feature == null ? model.layerAndFeature.getKey() : feature.getLayer();
+
+        if (!SpanLayerSupport.TYPE.equals(layer.getType())) {
+            warn("Curently only supported for span layers");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        var project = getProject();
+        var annotators = getAnnotators(model);
+        var selectedDocuments = model.documents;
+        var traits = getTraits();
+
+        var filename = project.getSlug() + "-" + layer.getName();
+        if (feature != null) {
+            filename += "-" + feature.getName();
+        }
+        filename += ".csv";
+
+        downloadBehavior.initiate(aTarget, filename, new PipedStreamResource(os -> {
+            // PipedStreamResource runs the lambda in a separate thread, so we need to make
+            // sure the MDC is correctly set up here.
+            var sessionOwner = userRepository.getCurrentUser();
+            try (var ctx = new DefaultMdcSetup(repositoryProperties, project, sessionOwner)) {
+                agreementService.exportSpanLayerDataAsCsv(os, layer, feature, traits,
+                        selectedDocuments, annotators);
+            }
+            catch (Exception e) {
+                os.write("Unexpected error during export, see log for details.".getBytes(UTF_8));
+                LOG.error("Unexpected error while exporting diff", e);
+            }
+        }));
+    }
+
     private void actionCalculatePairwiseAgreement(AjaxRequestTarget aTarget,
             Form<AgreementFormModel> aForm)
     {
@@ -380,14 +486,15 @@ public class AgreementPage
         var project = getProject();
 
         // Do not do any agreement if no feature or measure has been selected yet.
-        if (model.feature == null || model.measure == null) {
+        if (model.layerAndFeature == null || model.measure == null) {
             return;
         }
 
         var traits = getTraits();
+        var layer = model.layerAndFeature.getKey();
+        var feature = model.layerAndFeature.getValue();
 
-        var measure = agreementRegistry.getMeasure(model.feature, model.measure.getKey(), traits);
-
+        var measure = agreementRegistry.getMeasure(layer, feature, model.measure.getKey(), traits);
         var allAnnDocs = agreementService.getDocumentsToEvaluate(project, model.documents, traits);
 
         if (allAnnDocs.isEmpty()) {
@@ -410,7 +517,8 @@ public class AgreementPage
                 .withTrigger("Agreement page") //
                 .withAnnotators(annotators) //
                 .withTraits(traits) //
-                .withFeature(model.feature) //
+                .withLayer(model.layerAndFeature.getKey()) //
+                .withFeature(model.layerAndFeature.getValue()) //
                 .withMeasure(measure) //
                 .withDocuments(allAnnDocs) //
                 .withScope(LAST_USER_SESSION) //
@@ -433,13 +541,15 @@ public class AgreementPage
         var project = getProject();
 
         // Do not do any agreement if no feature or measure has been selected yet.
-        if (model.feature == null || model.measure == null) {
+        if (model.layerAndFeature == null || model.measure == null) {
             return;
         }
 
         var traits = getTraits();
+        var layer = model.layerAndFeature.getKey();
+        var feature = model.layerAndFeature.getValue();
 
-        var measure = agreementRegistry.getMeasure(model.feature, model.measure.getKey(), traits);
+        var measure = agreementRegistry.getMeasure(layer, feature, model.measure.getKey(), traits);
 
         var allAnnDocs = agreementService.getDocumentsToEvaluate(project, model.documents, traits);
 
@@ -463,7 +573,7 @@ public class AgreementPage
                 .withTrigger("Agreement page") //
                 .withAnnotators(annotators) //
                 .withTraits(traits) //
-                .withFeature(model.feature) //
+                .withFeature(model.layerAndFeature.getValue()) //
                 .withMeasure(measure) //
                 .withDocuments(allAnnDocs) //
                 .withScope(LAST_USER_SESSION) //
@@ -501,23 +611,59 @@ public class AgreementPage
         return annotators;
     }
 
-    List<Pair<String, String>> listMeasures()
+    private List<Pair<String, String>> listMeasures()
     {
-        if (form.getModelObject().feature == null) {
-            return Collections.emptyList();
+        if (form.getModelObject().layerAndFeature == null) {
+            return emptyList();
         }
 
-        return agreementRegistry.getAgreementMeasureSupports(form.getModelObject().feature).stream()
-                .map(s -> Pair.of(s.getId(), s.getName())) //
+        var layer = form.getModelObject().layerAndFeature.getKey();
+        var feature = form.getModelObject().layerAndFeature.getValue();
+
+        return agreementRegistry.getAgreementMeasureSupports(layer, feature) //
+                .stream().map(s -> Pair.of(s.getId(), s.getName())) //
                 .toList();
     }
 
-    private List<AnnotationFeature> getEligibleFeatures()
+    private List<Pair<AnnotationLayer, AnnotationFeature>> getEligibleFeatures()
     {
-        return annotationService.listEnabledFeatures(getProject()).stream() //
-                .filter(f -> !Token._TypeName.equals(f.getLayer().getName())) //
-                .filter(f -> !ChainLayerSupport.TYPE.equals(f.getLayer().getType())) //
-                .toList();
+        var result = new ArrayList<Pair<AnnotationLayer, AnnotationFeature>>();
+
+        // Collect layers (even without features)
+        var layers = annotationService.listEnabledLayers(getProject());
+        for (var layer : layers) {
+            if (Token._TypeName.equals(layer.getName())
+                    || Sentence._TypeName.equals(layer.getName())
+                    || ChainLayerSupport.TYPE.equals(layer.getType())) {
+                continue;
+            }
+
+            result.add(Pair.of(layer, null));
+        }
+
+        // Now collect the features
+        var groupedFeatures = annotationService.listEnabledFeatures(getProject()).stream()
+                .collect(groupingBy(AnnotationFeature::getLayer));
+        for (var entry : groupedFeatures.entrySet()) {
+            var layer = entry.getKey();
+            var features = entry.getValue();
+
+            if (Token._TypeName.equals(layer.getName())
+                    || Sentence._TypeName.equals(layer.getName())
+                    || ChainLayerSupport.TYPE.equals(layer.getType())) {
+                continue;
+            }
+
+            for (var feature : features) {
+                result.add(Pair.of(layer, feature));
+            }
+        }
+
+        result.sort(comparing(
+                (Pair<AnnotationLayer, AnnotationFeature> pair) -> pair.getKey().getUiName()) //
+                        .thenComparing(pair -> pair.getValue() != null ? pair.getValue().getUiName()
+                                : null, nullsFirst(naturalOrder())));
+        return result;
     }
 
     @OnEvent
@@ -536,8 +682,18 @@ public class AgreementPage
             // PipedStreamResource runs the lambda in a separate thread, so we need to make
             // sure the MDC is correctly set up here.
             try (var ctx = new DefaultMdcSetup(repositoryProperties, getProject(), sessionOwner)) {
-                agreementService.exportPairwiseDiff(os, model.feature, model.measure.getKey(),
-                        getTraits(), sessionOwner, model.documents, annotator1, annotator2);
+                var layer = model.layerAndFeature.getKey();
+                var feature = model.layerAndFeature.getValue();
+
+                if (feature != null) {
+                    agreementService.exportDiff(os, feature.getLayer(), feature, getTraits(),
+                            model.documents, asList(annotator1, annotator2));
+                }
+                else {
+                    agreementService.exportDiff(os, layer, null, getTraits(), model.documents,
+                            asList(annotator1, annotator2));
+                }
+
             }
         }));
     }
@@ -552,7 +708,7 @@ public class AgreementPage
     {
         private static final long serialVersionUID = -1L;
 
-        AnnotationFeature feature;
+        Pair<AnnotationLayer, AnnotationFeature> layerAndFeature;
 
         Pair<String, String> measure;
 

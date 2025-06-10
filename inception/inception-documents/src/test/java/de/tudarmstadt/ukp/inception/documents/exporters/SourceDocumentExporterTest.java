@@ -107,7 +107,10 @@ public class SourceDocumentExporterTest
 
         // Import the project again
         repositoryProperties.setPath(targetWorkDir);
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         try (var zipFile = new ZipFile(exportFile)) {
             sut.importData(importRequest, project, exProject, zipFile);
         }

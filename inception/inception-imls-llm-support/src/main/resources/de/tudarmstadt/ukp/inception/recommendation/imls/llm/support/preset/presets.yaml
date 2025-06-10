@@ -1,0 +1,26 @@
+- name: Named entity recognition
+  promptingMode: per-paragraph
+  extractionMode: mentions-from-json
+  prompt: |-
+    Identify all named entities and categorize them.
+
+
+- name: Summarization
+  promptingMode: per-paragraph
+  extractionMode: response-as-label
+  prompt: |-
+    Summarize the text.
+
+
+- name: Summarize document
+  promptingMode: per-document
+  extractionMode: response-as-label
+  prompt: |-
+    Briefly summarize the context.
+
+
+- name: Summarize annotated spans
+  promptingMode: per-annotation
+  extractionMode: response-as-label
+  prompt: |-
+    Briefly summarize the context.

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.SETTINGS_FOLDER;
+import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs.KEY_ANCHORING_MODE;
 import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationLayerVisibilityState.KEY_LAYERS_STATE;
 import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPageLayoutState.KEY_LAYOUT_STATE;
 import static java.util.Arrays.asList;
@@ -129,6 +130,13 @@ public class UserPreferencesServiceImpl
 
         // Make sure the visibility logic of the right sidebar sees if there are selectable layers
         aState.refreshSelectableLayers(annotationEditorProperties::isLayerBlocked);
+
+        if (aState.getDefaultAnnotationLayer() != null) {
+            var sessionOwner = userService.getCurrentUser();
+            var anchoringPrefs = preferencesService.loadTraitsForUserAndProject(KEY_ANCHORING_MODE,
+                    sessionOwner, aState.getProject());
+            aState.syncAnchoringModeToDefaultLayer(anchoringPrefs);
+        }
     }
 
     @Override

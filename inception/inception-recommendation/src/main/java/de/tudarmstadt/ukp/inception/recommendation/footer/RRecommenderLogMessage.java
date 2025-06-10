@@ -20,40 +20,34 @@ package de.tudarmstadt.ukp.inception.recommendation.footer;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 
-import java.io.Serializable;
 import java.util.Collection;
-import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.inception.support.logging.LogLevel;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
-public class RRecommenderLogMessage
-    implements Serializable
+@JsonInclude(value = Include.NON_NULL)
+public record RRecommenderLogMessage(@JsonProperty(LEVEL) LogLevel level,
+        @JsonProperty(MESSAGE) String message,
+        @JsonProperty(value = ADD_MARKER_CLASSES) Collection<String> markerClassesToAdd,
+        @JsonProperty(value = REMOVE_MARKER_CLASSES) Collection<String> markerClassesToRemove)
 {
-    private static final long serialVersionUID = 4187626919775469472L;
 
     private static final String MESSAGE = "message";
     private static final String LEVEL = "level";
     private static final String ADD_MARKER_CLASSES = "addClasses";
     private static final String REMOVE_MARKER_CLASSES = "removeClasses";
 
-    private final LogLevel level;
-    private final String message;
-    private final Set<String> markerClassesToRemove;
-    private final Set<String> markerClassesToAdd;
-
     public RRecommenderLogMessage(LogMessage aMessage)
     {
-        level = aMessage.getLevel();
-        message = aMessage.getMessage();
-        markerClassesToAdd = emptySet();
-        markerClassesToRemove = emptySet();
+        this(aMessage.getLevel(), aMessage.getMessage(), null, null);
     }
 
     public RRecommenderLogMessage(@JsonProperty(LEVEL) LogLevel aLevel,
@@ -63,51 +57,27 @@ public class RRecommenderLogMessage
     }
 
     @JsonCreator
-    public RRecommenderLogMessage(@JsonProperty(LEVEL) LogLevel aLevel,
-            @JsonProperty(MESSAGE) String aMessage,
-            @JsonProperty(value = ADD_MARKER_CLASSES) Collection<String> aMarkerClassesToAdd,
-            @JsonProperty(value = REMOVE_MARKER_CLASSES) Collection<String> aMarkerClassesToRemove)
+    public RRecommenderLogMessage(@JsonProperty(LEVEL) LogLevel level,
+            @JsonProperty(MESSAGE) String message,
+            @JsonProperty(value = ADD_MARKER_CLASSES) Collection<String> markerClassesToAdd,
+            @JsonProperty(value = REMOVE_MARKER_CLASSES) Collection<String> markerClassesToRemove)
     {
-        level = aLevel;
-        message = aMessage;
+        this.level = level;
+        this.message = message;
 
-        if (aMarkerClassesToAdd == null) {
-            markerClassesToAdd = emptySet();
+        if (markerClassesToAdd == null) {
+            this.markerClassesToAdd = emptySet();
         }
         else {
-            markerClassesToAdd = aMarkerClassesToAdd.stream().collect(toSet());
+            this.markerClassesToAdd = markerClassesToAdd.stream().collect(toSet());
         }
 
-        if (aMarkerClassesToRemove == null) {
-            markerClassesToRemove = emptySet();
+        if (markerClassesToRemove == null) {
+            this.markerClassesToRemove = emptySet();
         }
         else {
-            markerClassesToRemove = aMarkerClassesToRemove.stream().collect(toSet());
+            this.markerClassesToRemove = markerClassesToRemove.stream().collect(toSet());
         }
-    }
-
-    @JsonProperty(LEVEL)
-    public LogLevel getLevel()
-    {
-        return level;
-    }
-
-    @JsonProperty(MESSAGE)
-    public String getMessage()
-    {
-        return message;
-    }
-
-    @JsonProperty(ADD_MARKER_CLASSES)
-    public Set<String> getMarkerClassesToAdd()
-    {
-        return markerClassesToAdd;
-    }
-
-    @JsonProperty(REMOVE_MARKER_CLASSES)
-    public Set<String> getMarkerClassesToRemove()
-    {
-        return markerClassesToRemove;
     }
 
     @Override

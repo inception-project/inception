@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_CORRECTION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
@@ -50,6 +52,8 @@ public final class ExtractionContext
     private final Type predictedType;
 
     private final Feature labelFeature;
+    private final Feature correctionFeature;
+    private final Feature correctionExplanationFeature;
     private final Feature scoreFeature;
     private final Feature scoreExplanationFeature;
     private final Feature modeFeature;
@@ -77,6 +81,10 @@ public final class ExtractionContext
         scoreFeature = predictedType.getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_SUFFIX);
         scoreExplanationFeature = predictedType
                 .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
+        correctionFeature = predictedType
+                .getFeatureByBaseName(featureName + FEATURE_NAME_CORRECTION_SUFFIX);
+        correctionExplanationFeature = predictedType
+                .getFeatureByBaseName(featureName + FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX);
         modeFeature = predictedType
                 .getFeatureByBaseName(featureName + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX);
         predictionFeature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
@@ -136,6 +144,16 @@ public final class ExtractionContext
     public Feature getLabelFeature()
     {
         return labelFeature;
+    }
+
+    public Feature getCorrectionFeature()
+    {
+        return correctionFeature;
+    }
+
+    public Feature getCorrectionExplanationFeature()
+    {
+        return correctionExplanationFeature;
     }
 
     public Feature getScoreFeature()

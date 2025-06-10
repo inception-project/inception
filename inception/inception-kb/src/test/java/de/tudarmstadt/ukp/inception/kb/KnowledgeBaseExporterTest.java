@@ -109,7 +109,8 @@ public class KnowledgeBaseExporterTest
     {
         // Export the project
         var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
-        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test",
+                exportRequest.getFilenamePrefix());
         var exportedProject = new ExportedProject();
         var stage = Mockito.mock(ZipOutputStream.class);
         sut.exportData(exportRequest, monitor, exportedProject, stage);
@@ -118,7 +119,10 @@ public class KnowledgeBaseExporterTest
         var exportKbCaptor = ArgumentCaptor.forClass(KnowledgeBase.class);
         doNothing().when(kbService).registerKnowledgeBase(exportKbCaptor.capture(), any());
 
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         var zipFile = mock(ZipFile.class);
         var zipFileEntry = mock(ZipEntry.class);
         when(zipFile.getEntry(any())).thenReturn(zipFileEntry);
@@ -145,7 +149,8 @@ public class KnowledgeBaseExporterTest
     {
         // Export the project
         var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
-        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test",
+                exportRequest.getFilenamePrefix());
         var exportedProject = new ExportedProject();
         var stage = Mockito.mock(ZipOutputStream.class);
         sut.exportData(exportRequest, monitor, exportedProject, stage);
@@ -166,7 +171,10 @@ public class KnowledgeBaseExporterTest
         doNothing().when(schemaService).createFeature(importedAnnotationFeatureCaptor.capture());
 
         // Import the project again
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         var zipFile = mock(ZipFile.class);
         var zipFileEntry = mock(ZipEntry.class);
         when(zipFile.getEntry(any())).thenReturn(zipFileEntry);

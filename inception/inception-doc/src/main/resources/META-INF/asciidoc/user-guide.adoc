@@ -14,6 +14,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+:include-dir: user-guide/
+:imagesdir: user-guide/
+:doctype: book
+
 = {product-name} User Guide
 The {product-name} Team
 
@@ -26,19 +30,17 @@ include::{include-dir}getting-started.adoc[leveloffset=+1]
 [[sect_core_funct]]
 = Core functionalities
 
-include::{include-dir}workflow.adoc[leveloffset=+1]
+include::{include-dir}project-lifecycle.adoc[leveloffset=+1]
 
 include::{include-dir}login.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}dashboard.adoc[]
+include::{include-dir}menubar.adoc[leveloffset=+1]
 
-include::{include-dir}dashboard_menubar.adoc[leveloffset=+1]
+include::{include-dir}project-overview.adoc[leveloffset=+1]
 
-include::{include-dir}dashboard_projects-list.adoc[leveloffset=+1]
-
-include::{include-dir}dashboard_project-view.adoc[leveloffset=+1]
+include::{include-dir}project-dashboard.adoc[leveloffset=+1]
 
 <<<
 
@@ -111,9 +113,6 @@ include::{include-dir}workload_dynamic.adoc[leveloffset=+2]
 include::{include-dir}agreement.adoc[leveloffset=+1]
 
 <<<
-include::{include-dir}evaluation.adoc[leveloffset=+1]
-
-<<<
 
 include::{include-dir}knowledge_base.adoc[]
 
@@ -128,6 +127,16 @@ include::{include-dir}projects_users.adoc[leveloffset=+2]
 include::{include-dir}projects_documents.adoc[leveloffset=+2]
 
 include::{include-dir}projects_layers.adoc[leveloffset=+2]
+
+include::{include-dir}projects_layers_feature.adoc[leveloffset=+3]
+
+include::{include-dir}projects_layers_feature_string.adoc[leveloffset=+4]
+
+include::{include-dir}projects_layers_feature_number.adoc[leveloffset=+4]
+
+include::{include-dir}projects_layers_feature_boolean.adoc[leveloffset=+4]
+
+include::{include-dir}projects_layers_feature_link.adoc[leveloffset=+4]
 
 include::{include-dir}projects_layers_feature_lookup.adoc[leveloffset=+4]
 
@@ -225,6 +234,10 @@ include::{include-dir}editable-segmentation.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}assistant.adoc[leveloffset=+1]
+
+<<<
+
 = Appendices
 
 [appendix]
@@ -278,7 +291,7 @@ include::{include-dir}formats-nif.adoc[leveloffset=+2]
 
 include::{include-dir}formats-pdf.adoc[leveloffset=+2]
 
-include::{include-dir}formats-pdf-legacy.adoc[leveloffset=+2]
+// include::{include-dir}formats-pdf-legacy.adoc[leveloffset=+2]
 
 include::{include-dir}formats-perseus.adoc[leveloffset=+2]
 

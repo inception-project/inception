@@ -18,11 +18,10 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.OllamaRecommenderTraits.DEFAULT_OLLAMA_URL;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateResponseFormat.JSON;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptingMode.PER_DOCUMENT;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.prompt.PromptingMode.PER_SENTENCE;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.response.ExtractionMode.MENTIONS_FROM_JSON;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.OllamaRecommenderTraits.DEFAULT_OLLAMA_URL;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptingMode.PER_DOCUMENT;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptingMode.PER_SENTENCE;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionMode.MENTIONS_FROM_JSON;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
@@ -38,6 +37,9 @@ import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,13 +52,19 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtil
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaClientImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.support.llm.response.ExtractionMode;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.OllamaRecommender;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.OllamaRecommenderTraits;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionMode;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
 
+@ExtendWith(MockitoExtension.class)
 class OllamaRecommenderTest
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private @Mock AnnotationSchemaService schemaSerivce;
 
     private AnnotationLayer layer;
     private AnnotationFeature feature;
@@ -96,7 +104,7 @@ class OllamaRecommenderTest
         traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(ExtractionMode.RESPONSE_AS_LABEL);
 
-        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
+        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce);
         sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
         var predictions = cas.select(NamedEntity.class)
@@ -114,14 +122,13 @@ class OllamaRecommenderTest
         var traits = new OllamaRecommenderTraits();
         traits.setModel("mistral");
         traits.setPrompt("""
-                         Identify all even numbers in the following list and return them as JSON.
+                Identify all even numbers in the following list and return them as JSON.
 
-                         {{ text }}""");
-        traits.setFormat(JSON);
+                {{ text }}""");
         traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(MENTIONS_FROM_JSON);
 
-        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
+        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce);
         sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
         var predictions = cas.select(NamedEntity.class)
@@ -140,11 +147,10 @@ class OllamaRecommenderTest
         var traits = new OllamaRecommenderTraits();
         traits.setModel("mistral");
         traits.setPrompt("Identify all named entities in the following text.\n\n{{ text }}");
-        traits.setFormat(JSON);
         traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(MENTIONS_FROM_JSON);
 
-        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
+        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce);
         sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
         var predictions = cas.select(NamedEntity.class)
@@ -158,21 +164,20 @@ class OllamaRecommenderTest
     void testPerDocumentUsingMentionsFromJsonList_Politicians() throws Exception
     {
         cas.setDocumentText("""
-                            John is will meet President Livingston tomorrow.
-                            They will lunch together with the minister of foreign affairs.
-                            Later they meet the the Lord of Darkness, Don Horny.""");
+                John is will meet President Livingston tomorrow.
+                They will lunch together with the minister of foreign affairs.
+                Later they meet the the Lord of Darkness, Don Horny.""");
 
         var traits = new OllamaRecommenderTraits();
         traits.setModel("mistral");
         traits.setPrompt("""
-                         Identify all politicians in the following text and return them as JSON.
+                Identify all politicians in the following text and return them as JSON.
 
-                         {{ text }}""");
-        traits.setFormat(JSON);
+                {{ text }}""");
         traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(MENTIONS_FROM_JSON);
 
-        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
+        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce);
         sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
         var predictions = cas.select(NamedEntity.class)
@@ -185,8 +190,7 @@ class OllamaRecommenderTest
     @Test
     void testPerSentenceUsingMentionsFromJsonList_Politicians_fewShjot() throws Exception
     {
-        TokenBuilder.create(Token.class, Sentence.class).buildTokens(cas.getJCas(),
-                """
+        TokenBuilder.create(Token.class, Sentence.class).buildTokens(cas.getJCas(), """
                 John is will meet President Livingston tomorrow .
                 They will lunch together with the minister of foreign affairs .
                 Later they meet the the Lord of Darkness, Don Horny .""");
@@ -200,29 +204,28 @@ class OllamaRecommenderTest
         var traits = new OllamaRecommenderTraits();
         traits.setModel("mistral");
         traits.setPrompt("""
-                         Identify all politicians in the following text and return them as JSON.
+                Identify all politicians in the following text and return them as JSON.
 
-                         {% for example in examples %}
-                         Text:
-                         '''
-                         {{ example.getText() }}
-                         '''
+                {% for example in examples %}
+                Text:
+                '''
+                {{ example.getText() }}
+                '''
 
-                         Response:
-                         {{ example.getLabelledMentions() | tojson }}
-                         {% endfor %}
+                Response:
+                {{ example.getLabelledMentions() | tojson }}
+                {% endfor %}
 
-                         Text:
-                         '''
-                         {{ text }}
-                         '''
+                Text:
+                '''
+                {{ text }}
+                '''
 
-                         Response:""");
-        traits.setFormat(JSON);
+                Response:""");
         traits.setPromptingMode(PER_SENTENCE);
         traits.setExtractionMode(MENTIONS_FROM_JSON);
 
-        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl());
+        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce);
         sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
         var predictions = cas.select(NamedEntity.class)

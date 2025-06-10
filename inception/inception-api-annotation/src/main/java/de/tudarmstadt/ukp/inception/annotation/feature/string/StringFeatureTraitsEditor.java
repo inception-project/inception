@@ -27,6 +27,7 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -73,7 +74,7 @@ public class StringFeatureTraitsEditor
         keyBindings = newKeyBindingsConfigurationPanel(aFeature);
         add(keyBindings);
 
-        Form<StringFeatureTraits> form = new Form<StringFeatureTraits>(MID_FORM, traits)
+        var form = new Form<StringFeatureTraits>(MID_FORM, traits)
         {
             private static final long serialVersionUID = -3109239605783291123L;
 
@@ -96,8 +97,11 @@ public class StringFeatureTraitsEditor
         form.setOutputMarkupPlaceholderTag(true);
         add(form);
 
-        NumberTextField<Integer> collapsedRows = new NumberTextField<>("collapsedRows",
-                Integer.class, new Options().set("format", "'#'"));
+        var defaultValue = new TextField<>("defaultValue");
+        queue(defaultValue);
+
+        var collapsedRows = new NumberTextField<Integer>("collapsedRows", Integer.class,
+                new Options().set("format", "'#'"));
         collapsedRows.setModel(PropertyModel.of(traits, "collapsedRows"));
         collapsedRows.setMinimum(1);
         collapsedRows.setMaximum(100);
@@ -105,16 +109,16 @@ public class StringFeatureTraitsEditor
                 () -> traits.getObject().isMultipleRows() && !traits.getObject().isDynamicSize()));
         form.add(collapsedRows);
 
-        NumberTextField<Integer> expandedRows = new NumberTextField<>("expandedRows", Integer.class,
+        var expandedRows = new NumberTextField<Integer>("expandedRows", Integer.class,
                 new Options().set("format", "'#'"));
         expandedRows.setModel(PropertyModel.of(traits, "expandedRows"));
         expandedRows.setMinimum(1);
-        collapsedRows.setMaximum(100);
+        expandedRows.setMaximum(100);
         expandedRows.add(visibleWhen(
                 () -> traits.getObject().isMultipleRows() && !traits.getObject().isDynamicSize()));
         form.add(expandedRows);
 
-        DropDownChoice<TagSet> tagset = new DropDownChoice<>("tagset");
+        var tagset = new DropDownChoice<TagSet>("tagset");
         tagset.setOutputMarkupPlaceholderTag(true);
         tagset.setChoiceRenderer(new ChoiceRenderer<>("name"));
         tagset.setNullValid(true);
@@ -130,7 +134,7 @@ public class StringFeatureTraitsEditor
         }));
         form.add(tagset);
 
-        CheckBox multipleRows = new CheckBox("multipleRows");
+        var multipleRows = new CheckBox("multipleRows");
         multipleRows.setModel(PropertyModel.of(traits, "multipleRows"));
         multipleRows.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
             if (multipleRows.getModelObject()) {
@@ -141,19 +145,19 @@ public class StringFeatureTraitsEditor
         }));
         form.add(multipleRows);
 
-        CheckBox dynamicSize = new CheckBox("dynamicSize");
+        var dynamicSize = new CheckBox("dynamicSize");
         dynamicSize.setModel(PropertyModel.of(traits, "dynamicSize"));
         dynamicSize.add(
                 new LambdaAjaxFormComponentUpdatingBehavior("change", target -> target.add(form)));
         dynamicSize.add(visibleWhen(() -> traits.getObject().isMultipleRows()));
         form.add(dynamicSize);
 
-        WebMarkupContainer editorTypeContainer = new WebMarkupContainer("editorTypeContainer");
+        var editorTypeContainer = new WebMarkupContainer("editorTypeContainer");
         editorTypeContainer.setOutputMarkupPlaceholderTag(true);
         editorTypeContainer.add(visibleWhen(() -> !traits.getObject().isMultipleRows()
                 && aFeature.getObject().getTagset() != null));
-        DropDownChoice<StringFeatureTraits.EditorType> editorType = new DropDownChoice<>(
-                "editorType");
+
+        var editorType = new DropDownChoice<StringFeatureTraits.EditorType>("editorType");
         editorType.setModel(PropertyModel.of(traits, "editorType"));
         editorType.setChoices(Arrays.asList(StringFeatureTraits.EditorType.values()));
         editorType.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
@@ -163,7 +167,7 @@ public class StringFeatureTraitsEditor
 
     private void refreshKeyBindings(AjaxRequestTarget aTarget, IModel<AnnotationFeature> aFeature)
     {
-        KeyBindingsConfigurationPanel newKeyBindings = newKeyBindingsConfigurationPanel(aFeature);
+        var newKeyBindings = newKeyBindingsConfigurationPanel(aFeature);
         keyBindings.replaceWith(newKeyBindings);
         keyBindings = newKeyBindings;
         aTarget.add(keyBindings);
@@ -173,8 +177,8 @@ public class StringFeatureTraitsEditor
             IModel<AnnotationFeature> aFeature)
     {
         getFeatureSupport().writeTraits(aFeature.getObject(), traits.getObject());
-        KeyBindingsConfigurationPanel panel = new KeyBindingsConfigurationPanel("keyBindings",
-                aFeature, traits.bind("keyBindings"));
+        var panel = new KeyBindingsConfigurationPanel("keyBindings", aFeature,
+                traits.bind("keyBindings"));
         panel.setOutputMarkupId(true);
         // panel.add(visibleWhen(() -> !traits.getObject().isMultipleRows()));
         return panel;

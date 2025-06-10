@@ -19,42 +19,56 @@
 
 NOTE: This functionality is only available to *curators*.
 
+[.i7n-assistant]
+--
+The curation page is a special page that allows curators to review and correct annotations made by annotators.
+The curation page is accessible from the <<sect_project_dashboard>>.
+--
+
 == Opening a Document for Curation
 
-When navigating to the *Curation Page*, the procedure for opening projects and documents is the same as in <<sect_annotation>>. The navigation within the document is also equivalent to <<sect_annotation>>.
+When navigating to the *Curation Page*, the procedure for opening projects and documents is the same as in <<sect_annotation>>.
+The navigation within the document is also equivalent to <<sect_annotation>>.
 
-The table reflects the state of the document. A document can be *in-progress*, *finished*, *curation-in-progress* or *curation-finished*. 
+The table reflects the state of the document.
+A document can be *in-progress*, *finished*, *curation-in-progress* or *curation-finished*. 
 
-== Curating a document
+== Split curation mode
 
-On the left, there is a sidebar titled *Units*, an overview of the chosen document is displayed. Units are represented by their number inside the document. Click on a unit in order to select it and to to edit it in the central part of the page.
+In the **split curation mode**, the curation page is divided into two parts.
+The upper part is the *Annotation* pane, where the curator can edit the annotations.
+The lower part is the *Annotator* pane, where the annotations of the individual annotators are displayed.
 
-The units are shown using different colors that indicate their state. Since the calculation of
-the state can take significant time, it is not updated as changes are made in the main editor pane.
-To update the coloring of the unit overview, use the *Refresh* button. When switching between
-documents, the overview is automatically refreshed.
+On the left, there is a sidebar titled *Units*, an overview of the chosen document is displayed. 
+Units are represented by their number inside the document.
+Click on a unit in order to select it and to to edit it in the central part of the page.
 
-NOTE: In order for the unit overview to consider a unit as *Curated*, the curation pane must
-contain an annotation for all positions that any of the annotators have annotated. This implies
-that the *Curated* state requires the curator to have made an annotation. It is not possible
-at this time to mark a unit as curated in which an annotator has made an annotator, but the
-curator has not (e.g. because the curator considers the annotator's annotation to be entirely
-wrong and misplaced).
+The units are shown using different colors that indicate their state.
+Since the calculation of the state can take significant time, it is not updated as changes are made in the main editor pane.
+To update the coloring of the unit overview, use the *Refresh* button.
+When switching between documents, the overview is automatically refreshed.
 
-image::curation_1.png[align="center"]
+NOTE: In order for the unit overview to consider a unit as *Curated*, the curation pane must contain an annotation for all positions that any of the annotators have annotated. 
+      This implies that the *Curated* state requires the curator to have made an annotation.
+      It is not possible at this time to mark a unit as curated in which an annotator has made an annotator, but the curator has not (e.g. because the curator considers the annotator's annotation to be entirely wrong and misplaced).
+
+image::images/curation_1.png[align="center"]
 
 The center part of the annotation page is divided into the *Annotation* pane which is a full-scale
 annotation editor and contains the final data from the curation step. 
 
 Below it are multiple read-only panes containing the annotations from individual annotators. 
 Clicking on an annotation in any of the annotator's panes transfers the respective annotation to the *Annotation* pane.
-There is also a small state icon for each annotator. If you click on that icon, you can change the state, e.g. from *finished* back to *in progress*. Note if you do that, the respective annotators document will no longer be available for curation. When the last finished annotation for a document is reopened, you will be forced to leave curation.
+There is also a small state icon for each annotator.
+If you click on that icon, you can change the state, e.g. from *finished* back to *in progress*. 
+Note if you do that, the respective annotators document will no longer be available for curation. 
+When the last finished annotation for a document is reopened, you will be forced to leave curation.
 
-When a document is opened for the first time in the curation page, the application analyzes agreements
-and disagreements between annotators. All annotations on which all annotators agree are automatically
-copied to the *Annotation* pane. Any annotations on which the annotators disagree are skipped.
+When a document is opened for the first time in the curation page, the application analyzes agreements and disagreements between annotators.
+All annotations on which all annotators agree are automatically copied to the *Annotation* pane. Any annotations on which the annotators disagree are skipped.
 
-The annotator's panes are color-coded according to their relation with the contents of the *Annotation* pane and according to the agreement status. The colors largely match the colors also used in the status over in the left sidebar.
+The annotator's panes are color-coded according to their relation with the contents of the *Annotation* pane and according to the agreement status.
+The colors largely match the colors also used in the status over in the left sidebar.
 
 NOTE: The upper *Annotation* pane that the curator uses to edit annotations is not color-coded. It uses whatever coloring strategy is configured in the *Settings* dialog.
 
@@ -81,18 +95,33 @@ NOTE: The upper *Annotation* pane that the curator uses to edit annotations is n
 
 **Right-click** on an annotation in the lower panels to bring up a menu with additional options.
 
-* **Merge all XXX**: merge all annotations of the given type from the selected annotator. Note that
-  this overrides any annotations of the type which may previously have been merged or manually 
-  created in the upper panel.
+* **Merge all XXX**: merge all annotations of the given type from the selected annotator.
+  Note that this overrides any annotations of the type which may previously have been merged or manually created in the upper panel.
+
+== Integrated curation mode
+
+The **integrated curation mode** is similar to the annotation page.
+The curator can edit the annotations directly in the document view.
+The annotations of the annotators are displayed as annotation suggestions that the curator can accept or override.
+In order to override an suggestion, simply create a new annotation at the same position.
+Overriding or accepting suggestions will typically hide alternative suggestions unless the layer allows stacking annotations.
+It is currently not possible to reject an annotation in the integrated curation mode.
+So if you do not want to accept or override an annotation, just ignore it.
+
+In this mode, you can find a **Curation sidebar** on the left side of the page.
+In this sidebar, you can configure which annotators you want to see in the document view.
+You can also restart the curation process for a document using the **Re-merge** button.
 
 [#merging-strategies]
 == Merging strategies
 
-{product-name} supports several different strategies for pre-merging data from the annotators to the curated document. The default strategy is **Merge completely agreeing non-stacked annotations**, but this default can be changed by the project manager in the project settings. It is also possible to update the default settings from the **Re-merge** dialog on the curation page.
+{product-name} supports several different strategies for pre-merging data from the annotators to the curated document.
+The default strategy is **Merge completely agreeing non-stacked annotations**, but this default can be changed by the project manager in the project settings.
+It is also possible to update the default settings from the **Re-merge** dialog on the curation page.
 
 === Merge completely agreeing non-stacked annotations
 
-This merge strategy merges an annotation if all annotators have created  an annotation and assigned the same label at a given position  (i.e. complete and agreeing annotations). 
+This merge strategy merges an annotation if all annotators have created  an annotation and assigned the same label at a given position (i.e. complete and agreeing annotations). 
 If any of the annotators did not create an annotation at the position or assigned a different label than any of the others, the annotation is not merged.
 
 [cols="1,1,1,2"]
@@ -100,7 +129,7 @@ If any of the annotators did not create an annotation at the position or assigne
 | *Annotator 1*
 | *Annotator 2*
 | *Merge result*
-| *Reason*
+| *Reason*
 
 | `foo`
 | `foo`
@@ -182,15 +211,15 @@ For example, if your project has two annotators, one working on POS tagging and 
 
 === Merge using thresholds
 
-This is the most powerful and flexible strategy. It is also the only strategy so far that supports merging stacked annotations.
+This is the most powerful and flexible strategy.
+It is also the only strategy so far that supports merging stacked annotations.
 
 The strategy is controlled by three parameters:
 
 * **User threshold:** the minimum amount of annotators that must have voted for a given label for the label to be considered at all. 
 If fewer annotators have voted for the label, then it is completely ignored.
 * **Confidence threshold:** the minimum confidence of a label. 
-The confidence for a label is calculated by counting the number of annotators that provided a given label
-dividing it by by the  the total number annotators that annotated a given position (`votes(label) / all_votes</code>`). 
+The confidence for a label is calculated by counting the number of annotators that provided a given label dividing it by by the  the total number annotators that annotated a given position (`votes(label) / all_votes</code>`). 
 The user threshold is applied before counting votes to calculate confidence. The confidence interacts with the number of valid labels you expect. 
 E.g. if you expect that there could be four valid labels (and therefore set the **top-voted** parameter to `4`), then the best confidence that a single label can have achieve is `25%` (`= 100% / 4`).
 If you would set a higher threshold than this, it would never be possible to merge all four labels at a given position.
@@ -201,12 +230,12 @@ If there is any tie within the `n` most-voted labels, then all labels that still
 Note that this setting only affects annotations on layers that allow stacking annotations. For other layers, an implicit setting of `1` is used here.
 
 == Anonymized curation
-By default, the curator can see the annotators names on the curation page. However, in some cases,
-it may not be desirable for the curator to see the names. In this case, enable the option
-*Anonymous curation* in the project detail settings. Users with the curator role will then only
-see an anonymous label like *Anonymized annotator 1* instead of the annotator names. Users who are
-project managers can still see the annotator names.
+By default, the curator can see the annotators names on the curation page.
+However, in some cases, it may not be desirable for the curator to see the names.
+In this case, enable the option *Anonymous curation* in the project detail settings.
+Users with the curator role will then only see an anonymous label like *Anonymized annotator 1* instead of the annotator names.
+Users who are project managers can still see the annotator names.
 
-NOTE: The order of the annotators is not randomized - only the names are removed from the UI. Only 
-      annotators who have marked their documents as *finished* are shown. Thus, which annotator receives
-      which number may changed depending on documents being marked as finished or put back into progress.
+NOTE: The order of the annotators is not randomized - only the names are removed from the UI.
+      Only annotators who have marked their documents as *finished* are shown.
+      Thus, which annotator receives which number may changed depending on documents being marked as finished or put back into progress.

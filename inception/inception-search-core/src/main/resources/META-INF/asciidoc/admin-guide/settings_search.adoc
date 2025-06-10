@@ -26,7 +26,7 @@ from this list to determine how many results should be displayed per page when h
 If no value for the parameter is specified, its default value is used. The default value is shown as
 an example of how the parameter can be configured below:
 
-.Knowledge base settings overview
+.Search settings 
 [cols="4*", options="header"]
 |===
 | Setting

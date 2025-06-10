@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.recommendation;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_ALL;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -83,7 +84,7 @@ public class MetadataSuggestionSupport
         }
 
         var feature = aContext.getFeature();
-        if (CAS.TYPE_NAME_STRING.equals(feature.getType()) || feature.isVirtualFeature()) {
+        if (TYPE_NAME_STRING.equals(feature.getType()) || feature.isVirtualFeature()) {
             return true;
         }
 
@@ -213,6 +214,7 @@ public class MetadataSuggestionSupport
     {
 
         for (var annotation : aAnnotations) {
+            // FIXME: This will not work for multi-valued features
             var label = annotation.getFeatureValueAsString(aFeat);
 
             if (label == null) {
@@ -224,9 +226,9 @@ public class MetadataSuggestionSupport
                     sugGroup.hideAll(FLAG_OVERLAP);
                 }
                 else {
-                    for (var sug : sugGroup) {
-                        if (label.equals(sug.getLabel())) {
-                            sug.hide(FLAG_OVERLAP);
+                    for (var suggestion : sugGroup) {
+                        if (label.equals(suggestion.getLabel())) {
+                            suggestion.hide(FLAG_OVERLAP);
                         }
                     }
                 }
@@ -289,6 +291,9 @@ public class MetadataSuggestionSupport
                     ctx.isMultiLabels());
             var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
             var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+            var correction = predictedFS.getBooleanValue(ctx.getCorrectionFeature());
+            var correctionExplanation = predictedFS
+                    .getStringValue(ctx.getCorrectionExplanationFeature());
 
             for (var label : labels) {
                 var suggestion = MetadataSuggestion.builder() //
@@ -298,6 +303,8 @@ public class MetadataSuggestionSupport
                         .withDocument(ctx.getDocument()) //
                         .withLabel(label) //
                         .withUiLabel(label) //
+                        .withCorrection(correction) //
+                        .withCorrectionExplanation(correctionExplanation) //
                         .withScore(score) //
                         .withScoreExplanation(scoreExplanation) //
                         .withAutoAcceptMode(autoAcceptMode) //

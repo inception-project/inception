@@ -31,6 +31,7 @@ import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -81,9 +82,11 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFileInputField;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
+import de.tudarmstadt.ukp.inception.project.api.FeatureInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -106,7 +109,8 @@ import jakarta.persistence.NoResultException;
 public class ProjectLayersPanel
     extends ProjectSettingsPanelBase
 {
-    static final Logger LOG = LoggerFactory.getLogger(ProjectLayersPanel.class);
+    static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final long serialVersionUID = -7870526462864489252L;
 
     public static final String MID_FEATURE_SELECTION_FORM = "featureSelectionForm";
@@ -169,13 +173,9 @@ public class ProjectLayersPanel
         private static final long serialVersionUID = -1L;
 
         private final Map<AnnotationLayer, String> colors = new HashMap<>();
-
         private final BootstrapModalDialog dialog;
-
         private final Select<AnnotationLayer> layerSelection;
-
         private final IModel<List<LayerInitializer>> layerInitializers;
-
         private final LambdaAjaxLink addButton;
 
         public LayerSelectionPane(String id, IModel<AnnotationLayer> aModel)
@@ -189,14 +189,14 @@ public class ProjectLayersPanel
             dialog.trapFocus();
             queue(dialog);
 
-            add(new DocLink("helpLinkLayers", "sect_projects_layers"));
+            queue(new DocLink("helpLinkLayers", "sect_projects_layers"));
 
-            add(new LambdaAjaxLink("create", this::actionCreateLayer));
+            queue(new LambdaAjaxLink("create", this::actionCreateLayer));
 
             addButton = new LambdaAjaxLink("add", this::actionAddLayer);
             addButton.setOutputMarkupPlaceholderTag(true);
             addButton.add(visibleWhenNot(layerInitializers.map(List::isEmpty)));
-            add(addButton);
+            queue(addButton);
 
             layerSelection = new Select<>("layerSelection", aModel);
             var layers = new ListView<AnnotationLayer>("layers", LambdaModel.of(this::listLayers))
@@ -223,7 +223,7 @@ public class ProjectLayersPanel
                 }
             };
 
-            add(layerSelection.add(layers));
+            queue(layerSelection.add(layers));
             layerSelection.setOutputMarkupId(true);
             layerSelection.add(OnChangeAjaxBehavior.onChange(_target -> {
                 featureDetailForm.setModelObject(null);
@@ -292,7 +292,7 @@ public class ProjectLayersPanel
                 var request = ProjectInitializationRequest.builder().withProject(getModelObject())
                         .build();
                 projectService.initializeProject(request, asList(initializer));
-                info("Applying project initializer [" + initializer.getName() + "]");
+                success("Applied project initializer [" + initializer.getName() + "]");
             }
             catch (Exception e) {
                 error("Error applying project initializer [" + initializer.getName() + "]: "
@@ -441,12 +441,27 @@ public class ProjectLayersPanel
         private LambdaAjaxLink btnMoveUp;
         private LambdaAjaxLink btnMoveDown;
         private ListChoice<AnnotationFeature> overviewList;
+        private final BootstrapModalDialog dialog;
+        private final IModel<List<FeatureInitializer>> featureInitializers;
+        private final LambdaAjaxLink addButton;
 
         public FeatureSelectionForm(String id, IModel<AnnotationFeature> aModel)
         {
             super(id, aModel);
 
             setOutputMarkupPlaceholderTag(true);
+
+            featureInitializers = LoadableDetachableModel.of(this::listFeatureInitializers);
+            add(LambdaBehavior.onDetach(featureInitializers::detach));
+
+            dialog = new BootstrapModalDialog(MID_DIALOG);
+            dialog.trapFocus();
+            queue(dialog);
+
+            addButton = new LambdaAjaxLink("add", this::actionAddFeature);
+            addButton.setOutputMarkupPlaceholderTag(true);
+            addButton.add(visibleWhenNot(featureInitializers.map(List::isEmpty)));
+            queue(addButton);
 
             add(new DocLink("featuresHelpLink", "sect_projects_layers_features"));
 
@@ -560,7 +575,7 @@ public class ProjectLayersPanel
             // cancel selection of feature list
             selectedFeature.setObject(null);
 
-            AnnotationFeature newFeature = new AnnotationFeature();
+            var newFeature = new AnnotationFeature();
             newFeature.setLayer(layerDetailForm.getModelObject());
             newFeature.setProject(ProjectLayersPanel.this.getModelObject());
             featureDetailForm.setDefaultModelObject(newFeature);
@@ -573,14 +588,23 @@ public class ProjectLayersPanel
                     + featureDetailForm.getInitialFocusComponent().getMarkupId() + "').focus();"));
         }
 
+        private void actionAddFeature(AjaxRequestTarget aTarget)
+        {
+            var dialogContent = new FeatureTemplateSelectionDialogPanel(
+                    BootstrapModalDialog.CONTENT_ID, ProjectLayersPanel.this.getModel(),
+                    featureInitializers);
+            dialog.open(dialogContent, aTarget);
+        }
+
         private List<AnnotationFeature> listFeatures()
         {
-            List<AnnotationFeature> features = annotationService
+            var features = annotationService
                     .listAnnotationFeature(layerDetailForm.getModelObject());
-            if (CHAIN_TYPE.equals(layerDetailForm.getModelObject().getType())
+
+            if (ChainLayerSupport.TYPE.equals(layerDetailForm.getModelObject().getType())
                     && !layerDetailForm.getModelObject().isLinkedListBehavior()) {
-                List<AnnotationFeature> filtered = new ArrayList<>();
-                for (AnnotationFeature f : features) {
+                var filtered = new ArrayList<AnnotationFeature>();
+                for (var f : features) {
                     if (!COREFERENCE_RELATION_FEATURE.equals(f.getName())) {
                         filtered.add(f);
                     }
@@ -592,6 +616,17 @@ public class ProjectLayersPanel
             }
         }
 
+        private List<FeatureInitializer> listFeatureInitializers()
+        {
+            if (!selectedLayer.isPresent().getObject()) {
+                return emptyList();
+            }
+
+            return projectService.listFeatureInitializers().stream()
+                    .filter(initializer -> !initializer.alreadyApplied(selectedLayer.getObject()))
+                    .toList();
+        }
+
         @Override
         protected void onConfigure()
         {
@@ -599,6 +634,28 @@ public class ProjectLayersPanel
 
             setVisible(selectedLayer.getObject() != null
                     && nonNull(selectedLayer.getObject().getId()));
+        }
+
+        @OnEvent
+        public void onFeatureTemplateSelected(FeatureTemplateSelectedEvent aEvent)
+        {
+            var target = aEvent.getTarget();
+            var initializer = aEvent.getLayerInitializer();
+            try {
+                target.add(overviewList);
+                target.add(addButton);
+                target.addChildren(getPage(), IFeedback.class);
+                initializer.configure(selectedLayer.getObject());
+                success("Applied feature initializer [" + initializer.getName() + "]");
+            }
+            catch (Exception e) {
+                error("Error applying feature initializer [" + initializer.getName() + "]: "
+                        + ExceptionUtils.getRootCauseMessage(e));
+                LOG.error("Error applying feature initializer {}", initializer, e);
+            }
+
+            applicationEventPublisherHolder.get().publishEvent(new LayerConfigurationChangedEvent(
+                    this, ProjectLayersPanel.this.getModelObject()));
         }
     }
 }

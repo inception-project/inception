@@ -60,18 +60,28 @@ public class OpenNlpDoccatMetadataRecommenderFactory
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public boolean accepts(AnnotationLayer aLayer)
     {
-        if (aLayer == null || aFeature == null) {
+        if (aLayer == null) {
             return false;
         }
 
-        var compatibleSpanLayer = DocumentMetadataLayerSupport.TYPE.equals(aLayer.getType());
+        return DocumentMetadataLayerSupport.TYPE.equals(aLayer.getType());
+    }
 
-        var compatibleFeature = asList(CAS.TYPE_NAME_STRING, CAS.TYPE_NAME_BOOLEAN)
-                .contains(aFeature.getType()) || aFeature.isVirtualFeature();
+    @Override
+    public boolean accepts(AnnotationFeature aFeature)
+    {
+        if (aFeature == null) {
+            return false;
+        }
 
-        return compatibleSpanLayer && compatibleFeature;
+        if (!accepts(aFeature.getLayer())) {
+            return false;
+        }
+
+        return asList(CAS.TYPE_NAME_STRING, CAS.TYPE_NAME_BOOLEAN).contains(aFeature.getType())
+                || aFeature.isVirtualFeature();
     }
 
     @Override

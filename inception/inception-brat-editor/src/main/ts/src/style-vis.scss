@@ -20,6 +20,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+@import '~@inception-project/inception-js-api/src/style/InceptionEditorColors.scss';
+@import '~@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss';
+
 $color_1: #2e6e9e;
 $color_2: #000000;
 $color_3: #333333;
@@ -39,21 +42,6 @@ $background_color_10: #ffcccc;
 
 
 .brat {
-  @-webkit-keyframes pulse {
-    0% {
-      color: #9999ff;
-      margin-top: 0;
-    }
-    50% {
-      color: #ffffff;
-      margin-top: 7px;
-    }
-    100% {
-      color: #9999ff;
-      margin-top: 0;
-    }
-  }
-  
   .center_wrapper {
     display: table;
     position: absolute;
@@ -190,91 +178,41 @@ $background_color_10: #ffcccc;
   .attribute_warning {
     stroke: red;
   }
-  
-  .shadow_True_positive {
-    fill: #00ff00;
-  }
-  
-  .shadow_False_positive {
-    fill: #ff4141;
-  }
-  
-  #commentpopup.comment_False_positive {
-    background-color: $background_color_1;
-  }
-  
-  .shadow_False_negative {
-    fill: #c20000;
-  }
-  
-  #commentpopup.comment_False_negative {
-    background-color: $background_color_2;
-  }
-  
-  .shadow_AnnotationError {
-    fill: #ff0000;
-  }
-  
-  #commentpopup.comment_AnnotationError {
-    background-color: $background_color_3;
-  }
-  
-  .shadow_AnnotationWarning {
-    fill: #ff8800;
-  }
-  
-  #commentpopup.comment_AnnotationWarning {
-    background-color: $background_color_4;
-  }
-  
-  .shadow_AnnotatorNotes {
-    fill: #3ab7ee;
-  }
-  
-  #commentpopup.comment_AnnotatorNotes {
-    background-color: $background_color_5;
-  }
-  
-  .shadow_Normalized {
-    fill: #3aee37;
-  }
-  
-  #commentpopup.comment_Normalized {
-    background-color: $background_color_6;
+
+  .shadow {
+    -moz-box-shadow: 5px 5px 5px #444444;
+    -webkit-box-shadow: 5px 5px 5px #444444;
+    box-shadow: 5px 5px 5px #444444;
+
+    &_True_positive { fill: #00ff00; }
+    &_False_positive { fill: #ff4141; }
+    &_False_negative { fill: #c20000; }
+    &_AnnotationError { fill: #ff0000; }
+    &_AnnotationWarning { fill: #ff8800; }
+    &_AnnotatorNotes { fill: #3ab7ee; }
+    &_Normalized { fill: #3aee37; }
+    &_AnnotationIncomplete { fill: #aaaaaa; }
+    &_AnnotationUnconfirmed { fill: #eeeeee; }
+    &_AddedAnnotation { fill: #ff4141; }
+    &_MissingAnnotation { fill: #ff4141; opacity: 0.3; }
+    &_ChangedAnnotation { fill: #ff4141; }
+    &_EditHighlight_arc {
+      stroke: orange;
+      -webkit-animation-name: flash;
+      animation-name: flash;
+      -webkit-animation-duration: 1s;
+      animation-duration: 1s;
+      -webkit-animation-fill-mode: both;
+      animation-fill-mode: both;
+    }
   }
   
   rect.Normalized {
     stroke-width: 1.5;
   }
   
-  .shadow_AnnotationIncomplete {
-    fill: #aaaaaa;
-  }
-  
-  #commentpopup.comment_AnnotationIncomplete {
-    background-color: $background_color_7;
-  }
-  
-  .shadow_AnnotationUnconfirmed {
-    fill: #eeeeee;
-  }
-  
-  #commentpopup.comment_AnnotationUnconfirmed {
-    background-color: $background_color_8;
-  }
-  
   rect.shadow_EditHighlight {
     fill: orange;
-    -webkit-animation-name: flash;
-    animation-name: flash;
-    -webkit-animation-duration: 1s;
-    animation-duration: 1s;
-    -webkit-animation-fill-mode: both;
-    animation-fill-mode: both;
-  }
-  
-  .shadow_EditHighlight_arc {
-    stroke: orange;
     -webkit-animation-name: flash;
     animation-name: flash;
     -webkit-animation-duration: 1s;
@@ -362,18 +300,6 @@ $background_color_10: #ffcccc;
     fill: black;
   }
   
-  .dialog {
-    display: none;
-  }
-  
-  #span_free_div {
-    float: left;
-  }
-  
-  #arc_free_div {
-    float: left;
-  }
-  
   .label-like {
     font-family: $font_family_3;
     font-weight: bold;
@@ -384,134 +310,7 @@ $background_color_10: #ffcccc;
   .accesskey {
     text-decoration: underline;
   }
-  
-  .shadow {
-    -moz-box-shadow: 5px 5px 5px #444444;
-    -webkit-box-shadow: 5px 5px 5px #444444;
-    box-shadow: 5px 5px 5px #444444;
-  }
-  
-  #span_selected {
-    font-weight: bold;
-  }
-  
-  #arc_origin {
-    font-weight: bold;
-  }
-  
-  #arc_target {
-    font-weight: bold;
-  }
-  
-  #commentpopup {
-    font-family: $font_family_1;
-    position: fixed;
-    top: 0;
-    left: 0;
-    opacity: 0.95;
-    padding: 10px;
-    display: none;
-    border: 1px outset #000000;
-    background-color: $background_color_9;
-    color: $color_2;
-    z-index: 40000;
-    -moz-box-shadow: 5px 5px 5px #aaaaaa;
-    -webkit-box-shadow: 5px 5px 5px #aaaaaa;
-    box-shadow: 5px 5px 5px #aaaaaa;
-    -moz-border-radius: 3px;
-    -webkit-border-radius: 3px;
-    border-radius: 3px;
-    max-width: 80%;
-  }
-  
-  #commentpopup hr {
-  	margin-top: 5px;
-  	margin-bottom: 5px;
-  	color: black;
-  	border-top: 1px solid #444;
-  }
-  
-  #more_info_readme {
-    height: 350px;
-  }
-  
-  #readme_container {
-    position: relative;
-  }
-  
-  #more_readme_button {
-    padding: 2px 5px;
-    position: absolute;
-    top: -2px;
-    right: -2px;
-  }
-  
-  .comment_id {
-    vertical-align: top;
-    float: right;
-    font-size: 75%;
-    font-family: $font_family_3;
-    color: $color_3;
-  }
-  
-  .comment_text {
-    font-weight: bold;
-  }
-  
-  .comment_type_id_wrapper {
-    padding-right: 2em;
-  }
-  
-  .norm_info_label {
-    font-weight: bold;
-    font-size: 80%;
-  }
-  
-  .norm_info_value {
-    font-size: 80%;
-  }
-  
-  .norm_info_img {
-    float: right;
-    margin-left: 1em;
-	  max-width: 200px;
-	  max-height: 200px;
-  }
-  
-  #search_form {
-    select {
-      width: 100%;
-    }
-  }
-  
-  .scroll_fset {
-    height: 200px;
-    margin-bottom: 2.5em;
-    fieldset {
-      height: 100%;
-      overflow-x: hidden;
-      overflow-y: hidden;
-      padding-bottom: 2em;
-    }
-    div.scroller {
-      overflow: auto;
-      width: 100%;
-      height: 100%;
-    }
-  }
-  
-  #span_highlight_link {
-    float: right;
-  }
-  
-  #arc_highlight_link {
-    float: right;
-  }
-  
-  #viewspan_highlight_link {
-    float: right;
-  }
-
+    
   .contain-selection {
     -moz-user-select: -moz-contain;
     -khtml-user-select: contain;
@@ -533,35 +332,10 @@ $background_color_10: #ffcccc;
     -webkit-tap-highlight-color: rgba(0,0,0,0);
     select: none;
   }
-  
-  .shadow_AddedAnnotation {
-    fill: #ff4141;
-  }
-  
-  #commentpopup.comment_AddedAnnotation {
-    background-color: $background_color_10;
-  }
-  
-  .shadow_MissingAnnotation {
-    fill: #ff4141;
-    opacity: 0.3;
-  }
-  
-  #commentpopup.comment_MissingAnnotation {
-    background-color: $background_color_10;
-  }
-  
-  .shadow_ChangedAnnotation {
-    fill: #ff4141;
-  }
-  
-  #commentpopup.comment_ChangedAnnotation {
-    background-color: $background_color_10;
-  }
-  
+    
   .highlights {
     .matchfocus {
-      fill: orange;
+      fill: var(--i7n-match-focus-color);
       -webkit-animation-name: flash;
       animation-name: flash;
       -webkit-animation-duration: 1s;
@@ -569,8 +343,9 @@ $background_color_10: #ffcccc;
       -webkit-animation-fill-mode: both;
       animation-fill-mode: both;
     }
+
     .focus {
-      fill: #3ab7ee;
+      fill: var(--i7n-focus-color);
       -webkit-animation-name: flash;
       animation-name: flash;
       -webkit-animation-duration: 1s;
@@ -578,9 +353,10 @@ $background_color_10: #ffcccc;
       -webkit-animation-fill-mode: both;
       animation-fill-mode: both;
     }
+
     rect.match {
-      fill: orange;
-      opacity: 0.25;
+      fill: var(--i7n-match-color);
+      // opacity: 0.25;
     }
   }
 

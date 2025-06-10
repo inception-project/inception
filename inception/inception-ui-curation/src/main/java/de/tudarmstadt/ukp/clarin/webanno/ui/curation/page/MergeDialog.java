@@ -18,11 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.Serializable;
 import java.util.Objects;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
@@ -101,7 +103,7 @@ public class MergeDialog
         expectedResponseModel.detach();
 
         setModelObject(new State());
-        aTarget.focusComponent(conentPanel.cancelButton);
+        aTarget.focusComponent(conentPanel.responseField);
 
         open(aTarget);
     }
@@ -132,12 +134,12 @@ public class MergeDialog
 
         // Check if the challenge was met
         if (!Objects.equals(expectedResponseModel.getObject(), state.response)) {
-            state.feedback = "Your response did not meet the challenge.";
-            aTarget.add(aForm);
+            info("Your response did not meet the challenge.");
+            aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
 
-        boolean closeOk = true;
+        var closeOk = true;
 
         // Invoke callback if one is defined
         if (confirmAction != null) {
@@ -150,8 +152,8 @@ public class MergeDialog
             }
             catch (Exception e) {
                 LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
-                state.feedback = "Error: " + e.getMessage();
-                aTarget.add(aForm);
+                info("Unable to perform merge: " + getRootCauseMessage(e));
+                aTarget.addChildren(getPage(), IFeedback.class);
                 closeOk = false;
             }
         }
@@ -169,7 +171,8 @@ public class MergeDialog
             }
             catch (Exception e) {
                 LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
-                getModelObject().feedback = "Error: " + e.getMessage();
+                info("Unable to perform merge: " + getRootCauseMessage(e));
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
         }
 
@@ -182,7 +185,6 @@ public class MergeDialog
         private static final long serialVersionUID = 4483229579553569947L;
 
         String response;
-        String feedback;
         boolean saveSettingsAsDefault;
         boolean clearTargetCas = true;
 
@@ -204,6 +206,8 @@ public class MergeDialog
 
         private final LambdaAjaxLink cancelButton;
 
+        private TextField<Object> responseField;
+
         public ContentPanel(String aId, IModel<State> aModel)
         {
             super(aId, aModel);
@@ -215,8 +219,9 @@ public class MergeDialog
             // which can only come from a trusted resource bundle
             queue(challenge);
             queue(new Label("expectedResponse", expectedResponseModel));
-            queue(new Label("feedback"));
-            queue(new TextField<>("response"));
+            responseField = new TextField<>("response");
+            responseField.setOutputMarkupId(true);
+            queue(responseField);
             queue(new MergeStrategyPanel("mergeStrategySettings", curationWorkflowModel));
             queue(new CheckBox("saveSettingsAsDefault").setOutputMarkupId(true));
             // On the curation page, the option to (not) clear the target CAS is not (yet) supported

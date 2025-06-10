@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.sharing.project;
 
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static java.util.Arrays.asList;
@@ -103,14 +104,14 @@ public class InviteProjectSettingsPanel
 
         detailsForm.add(new CheckBox("guestAccessible").setOutputMarkupId(true)
                 .add(visibleWhen(() -> inviteServiceProperties.isGuestsEnabled()))
-                .add(new LambdaAjaxFormSubmittingBehavior("change", _t -> _t.add(this))));
+                .add(new LambdaAjaxFormSubmittingBehavior(CHANGE_EVENT, _t -> _t.add(this))));
 
         DropDownChoice<Mandatoriness> askForEMail = new DropDownChoice<>("askForEMail",
                 asList(Mandatoriness.values()), new EnumChoiceRenderer<>(this));
         askForEMail.setOutputMarkupId(true);
         askForEMail.add(visibleWhen(() -> inviteServiceProperties.isGuestsEnabled()
                 && invite.map(ProjectInvite::isGuestAccessible).orElse(false).getObject()));
-        askForEMail.add(new LambdaAjaxFormSubmittingBehavior("change", _t -> _t.add(this)));
+        askForEMail.add(new LambdaAjaxFormSubmittingBehavior(CHANGE_EVENT, _t -> _t.add(this)));
         detailsForm.add(askForEMail);
 
         detailsForm.add(new TextField<>("userIdPlaceholder")

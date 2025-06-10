@@ -171,7 +171,7 @@ public class SchedulingServiceTest
         {
             protected Builder()
             {
-                withDebounceMillis(ofSeconds(3));
+                withDebounceDelay(ofSeconds(3));
             }
 
             public DummyTask build()

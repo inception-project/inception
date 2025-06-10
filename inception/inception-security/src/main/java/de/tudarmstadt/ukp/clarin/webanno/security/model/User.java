@@ -29,7 +29,6 @@ import java.util.Set;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
@@ -153,7 +152,7 @@ public class User
     private synchronized PasswordEncoder getPasswordEncoder()
     {
         if (passwordEncoder == null) {
-            ApplicationContext context = ApplicationContextProvider.getApplicationContext();
+            var context = ApplicationContextProvider.getApplicationContext();
             passwordEncoder = context.getBean("passwordEncoder", PasswordEncoder.class);
         }
         return passwordEncoder;

@@ -1,0 +1,10 @@
+{
+  "decisions": {
+    "1102341|@sveltejs/vite-plugin-svelte>@sveltejs/vite-plugin-svelte-inspector>vite>esbuild": {
+      "decision": "postpone",
+      "madeAt": 1742938291433
+    }
+  },
+  "rules": {},
+  "version": 1
+}

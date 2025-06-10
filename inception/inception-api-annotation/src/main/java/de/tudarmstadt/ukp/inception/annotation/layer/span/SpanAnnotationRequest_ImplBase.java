@@ -22,6 +22,7 @@ import java.util.Optional;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public abstract class SpanAnnotationRequest_ImplBase<T extends SpanAnnotationRequest_ImplBase<T>>
@@ -32,15 +33,16 @@ public abstract class SpanAnnotationRequest_ImplBase<T extends SpanAnnotationReq
     private final int begin;
     private final int end;
     private final T originalRequest;
+    private final AnchoringMode anchoringMode;
 
     public SpanAnnotationRequest_ImplBase(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
-            int aBegin, int aEnd)
+            int aBegin, int aEnd, AnchoringMode aAnchoringMode)
     {
-        this(null, aDocument, aDocumentOwner, aCas, aBegin, aEnd);
+        this(null, aDocument, aDocumentOwner, aCas, aBegin, aEnd, aAnchoringMode);
     }
 
     protected SpanAnnotationRequest_ImplBase(T aOriginal, SourceDocument aDocument,
-            String aDocumentOwner, CAS aCas, int aBegin, int aEnd)
+            String aDocumentOwner, CAS aCas, int aBegin, int aEnd, AnchoringMode aAnchoringMode)
     {
         Validate.isTrue(aBegin <= aEnd, "Annotation begin [%d] must smaller or equal to end [%d]",
                 aBegin, aEnd);
@@ -51,6 +53,7 @@ public abstract class SpanAnnotationRequest_ImplBase<T extends SpanAnnotationReq
         cas = aCas;
         begin = aBegin;
         end = aEnd;
+        anchoringMode = aAnchoringMode;
     }
 
     public SourceDocument getDocument()
@@ -78,10 +81,15 @@ public abstract class SpanAnnotationRequest_ImplBase<T extends SpanAnnotationReq
         return end;
     }
 
+    public AnchoringMode getAnchoringMode()
+    {
+        return anchoringMode;
+    }
+
     public Optional<T> getOriginalRequest()
     {
         return Optional.ofNullable(originalRequest);
     }
 
-    public abstract T changeSpan(int aBegin, int aEnd);
+    public abstract T changeSpan(int aBegin, int aEnd, AnchoringMode aAnchoringMode);
 }

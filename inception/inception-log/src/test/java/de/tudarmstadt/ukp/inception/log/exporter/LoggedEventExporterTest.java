@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.log.exporter;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.stream.Streams.failableStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -35,7 +36,6 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.lang3.function.FailableConsumer;
-import org.apache.commons.lang3.stream.Streams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -93,7 +93,7 @@ public class LoggedEventExporterTest
 
         doAnswer((Answer<Void>) invocation -> {
             FailableConsumer<LoggedEvent, Exception> consumer = invocation.getArgument(1);
-            Streams.stream(events(sourceProject)).forEach(consumer);
+            failableStream(events(sourceProject)).forEach(consumer);
             return null;
         }).when(eventRepository).forEachLoggedEvent(any(), any());
 
@@ -102,7 +102,8 @@ public class LoggedEventExporterTest
 
         // Export the project
         var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
-        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test",
+                exportRequest.getFilenamePrefix());
         var exportedProject = new ExportedProject();
 
         try (var zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
@@ -116,7 +117,10 @@ public class LoggedEventExporterTest
         // Import the project again
         lenient().doNothing().when(eventRepository).create(loggedEventCaptor.capture());
 
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         try (var zf = new ZipFile(zipFile)) {
             sut.importData(importRequest, targetProject, exportedProject, zf);
         }
@@ -140,7 +144,8 @@ public class LoggedEventExporterTest
 
         // Export the project
         var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
-        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test",
+                exportRequest.getFilenamePrefix());
         var exportedProject = new ExportedProject();
 
         try (var zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
@@ -152,7 +157,10 @@ public class LoggedEventExporterTest
         // Import the project again
         lenient().doNothing().when(eventRepository).create(loggedEventCaptor.capture());
 
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         try (var zf = new ZipFile(zipFile)) {
             sut.importData(importRequest, targetProject, exportedProject, zf);
         }

@@ -21,7 +21,6 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -48,6 +47,8 @@ public class InputBehavior
 
     private final KeyType[] keyCombo;
 
+    private Component target;
+
     public InputBehavior(KeyType[] aKeyCombo, EventType aEventType)
     {
         super(aKeyCombo, aEventType);
@@ -65,9 +66,26 @@ public class InputBehavior
     private String generateString(TextTemplate textTemplate)
     {
         // variables for the initialization script
-        Map<String, Object> variables = new HashMap<String, Object>();
+        var variables = new HashMap<String, Object>();
         variables.put("keys", stream(keyCombo).map(KeyType::getKeyCode).collect(joining("+")));
         textTemplate.interpolate(variables);
         return textTemplate.asString();
+    }
+
+    @Override
+    protected String getTarget()
+    {
+        if (target != null) {
+            return target.getMarkupId();
+        }
+
+        return super.getTarget();
+    }
+
+    public InputBehavior setTarget(Component aComponent)
+    {
+        aComponent.setOutputMarkupId(true);
+        target = aComponent;
+        return this;
     }
 }

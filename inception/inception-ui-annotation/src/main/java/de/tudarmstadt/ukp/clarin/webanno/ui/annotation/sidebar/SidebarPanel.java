@@ -88,16 +88,25 @@ public class SidebarPanel
     public void refreshTabs(AjaxRequestTarget aTarget)
     {
         // re-init tabs list with valid tabs
-        List<SidebarTab> tabs = tabsPanel.getTabs();
+        var tabs = tabsPanel.getTabs();
         tabs.clear();
         tabs.addAll(makeTabs());
+        aTarget.add(tabsPanel);
+    }
+
+    public void showTab(AjaxRequestTarget aTarget, String aFactoryId)
+    {
+        tabsPanel.getTabs().stream() //
+                .filter(tab -> tab.getFactoryId().equals(aFactoryId)) //
+                .findFirst() //
+                .ifPresent(tab -> tabsPanel.setSelectedTab(tabsPanel.getTabs().indexOf(tab)));
         aTarget.add(tabsPanel);
     }
 
     private List<SidebarTab> makeTabs()
     {
         var tabs = new ArrayList<SidebarTab>();
-        for (var factory : sidebarRegistry.getSidebarFactories()) {
+        for (var factory : sidebarRegistry.getExtensions()) {
 
             if (!factory.accepts(annotationPage)) {
                 continue;

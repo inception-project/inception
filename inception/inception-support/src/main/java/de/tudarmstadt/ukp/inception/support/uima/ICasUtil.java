@@ -35,6 +35,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.cas.Sofa;
 import org.apache.uima.jcas.cas.TOP;
+import org.apache.uima.jcas.tcas.Annotation;
 
 public class ICasUtil
 {
@@ -151,12 +152,12 @@ public class ICasUtil
         return ((CASImpl) aFS.getCAS()).ll_getFSRef(aFS);
     }
 
-    public static AnnotationFS selectAnnotationByAddr(CAS aCas, int aAddress)
+    public static Annotation selectAnnotationByAddr(CAS aCas, int aAddress)
     {
-        return selectByAddr(aCas, AnnotationFS.class, aAddress);
+        return selectByAddr(aCas, Annotation.class, aAddress);
     }
 
-    public static <T extends AnnotationFS> AnnotationFS selectByAddr(CAS aCas, Class<T> aType,
+    public static <T extends AnnotationFS> Annotation selectByAddr(CAS aCas, Class<T> aType,
             int aAddress)
     {
         // Check that the type passed is actually an annotation type

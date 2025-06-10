@@ -129,7 +129,8 @@ public class GazeteerExporterTest
     {
         // Export the project
         var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
-        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test",
+                exportRequest.getFilenamePrefix());
         var exportedProject = new ExportedProject();
         var stage = Mockito.mock(ZipOutputStream.class);
         sut.exportData(exportRequest, monitor, exportedProject, stage);
@@ -141,7 +142,10 @@ public class GazeteerExporterTest
         var gazeteerFileCaptor = ArgumentCaptor.forClass(Gazeteer.class);
         doNothing().when(gazeteerService).importGazeteerFile(gazeteerFileCaptor.capture(), any());
 
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         var zipFile = mock(ZipFile.class);
 
         sut.importData(importRequest, targetProject, exportedProject, zipFile);

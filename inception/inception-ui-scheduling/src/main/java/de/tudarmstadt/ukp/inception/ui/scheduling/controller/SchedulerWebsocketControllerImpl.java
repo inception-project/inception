@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.ui.scheduling.controller;
 
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
 
-import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 import java.util.Objects;
@@ -34,7 +33,6 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -62,9 +60,8 @@ public class SchedulerWebsocketControllerImpl
         schedulingService = aSchedulingService;
     }
 
-    @SubscribeMapping(SchedulerWebsocketController.USER_TASKS_TOPIC)
+    @SubscribeMapping(USER_TASKS_TOPIC)
     public List<MTaskStateUpdate> onSubscribeToUserTaskUpdates(Principal user)
-        throws AccessDeniedException
     {
         return schedulingService.getAllTasks().stream() //
                 .filter(t -> t.getParentTask() == null) //
@@ -80,7 +77,6 @@ public class SchedulerWebsocketControllerImpl
     public List<MTaskStateUpdate> onSubscribeToProjectTaskUpdates(
             SimpMessageHeaderAccessor aHeaderAccessor, Principal aPrincipal, //
             @DestinationVariable(PARAM_PROJECT) long aProjectId)
-        throws IOException
     {
         return schedulingService.getAllTasks().stream() //
                 .filter(t -> t.getParentTask() == null) //
@@ -97,8 +93,8 @@ public class SchedulerWebsocketControllerImpl
     public void dispatch(MTaskStateUpdate aUpdate)
     {
         if (aUpdate.getUsername() != null) {
-            msgTemplate.convertAndSendToUser(aUpdate.getUsername(),
-                    "/queue" + SchedulerWebsocketController.USER_TASKS_TOPIC, aUpdate);
+            msgTemplate.convertAndSendToUser(aUpdate.getUsername(), "/queue" + USER_TASKS_TOPIC,
+                    aUpdate);
         }
 
         if (aUpdate.getProjectId() > 0) {

@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
+import static de.tudarmstadt.ukp.inception.scheduling.TaskState.CANCELLED;
+import static de.tudarmstadt.ukp.inception.scheduling.TaskState.COMPLETED;
+import static de.tudarmstadt.ukp.inception.scheduling.TaskState.FAILED;
+import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_PROJECT_ID;
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_USERNAME;
@@ -58,6 +62,7 @@ public abstract class Task
     private final String type;
     private final boolean cancellable;
 
+    private volatile Thread thread;
     private TaskMonitor monitor;
     private Task parentTask;
 
@@ -80,6 +85,7 @@ public abstract class Task
         cancellable = builder.cancellable;
         parentTask = builder.parentTask;
         scope = builder.scope;
+
         if (builder.monitor != null) {
             monitor = builder.monitor.apply(this);
         }
@@ -90,14 +96,19 @@ public abstract class Task
     {
         if (monitor == null) {
             // For tasks that have a parent task, we use a non-notifying monitor. Also, we do not
-            // report such subtasks ia the SchedulerControllerImpl - they are internal.
-            if (schedulerController != null && sessionOwner != null && parentTask == null) {
+            // report such subtasks via the SchedulerControllerImpl - they are internal.
+            if (schedulerController != null && parentTask == null) {
                 monitor = new NotifyingTaskMonitor(this, schedulerController);
             }
             else {
                 monitor = new TaskMonitor(this);
             }
         }
+    }
+
+    Thread getThread()
+    {
+        return thread;
     }
 
     public boolean isCancellable()
@@ -130,7 +141,17 @@ public abstract class Task
         return monitor;
     }
 
+    /**
+     * @deprecated Use {@link #getSessionOwner()}
+     * @return user who started the task
+     */
+    @Deprecated
     public Optional<User> getUser()
+    {
+        return getSessionOwner();
+    }
+
+    public Optional<User> getSessionOwner()
     {
         return Optional.ofNullable(sessionOwner);
     }
@@ -196,25 +217,44 @@ public abstract class Task
         }
     }
 
-    public void runSync()
+    public final void runSync()
     {
         try {
-            monitor.setState(TaskState.RUNNING);
+            if (thread != null) {
+                throw new IllegalStateException("Task " + this + " already bound to thread "
+                        + thread + " when trying to start on thread " + Thread.currentThread());
+            }
+
+            thread = Thread.currentThread();
+            monitor.update(up -> up.setState(RUNNING));
+
             execute();
-            if (monitor.getState() == TaskState.RUNNING) {
-                monitor.setState(TaskState.COMPLETED);
+
+            if (monitor.isCancelled()) {
+                monitor.update(up -> up.setState(CANCELLED));
+            }
+            else if (monitor.getState() == RUNNING) {
+                monitor.update(up -> up.setState(COMPLETED));
+            }
+
+            if (monitor.getState() == COMPLETED) {
+                LOG.debug("Task [{}] completed (trigger: [{}]) in {}ms", getTitle(), getTrigger(),
+                        monitor.getDuration());
             }
         }
         catch (Exception e) {
-            monitor.addMessage(LogMessage.error(this, "Task failed."));
-            monitor.setState(TaskState.FAILED);
+            monitor.update(up -> up.setState(FAILED) //
+                    .addMessage(LogMessage.error(this, "Task failed.")));
             LOG.error("Task [{}] failed (trigger: [{}])", getTitle(), getTrigger(), e);
         }
         catch (Throwable e) {
-            monitor.addMessage(LogMessage.error(this, "Task failed with a serious error."));
-            monitor.setState(TaskState.FAILED);
+            monitor.update(up -> up.setState(FAILED) //
+                    .addMessage(LogMessage.error(this, "Task failed with a serious error.")));
             LOG.error("Task [{}] failed with a serious error (trigger: [{}])", getTitle(),
                     getTrigger(), e);
+        }
+        finally {
+            thread = null;
         }
     }
 
@@ -223,11 +263,17 @@ public abstract class Task
     @Override
     public String toString()
     {
-        StringBuilder sb = new StringBuilder(getName());
+        var sb = new StringBuilder(getName());
         sb.append('[');
         sb.append("user=").append(sessionOwner != null ? sessionOwner.getUsername() : "<SYSTEM>");
         sb.append(", project=").append(project.getName());
         sb.append(", trigger=\"").append(trigger);
+        if (monitor != null) {
+            sb.append(", ");
+            sb.append(monitor.getProgress());
+            sb.append("/");
+            sb.append(monitor.getMaxProgress());
+        }
         sb.append("\"]");
         return sb.toString();
     }
@@ -273,7 +319,7 @@ public abstract class Task
         @SuppressWarnings("unchecked")
         public T withSessionOwner(User aSessionOwner)
         {
-            this.sessionOwner = aSessionOwner;
+            sessionOwner = aSessionOwner;
             return (T) this;
         }
 
@@ -284,7 +330,7 @@ public abstract class Task
         @SuppressWarnings("unchecked")
         public T withProject(Project aProject)
         {
-            this.project = aProject;
+            project = aProject;
             return (T) this;
         }
 
@@ -295,21 +341,21 @@ public abstract class Task
         @SuppressWarnings("unchecked")
         public T withTrigger(String aTrigger)
         {
-            this.trigger = aTrigger;
+            trigger = aTrigger;
             return (T) this;
         }
 
         @SuppressWarnings("unchecked")
         public T withType(String aType)
         {
-            this.type = aType;
+            type = aType;
             return (T) this;
         }
 
         @SuppressWarnings("unchecked")
         public T withCancellable(boolean aCancellable)
         {
-            this.cancellable = aCancellable;
+            cancellable = aCancellable;
             return (T) this;
         }
 
@@ -320,7 +366,7 @@ public abstract class Task
         @SuppressWarnings("unchecked")
         public T withParentTask(Task aParentTask)
         {
-            this.parentTask = aParentTask;
+            parentTask = aParentTask;
             return (T) this;
         }
 
@@ -331,14 +377,14 @@ public abstract class Task
         @SuppressWarnings("unchecked")
         public T withMonitor(Function<Task, TaskMonitor> aMonitorFactory)
         {
-            this.monitor = aMonitorFactory;
+            monitor = aMonitorFactory;
             return (T) this;
         }
 
         @SuppressWarnings("unchecked")
         public T withScope(TaskScope aScope)
         {
-            this.scope = aScope;
+            scope = aScope;
             return (T) this;
         }
     }

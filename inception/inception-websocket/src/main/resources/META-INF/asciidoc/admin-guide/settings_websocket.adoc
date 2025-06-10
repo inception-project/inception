@@ -17,11 +17,8 @@
 [[sect_settings_websocket]]
 = Websocket Settings
 
-====
-CAUTION: Experimental feature.
-====
-
-You can enable websocket support for your instance which allows to push messages to the client browser. This can e.g. be information for Admin users on recently logged events. 
+You can enable/disable websocket support for your instance which allows to push messages to the client browser. This can e.g. be information for Admin users on recently logged events. 
+Note that some features may no longer work when disabling websocket such as the annotation overview sidebar.
 
 .Websocket settings
 [cols="4*", options="header"]
@@ -33,8 +30,8 @@ You can enable websocket support for your instance which allows to push messages
 
 | websocket.enabled
 | enable/disable websocket support/endpoint
-| false
 | true
+| false
 
 | websocket.logged-events.enabled
 | enable/disable push messages for logged events

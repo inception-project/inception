@@ -70,7 +70,26 @@ public interface RecommendationEngineFactory<T>
 
     RecommendationEngine build(Recommender aRecommender);
 
-    boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature);
+    default boolean accepts(Recommender aRecommender)
+    {
+        if (aRecommender == null) {
+            return false;
+        }
+
+        return accepts(aRecommender.getLayer()) && accepts(aRecommender.getFeature());
+    }
+
+    /**
+     * @return whether a recommender may be applicable to the given layer. The recommender may still
+     *         reject if an unacceptable feature is provided, so {@link #accepts(AnnotationFeature)}
+     *         should also be used.
+     */
+    boolean accepts(AnnotationLayer aLayer);
+
+    /**
+     * @return whether a recommender may be applicable to the given feature.
+     */
+    boolean accepts(AnnotationFeature aFeature);
 
     T createTraits();
 

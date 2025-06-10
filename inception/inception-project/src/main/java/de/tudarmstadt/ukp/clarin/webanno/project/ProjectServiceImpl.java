@@ -44,6 +44,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -70,9 +71,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
@@ -91,6 +90,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.project.api.FeatureInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -113,28 +113,30 @@ import jakarta.persistence.NoResultException;
 public class ProjectServiceImpl
     implements ProjectService
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final EntityManager entityManager;
     private final UserDao userRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final RepositoryProperties repositoryProperties;
-    private final List<ProjectInitializer> initializerProxy;
+    private final List<ProjectInitializer> projectInitializerProxy;
+    private final List<FeatureInitializer> featureInitializerProxy;
 
-    private List<ProjectInitializer> initializers;
+    private List<ProjectInitializer> projectInitializers;
+    private List<FeatureInitializer> featureInitializers;
 
-    @Autowired
     public ProjectServiceImpl(UserDao aUserRepository,
             ApplicationEventPublisher aApplicationEventPublisher,
             RepositoryProperties aRepositoryProperties,
-            @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy,
-            EntityManager aEntityManager)
+            List<ProjectInitializer> aProjectInitializerProxy,
+            List<FeatureInitializer> aFeatureInitializerProxy, EntityManager aEntityManager)
     {
         entityManager = aEntityManager;
         userRepository = aUserRepository;
         applicationEventPublisher = aApplicationEventPublisher;
         repositoryProperties = aRepositoryProperties;
-        initializerProxy = aInitializerProxy;
+        projectInitializerProxy = aProjectInitializerProxy;
+        featureInitializerProxy = aFeatureInitializerProxy;
     }
 
     @Override
@@ -149,10 +151,10 @@ public class ProjectServiceImpl
         entityManager.persist(aProject);
 
         try (var logCtx = withProjectLogger(aProject)) {
-            log.info("Created project [{}]({})", aProject.getName(), aProject.getId());
+            LOG.info("Created project {}", aProject);
 
-            String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
-                    + "/" + aProject.getId();
+            var path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                    + aProject.getId();
             FileUtils.forceMkdir(new File(path));
 
             applicationEventPublisher.publishEvent(new AfterProjectCreatedEvent(this, aProject));
@@ -176,7 +178,7 @@ public class ProjectServiceImpl
         try (var logCtx = withProjectLogger(aPermission.getProject())) {
             entityManager.persist(aPermission);
 
-            log.info("Created permission [{}] for user [{}] on project {}", aPermission.getLevel(),
+            LOG.info("Created permission [{}] for user [{}] on project {}", aPermission.getLevel(),
                     aPermission.getUser(), aPermission.getProject());
 
             applicationEventPublisher.publishEvent(new ProjectPermissionsChangedEvent(this,
@@ -498,8 +500,8 @@ public class ProjectServiceImpl
             Collection<PermissionLevel> aLevels)
     {
         try (var logCtx = withProjectLogger(aProject)) {
-            Set<PermissionLevel> levelsToBeGranted = new HashSet<>(aLevels);
-            List<ProjectPermission> permissions = new ArrayList<>();
+            var levelsToBeGranted = new HashSet<PermissionLevel>(aLevels);
+            var permissions = new ArrayList<ProjectPermission>();
             try {
                 permissions.addAll(listProjectPermissionLevel(aUser, aProject));
             }
@@ -508,14 +510,14 @@ public class ProjectServiceImpl
             }
 
             // Remove permissions that no longer exist
-            List<ProjectPermission> revokedPermissions = new ArrayList<>();
-            for (ProjectPermission permission : permissions) {
+            var revokedPermissions = new ArrayList<ProjectPermission>();
+            for (var permission : permissions) {
                 if (!aLevels.contains(permission.getLevel())) {
                     revokedPermissions.add(permission);
 
                     entityManager.remove(permission);
 
-                    log.info("Removed permission [{}] for user [{}] on project {}",
+                    LOG.info("Removed permission [{}] for user [{}] on project {}",
                             permission.getLevel(), permission.getUser(), permission.getProject());
                 }
                 else {
@@ -524,15 +526,15 @@ public class ProjectServiceImpl
             }
 
             // Grant new permissions
-            List<ProjectPermission> grantedPermissions = new ArrayList<>();
-            for (PermissionLevel level : levelsToBeGranted) {
-                ProjectPermission permission = new ProjectPermission(aProject, aUser, level);
+            var grantedPermissions = new ArrayList<ProjectPermission>();
+            for (var level : levelsToBeGranted) {
+                var permission = new ProjectPermission(aProject, aUser, level);
 
                 grantedPermissions.add(permission);
 
                 entityManager.persist(permission);
 
-                log.info("Granted permission [{}] for user {} on project {}", level, aUser,
+                LOG.info("Granted permission [{}] for user {} on project {}", level, aUser,
                         aProject);
             }
 
@@ -667,32 +669,32 @@ public class ProjectServiceImpl
             long start = System.currentTimeMillis();
 
             // remove metadata from DB
-            Project project = aProject;
+            var project = aProject;
             if (!entityManager.contains(project)) {
                 project = entityManager.merge(project);
             }
 
-            applicationEventPublisher.publishEvent(new BeforeProjectRemovedEvent(this, aProject));
+            applicationEventPublisher.publishEvent(new BeforeProjectRemovedEvent(this, project));
 
-            for (ProjectPermission permissions : getProjectPermissions(aProject)) {
+            for (var permissions : getProjectPermissions(project)) {
                 entityManager.remove(permissions);
             }
 
             entityManager.remove(project);
 
             // remove the project directory from the file system
-            String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
-                    + "/" + aProject.getId();
+            var path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                    + project.getId();
             try {
                 FastIOUtils.delete(new File(path));
             }
             catch (FileNotFoundException | NoSuchFileException e) {
-                log.info("Project directory to be deleted was not found: [{}]. Ignoring.", path);
+                LOG.info("Project directory to be deleted was not found: [{}]. Ignoring.", path);
             }
 
-            applicationEventPublisher.publishEvent(new AfterProjectRemovedEvent(this, aProject));
+            applicationEventPublisher.publishEvent(new AfterProjectRemovedEvent(this, project));
 
-            log.info("Removed project {} ({})", aProject,
+            LOG.info("Removed project {} ({})", project,
                     formatDurationWords(System.currentTimeMillis() - start, true, true));
         }
     }
@@ -705,7 +707,7 @@ public class ProjectServiceImpl
         try (var logCtx = withProjectLogger(aPermission.getProject())) {
             entityManager.remove(aPermission);
 
-            log.info("Removed permission [{}] for user [{}] on project {}", aPermission.getLevel(),
+            LOG.info("Removed permission [{}] for user [{}] on project {}", aPermission.getLevel(),
                     aPermission.getUser(), aPermission.getProject());
 
             applicationEventPublisher.publishEvent(new ProjectPermissionsChangedEvent(this,
@@ -805,16 +807,16 @@ public class ProjectServiceImpl
 
     /* package private */ void init()
     {
-        List<ProjectInitializer> inits = new ArrayList<>();
+        var projectInits = new ArrayList<ProjectInitializer>();
 
-        if (initializerProxy != null) {
-            inits.addAll(initializerProxy);
-            AnnotationAwareOrderComparator.sort(inits);
+        if (projectInitializerProxy != null) {
+            projectInits.addAll(projectInitializerProxy);
+            AnnotationAwareOrderComparator.sort(projectInits);
 
-            Set<Class<? extends ProjectInitializer>> initializerClasses = new HashSet<>();
-            for (ProjectInitializer init : inits) {
+            var initializerClasses = new HashSet<Class<? extends ProjectInitializer>>();
+            for (var init : projectInits) {
                 if (initializerClasses.add(init.getClass())) {
-                    log.debug("Found project initializer: {}",
+                    LOG.debug("Found project initializer: {}",
                             ClassUtils.getAbbreviatedName(init.getClass(), 20));
                 }
                 else {
@@ -825,9 +827,33 @@ public class ProjectServiceImpl
             }
         }
 
-        BaseLoggers.BOOT_LOG.info("Found [{}] project initializers", inits.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] project initializers", projectInits.size());
 
-        initializers = unmodifiableList(inits);
+        projectInitializers = unmodifiableList(projectInits);
+
+        var featureInits = new ArrayList<FeatureInitializer>();
+
+        if (featureInitializerProxy != null) {
+            featureInits.addAll(featureInitializerProxy);
+            AnnotationAwareOrderComparator.sort(featureInits);
+
+            var initializerClasses = new HashSet<Class<? extends FeatureInitializer>>();
+            for (var init : featureInits) {
+                if (initializerClasses.add(init.getClass())) {
+                    LOG.debug("Found feature initializer: {}",
+                            ClassUtils.getAbbreviatedName(init.getClass(), 20));
+                }
+                else {
+                    throw new IllegalStateException("There cannot be more than once instance "
+                            + "of each feature initializer class! Duplicate instance of class: "
+                            + init.getClass());
+                }
+            }
+        }
+
+        BaseLoggers.BOOT_LOG.info("Found [{}] feature initializers", projectInits.size());
+
+        featureInitializers = unmodifiableList(featureInits);
     }
 
     private void addMissingProjectSlugs()
@@ -837,13 +863,13 @@ public class ProjectServiceImpl
         for (Project project : projects) {
             String slug = deriveSlugFromName(project.getName());
             if (!isValidProjectSlug(slug)) {
-                log.warn("Attempt to derive slug from project name [{}] resulted in invalid slug "
+                LOG.warn("Attempt to derive slug from project name [{}] resulted in invalid slug "
                         + "[{}], generating random slug...", project.getName(), slug);
                 slug = generateRandomSlug();
             }
             slug = deriveUniqueSlug(slug);
             project.setSlug(slug);
-            log.info("Auto-generated slug [{}] for project {}", slug, project);
+            LOG.info("Auto-generated slug [{}] for project {}", slug, project);
         }
     }
 
@@ -861,21 +887,27 @@ public class ProjectServiceImpl
     @Override
     public List<ProjectInitializer> listProjectInitializers()
     {
-        return initializers;
+        return projectInitializers;
+    }
+
+    @Override
+    public List<FeatureInitializer> listFeatureInitializers()
+    {
+        return featureInitializers;
     }
 
     @Override
     @Transactional
     public void initializeProject(ProjectInitializationRequest aRequest) throws IOException
     {
-        initializeProject(aRequest, initializers.stream() //
+        initializeProject(aRequest, projectInitializers.stream() //
                 .filter(ProjectInitializer::applyByDefault) //
                 .collect(Collectors.toList()));
     }
 
     private ProjectInitializer findProjectInitializer(Class<? extends ProjectInitializer> aType)
     {
-        return initializers.stream().filter(i -> aType.isAssignableFrom(i.getClass())) //
+        return projectInitializers.stream().filter(i -> aType.isAssignableFrom(i.getClass())) //
                 .findFirst() //
                 .orElseThrow(() -> new IllegalArgumentException(
                         "No initializer of type [" + aType + "] exists!"));
@@ -911,7 +943,7 @@ public class ProjectServiceImpl
     {
         var allInits = new HashSet<Class<? extends ProjectInitializer>>();
         var applied = new HashSet<Class<? extends ProjectInitializer>>();
-        for (var initializer : initializers) {
+        for (var initializer : projectInitializers) {
             allInits.add(initializer.getClass());
             if (initializer.alreadyApplied(aRequest.getProject())) {
                 applied.add(initializer.getClass());
@@ -925,7 +957,7 @@ public class ProjectServiceImpl
             var initializerName = initializer.getName();
 
             if (applied.contains(initializer.getClass())) {
-                log.debug("Skipping project initializer that was already applied: [{}]",
+                LOG.debug("Skipping project initializer that was already applied: [{}]",
                         initializerName);
                 continue;
             }
@@ -943,13 +975,13 @@ public class ProjectServiceImpl
             }
 
             if (applied.containsAll(initializer.getDependencies())) {
-                log.debug("Applying project initializer: [{}]", initializerName);
+                LOG.debug("Applying project initializer: [{}]", initializerName);
                 initializer.configure(aRequest);
                 applied.add(initializer.getClass());
                 initsDeferred.clear();
             }
             else {
-                log.debug("Deferring project initializer as dependencies are not yet fulfilled: {}",
+                LOG.debug("Deferring project initializer as dependencies are not yet fulfilled: {}",
                         initializer);
                 toApply.add(initializer);
                 initsDeferred.add(initializer);
@@ -1013,7 +1045,7 @@ public class ProjectServiceImpl
     @Transactional
     public void setProjectState(Project aProject, ProjectState aState)
     {
-        ProjectState oldState = aProject.getState();
+        var oldState = aProject.getState();
 
         aProject.setState(aState);
         updateProject(aProject);

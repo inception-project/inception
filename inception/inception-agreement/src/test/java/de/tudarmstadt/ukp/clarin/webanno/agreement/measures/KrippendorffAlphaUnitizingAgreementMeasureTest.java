@@ -95,4 +95,12 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
 
         assertEquals(0.4893, result.getAgreement(), 0.001);
     }
+
+    @Test
+    public void selfOverlappingAgreementTest() throws Exception
+    {
+        var result = selfOverlappingAgreement(sut);
+
+        assertEquals(0.6783, result.getAgreement(), 0.001);
+    }
 }

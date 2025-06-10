@@ -25,7 +25,7 @@ Support for this feature will be removed in a future version. The replacement is
 
 This section describes the global settings related to the legacy PDF annotation editor module.
 
-.Knowledge base settings overview
+.Legacy PDF editor settings
 [cols="4*", options="header"]
 |===
 | Setting

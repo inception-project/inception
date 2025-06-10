@@ -21,7 +21,6 @@ import static java.util.Collections.emptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.IteratorUtils;
@@ -60,37 +59,38 @@ public class SearchResultsProvider
 
     // Cache
     private long totalResults = 0;
-    private IModel<SearchResultsPagesCache> pagesCacheModel;
+    private SearchResultsPagesCache cache;
 
-    public SearchResultsProvider(SearchService aSearchService,
-            IModel<SearchResultsPagesCache> aPageCacheModel)
+    public SearchResultsProvider(SearchService aSearchService)
     {
         searchService = aSearchService;
-        pagesCacheModel = aPageCacheModel;
+        cache = new SearchResultsPagesCache();
     }
 
     @Override
     public Iterator<ResultsGroup> iterator(long first, long count)
     {
         if (query == null) {
-            pagesCacheModel.getObject().clear();
+            cache.clear();
             return IteratorUtils.emptyIterator();
         }
 
-        if (pagesCacheModel.getObject().containsPage(first, count)) {
-            return pagesCacheModel.getObject().getPage(first, count).iterator();
+        if (cache.containsPage(first, count)) {
+            return cache.getPage(first, count).iterator();
         }
 
         // Query if the results in the given range are not in the cache i.e. if we need to fetch
         // a new page
         try {
-            List<ResultsGroup> queryResults = searchService
+            var queryResults = searchService
                     .query(user, project, query, document, annotationLayer, annotationFeature,
-                            first, count)
-                    .entrySet().stream().map(e -> new ResultsGroup(e.getKey(), e.getValue()))
+                            first, count) //
+                    .entrySet().stream() //
+                    .map(e -> new ResultsGroup(e.getKey(), e.getValue())) //
                     .collect(Collectors.toList());
 
-            pagesCacheModel.getObject().putPage(first, count, queryResults);
+            cache.putPage(first, count, queryResults);
+
             return queryResults.iterator();
         }
         catch (ExecutionException e) {
@@ -137,26 +137,24 @@ public class SearchResultsProvider
      * query.
      */
     @SuppressWarnings("javadoc")
-    public void initializeQuery(User aUser, Project aProject, String aQuery,
-            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature)
+    public void initializeQuery(SearchRequest aRequest)
     {
-        user = aUser;
-        project = aProject;
-        query = aQuery;
-        document = aDocument;
-        annotationLayer = aAnnotationLayer;
-        annotationFeature = aAnnotationFeature;
+        user = aRequest.dataOwner();
+        project = aRequest.project();
+        query = aRequest.query();
+        document = aRequest.limitToDocument();
+        annotationLayer = aRequest.groupingLayer();
+        annotationFeature = aRequest.groupingFeature();
 
         totalResults = -1; // reset size cache
-        pagesCacheModel.getObject().clear(); // reset page cache
+        cache.clear(); // reset page cache
     }
 
     public void emptyQuery()
     {
         query = null;
         totalResults = 0;
-        pagesCacheModel.getObject().clear();
+        cache.clear();
     }
 
     public AnnotationLayer getAnnotationLayer()
@@ -169,8 +167,8 @@ public class SearchResultsProvider
         return annotationFeature;
     }
 
-    public IModel<SearchResultsPagesCache> getPagesCacheModel()
+    public SearchResultsPagesCache getCache()
     {
-        return pagesCacheModel;
+        return cache;
     }
 }

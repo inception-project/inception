@@ -15,9 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { it, expect } from 'vitest'
+import { it, expect, afterEach, vi, beforeEach } from 'vitest'
 import ActivitiesDashlet from '../src/ActivitiesDashlet.svelte'
 import { render } from '@testing-library/svelte'
+
+const mockActivities = [{
+  id: 1,
+  projectId: 2,
+  documentId: 3,
+  documentName: 'document.txt',
+  user: 'username',
+  annotator: 'annotator-username',
+  timestamp: 1600945790000,
+  link: '/inception/p/2/annotate/3',
+  type: 'Annotation'
+}]
+
+beforeEach(() => {
+  // Mock global fetch before each test
+  global.fetch = vi.fn(() =>
+    Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve(mockActivities)
+    })
+  )
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 it('Shows the loading indicator', async () => {
   const { getByText } = render(ActivitiesDashlet, {

@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -56,6 +57,7 @@ public class NonTrainableRecommenderActivationTask
     private @Autowired AnnotationSchemaService annoService;
     private @Autowired RecommendationService recommendationService;
     private @Autowired ApplicationEventPublisher appEventPublisher;
+    private @Autowired RecommenderProperties properties;
 
     public NonTrainableRecommenderActivationTask(Builder<? extends Builder<?>> aBuilder)
     {
@@ -120,13 +122,14 @@ public class NonTrainableRecommenderActivationTask
 
             recommendationService.setEvaluatedRecommenders(user, layer, evaluatedRecommenders);
 
-            appEventPublisher
-                    .publishEvent(
-                            RecommenderTaskNotificationEvent
-                                    .builder(this, getProject(), user.getUsername()) //
-                                    .withMessage(LogMessage.info(this,
-                                            "Activation of non-trainable recommenders complete"))
-                                    .build());
+            if (properties.getMessages().isNonTrainableRecommenderActivation()) {
+                appEventPublisher
+                        .publishEvent(RecommenderTaskNotificationEvent
+                                .builder(this, getProject(), user.getUsername()) //
+                                .withMessage(LogMessage.info(this,
+                                        "Activation of non-trainable recommenders complete"))
+                                .build());
+            }
         }
     }
 
@@ -140,11 +143,15 @@ public class NonTrainableRecommenderActivationTask
         }
 
         var factory = optFactory.get();
-        if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+        if (!factory.accepts(recommender)) {
             return Optional.of(skipRecommenderWithInvalidSettings(user, recommender));
         }
 
         var engine = factory.build(recommender);
+
+        if (factory.isInteractive(recommender)) {
+            return Optional.of(activateNonTrainableRecommender(user, recommender, engine));
+        }
 
         return switch (engine.getTrainingCapability()) {
         case TRAINING_NOT_SUPPORTED, TRAINING_SUPPORTED -> Optional
@@ -169,7 +176,8 @@ public class NonTrainableRecommenderActivationTask
         LOG.debug("[{}][{}]: Activating [{}] non-trainable recommender", user.getUsername(),
                 recommenderName, recommenderName);
         info("Recommender [%s] activated because it is not trainable", recommenderName);
-        return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender);
+        return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender,
+                "Non-trainable recommenders is always active (without evaluation)");
     }
 
     private EvaluatedRecommender skipTrainableRecommender(User user, Recommender recommender)
@@ -237,8 +245,6 @@ public class NonTrainableRecommenderActivationTask
     public static class Builder<T extends Builder<?>>
         extends RecommendationTask_ImplBase.Builder<T>
     {
-        private Recommender recommender;
-
         public NonTrainableRecommenderActivationTask build()
         {
             return new NonTrainableRecommenderActivationTask(this);

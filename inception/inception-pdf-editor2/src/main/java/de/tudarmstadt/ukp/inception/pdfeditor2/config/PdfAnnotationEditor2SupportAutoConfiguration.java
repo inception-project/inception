@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.pdfeditor2.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -29,6 +30,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor2.view.PdfDocumentIFrameViewFactory
  * Provides support for an PDF-oriented annotation editor.
  */
 @Configuration
+@EnableConfigurationProperties(PdfFormatPropertiesImpl.class)
 public class PdfAnnotationEditor2SupportAutoConfiguration
 {
     @ConditionalOnProperty(prefix = "ui.pdf", name = "enabled", havingValue = "true", matchIfMissing = true)
@@ -47,8 +49,8 @@ public class PdfAnnotationEditor2SupportAutoConfiguration
 
     @ConditionalOnProperty(prefix = "format.pdf", name = "enabled", havingValue = "true", matchIfMissing = true)
     @Bean
-    public PdfFormatSupport pdfFormat2Support()
+    public PdfFormatSupport pdfFormat2Support(PdfFormatProperties aProperties)
     {
-        return new PdfFormatSupport();
+        return new PdfFormatSupport(aProperties);
     }
 }

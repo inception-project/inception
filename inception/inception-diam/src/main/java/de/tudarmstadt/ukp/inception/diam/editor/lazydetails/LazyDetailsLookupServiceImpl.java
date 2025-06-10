@@ -94,8 +94,8 @@ public class LazyDetailsLookupServiceImpl
                 .collect(toList());
     }
 
-    private List<VLazyDetailGroup> lookLazyDetails(VID aVid, SourceDocument aDocument, User aDataOwner,
-            StringValue aLayerParam, CAS aCas)
+    private List<VLazyDetailGroup> lookLazyDetails(VID aVid, SourceDocument aDocument,
+            User aDataOwner, StringValue aLayerParam, CAS aCas)
         throws AnnotationException, IOException
     {
         if (isSentence(aCas, aVid)) {

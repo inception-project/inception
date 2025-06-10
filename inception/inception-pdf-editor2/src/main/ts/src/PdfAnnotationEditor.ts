@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { AnnotationEditor, DiamAjax, Offsets } from '@inception-project/inception-js-api'
-import './PdfAnnotationEditor.css'
-import { initPdfAnno, getAnnotations as doLoadAnnotations, scrollTo, destroy as destroyPdfAnno } from './pdfanno/pdfanno'
 import AbstractAnnotation from './pdfanno/core/src/model/AbstractAnnotation'
+import type { AnnotationEditor, DiamAjax, Offsets } from '@inception-project/inception-js-api'
+import './PdfAnnotationEditor.scss'
+import { initPdfAnno, getAnnotations as doLoadAnnotations, scrollTo, destroy as destroyPdfAnno } from './pdfanno/pdfanno'
 
 export class PdfAnnotationEditor implements AnnotationEditor {
   private ajax: DiamAjax

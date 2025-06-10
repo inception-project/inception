@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.inception.project.export.legacy.LegacyExportProjectSet
 import de.tudarmstadt.ukp.inception.project.export.settings.ExportProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.project.export.task.backup.BackupProjectExportExtension;
 import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportExtension;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 
 @Configuration
 @AutoConfigureAfter(name = {
@@ -50,9 +51,10 @@ public class ProjectExportServiceAutoConfiguration
     @Bean
     public ProjectExportService projectExportService(ApplicationContext aApplicationContext,
             @Lazy @Autowired(required = false) List<ProjectExporter> aExporters,
-            ProjectService aProjectService)
+            ProjectService aProjectService, SchedulingService aSchedulingService)
     {
-        return new ProjectExportServiceImpl(aApplicationContext, aExporters, aProjectService);
+        return new ProjectExportServiceImpl(aApplicationContext, aExporters, aProjectService,
+                aSchedulingService);
     }
 
     @ConditionalOnProperty(name = "dashboard.legacy-export", havingValue = "false", matchIfMissing = true)

@@ -40,6 +40,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -65,10 +67,11 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.GazeteerEntry;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.trie.Trie;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.trie.WhitespaceNormalizingSanitizer;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.text.KeySanitizerFactory;
+import de.tudarmstadt.ukp.inception.support.text.Trie;
+import de.tudarmstadt.ukp.inception.support.text.WhitespaceNormalizingSanitizer;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public class StringMatchingRecommender
@@ -87,6 +90,11 @@ public class StringMatchingRecommender
 
     private final GazeteerService gazeteerService;
 
+    private final KeySanitizerFactory keySanitizerFactory;
+
+    private Pattern excludePattern;
+    private String excludePatternError;
+
     public StringMatchingRecommender(Recommender aRecommender,
             StringMatchingRecommenderTraits aTraits)
     {
@@ -100,6 +108,19 @@ public class StringMatchingRecommender
 
         traits = aTraits;
         gazeteerService = aGazeteerService;
+        keySanitizerFactory = WhitespaceNormalizingSanitizer.factory();
+
+        if (traits != null && traits.getExcludePattern() != null) {
+            try {
+                excludePattern = Pattern.compile(traits.getExcludePattern());
+            }
+            catch (PatternSyntaxException e) {
+                excludePatternError = e.getMessage();
+            }
+        }
+        else {
+            excludePattern = null;
+        }
     }
 
     @Override
@@ -136,7 +157,7 @@ public class StringMatchingRecommender
 
         if (aData != null) {
             for (var entry : aData) {
-                learn(dict, entry.text, entry.label);
+                learn(dict, entry.text, entry.label, true);
             }
 
             aContext.log(LogMessage.info(getRecommender().getName(),
@@ -148,12 +169,17 @@ public class StringMatchingRecommender
 
     private <T> Trie<T> createTrie()
     {
-        return new Trie<>(WhitespaceNormalizingSanitizer.factory());
+        return new Trie<>(keySanitizerFactory);
     }
 
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
+        if (excludePatternError != null) {
+            aContext.log(LogMessage.error(getRecommender().getName(),
+                    "Ignoring bad exclude pattern: %s", excludePatternError));
+        }
+
         // Pre-load the gazeteers into the model
         if (gazeteerService != null) {
             for (var gaz : gazeteerService.listGazeteers(recommender)) {
@@ -185,13 +211,13 @@ public class StringMatchingRecommender
                     var labels = FSUtil.getFeature(ann, predictedFeature, String[].class);
                     if (labels != null) {
                         for (var label : labels) {
-                            learn(dict, ann.getCoveredText(), label);
+                            learn(dict, ann.getCoveredText(), label, false);
                         }
                     }
                 }
                 else {
-                    learn(dict, ann.getCoveredText(),
-                            ann.getFeatureValueAsString(predictedFeature));
+                    learn(dict, ann.getCoveredText(), ann.getFeatureValueAsString(predictedFeature),
+                            false);
                 }
             }
         }
@@ -356,7 +382,7 @@ public class StringMatchingRecommender
         Trie<DictEntry> dict = createTrie();
         for (var sample : trainingSet) {
             for (var span : sample.getSpans()) {
-                learn(dict, span.text(), span.label());
+                learn(dict, span.text(), span.label(), false);
             }
         }
 
@@ -391,10 +417,20 @@ public class StringMatchingRecommender
                 SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio, NO_LABEL));
     }
 
-    private void learn(Trie<DictEntry> aDict, String aText, String aLabel)
+    private void learn(Trie<DictEntry> aDict, String aText, String aLabel, boolean aBypassLimits)
     {
         if (isBlank(aText)) {
             return;
+        }
+
+        if (!aBypassLimits && traits != null) {
+            if (excludePattern != null && excludePattern.matcher(aText).matches()) {
+                return;
+            }
+
+            if (keySanitizerFactory.create().sanitize(aText).length() < traits.getMinLength()) {
+                return;
+            }
         }
 
         var label = isBlank(aLabel) ? BLANK_LABEL : aLabel;

@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static java.util.Arrays.asList;
@@ -63,6 +64,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
@@ -78,7 +80,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties.CasDoctorOnImportPolicy;
@@ -363,11 +364,10 @@ public class DocumentImportExportServiceImpl
         var casDoctor = new CasDoctor(checksRegistry, repairsRegistry);
         casDoctor.setActiveChecks(
                 checksRegistry.getExtensions().stream().map(c -> c.getId()).toArray(String[]::new));
-        casDoctor.analyze(aDocument.getProject(), aCas, messages, true);
+        casDoctor.analyze(aDocument, INITIAL_CAS_PSEUDO_USER, aCas, messages, true);
     }
 
-    private void splitTokens(CAS cas, FormatSupport aFormat)
-        throws IOException
+    private void splitTokens(CAS cas, FormatSupport aFormat) throws IOException
     {
         var tokenType = getType(cas, Token.class);
 
@@ -396,8 +396,7 @@ public class DocumentImportExportServiceImpl
         }
     }
 
-    private void splitSenencesIfNecssary(CAS cas, FormatSupport aFormat)
-        throws IOException
+    private void splitSenencesIfNecssary(CAS cas, FormatSupport aFormat) throws IOException
     {
         var sentenceType = getType(cas, Sentence.class);
 
@@ -551,15 +550,16 @@ public class DocumentImportExportServiceImpl
         return features;
     }
 
-    private void addOrUpdateDocumentMetadata(CAS aCas, SourceDocument aDocument, String aFileName)
+    static void addOrUpdateDocumentMetadata(CAS aCas, SourceDocument aDocument, String aFileName)
         throws MalformedURLException, CASException
     {
         var slug = aDocument.getProject().getSlug();
         var documentMetadata = DocumentMetaData.get(aCas.getJCas());
+        documentMetadata.setDocumentTitle(aDocument.getName());
+        documentMetadata.setCollectionId(slug);
+        documentMetadata.setDocumentId(aFileName);
         documentMetadata.setDocumentBaseUri(slug);
         documentMetadata.setDocumentUri(slug + "/" + aFileName);
-        documentMetadata.setCollectionId(slug + "/" + aFileName);
-        documentMetadata.setDocumentId(aFileName);
     }
 
     private void addLayerAndFeatureDefinitionAnnotations(CAS aCas, Project aProject,

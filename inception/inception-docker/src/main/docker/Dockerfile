@@ -4,7 +4,7 @@
 #
 ############################################################
 
-FROM eclipse-temurin:17
+FROM eclipse-temurin:21@sha256:843686b2422d68890bb3ee90c5d08d9b325b9a2acf06ffca42351c2d187d3921
 
 MAINTAINER INCEpTION Team
 

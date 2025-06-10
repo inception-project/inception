@@ -27,10 +27,10 @@ The maximum number of results can also be configured separately for each knowled
 .Hard max results
 A hard limit for the *Max results* parameter.
 
-If no value for the parameter is specified, its default value is used. The default value is shown as
-an example of how the parameter can be configured below:
+If no value for the parameter is specified, its default value is used.
+The default value is shown as an example of how the parameter can be configured below:
 
-.Knowledge base settings overview
+.Knowledge base settings
 [cols="4*", options="header"]
 |===
 | Setting
@@ -38,58 +38,57 @@ an example of how the parameter can be configured below:
 | Default
 | Example
 
-| knowledge-base.enabled
+| `knowledge-base.enabled`
 | enable/disable KB support
-| true
-| false
+| `true`
+| `false`
 
-| knowledge-base.default-max-results
+| `knowledge-base.default-max-results`
 | default result limit for SPARQL query
-| 1000
-| 10000
+| `1000`
+| `10000`
 
-| knowledge-base.hard-max-results
+| `knowledge-base.hard-max-results`
 | hard limit for the maximum number of results from a query
-| 10000
-| 5000
+| `10000`
+| `5000`
 
-| knowledge-base.cache-size
+| `knowledge-base.cache-size`
 | number of items (classes, instances and properties) to cache
-| 100000
-| 500000
+| `100000`
+| `500000`
 
-| knowledge-base.cache-expire-delay
+| `knowledge-base.cache-expire-delay`
 | time before items are expunged from the cache
-| 15m
-| 1h
+| `15m`
+| `1h`
 
-| knowledge-base.cache-refresh-delay
+| `knowledge-base.cache-refresh-delay`
 | time before items are asynchronously refreshed
-| 5m
-| 30m
+| `5m`
+| `30m`
 
-| knowledge-base.render-cache-size
+| `knowledge-base.render-cache-size`
 | number of items (classes, instances and properties) to cache during rendering
-| 10000
-| 50000
+| `10000`
+| `50000`
 
-| knowledge-base.render-cache-expire-delay
+| `knowledge-base.render-cache-expire-delay`
 | time before items are expunged from the render cache
-| 10m
-| 1h
+| `10m`
+| `1h`
 
-| knowledge-base.render-cache-refresh-delay
+| `knowledge-base.render-cache-refresh-delay`
 | time before items are asynchronously refreshed when rendering
-| 1m
-| 5m
+| `1m`
+| `5m`
 
-| knowledge-base.remove-orphans-on-start
+| `knowledge-base.remove-orphans-on-start`
 | whether to delete orphaned KBs on start
-| false
-| true
+| `false`
+| `true`
 |===
 
 NOTE: Disabling the knowledge base support will lead to the loss of concept linked features from
-      documents/projects that were using them. If you wish to run the application without knowledge base 
-      support, it is strongly recommended to disable the feature immediately after the installation and
-      not after any projects have potentially started using it.
+      documents/projects that were using them. 
+      If you wish to run the application without knowledge base support, it is strongly recommended to disable the feature immediately after the installation and not after any projects have potentially started using it.

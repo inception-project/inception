@@ -82,14 +82,16 @@ public class KnowledgeBaseProfile
     {
     }
 
-    public KnowledgeBaseProfile(@JsonProperty("name") String aName,
-            @JsonProperty("disabled") boolean aDisabled, @JsonProperty("type") RepositoryType aType,
-            @JsonProperty("access") KnowledgeBaseAccess aAccess,
-            @JsonProperty("mapping") KnowledgeBaseMapping aMapping,
-            @JsonProperty("root-concepts") List<String> aRootConcepts,
-            @JsonProperty("info") KnowledgeBaseInfo aInfo,
-            @JsonProperty("reification") Reification aReification,
-            @JsonProperty("default-language") String aDefaultLanguage,
+    public KnowledgeBaseProfile( //
+            @JsonProperty("name") String aName, //
+            @JsonProperty("disabled") boolean aDisabled, //
+            @JsonProperty("type") RepositoryType aType, //
+            @JsonProperty("access") KnowledgeBaseAccess aAccess, //
+            @JsonProperty("mapping") KnowledgeBaseMapping aMapping, //
+            @JsonProperty("root-concepts") List<String> aRootConcepts, //
+            @JsonProperty("info") KnowledgeBaseInfo aInfo, //
+            @JsonProperty("reification") Reification aReification, //
+            @JsonProperty("default-language") String aDefaultLanguage, //
             @JsonProperty("default-dataset") String aDefaultDataset)
     {
         name = aName;
@@ -234,6 +236,14 @@ public class KnowledgeBaseProfile
         defaultDataset = aDefaultDataset;
     }
 
+    /**
+     * Reads knowledge base profiles from a YAML file and stores them in a HashMap with the key that
+     * is defined in the file and a corresponding {@link KnowledgeBaseProfile} object as value
+     * 
+     * @return a HashMap with the knowledge base profiles
+     * @throws IOException
+     *             if an error occurs when reading the file
+     */
     public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
     {
         try (var r = new InputStreamReader(

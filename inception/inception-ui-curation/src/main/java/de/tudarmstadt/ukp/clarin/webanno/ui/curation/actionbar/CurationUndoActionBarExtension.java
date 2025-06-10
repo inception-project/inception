@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
  * {@link LegacyCurationUIAutoConfiguration#curationUndoActionBarExtension}.
  * </p>
  */
-@Order(0)
+@Order(ActionBarExtension.ORDER_UNDO)
 public class CurationUndoActionBarExtension
     implements ActionBarExtension
 {

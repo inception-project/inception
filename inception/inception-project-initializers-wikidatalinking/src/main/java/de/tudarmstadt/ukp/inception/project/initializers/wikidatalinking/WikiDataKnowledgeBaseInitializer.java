@@ -17,19 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking;
 
-import static java.util.Collections.emptyList;
-
 import java.io.IOException;
-import java.util.List;
+import java.lang.invoke.MethodHandles;
+import java.util.Optional;
 
-import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.KnowledgeBaseInitializer;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
-import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.config.WikiDataLinkingProjectInitializersAutoConfiguration;
 
 /**
@@ -39,23 +39,20 @@ import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.config.
  * </p>
  */
 public class WikiDataKnowledgeBaseInitializer
-    implements ProjectInitializer
+    implements KnowledgeBaseInitializer
 {
-    private static final String WIKIDATA_PROFILE = "wikidata";
+    private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "Lexicon.svg");
 
     private final KnowledgeBaseService kbService;
-    private final KnowledgeBaseProfile wikidataProfile;
-    private final KnowledgeBaseProperties kbProperties;
+    private final KnowledgeBaseProfile profile;
 
-    public WikiDataKnowledgeBaseInitializer(KnowledgeBaseService aKbService,
-            KnowledgeBaseProperties aKbProperties)
+    public WikiDataKnowledgeBaseInitializer(KnowledgeBaseService aKbService)
     {
         kbService = aKbService;
-        kbProperties = aKbProperties;
 
         try {
-            wikidataProfile = KnowledgeBaseProfile.readKnowledgeBaseProfiles()
-                    .get(WIKIDATA_PROFILE);
+            profile = KnowledgeBaseProfile.readKnowledgeBaseProfiles().get("wikidata");
         }
         catch (IOException e) {
             throw new IllegalStateException(e);
@@ -65,7 +62,19 @@ public class WikiDataKnowledgeBaseInitializer
     @Override
     public String getName()
     {
-        return "Wikidata knowledge base";
+        return profile.getName();
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.ofNullable(profile.getInfo().getDescription());
+    }
+
+    @Override
+    public Optional<ResourceReference> getThumbnail()
+    {
+        return Optional.of(THUMBNAIL);
     }
 
     @Override
@@ -77,37 +86,18 @@ public class WikiDataKnowledgeBaseInitializer
     @Override
     public boolean alreadyApplied(Project aProject)
     {
-        return kbService.knowledgeBaseExists(aProject, wikidataProfile.getName());
+        return kbService.knowledgeBaseExists(aProject, profile.getName());
     }
 
     @Override
-    public List<Class<? extends ProjectInitializer>> getDependencies()
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
-        return emptyList();
-    }
-
-    @Override
-    public void configure(Project aProject) throws IOException
-    {
-        // set all the fields according to the chosen profile
-        RepositoryImplConfig cfg = kbService
-                .getRemoteConfig(wikidataProfile.getAccess().getAccessUrl());
-
-        // sets root concepts list - if null then an empty list otherwise change the
-        // values to IRI and populate the list
-        KnowledgeBase kb = new KnowledgeBase();
-        kb.setProject(aProject);
+        var kb = new KnowledgeBase();
+        kbService.configure(kb, profile);
+        kb.setProject(aRequest.getProject());
         kb.setReadOnly(true);
-        kb.setMaxResults(kbProperties.getDefaultMaxResults());
-        kb.setType(wikidataProfile.getType());
-        kb.setName(wikidataProfile.getName());
-        kb.applyRootConcepts(wikidataProfile);
-        kb.applyMapping(wikidataProfile.getMapping());
-        kb.setFullTextSearchIri(wikidataProfile.getAccess().getFullTextSearchIri());
-        kb.setDefaultLanguage(wikidataProfile.getDefaultLanguage());
-        kb.setDefaultDatasetIri(wikidataProfile.getDefaultDataset());
-        kb.setReification(wikidataProfile.getReification());
 
+        var cfg = kbService.getRemoteConfig(profile.getAccess().getAccessUrl());
         kbService.registerKnowledgeBase(kb, cfg);
     }
 }

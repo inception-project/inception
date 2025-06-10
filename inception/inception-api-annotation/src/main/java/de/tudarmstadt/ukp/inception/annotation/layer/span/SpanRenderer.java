@@ -40,6 +40,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureTraits;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationRenderer;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
@@ -95,20 +96,17 @@ public class SpanRenderer
     }
 
     @Override
-    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
-            int aWindowEnd)
+    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest)
     {
         var cas = aRequest.getCas();
+        var windowBegin = aRequest.getWindowBeginOffset();
+        var windowEnd = aRequest.getWindowEndOffset();
 
-        if (!aRequest.isLongArcs()) {
-            return cas.<Annotation> select(type) //
-                    .coveredBy(0, aWindowEnd) //
-                    .includeAnnotationsWithEndBeyondBounds() //
-                    .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd))
-                    .toList();
-        }
-
-        return aRequest.getCas().<Annotation> select(type).toList();
+        return cas.<Annotation> select(type) //
+                .coveredBy(0, windowEnd) //
+                .includeAnnotationsWithEndBeyondBounds() //
+                .filter(ann -> AnnotationPredicates.overlapping(ann, windowBegin, windowEnd))
+                .toList();
     }
 
     @Override
@@ -154,8 +152,7 @@ public class SpanRenderer
         // Index mapping annotations to the corresponding rendered spans
         var annoToSpanIdx = new HashMap<AnnotationFS, VSpan>();
 
-        var annotations = selectAnnotationsInWindow(aRequest, aResponse.getWindowBegin(),
-                aResponse.getWindowEnd());
+        var annotations = selectAnnotationsInWindow(aRequest);
 
         for (var fs : annotations) {
             for (var vobj : render(aRequest, aFeatures, aResponse, fs)) {
@@ -208,6 +205,7 @@ public class SpanRenderer
         var typeAdapter = getTypeAdapter();
         var aWindowBegin = aVDocument.getWindowBegin();
         var aWindowEnd = aVDocument.getWindowEnd();
+        var layer = typeAdapter.getLayer();
 
         int fi = 0;
         nextFeature: for (var feat : typeAdapter.listFeatures()) {
@@ -217,6 +215,8 @@ public class SpanRenderer
             }
 
             if (feat.getMultiValueMode() == ARRAY && feat.getLinkMode() == WITH_ROLE) {
+                var traits = getTraits(feat, LinkFeatureTraits.class);
+
                 List<LinkWithRoleModel> links = typeAdapter.getFeatureValue(feat, aFS);
                 for (var li = 0; li < links.size(); li++) {
                     var link = links.get(li);
@@ -234,12 +234,16 @@ public class SpanRenderer
                                 .withSlot(li) //
                                 .build();
 
+                        var label = traits.map(LinkFeatureTraits::isEnableRoleLabels).orElse(false)
+                                ? link.role
+                                : feat.getUiName();
+
                         var arc = VArc.builder() //
-                                .withLayer(typeAdapter.getLayer()) //
+                                .withLayer(layer) //
                                 .withVid(vid) //
                                 .withSource(aSource) //
                                 .withTarget(target) //
-                                .withLabel(link.role) //
+                                .withLabel(label) //
                                 .build();
 
                         aSpansAndSlots.add(arc);

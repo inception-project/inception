@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.Re
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.SpanAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableActionSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationActionSupport;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UnitAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.layer.LayerVisibilitySidebarFactory;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.servlet.ServletContext;
@@ -67,6 +68,12 @@ public class AnnotationUIAutoConfiguration
     public SpanAnnotationActionUndoSupport spanAnnotationActionUndoSupport()
     {
         return new SpanAnnotationActionUndoSupport();
+    }
+
+    @Bean
+    public UnitAnnotationActionUndoSupport unitAnnotationActionUndoSupport()
+    {
+        return new UnitAnnotationActionUndoSupport();
     }
 
     @Bean

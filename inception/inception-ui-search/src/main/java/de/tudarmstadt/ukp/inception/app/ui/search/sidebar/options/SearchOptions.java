@@ -21,21 +21,40 @@ import java.io.Serializable;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.search.SearchResult;
 
 public class SearchOptions
     implements Serializable
 {
     private static final long serialVersionUID = 3030323391922717647L;
 
+    private String query;
+    private SearchResult selectedResult;
     private boolean limitedToCurrentDocument = false;
-
     private AnnotationLayer groupingLayer;
-
     private AnnotationFeature groupingFeature;
-
     private long itemsPerPage;
-
     private boolean lowLevelPaging;
+
+    public void setSelectedResult(SearchResult aSelectedResult)
+    {
+        selectedResult = aSelectedResult;
+    }
+
+    public SearchResult getSelectedResult()
+    {
+        return selectedResult;
+    }
+
+    public String getQuery()
+    {
+        return query;
+    }
+
+    public void setQuery(String aQuery)
+    {
+        query = aQuery;
+    }
 
     public boolean isLimitedToCurrentDocument()
     {

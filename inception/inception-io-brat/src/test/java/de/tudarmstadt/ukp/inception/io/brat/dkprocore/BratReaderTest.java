@@ -35,41 +35,41 @@ class BratReaderTest
     void test() throws Exception
     {
         var mapping = """
-                      {
-                        'textTypeMapppings': [
-                          {
-                            'from': '.*',
-                            'to': 'custom.Span',
-                            'defaultFeatureValues': { }
-                          }
-                        ],
-                        'relationTypeMapppings': [
-                          {
-                            'from': '.*',
-                            'to': 'custom.Relation',
-                            'defaultFeatureValues': { }
-                          }
-                        ],
-                        'spans': [
-                          {
-                            'type': 'custom.Span',
-                            'subCatFeature': 'value',
-                            'defaultFeatureValues': { }
-                          }
-                        ],
-                        'relations': [
-                          {
-                            'type': 'custom.Relation',
-                            'arg1': 'Governor',
-                            'arg2': 'Dependent',
-                            'flags2': 'A',
-                            'subCatFeature': 'value',
-                            'defaultFeatureValues': { }
-                          }
-                        ],
-                        'comments': [ ]
-                      }
-                      """;
+                {
+                  'textTypeMapppings': [
+                    {
+                      'from': '.*',
+                      'to': 'custom.Span',
+                      'defaultFeatureValues': { }
+                    }
+                  ],
+                  'relationTypeMapppings': [
+                    {
+                      'from': '.*',
+                      'to': 'custom.Relation',
+                      'defaultFeatureValues': { }
+                    }
+                  ],
+                  'spans': [
+                    {
+                      'type': 'custom.Span',
+                      'subCatFeature': 'value',
+                      'defaultFeatureValues': { }
+                    }
+                  ],
+                  'relations': [
+                    {
+                      'type': 'custom.Relation',
+                      'arg1': 'Governor',
+                      'arg2': 'Dependent',
+                      'flags2': 'A',
+                      'subCatFeature': 'value',
+                      'defaultFeatureValues': { }
+                    }
+                  ],
+                  'comments': [ ]
+                }
+                """;
 
         var tsd = UIMAFramework.getResourceSpecifierFactory().createTypeSystemDescription();
 

@@ -24,11 +24,14 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.DoubleStream;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizingAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public class AgreementSummary
     implements Serializable
@@ -61,7 +64,7 @@ public class AgreementSummary
                     + "] but encountered [" + aResult.type + "]");
         }
 
-        if (!feature.equals(aResult.feature)) {
+        if (!Objects.equals(feature, aResult.feature)) {
             throw new IllegalArgumentException("All merged results must have the same feature ["
                     + feature + "] but encountered [" + aResult.feature + "]");
         }
@@ -123,9 +126,10 @@ public class AgreementSummary
                 "Unsupported result type: [" + aResult.getClass().getName() + "]");
     }
 
-    public static AgreementSummary skipped(String aType, String aFeature)
+    public static AgreementSummary skipped(AnnotationLayer aLayer, AnnotationFeature aFeature)
     {
-        return new AgreementSummary(aType, aFeature);
+        var featureName = aFeature != null ? aFeature.getName() : null;
+        return new AgreementSummary(aLayer.getName(), featureName);
     }
 
     public AgreementSummary(String aType, String aFeature)

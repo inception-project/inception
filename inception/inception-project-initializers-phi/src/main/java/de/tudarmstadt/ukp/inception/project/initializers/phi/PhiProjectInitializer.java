@@ -91,6 +91,12 @@ public class PhiProjectInitializer
     }
 
     @Override
+    public boolean hasExamples()
+    {
+        return true;
+    }
+
+    @Override
     public boolean alreadyApplied(Project aProject)
     {
         return false;
@@ -122,23 +128,23 @@ public class PhiProjectInitializer
 
         var description = //
                 """
-                This project comes pre-configured for **Personal Health Information (PHI)**.
+                        This project comes pre-configured for **Personal Health Information (PHI)**.
 
-                To annotate a PHI information, mark the text with the mouse, then assign a category in annotation detail
-                panel on the right.
+                        To annotate a PHI information, mark the text with the mouse, then assign a category in annotation detail
+                        panel on the right.
 
-                The tagset used in this project template was derived from the PHI tagset used by the GeMTeX project.
-                It was originally published as part of the [`GraSCCo_PHI` dataset](https://zenodo.org/records/11502329).
-                """;
+                        The tagset used in this project template was derived from the PHI tagset used by the GeMTeX project.
+                        It was originally published as part of the [`GraSCCo_PHI` dataset](https://zenodo.org/records/11502329).
+                        """;
 
         if (isStringRecommenderAvailable()) {
             description += //
                     """
 
-                    The project includes recommenders that will learn from the annotations you make and suggest further
-                    entities to annotate in the text. These suggestions will appear in gray. You can accept a
-                    suggestion by a single click. A double-click will instead reject the suggestion.
-                    """;
+                            The project includes recommenders that will learn from the annotations you make and suggest further
+                            entities to annotate in the text. These suggestions will appear in gray. You can accept a
+                            suggestion by a single click. A double-click will instead reject the suggestion.
+                            """;
         }
 
         if (aRequest.isIncludeSampleData()) {

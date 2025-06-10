@@ -18,8 +18,8 @@
 
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
-import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.dumpAgreementStudy;
-import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.makeCodingStudy;
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.CodingStudyUtils.dumpCodingStudy;
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.CodingStudyUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.ConcreteAgreementMeasure.COHEN_KAPPA_AGREEMENT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
@@ -377,7 +377,7 @@ public class AgreementTestUtils
         }
         catch (RuntimeException e) {
             // FIXME
-            dumpAgreementStudy(System.out, agreementResult);
+            dumpCodingStudy(System.out, agreementResult);
             throw e;
         }
 

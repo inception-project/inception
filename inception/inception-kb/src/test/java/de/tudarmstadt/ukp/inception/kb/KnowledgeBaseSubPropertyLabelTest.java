@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -36,6 +37,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -68,6 +71,8 @@ import jakarta.persistence.EntityManager;
         excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
 public class KnowledgeBaseSubPropertyLabelTest
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final String PROJECT_NAME = "Test project";
 
     @TempDir
@@ -129,9 +134,9 @@ public class KnowledgeBaseSubPropertyLabelTest
         List<KBHandle> instanceKBHandle = sut.listInstances(kb, concept, true);
         duration = System.currentTimeMillis() - duration;
 
-        System.out.printf("Instances retrieved for %s : %d%n", concept, instanceKBHandle.size());
-        System.out.printf("Time required           : %d ms%n", duration);
-        instanceKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
+        LOG.info("Instances retrieved for {} : {}", concept, instanceKBHandle.size());
+        LOG.info("Time required           : {} ms", duration);
+        instanceKBHandle.stream().limit(10).forEach(h -> LOG.info("   {}", h));
 
         assertThat(instanceKBHandle).as("Check that instance list is not empty").isNotEmpty();
         assertThat(instanceKBHandle.stream().map(KBHandle::getName))

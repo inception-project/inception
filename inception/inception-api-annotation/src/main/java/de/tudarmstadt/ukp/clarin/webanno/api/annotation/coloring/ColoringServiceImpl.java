@@ -27,7 +27,6 @@ import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyTy
 import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType.LEGACY;
 import static de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType.STATIC_PASTELLE;
 import static de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringStrategy.NORMAL;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.lang.Integer.MAX_VALUE;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -44,13 +43,12 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
-import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringStrategy;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.ColoringPreferences;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
@@ -84,8 +82,8 @@ public class ColoringServiceImpl
     public ColoringStrategy getStrategy(AnnotationLayer aLayer, ColoringPreferences aPreferences,
             Map<String[], Queue<String>> aColorQueues)
     {
-        ColoringStrategyType t = aPreferences.getColorPerLayer().get(aLayer.getId());
-        ReadonlyColoringStrategy rt = aPreferences.getReadonlyLayerColoringBehaviour();
+        var t = aPreferences.getColorPerLayer().get(aLayer.getId());
+        var rt = aPreferences.getReadonlyLayerColoringBehaviour();
 
         if (aLayer.isReadonly() && rt != NORMAL) {
             t = rt.getColoringStrategy();
@@ -105,7 +103,7 @@ public class ColoringServiceImpl
         switch (colortype) {
         case STATIC_PASTELLE: { // ignore for the moment and fall through
             int threshold;
-            if (SPAN_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
+            if (SpanLayerSupport.TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
                 threshold = MAX_VALUE; // No filtering
             }
             else {
@@ -122,7 +120,7 @@ public class ColoringServiceImpl
         }
         case STATIC: {
             int threshold;
-            if (SPAN_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
+            if (SpanLayerSupport.TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
                 threshold = MAX_VALUE; // No filtering
             }
             else {
@@ -138,7 +136,7 @@ public class ColoringServiceImpl
             return new LabelHashBasedColoringStrategy(aPalette);
         }
         case DYNAMIC_PASTELLE: {
-            if (SPAN_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
+            if (SpanLayerSupport.TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
                 return new LabelHashBasedColoringStrategy(PALETTE_PASTEL);
             }
 
@@ -148,7 +146,7 @@ public class ColoringServiceImpl
             return new LabelHashBasedColoringStrategy(PALETTE_NORMAL_FILTERED);
         }
         case DYNAMIC: {
-            if (SPAN_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
+            if (SpanLayerSupport.TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
                 return new LabelHashBasedColoringStrategy(PALETTE_NORMAL);
             }
 
@@ -180,7 +178,7 @@ public class ColoringServiceImpl
 
     private boolean loadHasLinkFeature(AnnotationLayer aLayer)
     {
-        for (AnnotationFeature feature : schemaService.listAnnotationFeature(aLayer)) {
+        for (var feature : schemaService.listAnnotationFeature(aLayer)) {
             if (!LinkMode.NONE.equals(feature.getLinkMode())) {
                 return true;
             }
@@ -193,15 +191,15 @@ public class ColoringServiceImpl
             int aThreshold)
     {
         // Initialize the color queue if not already done so
-        Queue<String> colorQueue = aPaletteCursors.get(aPalette);
+        var colorQueue = aPaletteCursors.get(aPalette);
         if (colorQueue == null) {
             colorQueue = new LinkedList<>(asList(aPalette));
             aPaletteCursors.put(aPalette, colorQueue);
         }
 
         // Look for a suitable color
-        String color = colorQueue.poll();
-        String firstColor = color;
+        var color = colorQueue.poll();
+        var firstColor = color;
         while (isTooLight(color, aThreshold)) {
             colorQueue.add(color);
             color = colorQueue.poll();

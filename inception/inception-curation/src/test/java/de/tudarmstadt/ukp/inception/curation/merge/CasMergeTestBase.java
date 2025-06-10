@@ -20,24 +20,22 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.NER_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.SENTENCE_DIFF_ADAPTER;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.TOKEN_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
+import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.EXCLUDE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -63,12 +61,12 @@ import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistryImpl;
-import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
 
 @ExtendWith(MockitoExtension.class)
 public class CasMergeTestBase
@@ -95,6 +93,7 @@ public class CasMergeTestBase
     protected AnnotationFeature depFlavorFeature;
     protected AnnotationLayer slotLayer;
     protected AnnotationFeature slotFeature;
+    protected AnnotationFeature slotFeature2;
     protected AnnotationFeature stringFeature;
     protected AnnotationLayer multiValRel;
     protected AnnotationFeature multiValRelRel1;
@@ -103,7 +102,9 @@ public class CasMergeTestBase
     protected AnnotationFeature multiValSpanF1;
     protected AnnotationFeature multiValSpanF2;
     protected SourceDocument document;
+
     protected List<DiffAdapter> diffAdapters;
+    protected SpanDiffAdapter slotHostDiffAdapter;
 
     protected static final RelationDiffAdapter MULTIVALREL_DIFF_ADAPTER = new RelationDiffAdapter(
             "webanno.custom.Multivalrel", "Dependent", "Governor", "rel1", "rel2");
@@ -113,12 +114,15 @@ public class CasMergeTestBase
     @BeforeEach
     public void setup() throws Exception
     {
-        var slotHostDiffAdapter = new SpanDiffAdapter(HOST_TYPE);
-        slotHostDiffAdapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES);
+        slotHostDiffAdapter = new SpanDiffAdapter(HOST_TYPE);
+        slotHostDiffAdapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES,
+                EXCLUDE);
+        slotHostDiffAdapter.addLinkFeature("altLinks", "role", "target", ONE_TARGET_MULTIPLE_ROLES,
+                EXCLUDE);
 
         diffAdapters = new ArrayList<>();
-        diffAdapters.add(TOKEN_DIFF_ADAPTER);
-        diffAdapters.add(SENTENCE_DIFF_ADAPTER);
+        // diffAdapters.add(TOKEN_DIFF_ADAPTER);
+        // diffAdapters.add(SENTENCE_DIFF_ADAPTER);
         diffAdapters.add(POS_DIFF_ADAPTER);
         diffAdapters.add(NER_DIFF_ADAPTER);
         diffAdapters.add(DEPENDENCY_DIFF_ADAPTER);
@@ -156,7 +160,7 @@ public class CasMergeTestBase
         posFeature = new AnnotationFeature();
         posFeature.setName("PosValue");
         posFeature.setEnabled(true);
-        posFeature.setType(CAS.TYPE_NAME_STRING);
+        posFeature.setType(TYPE_NAME_STRING);
         posFeature.setUiName("PosValue");
         posFeature.setLayer(posLayer);
         posFeature.setProject(project);
@@ -166,7 +170,7 @@ public class CasMergeTestBase
         posCoarseFeature = new AnnotationFeature();
         posCoarseFeature.setName("coarseValue");
         posCoarseFeature.setEnabled(true);
-        posCoarseFeature.setType(CAS.TYPE_NAME_STRING);
+        posCoarseFeature.setType(TYPE_NAME_STRING);
         posCoarseFeature.setUiName("coarseValue");
         posCoarseFeature.setLayer(posLayer);
         posCoarseFeature.setProject(project);
@@ -179,7 +183,7 @@ public class CasMergeTestBase
         neFeature = new AnnotationFeature();
         neFeature.setName("value");
         neFeature.setEnabled(true);
-        neFeature.setType(CAS.TYPE_NAME_STRING);
+        neFeature.setType(TYPE_NAME_STRING);
         neFeature.setUiName("value");
         neFeature.setLayer(neLayer);
         neFeature.setProject(project);
@@ -189,22 +193,22 @@ public class CasMergeTestBase
         neIdentifierFeature = new AnnotationFeature();
         neIdentifierFeature.setName("identifier");
         neIdentifierFeature.setEnabled(true);
-        neIdentifierFeature.setType(CAS.TYPE_NAME_STRING);
+        neIdentifierFeature.setType(TYPE_NAME_STRING);
         neIdentifierFeature.setUiName("identifier");
         neIdentifierFeature.setLayer(neLayer);
         neIdentifierFeature.setProject(project);
         neIdentifierFeature.setVisible(true);
         neIdentifierFeature.setCuratable(true);
 
-        depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency", RELATION_TYPE,
-                project, true, SINGLE_TOKEN, OVERLAP_ONLY);
+        depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
+                RelationLayerSupport.TYPE, project, true, SINGLE_TOKEN, OVERLAP_ONLY);
         depLayer.setAttachType(tokenLayer);
         depLayer.setAttachFeature(tokenPosFeature);
 
         depFeature = new AnnotationFeature();
         depFeature.setName("DependencyType");
         depFeature.setEnabled(true);
-        depFeature.setType(CAS.TYPE_NAME_STRING);
+        depFeature.setType(TYPE_NAME_STRING);
         depFeature.setUiName("Relation");
         depFeature.setLayer(depLayer);
         depFeature.setProject(project);
@@ -214,7 +218,7 @@ public class CasMergeTestBase
         depFlavorFeature = new AnnotationFeature();
         depFlavorFeature.setName("flavor");
         depFlavorFeature.setEnabled(true);
-        depFlavorFeature.setType(CAS.TYPE_NAME_STRING);
+        depFlavorFeature.setType(TYPE_NAME_STRING);
         depFlavorFeature.setUiName("flavor");
         depFlavorFeature.setLayer(depLayer);
         depFlavorFeature.setProject(project);
@@ -239,10 +243,25 @@ public class CasMergeTestBase
         slotFeature.setVisible(true);
         slotFeature.setCuratable(true);
 
+        slotFeature2 = new AnnotationFeature();
+        slotFeature2.setName("altLinks");
+        slotFeature2.setEnabled(true);
+        slotFeature2.setType(Token.class.getName());
+        slotFeature2.setMode(MultiValueMode.ARRAY);
+        slotFeature2.setLinkMode(LinkMode.WITH_ROLE);
+        slotFeature2.setLinkTypeName(CurationTestUtils.LINK_TYPE);
+        slotFeature2.setLinkTypeRoleFeatureName("role");
+        slotFeature2.setLinkTypeTargetFeatureName("target");
+        slotFeature2.setUiName("links");
+        slotFeature2.setLayer(slotLayer);
+        slotFeature2.setProject(project);
+        slotFeature2.setVisible(true);
+        slotFeature2.setCuratable(true);
+
         stringFeature = new AnnotationFeature();
         stringFeature.setName("f1");
         stringFeature.setEnabled(true);
-        stringFeature.setType(CAS.TYPE_NAME_STRING);
+        stringFeature.setType(TYPE_NAME_STRING);
         stringFeature.setUiName("f1");
         stringFeature.setLayer(slotLayer);
         stringFeature.setProject(project);
@@ -255,7 +274,7 @@ public class CasMergeTestBase
         multiValSpanF1 = new AnnotationFeature();
         multiValSpanF1.setName("f1");
         multiValSpanF1.setEnabled(true);
-        multiValSpanF1.setType(CAS.TYPE_NAME_STRING);
+        multiValSpanF1.setType(TYPE_NAME_STRING);
         multiValSpanF1.setUiName("f1");
         multiValSpanF1.setLayer(multiValSpan);
         multiValSpanF1.setProject(project);
@@ -265,7 +284,7 @@ public class CasMergeTestBase
         multiValSpanF2 = new AnnotationFeature();
         multiValSpanF2.setName("f2");
         multiValSpanF2.setEnabled(true);
-        multiValSpanF2.setType(CAS.TYPE_NAME_STRING);
+        multiValSpanF2.setType(TYPE_NAME_STRING);
         multiValSpanF2.setUiName("f2");
         multiValSpanF2.setLayer(multiValSpan);
         multiValSpanF2.setProject(project);
@@ -273,13 +292,13 @@ public class CasMergeTestBase
         multiValSpanF2.setCuratable(true);
 
         multiValRel = new AnnotationLayer("webanno.custom.Multivalrel", "Multivalrel",
-                RELATION_TYPE, project, true, SINGLE_TOKEN, OVERLAP_ONLY);
+                RelationLayerSupport.TYPE, project, true, SINGLE_TOKEN, OVERLAP_ONLY);
         multiValRel.setAttachType(multiValSpan);
 
         multiValRelRel1 = new AnnotationFeature();
         multiValRelRel1.setName("rel1");
         multiValRelRel1.setEnabled(true);
-        multiValRelRel1.setType(CAS.TYPE_NAME_STRING);
+        multiValRelRel1.setType(TYPE_NAME_STRING);
         multiValRelRel1.setUiName("rel1");
         multiValRelRel1.setLayer(multiValSpan);
         multiValRelRel1.setProject(project);
@@ -289,7 +308,7 @@ public class CasMergeTestBase
         multiValRelRel2 = new AnnotationFeature();
         multiValRelRel2.setName("rel2");
         multiValRelRel2.setEnabled(true);
-        multiValRelRel2.setType(CAS.TYPE_NAME_STRING);
+        multiValRelRel2.setType(TYPE_NAME_STRING);
         multiValRelRel2.setUiName("rel2");
         multiValRelRel2.setLayer(multiValSpan);
         multiValRelRel2.setProject(project);
@@ -349,7 +368,7 @@ public class CasMergeTestBase
                         return asList(neFeature, neIdentifierFeature);
                     }
                     if (type.getName().equals(HOST_TYPE)) {
-                        return asList(slotFeature, stringFeature);
+                        return asList(slotFeature, slotFeature2, stringFeature);
                     }
                     if (type.getName().equals("webanno.custom.Multivalrel")) {
                         return asList(multiValRelRel1, multiValRelRel2);

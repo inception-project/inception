@@ -20,15 +20,16 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
+import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
@@ -76,22 +77,34 @@ public class StringMatchingRecommenderFactory
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public boolean accepts(AnnotationLayer aLayer)
     {
-        if (aLayer == null || aFeature == null) {
+        if (aLayer == null) {
+            return false;
+        }
+
+        return asList(CHARACTERS, SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode())
+                && SpanLayerSupport.TYPE.equals(aLayer.getType());
+    }
+
+    @Override
+    public boolean accepts(AnnotationFeature aFeature)
+    {
+        if (aFeature == null) {
+            return false;
+        }
+
+        if (!accepts(aFeature.getLayer())) {
             return false;
         }
 
         // We exclude sentence level for the moment for no better reason than that would probably
         // generate quite large dictionaries...
-        return (asList(CHARACTERS, SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
-                && SPAN_TYPE.equals(aLayer.getType())
-                && (TYPE_NAME_STRING_ARRAY.equals(aFeature.getType())
-                        // not all are supported/tested yet ||
-                        // ICasUtil.isPrimitive(aFeature.getType())
-                        || asList(CAS.TYPE_NAME_STRING, CAS.TYPE_NAME_BOOLEAN)
-                                .contains(aFeature.getType())
-                        || aFeature.isVirtualFeature());
+        return TYPE_NAME_STRING_ARRAY.equals(aFeature.getType())
+                // not all are supported/tested yet ||
+                // ICasUtil.isPrimitive(aFeature.getType())
+                || asList(TYPE_NAME_STRING, TYPE_NAME_BOOLEAN).contains(aFeature.getType())
+                || aFeature.isVirtualFeature();
     }
 
     @Override

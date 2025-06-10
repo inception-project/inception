@@ -19,14 +19,25 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.config;
 
 import org.springframework.context.annotation.Bean;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementService;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.cohenkappa.CohenKappaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.fleisskappa.FleissKappaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha.KrippendorffAlphaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing.KrippendorffAlphaUnitizingAgreementMeasureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class AgreementAutoConfiguration
 {
+    @Bean
+    public AgreementService agreementService(DocumentService aDocumentService,
+            AnnotationSchemaService aSchemaService, UserDao aUserService)
+    {
+        return new AgreementServiceImpl(aDocumentService, aSchemaService, aUserService);
+    }
+
     @Bean
     public CohenKappaAgreementMeasureSupport cohenKappaAgreementMeasureSupport(
             AnnotationSchemaService aAnnotationService)

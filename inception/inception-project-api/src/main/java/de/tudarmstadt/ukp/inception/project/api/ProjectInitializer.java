@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.project.api;
 
+import static java.util.Collections.emptyList;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -33,7 +35,10 @@ public interface ProjectInitializer
 
     boolean alreadyApplied(Project aProject);
 
-    List<Class<? extends ProjectInitializer>> getDependencies();
+    default List<Class<? extends ProjectInitializer>> getDependencies()
+    {
+        return emptyList();
+    }
 
     default void configure(ProjectInitializationRequest aRequest) throws IOException
     {

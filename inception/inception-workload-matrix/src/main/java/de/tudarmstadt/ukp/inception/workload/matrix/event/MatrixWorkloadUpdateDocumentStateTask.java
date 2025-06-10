@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix.event;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension.MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
@@ -93,7 +94,8 @@ public class MatrixWorkloadUpdateDocumentStateTask
             return;
         }
 
-        int annotatorCount = projectService.listProjectUsersWithPermissions(project).size();
+        int annotatorCount = projectService.listProjectUsersWithPermissions(project, ANNOTATOR)
+                .size();
 
         matrixWorkloadExtension.updateDocumentState(doc, annotatorCount);
     }
@@ -129,7 +131,7 @@ public class MatrixWorkloadUpdateDocumentStateTask
 
         protected Builder()
         {
-            withDebounceMillis(ofSeconds(2));
+            withDebounceDelay(ofSeconds(2));
         }
 
         @SuppressWarnings("unchecked")

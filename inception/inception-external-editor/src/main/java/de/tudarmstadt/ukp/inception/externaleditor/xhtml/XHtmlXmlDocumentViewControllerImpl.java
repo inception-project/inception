@@ -17,8 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.xhtml;
 
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.BODY;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.HEAD;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.HTML;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.P;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.SPAN;
+import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.XHTML_NS_URI;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Optional.ofNullable;
+import static javax.xml.XMLConstants.DEFAULT_NS_PREFIX;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.IMAGE_GIF;
@@ -31,8 +38,6 @@ import java.io.StringWriter;
 import java.security.Principal;
 import java.util.Locale;
 import java.util.Optional;
-
-import javax.xml.XMLConstants;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
@@ -61,10 +66,10 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.externaleditor.XmlDocumentViewControllerImplBase;
+import de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorProperties;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicy;
 import de.tudarmstadt.ukp.inception.externaleditor.xml.XmlCas2SaxEvents;
-import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
 import de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils;
 import jakarta.servlet.ServletContext;
 
@@ -82,23 +87,18 @@ public class XHtmlXmlDocumentViewControllerImpl
     private static final String GET_DOCUMENT_PATH = "/p/{projectId}/d/{documentId}/xml";
     private static final String GET_RESOURCE_PATH = "/p/{projectId}/d/{documentId}/res";
 
-    private static final String XHTML_NS_URI = "http://www.w3.org/1999/xhtml";
-    private static final String HTML = "html";
-    private static final String BODY = "body";
-    private static final String HEAD = "head";
-    private static final String P = "p";
-
     private final DocumentService documentService;
     private final DocumentStorageService documentStorageService;
     private final DocumentImportExportService formatRegistry;
     private final ServletContext servletContext;
+    private final ExternalEditorProperties properties;
 
     @Autowired
     public XHtmlXmlDocumentViewControllerImpl(DocumentService aDocumentService,
             DocumentStorageService aDocumentStorageService,
             AnnotationEditorRegistry aAnnotationEditorRegistry, ServletContext aServletContext,
             DocumentImportExportService aFormatRegistry, DefaultHtmlDocumentPolicy aDefaultPolicy,
-            SafetyNetDocumentPolicy aSafetyNetPolicy)
+            SafetyNetDocumentPolicy aSafetyNetPolicy, ExternalEditorProperties aProperties)
     {
         super(aDefaultPolicy, aSafetyNetPolicy, aFormatRegistry, aAnnotationEditorRegistry);
 
@@ -106,6 +106,7 @@ public class XHtmlXmlDocumentViewControllerImpl
         documentStorageService = aDocumentStorageService;
         servletContext = aServletContext;
         formatRegistry = aFormatRegistry;
+        properties = aProperties;
     }
 
     @Override
@@ -160,12 +161,8 @@ public class XHtmlXmlDocumentViewControllerImpl
             // If the CAS contains an actual HTML structure, then we send that. Mind that we do
             // not inject format-specific CSS then!
             if (casContainsHtml) {
-                var xml = maybeXmlDocument.get();
                 startXHtmlDocument(rawHandler);
-
-                var serializer = new XmlCas2SaxEvents(xml, finalHandler);
-                serializer.process(xml.getRoot());
-
+                renderXmlContent(finalHandler, maybeXmlDocument.get());
                 endXHtmlDocument(rawHandler);
                 return toResponse(out);
             }
@@ -173,31 +170,19 @@ public class XHtmlXmlDocumentViewControllerImpl
             startXHtmlDocument(rawHandler);
 
             rawHandler.startElement(null, null, HTML, null);
-
             renderHead(doc, rawHandler);
 
-            rawHandler.startElement(null, null, BODY, null);
             if (maybeXmlDocument.isEmpty()) {
-                // Gracefully handle the case that the CAS does not contain any XML structure at all
-                // and show only the document text in this case.
-                renderTextContent(cas, finalHandler);
+                if (properties.isInterpretMarkdown()) {
+                    renderMarkdownContent(cas, rawHandler, finalHandler);
+                }
+                else {
+                    renderTextContent(cas, rawHandler, finalHandler);
+                }
             }
             else {
-                var formatPolicy = formatRegistry.getFormatPolicy(doc);
-                var defaultNamespace = formatPolicy.flatMap(policy -> policy.getDefaultNamespace());
-
-                if (defaultNamespace.isPresent()) {
-                    finalHandler.startPrefixMapping(XMLConstants.DEFAULT_NS_PREFIX,
-                            defaultNamespace.get());
-                }
-
-                renderXmlContent(doc, finalHandler, aEditor, maybeXmlDocument.get());
-
-                if (defaultNamespace.isPresent()) {
-                    finalHandler.endPrefixMapping(XMLConstants.DEFAULT_NS_PREFIX);
-                }
+                renderXmlDocument(doc, maybeXmlDocument.get(), rawHandler, finalHandler);
             }
-            rawHandler.endElement(null, null, BODY);
 
             rawHandler.endElement(null, null, HTML);
 
@@ -205,6 +190,28 @@ public class XHtmlXmlDocumentViewControllerImpl
 
             return toResponse(out);
         }
+    }
+
+    private void renderXmlDocument(SourceDocument aDoc, XmlDocument aXmlDocument,
+            ContentHandler aRawHandler, ContentHandler aFinalHandler)
+        throws SAXException, IOException
+    {
+        aRawHandler.startElement(null, null, BODY, null);
+
+        var formatPolicy = formatRegistry.getFormatPolicy(aDoc);
+        var defaultNamespace = formatPolicy.flatMap(policy -> policy.getDefaultNamespace());
+
+        if (defaultNamespace.isPresent()) {
+            aFinalHandler.startPrefixMapping(DEFAULT_NS_PREFIX, defaultNamespace.get());
+        }
+
+        renderXmlContent(aFinalHandler, aXmlDocument);
+
+        if (defaultNamespace.isPresent()) {
+            aFinalHandler.endPrefixMapping(DEFAULT_NS_PREFIX);
+        }
+
+        aRawHandler.endElement(null, null, BODY);
     }
 
     private void endXHtmlDocument(ContentHandler ch) throws SAXException
@@ -219,45 +226,77 @@ public class XHtmlXmlDocumentViewControllerImpl
         ch.startPrefixMapping("", XHTML_NS_URI);
     }
 
-    private void renderHead(SourceDocument doc, ContentHandler ch) throws SAXException
+    private void renderHead(SourceDocument aDoc, ContentHandler aRawHandler) throws SAXException
     {
-        ch.startElement(null, null, HEAD, null);
-        for (var cssUrl : formatRegistry.getFormatCssStylesheets(doc).stream()
+        aRawHandler.startElement(null, null, HEAD, null);
+        for (var cssUrl : formatRegistry.getFormatCssStylesheets(aDoc).stream()
                 .map(css -> ServletContextUtils.referenceToUrl(servletContext, css)).toList()) {
-            renderXmlStylesheet(ch, cssUrl);
+            renderXmlStylesheet(aRawHandler, cssUrl);
         }
-        ch.endElement(null, null, HEAD);
+        aRawHandler.endElement(null, null, HEAD);
     }
 
-    private void renderXmlContent(SourceDocument doc, ContentHandler ch, Optional<String> aEditor,
-            XmlDocument aXmlDocument)
-        throws IOException, SAXException
+    private void renderXmlContent(ContentHandler ch, XmlDocument aXmlDocument) throws SAXException
     {
-        Cas2SaxEvents serializer = new XmlCas2SaxEvents(aXmlDocument, ch);
+        var serializer = new XmlCas2SaxEvents(aXmlDocument, ch);
         serializer.process(aXmlDocument.getRoot());
     }
 
-    private void renderTextContent(CAS cas, ContentHandler ch) throws SAXException
+    private void renderTextContent(CAS aCas, ContentHandler aRawHandler,
+            ContentHandler aFinalHandler)
+        throws SAXException
     {
-        var text = cas.getDocumentText().toCharArray();
-        ch.startElement(null, null, P, null);
+        // Gracefully handle the case that the CAS does not contain any XML structure at all
+        // and show only the document text in this case.
+        var atts = new AttributesImpl();
+        atts.addAttribute("", "", "class", "CDATA", "i7n-plain-text-document");
+        aRawHandler.startElement(null, null, BODY, atts);
+
+        var lineAttribs = new AttributesImpl();
+        lineAttribs.addAttribute("", "", "class", "CDATA", "data-i7n-tracking");
+
+        var text = aCas.getDocumentText().toCharArray();
+        aFinalHandler.startElement(null, null, P, null);
+        aFinalHandler.startElement(null, null, SPAN, lineAttribs);
+
         var lineBreakSequenceLength = 0;
         for (int i = 0; i < text.length; i++) {
             if (text[i] == '\n') {
                 lineBreakSequenceLength++;
+                aFinalHandler.endElement(null, null, SPAN);
+                aFinalHandler.startElement(null, null, SPAN, lineAttribs);
             }
             else if (text[i] != '\r') {
                 if (lineBreakSequenceLength > 1) {
-                    ch.endElement(null, null, P);
-                    ch.startElement(null, null, P, null);
+                    aFinalHandler.endElement(null, null, SPAN);
+                    aFinalHandler.endElement(null, null, P);
+                    aFinalHandler.startElement(null, null, P, null);
+                    aFinalHandler.startElement(null, null, SPAN, lineAttribs);
                 }
 
                 lineBreakSequenceLength = 0;
             }
 
-            ch.characters(text, i, 1);
+            aFinalHandler.characters(text, i, 1);
         }
-        ch.endElement(null, null, P);
+
+        aFinalHandler.endElement(null, null, SPAN);
+        aFinalHandler.endElement(null, null, P);
+
+        aRawHandler.endElement(null, null, BODY);
+    }
+
+    private void renderMarkdownContent(CAS aCas, ContentHandler aRawHandler,
+            ContentHandler aFinalHandler)
+        throws SAXException
+    {
+        var atts = new AttributesImpl();
+        atts.addAttribute("", "", "class", "CDATA", "i7n-markdown-document");
+        aRawHandler.startElement(null, null, BODY, atts);
+
+        new XHtmlXmlMarkdownProcessor().process(aFinalHandler, aCas.getDocumentText());
+
+        aRawHandler.endElement(null, null, BODY);
     }
 
     @PreAuthorize("@documentAccess.canViewAnnotationDocument(#aProjectId, #aDocumentId, #principal.name)")

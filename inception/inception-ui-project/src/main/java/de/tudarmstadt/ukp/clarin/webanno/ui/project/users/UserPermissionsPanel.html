@@ -45,6 +45,13 @@
             <div wicket:id="permissions"></div>
           </div>
         </div>
+        <small class="text-body-secondary card-footer d-block">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          Removing the annotator role from a user will make their annotations inaccessible.
+          Add the annotator role back to the user to make the annotations accessible again.
+          While the annotations of users who have lost the annotator role are not immediately
+          outright deleted, they will not be included in project exports.
+        </small>
       </div>
     </form>
   </wicket:panel>

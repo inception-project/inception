@@ -79,20 +79,22 @@ public class RecommendationEventWebsocketControllerImpl
 
     private RRecommenderLogMessage makeEventMessage(RecommenderTaskNotificationEvent aEvent)
     {
+        var message = aEvent.getMessage();
+        var messageBody = message != null ? message.message : null;
+        var messageLevel = message != null ? message.level : null;
+
         if (aEvent.getSource() instanceof PredictionTask) {
             var sessionOwner = userService.get(aEvent.getUser());
             var predictions = recommendationService.getIncomingPredictions(sessionOwner,
                     aEvent.getProject());
 
             if (predictions != null && predictions.hasNewSuggestions()) {
-                return new RRecommenderLogMessage(aEvent.getMessage().getLevel(),
-                        aEvent.getMessage().getMessage(),
+                return new RRecommenderLogMessage(messageLevel, messageBody,
                         asList(RecommenderActionBarPanel.STATE_PREDICTIONS_AVAILABLE), emptyList());
             }
         }
 
-        return new RRecommenderLogMessage(aEvent.getMessage().getLevel(),
-                aEvent.getMessage().getMessage());
+        return new RRecommenderLogMessage(messageLevel, messageBody);
     }
 
     static String getChannel(Project project, String aUsername)

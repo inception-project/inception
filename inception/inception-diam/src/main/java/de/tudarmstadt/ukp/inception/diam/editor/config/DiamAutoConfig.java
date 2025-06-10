@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemRegistry;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateRelationAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.DeleteAnnotationHandler;
@@ -36,6 +37,7 @@ import de.tudarmstadt.ukp.inception.diam.editor.actions.FillSlotWithExistingAnno
 import de.tudarmstadt.ukp.inception.diam.editor.actions.FillSlotWithNewAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ImplicitUnarmSlotHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.LinkToContextMenuItem;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LoadAnnotationsHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LoadPreferences;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.MoveSpanAnnotationHandler;
@@ -47,6 +49,7 @@ import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupSer
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupServiceImpl;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializer;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializerImpl;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.preferences.ClientSiderUserPreferencesProviderRegistry;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
@@ -74,9 +77,9 @@ public class DiamAutoConfig
     }
 
     @Bean
-    public ScrollToHandler scrollToHandler()
+    public ScrollToHandler scrollToHandler(DocumentService aDocumentService)
     {
-        return new ScrollToHandler();
+        return new ScrollToHandler(aDocumentService);
     }
 
     @Bean
@@ -109,9 +112,10 @@ public class DiamAutoConfig
     }
 
     @Bean
-    public ShowContextMenuHandler ShowContextMenuHandler()
+    public ShowContextMenuHandler showContextMenuHandler(
+            ContextMenuItemRegistry aContextMenuItemRegistry)
     {
-        return new ShowContextMenuHandler();
+        return new ShowContextMenuHandler(aContextMenuItemRegistry);
     }
 
     @Bean
@@ -185,5 +189,12 @@ public class DiamAutoConfig
     {
         return new SavePreferences(aUserService, aPreferencesService,
                 aClientSiderUserPreferencesProviderRegistry);
+    }
+
+    @Bean
+    public LinkToContextMenuItem linkToContextMenuItem(AnnotationSchemaService aSchemaService,
+            CreateRelationAnnotationHandler aCreateRelationAnnotationHandler)
+    {
+        return new LinkToContextMenuItem(aSchemaService, aCreateRelationAnnotationHandler);
     }
 }

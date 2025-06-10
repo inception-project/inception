@@ -1,8 +1,4 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- * 
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,15 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
@@ -39,9 +36,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
@@ -75,7 +71,7 @@ public class RecommenderFactoryRegistryImpl
 
     /* package private */ void init()
     {
-        Map<String, RecommendationEngineFactory<?>> exts = new HashMap<>();
+        var exts = new HashMap<String, RecommendationEngineFactory<?>>();
 
         if (extensionsProxy != null) {
             for (RecommendationEngineFactory<?> ext : extensionsProxy) {
@@ -93,18 +89,23 @@ public class RecommenderFactoryRegistryImpl
     @Override
     public List<RecommendationEngineFactory<?>> getAllFactories()
     {
-        List<RecommendationEngineFactory<?>> factories = new ArrayList<>();
+        var factories = new ArrayList<RecommendationEngineFactory<?>>();
         factories.addAll(extensions.values());
-        return Collections.unmodifiableList(factories);
+        return unmodifiableList(factories);
     }
 
     @Override
-    public List<RecommendationEngineFactory<?>> getFactories(AnnotationLayer aLayer,
-            AnnotationFeature aFeature)
+    public List<RecommendationEngineFactory<?>> getFactories(Recommender aRecommender)
     {
-        return extensions.values().stream().filter(factory -> factory.accepts(aLayer, aFeature))
-                .sorted(Comparator.comparing(RecommendationEngineFactory::getName))
-                .collect(Collectors.toList());
+        if (aRecommender == null) {
+            return emptyList();
+        }
+
+        return extensions.values().stream() //
+                .filter(factory -> factory.accepts(aRecommender.getLayer())
+                        && factory.accepts(aRecommender.getFeature())) //
+                .sorted(comparing(RecommendationEngineFactory::getName)) //
+                .collect(toList());
     }
 
     @Override

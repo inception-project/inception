@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+  <Appenders>
+    <Console name="ConsoleAppender" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %level{length=5} %logger{1} - %msg%n" />
+    </Console>
+  </Appenders>
+
+  <Loggers>
+<!--     <Logger name="de.tudarmstadt.ukp.inception.diam" level="TRACE"/> -->
+<!--     <Logger name="org.springframework.messaging" level="TRACE"/>  -->
+<!--     <Logger name="org.springframework.web.socket.messaging" level="TRACE"/>  -->
+<!--     If there are exceptions during authorization, increase the StompSubProtocolHandler log level! -->
+<!--     <Logger name="org.springframework.web.socket.messaging" level="TRACE"/> -->
+<!--     <Logger name="org.springframework.security.messaging" level="TRACE"/> -->
+<!--     <Logger name="de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator" level="TRACE"/> -->
+<!--     <Logger name="org.springframework.security" level="TRACE" /> -->
+<!--     <Logger name="org.springframework.security.authorization" level="TRACE" /> -->
+<!--     <Logger name="de.tudarmstadt.ukp.inception.support.test.websocket" level="TRACE" /> -->
+<!--     <Logger name="de.tudarmstadt.ukp.inception.assistant" level="TRACE"/> -->
+
+    <Root level="WARN">
+      <AppenderRef ref="ConsoleAppender" />
+    </Root>
+  </Loggers>
+</Configuration>

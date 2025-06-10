@@ -71,10 +71,11 @@ public class DocxFormatSupport
     public Optional<PolicyCollection> getPolicy() throws IOException
     {
         return new WatchedResourceFile<PolicyCollection>(
-                getClass().getResource("/de/tudarmstadt/ukp/inception/io/docx/DocxDocumentPolicy.yaml"),
+                getClass().getResource(
+                        "/de/tudarmstadt/ukp/inception/io/docx/DocxDocumentPolicy.yaml"),
                 PolicyCollectionIOUtils::loadPolicies).get();
     }
-    
+
     @Override
     public List<ResourceReference> getCssStylesheets()
     {

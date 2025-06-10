@@ -1,0 +1,62 @@
+{
+  "name": "@inception-project/${project.artifactId}",
+  "version": "${semver}",
+  "type": "module",
+  "author": "INCEpTION Team",
+  "license": "Apache-2.0",
+  "private": true,
+  "homepage": "https://github.com/inception-project/inception#readme",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "vitest run --reporter=junit --outputFile=\"../../../target/surefire-reports/vitest-test-report.xml\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inception-project/inception.git"
+  },
+  "bugs": {
+    "url": "https://github.com/inception-project/issues"
+  },
+  "dependencies": {
+    "@inception-project/inception-js-api": "${semver}",
+    "@inception-project/inception-diam": "${semver}",
+    "@stomp/stompjs": "${stomp-stompjs.version}",
+    "@types/stompjs": "${types-stompjs.version}"
+  },
+  "optionalDependencies": {
+      "@rollup/rollup-win32-x64-msvc": "${rollup.version}",
+      "@rollup/rollup-linux-x64-gnu": "${rollup.version}",
+      "@rollup/rollup-darwin-x64": "${rollup.version}",
+      "@rollup/rollup-darwin-arm64": "${rollup.version}"
+  },
+  "devDependencies": {
+    "dompurify": "${dompurify.version}",
+    "esbuild": "${esbuild.version}",
+    "esbuild-svelte": "${esbuild-svelte.version}",
+    "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
+    "eslint": "${eslint.version}",
+    "neostandard": "${neostandard.version}",
+    "eslint-plugin-import": "${eslint-plugin-import.version}",
+    "eslint-plugin-n": "${eslint-plugin-n.version}",
+    "eslint-plugin-promise": "${eslint-plugin-promise.version}",
+    "eslint-plugin-svelte": "${eslint-plugin-svelte.version}",
+    "fs-extra": "${fs-extra.version}",
+    "jsdom": "${jsdom.version}",
+    "jsdom-global": "${jsdom-global.version}",
+    "marked": "${marked.version}",
+    "sass": "${sass.version}",
+    "svelte": "${svelte.version}",
+    "svelte-preprocess": "${svelte-preprocess.version}",
+    "@sveltejs/vite-plugin-svelte": "${sveltejs-vite-plugin-svelte.version}",
+    "temp-write": "${temp-write.version}",
+    "@testing-library/svelte": "${testing-library-svelte.version}",
+    "typescript": "${typescript.version}",
+    "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
+    "@typescript-eslint/parser": "${typescript-eslint-parser.version}",
+    "@types/events": "${types-events.version}",
+    "uuid": "${uuid.version}",
+    "vite": "${vite.version}",
+    "vitest": "${vitest.version}",
+    "yargs": "${yargs.version}"
+  }
+}

@@ -17,25 +17,41 @@
      * limitations under the License.
      */
 
-    import { MTaskStateUpdate } from "./MTaskStateUpdate"
+    import type { MTaskStateUpdate } from "./MTaskStateUpdate"
     import { onMount, onDestroy } from "svelte"
-    import { Client, Stomp, IFrame } from "@stomp/stompjs"
+    import { Client, Stomp } from "@stomp/stompjs"
+    import type { IFrame } from "@stomp/stompjs"
 
-    export let csrfToken: string
-    export let endpointUrl: string // should this be full http://... url
-    export let wsEndpointUrl: string // should this be full ws://... url
-    export let taskStatusTopic: string
-    export let taskUpdatesTopic: string
-    export let tasks: MTaskStateUpdate[] = []
-    export let connected = false
-    export let popupMode = true
-    export let showFinishedTasks = true
-    export let typePattern: string = null
+    interface Props {
+        csrfToken: string;
+        endpointUrl: string; // should this be full http://... url
+        wsEndpointUrl: string; // should this be full ws://... url
+        taskStatusTopic: string;
+        taskUpdatesTopic: string;
+        tasks?: MTaskStateUpdate[];
+        connected?: boolean;
+        popupMode?: boolean;
+        showFinishedTasks?: boolean;
+        typePattern?: string;
+    }
+
+    let {
+        csrfToken,
+        endpointUrl,
+        wsEndpointUrl,
+        taskStatusTopic,
+        taskUpdatesTopic,
+        tasks = $bindable([]),
+        connected = $bindable(false),
+        popupMode = true,
+        showFinishedTasks = true,
+        typePattern = null
+    }: Props = $props();
 
     let socket: WebSocket = null
     let stompClient: Client = null
     let connectionError = null
-    let popupOpen = false
+    let popupOpen = $state(false)
 
     export function connect(): void {
         if (connected) {
@@ -49,6 +65,8 @@
         stompClient = Stomp.over(
             () => (socket = new WebSocket(wsEndpoint.toString()))
         );
+        stompClient.connectHeaders= { 'X-CSRF-TOKEN': csrfToken }
+
         stompClient.onConnect = () => {
             connected = true;
             stompClient.subscribe("/user/queue/errors", function (msg) {
@@ -144,12 +162,12 @@
 </script>
 
 {#if popupMode}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="ms-3 float-start" on:click={() => (popupOpen = !popupOpen)}>
-        <!-- svelte-ignore a11y-missing-attribute -->
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <div class="ms-3 float-start" onclick={() => (popupOpen = !popupOpen)}>
+        <!-- svelte-ignore a11y_missing_attribute -->
         <a role="button" tabindex="0" title="Background tasks">
             {#if tasks?.find((t) => t.state === "RUNNING")}
-                <div class="spinner-border spinner-border-sm" role="status" />
+                <div class="spinner-border spinner-border-sm" role="status"></div>
                 Processing...
             {:else if tasks?.length > 0}
                 <i class="far fa-dot-circle"></i>
@@ -192,52 +210,61 @@
                 {#each tasks as item}
                     <li class="list-group-item py-1 px-3">
                         <div
-                            class="d-flex w-100 justify-content-between"
+                            class="d-flex w-100 justify-content-between align-items-center"
                         >
                             {item.title}
                             <span class="d-flex">
                             {#if item.state === 'FAILED'}
-                              <i class="text-danger fas fa-exclamation-triangle" />
+                              <i class="text-danger fas fa-exclamation-triangle"></i>
                             {:else if item.state === 'CANCELLED'}
                               <i class="text-secondary fas fa-ban"></i>
                             {:else if item.state === 'RUNNING'}
-                              <div class="spinner spinner-border spinner-border-sm flex-shrink-0" role="status"/>
+                              <div class="spinner spinner-border spinner-border-sm flex-shrink-0" role="status"></div>
                             {:else if item.state === 'COMPLETED'}
                               <i class="text-success fas fa-check-circle"></i>
                             {/if}
                             {#if endpointUrl && item.state !== 'RUNNING' && item.state !== 'NOT_STARTED'}
-                                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                <i class="fas fa-times-circle ms-2 text-secondary" style="cursor: pointer;" on:click={() => acknowledgeResult(item)} />
+                                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                <i class="fas fa-times-circle ms-2 text-secondary align-content-center" style="cursor: pointer;" onclick={() => acknowledgeResult(item)}></i>
                             {/if}
-                            </span>
+                            {#if item.state === "RUNNING" || item.state === 'NOT_STARTED'}
+                                {#if item.cancellable && endpointUrl}
+                                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                <i class="far fa-stop-circle ms-3 text-secondary align-content-center" style="cursor: pointer;" onclick={() => cancelTask(item)}></i>
+                                {/if}
+                            {/if}
+                        </span>
                         </div>
                         {#if item.state === "RUNNING" || item.state === 'NOT_STARTED'}
-                            <div class="d-flex flex-row">
-                                {#if item.maxProgress}
-                                    <progress
-                                        max={item.maxProgress}
-                                        value={item.progress}
-                                        class="flex-grow-1"
-                                    />
-                                {:else}
-                                    <progress class="flex-grow-1" />
-                                {/if}
-                                {#if item.cancellable && endpointUrl}
-                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                    <i class="far fa-stop-circle ms-3 text-secondary" style="cursor: pointer;" on:click={() => cancelTask(item)} />
-                                {/if}
-                            </div>
+                            {#each item.progresses as progress}
+                                <div class="d-flex flex-row">
+                                    {#if progress.maxProgress}
+                                        <progress
+                                            max={progress.maxProgress}
+                                            value={progress.progress}
+                                            class="flex-grow-1"
+                                        ></progress>
+                                    {:else}
+                                        <progress class="flex-grow-1"></progress>
+                                    {/if}
+                                </div>
+                                {#if progress.unit}
+                                <div class="text-muted small fw-light">
+                                    {progress.progress} / {progress.maxProgress} {progress.unit}
+                                </div>
+                            {/if}
+                    {/each}
                         {/if}
-                        {#if item.latestMessage}
+                        {#if item.latestMessage} 
                             <div class="text-muted small">
                                 {#if item.latestMessage.level === "ERROR"}
                                     <i
                                         class="text-danger fas fa-exclamation-triangle"
-                                    />
+                                    ></i>
                                 {:else if item.latestMessage.level === "WARN"}
                                     <i
                                         class="text-warning fas fa-exclamation-triangle"
-                                    />
+                                    ></i>
                                 {/if}
                                 {item.latestMessage.message}
                             </div>

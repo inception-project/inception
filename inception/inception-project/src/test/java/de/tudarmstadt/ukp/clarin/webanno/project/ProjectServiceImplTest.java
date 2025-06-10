@@ -99,7 +99,7 @@ public class ProjectServiceImplTest
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
         sut = new ProjectServiceImpl(userService, applicationEventPublisher, repositoryProperties,
-                null, testEntityManager.getEntityManager());
+                null, null, testEntityManager.getEntityManager());
 
         // create users
         beate = new User("beate", Role.ROLE_USER, Role.ROLE_ADMIN);
