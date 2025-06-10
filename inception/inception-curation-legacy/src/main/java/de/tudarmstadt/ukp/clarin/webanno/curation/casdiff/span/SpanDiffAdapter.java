@@ -20,15 +20,16 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.cas.text.AnnotationPredicates;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.cas.AnnotationBase;
 import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
@@ -37,9 +38,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanRenderer;
-import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class SpanDiffAdapter
     extends DiffAdapter_ImplBase
@@ -56,56 +54,68 @@ public class SpanDiffAdapter
     public static final SpanDiffAdapter NER_DIFF_ADAPTER = new SpanDiffAdapter(
             NamedEntity.class.getName(), "value", "identifier");
 
-    public SpanDiffAdapter(String aType, String... aLabelFeatures)
+    public SpanDiffAdapter(String aType, String... aFeatures)
     {
-        this(aType, new HashSet<>(asList(aLabelFeatures)));
+        this(aType, new HashSet<>(asList(aFeatures)));
     }
 
-    public SpanDiffAdapter(String aType, Set<String> aLabelFeatures)
+    public SpanDiffAdapter(String aType, Set<String> aFeatures)
     {
-        super(aType, aLabelFeatures);
+        super(aType, aFeatures);
     }
 
-    /**
-     * @see SpanRenderer#selectAnnotationsInWindow
-     */
     @Override
     public List<Annotation> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
     {
-        return aCas.select(getType()).coveredBy(0, aWindowEnd) //
+        return aCas.select(getType()) //
+                .coveredBy(0, aWindowEnd) //
                 .includeAnnotationsWithEndBeyondBounds() //
                 .map(fs -> (Annotation) fs) //
-                .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd)) //
+                .filter(ann -> ann.overlapping(aWindowBegin, aWindowEnd)) //
                 .collect(toList());
     }
 
     @Override
-    public Position getPosition(FeatureStructure aFS, String aFeature, String aRole,
-            int aLinkTargetBegin, int aLinkTargetEnd,
-            LinkFeatureMultiplicityMode aLinkCompareBehavior)
+    public Position getPosition(AnnotationBase aFS)
     {
-        AnnotationFS annoFS = (AnnotationFS) aFS;
+        return SpanPosition.builder() //
+                .forAnnotation((Annotation) aFS) //
+                .build();
+    }
 
-        String collectionId = null;
-        String documentId = null;
-        try {
-            var dmd = WebAnnoCasUtil.getDocumentMetadata(aFS.getCAS());
-            collectionId = FSUtil.getFeature(dmd, "collectionId", String.class);
-            documentId = FSUtil.getFeature(dmd, "documentId", String.class);
-        }
-        catch (IllegalArgumentException e) {
-            // We use this information only for debugging - so we can ignore if the information
-            // is missing.
+    @Override
+    public List<? extends Position> generateSubPositions(AnnotationBase aFs)
+    {
+        var subPositions = new ArrayList<Position>();
+
+        for (var decl : getLinkFeaturesDecls()) {
+            var linkFeature = aFs.getType().getFeatureByBaseName(decl.getName());
+            if (linkFeature == null) {
+                continue;
+            }
+
+            var array = FSUtil.getFeature(aFs, linkFeature, ArrayFS.class);
+
+            if (array == null) {
+                continue;
+            }
+
+            for (var linkFS : array.toArray()) {
+                var role = linkFS.getStringValue(
+                        linkFS.getType().getFeatureByBaseName(decl.getRoleFeature()));
+                var target = (AnnotationFS) linkFS.getFeatureValue(
+                        linkFS.getType().getFeatureByBaseName(decl.getTargetFeature()));
+                var pos = SpanPosition.builder() //
+                        .forAnnotation((Annotation) aFs) //
+                        .withLinkFeature(decl.getName()) //
+                        .withLinkFeatureMultiplicityMode(decl.getMultiplicityMode()) //
+                        .withLinkRole(role) //
+                        .withLinkTarget(target) //
+                        .build();
+                subPositions.add(pos);
+            }
         }
 
-        String linkTargetText = null;
-        if (aLinkTargetBegin != -1 && aFS.getCAS().getDocumentText() != null) {
-            linkTargetText = aFS.getCAS().getDocumentText().substring(aLinkTargetBegin,
-                    aLinkTargetEnd);
-        }
-
-        return new SpanPosition(collectionId, documentId, getType(), annoFS.getBegin(),
-                annoFS.getEnd(), annoFS.getCoveredText(), aFeature, aRole, aLinkTargetBegin,
-                aLinkTargetEnd, linkTargetText, aLinkCompareBehavior);
+        return subPositions;
     }
 }

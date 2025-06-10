@@ -37,6 +37,7 @@ public class ProjectExportTaskMonitor
     private final ProjectExportTaskHandle handle;
     private final long projectId;
     private final String title;
+    private final String filenamePrefix;
 
     private long createTime;
     private long startTime = -1;
@@ -49,11 +50,12 @@ public class ProjectExportTaskMonitor
     private boolean destroyed = false;
 
     public ProjectExportTaskMonitor(Project aProject, ProjectExportTaskHandle aHandle,
-            String aTitle)
+            String aTitle, String aFilenamePrefix)
     {
         projectId = aProject.getId();
         handle = aHandle;
         title = aTitle;
+        filenamePrefix = aFilenamePrefix;
     }
 
     public long getProjectId()
@@ -141,6 +143,11 @@ public class ProjectExportTaskMonitor
     public synchronized File getExportedFile()
     {
         return exportedFile;
+    }
+
+    public String getExportedFilenamePrefix()
+    {
+        return filenamePrefix;
     }
 
     public synchronized void setExportedFile(File aExportedFile)

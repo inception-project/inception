@@ -17,19 +17,23 @@
 [[sect_constraints]]
 = Constraints
 
-Constraints reorder the choice of tags based on the context of an annotation. For instance, for a
-given lemma, not all possible part-of-speech tags are sensible. Constraint rules can be set up to
-reorder the choice of part-of-speech tags such that the relevant tags are listed first. This speeds
-up the annotation process as the annotator can choose from the relevant tags more conveniently.
+Constraints reorder the choice of tags based on the context of an annotation.
+For instance, for a given lemma, not all possible part-of-speech tags are sensible.
+Constraint rules can be set up to reorder the choice of part-of-speech tags such that the relevant tags are listed first.
+This speeds up the annotation process as the annotator can choose from the relevant tags more conveniently.
 
-The choice of tags is not limited, only the order in which they are presented to the annotator. Thus, if
-the project manager has forgotten to set up a constraint or did possible not consider an oddball case,
-the annotator can still make a decision. 
+The choice of tags is not limited, only the order in which they are presented to the annotator. 
+Thus, if the project manager has forgotten to set up a constraint or did possible not consider an oddball case, the annotator can still make a decision. 
 
 
 == Importing constraints
 
-To import a constraints file, go to *Project* and click on the particular project name. On the left side of the screen, a tab bar opens. Choose *Constraints*. You can now choose a constraint file by clicking on *Choose Files*. Then, click on *Import*. Upon import, the application checks if the constraints file is well formed. If they conform to the rules of writing constraints, the constraints are applied. 
+To import a constraints file, go to *Project* and click on the particular project name.
+On the left side of the screen, a tab bar opens.
+Choose *Constraints*. You can now choose a constraint file by clicking on *Choose Files*.
+Then, click on *Import*.
+Upon import, the application checks if the constraints file is well formed.
+If they conform to the rules of writing constraints, the constraints are applied. 
 
 == Implementing constraint sets
 
@@ -172,7 +176,7 @@ Pos {
 
 In the UI, the tags that were matched by the constraints are bold and come first in the list of tags:
 
-image::constraints.png[align="center"]
+image::images/constraints.png[align="center"]
 
 
 === Constraining a relation layer based on its endpoints
@@ -203,7 +207,9 @@ So when we read
 }
 ----
 
-that means: looking at the current annotation of `<LAYER>`, match if the *TARGET* of the relation has a `<FEATURE>` with the given `<VALUE>`. Note that in the snippet above, we use not a simple `<FEATURE>` but actually a `<FEATURE_PATH>` `...pos.PosValue` which means that we first go to the annotation referred to by the `pos` feature on the *TARGET* and then continue to the `PosValue` feature. This is a special situation for the built-in Dependency layer which you do not need when using custom layers.
+that means: looking at the current annotation of `<LAYER>`, match if the *TARGET* of the relation has a `<FEATURE>` with the given `<VALUE>`.
+Note that in the snippet above, we use not a simple `<FEATURE>` but actually a `<FEATURE_PATH>` `...pos.PosValue` which means that we first go to the annotation referred to by the `pos` feature on the *TARGET* and then continue to the `PosValue` feature.
+This is a special situation for the built-in Dependency layer which you do not need when using custom layers.
 
 So the general structure for you to start from could be:
 
@@ -254,11 +260,16 @@ NOTE: It is important that both of the features have tagsets assigned - otherwis
 
 Constraints can be applied to the roles of slot features. This is useful, e.g. when annotating predicate/argument structures where specific predicates can only have certain arguments. 
 
-Consider having a span layer `SemPred` resembling a semantic predicate and bearing a slot feature `arguments` and a string feature `senseId`. We want to restrict the possible argument roles based on the lemma associated with the predicate. The first rule in the following example restricts the `senseId` depending on the value of a `Lemma` annotation at the same position as the `SemPred` annotation. The second rule then restricts the choice of roles for the arguments based on the `senseId`. Note that to apply a restriction to the role of a slot feature, it is
-necessary to append `.role` to the feature name (that is because `role` is technically a nested feature). 
+Consider having a span layer `SemPred` resembling a semantic predicate and bearing a slot feature `arguments` and a string feature `senseId`.
+We want to restrict the possible argument roles based on the lemma associated with the predicate. 
+The first rule in the following example restricts the `senseId` depending on the value of a `Lemma` annotation at the same position as the `SemPred` annotation.
+The second rule then restricts the choice of roles for the arguments based on the `senseId`.
+Note that to apply a restriction to the role of a slot feature, it is necessary to append `.role` to the feature name (that is because `role` is technically a nested feature). 
 Thus, while we can write e.g. `senseId = "Request"` for a simple string feature, it is necessary to write `arguments.role = "Addressee"`.
 
-Note that some role labels are marked with the flag `(!)`. This is a special flag for slot features and indicates that slots with these role labels should be automatically displayed in the UI ready to be filled. This should be used for mandatory or common slots and saves time as the annotator does not have to manually create the slots before filling them.
+Note that some role labels are marked with the flag `(!)`.
+This is a special flag for slot features and indicates that slots with these role labels should be automatically displayed in the UI ready to be filled.
+This should be used for mandatory or common slots and saves time as the annotator does not have to manually create the slots before filling them.
 
 [source,text]
 ----

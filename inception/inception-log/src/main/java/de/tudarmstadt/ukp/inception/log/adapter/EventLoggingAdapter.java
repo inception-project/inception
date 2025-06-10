@@ -84,7 +84,7 @@ public interface EventLoggingAdapter<T>
 
     default LoggedEvent toLoggedEvent(T aEvent) throws Exception
     {
-        LoggedEvent e = new LoggedEvent();
+        var e = new LoggedEvent();
         e.setCreated(getCreated(aEvent));
         e.setEvent(getEvent(aEvent));
         e.setUser(getUser(aEvent));

@@ -34,11 +34,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.event.EventListener;
 
-import de.tudarmstadt.ukp.clarin.webanno.diag.checks.Check;
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorProperties;
-import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class CasDoctor
@@ -52,7 +49,7 @@ public class CasDoctor
     private Set<String> activeRepairs;
 
     private boolean fatalChecks = true;
-    private boolean disableAutoScan = false;
+    // private boolean disableAutoScan = false;
 
     public CasDoctor(CasDoctorProperties aProperties, ChecksRegistry aChecksRegistry,
             RepairsRegistry aRepairsRegistry)
@@ -61,7 +58,7 @@ public class CasDoctor
         repairsRegistry = aRepairsRegistry;
 
         fatalChecks = aProperties.isFatal();
-        disableAutoScan = aProperties.isForceReleaseBehavior();
+        // disableAutoScan = aProperties.isForceReleaseBehavior();
 
         activeChecks = new LinkedHashSet<>();
         if (isNotEmpty(aProperties.getChecks())) {
@@ -80,7 +77,7 @@ public class CasDoctor
         repairsRegistry = aRepairsRegistry;
 
         fatalChecks = false;
-        disableAutoScan = true;
+        // disableAutoScan = true;
 
         activeChecks = new LinkedHashSet<>();
         activeRepairs = new LinkedHashSet<>();
@@ -101,10 +98,10 @@ public class CasDoctor
         return fatalChecks;
     }
 
-    public void repair(Project aProject, CAS aCas)
+    public void repair(SourceDocument aDocument, String aDataOwner, CAS aCas)
     {
-        List<LogMessage> messages = new ArrayList<>();
-        repair(aProject, aCas, messages);
+        var messages = new ArrayList<LogMessage>();
+        repair(aDocument, aDataOwner, aCas, messages);
         if (LOG.isWarnEnabled() && !messages.isEmpty()) {
             messages.forEach(s -> LOG.warn("{}", s));
         }
@@ -115,17 +112,18 @@ public class CasDoctor
         return !activeRepairs.isEmpty();
     }
 
-    public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public void repair(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
     {
         // APPLY REPAIRS
-        long tStart = currentTimeMillis();
+        var tStart = currentTimeMillis();
         for (String repairId : activeRepairs) {
             try {
-                Repair repair = repairsRegistry.getExtension(repairId).orElseThrow(
+                var repair = repairsRegistry.getExtension(repairId).orElseThrow(
                         () -> new NoSuchElementException("Unknown repair [" + repairId + "]"));
-                long tStartTask = currentTimeMillis();
+                var tStartTask = currentTimeMillis();
                 LOG.info("CasDoctor repair [" + repair.getId() + "] running...");
-                repair.repair(aProject, aCas, aMessages);
+                repair.repair(aDocument, aDataOwner, aCas, aMessages);
                 LOG.info("CasDoctor repair [" + repair.getId() + "] completed in "
                         + (currentTimeMillis() - tStartTask) + "ms");
             }
@@ -140,44 +138,46 @@ public class CasDoctor
 
         // POST-CONDITION: CAS must be consistent
         // Ensure that the repairs actually fixed the CAS
-        analyze(aProject, aCas, aMessages, true);
+        analyze(aDocument, aDataOwner, aCas, aMessages, true);
     }
 
-    public boolean analyze(Project aProject, CAS aCas) throws CasDoctorException
+    public boolean analyze(SourceDocument aDocument, String aDataOwner, CAS aCas)
+        throws CasDoctorException
     {
-        List<LogMessage> messages = new ArrayList<>();
-        boolean result = analyze(aProject, aCas, messages);
+        var messages = new ArrayList<LogMessage>();
+        var result = analyze(aDocument, aDataOwner, aCas, messages);
         if (LOG.isDebugEnabled()) {
             messages.forEach(s -> LOG.debug("{}", s));
         }
         return result;
     }
 
-    public boolean analyze(Project aProject, CAS aCas, List<LogMessage> aMessages)
+    public boolean analyze(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages)
         throws CasDoctorException
     {
-        return analyze(aProject, aCas, aMessages, isFatalChecks());
+        return analyze(aDocument, aDataOwner, aCas, aMessages, isFatalChecks());
     }
 
-    public boolean analyze(Project aProject, CAS aCas, List<LogMessage> aMessages,
-            boolean aFatalChecks)
+    public boolean analyze(SourceDocument aDocument, String aDataOwner, CAS aCas,
+            List<LogMessage> aMessages, boolean aFatalChecks)
         throws CasDoctorException
     {
         if (activeChecks.isEmpty()) {
             return true;
         }
 
-        long tStart = currentTimeMillis();
+        var tStart = currentTimeMillis();
 
-        boolean ok = true;
-        for (String checkId : activeChecks) {
+        var ok = true;
+        for (var checkId : activeChecks) {
             try {
-                Check check = checksRegistry.getExtension(checkId).orElseThrow(
+                var check = checksRegistry.getExtension(checkId).orElseThrow(
                         () -> new NoSuchElementException("Unknown check [" + checkId + "]"));
 
-                long tStartTask = currentTimeMillis();
+                var tStartTask = currentTimeMillis();
                 LOG.debug("CasDoctor analysis [" + check.getId() + "] running...");
-                ok &= check.check(aProject, aCas, aMessages);
+                ok &= check.check(aDocument, aDataOwner, aCas, aMessages);
                 LOG.debug("CasDoctor analysis [" + check.getId() + "] completed in "
                         + (currentTimeMillis() - tStartTask) + "ms");
             }
@@ -194,7 +194,7 @@ public class CasDoctor
             throw new CasDoctorException(aMessages);
         }
 
-        long duration = currentTimeMillis() - tStart;
+        var duration = currentTimeMillis() - tStart;
         LOG.debug("CasDoctor completed {} checks in {}ms", activeChecks.size(), duration);
         serverTiming("CasDoctor", "CasDoctor (analyze)", duration);
 
@@ -215,24 +215,24 @@ public class CasDoctor
     public void onApplicationStartedEvent(ApplicationStartedEvent aEvent)
     {
         // When under development, automatically enable all checks.
-        String version = SettingsUtil.getVersionProperties().getProperty(SettingsUtil.PROP_VERSION);
-        if ("unknown".equals(version) || version.contains("-SNAPSHOT")
-                || version.contains("-beta-")) {
-            if (disableAutoScan) {
-                LOG.info("Detected SNAPSHOT/beta version - but FORCING release mode and NOT "
-                        + "auto-enabling checks");
-            }
-            else {
-                checksRegistry.getExtensions().forEach(check -> activeChecks.add(check.getId()));
-                LOG.info("Detected SNAPSHOT/beta version - automatically enabling all checks");
-            }
-        }
+        // var version = SettingsUtil.getVersionProperties().getProperty(SettingsUtil.PROP_VERSION);
+        // if ("unknown".equals(version) || version.contains("-SNAPSHOT")
+        // || version.contains("-beta-")) {
+        // if (disableAutoScan) {
+        // LOG.info("Detected SNAPSHOT/beta version - but FORCING release mode and NOT "
+        // + "auto-enabling checks");
+        // }
+        // else {
+        // checksRegistry.getExtensions().forEach(check -> activeChecks.add(check.getId()));
+        // LOG.info("Detected SNAPSHOT/beta version - automatically enabling all checks");
+        // }
+        // }
 
-        for (String checkId : activeChecks) {
+        for (var checkId : activeChecks) {
             LOG.info("Check activated: " + checkId);
         }
 
-        for (String repairId : activeRepairs) {
+        for (var repairId : activeRepairs) {
             LOG.info("Repair activated: " + repairId);
         }
     }

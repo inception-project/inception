@@ -17,23 +17,22 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.LineOrientedPagingStrategy.LINE_SPLITTER_PATTERN;
 import static java.lang.String.format;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
-import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class TokenWrappingPagingStrategy
     extends PagingStrategy_ImplBase
@@ -50,14 +49,14 @@ public class TokenWrappingPagingStrategy
     @Override
     public List<Unit> units(CAS aCas, int aFirstIndex, int aLastIndex)
     {
-        Iterator<AnnotationFS> tokenIterator = WebAnnoCasUtil.selectTokens(aCas).iterator();
+        var tokenIterator = aCas.select(Token.class).iterator();
 
         var units = new ArrayList<Unit>();
 
         int currentUnitStart = 0;
         int currentUnitEnd = 0;
         while (tokenIterator.hasNext()) {
-            AnnotationFS currentToken = tokenIterator.next();
+            var currentToken = tokenIterator.next();
 
             if (currentToken.getBegin() < currentUnitEnd) {
                 throw new IllegalStateException(format(
@@ -65,14 +64,14 @@ public class TokenWrappingPagingStrategy
                         currentToken.getBegin(), currentToken.getEnd(), currentUnitEnd));
             }
 
+            // Add units for each of the lines in the gap
             var gap = aCas.getDocumentText().substring(currentUnitEnd, currentToken.getBegin());
             int gapStart = currentUnitEnd;
-            int lineBreakIndex = gap.indexOf("\n");
-            while (lineBreakIndex > -1) {
-                currentUnitEnd = gapStart + lineBreakIndex;
+            var matcher = LINE_SPLITTER_PATTERN.matcher(gap);
+            while (matcher.find()) {
+                currentUnitEnd = gapStart + matcher.start();
                 units.add(new Unit(units.size() + 1, currentUnitStart, currentUnitEnd));
-                currentUnitStart = currentUnitEnd + 1; // +1 because of the line break character
-                lineBreakIndex = gap.indexOf("\n", lineBreakIndex + 1);
+                currentUnitStart = gapStart + matcher.end();
             }
 
             var unitNonEmpty = (currentUnitEnd - currentUnitStart) > 0;
@@ -92,9 +91,27 @@ public class TokenWrappingPagingStrategy
             currentUnitEnd = currentToken.getEnd();
         }
 
+        // Finish current unit
         if (currentUnitEnd - currentUnitStart > 0) {
             units.add(new Unit(units.size() + 1, currentUnitStart, currentUnitEnd));
+            currentUnitStart = -1;
         }
+
+        // // Add any line breaks at the end of the document
+        // if (aCas.getDocumentText().length() - currentUnitEnd > 0) {
+        // var gap = aCas.getDocumentText().substring(currentUnitEnd,
+        // aCas.getDocumentText().length());
+        // int gapStart = currentUnitEnd;
+        // var matcher = LINE_SPLITTER_PATTERN.matcher(gap);
+        // while (matcher.find()) {
+        // currentUnitEnd = gapStart + matcher.start();
+        // if (currentUnitStart == -1) {
+        // currentUnitStart = currentUnitEnd;
+        // }
+        // units.add(new Unit(units.size() + 1, currentUnitStart, currentUnitEnd));
+        // currentUnitStart = gapStart + matcher.end();
+        // }
+        // }
 
         return units;
     }

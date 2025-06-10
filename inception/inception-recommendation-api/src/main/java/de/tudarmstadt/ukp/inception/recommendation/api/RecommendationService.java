@@ -58,6 +58,8 @@ public interface RecommendationService
     String FEATURE_NAME_IS_PREDICTION = "inception_internal_predicted";
     String FEATURE_NAME_SCORE_SUFFIX = "_score";
     String FEATURE_NAME_SCORE_EXPLANATION_SUFFIX = "_score_explanation";
+    String FEATURE_NAME_CORRECTION_SUFFIX = "_correction";
+    String FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX = "_correction_explanation";
     String FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX = "_auto_accept";
 
     int MAX_RECOMMENDATIONS_DEFAULT = 3;
@@ -101,7 +103,7 @@ public interface RecommendationService
      *         recommender is only available behind a feature flag that was once enabled and now is
      *         disabled.
      */
-    Optional<RecommendationEngineFactory<?>> getRecommenderFactory(Recommender aRecommender);
+    <T> Optional<RecommendationEngineFactory<T>> getRecommenderFactory(Recommender aRecommender);
 
     boolean hasActiveRecommenders(String aSessionOwner, Project aProject);
 

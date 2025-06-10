@@ -46,6 +46,8 @@ public class LinkSuggestion
                 .withUiLabel(uiLabel) //
                 .withScore(score) //
                 .withScoreExplanation(scoreExplanation) //
+                .withCorrection(correction) //
+                .withCorrectionExplanation(correctionExplanation) //
                 .withPosition(position) //
                 .withAutoAcceptMode(getAutoAcceptMode()) //
                 .withHidingFlags(getHidingFlags());

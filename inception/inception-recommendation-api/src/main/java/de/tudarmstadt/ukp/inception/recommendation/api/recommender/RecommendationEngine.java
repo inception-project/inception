@@ -18,9 +18,12 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_CORRECTION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
+import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.IOException;
@@ -31,6 +34,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 
+import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -205,22 +209,33 @@ public abstract class RecommendationEngine
         return getPredictedType(aCas).getFeatureByBaseName(featureName);
     }
 
-    protected Feature getScoreFeature(CAS aCas)
+    public Feature getScoreFeature(CAS aCas)
     {
-        String scoreFeatureName = featureName + FEATURE_NAME_SCORE_SUFFIX;
-        return getPredictedType(aCas).getFeatureByBaseName(scoreFeatureName);
+        return getPredictedType(aCas).getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_SUFFIX);
     }
 
-    protected Feature getScoreExplanationFeature(CAS aCas)
+    public Feature getScoreExplanationFeature(CAS aCas)
     {
-        String scoreExplanationFeature = featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
-        return getPredictedType(aCas).getFeatureByBaseName(scoreExplanationFeature);
+        return getPredictedType(aCas)
+                .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
+    }
+
+    public Feature getCorrectionFeature(CAS aCas)
+    {
+        return getPredictedType(aCas)
+                .getFeatureByBaseName(featureName + FEATURE_NAME_CORRECTION_SUFFIX);
+    }
+
+    public Feature getCorrectionExplanationFeature(CAS aCas)
+    {
+        return getPredictedType(aCas)
+                .getFeatureByBaseName(featureName + FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX);
     }
 
     protected Feature getModeFeature(CAS aCas)
     {
-        String scoreExplanationFeature = featureName + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
-        return getPredictedType(aCas).getFeatureByBaseName(scoreExplanationFeature);
+        return getPredictedType(aCas)
+                .getFeatureByBaseName(featureName + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX);
     }
 
     public Feature getIsPredictionFeature(CAS aCas)
@@ -238,5 +253,23 @@ public abstract class RecommendationEngine
     public void exportModel(RecommenderContext aContext, OutputStream aOutput) throws IOException
     {
         throw new UnsupportedOperationException("Model export not supported");
+    }
+
+    public List<? extends TrainingInstance> generateIncrementalTrainingInstances(
+            AnnotationEvent aEvent)
+    {
+        return emptyList();
+    }
+
+    /**
+     * Store the given incremental training data into the given recommender context. The idea is
+     * that the engine then picks the training data up from the context on the next training run. It
+     * may then choose to use only the incremental training data during that run instead of training
+     * from scratch.
+     */
+    public void putIncrementalTrainingData(RecommenderContext aRecommenderContext,
+            List<TrainingInstance> aIncrementalTrainingData)
+    {
+        // Nothing do to
     }
 }

@@ -303,6 +303,9 @@ public class RelationSuggestionSupport
                     ctx.isMultiLabels());
             var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
             var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+            var correction = predictedFS.getBooleanValue(ctx.getCorrectionFeature());
+            var correctionExplanation = predictedFS
+                    .getStringValue(ctx.getCorrectionExplanationFeature());
             var position = new RelationPosition(originalSource.get(), originalTarget.get());
 
             for (var label : labels) {
@@ -314,6 +317,8 @@ public class RelationSuggestionSupport
                         .withPosition(position) //
                         .withLabel(label) //
                         .withUiLabel(label) //
+                        .withCorrection(correction) //
+                        .withCorrectionExplanation(correctionExplanation) //
                         .withScore(score) //
                         .withScoreExplanation(scoreExplanation) //
                         .withAutoAcceptMode(autoAcceptMode) //

@@ -27,5 +27,5 @@ public interface CasDoctorProperties
 
     boolean isFatal();
 
-    boolean isForceReleaseBehavior();
+    // boolean isForceReleaseBehavior();
 }

@@ -21,6 +21,7 @@ import static java.nio.file.Files.getLastModifiedTime;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -36,7 +37,7 @@ import org.slf4j.LoggerFactory;
 
 public class WatchedResourceFile<T>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final FailableFunction<InputStream, T, IOException> loader;
     private final URL resourceLocation;
@@ -67,7 +68,7 @@ public class WatchedResourceFile<T>
     public Optional<T> get() throws IOException
     {
         if (resourceLocation == null) {
-            log.trace("No resource has been set.");
+            LOG.trace("No resource has been set.");
             return Optional.empty();
         }
 
@@ -84,12 +85,12 @@ public class WatchedResourceFile<T>
                 Instant mtime = getLastModifiedTime(resourcePath).toInstant();
                 if (resourceMTime == null || mtime.isAfter(resourceMTime)) {
                     if (resourceMTime == null) {
-                        log.trace(
+                        LOG.trace(
                                 "Updatable resource [{}] has not been loaded yet - loading resource...",
                                 resourceLocation);
                     }
                     else {
-                        log.trace(
+                        LOG.trace(
                                 "Updatable resource [{}] has changed at [{}] - reloading resource...",
                                 resourceLocation, mtime);
                     }
@@ -101,7 +102,7 @@ public class WatchedResourceFile<T>
                     }
                 }
                 else {
-                    log.trace(
+                    LOG.trace(
                             "Updatable resource [{}] has not changed since [{}] [{}] - using already loaded resource",
                             resourceLocation, resourceMTime, mtime);
                 }
@@ -110,11 +111,11 @@ public class WatchedResourceFile<T>
             }
 
             if (resourceMTime != null) {
-                log.trace("Updatable resource [{}] last changed at [{}] has disappeared",
+                LOG.trace("Updatable resource [{}] last changed at [{}] has disappeared",
                         resourceLocation, resourceMTime);
             }
             else {
-                log.trace("Updatable resource [{}] does not exist", resourceLocation);
+                LOG.trace("Updatable resource [{}] does not exist", resourceLocation);
             }
 
             resourceMTime = null;
@@ -124,7 +125,7 @@ public class WatchedResourceFile<T>
 
         if (resourceMTime == null) {
             resourceMTime = Instant.now();
-            log.trace("Static resource [{}] has not been loaded yet - loading resource...",
+            LOG.trace("Static resource [{}] has not been loaded yet - loading resource...",
                     resourceLocation);
             try (var is = resourceLocation.openStream()) {
                 resource = loader.apply(is);

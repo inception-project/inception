@@ -28,7 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.docnav.Document
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
-@Order(0)
+@Order(ActionBarExtension.ORDER_DOCUMENT_NAVIGATOR)
 @Component
 public class AnnotationDocumentNavigatorActionBarExtension
     implements ActionBarExtension

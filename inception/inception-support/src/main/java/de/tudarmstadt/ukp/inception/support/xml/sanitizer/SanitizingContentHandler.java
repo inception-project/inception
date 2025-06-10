@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 
+import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sanitizeIllegalXmlCharacters;
 import static de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils.getQName;
+import static java.lang.System.arraycopy;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.startsWith;
@@ -134,8 +136,9 @@ public class SanitizingContentHandler
         }
     }
 
-    private void startElement(QName aElement, Attributes aAtts, Optional<QNameElementPolicy> aPolicy,
-            ElementAction aAction, Map<String, String> aLocalNamespaces)
+    private void startElement(QName aElement, Attributes aAtts,
+            Optional<QNameElementPolicy> aPolicy, ElementAction aAction,
+            Map<String, String> aLocalNamespaces)
         throws SAXException
     {
         var element = aElement;
@@ -232,7 +235,11 @@ public class SanitizingContentHandler
             break;
         case SKIP: // pass-through
         case PASS:
-            super.characters(aCh, aStart, aLength);
+            var sanitizedChars = new char[aLength];
+            arraycopy(aCh, aStart, sanitizedChars, 0, aLength);
+            sanitizeIllegalXmlCharacters(sanitizedChars, filteredCharacter, 0,
+                    sanitizedChars.length);
+            super.characters(sanitizedChars, aStart, aLength);
             break;
         default:
             throw new SAXException("Unsupported element action: [" + action + "]");
@@ -252,7 +259,11 @@ public class SanitizingContentHandler
             break;
         case SKIP: // pass-through
         case PASS:
-            super.ignorableWhitespace(aCh, aStart, aLength);
+            var sanitizedChars = new char[aLength];
+            arraycopy(aCh, aStart, sanitizedChars, 0, aLength);
+            sanitizeIllegalXmlCharacters(sanitizedChars, filteredCharacter, 0,
+                    sanitizedChars.length);
+            super.ignorableWhitespace(sanitizedChars, aStart, aLength);
             break;
         default:
             throw new SAXException("Unsupported element action: [" + action + "]");

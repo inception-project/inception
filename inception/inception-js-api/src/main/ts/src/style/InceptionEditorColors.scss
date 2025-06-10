@@ -17,12 +17,16 @@
  */
 $i7n-focus-color: rgba(255,165,0);
 $i7n-focus-bounds-color: rgba(255, 106, 0, 0.7);
-$i7n-match-focus-color: rgb(0, 217, 255);
-$i7n-error-color: rgb(255, 0, 0);
+$i7n-match-color: rgb(255, 255, 200);
+$i7n-match-focus-color: rgb(255, 255, 0);
+$i7n-error-color: rgb(220, 53, 69);
+$i7n-warn-color: rgb(255, 193, 7);
 
 :root {
   --i7n-focus-color: #{$i7n-focus-color};
   --i7n-focus-bounds-color: #{$i7n-focus-bounds-color};
+  --i7n-match-color: #{$i7n-match-color};
   --i7n-match-focus-color: #{$i7n-match-focus-color};
   --i7n-error-color: #{$i7n-error-color};
+  --i7n-warn-color: #{$i7n-warn-color};
 }

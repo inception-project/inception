@@ -17,12 +17,17 @@
  */
 import './SectionAnnotationCreator.scss'
 import { AnnotatedText, calculateEndOffset, calculateStartOffset, DiamAjax } from "@inception-project/inception-js-api"
+import { getScrollY } from './SectionAnnotationVisualizer'
 
 export class SectionAnnotationCreator {
   private sectionSelector: string
   private ajax: DiamAjax
   private root: Element
+
   private observer: IntersectionObserver
+  private observerDebounceTimeout: number | undefined
+  private suspended = false
+
   private _previewFrame: HTMLIFrameElement | undefined
   private previewRenderTimeout: number | undefined
   private previewScrollTimeout: number | undefined
@@ -35,10 +40,21 @@ export class SectionAnnotationCreator {
     if (this.sectionSelector) {
       this.initializeElementTracking()
       this.initializeSectionTypeAttributes()
-
-      // on scrolling the window, we need to ensure that the panels stay visible
-      this.root.addEventListener('scroll', () => this.ensureVisibility())
     }
+  }
+
+  public suspend() {
+    this.suspended = true
+  }
+
+  public resume() {
+    this.suspended = false
+  }
+
+  public destroy() {
+    this.observer.disconnect()
+    this.root.querySelectorAll('.iaa-section-control').forEach(e => e.remove())
+    this.hidePreviewFrame()
   }
 
   private initializeSectionTypeAttributes() {
@@ -65,9 +81,10 @@ export class SectionAnnotationCreator {
   }
 
   private ensureVisibility() {
-    const rootRect = this.root.getBoundingClientRect()
-    const scrollY = (this.root.scrollTop || 0) - rootRect.top
+    const scrollY = getScrollY(this.root)
     const panels = Array.from(this.root.querySelectorAll('.iaa-section-control') || [])
+
+    const panelsTops = new Map<HTMLElement, number>()
     for (const panel of (panels as HTMLElement[])) {
       const sectionId = panel.getAttribute('data-iaa-applies-to')
       const section = this.root.querySelector(`[id="${sectionId}"]`)
@@ -76,30 +93,42 @@ export class SectionAnnotationCreator {
         continue
       }
       const sectionRect = section.getBoundingClientRect()
-      panel.style.top = `${sectionRect.top + scrollY}px`
+      panelsTops.set(panel, sectionRect.top)
+    }
+
+    // Update the position of the panels all at once to avoid layout thrashing
+    for (const [panel, top] of panelsTops) {
+      panel.style.top = `${top + scrollY}px`
     }
   }
 
   private handleIntersect(entries: IntersectionObserverEntry[], observer: IntersectionObserver): void {
-    const rootRect = this.root.getBoundingClientRect()
-    const scrollY = (this.root.scrollTop || 0) - rootRect.top
-
-    for (const entry of entries) {
-      const sectionId = entry.target.id
-      const sectionRect = entry.boundingClientRect
-      let panel = this.root.querySelector(`.iaa-section-control[data-iaa-applies-to="${sectionId}"]`) as HTMLElement
-
-      if (entry.isIntersecting && !panel) {
-        panel = this.createControl()
-        panel.setAttribute('data-iaa-applies-to', sectionId)
-        this.root.appendChild(panel)
-        panel.style.top = `${sectionRect.top + scrollY}px`
-      }
-
-      if (!entry.isIntersecting && panel) {
-        panel.remove()
-      }
+    if (this.observerDebounceTimeout) {
+      window.cancelAnimationFrame(this.observerDebounceTimeout)
+      this.observerDebounceTimeout = undefined
     }
+
+    this.observerDebounceTimeout = window.requestAnimationFrame(() => {
+      const rootRect = this.root.getBoundingClientRect()
+      const scrollY = (this.root.scrollTop || 0) - rootRect.top
+
+      for (const entry of entries) {
+        const sectionId = entry.target.id
+        const sectionRect = entry.boundingClientRect
+        let panel = this.root.querySelector(`.iaa-section-control[data-iaa-applies-to="${sectionId}"]`) as HTMLElement
+
+        if (entry.isIntersecting && !panel) {
+          panel = this.createControl()
+          panel.setAttribute('data-iaa-applies-to', sectionId)
+          panel.style.top = `${sectionRect.top + scrollY}px`
+          this.root.appendChild(panel)
+        }
+
+        if (!entry.isIntersecting && panel) {
+          panel.remove()
+        }
+      }
+    });
   }
 
   private createControl(): HTMLElement {
@@ -185,6 +214,11 @@ export class SectionAnnotationCreator {
     })
     const root = this.root.closest('.i7n-wrapper') || this.root
     const copy = root.cloneNode(true) as HTMLElement
+    if (!doc.body) {
+      // Fix for browsers like Firefox, which do not create a body element by default
+      const body = doc.createElement('body');
+      doc.documentElement ? doc.documentElement.appendChild(body) : doc.appendChild(body);
+    }
     doc.body.appendChild(copy)
     copy.querySelectorAll(".iaa-preview-frame, .iaa-section-control, " + 
       ".iaa-visible-annotations-panel, .iaa-visible-annotations-panel-spacer").forEach(n => n.remove())

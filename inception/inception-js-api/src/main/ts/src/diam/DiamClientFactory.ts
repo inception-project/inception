@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 import { DiamWebsocket } from './DiamWebsocket'
-import { DiamAjax } from './DiamAjax'
+import { DiamAjax, DiamAjaxConnectOptions } from './DiamAjax'
 
 export interface DiamClientFactory {
   createWebsocketClient() : DiamWebsocket;
 
-  createAjaxClient(ajaxEndpoint: string) : DiamAjax;
+  createAjaxClient(options: string | DiamAjaxConnectOptions) : DiamAjax;
 }

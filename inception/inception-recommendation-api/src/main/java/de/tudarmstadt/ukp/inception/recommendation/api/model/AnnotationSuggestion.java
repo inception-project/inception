@@ -84,6 +84,8 @@ public abstract class AnnotationSuggestion
     protected final String uiLabel;
     protected final double score;
     protected final String scoreExplanation;
+    protected final boolean correction;
+    protected final String correctionExplanation;
 
     private AutoAcceptMode autoAcceptMode;
     private int hidingFlags = 0;
@@ -92,7 +94,8 @@ public abstract class AnnotationSuggestion
     public AnnotationSuggestion(int aId, int aGeneration, int aAge, long aRecommenderId,
             String aRecommenderName, long aLayerId, String aFeature, String aDocumentName,
             String aLabel, String aUiLabel, double aScore, String aScoreExplanation,
-            AutoAcceptMode aAutoAcceptMode, int aHidingFlags)
+            AutoAcceptMode aAutoAcceptMode, int aHidingFlags, boolean aCorrection,
+            String aCorrectionExplanation)
     {
         generation = aGeneration;
         age = aAge;
@@ -108,6 +111,8 @@ public abstract class AnnotationSuggestion
         documentName = aDocumentName;
         autoAcceptMode = aAutoAcceptMode != null ? aAutoAcceptMode : AutoAcceptMode.NEVER;
         hidingFlags = aHidingFlags;
+        correction = aCorrection;
+        correctionExplanation = aCorrectionExplanation;
     }
 
     public int getId()
@@ -155,6 +160,11 @@ public abstract class AnnotationSuggestion
     public Optional<String> getScoreExplanation()
     {
         return Optional.ofNullable(scoreExplanation);
+    }
+
+    public Optional<String> getCorrectionExplanation()
+    {
+        return Optional.ofNullable(correctionExplanation);
     }
 
     public long getRecommenderId()
@@ -211,6 +221,16 @@ public abstract class AnnotationSuggestion
         return hidingFlags == 0;
     }
 
+    /**
+     * @return whether the suggestion is a correction suggestion for an existing annotation.
+     *         Corrections should not be hidden for overlap with an existing annotation unless the
+     *         label matches.
+     */
+    public boolean isCorrection()
+    {
+        return correction;
+    }
+
     public AutoAcceptMode getAutoAcceptMode()
     {
         return autoAcceptMode;
@@ -223,7 +243,7 @@ public abstract class AnnotationSuggestion
 
     public VID getVID()
     {
-        String payload = new VID(layerId, (int) recommenderId, id).toString();
+        var payload = new VID(layerId, (int) recommenderId, id).toString();
         return new VID(EXTENSION_ID, layerId, (int) recommenderId, id, payload);
     }
 

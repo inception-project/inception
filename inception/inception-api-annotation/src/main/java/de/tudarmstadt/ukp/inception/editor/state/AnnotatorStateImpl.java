@@ -43,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -57,6 +58,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorStateMetaDataKey;
@@ -202,6 +204,8 @@ public class AnnotatorStateImpl
     private List<Unit> visibleUnits = emptyList();
 
     private Map<AnnotatorStateMetaDataKey<?>, Object> metaData = new HashMap<>();
+
+    private AnchoringMode anchoringMode;
 
     public AnnotatorStateImpl(Mode aMode)
     {
@@ -457,7 +461,7 @@ public class AnnotatorStateImpl
     {
         selectableLayers.clear();
 
-        for (AnnotationLayer layer : getAnnotationLayers()) {
+        for (var layer : getAnnotationLayers()) {
             if (!layer.isEnabled() || layer.isReadonly() || isLayerBlocked.test(layer)) {
                 continue;
             }
@@ -520,7 +524,7 @@ public class AnnotatorStateImpl
     {
         rememberedSpanFeatures = new HashMap<>();
         if (aModels != null) {
-            for (FeatureState fm : aModels) {
+            for (var fm : aModels) {
                 // Do not remember values unless this feature is enabled
                 if (!fm.feature.isRemember()) {
                     continue;
@@ -815,6 +819,36 @@ public class AnnotatorStateImpl
             Page page = (Page) handler.get().getPage();
             page.send(page, BREADTH, new AnnotatorViewportChangedEvent(
                     requestCycle.find(AjaxRequestTarget.class).orElse(null)));
+        }
+    }
+
+    @Override
+    public AnchoringMode getAnchoringMode()
+    {
+        return anchoringMode;
+    }
+
+    @Override
+    public void setAnchoringMode(AnchoringMode aAnchoringMode)
+    {
+        anchoringMode = aAnchoringMode;
+    }
+
+    @Override
+    public void syncAnchoringModeToDefaultLayer(AnchoringModePrefs aAnchoringPrefs)
+    {
+        var defaultLayer = getDefaultAnnotationLayer();
+        if (defaultLayer == null) {
+            setAnchoringMode(null);
+            return;
+        }
+
+        var prefAnchoringMode = aAnchoringPrefs.getAnchoringMode(defaultLayer);
+        if (prefAnchoringMode.map(defaultLayer.getAnchoringMode()::allows).orElse(false)) {
+            prefAnchoringMode.ifPresent(this::setAnchoringMode);
+        }
+        else {
+            setAnchoringMode(defaultLayer.getAnchoringMode());
         }
     }
 }

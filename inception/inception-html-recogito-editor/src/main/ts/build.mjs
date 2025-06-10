@@ -39,7 +39,7 @@ const defaults = {
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
-  target: 'es2018',
+  target: 'es2019',
   loader: { '.ts': 'ts' },
   logLevel: 'info',
   plugins: [
@@ -63,8 +63,14 @@ fs.mkdirsSync(`${outbase}`)
 fs.emptyDirSync(outbase)
 
 if (argv.live) {
-  const context = await esbuild.context(defaults)
-  await context.watch()
+  const context = await esbuild.context({
+    ...defaults,
+    plugins: [
+      ...defaults.plugins,
+    ],
+  });  
+  await context.watch();
+  console.log(`Watching for changes to ${defaults.outfile}...`);
 } else {
-  esbuild.build(defaults)
+  await esbuild.build(defaults);
 }

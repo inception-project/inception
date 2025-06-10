@@ -23,7 +23,7 @@ NOTE: Disabling document metadata support prevents new document metadata layers 
        created, but it does not prevent the use of existing document metadata layers layers in order
        not to break existing projects. 
 
-.Knowledge base settings overview
+.Document metadata settings
 [cols="4*", options="header"]
 |===
 | Setting

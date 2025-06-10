@@ -17,7 +17,8 @@
 = 🧪 Cross-layer relations
 
 ====
-CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `ui.cross-layer-relations-enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings_cross-layer-relations, Admin Guide>>). While this feature introduces a new level of flexibility, it can also interact with existing features in unexpected and untested ways.
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `ui.cross-layer-relations-enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings_cross-layer-relations, Admin Guide>>).
+While this feature introduces a new level of flexibility, it can also interact with existing features in unexpected and untested ways.
 ====
 
 By default, relations can only be created between two endpoints on the same layer.

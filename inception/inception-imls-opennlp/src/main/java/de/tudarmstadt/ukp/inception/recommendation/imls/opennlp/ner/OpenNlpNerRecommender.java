@@ -156,6 +156,8 @@ public class OpenNlpNerRecommender
         var predictedFeature = getPredictedFeature(aCas);
         var isPredictionFeature = getIsPredictionFeature(aCas);
         var scoreFeature = getScoreFeature(aCas);
+        var correctionFeature = getCorrectionFeature(aCas);
+        var corectionExplanationFeature = getCorrectionExplanationFeature(aCas);
 
         var predictionCount = 0;
         var predictedRangeBegin = aBegin;
@@ -189,11 +191,17 @@ public class OpenNlpNerRecommender
                 var annotation = aCas.createAnnotation(predictedType, begin, end);
 
                 annotation.setFeatureValueFromString(predictedFeature, label);
+                annotation.setBooleanValue(isPredictionFeature, true);
+
                 if (scoreFeature != null) {
                     annotation.setDoubleValue(scoreFeature, prediction.getProb());
                 }
 
-                annotation.setBooleanValue(isPredictionFeature, true);
+                if (traits.isCorrectionsEnabled() && correctionFeature != null
+                        && prediction.getProb() > traits.getCorrectionThreshold()) {
+                    annotation.setBooleanValue(correctionFeature, true);
+                    annotation.setStringValue(corectionExplanationFeature, "High confidence");
+                }
 
                 aCas.addFsToIndexes(annotation);
             }

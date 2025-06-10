@@ -23,6 +23,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.BasicProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.BasicRelationLayerInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.BasicRelationRecommenderInitializer;
@@ -30,6 +31,7 @@ import de.tudarmstadt.ukp.inception.project.initializers.basic.BasicRelationTagS
 import de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanLayerInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanRecommenderInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanTagSetInitializer;
+import de.tudarmstadt.ukp.inception.project.initializers.basic.CommentFeatureInitializer;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
@@ -68,6 +70,14 @@ public class InceptionBasicProjectInitializersAutoConfiguration
             AnnotationSchemaService aAnnotationSchemaService)
     {
         return new BasicSpanLayerInitializer(aAnnotationSchemaService);
+    }
+
+    @Bean
+    public CommentFeatureInitializer commentFeatureInitializer(
+            AnnotationSchemaService aAnnotationSchemaService,
+            StringFeatureSupport aStringFeatureSupport)
+    {
+        return new CommentFeatureInitializer(aAnnotationSchemaService, aStringFeatureSupport);
     }
 
     @ConditionalOnBean({ RecommendationService.class, StringMatchingRecommenderFactory.class })

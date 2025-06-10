@@ -90,8 +90,7 @@ public class ChainRenderer
     }
 
     @Override
-    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
-            int aWindowEnd)
+    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest)
     {
         var cas = aRequest.getCas();
 

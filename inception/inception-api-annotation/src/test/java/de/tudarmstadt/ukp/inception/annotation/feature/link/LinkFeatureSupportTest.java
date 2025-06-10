@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCasFromPath;
+import static org.apache.uima.fit.util.FSUtil.setFeature;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -26,14 +27,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.List;
 
-import org.apache.uima.cas.ArrayFS;
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -86,11 +81,11 @@ public class LinkFeatureSupportTest
     @Test
     public void testAccepts()
     {
-        AnnotationFeature feat1 = new AnnotationFeature("string", "LinkType");
+        var feat1 = new AnnotationFeature("string", "LinkType");
         feat1.setMode(MultiValueMode.ARRAY);
         feat1.setLinkMode(LinkMode.WITH_ROLE);
 
-        AnnotationFeature feat2 = new AnnotationFeature("Dummy feature", "someType");
+        var feat2 = new AnnotationFeature("Dummy feature", "someType");
 
         assertThat(sut.accepts(feat1)).isTrue();
         assertThat(sut.accepts(feat2)).isFalse();
@@ -99,17 +94,17 @@ public class LinkFeatureSupportTest
     @Test
     public void testWrapUnwrap() throws Exception
     {
-        CAS cas = jcas.getCas();
+        var cas = jcas.getCas();
 
-        List<LinkWithRoleModel> links = new ArrayList<>();
+        var links = new ArrayList<LinkWithRoleModel>();
         links.add(new LinkWithRoleModel("role", "label", 3));
 
-        AnnotationFS targetFS = cas.createAnnotation(targetType, 0, cas.getDocumentText().length());
+        var targetFS = cas.createAnnotation(targetType, 0, cas.getDocumentText().length());
 
-        ArrayFS array = cas.createArrayFS(1);
-        FeatureStructure linkFS = cas.createFS(linkType);
-        FSUtil.setFeature(linkFS, slotFeature.getLinkTypeRoleFeatureName(), "role");
-        FSUtil.setFeature(linkFS, slotFeature.getLinkTypeTargetFeatureName(), targetFS);
+        var array = cas.createArrayFS(1);
+        var linkFS = cas.createFS(linkType);
+        setFeature(linkFS, slotFeature.getLinkTypeRoleFeatureName(), "role");
+        setFeature(linkFS, slotFeature.getLinkTypeTargetFeatureName(), targetFS);
         array.set(0, linkFS);
 
         assertThat(sut.wrapFeatureValue(slotFeature, cas, array)).isEqualTo(links);
@@ -128,15 +123,15 @@ public class LinkFeatureSupportTest
     {
         final String role = "TAG-NOT-IN-LIST";
 
-        CAS cas = jcas.getCas();
+        var cas = jcas.getCas();
 
-        TagSet slotFeatureTagset = new TagSet();
+        var slotFeatureTagset = new TagSet();
         slotFeatureTagset.setCreateTag(false);
 
         slotFeature.setTagset(slotFeatureTagset);
 
-        AnnotationFS hostFS = cas.createAnnotation(hostType, 0, cas.getDocumentText().length());
-        AnnotationFS targetFS = cas.createAnnotation(targetType, 0, cas.getDocumentText().length());
+        var hostFS = cas.createAnnotation(hostType, 0, cas.getDocumentText().length());
+        var targetFS = cas.createAnnotation(targetType, 0, cas.getDocumentText().length());
 
         when(schemaService.existsTag(role, slotFeatureTagset)).thenReturn(false);
 
@@ -152,15 +147,15 @@ public class LinkFeatureSupportTest
     {
         final String role = "TAG-NOT-IN-LIST";
 
-        CAS cas = jcas.getCas();
+        var cas = jcas.getCas();
 
-        TagSet slotFeatureTagset = new TagSet();
+        var slotFeatureTagset = new TagSet();
         slotFeatureTagset.setCreateTag(true);
 
         slotFeature.setTagset(slotFeatureTagset);
 
-        AnnotationFS hostFS = cas.createAnnotation(hostType, 0, cas.getDocumentText().length());
-        AnnotationFS targetFS = cas.createAnnotation(targetType, 0, cas.getDocumentText().length());
+        var hostFS = cas.createAnnotation(hostType, 0, cas.getDocumentText().length());
+        var targetFS = cas.createAnnotation(targetType, 0, cas.getDocumentText().length());
 
         when(schemaService.existsTag(role, slotFeatureTagset)).thenReturn(false);
 

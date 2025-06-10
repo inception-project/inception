@@ -4,7 +4,7 @@ import { adjustViewerSize } from '../util/window'
 import AnnotationContainer from '../../core/src/model/AnnotationContainer'
 import SpanAnnotation from '../../core/src/model/SpanAnnotation'
 import RelationAnnotation from '../../core/src/model/RelationAnnotation'
-import { VID } from '@inception-project/inception-js-api'
+import { type VID } from '@inception-project/inception-js-api'
 
 /**
  * PDFAnno's Annotation functions for Page produced by .

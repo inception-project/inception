@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.api;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_CORRECTION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
@@ -69,16 +71,19 @@ public class RecommenderTypeSystemUtils
                 continue;
             }
 
-            var scoreFeatureName = feature.getName() + FEATURE_NAME_SCORE_SUFFIX;
-            td.addFeature(scoreFeatureName, "Score feature", TYPE_NAME_DOUBLE);
+            td.addFeature(feature.getName() + FEATURE_NAME_SCORE_SUFFIX, "Score", TYPE_NAME_DOUBLE);
 
-            var scoreExplanationFeatureName = feature.getName()
-                    + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
-            td.addFeature(scoreExplanationFeatureName, "Score explanation feature",
-                    TYPE_NAME_STRING);
+            td.addFeature(feature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX,
+                    "Score explanation feature", TYPE_NAME_STRING);
 
-            var modeFeatureName = feature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
-            td.addFeature(modeFeatureName, "Suggestion mode", TYPE_NAME_STRING);
+            td.addFeature(feature.getName() + FEATURE_NAME_CORRECTION_SUFFIX, "Correction flag",
+                    TYPE_NAME_BOOLEAN);
+
+            td.addFeature(feature.getName() + FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX,
+                    "Correction explanation", TYPE_NAME_STRING);
+
+            td.addFeature(feature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX,
+                    "Suggestion mode", TYPE_NAME_STRING);
         }
 
         var layers = features.stream().map(AnnotationFeature::getLayer).distinct().toList();

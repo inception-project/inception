@@ -35,6 +35,8 @@ public abstract class VMarker
 
     public static final String MATCH = "match";
 
+    public static final String WARN = "warn";
+
     private final Object source;
 
     /**

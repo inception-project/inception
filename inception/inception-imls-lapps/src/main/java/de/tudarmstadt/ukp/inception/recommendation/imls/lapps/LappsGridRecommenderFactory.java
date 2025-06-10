@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.Lapp
 import static de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor.NER_LAYER;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor.POS_FEATURE;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor.POS_LAYER;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 
 import org.apache.wicket.model.IModel;
 
@@ -30,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
@@ -72,15 +72,31 @@ public class LappsGridRecommenderFactory
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public boolean accepts(AnnotationLayer aLayer)
     {
-        if (aLayer == null || aFeature == null || !SPAN_TYPE.equals(aLayer.getType())) {
+        if (aLayer == null || !SpanLayerSupport.TYPE.equals(aLayer.getType())) {
             return false;
         }
 
-        String layer = aLayer.getName();
-        String feature = aFeature.getName();
-        AnchoringMode anchoring = aLayer.getAnchoringMode();
+        var layer = aLayer.getName();
+
+        return NER_LAYER.equals(layer) || POS_LAYER.equals(layer);
+    }
+
+    @Override
+    public boolean accepts(AnnotationFeature aFeature)
+    {
+        if (aFeature == null) {
+            return false;
+        }
+
+        if (!accepts(aFeature.getLayer())) {
+            return false;
+        }
+
+        var layer = aFeature.getLayer().getName();
+        var feature = aFeature.getName();
+        var anchoring = aFeature.getLayer().getAnchoringMode();
 
         boolean isNer = NER_LAYER.equals(layer) && NER_FEATURE.equals(feature);
         boolean isPos = POS_LAYER.equals(layer) && POS_FEATURE.equals(feature);

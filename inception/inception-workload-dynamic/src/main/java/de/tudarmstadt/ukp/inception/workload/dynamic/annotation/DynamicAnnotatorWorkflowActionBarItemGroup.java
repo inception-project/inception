@@ -60,7 +60,6 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.ui.ResetAnnotationDocumentConfirmationDialogContentPanel;
-import jakarta.persistence.EntityManager;
 import wicket.contrib.input.events.key.KeyType;
 
 /**
@@ -83,7 +82,6 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean DynamicWorkloadExtension dynamicWorkloadExtension;
-    private @SpringBean EntityManager entityManager;
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean WorkflowExtensionPoint workflowExtensionPoint;
 

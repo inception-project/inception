@@ -26,6 +26,7 @@ public class FullProjectExportRequest
 {
     private static final long serialVersionUID = -7010995651575991241L;
 
+    private static final String FILENAME_PREFIX = "project";
     public static final String FORMAT_AUTO = "AUTO";
 
     private String format;
@@ -93,14 +94,9 @@ public class FullProjectExportRequest
     }
 
     @Override
-    public String getFilenameTag()
+    public String getFilenamePrefix()
     {
-        return filenameTag;
-    }
-
-    public void setFilenameTag(String aFilenameTag)
-    {
-        filenameTag = aFilenameTag;
+        return FILENAME_PREFIX;
     }
 
     @Override

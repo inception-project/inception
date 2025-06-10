@@ -16,11 +16,17 @@
  limitations under the License.
 -->
 <config>
-  <luceneMatchVersion>6.2.1</luceneMatchVersion>
+  <luceneMatchVersion>9.11.0</luceneMatchVersion>
 
   <dataDir>${solr.data.dir:}</dataDir>
 
-  <schemaFactory class="ClassicIndexSchemaFactory"/>
+  <schemaFactory class="ClassicIndexSchemaFactory" />
+  <!-- 
+    codecFactory is required because Solr 9.7.0 default tries to instantiate Lucene99 codec which
+    has been moved to a different package in Lucene 9.12.1. Note that the LuceneDefaultCodecFactory
+    is not schema-aware - but for our test this is not a problem
+    -->
+  <codecFactory class="solr.LuceneDefaultCodecFactory" />
 
   <indexConfig>
     <lockType>single</lockType>

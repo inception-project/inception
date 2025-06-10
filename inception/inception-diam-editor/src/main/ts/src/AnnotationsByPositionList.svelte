@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     /*
      * Licensed to the Technische Universität Darmstadt under one
      * or more contributor license agreements.  See the NOTICE file
@@ -18,13 +20,15 @@
      */
     import {
         AnnotatedText,
-        Annotation,
         AnnotationOverEvent,
         AnnotationOutEvent,
-        DiamAjax,
-        Offsets,
         Relation,
         Span,
+    } from "@inception-project/inception-js-api";
+    import type {
+        Annotation,
+        DiamAjax,
+        Offsets,
     } from "@inception-project/inception-js-api";
     import LabelBadge from "./LabelBadge.svelte";
     import SpanText from "./SpanText.svelte";
@@ -35,31 +39,32 @@
         uniqueOffsets,
     } from "./Utils";
 
-    export let ajaxClient: DiamAjax;
-    export let data: AnnotatedText;
+    interface Props {
+        ajaxClient: DiamAjax;
+        data: AnnotatedText;
+    }
 
-    let groupedSpans: Record<string, Span[]>;
-    let groupedRelations: Record<string, Relation[]>;
-    let sortedSpanOffsets: Offsets[];
-    let filter = '';
+    let { ajaxClient, data }: Props = $props();
 
-    $: groupedSpans = groupSpansByPosition(data);
-    $: groupedRelations = groupRelationsByPosition(data);
-    $: { 
-        sortedSpanOffsets = uniqueOffsets(data);
+    let groupedSpans: Record<string, Span[]> = $derived(groupSpansByPosition(data));
+    let groupedRelations: Record<string, Relation[]> = $derived(groupRelationsByPosition(data));
+    let sortedSpanOffsets: Offsets[] = $state();
+    let filter = $state('');
+
+    run(() => { 
         const normalizedFilter = filter.replace(/\s+/g, ' ').toLowerCase()
-        sortedSpanOffsets = sortedSpanOffsets.filter(offset => {
+        sortedSpanOffsets = uniqueOffsets(data).filter(offset => {
             let coveredText = data.text?.substring(offset[0], offset[1]) || '';
             return coveredText.replace(/\s+/g, ' ').toLowerCase().includes(normalizedFilter)
         })
-    }
+    });
 
     function scrollToSpan(span: Span) {
         ajaxClient.scrollTo({ id: span.vid, offset: span.offsets[0] });
     }
 
     function scrollToRelation(relation: Relation) {
-        ajaxClient.scrollTo({ id: relation.vid });
+        ajaxClient.scrollTo({ id: relation.vid, offset: relation.arguments[0].target.offsets[0] });
     }
 
     function mouseOverAnnotation(event: MouseEvent, annotation: Annotation) {
@@ -88,7 +93,7 @@
     </div>
 {:else}
     <div class="d-flex flex-row flex-wrap">
-        <input type="text" class="form-control rounded-0" on:input={handleFilterChange} placeholder="Filter"/>
+        <input type="text" class="form-control rounded-0" oninput={handleFilterChange} placeholder="Filter"/>
     </div>
     <div class="flex-content fit-child-snug">
         {#if sortedSpanOffsets || sortedSpanOffsets?.length}
@@ -96,22 +101,23 @@
                 {#each sortedSpanOffsets as offsets}
                     {@const spans = groupedSpans[`${offsets}`]}
                     {@const firstSpan = spans[0]}
-                    <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+                    <!-- svelte-ignore a11y_mouse_events_have_key_events -->
                     <li class="list-group-item list-group-item-action p-0">
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
                         <div
                             class="flex-grow-1 my-1 mx-2 overflow-hidden"
-                            on:click={() => scrollToSpan(firstSpan)}
+                            onclick={() => scrollToSpan(firstSpan)}
                         >
-                            <div class="float-end labels me-1">
+                            <div class="float-end labels">
                                 {#each spans as span}
                                     <span
-                                        on:mouseover={(ev) =>
+                                        onmouseover={(ev) =>
                                             mouseOverAnnotation(ev, span)}
-                                        on:mouseout={(ev) =>
+                                        onmouseout={(ev) =>
                                             mouseOutAnnotation(ev, span)}
                                     >
                                         <LabelBadge
+                                            {data}
                                             annotation={span}
                                             {ajaxClient}
                                         />
@@ -126,12 +132,12 @@
                     {#if relations}
                         {#each relations as relation}
                             {@const target = relation.arguments[1].target}
-                            <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+                            <!-- svelte-ignore a11y_mouse_events_have_key_events -->
                             <li
                                 class="list-group-item list-group-item-action p-0 d-flex"
-                                on:mouseover={(ev) =>
+                                onmouseover={(ev) =>
                                     mouseOverAnnotation(ev, relation)}
-                                on:mouseout={(ev) =>
+                                onmouseout={(ev) =>
                                     mouseOutAnnotation(ev, relation)}
                             >
                                 <div
@@ -139,13 +145,14 @@
                                 >
                                     <span>↳</span>
                                 </div>
-                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                <!-- svelte-ignore a11y_click_events_have_key_events -->
                                 <div
                                     class="flex-grow-1 my-1 mx-2 overflow-hidden"
-                                    on:click={() => scrollToRelation(relation)}
+                                    onclick={() => scrollToRelation(relation)}
                                 >
-                                    <div class="float-end labels me-1">
+                                    <div class="float-end labels">
                                         <LabelBadge
+                                            {data}
                                             annotation={relation}
                                             {ajaxClient}
                                         />

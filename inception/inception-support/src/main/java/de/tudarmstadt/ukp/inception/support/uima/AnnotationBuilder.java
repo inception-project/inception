@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.support.uima;
 
+import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
+
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -27,7 +29,6 @@ import java.util.regex.Pattern;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 
@@ -158,8 +159,13 @@ public class AnnotationBuilder<T extends AnnotationFS>
         return buildAnnotation(aCas, CAS.TYPE_NAME_ANNOTATION);
     }
 
+    public static AnnotationBuilder<AnnotationFS> buildAnnotation(JCas aJCas, String aType)
+    {
+        return buildAnnotation(aJCas.getCas(), aType);
+    }
+
     public static AnnotationBuilder<AnnotationFS> buildAnnotation(CAS aCas, String aType)
     {
-        return new AnnotationBuilder<AnnotationFS>(aCas, CasUtil.getAnnotationType(aCas, aType));
+        return new AnnotationBuilder<AnnotationFS>(aCas, getAnnotationType(aCas, aType));
     }
 }

@@ -17,9 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project.local;
 
-import static de.tudarmstadt.ukp.inception.kb.RepositoryType.LOCAL;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.rdf4j.rio.RDFFormat.NTRIPLES;
@@ -28,21 +26,14 @@ import static org.eclipse.rdf4j.rio.RDFFormat.TURTLE;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.wicket.AttributeModifier;
-import org.apache.wicket.ClassAttributeModifier;
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
@@ -50,12 +41,10 @@ import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
@@ -66,16 +55,11 @@ import org.slf4j.LoggerFactory;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
-import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 import de.tudarmstadt.ukp.inception.support.io.FileUploadDownloadHelper;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.inception.support.wicket.PipedStreamResource;
-import de.tudarmstadt.ukp.inception.ui.kb.project.AccessSpecificSettingsPanel;
-import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseInfoPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
 
 public class LocalRepositorySettingsPanel
@@ -83,9 +67,7 @@ public class LocalRepositorySettingsPanel
 {
     private static final long serialVersionUID = 866658729983211740L;
 
-    private static final String CLASSPATH_PREFIX = "classpath:";
-
-    private static final Logger LOG = LoggerFactory.getLogger(AccessSpecificSettingsPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     /**
      * Given the default file extension of an RDF format, returns the corresponding
@@ -108,14 +90,7 @@ public class LocalRepositorySettingsPanel
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean KnowledgeBaseProperties kbproperties;
 
-    private final Map<String, KnowledgeBaseProfile> knowledgeBaseProfiles;
-    private final Map<String, KnowledgeBaseProfile> downloadedProfiles = new HashMap<>();
     private final Map<String, File> uploadedFiles = new HashMap<>();
-
-    private final WebMarkupContainer listViewContainer;
-    private final WebMarkupContainer infoContainerLocal;
-    private final CompoundPropertyModel<KnowledgeBaseInfo> kbInfoModel = CompoundPropertyModel
-            .of(Model.of());
 
     private final Label repositorySize;
     private final Label indexSize;
@@ -123,16 +98,12 @@ public class LocalRepositorySettingsPanel
 
     private FileUploadField fileUpload;
 
-    private KnowledgeBaseProfile selectedKnowledgeBaseProfile;
-
     public LocalRepositorySettingsPanel(String aId, IModel<KnowledgeBaseWrapper> aModel,
             Map<String, KnowledgeBaseProfile> aKnowledgeBaseProfiles)
     {
         super(aId, aModel);
 
         setOutputMarkupId(true);
-
-        knowledgeBaseProfiles = aKnowledgeBaseProfiles;
 
         queue(uploadForm("uploadForm", "uploadField"));
 
@@ -165,25 +136,6 @@ public class LocalRepositorySettingsPanel
         }));
         statementCount.add(visibleWhen(getModel().map(KnowledgeBaseWrapper::isKbSaved)));
         queue(statementCount);
-
-        var localKBs = knowledgeBaseProfiles.values().stream() //
-                .filter(kb -> LOCAL == kb.getType()) //
-                .collect(Collectors.toList());
-
-        listViewContainer = new WebMarkupContainer("listViewContainer");
-        listViewContainer.add(localSuggestionsList("localKBs", localKBs));
-        listViewContainer.setOutputMarkupPlaceholderTag(true);
-        listViewContainer.add(visibleWhenNot(getModel().map(KnowledgeBaseWrapper::isKbSaved)));
-
-        var addKbButton = new LambdaAjaxLink("addKbButton", this::actionDownloadKbAndSetIRIs);
-        addKbButton.add(new Label("addKbLabel", new ResourceModel("kb.wizard.steps.local.addKb")));
-        listViewContainer.add(addKbButton);
-
-        infoContainerLocal = new KnowledgeBaseInfoPanel("infoContainer", kbInfoModel);
-        infoContainerLocal.setOutputMarkupId(true);
-        queue(infoContainerLocal);
-
-        queue(listViewContainer);
     }
 
     @SuppressWarnings("unchecked")
@@ -247,82 +199,6 @@ public class LocalRepositorySettingsPanel
         return fileExListView;
     }
 
-    private ListView<KnowledgeBaseProfile> localSuggestionsList(String aId,
-            List<KnowledgeBaseProfile> localKBs)
-    {
-        var suggestions = new ListView<KnowledgeBaseProfile>(aId, localKBs)
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void populateItem(ListItem<KnowledgeBaseProfile> item)
-            {
-                var link = new LambdaAjaxLink("suggestionLink",
-                        _target -> actionSelectPredefinedKB(_target, item.getModel()));
-
-                // Can not import the same KB more than once
-                var isImported = downloadedProfiles.containsKey(item.getModelObject().getName());
-                link.setEnabled(!isImported);
-
-                var itemLabel = item.getModelObject().getName();
-                // Adjust label to indicate whether the KB has already been downloaded
-                if (isImported) {
-                    // \u2714 is the checkmark symbol
-                    itemLabel = itemLabel + "  \u2714";
-                }
-                link.add(new Label("suggestionLabel", itemLabel));
-
-                link.add(new ClassAttributeModifier()
-                {
-                    private static final long serialVersionUID = -3985182168502826951L;
-
-                    @Override
-                    protected Set<String> update(Set<String> aOldClasses)
-                    {
-                        if (Objects.equals(selectedKnowledgeBaseProfile, item.getModelObject())) {
-                            aOldClasses.add("active");
-                        }
-                        else {
-                            aOldClasses.remove("active");
-                        }
-                        return aOldClasses;
-                    }
-                });
-
-                // Show schema type on mouseover
-                link.add(
-                        AttributeModifier
-                                .append("title",
-                                        new StringResourceModel(
-                                                "kb.wizard.steps.local.schemaOnMouseOver", this)
-                                                        .setParameters(
-                                                                SchemaProfile
-                                                                        .checkSchemaProfile(item
-                                                                                .getModelObject())
-                                                                        .getUiLabel(),
-                                                                getAccessTypeLabel(
-                                                                        item.getModelObject()))));
-
-                item.add(link);
-            }
-        };
-        suggestions.setOutputMarkupId(true);
-        return suggestions;
-    }
-
-    private void actionSelectPredefinedKB(AjaxRequestTarget aTarget,
-            IModel<KnowledgeBaseProfile> aModel)
-    {
-        if (Objects.equals(selectedKnowledgeBaseProfile, aModel.getObject())) {
-            selectedKnowledgeBaseProfile = null;
-        }
-        else {
-            selectedKnowledgeBaseProfile = aModel.getObject();
-            kbInfoModel.setObject(aModel.getObject().getInfo());
-        }
-        aTarget.add(listViewContainer, infoContainerLocal);
-    }
-
     private File uploadFile(FileUpload fu) throws IOException
     {
         var fileName = fu.getClientFileName();
@@ -344,63 +220,5 @@ public class LocalRepositorySettingsPanel
         var format = getRdfFormatForFileExt(rdfFormatFileExt);
         return new PipedStreamResource((os) -> kbService.exportData(kb, format, os),
                 GZIPOutputStream::new);
-    }
-
-    private void actionDownloadKbAndSetIRIs(AjaxRequestTarget aTarget)
-    {
-        try {
-            if (selectedKnowledgeBaseProfile != null) {
-                var accessUrl = selectedKnowledgeBaseProfile.getAccess().getAccessUrl();
-
-                var fileUploadDownloadHelper = new FileUploadDownloadHelper(getApplication());
-
-                if (accessUrl == null) {
-                    // Nothing to do
-                }
-                else if (accessUrl.startsWith(CLASSPATH_PREFIX)) {
-                    // import from classpath
-                    var kbFile = fileUploadDownloadHelper
-                            .writeClasspathResourceToTemporaryFile(accessUrl, getModel());
-                    getModel().getObject().putFile(selectedKnowledgeBaseProfile.getName(), kbFile);
-                }
-                else {
-                    var tmpFile = fileUploadDownloadHelper
-                            .writeFileDownloadToTemporaryFile(accessUrl, getModel());
-                    getModel().getObject().putFile(selectedKnowledgeBaseProfile.getName(), tmpFile);
-                }
-
-                var kb = getModel().getObject().getKb();
-                kb.applyRootConcepts(selectedKnowledgeBaseProfile);
-                kb.applyAdditionalMatchingProperties(selectedKnowledgeBaseProfile);
-                kb.applyMapping(selectedKnowledgeBaseProfile.getMapping());
-                kb.setFullTextSearchIri(
-                        selectedKnowledgeBaseProfile.getAccess().getFullTextSearchIri());
-                kb.setDefaultLanguage(selectedKnowledgeBaseProfile.getDefaultLanguage());
-                kb.setReification(selectedKnowledgeBaseProfile.getReification());
-                downloadedProfiles.put(selectedKnowledgeBaseProfile.getName(),
-                        selectedKnowledgeBaseProfile);
-                aTarget.add(this);
-
-                selectedKnowledgeBaseProfile = null;
-            }
-        }
-        catch (IOException e) {
-            error("Unable to download or import knowledge base file " + e.getMessage());
-            LOG.error("Unable to download or import knowledge base file ", e);
-            aTarget.addChildren(getPage(), IFeedback.class);
-        }
-    }
-
-    private String getAccessTypeLabel(KnowledgeBaseProfile aProfile)
-    {
-        if (aProfile.getAccess().getAccessUrl() == null) {
-            return "MANUAL";
-        }
-
-        if (aProfile.getAccess().getAccessUrl().startsWith(CLASSPATH_PREFIX)) {
-            return "CLASSPATH";
-        }
-
-        return "DOWNLOAD";
     }
 }

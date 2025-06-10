@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.rdf4j.model.Statement;
@@ -47,16 +46,6 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public interface KnowledgeBaseService
 {
-    /**
-     * Reads knowledge base profiles from a YAML file and stores them in a HashMap with the key that
-     * is defined in the file and a corresponding {@link KnowledgeBaseProfile} object as value
-     * 
-     * @return a HashMap with the knowledge base profiles
-     * @throws IOException
-     *             if an error occurs when reading the file
-     */
-    Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException;
-
     void importData(KnowledgeBase kb, String aFilename, InputStream aIS) throws IOException;
 
     /**
@@ -647,4 +636,6 @@ public interface KnowledgeBaseService
     long getStatementCount(KnowledgeBase aKB);
 
     long getIndexSize(KnowledgeBase aKB);
+
+    void configure(KnowledgeBase aKb, KnowledgeBaseProfile aWikidataProfile);
 }

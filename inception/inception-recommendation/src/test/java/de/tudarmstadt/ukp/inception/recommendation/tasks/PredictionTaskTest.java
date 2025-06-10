@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_CORRECTION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
@@ -42,6 +44,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -49,7 +52,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -73,14 +75,26 @@ class PredictionTaskTest
     @BeforeEach
     void setup()
     {
-        sessionOwner = User.builder().withUsername("user").build();
-        project = Project.builder().build();
-        document = SourceDocument.builder().withId(1l).withName("doc1").withProject(project)
+        sessionOwner = User.builder() //
+                .withUsername("user") //
                 .build();
-        layer = AnnotationLayer.builder().withId(1l).forJCasClass(NamedEntity.class)
-                .withType(SpanLayerSupport.TYPE).build();
-        feature = AnnotationFeature.builder().withId(1l).withName(NamedEntity._FeatName_value)
-                .withType(CAS.TYPE_NAME_STRING).withLayer(layer).build();
+        project = Project.builder().build();
+        document = SourceDocument.builder() //
+                .withId(1l) //
+                .withName("doc1") //
+                .withProject(project) //
+                .build();
+        layer = AnnotationLayer.builder() //
+                .withId(1l) //
+                .forJCasClass(NamedEntity.class) //
+                .withType(SpanLayerSupport.TYPE) //
+                .build();
+        feature = AnnotationFeature.builder() //
+                .withId(1l) //
+                .withName(NamedEntity._FeatName_value) //
+                .withType(CAS.TYPE_NAME_STRING) //
+                .withLayer(layer) //
+                .build();
     }
 
     @Test
@@ -118,6 +132,8 @@ class PredictionTaskTest
                         "value", //
                         feature.getName() + FEATURE_NAME_SCORE_SUFFIX, //
                         feature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX, //
+                        feature.getName() + FEATURE_NAME_CORRECTION_SUFFIX, //
+                        feature.getName() + FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX, //
                         feature.getName() + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX, //
                         "identifier", //
                         FEATURE_NAME_IS_PREDICTION);
@@ -126,8 +142,12 @@ class PredictionTaskTest
     @Test
     void testReconciliation() throws Exception
     {
-        var rec = Recommender.builder().withId(1l).withName("rec").withLayer(layer)
-                .withFeature(feature).build();
+        var rec = Recommender.builder() //
+                .withId(1l) //
+                .withName("rec") //
+                .withLayer(layer) //
+                .withFeature(feature) //
+                .build();
 
         var existingSuggestions = Arrays.<AnnotationSuggestion> asList( //
                 SpanSuggestion.builder() //
@@ -167,8 +187,11 @@ class PredictionTaskTest
                 newSuggestions);
 
         assertThat(result.suggestions()) //
-                .extracting(AnnotationSuggestion::getId, AnnotationSuggestion::getLabel,
+                .extracting( //
+                        AnnotationSuggestion::getId, //
+                        AnnotationSuggestion::getLabel, //
                         AnnotationSuggestion::getAge) //
-                .containsExactlyInAnyOrder(tuple(0, "aged", 1), tuple(3, "added", 0));
+                .containsExactlyInAnyOrder( //
+                        tuple(0, "aged", 1), tuple(3, "added", 0));
     }
 }

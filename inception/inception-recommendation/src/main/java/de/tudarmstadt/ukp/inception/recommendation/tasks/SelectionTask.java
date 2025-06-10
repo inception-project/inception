@@ -37,11 +37,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBase
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
@@ -77,6 +78,7 @@ public class SelectionTask
     private @Autowired RecommendationService recommendationService;
     private @Autowired ApplicationEventPublisher appEventPublisher;
     private @Autowired SchedulingService schedulingService;
+    private @Autowired RecommenderProperties properties;
 
     private final SourceDocument currentDocument;
     private final String dataOwner;
@@ -116,67 +118,70 @@ public class SelectionTask
                 }
             };
 
-            var listAnnotationLayers = annoService.listAnnotationLayer(getProject());
-            getMonitor().setMaxProgress(listAnnotationLayers.size());
             var seenRecommender = false;
             var layers = annoService.listAnnotationLayer(getProject());
-            for (var layer : layers) {
-                getMonitor().incrementProgress();
+            try (var progress = getMonitor().openScope("layers", layers.size())) {
+                for (var layer : layers) {
+                    progress.update(up -> up.increment());
 
-                if (!layer.isEnabled()) {
-                    continue;
-                }
-
-                var recommenders = recommendationService.listRecommenders(layer);
-                if (recommenders == null || recommenders.isEmpty()) {
-                    logNoRecommenders(sessionOwnerName, layer);
-                    continue;
-                }
-
-                var evaluatedRecommenders = new ArrayList<EvaluatedRecommender>();
-                for (var r : recommenders) {
-                    // Make sure we have the latest recommender config from the DB - the one from
-                    // the active recommenders list may be outdated
-                    var optRecommender = freshenRecommender(sessionOwner, r);
-                    if (optRecommender.isEmpty()) {
-                        logRecommenderGone(sessionOwner, r);
+                    if (!layer.isEnabled()) {
                         continue;
                     }
 
-                    if (!seenRecommender) {
-                        logSelectionStarted(sessionOwner);
-                        seenRecommender = true;
+                    var recommenders = recommendationService.listRecommenders(layer);
+                    if (recommenders == null || recommenders.isEmpty()) {
+                        logNoRecommenders(sessionOwnerName, layer);
+                        continue;
                     }
 
-                    Recommender recommender = optRecommender.get();
-                    try {
-                        long start = System.currentTimeMillis();
+                    var evaluatedRecommenders = new ArrayList<EvaluatedRecommender>();
+                    for (var r : recommenders) {
+                        // Make sure we have the latest recommender config from the DB - the one
+                        // from
+                        // the active recommenders list may be outdated
+                        var optRecommender = freshenRecommender(sessionOwner, r);
+                        if (optRecommender.isEmpty()) {
+                            logRecommenderGone(sessionOwner, r);
+                            continue;
+                        }
 
-                        getMonitor().addMessage(LogMessage.info(this, "%s", recommender.getName()));
-                        evaluate(sessionOwner, recommender, casLoader)
-                                .ifPresent(evaluatedRecommender -> {
-                                    var result = evaluatedRecommender.getEvaluationResult();
+                        if (!seenRecommender) {
+                            logSelectionStarted(sessionOwner);
+                            seenRecommender = true;
+                        }
 
-                                    evaluatedRecommenders.add(evaluatedRecommender);
-                                    appEventPublisher
-                                            .publishEvent(new RecommenderEvaluationResultEvent(this,
-                                                    recommender, sessionOwner.getUsername(), result,
-                                                    currentTimeMillis() - start,
-                                                    evaluatedRecommender.isActive()));
-                                });
+                        var recommender = optRecommender.get();
+                        try {
+                            long start = System.currentTimeMillis();
+
+                            getMonitor().update(up -> up.addMessage(
+                                    LogMessage.info(this, "%s", recommender.getName())));
+                            evaluate(sessionOwner, recommender, casLoader)
+                                    .ifPresent(evaluatedRecommender -> {
+                                        var result = evaluatedRecommender.getEvaluationResult();
+
+                                        evaluatedRecommenders.add(evaluatedRecommender);
+                                        appEventPublisher.publishEvent(
+                                                new RecommenderEvaluationResultEvent(this,
+                                                        recommender, sessionOwner.getUsername(),
+                                                        result, currentTimeMillis() - start,
+                                                        evaluatedRecommender.isActive()));
+                                    });
+                        }
+
+                        // Catching Throwable is intentional here as we want to continue the
+                        // execution
+                        // even if a particular recommender fails.
+                        catch (Throwable e) {
+                            logEvaluationFailed(project, sessionOwner, recommender.getName(), e);
+                        }
                     }
 
-                    // Catching Throwable is intentional here as we want to continue the execution
-                    // even if a particular recommender fails.
-                    catch (Throwable e) {
-                        logEvaluationFailed(project, sessionOwner, recommender.getName(), e);
-                    }
+                    recommendationService.setEvaluatedRecommenders(sessionOwner, layer,
+                            evaluatedRecommenders);
+
+                    logEvaluationSuccessful(sessionOwner);
                 }
-
-                recommendationService.setEvaluatedRecommenders(sessionOwner, layer,
-                        evaluatedRecommenders);
-
-                logEvaluationSuccessful(sessionOwner);
             }
 
             if (!seenRecommender) {
@@ -241,20 +246,24 @@ public class SelectionTask
     private void logEvaluationSuccessful(User sessionOwner)
     {
         LOG.info("[{}]: Evaluation complete", sessionOwner.getUsername());
-        appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
-                .builder(this, getProject(), sessionOwner.getUsername()) //
-                .withMessage(LogMessage.info(this, "Evaluation complete")) //
-                .build());
+        if (properties.getMessages().isEvaluationSuccessful()) {
+            appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                    .builder(this, getProject(), sessionOwner.getUsername()) //
+                    .withMessage(LogMessage.info(this, "Evaluation complete")) //
+                    .build());
+        }
     }
 
     private void logEvaluationFailed(Project project, User sessionOwner, String recommenderName,
             Throwable e)
     {
         LOG.error("[{}][{}]: Evaluation failed", sessionOwner.getUsername(), recommenderName, e);
-        appEventPublisher.publishEvent(
-                RecommenderTaskNotificationEvent.builder(this, project, sessionOwner.getUsername()) //
-                        .withMessage(LogMessage.error(this, e.getMessage())) //
-                        .build());
+        if (properties.getMessages().isEvaluationFailed()) {
+            appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
+                    .builder(this, project, sessionOwner.getUsername()) //
+                    .withMessage(LogMessage.error(this, e.getMessage())) //
+                    .build());
+        }
     }
 
     private void logNoRecommenders(String sessionOwnerName, AnnotationLayer layer)
@@ -276,12 +285,12 @@ public class SelectionTask
         }
 
         var factory = optFactory.get();
-        if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+        if (!factory.accepts(recommender)) {
             return Optional.of(skipRecommenderWithInvalidSettings(user, recommender));
         }
 
         if (factory.isInteractive(recommender)) {
-            return Optional.of(skipInteractiveRecommender(user, recommender));
+            return Optional.of(activateInteractiveRecommender(user, recommender));
         }
 
         if (recommender.isAlwaysSelected()) {
@@ -359,31 +368,32 @@ public class SelectionTask
             Recommender recommender)
     {
         String recommenderName = recommender.getName();
-        LOG.debug("[{}][{}]: Activating [{}] without evaluating - not evaluable", userName,
+        LOG.debug("[{}][{}]: Activating [{}] without evaluation - not evaluable", userName,
                 recommenderName, recommenderName);
-        info("Recommender [%s] activated without evaluating - not evaluable", recommenderName);
-        return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender);
+        info("Recommender [%s] activated without evaluation - not evaluable", recommenderName);
+        return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender,
+                "Non-evaluatable recommender is always active (without evaluation).");
     }
 
     private EvaluatedRecommender activateAlwaysOnRecommender(String userName,
             Recommender recommender)
     {
         String recommenderName = recommender.getName();
-        LOG.debug("[{}][{}]: Activating [{}] without evaluating - always selected", userName,
+        LOG.debug("[{}][{}]: Activating [{}] without evaluation - always selected", userName,
                 recommenderName, recommenderName);
-        info("Recommender [%s] activated without evaluating - always selected", recommenderName);
-        return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender);
+        info("Recommender [%s] activated without evaluation - always selected", recommenderName);
+        return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender,
+                "Recommender is always active (without evaluation).");
     }
 
-    private EvaluatedRecommender skipInteractiveRecommender(User user, Recommender recommender)
+    private EvaluatedRecommender activateInteractiveRecommender(User user, Recommender recommender)
     {
         var recommenderName = recommender.getName();
-        LOG.info("[{}][{}]: Recommender reserved for interactive use " + "- skipping recommender",
-                user.getUsername(), recommenderName);
-        info("Recommender [%s] reserved for interactive use - skipping recommender",
-                recommenderName);
-        return EvaluatedRecommender.makeInactiveWithoutEvaluation(recommender,
-                "Reserved for interactive use");
+        LOG.info("[{}][{}]: Activating [{}] without evaluation - interactive use",
+                user.getUsername(), recommenderName, recommenderName);
+        info("Recommender [%s] without evaluation - interactive use", recommenderName);
+        return EvaluatedRecommender.makeActiveWithoutEvaluation(recommender,
+                "Interactive recommender is always active (without evaluation).");
     }
 
     private EvaluatedRecommender skipRecommenderWithInvalidSettings(User user,

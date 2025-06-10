@@ -1,6 +1,8 @@
 import AbstractAnnotation from './AbstractAnnotation'
 import { anyOf } from '../../../shared/util'
 import SpanAnnotation from './SpanAnnotation'
+import { renderRelation } from '../render/renderRelation'
+import { transform } from '../UI/utils'
 
 /**
  * Relation Annotation (one-way / two-way / link)
@@ -104,16 +106,16 @@ export default class RelationAnnotation extends AbstractAnnotation {
     const promise = super.destroy()
 
     if (this._rel1Annotation) {
-      this._rel1Annotation.removeListener('hoverin', this.handleRelHoverIn)
-      this._rel1Annotation.removeListener('hoverout', this.handleRelHoverOut)
-      this._rel1Annotation.removeListener('delete', this.handleRelDelete)
+      this._rel1Annotation.off('hoverin', this.handleRelHoverIn)
+      this._rel1Annotation.off('hoverout', this.handleRelHoverOut)
+      this._rel1Annotation.off('delete', this.handleRelDelete)
       this._rel1Annotation = null
     }
 
     if (this._rel2Annotation) {
-      this._rel2Annotation.removeListener('hoverin', this.handleRelHoverIn)
-      this._rel2Annotation.removeListener('hoverout', this.handleRelHoverOut)
-      this._rel2Annotation.removeListener('delete', this.handleRelDelete)
+      this._rel2Annotation.off('hoverin', this.handleRelHoverIn)
+      this._rel2Annotation.off('hoverout', this.handleRelHoverOut)
+      this._rel2Annotation.off('delete', this.handleRelDelete)
       this._rel2Annotation = null
     }
 
@@ -268,5 +270,20 @@ export default class RelationAnnotation extends AbstractAnnotation {
       anyOf(this.rel2Annotation?.vid, [anno.rel1Annotation?.vid, anno.rel2Annotation?.vid])
 
     return isSame
+  }
+
+  appendChild (base: HTMLElement): HTMLElement | null {
+    let child: HTMLElement | null
+        child = renderRelation(this)
+  
+    // If no type was provided for an annotation it will result in node being null.
+    // Skip appending/transforming if node doesn't exist.
+    if (child) {
+      const viewport = globalThis.PDFViewerApplication.pdfViewer.getPageView(0).viewport
+      const elm = transform(base, child, viewport)
+      base.append(elm)
+    }
+  
+    return child
   }
 }

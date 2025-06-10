@@ -1,0 +1,121 @@
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:head>
+  <style>
+    .small p {
+      margin-bottom: 0.25em;
+    }
+  </style>
+</wicket:head>
+<wicket:panel>
+  <form wicket:id="form">
+    <div class="row form-row" wicket:enclosure="url">
+      <label class="col-sm-3 col-form-label" wicket:for="url">
+        <wicket:message key="url"/>
+      </label>
+      <div class="col-sm-9">
+        <input wicket:id="url" type="text"/>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="authentication">
+      <label class="col-sm-3 col-form-label">
+        <wicket:message key="authentication"/>
+      </label>
+      <div class="col-sm-9">
+        <div wicket:id="authentication"/>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="model">
+      <label class="col-sm-3 col-form-label" wicket:for="model">
+        <wicket:message key="model"/>
+      </label>
+      <div class="col-sm-9">
+        <input wicket:id="model" type="text"/>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="structuredOutputSupported">
+      <div class="offset-sm-3 col-sm-9">
+        <div class="form-check form-switch">
+          <input wicket:id="structuredOutputSupported" class="form-check-input" type="checkbox"/>
+          <label wicket:for="structuredOutputSupported" class="form-check-label">
+            <wicket:label key="structuredOutputSupported"/>
+          </label>
+        </div>
+      </div>  
+    </div>
+    <div class="row form-row" wicket:enclosure="interactive">
+      <div class="offset-sm-3 col-sm-9">
+        <div class="form-check form-switch">
+          <input wicket:id="interactive" class="form-check-input" type="checkbox"/>
+          <label wicket:for="interactive" class="form-check-label">
+            <wicket:label key="interactive"/>
+          </label>
+        </div>
+      </div>  
+    </div>
+    <div wicket:id="promptContainer">
+      <div class="row form-row" wicket:enclosure="preset">
+        <div class="offset-sm-3 col-sm-9">
+          <select wicket:id="preset" class="form-select"/>
+        </div>
+      </div>
+      <div class="row form-row" wicket:enclosure="promptingMode">
+        <label wicket:for="promptingMode" class="col-sm-3 control-label">
+          <wicket:label key="promptingMode" />
+        </label>
+        <div class="col-sm-9">
+          <select wicket:id="promptingMode" class="form-select"/>
+        </div>
+      </div>
+      <div class="row form-row" wicket:enclosure="extractionMode">
+        <label wicket:for="extractionMode" class="col-sm-3 control-label">
+          <wicket:label key="extractionMode" />
+        </label>
+        <div class="col-sm-9">
+          <select wicket:id="extractionMode" class="form-select"/>
+        </div>
+      </div>
+      <div class="row form-row" wicket:enclosure="justificationEnabled">
+        <div class="offset-sm-3 col-sm-9">
+          <div class="form-check form-switch">
+            <input wicket:id="justificationEnabled" class="form-check-input" type="checkbox"/>
+            <label wicket:for="justificationEnabled" class="form-check-label">
+              <wicket:label key="justificationEnabled"/>
+            </label>
+          </div>
+        </div>  
+      </div>
+      <div class="row form-row" wicket:enclosure="prompt">
+        <label class="col-sm-3 col-form-label" wicket:for="prompt">
+          <wicket:message key="prompt"/>
+          <div class="small text-muted mb-2">
+            <i class="fas fa-torii-gate"></i> Jinja supported
+          </div>
+          <div wicket:id="promptHints" class="small text-muted"/>
+        </label>
+        <div class="col-sm-9">
+          <textarea wicket:id="prompt" class="form-control" rows="10"/>
+        </div>
+      </div>
+    </div>
+    <div wicket:id="optionsPanel"/>
+  </form>
+</wicket:panel>
+</html>

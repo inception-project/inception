@@ -24,7 +24,7 @@ CAUTION: Experimental feature. To use this functionality, you need to enable it 
 
 Project managers can generate invite links to their projects which allow users to easily join their project. For this, visit the *Project Settings* and click on *Share Project*. Clicking on *Allow joining the project via a link* will generate the invite link that can then be copied and given to users (e.g. via email).
 
-image::sharing_settings.png[align="center"]
+image::images/sharing_settings.png[align="center"]
 
 The user can now follow the invite link by entering it into a browser. She might be prompted to log into {product-name} and is then automatically added to the project with annotator rights and directed to the project dashboard page. She can now start annotating.
 

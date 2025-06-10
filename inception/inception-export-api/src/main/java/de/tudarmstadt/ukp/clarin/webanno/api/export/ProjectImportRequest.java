@@ -31,8 +31,6 @@ public class ProjectImportRequest
 
     public static final String FORMAT_AUTO = "AUTO";
 
-    public int progress = 0;
-
     private final Queue<String> messages = new ConcurrentLinkedQueue<>();
 
     private final boolean createMissingUsers;
@@ -41,39 +39,9 @@ public class ProjectImportRequest
 
     private ProjectImportRequest(Builder builder)
     {
-        this.createMissingUsers = builder.createMissingUsers;
-        this.importPermissions = builder.importPermissions;
-        this.manager = builder.manager;
-    }
-
-    /**
-     * Request the import of a project, optionally creating any users referenced in the project but
-     * missing in the current instance.
-     * 
-     * @param aCreateMissingUsers
-     *            whether to create users that are referenced in the project but missing in the
-     *            system
-     */
-    public ProjectImportRequest(boolean aCreateMissingUsers)
-    {
-        createMissingUsers = aCreateMissingUsers;
-        importPermissions = true;
-        manager = null;
-    }
-
-    public ProjectImportRequest(boolean aCreateMissingUsers, boolean aImportPermissions)
-    {
-        createMissingUsers = aCreateMissingUsers;
-        importPermissions = aImportPermissions;
-        manager = null;
-    }
-
-    public ProjectImportRequest(boolean aCreateMissingUsers, boolean aImportPermissions,
-            User aManager)
-    {
-        createMissingUsers = aCreateMissingUsers;
-        importPermissions = aImportPermissions;
-        manager = aManager;
+        createMissingUsers = builder.createMissingUsers;
+        importPermissions = builder.importPermissions;
+        manager = builder.manager;
     }
 
     public void addMessage(String aMessage)
@@ -121,19 +89,19 @@ public class ProjectImportRequest
 
         public Builder withCreateMissingUsers(boolean aCreateMissingUsers)
         {
-            this.createMissingUsers = aCreateMissingUsers;
+            createMissingUsers = aCreateMissingUsers;
             return this;
         }
 
         public Builder withImportPermissions(boolean aImportPermissions)
         {
-            this.importPermissions = aImportPermissions;
+            importPermissions = aImportPermissions;
             return this;
         }
 
         public Builder withManager(User aManager)
         {
-            this.manager = aManager;
+            manager = aManager;
             return this;
         }
 

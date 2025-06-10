@@ -8,11 +8,11 @@ TS_MODULES="
 ./inception-js-api/src/main/ts
 ./inception-diam/src/main/ts
 ./inception-io-tei/src/main/ts
+./inception-io-xml/src/main/ts
 ./inception-brat-editor/src/main/ts
 ./inception-diam-editor/src/main/ts
 ./inception-external-editor/src/main/ts
 ./inception-html-apache-annotator-editor/src/main/ts
-./inception-html-editor/src/main/ts
 ./inception-html-recogito-editor/src/main/ts
 ./inception-pdf-editor/src/main/ts
 ./inception-pdf-editor2/src/main/ts
@@ -22,6 +22,7 @@ TS_MODULES="
 ./inception-ui-kb/src/main/ts
 ./inception-ui-search/src/main/ts
 ./inception-ui-scheduling/src/main/ts
+./inception-assistant/src/main/ts
 "
 
 for module in $TS_MODULES ; do
@@ -32,7 +33,10 @@ for module in $TS_MODULES ; do
   rm -f package.json
   rm -Rf node_modules
 
-  cp ../../../../inception-build/src/main/resources/inception/eslintrc.yml .eslintrc.yml 
+  rm -f .eslintrc.yml
+  cp ../../../../inception-build/src/main/resources/inception/eslint.config.mjs eslint.config.mjs
+  cp ../../../../inception-build/src/main/resources/inception/vite.config.js vite.config.js
+  cp ../../../../inception-build/src/main/resources/inception/tsconfig.json tsconfig.json
   popd
 
   pushd "$module/../../.."

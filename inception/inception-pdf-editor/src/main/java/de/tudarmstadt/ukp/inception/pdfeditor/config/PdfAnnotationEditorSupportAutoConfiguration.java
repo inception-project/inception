@@ -34,14 +34,14 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfDocumentIFrameViewFacto
 @Configuration
 public class PdfAnnotationEditorSupportAutoConfiguration
 {
-    @ConditionalOnProperty(prefix = "ui.pdf-legacy", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ui.pdf-legacy", name = "enabled", havingValue = "true", matchIfMissing = false)
     @Bean
     public PdfAnnotationEditorFactory pdfAnnotationEditorFactory()
     {
         return new PdfAnnotationEditorFactory();
     }
 
-    @ConditionalOnProperty(prefix = "ui.pdf-legacy", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ui.pdf-legacy", name = "enabled", havingValue = "true", matchIfMissing = false)
     @Bean
     public PdfDocumentIFrameViewFactory pdfDocumentIFrameViewFactory()
     {

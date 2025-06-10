@@ -20,26 +20,23 @@
 = Images
 
 Linking text to images can be useful e.g. when dealing with OCRed data or with text describing
-images. To support such cases, {product-name} supports **image features**. Image features can
-be to annotation layers just like and other type of features. When selecting an annotation
-containing an image feature, the a text field is used as the feature editor. Enter an image URL into
-this field in order to link the annotation to an image. It is presently not possible to upload
-images to {product-name} - the image must be accessible via an URL, e.g. from an IIIF server.
+images.
+To support such cases, {product-name} supports **image features**.
+Image features can be to annotation layers just like and other type of features.
+When selecting an annotation containing an image feature, the a text field is used as the feature editor.
+Enter an image URL into this field in order to link the annotation to an image.
+It is presently not possible to upload images to {product-name} - the image must be accessible via an URL, e.g. from an IIIF server.
 
 Open the **images sidebar** to get an overview over all images linked to any of the annotations
 currently visible on screen.
 
-NOTE: The sidebar attempts to add a border of an appropriate color to each image. For light images,
-      a dark border is added and for dark images, a light border is added. However, this is only possible if
-      the image server supports cross-origin resource sharing (CORS). The website
-      link:https://enable-cors.org/server.html[enable-cors.org] provides tips on how to configure your image
-      server to support CORS. If CORS is not supported by the image server, rendering performance will 
-      degrade as there is an attempt to re-load the image without CORS and without trying to determine the
+NOTE: The sidebar attempts to add a border of an appropriate color to each image.
+      For light images, a dark border is added and for dark images, a light border is added.
+      However, this is only possible if the image server supports cross-origin resource sharing (CORS).
+      The website link:https://enable-cors.org/server.html[enable-cors.org] provides tips on how to configure your image server to support CORS.
+      If CORS is not supported by the image server, rendering performance will  degrade as there is an attempt to re-load the image without CORS and without trying to determine the
       border color - but the application should still work and the images should still show.
 
 NOTE: If the images are not hosted on the same server as {product-name}, you may have to specify
-      the remote server in the `security.csp.allowed-image-sources` property to enable users to access these
-      images from their browsers within {product-name}. This is a multi-valued property, so you have to 
-      set its values as `security.csp.allowed-image-sources[0]=https://my-first-image.host`,
-      `security.csp.allowed-image-sources[1]=https://my-second-image.host` in the `settings.properties`
-      file.
+      the remote server in the `security.csp.allowed-image-sources` property to enable users to access these images.
+      This is a multi-valued property, so you have to set its values as `security.csp.allowed-image-sources[0]=https://my-first-image.host`, `security.csp.allowed-image-sources[1]=https://my-second-image.host` in the `settings.properties` file.

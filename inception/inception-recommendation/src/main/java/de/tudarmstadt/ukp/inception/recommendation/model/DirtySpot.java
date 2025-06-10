@@ -17,11 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.model;
 
+import static java.util.Collections.unmodifiableMap;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingInstance;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public class DirtySpot
@@ -29,12 +36,15 @@ public class DirtySpot
     private final SourceDocument document;
     private final String user;
     private final Range affectedRange;
+    private final Map<Recommender, List<TrainingInstance>> incrementalTrainingData;
 
-    public DirtySpot(AnnotationEvent aEvent)
+    public DirtySpot(AnnotationEvent aEvent,
+            Map<Recommender, List<TrainingInstance>> aIncrementalTrainingData)
     {
         document = aEvent.getDocument();
         user = aEvent.getDocumentOwner();
         affectedRange = aEvent.getAffectedRange();
+        incrementalTrainingData = unmodifiableMap(new LinkedHashMap<>(aIncrementalTrainingData));
     }
 
     public Range getAffectedRange()
@@ -60,6 +70,11 @@ public class DirtySpot
     public Project getProject()
     {
         return document.getProject();
+    }
+
+    public Map<Recommender, List<TrainingInstance>> getIncrementalTrainingData()
+    {
+        return incrementalTrainingData;
     }
 
     @Override

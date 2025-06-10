@@ -57,6 +57,7 @@ public interface FeatureSupportRegistry
      * @return whether the given feature is accessible (that implies that it is supported).
      * @param aFeature
      *            the feature to check.
+     * @see de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport#isAccessible(AnnotationFeature)
      */
     boolean isAccessible(AnnotationFeature aFeature);
 

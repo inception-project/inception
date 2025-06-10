@@ -17,17 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client;
 
-import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.OllamaRecommenderTraits.DEFAULT_OLLAMA_URL;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client.OllamaGenerateResponseFormat.JSON;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.OllamaRecommenderTraits.DEFAULT_OLLAMA_URL;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
 import java.lang.invoke.MethodHandles;
+import java.util.function.Consumer;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatMessage;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaGenerateRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaGenerateResponse;
 import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
 
 class OllamaClientImplTest
@@ -45,12 +53,50 @@ class OllamaClientImplTest
     @Test
     void testStream() throws Exception
     {
-        var response = sut.generate(DEFAULT_OLLAMA_URL, OllamaGenerateRequest.builder() //
+        var request = OllamaGenerateRequest.builder() //
                 .withModel("mistral") //
                 .withPrompt("Tell me a joke.") //
                 .withStream(true) //
-                .build());
+                .build();
+        var response = sut.generate(DEFAULT_OLLAMA_URL, request);
         LOG.info("Response: [{}]", response.trim());
+    }
+
+    @Test
+    void testStreamWithCallback() throws Exception
+    {
+        var request = OllamaGenerateRequest.builder() //
+                .withModel("mistral") //
+                .withPrompt("Tell me a joke.") //
+                .withStream(true) //
+                .build();
+
+        Consumer<OllamaGenerateResponse> callback = response -> {
+            LOG.info("Callback: [{}]", response.getResponse());
+        };
+
+        var response = sut.generate(DEFAULT_OLLAMA_URL, request, callback);
+        LOG.info("Response: [{}]", response.trim());
+    }
+
+    @Test
+    void testChatStreamWithCallback() throws Exception
+    {
+        var request = OllamaChatRequest.builder() //
+                .withModel("mistral") //
+                .withMessages( //
+                        new OllamaChatMessage("system",
+                                "You are Donald Duck and end each sentence with 'quack'."),
+                        new OllamaChatMessage("user", "What is your name?")) //
+                .withStream(true) //
+                .build();
+
+        Consumer<OllamaChatResponse> callback = response -> {
+            LOG.info("Callback: [{}]", response.getMessage().content());
+        };
+
+        var response = sut.chat(DEFAULT_OLLAMA_URL, request, callback);
+        LOG.info("Response: [{}]", response.getMessage().content());
     }
 
     @Test
@@ -71,7 +117,7 @@ class OllamaClientImplTest
                 .withModel("mistral") //
                 .withPrompt("Generate a JSON map with the key/value pairs `a = 1` and `b = 2`") //
                 .withStream(false) //
-                .withFormat(JSON) //
+                .withFormat(JsonNodeFactory.instance.textNode("json")) //
                 .build());
         LOG.info("Response: [{}]", response.trim());
     }

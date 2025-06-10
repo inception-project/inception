@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.support.test.recommendation;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_CORRECTION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
@@ -43,15 +46,24 @@ public class RecommenderTestHelper
     public static void addPredictionFeatures(CAS aCas, String aTypeName, String aFeatureName)
         throws IOException, UIMAException
     {
-        var scoreFeatureName = aFeatureName + FEATURE_NAME_SCORE_SUFFIX;
-        var scoreExplanationFeatureName = aFeatureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
-
         var tsd = typeSystem2TypeSystemDescription(aCas.getTypeSystem());
-        var typeDescription = tsd.getType(aTypeName);
-        typeDescription.addFeature(scoreFeatureName, "Score feature", TYPE_NAME_DOUBLE);
-        typeDescription.addFeature(scoreExplanationFeatureName, "Score explanation feature",
+        var td = tsd.getType(aTypeName);
+
+        td.addFeature(FEATURE_NAME_IS_PREDICTION, "Is prediction", TYPE_NAME_BOOLEAN);
+
+        td.addFeature(aFeatureName + FEATURE_NAME_SCORE_SUFFIX, "Score", TYPE_NAME_DOUBLE);
+
+        td.addFeature(aFeatureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX,
+                "Score explanation feature", TYPE_NAME_STRING);
+
+        td.addFeature(aFeatureName + FEATURE_NAME_CORRECTION_SUFFIX, "Correction flag",
+                TYPE_NAME_BOOLEAN);
+
+        td.addFeature(aFeatureName + FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX,
+                "Correction explanation", TYPE_NAME_STRING);
+
+        td.addFeature(aFeatureName + FEATURE_NAME_AUTO_ACCEPT_MODE_SUFFIX, "Suggestion mode",
                 TYPE_NAME_STRING);
-        typeDescription.addFeature(FEATURE_NAME_IS_PREDICTION, "Is prediction", TYPE_NAME_BOOLEAN);
 
         var schemaService = new AnnotationSchemaServiceImpl();
         schemaService.upgradeCas(aCas, tsd);

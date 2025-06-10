@@ -18,14 +18,13 @@
 package de.tudarmstadt.ukp.inception.curation.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -37,10 +36,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
+import de.tudarmstadt.ukp.inception.curation.merge.PerCasMergeContext;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.StopWatch;
-import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
  * <p>
@@ -64,7 +63,7 @@ public class CurationMergeServiceImpl
     }
 
     @Override
-    public Set<LogMessage> mergeCasses(SourceDocument aDocument, String aTargetCasUserName,
+    public PerCasMergeContext mergeCasses(SourceDocument aDocument, String aTargetCasUserName,
             CAS aTargetCas, Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy)
         throws UIMAException
     {
@@ -77,7 +76,7 @@ public class CurationMergeServiceImpl
     }
 
     @Override
-    public Set<LogMessage> mergeCasses(SourceDocument aDocument, String aTargetCasUserName,
+    public PerCasMergeContext mergeCasses(SourceDocument aDocument, String aTargetCasUserName,
             CAS aTargetCas, Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy,
             List<AnnotationLayer> aLayers, boolean aClearTargetCas)
         throws UIMAException

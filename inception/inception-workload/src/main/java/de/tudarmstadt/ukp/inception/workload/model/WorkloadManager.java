@@ -17,8 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.workload.model;
 
+import static org.hibernate.annotations.OnDeleteAction.CASCADE;
+
 import java.io.Serializable;
 import java.util.Objects;
+
+import org.hibernate.annotations.OnDelete;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
@@ -53,6 +57,7 @@ public class WorkloadManager
 
     @ManyToOne
     @JoinColumn(name = "project", nullable = false)
+    @OnDelete(action = CASCADE)
     private Project project;
 
     @Column(columnDefinition = "VARCHAR(255)")

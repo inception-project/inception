@@ -23,7 +23,7 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 
-@Order(500)
+@Order(ActionBarExtension.ORDER_PAGING)
 @org.springframework.stereotype.Component
 public class PagingActionBarExtension
     implements ActionBarExtension

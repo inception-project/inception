@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
@@ -71,14 +73,16 @@ public class RelationRenderer
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    public static final String REL_EXTENSION_ID = "rel";
+
     public static final VID VID_BEFORE = VID.builder() //
-            .withExtensionId("rel") //
+            .withExtensionId(REL_EXTENSION_ID) //
             .withAnnotationId(0) //
             .withExtensionPayload("before") //
             .build();
 
     public static final VID VID_AFTER = VID.builder() //
-            .withExtensionId("rel") //
+            .withExtensionId(REL_EXTENSION_ID) //
             .withAnnotationId(1) //
             .withExtensionPayload("after") //
             .build();
@@ -133,33 +137,35 @@ public class RelationRenderer
     }
 
     @Override
-    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
-            int aWindowEnd)
+    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest)
     {
         var cas = aRequest.getCas();
+        var windowBegin = aRequest.getWindowBeginOffset();
+        var windowEnd = aRequest.getWindowEndOffset();
 
-        if (!aRequest.isLongArcs()) {
-            return cas.<Annotation> select(type) //
-                    .coveredBy(aWindowBegin, aWindowEnd) //
-                    .toList();
-        }
+        if (aRequest.isLongArcs()) {
+            var result = new ArrayList<Annotation>();
+            for (var rel : cas.<Annotation> select(type)) {
+                var sourceFs = getSourceFs(rel);
+                var targetFs = getTargetFs(rel);
 
-        var result = new ArrayList<Annotation>();
-        for (var rel : cas.<Annotation> select(type)) {
-            var sourceFs = getSourceFs(rel);
-            var targetFs = getTargetFs(rel);
+                if (sourceFs instanceof Annotation source
+                        && targetFs instanceof Annotation target) {
+                    var relBegin = min(source.getBegin(), target.getBegin());
+                    var relEnd = max(source.getEnd(), target.getEnd());
 
-            if (sourceFs instanceof Annotation source && targetFs instanceof Annotation target) {
-                var relBegin = Math.min(source.getBegin(), target.getBegin());
-                var relEnd = Math.max(source.getEnd(), target.getEnd());
-
-                if (overlapping(relBegin, relEnd, aWindowBegin, aWindowEnd)) {
-                    result.add(rel);
+                    if (overlapping(relBegin, relEnd, windowBegin, windowEnd)) {
+                        result.add(rel);
+                    }
                 }
             }
+
+            return result;
         }
 
-        return result;
+        return cas.<Annotation> select(type) //
+                .coveredBy(windowBegin, windowEnd) //
+                .toList();
     }
 
     @Override
@@ -175,8 +181,7 @@ public class RelationRenderer
         // Index mapping annotations to the corresponding rendered arcs
         var annoToArcIdx = new HashMap<AnnotationFS, VArc>();
 
-        var annotations = selectAnnotationsInWindow(aRequest, aResponse.getWindowBegin(),
-                aResponse.getWindowEnd());
+        var annotations = selectAnnotationsInWindow(aRequest);
 
         for (var fs : annotations) {
             for (var obj : render(aRequest, aFeatures, aResponse, fs)) {
@@ -260,12 +265,18 @@ public class RelationRenderer
                     labelFeatures);
         case WHEN_SELECTED:
             if (aRequest.getState() == null || isSelected(aRequest, aFS, sourceFs, targetFs)) {
+                // State == null is when we render for the annotation sidebar...
                 return renderRelationAsArcs(aRequest, aVDocument, aFS, typeAdapter, sourceFs,
                         targetFs, labelFeatures);
             }
             return renderRelationOnLabel(aVDocument, typeAdapter, sourceFs, targetFs,
                     labelFeatures);
         case NEVER:
+            if (aRequest.getState() == null) {
+                // State == null is when we render for the annotation sidebar...
+                return renderRelationAsArcs(aRequest, aVDocument, aFS, typeAdapter, sourceFs,
+                        targetFs, labelFeatures);
+            }
             return renderRelationOnLabel(aVDocument, typeAdapter, sourceFs, targetFs,
                     labelFeatures);
         default:

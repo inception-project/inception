@@ -35,7 +35,7 @@
     "esbuild-svelte": "${esbuild-svelte.version}",
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
-    "eslint-config-standard": "${eslint-config-standard.version}",
+    "neostandard": "${neostandard.version}",
     "eslint-plugin-import": "${eslint-plugin-import.version}",
     "eslint-plugin-n": "${eslint-plugin-n.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
@@ -54,6 +54,7 @@
     "@types/events": "${types-events.version}",
     "@testing-library/svelte": "${testing-library-svelte.version}",
     "uuid": "${uuid.version}",
+    "vite": "${vite.version}",
     "vitest": "${vitest.version}",
     "yargs": "${yargs.version}"
   }

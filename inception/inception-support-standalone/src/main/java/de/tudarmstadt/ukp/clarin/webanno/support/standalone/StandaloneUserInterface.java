@@ -48,9 +48,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.lang.invoke.MethodHandles;
-import java.net.URL;
 import java.time.Year;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -68,7 +66,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.Timer;
-import javax.swing.border.Border;
 import javax.swing.text.DefaultCaret;
 
 import org.slf4j.Logger;
@@ -96,7 +93,7 @@ public class StandaloneUserInterface
         }
 
         try {
-            File file = getSettingsFileLocation();
+            var file = getSettingsFileLocation();
             file.getParentFile().mkdirs();
             if (!file.exists()) {
                 file.createNewFile();
@@ -106,28 +103,29 @@ public class StandaloneUserInterface
                 getDesktop().browseFileDirectory(file);
             }
             else {
-                JLabel label = new JLabel("Path to the settings properties file:");
+                var label = new JLabel("Path to the settings properties file:");
 
-                JTextField textField = new JTextField(file.getAbsolutePath());
+                var textField = new JTextField(file.getAbsolutePath());
                 textField.setEditable(false);
 
-                JButton copyButton = new JButton("Copy");
+                var copyButton = new JButton("Copy");
                 copyButton.addActionListener(le -> {
                     StringSelection stringSelection = new StringSelection(textField.getText());
                     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                     clipboard.setContents(stringSelection, null);
                 });
 
-                JPanel panel = new JPanel();
+                var panel = new JPanel();
                 panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
                 panel.add(label);
                 panel.add(Box.createVerticalGlue());
-                JPanel row = new JPanel();
+
+                var row = new JPanel();
                 row.add(textField);
                 row.add(copyButton);
                 panel.add(row);
 
-                String title = "Settings Properties";
+                var title = "Settings Properties";
                 JOptionPane.showMessageDialog(null, panel, title, JOptionPane.INFORMATION_MESSAGE);
             }
         }
@@ -139,46 +137,48 @@ public class StandaloneUserInterface
 
     public static void actionShowLog(String applicationName)
     {
-        JFrame frame = new JFrame(applicationName + " - Log");
+        var frame = new JFrame(applicationName + " - Log");
 
-        JPanel contentPanel = new JPanel();
-        Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
+        var contentPanel = new JPanel();
+        var padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
         contentPanel.setBorder(padding);
         contentPanel.setLayout(new BoxLayout(contentPanel, PAGE_AXIS));
 
-        JLabel info = new JLabel(
+        var info = new JLabel(
                 "Only recent log messages are displayed here. For more information, check the log file.");
         contentPanel.add(info);
 
-        JTextArea logArea = new JTextArea(20, 80);
+        var logArea = new JTextArea(20, 80);
         logArea.setTabSize(2);
         logArea.setEditable(false);
         // Set text before setting the caret policy so we start in follow mode
         logArea.setText(getLog());
-        DefaultCaret caret = (DefaultCaret) logArea.getCaret();
+
+        var caret = (DefaultCaret) logArea.getCaret();
         caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
-        JScrollPane scroll = new JScrollPane(logArea);
+
+        var scroll = new JScrollPane(logArea);
         scroll.setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_ALWAYS);
         scroll.setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_ALWAYS);
         contentPanel.add(scroll);
 
-        JPanel buttonPanel = new JPanel();
+        var buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, LINE_AXIS));
         contentPanel.add(buttonPanel);
 
-        JButton copyToClipboardButton = new JButton("Copy to clipboard");
+        var copyToClipboardButton = new JButton("Copy to clipboard");
         copyToClipboardButton.addActionListener(StandaloneUserInterface::actionCopyLogToClipboard);
         buttonPanel.add(copyToClipboardButton);
 
         if (getGlobalLogFolder().isPresent() && Desktop.isDesktopSupported()) {
             if (getDesktop().isSupported(Desktop.Action.BROWSE_FILE_DIR)) {
-                JButton openLogFolderButton = new JButton("Open log folder");
+                var openLogFolderButton = new JButton("Open log folder");
                 openLogFolderButton.addActionListener(StandaloneUserInterface::actionOpenLogFolder);
                 buttonPanel.add(openLogFolderButton);
             }
 
             if (getDesktop().isSupported(Desktop.Action.OPEN)) {
-                JButton openLogFileButton = new JButton("Open log file");
+                var openLogFileButton = new JButton("Open log file");
                 openLogFileButton.addActionListener(StandaloneUserInterface::actionOpenLogFile);
                 buttonPanel.add(openLogFileButton);
             }
@@ -192,11 +192,11 @@ public class StandaloneUserInterface
         bringToFront(frame);
 
         // Watch the log and if the log has scrolled down all the way to the bottom, follow
-        Timer timer = new Timer(250, e -> {
+        var timer = new Timer(250, e -> {
             int savedHorizontal = scroll.getHorizontalScrollBar().getValue();
             int vpos = scroll.getVerticalScrollBar().getValue() + scroll.getHeight()
                     - scroll.getHorizontalScrollBar().getHeight() /*- (lineHeight / 2)*/;
-            boolean atBottom = vpos >= scroll.getVerticalScrollBar().getMaximum();
+            var atBottom = vpos >= scroll.getVerticalScrollBar().getMaximum();
             logArea.setText(getLog());
             if (savedHorizontal != 0) {
                 scroll.getHorizontalScrollBar().setValue(savedHorizontal);
@@ -239,8 +239,8 @@ public class StandaloneUserInterface
     private static void actionCopyLogToClipboard(ActionEvent aEvent)
     {
         try {
-            StringSelection stringSelection = new StringSelection(getLog());
-            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            var stringSelection = new StringSelection(getLog());
+            var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(stringSelection, null);
         }
         catch (Exception e) {
@@ -273,16 +273,16 @@ public class StandaloneUserInterface
 
     public static void actionShowAbout(String applicationName)
     {
-        ResourceBundle bundle = ResourceBundle.getBundle(StandaloneUserInterface.class.getName());
+        var bundle = ResourceBundle.getBundle(StandaloneUserInterface.class.getName());
 
-        JFrame frame = new JFrame(applicationName + " - About");
+        var frame = new JFrame(applicationName + " - About");
 
-        JPanel contentPanel = new JPanel();
-        Border padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
+        var contentPanel = new JPanel();
+        var padding = BorderFactory.createEmptyBorder(10, 10, 10, 10);
         contentPanel.setBorder(padding);
         contentPanel.setLayout(new BoxLayout(contentPanel, PAGE_AXIS));
 
-        JLabel header = new JLabel(applicationName);
+        var header = new JLabel(applicationName);
         header.setFont(new Font(SANS_SERIF, BOLD, 16));
         contentPanel.add(header);
 
@@ -293,7 +293,7 @@ public class StandaloneUserInterface
         contentPanel.add(new JLabel(
                 format(bundle.getString("copyright"), Integer.toString(Year.now().getValue()))));
 
-        JTextArea dependencies = new JTextArea(20, 80);
+        var dependencies = new JTextArea(20, 80);
         dependencies.setEditable(false);
         dependencies.setText(ApplicationInformation.loadDependencies());
         dependencies.setCaretPosition(0);
@@ -311,27 +311,27 @@ public class StandaloneUserInterface
 
     public static TrayIcon makeStartupSystemTrayMenu(String applicationName) throws AWTException
     {
-        SystemTray tray = SystemTray.getSystemTray();
-        TrayIcon trayIcon = new TrayIcon(getIconImage());
+        var tray = SystemTray.getSystemTray();
+        var trayIcon = new TrayIcon(getIconImage());
         trayIcon.setImageAutoSize(true);
 
-        PopupMenu popupMenu = new PopupMenu();
+        var popupMenu = new PopupMenu();
 
-        MenuItem logItem = new MenuItem("Log...");
+        var logItem = new MenuItem("Log...");
         logItem.addActionListener(e -> actionShowLog(applicationName));
         popupMenu.add(logItem);
 
         if (getSettingsFileLocation() != null) {
-            MenuItem settingsPropertiesItem = new MenuItem("Locate settings file");
+            var settingsPropertiesItem = new MenuItem("Locate settings file");
             settingsPropertiesItem.addActionListener(e -> actionLocateSettingsProperties());
             popupMenu.add(settingsPropertiesItem);
         }
 
-        MenuItem aboutItem = new MenuItem("About...");
+        var aboutItem = new MenuItem("About...");
         aboutItem.addActionListener(e -> actionShowAbout(applicationName));
         popupMenu.add(aboutItem);
 
-        MenuItem shutdownItem = new MenuItem(ACTION_SHUTDOWN + " (may take a moment)");
+        var shutdownItem = new MenuItem(ACTION_SHUTDOWN + " (may take a moment)");
         shutdownItem.addActionListener(e -> {
             tray.remove(trayIcon);
             actionShutdown();
@@ -348,9 +348,8 @@ public class StandaloneUserInterface
 
     public static Image getIconImage()
     {
-        URL iconUrl = LoadingSplashScreen.class.getResource("/icon.png");
-        ImageIcon icon = new ImageIcon(iconUrl);
+        var iconUrl = LoadingSplashScreen.class.getResource("/icon.png");
+        var icon = new ImageIcon(iconUrl);
         return icon.getImage();
     }
-
 }

@@ -17,33 +17,23 @@
      * limitations under the License.
      */
 
-    import { onMount, onDestroy } from "svelte";
-    import { get_current_component } from "svelte/internal";
+    import { mount, onMount, onDestroy } from "svelte";
     import {
         AnnotatedText,
         unpackCompactAnnotatedTextV2,
     } from "@inception-project/inception-js-api";
+    // import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
+    import AnnotationDetailPopOver from './AnnotationDetailPopOver.svelte'
     import { factory } from "@inception-project/inception-diam";
-    import {
-        groupingMode,
-        recommendationsFirst,
-        sortByScore,
-    } from "./AnnotationBrowserState";
+    import { stateStore } from "./AnnotationBrowserState.svelte";
     import AnnotationsByPositionList from "./AnnotationsByPositionList.svelte";
     import AnnotationsByLabelList from "./AnnotationsByLabelList.svelte";
     import AnnotationsByLayerList from "./AnnotationsByLayerList.svelte";
-    import AnnotationDetailPopOver from "@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte"
 
-    export let wsEndpointUrl: string;
-    export let topicChannel: string;
-    export let ajaxEndpointUrl: string;
-    export let pinnedGroups: string[];
-    export let userPreferencesKey: string;
+    let { wsEndpointUrl, csrfToken, topicChannel, ajaxEndpointUrl, pinnedGroups, userPreferencesKey } = $props();
 
-    let popover : AnnotationDetailPopOver = null;
+    let element: HTMLElement | undefined = $state(undefined);
     let connected = false;
-    let element = null;
-    let self = get_current_component();
 
     let defaultPreferences = {
         mode: "by-label",
@@ -56,9 +46,9 @@
         "by-label": "Group by label",
         "by-layer": "Group by layer",
     };
-    let tooManyAnnotations = false;
+    let tooManyAnnotations = $state(false);
 
-    let data: AnnotatedText;
+    let data: AnnotatedText | undefined = $state(undefined);
 
     let wsClient = factory().createWebsocketClient();
     wsClient.onConnect = () =>
@@ -69,32 +59,20 @@
     ajaxClient.loadPreferences(userPreferencesKey).then((p) => {
         preferences = Object.assign(preferences, defaultPreferences, p);
         console.log("Loaded preferences", preferences);
-        groupingMode.set(preferences.mode || defaultPreferences.mode);
-        sortByScore.set(
-            preferences.sortByScore !== undefined
+        stateStore.groupingMode = preferences.mode || defaultPreferences.mode;
+        stateStore.sortByScore = preferences.sortByScore !== undefined
                 ? preferences.sortByScore
-                : defaultPreferences.sortByScore
-        );
-        recommendationsFirst.set(
-            preferences.recommendationsFirst !== undefined
+                : defaultPreferences.sortByScore;
+        stateStore.recommendationsFirst = preferences.recommendationsFirst !== undefined
                 ? preferences.recommendationsFirst
                 : defaultPreferences.recommendationsFirst
-        );
+    });
 
-        groupingMode.subscribe((mode) => {
-            preferences.mode = mode;
-            ajaxClient.savePreferences(userPreferencesKey, preferences);
-        });
-
-        sortByScore.subscribe((mode) => {
-            preferences.sortByScore = mode;
-            ajaxClient.savePreferences(userPreferencesKey, preferences);
-        });
-
-        recommendationsFirst.subscribe((mode) => {
-            preferences.recommendationsFirst = mode;
-            ajaxClient.savePreferences(userPreferencesKey, preferences);
-        });
+    $effect(() => { 
+        preferences.mode = stateStore.groupingMode;
+        preferences.sortByScore = stateStore.sortByScore;
+        preferences.recommendationsFirst = stateStore.recommendationsFirst;
+        ajaxClient.savePreferences(userPreferencesKey, preferences);
     });
 
     export function messageRecieved(d) {
@@ -102,7 +80,7 @@
             console.debug(
                 "Element is not part of the DOM anymore. Disconnecting and suiciding."
             );
-            self.$destroy();
+            disconnect()
             return;
         }
 
@@ -121,7 +99,7 @@
 
     export function connect(): void {
         if (connected) return;
-        wsClient.connect(wsEndpointUrl);
+        wsClient.connect({url: wsEndpointUrl, csrfToken});
     }
 
     export function disconnect() {
@@ -132,17 +110,9 @@
 
     onMount(async () => { 
         connect()
-        popover = new AnnotationDetailPopOver({
-            target: element,
-            props: {
-                root: element,
-                ajax: ajaxClient
-            }
-        })
     });
 
     onDestroy(async () => { 
-        popover?.$destroy()
         disconnect() 
     });
 
@@ -155,29 +125,36 @@
     }
   }</script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 <div class="flex-content flex-v-container" bind:this={element} 
-    on:click|capture={cancelRightClick} on:mousedown|capture={cancelRightClick} 
-    on:mouseup|capture={cancelRightClick}>
-    <select bind:value={$groupingMode} class="form-select rounded-0">
+    onclickcapture={cancelRightClick} onmousedowncapture={cancelRightClick} 
+    onmouseupcapture={cancelRightClick}>
+
+    {#if element}
+        <AnnotationDetailPopOver root={element} ajax={ajaxClient} />
+    {/if}
+
+    <select bind:value={stateStore.groupingMode} class="form-select rounded-0">
         {#each Object.keys(modes) as value}<option {value}
                 >{modes[value]}</option
             >{/each}
     </select>
-    {#if tooManyAnnotations}
-        <div class="m-auto text-center text-muted">
-            <div class="fs-1"><i class="far fa-dizzy"></i></div>
-            <div>Too many annotations</div>
-        </div>
-    {:else if $groupingMode == "by-position"}
-        <AnnotationsByPositionList {ajaxClient} {data} />
-    {:else if $groupingMode == "by-layer"}
-        <AnnotationsByLayerList {ajaxClient} {data} />
-    {:else}
-        <AnnotationsByLabelList {ajaxClient} {data} {pinnedGroups} />
+    {#if data}
+        {#if tooManyAnnotations}
+            <div class="m-auto text-center text-muted">
+                <div class="fs-1"><i class="far fa-dizzy"></i></div>
+                <div>Too many annotations</div>
+            </div>
+        {:else if stateStore.groupingMode == "by-position"}
+            <AnnotationsByPositionList {ajaxClient} {data} />
+        {:else if stateStore.groupingMode == "by-layer"}
+            <AnnotationsByLayerList {ajaxClient} {data} />
+        {:else}
+            <AnnotationsByLabelList {ajaxClient} {data} {pinnedGroups} />
+        {/if}
     {/if}
 </div>
 
-<style>
-     @import '../node_modules/@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss';
+<style lang="scss">
+     @import '@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss';
 </style>

@@ -25,6 +25,7 @@ export type ViewportTrackerOptions = {
 }
 
 export const NO_TRACKING_CLASS = 'data-i7n-no-tracking'
+export const TRACKING_CLASS = 'data-i7n-tracking'
 
 export class ViewportTracker {
   private _visibleElements = new Set<Element>()
@@ -59,6 +60,17 @@ export class ViewportTracker {
     this.initializeElementTracking(this.root)
   }
 
+  public disconnect() {
+    if (this.observer) {
+      this.observer.disconnect()
+    }
+    this._visibleElements.clear()
+    this._currentRange = [0, 0]
+    this.initialized = false
+    clearTimeout(this.redrawTimeoutId)
+    this.redrawTimeoutId = undefined
+  }
+
   public get currentRange (): [number, number] {
     return this._currentRange
   }
@@ -68,6 +80,10 @@ export class ViewportTracker {
   }
 
   private shouldTrack (element: Element): boolean {
+    if (element.classList.contains(TRACKING_CLASS)) {
+      return true
+    }
+
     if (this.options?.ignoreSelector && element.matches(this.options.ignoreSelector)) {
       return false
     }
@@ -82,7 +98,7 @@ export class ViewportTracker {
     }
 
     return style.display === 'block' || style.display === 'flex' || style.display === 'grid' ||
-      style.display === 'table-row'
+      style.display === 'table-row' || style.display === 'list-item'
 
     // return !style.display.startsWith('inline') && !style.display.includes('math')
   }

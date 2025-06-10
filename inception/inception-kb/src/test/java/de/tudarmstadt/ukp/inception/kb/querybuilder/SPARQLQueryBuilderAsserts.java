@@ -20,6 +20,9 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 import static java.lang.System.currentTimeMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,76 +31,81 @@ import java.util.Random;
 import org.eclipse.rdf4j.query.MalformedQueryException;
 import org.eclipse.rdf4j.query.parser.sparql.ast.ParseException;
 import org.eclipse.rdf4j.repository.Repository;
-import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class SPARQLQueryBuilderAsserts
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     public static void assertThatChildrenOfExplicitRootCanBeRetrieved(KnowledgeBase aKB,
             Repository aRepository, String aRootClass, int aLimit)
     {
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder.forClasses(aKB)
+        var results = asHandles(aRepository, SPARQLQueryBuilder.forClasses(aKB)
                 .childrenOf(aRootClass).retrieveLabel().retrieveDescription());
 
         assertThat(results).isNotEmpty();
 
+        var buf = new StringWriter();
+        var out = new PrintWriter(buf);
         if (aLimit > 0) {
-            Random r = new Random();
+            var r = new Random();
             List<KBHandle> pool = results;
             int total = pool.size();
             results = new ArrayList<>();
             for (int i = 0; i < aLimit; i++) {
                 results.add(pool.remove(r.nextInt(pool.size())));
             }
-            System.out.printf("Validating %d of %d results randomly selected:%n", results.size(),
-                    total);
+            out.printf("Validating %d of %d results randomly selected:%n", results.size(), total);
         }
         else {
-            System.out.printf("Validating all %d results:%n", results.size());
+            out.printf("Validating all %d results:%n", results.size());
         }
 
-        try {
-            assertThat(results).allMatch(_child -> {
-                System.out.printf("   %-70s ...", _child.getIdentifier());
-                boolean result;
-                long start = currentTimeMillis();
-                try (RepositoryConnection conn = aRepository.getConnection()) {
-                    result = SPARQLQueryBuilder.forClasses(aKB) //
-                            .parentsOf(_child.getIdentifier()) //
-                            .asHandles(conn, true).stream() //
-                            .map(KBHandle::getIdentifier) //
-                            .anyMatch(iri -> iri.equals(aRootClass));
-                    System.out.printf(" OK   (%6d ms)%n", currentTimeMillis() - start);
-                }
-                catch (Exception e) {
-                    System.out.printf(" FAIL (%6d ms)%n", currentTimeMillis() - start);
-                    throw e;
-                }
-                return result;
-            });
-        }
-        finally {
-            System.out.println();
-        }
+        assertThat(results).allMatch(_child -> {
+            out.printf("   %-70s ...", _child.getIdentifier());
+            boolean result;
+            long start = currentTimeMillis();
+            try (var conn = aRepository.getConnection()) {
+                result = SPARQLQueryBuilder.forClasses(aKB) //
+                        .parentsOf(_child.getIdentifier()) //
+                        .asHandles(conn, true).stream() //
+                        .map(KBHandle::getIdentifier) //
+                        .anyMatch(iri -> iri.equals(aRootClass));
+                out.printf(" OK   (%6d ms)%n", currentTimeMillis() - start);
+                LOG.info("{}", buf);
+            }
+            catch (Exception e) {
+                out.printf(" FAIL (%6d ms)%n", currentTimeMillis() - start);
+                LOG.error("{}", buf);
+                throw e;
+            }
+            return result;
+        });
     }
 
     public static List<KBHandle> asHandles(Repository aRepo, SPARQLQuery aBuilder)
     {
-        try (RepositoryConnection conn = aRepo.getConnection()) {
+        try (var conn = aRepo.getConnection()) {
             printQuery(aBuilder);
 
-            long startTime = System.currentTimeMillis();
+            var startTime = currentTimeMillis();
 
-            List<KBHandle> results = aBuilder.asHandles(conn, true);
+            var results = aBuilder.asHandles(conn, true);
 
-            System.out.printf("Results : %d in %dms%n", results.size(),
-                    System.currentTimeMillis() - startTime);
-            results.stream().limit(10).forEach(r -> System.out.printf("          %s%n", r));
+            var buf = new StringWriter();
+            var out = new PrintWriter(buf);
+
+            out.printf("Results : %d in %dms%n", results.size(), currentTimeMillis() - startTime);
+            results.stream().limit(10).forEach(r -> out.printf("          %s%n", r));
             if (results.size() > 10) {
-                System.out.printf("          ... and %d more ...%n", results.size() - 10);
+                out.printf("          ... and %d more ...%n", results.size() - 10);
             }
+
+            LOG.info("{}", buf);
 
             return results;
         }
@@ -108,15 +116,14 @@ public class SPARQLQueryBuilderAsserts
 
     public static boolean exists(Repository aRepo, SPARQLQuery aBuilder)
     {
-        try (RepositoryConnection conn = aRepo.getConnection()) {
+        try (var conn = aRepo.getConnection()) {
             printQuery(aBuilder);
 
-            long startTime = System.currentTimeMillis();
+            var startTime = currentTimeMillis();
 
-            boolean result = aBuilder.exists(conn, true);
+            var result = aBuilder.exists(conn, true);
 
-            System.out.printf("Results : %b in %dms%n", result,
-                    System.currentTimeMillis() - startTime);
+            LOG.info("Results : {} in {}ms", result, currentTimeMillis() - startTime);
 
             return result;
         }
@@ -127,9 +134,9 @@ public class SPARQLQueryBuilderAsserts
 
     private static void printQuery(SPARQLQuery aBuilder)
     {
-        System.out.printf("Query   : %n");
+        LOG.info("Query   :");
         Arrays.stream(aBuilder.selectQuery().getQueryString().split("\n"))
-                .forEachOrdered(l -> System.out.printf("          %s%n", l));
+                .forEachOrdered(l -> LOG.info("          {}", l));
     }
 
     @SuppressWarnings("unchecked")

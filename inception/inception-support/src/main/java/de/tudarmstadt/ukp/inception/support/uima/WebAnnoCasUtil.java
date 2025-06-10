@@ -110,8 +110,8 @@ public class WebAnnoCasUtil
      */
     public static CAS createCasCopy(CAS aOriginal) throws UIMAException
     {
-        CAS copy = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aOriginal));
+        var copy = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        var serializer = serializeCASComplete((CASImpl) getRealCas(aOriginal));
         deserializeCASComplete(serializer, (CASImpl) getRealCas(copy));
         return copy;
     }

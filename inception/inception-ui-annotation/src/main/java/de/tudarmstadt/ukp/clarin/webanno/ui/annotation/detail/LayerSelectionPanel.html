@@ -21,7 +21,7 @@
   <wicket:panel>
     <!-- pb-1 compensates for the bottom padding of the  -->
     <div class="card-body pb-1">
-      <div class="row">
+      <div class="row" wicket:enclosure="defaultAnnotationLayer">
         <label wicket:for="defaultAnnotationLayer" class="col-sm-3 col-form-label text-nowrap">
           <wicket:label key="layer"/>
         </label>
@@ -32,6 +32,7 @@
           <small wicket:id="relationHint"></small>
         </div>
       </div>
+      <div wicket:id="anchoringMode" class="mt-2 mb-1" />
     </div>
   </wicket:panel>
 </body>

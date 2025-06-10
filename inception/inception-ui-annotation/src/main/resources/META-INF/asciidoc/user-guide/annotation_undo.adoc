@@ -16,24 +16,29 @@
 // limitations under the License.
 ////
 
+[sect_undo]
 = Undo/re-do
 
+[.i7n-assistant]
+--
 The undo/re-do buttons in the action bar allow to undo annotation actions or to re-do an an undone action.
 
-This functionality is only available while working on a particular document. When switching to another document, the undo/redo history is reset.
+This functionality is only available while working on a particular document.
+When switching to another document, the undo/redo history is reset.
+--
 
 .Undo/re-do key bindings
 |====
 | Key | Action 
 
-| kbd:[Ctrl-Z]
+| kbd:[Ctrl + Z]
 | undo last action
 
-| kbd:[Shift-Ctrl-Z]
+| kbd:[Shift + Ctrl + Z]
 | re-do last un-done action
 |====
 
-NOTE: Not all actions can be undone or redone. E.g. bulk actions are not supported. 
-      While the undoing the creation of chain span and chain link annotations is supported, 
-      re-doing these actions or undoing their deletions is not supported.
+NOTE: Not all actions can be undone or redone.
+      E.g. bulk actions are not supported. 
+      While the undoing the creation of chain span and chain link annotations is supported, re-doing these actions or undoing their deletions is not supported.
 

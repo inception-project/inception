@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasSessionException;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public interface CasStorageService

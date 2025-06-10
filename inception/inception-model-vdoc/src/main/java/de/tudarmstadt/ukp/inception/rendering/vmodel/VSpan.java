@@ -138,7 +138,7 @@ public class VSpan
     {
         private AnnotationLayer layer;
         private VID vid;
-        private int equivalenceSet;
+        private int equivalenceSet = -1;
         private Map<String, String> features = Collections.emptyMap();
         private List<VRange> ranges;
         private String label;
@@ -156,43 +156,43 @@ public class VSpan
 
         public Builder withLayer(AnnotationLayer aLayer)
         {
-            this.layer = aLayer;
+            layer = aLayer;
             return this;
         }
 
         public Builder withVid(VID aVid)
         {
-            this.vid = aVid;
+            vid = aVid;
             return this;
         }
 
         public Builder withEquivalenceSet(int aEquivalenceSet)
         {
-            this.equivalenceSet = aEquivalenceSet;
+            equivalenceSet = aEquivalenceSet;
             return this;
         }
 
         public Builder withFeatures(Map<String, String> aFeatures)
         {
-            this.features = aFeatures;
+            features = aFeatures;
             return this;
         }
 
         public Builder withRange(VRange aRange)
         {
-            this.ranges = asList(aRange);
+            ranges = asList(aRange);
             return this;
         }
 
         public Builder withLabel(String aLabel)
         {
-            this.label = aLabel;
+            label = aLabel;
             return this;
         }
 
         public Builder placeholder()
         {
-            this.placeholder = true;
+            placeholder = true;
             return this;
         }
 

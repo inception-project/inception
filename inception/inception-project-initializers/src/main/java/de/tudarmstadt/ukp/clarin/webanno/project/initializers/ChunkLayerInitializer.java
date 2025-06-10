@@ -17,26 +17,27 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
@@ -93,17 +94,18 @@ public class ChunkLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
-        AnnotationLayer chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk", SPAN_TYPE,
-                aProject, true, AnchoringMode.TOKENS, OverlapMode.NO_OVERLAP);
+        var project = aRequest.getProject();
+        var chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk", SpanLayerSupport.TYPE,
+                project, true, TOKENS, NO_OVERLAP);
         annotationSchemaService.createOrUpdateLayer(chunkLayer);
 
         AnnotationFeature chunkValueFeature = new AnnotationFeature();
         chunkValueFeature.setDescription("Chunk tag");
         chunkValueFeature.setName("chunkValue");
-        chunkValueFeature.setType(CAS.TYPE_NAME_STRING);
-        chunkValueFeature.setProject(aProject);
+        chunkValueFeature.setType(TYPE_NAME_STRING);
+        chunkValueFeature.setProject(project);
         chunkValueFeature.setUiName("Tag");
         chunkValueFeature.setLayer(chunkLayer);
         annotationSchemaService.createFeature(chunkValueFeature);

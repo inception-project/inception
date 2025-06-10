@@ -17,12 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.io.docx;
 
-import static org.apache.uima.cas.SerialFormat.XMI_PRETTY;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.uima.fit.factory.CasFactory;
-import org.apache.uima.util.CasIOUtils;
 import org.dkpro.core.api.xml.type.XmlElement;
 import org.dkpro.core.api.xml.type.XmlTextNode;
 import org.junit.jupiter.api.Test;
@@ -39,7 +37,7 @@ class DocxDocumentReaderTest
         var cas = CasFactory.createCas();
         sut.getNext(cas);
 
-        CasIOUtils.save(cas, System.out, XMI_PRETTY);
+        // CasIOUtils.save(cas, System.out, XMI_PRETTY);
 
         assertThat(cas.select(XmlElement.class).asList()).hasSize(15);
         assertThat(cas.select(XmlTextNode.class).filter(n -> n.getCaptured())).hasSize(1);

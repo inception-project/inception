@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -71,7 +72,7 @@ public class KeyBindingsConfigurationPanel
 
         keyBindings = aKeyBindings;
 
-        Form<KeyBinding> keyBindingForm = new Form<>("keyBindingForm",
+        var keyBindingForm = new Form<KeyBinding>("keyBindingForm",
                 CompoundPropertyModel.of(new KeyBinding()));
         add(keyBindingForm);
 
@@ -112,7 +113,7 @@ public class KeyBindingsConfigurationPanel
             @Override
             protected void populateItem(ListItem<KeyBinding> aItem)
             {
-                AnnotationFeature feature = KeyBindingsConfigurationPanel.this.getModelObject();
+                var feature = KeyBindingsConfigurationPanel.this.getModelObject();
                 FeatureSupport<?> fs = featureSupportRegistry.findExtension(feature).orElseThrow();
 
                 KeyBinding keyBinding = aItem.getModelObject();
@@ -134,9 +135,9 @@ public class KeyBindingsConfigurationPanel
 
     private void addKeyBinding(AjaxRequestTarget aTarget, Form<KeyBinding> aForm)
     {
-        KeyBinding keyBinding = aForm.getModelObject();
+        var keyBinding = aForm.getModelObject();
 
-        if (StringUtils.isBlank(keyBinding.getKeyCombo())) {
+        if (isBlank(keyBinding.getKeyCombo())) {
             error("Key combo is required");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
@@ -144,7 +145,7 @@ public class KeyBindingsConfigurationPanel
 
         // Copy value from the value editor over into the form model (key binding) and then add it
         // to the list
-        AnnotationFeature feature = getModelObject();
+        var feature = getModelObject();
         FeatureSupport<?> fs = featureSupportRegistry.findExtension(feature).orElseThrow();
         keyBinding.setValue(fs.unwrapFeatureValue(feature, null, featureState.getObject().value));
         keyBindings.getObject().add(keyBinding);
@@ -172,8 +173,8 @@ public class KeyBindingsConfigurationPanel
         @Override
         public void validate(IValidatable<String> aValidatable)
         {
-            String keyCombo = aValidatable.getValue();
-            KeyBinding keyBinding = new KeyBinding(keyCombo, null);
+            var keyCombo = aValidatable.getValue();
+            var keyBinding = new KeyBinding(keyCombo, null);
             if (!keyBinding.isValid()) {
                 aValidatable.error(new ValidationError("Invalid key combo: [" + keyCombo + "]"));
             }

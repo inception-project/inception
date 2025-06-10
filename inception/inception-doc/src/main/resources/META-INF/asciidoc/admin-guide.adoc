@@ -14,6 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+:include-dir: admin-guide/
+:imagesdir: admin-guide/
+
 = {product-name} Administrator Guide
 The {product-name} Team
 
@@ -64,7 +67,7 @@ include::{include-dir}security-authentication-auto-login.adoc[leveloffset=+1]
 
 include::{include-dir}security-authentication-preauth.adoc[leveloffset=+1]
 
-include::{include-dir}settings_security-csp.adoc[]
+include::{include-dir}settings_security-csp.adoc[leveloffset=+1]
 
 <<<
 
@@ -134,10 +137,12 @@ include::{include-dir}settings_recommender.adoc[leveloffset=+1]
 include::{include-dir}settings_string_relation_recommender.adoc[leveloffset=+2]
 include::{include-dir}settings_recommendation_external.adoc[leveloffset=+2]
 
-include::{include-dir}settings_bulk_processing.adoc[leveloffset=+1]
+include::{include-dir}settings_bulk-processing.adoc[leveloffset=+1]
 
 include::{include-dir}settings_sharing.adoc[leveloffset=+1]
 
 include::{include-dir}settings_versioning.adoc[leveloffset=+1]
 
 include::{include-dir}settings_websocket.adoc[leveloffset=+1]
+
+include::{include-dir}settings_assistant.adoc[leveloffset=+1]

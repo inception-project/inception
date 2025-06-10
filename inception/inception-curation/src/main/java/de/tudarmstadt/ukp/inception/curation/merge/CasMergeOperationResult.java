@@ -17,8 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge;
 
-public class CasMergeOperationResult
-{
+public record CasMergeOperationResult(ResultState state, int targetAddress) {
     public static enum ResultState
     {
         /**
@@ -32,22 +31,9 @@ public class CasMergeOperationResult
         UPDATED;
     }
 
-    private final ResultState state;
-    private final int resultFSAddress;
-
-    public CasMergeOperationResult(ResultState aState, int aResultAddress)
+    @Override
+    public final String toString()
     {
-        state = aState;
-        resultFSAddress = aResultAddress;
-    }
-
-    public ResultState getState()
-    {
-        return state;
-    }
-
-    public int getResultFSAddress()
-    {
-        return resultFSAddress;
+        return "[" + targetAddress + "](" + state + ")";
     }
 }

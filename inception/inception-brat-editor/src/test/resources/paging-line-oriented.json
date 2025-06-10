@@ -1,0 +1,12 @@
+{
+  "action" : "getDocument",
+  "text" : "This is line 1.  This is line 3. This is line 4.",
+  "windowBegin" : 0,
+  "windowEnd" : 48,
+  "args" : { },
+  "rtl_mode" : false,
+  "font_zoom" : 100,
+  "sentence_number_offset" : 1,
+  "token_offsets" : [ [ 0, 4 ], [ 5, 7 ], [ 8, 12 ], [ 13, 14 ], [ 14, 15 ], [ 17, 21 ], [ 22, 24 ], [ 25, 29 ], [ 30, 31 ], [ 31, 32 ], [ 33, 37 ], [ 38, 40 ], [ 41, 45 ], [ 46, 47 ], [ 47, 48 ] ],
+  "sentence_offsets" : [ [ 0, 15 ], [ 16, 16 ], [ 17, 32 ], [ 33, 48 ] ]
+}

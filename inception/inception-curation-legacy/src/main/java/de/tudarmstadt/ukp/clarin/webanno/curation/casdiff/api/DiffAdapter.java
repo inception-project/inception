@@ -22,11 +22,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.cas.AnnotationBase;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkFeatureDecl;
-import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 public interface DiffAdapter
 {
@@ -39,13 +37,22 @@ public interface DiffAdapter
 
     LinkFeatureDecl getLinkFeature(String aFeature);
 
-    Set<String> getLabelFeatures();
+    /**
+     * @return names of features that the adapter should compare. Link features are not included
+     *         here.
+     */
+    Set<String> getFeatures();
 
-    Position getPosition(FeatureStructure aFS);
+    /**
+     * @return names of link features that the adapter should compare. Non-link features are not
+     *         included here.
+     */
+    Set<String> getLinkFeatures();
 
-    Position getPosition(FeatureStructure aFS, String aFeature, String aRole, int aLinkTargetBegin,
-            int aLinkTargetEnd, LinkFeatureMultiplicityMode aLinkCompareBehavior);
+    Position getPosition(AnnotationBase aFS);
 
     List<? extends AnnotationBase> selectAnnotationsInWindow(CAS aCas, int aWindowBegin,
             int aWindowEnd);
+
+    boolean isIncludeInDiff(String aFeature);
 }

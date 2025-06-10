@@ -34,9 +34,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
-import de.tudarmstadt.ukp.inception.workload.event.RecalculateProjectStateTask;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
+import de.tudarmstadt.ukp.inception.workload.task.RecalculateProjectStateTask;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 

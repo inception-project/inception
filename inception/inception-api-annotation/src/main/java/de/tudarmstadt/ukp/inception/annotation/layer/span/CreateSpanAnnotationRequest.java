@@ -19,27 +19,109 @@ package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class CreateSpanAnnotationRequest
     extends SpanAnnotationRequest_ImplBase<CreateSpanAnnotationRequest>
 {
-    public CreateSpanAnnotationRequest(SourceDocument aDocument, String aDocumentOwner, CAS aCas,
-            int aBegin, int aEnd)
+    private CreateSpanAnnotationRequest(Builder builder)
     {
-        this(null, aDocument, aDocumentOwner, aCas, aBegin, aEnd);
-    }
-
-    private CreateSpanAnnotationRequest(CreateSpanAnnotationRequest aOriginal,
-            SourceDocument aDocument, String aDocumentOwner, CAS aCas, int aBegin, int aEnd)
-    {
-        super(null, aDocument, aDocumentOwner, aCas, aBegin, aEnd);
+        super(builder.original, builder.document, builder.documentOwner, builder.cas, builder.begin,
+                builder.end, builder.anchoringMode);
     }
 
     @Override
-    public CreateSpanAnnotationRequest changeSpan(int aBegin, int aEnd)
+    public CreateSpanAnnotationRequest changeSpan(int aBegin, int aEnd,
+            AnchoringMode aAnchoringMode)
     {
-        return new CreateSpanAnnotationRequest(this, getDocument(), getDocumentOwner(), getCas(),
-                aBegin, aEnd);
+        return CreateSpanAnnotationRequest.builder() //
+                .withOriginal(this) //
+                .withDocument(getDocument(), getDocumentOwner(), getCas()) //
+                .withRange(aBegin, aEnd) //
+                .withAnchoringMode(aAnchoringMode) //
+                .build();
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private CreateSpanAnnotationRequest original;
+        private SourceDocument document;
+        private String documentOwner;
+        private CAS cas;
+        private int begin;
+        private int end;
+        private AnchoringMode anchoringMode;
+
+        private Builder()
+        {
+        }
+
+        public Builder withOriginal(CreateSpanAnnotationRequest aOriginal)
+        {
+            original = aOriginal;
+            return this;
+        }
+
+        public Builder withDocument(SourceDocument aDocument)
+        {
+            document = aDocument;
+            return this;
+        }
+
+        public Builder withDataOwner(String aDocumentOwner)
+        {
+            documentOwner = aDocumentOwner;
+            return this;
+        }
+
+        public Builder withCas(CAS aCas)
+        {
+            cas = aCas;
+            return this;
+        }
+
+        public Builder withBegin(int aBegin)
+        {
+            begin = aBegin;
+            return this;
+        }
+
+        public Builder withEnd(int aEnd)
+        {
+            end = aEnd;
+            return this;
+        }
+
+        public Builder withDocument(SourceDocument aDocument, String aDocumentOwner, CAS aCas)
+        {
+            document = aDocument;
+            documentOwner = aDocumentOwner;
+            cas = aCas;
+            return this;
+        }
+
+        public Builder withRange(int aBegin, int aEnd)
+        {
+            begin = aBegin;
+            end = aEnd;
+            return this;
+        }
+
+        public Builder withAnchoringMode(AnchoringMode aAnchoringMode)
+        {
+            anchoringMode = aAnchoringMode;
+            return this;
+        }
+
+        public CreateSpanAnnotationRequest build()
+        {
+            return new CreateSpanAnnotationRequest(this);
+        }
     }
 }

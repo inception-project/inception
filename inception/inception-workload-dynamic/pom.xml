@@ -19,7 +19,7 @@
   <parent>
     <artifactId>inception-app</artifactId>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    <version>35.0-SNAPSHOT</version>
+    <version>37.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>inception-workload-dynamic</artifactId>
@@ -75,7 +75,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-annotation-storage</artifactId>
+      <artifactId>inception-annotation-storage-api</artifactId>
     </dependency>
 
     <dependency>
@@ -217,6 +217,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jdbc</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-schema</artifactId>
       <scope>test</scope>
@@ -250,6 +255,11 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-documents</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-annotation-storage</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

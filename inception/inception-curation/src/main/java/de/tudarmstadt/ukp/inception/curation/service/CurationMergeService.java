@@ -19,15 +19,14 @@ package de.tudarmstadt.ukp.inception.curation.service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.curation.merge.PerCasMergeContext;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
-import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public interface CurationMergeService
 {
@@ -46,12 +45,14 @@ public interface CurationMergeService
      *            the merge strategy
      * @param aLayers
      *            the layers to be merged
+     * @param aClearTargetCas
+     *            whether to clear the target CAS before merging
      * @return any messages generated during the merge process.
      * @throws UIMAException
      *             if there was an UIMA-level problem
      */
-    Set<LogMessage> mergeCasses(SourceDocument aDocument, String aTargetCasUserName, CAS aTargetCas,
-            Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy,
+    PerCasMergeContext mergeCasses(SourceDocument aDocument, String aTargetCasUserName,
+            CAS aTargetCas, Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy,
             List<AnnotationLayer> aLayers, boolean aClearTargetCas)
         throws UIMAException;
 
@@ -72,7 +73,7 @@ public interface CurationMergeService
      * @throws UIMAException
      *             if there was an UIMA-level problem
      */
-    Set<LogMessage> mergeCasses(SourceDocument aDocument, String aTargetCasUserName, CAS aTargetCas,
-            Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy)
+    PerCasMergeContext mergeCasses(SourceDocument aDocument, String aTargetCasUserName,
+            CAS aTargetCas, Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy)
         throws UIMAException;
 }

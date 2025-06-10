@@ -85,7 +85,8 @@ public class LayerExporterTest
         // Export the project and import it again
         // Export the project
         var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
-        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test");
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test",
+                exportRequest.getFilenamePrefix());
         var exportedProject = new ExportedProject();
         var stage = mock(ZipOutputStream.class);
 
@@ -95,7 +96,10 @@ public class LayerExporterTest
         var captor = ArgumentCaptor.forClass(AnnotationLayer.class);
         doNothing().when(annotationService).createOrUpdateLayer(captor.capture());
 
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         var zipFile = mock(ZipFile.class);
         sut.importData(importRequest, targetProject, exportedProject, zipFile);
 

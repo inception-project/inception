@@ -22,14 +22,19 @@ import { frameCallbackType } from '@stomp/stompjs'
  */
 export declare type dataCallback = (data: any) => void;
 
+export interface DiamWebsocketConnectOptions {
+    url: string,
+    csrfToken: string
+}
+  
 export interface DiamWebsocket {
-    connect(aWsEndpoint: string): void;
+    connect(options: string | DiamWebsocketConnectOptions): void;
 
     onConnect: frameCallbackType
 
     disconnect(): void;
 
-    subscribeToViewport(aViewportTopic: string, callback: dataCallback): void;
+    subscribeToViewport(viewportTopic: string, callback: dataCallback): void;
 
     unsubscribeFromViewport(): void;
 }

@@ -20,8 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController.API_BASE;
+import static de.tudarmstadt.ukp.inception.remoteapi.Controller_ImplBase.API_BASE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
@@ -40,7 +41,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
@@ -56,11 +56,13 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.config.DashboardAutoConfiguration;
 
 @ActiveProfiles(DeploymentModeServiceImpl.PROFILE_AUTH_MODE_DATABASE)
 @SpringBootTest( //
-        webEnvironment = WebEnvironment.RANDOM_PORT, //
+        webEnvironment = RANDOM_PORT, //
         properties = { //
+                "server.address=127.0.0.1", //
                 "spring.main.banner-mode=off", //
                 "remote-api.enabled=true", //
                 "repository.path="
@@ -68,6 +70,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 @EnableAutoConfiguration( //
         exclude = { //
                 LiquibaseAutoConfiguration.class, //
+                DashboardAutoConfiguration.class, //
                 EventLoggingAutoConfiguration.class, //
                 SearchServiceAutoConfiguration.class, //
                 WicketAutoConfiguration.class })

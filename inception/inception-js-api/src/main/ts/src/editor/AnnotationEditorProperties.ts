@@ -24,5 +24,6 @@ export interface AnnotationEditorProperties {
   stylesheetSources: ReadonlyArray<string>
   diamAjaxCallbackUrl: string
   diamWsUrl: string
+  csrfToken: string
   loadingIndicatorDisabled: boolean
 }

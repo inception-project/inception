@@ -35,7 +35,7 @@
     "esbuild-svelte": "${esbuild-svelte.version}",
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
-    "eslint-config-standard": "${eslint-config-standard.version}",
+    "neostandard": "${neostandard.version}",
     "eslint-plugin-import": "${eslint-plugin-import.version}",
     "eslint-plugin-n": "${eslint-plugin-n.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
@@ -52,6 +52,7 @@
     "typescript": "${typescript.version}",
     "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
     "@typescript-eslint/parser": "${typescript-eslint-parser.version}",
+    "vite": "${vite.version}",
     "vitest": "${vitest.version}",
     "uuid": "${uuid.version}",
     "yargs": "${yargs.version}"

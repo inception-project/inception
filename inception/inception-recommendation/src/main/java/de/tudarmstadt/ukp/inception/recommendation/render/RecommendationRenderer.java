@@ -128,7 +128,7 @@ public class RecommendationRenderer
         var suggestionsByLayer = suggestions.stream()
                 .collect(groupingBy(AnnotationSuggestion::getLayerId));
 
-        var recommenderCache = recommendationService.listRecommenders(aRequest.getProject())
+        var recommenderCache = recommendationService.listEnabledRecommenders(aRequest.getProject())
                 .stream().collect(toMap(Recommender::getId, identity()));
         var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
 

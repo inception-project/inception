@@ -1,0 +1,9 @@
+# Not really used atm but if manage to set up a testing badssl via testcontainers, it might
+# come in useful.
+127.0.0.1   badssl.com
+127.0.0.1   expired.badssl.com
+127.0.0.1   wrong.host.badssl.com
+127.0.0.1   self-signed.badssl.com
+127.0.0.1   untrusted-root.badssl.com
+127.0.0.1   revoked.badssl.com
+127.0.0.1   tls-v1-2.badssl.com
