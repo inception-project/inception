@@ -17,13 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
-
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
@@ -70,13 +69,24 @@ public class ExternalRecommenderFactory
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public boolean accepts(AnnotationFeature aFeature)
     {
-        if (aLayer == null || aFeature == null) {
+        if (aFeature == null) {
             return false;
         }
 
-        return SPAN_TYPE.equals(aLayer.getType()) || RELATION_TYPE.equals(aLayer.getType());
+        return false;
+    }
+
+    @Override
+    public boolean accepts(AnnotationLayer aLayer)
+    {
+        if (aLayer == null) {
+            return false;
+        }
+
+        return SpanLayerSupport.TYPE.equals(aLayer.getType())
+                || RelationLayerSupport.TYPE.equals(aLayer.getType());
     }
 
     @Override

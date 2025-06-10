@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.getObjectMapper;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.getObjectMapper;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toJsonString;
 
 import java.io.IOException;
 import java.net.URI;
@@ -38,8 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 public class ExternalRecommenderV2Api
 {
@@ -180,7 +179,7 @@ public class ExternalRecommenderV2Api
             HttpRequest request = HttpRequest.newBuilder() //
                     .uri(url) //
                     .header("Content-Type", "application/json") //
-                    .PUT(BodyPublishers.ofString(JSONUtil.toJsonString(aDocument))) //
+                    .PUT(BodyPublishers.ofString(toJsonString(aDocument))) //
                     .build();
 
             HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
@@ -290,13 +289,13 @@ public class ExternalRecommenderV2Api
             HttpRequest request = HttpRequest.newBuilder() //
                     .uri(url) //
                     .header("Content-Type", "application/json") //
-                    .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aDocument))) //
+                    .POST(BodyPublishers.ofString(toJsonString(aDocument))) //
                     .build();
             HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
             LOG.info("Predicting finished with status code [{}]", response.statusCode());
 
             if (response.statusCode() == 200) {
-                return JSONUtil.fromJsonString(Document.class, response.body());
+                return fromJsonString(Document.class, response.body());
             }
             else {
                 String msg = "Error while predicting: " + response.body();

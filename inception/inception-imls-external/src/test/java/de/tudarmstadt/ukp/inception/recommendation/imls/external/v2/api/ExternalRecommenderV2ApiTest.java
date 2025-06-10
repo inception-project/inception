@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api;
 
 import static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.Fixtures.loadAlaskaCas;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonString;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.URI;
@@ -30,8 +31,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 @Disabled("Requires starting a test server")
 public class ExternalRecommenderV2ApiTest
@@ -181,7 +180,7 @@ public class ExternalRecommenderV2ApiTest
 
         Document response = sut.predict(CLASSIFIER_ID, "test_model", document);
 
-        System.out.println(JSONUtil.toPrettyJsonString(response));
+        System.out.println(toPrettyJsonString(response));
     }
 
     private void purgeServer() throws Exception

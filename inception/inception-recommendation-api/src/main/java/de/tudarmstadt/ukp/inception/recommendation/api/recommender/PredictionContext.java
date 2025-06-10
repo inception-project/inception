@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.scheduling.Monitor;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -51,6 +52,11 @@ public class PredictionContext
     synchronized public <T> Optional<T> get(Key<T> aKey)
     {
         return modelContext.get(aKey);
+    }
+
+    synchronized public Optional<User> getUser()
+    {
+        return modelContext.getUser();
     }
 
     synchronized public void log(LogMessage aMessage)

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.util;
 
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonStream;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Paths;
@@ -26,7 +28,6 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.util.CasIOUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.Document;
 
 public class Fixtures
@@ -56,7 +57,7 @@ public class Fixtures
     {
 
         try (FileInputStream fis = new FileInputStream(getResource("small_cas.json"))) {
-            return JSONUtil.fromJsonStream(Document.class, fis);
+            return fromJsonStream(Document.class, fis);
         }
     }
 

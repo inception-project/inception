@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.net.URI;
@@ -29,6 +29,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.LambdaChoiceRenderer;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -38,15 +39,14 @@ import org.apache.wicket.validation.validator.UrlValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.ClassifierInfo;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.ExternalRecommenderApiException;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.ExternalRecommenderV2Api;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 public class ExternalRecommenderTraitsEditor
     extends DefaultTrainableRecommenderTraitsEditor

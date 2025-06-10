@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v2;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getDocumentTitle;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
@@ -149,11 +150,10 @@ public class ExternalRecommender
         // Finally, send new/updated documents
         FormatConverter converter = new FormatConverter();
         for (CAS cas : documentsToSend) {
-            String documentName = getDocumentName(cas);
-            long version = getVersion(cas);
-            String layerName = recommender.getLayer().getName();
-            String featureName = recommender.getFeature().getName();
-            Document document = converter.documentFromCas(cas, layerName, featureName, version);
+            var documentName = getDocumentName(cas);
+            var version = getVersion(cas);
+            var document = converter.documentFromCas(cas, recommender.getLayer().getName(),
+                    recommender.getFeature().getName(), version);
 
             api.addDocumentToDataset(aDatasetName, documentName, document);
         }
@@ -162,7 +162,7 @@ public class ExternalRecommender
     }
 
     @Override
-    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         CAS cas = getRealCas(aCas);
@@ -174,14 +174,14 @@ public class ExternalRecommender
 
         long version = 0;
 
-        FormatConverter converter = new FormatConverter();
-        String layerName = recommender.getLayer().getName();
-        String featureName = recommender.getFeature().getName();
+        var converter = new FormatConverter();
+        var layerName = recommender.getLayer().getName();
+        var featureName = recommender.getFeature().getName();
 
-        Document request = converter.documentFromCas(cas, layerName, featureName, version);
+        var request = converter.documentFromCas(cas, layerName, featureName, version);
 
-        String modelName = buildModelName(recommender.getProject(), aContext.getUser().get());
-        String classifierName = traits.getClassifierInfo().getName();
+        var modelName = buildModelName(recommender.getProject(), aContext.getUser().get());
+        var classifierName = traits.getClassifierInfo().getName();
 
         try {
             Document response = api.predict(classifierName, modelName, request);
