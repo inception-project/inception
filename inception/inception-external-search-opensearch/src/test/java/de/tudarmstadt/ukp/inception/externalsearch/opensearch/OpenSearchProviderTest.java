@@ -29,7 +29,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opensearch.LegacyESVersion;
-import org.opensearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.opensearch.client.Requests;
 import org.opensearch.cluster.health.ClusterHealthStatus;
 import org.opensearch.common.Priority;
@@ -63,7 +62,7 @@ public class OpenSearchProviderTest
             @Override
             public ClusterHealthStatus ensureYellow(final String... indices)
             {
-                final ClusterHealthResponse actionGet = client().admin().cluster()
+                var actionGet = client().admin().cluster() //
                         .health(Requests.clusterHealthRequest(indices)
                                 .waitForNoRelocatingShards(true).waitForYellowStatus()
                                 .waitForEvents(Priority.LANGUID))
@@ -82,6 +81,7 @@ public class OpenSearchProviderTest
             @Override
             public void build(int aIndex, Builder aBuilder)
             {
+                aBuilder.put("logger.level", "WARN");
                 // This should hopefully allow running tests on machines with less than the
                 // default 90% high watermark disk space free (e.g on a 1TB drive less than 100 GB).
                 aBuilder.put("cluster.routing.allocation.disk.threshold_enabled", false);

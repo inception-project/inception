@@ -69,7 +69,7 @@ public class CurationWorkflowExporter
         exportedCurationWorkflow.setMergeStrategy(curationWorkflow.getMergeStrategy());
         exportedCurationWorkflow.setMergeStrategyTraits(curationWorkflow.getMergeStrategyTraits());
 
-        aExProject.setProperty(KEY, curationWorkflow);
+        aExProject.setProperty(KEY, exportedCurationWorkflow);
         LOG.info("Exported curation workflow settings for project {}", project);
     }
 

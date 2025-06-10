@@ -31,7 +31,7 @@ public interface OllamaClient
             Consumer<OllamaGenerateResponse> aCallback)
         throws IOException;
 
-    OllamaChatResponse generate(String aUrl, OllamaChatRequest aRequest,
+    OllamaChatResponse chat(String aUrl, OllamaChatRequest aRequest,
             Consumer<OllamaChatResponse> aCallback)
         throws IOException;
 

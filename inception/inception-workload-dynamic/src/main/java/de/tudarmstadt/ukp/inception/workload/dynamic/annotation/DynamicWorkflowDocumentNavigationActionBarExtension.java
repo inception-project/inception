@@ -26,6 +26,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -47,6 +48,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
  * {@link DynamicWorkloadManagerAutoConfiguration#dynamicWorkflowDocumentNavigationActionBarExtension}
  * </p>
  */
+@Order(ActionBarExtension.ORDER_WORKFLOW)
 public class DynamicWorkflowDocumentNavigationActionBarExtension
     implements ActionBarExtension, Serializable
 {

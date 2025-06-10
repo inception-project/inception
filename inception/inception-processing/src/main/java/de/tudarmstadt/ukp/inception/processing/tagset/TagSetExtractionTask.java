@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.processing.tagset;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_DOCUMENTS;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
-import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
 import static java.util.Arrays.asList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
@@ -39,11 +39,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.RecommendationTask_ImplBase;
 import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
@@ -126,23 +126,18 @@ public class TagSetExtractionTask
 
     private Set<String> extractTags()
     {
-        var monitor = getMonitor();
-
         var tags = new HashSet<String>();
 
         var documents = documentService.listSourceDocuments(getProject());
-        var processedDocumentsCount = 0;
-        var totalDocumentsCount = documents.size();
+        try (var progress = getMonitor().openScope(SCOPE_DOCUMENTS, documents.size())) {
+            for (var srcDoc : documents) {
+                progress.update(up -> up.increment());
 
-        for (var srcDoc : documents) {
-            processedDocumentsCount++;
-            monitor.setStateAndProgress(RUNNING, processedDocumentsCount, totalDocumentsCount);
+                extractTagsFromDocument(tags, srcDoc);
+            }
 
-            extractTagsFromDocument(tags, srcDoc);
+            progress.update(up -> up.addMessage(LogMessage.info(this, "Tag extraction complete")));
         }
-
-        monitor.setProgressWithMessage(processedDocumentsCount, totalDocumentsCount,
-                LogMessage.info(this, "Tag extraction complete"));
 
         return tags;
     }
@@ -170,8 +165,8 @@ public class TagSetExtractionTask
             }
         }
         catch (IOException e) {
-            getMonitor().addMessage(
-                    LogMessage.error(this, "Unable to process document [%s].", srcDoc.getName()));
+            getMonitor().update(up -> up.addMessage(
+                    LogMessage.error(this, "Unable to process document [%s].", srcDoc.getName())));
         }
     }
 

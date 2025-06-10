@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.wikidatalinking.config.WikiDataLinkingProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -102,9 +103,10 @@ public class EntityLinkingProjectInitializer
     }
 
     @Override
-    public void configure(Project aProject) throws IOException
+    public void configure(ProjectInitializationRequest aRequest) throws IOException
     {
-        var layer = annotationService.findLayer(aProject, NamedEntity.class.getName());
+        var project = aRequest.getProject();
+        var layer = annotationService.findLayer(project, NamedEntity.class.getName());
         var valueFeature = annotationService.getFeature(NamedEntity._FeatName_value, layer);
         valueFeature.setEnabled(false);
         annotationService.createFeature(valueFeature);

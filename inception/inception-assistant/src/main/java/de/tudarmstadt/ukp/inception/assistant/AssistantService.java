@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.assistant;
 
+import java.io.IOException;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.assistant.model.MCallResponse;
+import de.tudarmstadt.ukp.inception.assistant.model.MMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 
 public interface AssistantService
@@ -28,8 +31,25 @@ public interface AssistantService
 
     List<MTextMessage> getChatMessages(String aSessionOwner, Project aProject);
 
-    void processUserMessage(String aSessionOwner, Project aProject,
-            MTextMessage aMessage);
+    void processUserMessage(String aSessionOwner, Project aProject, MTextMessage aMessage,
+            MTextMessage... aTransientMessage);
+
+    void processAgentMessage(String aSessionOwner, Project aProject, MTextMessage aMessage,
+            MTextMessage... aContextMessages);
+
+    MTextMessage processInternalMessageSync(String aSessionOwner, Project aProject,
+            MTextMessage aMessage)
+        throws IOException;
+
+    <T> MCallResponse<T> processInternalCallSync(String aSessionOwner, Project aProject,
+            Class<T> aType, MTextMessage aMessage)
+        throws IOException;
 
     void clearConversation(String aSessionOwner, Project aProject);
+
+    void setDebugMode(String aSessionOwner, Project aProject, boolean aObject);
+
+    boolean isDebugMode(String aSessionOwner, Project aProject);
+
+    void dispatchMessage(String aSessionOwner, Project aProject, MMessage aMessage);
 }

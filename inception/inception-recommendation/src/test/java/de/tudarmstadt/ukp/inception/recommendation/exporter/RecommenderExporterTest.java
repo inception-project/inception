@@ -166,7 +166,10 @@ public class RecommenderExporterTest
         var captor = ArgumentCaptor.forClass(Recommender.class);
         doNothing().when(recommendationService).createOrUpdateRecommender(captor.capture());
 
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         var zipFile = mock(ZipFile.class);
         sut.importData(importRequest, targetProject, exportedProject, zipFile);
 

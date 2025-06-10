@@ -16,6 +16,7 @@
 * limitations under the License.
 */
 
+import { MProgress } from './MProgress'
 import { RLogMessage } from './RLogMessage'
 
 export interface MTaskStateUpdate {
@@ -24,6 +25,7 @@ export interface MTaskStateUpdate {
   type: string
   progress: number
   maxProgress: number
+  progresses?: MProgress[]
   state: 'NOT_STARTED' | 'RUNNING' | 'COMPLETED' | 'CANCELLED' | 'FAILED'
   title: string
   removed?: boolean

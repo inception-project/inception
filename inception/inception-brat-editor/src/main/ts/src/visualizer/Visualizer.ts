@@ -43,29 +43,29 @@ import { Measurements } from './Measurements'
 import { DocumentData } from './DocumentData'
 import { ENTITY, Entity, TRIGGER } from './Entity'
 import { EQUIV, EventDesc, RELATION } from './EventDesc'
-import { Chunk, Marker } from './Chunk'
+import { Chunk, type Marker } from './Chunk'
 import { Fragment } from './Fragment'
 import { Arc } from './Arc'
 import { Row } from './Row'
 import { RectBox } from './RectBox'
-import { AttributeType, ValType } from './AttributeType'
-import { CollectionLoadedResponse } from './CollectionLoadedResponse'
-import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID } from '../protocol/Protocol'
+import { AttributeType, type ValType } from './AttributeType'
+import { type CollectionLoadedResponse } from './CollectionLoadedResponse'
+import { type RelationTypeDto, type EntityTypeDto, type EntityDto, type CommentDto, type SourceData, type TriggerDto, type AttributeDto, type EquivDto, type ColorCode, type MarkerType,type MarkerDto, type RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH,type  RoleDto, type VID, WARN } from '../protocol/Protocol'
 import type { Dispatcher, Message } from '../dispatcher/Dispatcher'
 import * as jsonpatch from 'fast-json-patch'
-import { Operation } from 'fast-json-patch'
+import { type Operation } from 'fast-json-patch'
 import { scrollbarWidth } from '../util/ScrollbarWidth'
 import '@svgdotjs/svg.filter.js'
-import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, PathCommand, Rect, ArrayXY, SVGTypeMapping, Defs, G } from '@svgdotjs/svg.js'
+import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, type PathCommand, Rect, type ArrayXY, type SVGTypeMapping, Defs, G } from '@svgdotjs/svg.js'
 import { INSTANCE as Configuration } from '../configuration/Configuration'
 import { INSTANCE as Util } from '../util/Util'
-import { AnnotationOutEvent, AnnotationOverEvent, Offsets, Relation, Span } from '@inception-project/inception-js-api'
+import { AnnotationOutEvent, AnnotationOverEvent, type Offsets, Relation, Span } from '@inception-project/inception-js-api'
 declare const $: JQueryStatic
 
 /**
  * [lastRow, textDesc[3], lastX - boxX, textDesc[4]]
  */
-type MarkedRow = [Row, unknown, number, unknown];
+type MarkedTextHighlight = [row: Row, xBegin: number, xEnd: number, type: string];
 
 type MarkedText = [begin: number, end: number, type: string];
 
@@ -349,50 +349,60 @@ export class Visualizer {
   }
 
   setMarked (docData: DocumentData, sourceData: SourceData, markedType: MarkerType) {
-    if (!this.args[markedType]) {
+    if (!this.data || !this.args[markedType]) {
       return
     }
 
     for (const marker of this.args[markedType]) {
+      // Sentence marker
       if (marker[0] === 'sent') {
         docData.markedSent[marker[1]] = true
         continue
       }
 
-      if (marker[0] === 'equiv') { // [equiv, Equiv, T1]
-        for (const equiv of sourceData.equivs) {
-          if (equiv[1] === marker[1]) {
-            let len = equiv.length
-            for (let i = 2; i < len; i++) {
-              if (equiv[i] === marker[2]) {
-                // found it
-                len -= 3
-                for (let n = 1; n <= len; n++) {
-                  const arc = docData.eventDescs[equiv[0] + '*' + n].equivArc
-                  arc.marked = markedType
-                }
-                continue // next equiv
-              }
-            }
-          }
-        }
+      // INCEpTION does not use equivs, so we should not need this
+      // if (marker[0] === 'equiv') { // [equiv, Equiv, T1]
+      //   for (const equiv of sourceData.equivs) {
+      //     if (equiv[1] === marker[1]) {
+      //       let len = equiv.length
+      //       for (let i = 2; i < len; i++) {
+      //         if (equiv[i] === marker[2]) {
+      //           // found it
+      //           len -= 3
+      //           for (let n = 1; n <= len; n++) {
+      //             const arc = docData.eventDescs[equiv[0] + '*' + n].equivArc
+      //             arc.marked = markedType
+      //           }
+      //           continue // next equiv
+      //         }
+      //       }
+      //     }
+      //   }
 
+      //   continue
+      // }
+
+      if (!Array.isArray(marker)) {
         continue
       }
 
+      // Text marker
       if (marker.length === 2) {
-        this.markedText.push([parseInt(marker[0], 10), parseInt(marker[1], 10), markedType])
+        const begin = parseInt(marker[0], 10)
+        const end = parseInt(marker[1], 10)
+        this.markedText.push([begin, end, markedType])
         continue
       }
 
+      // Annotation marker (span or arc)
       const span = this.data.spans[marker[0]]
       if (span) {
         if (marker.length === 3) { // arc
-          $.each(span.outgoing, (arcNo, arc) => {
+          for (const arc of span.outgoing) {
             if (arc.target === marker[2] && arc.type === marker[1]) {
-              arc.marked = markedType
+              arc.marked = markedType;
             }
-          })
+          }
         } else { // span
           span.marked = markedType
         }
@@ -438,9 +448,10 @@ export class Visualizer {
   applyHighlighting (docData: DocumentData, sourceData: SourceData) {
     this.markedText = []
     this.setMarked(docData, sourceData, EDITED) // set by editing process
-    this.setMarked(docData, sourceData, FOCUS) // set by URL
     this.setMarked(docData, sourceData, MATCH_FOCUS) // set by search process, focused match
     this.setMarked(docData, sourceData, MATCH) // set by search process, other (non-focused) match
+    this.setMarked(docData, sourceData, WARN) // set by editing process
+    this.setMarked(docData, sourceData, FOCUS) // set by URL
   }
 
   /**
@@ -1289,7 +1300,6 @@ export class Visualizer {
       textMeasureGroup.addClass(cssClass)
     }
 
-    // changed from $.each because of #264 ('length' can appear)
     for (const text in textsHash) {
       if (Object.prototype.hasOwnProperty.call(textsHash, text)) {
         this.svg.plain(text).addTo(textMeasureGroup)
@@ -1360,8 +1370,9 @@ export class Visualizer {
       // Adjust for the browser collapsing whitespace
       let lastCharSpace = true
       let collapsedSpaces = 0
+      const tc = text.textContent || "";
       for (let i = 0; i < fragment[2]; i++) {
-        const c = text.textContent[i]
+        const c = tc[i]
         if (/\s/.test(c)) {
           if (lastCharSpace) {
             collapsedSpaces++
@@ -1409,7 +1420,7 @@ export class Visualizer {
     let startPos: number, endPos: number
     if (this.rtlmode) {
       // This rendering is much slower than the "old" version that brat uses, but it is more reliable in RTL mode.
-      [startPos, endPos] = this.calculateSubstringWidthRobust(fragment, text, firstChar, lastChar)
+      [startPos, endPos] = this.calculateSubstringPositionRobust(fragment, text, firstChar, lastChar)
       // In RTL mode, positions are negative (left to right)
       startPos = -startPos
       endPos = -endPos
@@ -1421,7 +1432,7 @@ export class Visualizer {
       // measurement is more reliable.
       // Cannot use fragment.chunk.text.length here because invisible
       // characters do not count. Using text.getNumberOfChars() instead.
-      [startPos, endPos] = this.calculateSubstringWidthFast(text, firstChar, lastChar)
+      [startPos, endPos] = this.calculateSubstringPositionFast(text, firstChar, lastChar)
     }
 
     // Make sure that startPos and endPos are properly ordered on the X axis
@@ -1431,7 +1442,11 @@ export class Visualizer {
     }
   }
 
-  private calculateSubstringWidthRobust (fragment: Fragment, text: SVGTextElement, firstChar: number, lastChar: number) {
+  private calculateSubstringPositionRobust (fragment: Fragment, text: SVGTextElement, firstChar: number, lastChar: number): [number, number] {
+    if (text.textContent === null || text.textContent.length === 0) {
+      return [0, 0]
+    }
+
     let charDirection: Array<'rtl' | 'ltr'>
     let charAttrs: Array<{ order: number, width: number, direction: 'rtl' | 'ltr' }>
     let corrFactor = 1
@@ -1448,22 +1463,20 @@ export class Visualizer {
 
       // Cannot use fragment.chunk.text.length here because invisible characters do not count.
       // Using text.getNumberOfChars() instead.
-      if (text.textContent !== null) {
-        for (let idx = 0; idx < text.getNumberOfChars(); idx++) {
-          const cw = text.getEndPositionOfChar(idx).x - text.getStartPositionOfChar(idx).x
-          const dir = isRTL(text.textContent.charCodeAt(idx)) ? 'rtl' : 'ltr'
-          charAttrs.push({
-            order: idx,
-            width: Math.abs(cw),
-            direction: dir
-          })
-          charDirection.push(dir)
-          // console.log("char " +  idx + " [" + text.textContent[idx] + "] " +
-          //   "begin:" + text.getStartPositionOfChar(idx).x +
-          //   " end:" + text.getEndPositionOfChar(idx).x +
-          //   " width:" + Math.abs(cw) +
-          //   " dir:" + charDirection[charDirection.length-1]);
-        }
+      for (let idx = 0; idx < text.getNumberOfChars(); idx++) {
+        const cw = text.getEndPositionOfChar(idx).x - text.getStartPositionOfChar(idx).x
+        const dir = isRTL(text.textContent.charCodeAt(idx)) ? 'rtl' : 'ltr'
+        charAttrs.push({
+          order: idx,
+          width: Math.abs(cw),
+          direction: dir
+        })
+        charDirection.push(dir)
+        // console.log("char " +  idx + " [" + text.textContent[idx] + "] " +
+        //   "begin:" + text.getStartPositionOfChar(idx).x +
+        //   " end:" + text.getEndPositionOfChar(idx).x +
+        //   " width:" + Math.abs(cw) +
+        //   " dir:" + charDirection[charDirection.length-1]);
       }
 
       // Re-order widths if necessary
@@ -1542,7 +1555,7 @@ export class Visualizer {
     return [startPos, endPos]
   }
 
-  private calculateSubstringWidthFast (text: SVGTextContentElement, firstChar: number, lastChar: number) {
+  private calculateSubstringPositionFast (text: SVGTextContentElement, firstChar: number, lastChar: number) {
     try {
 {      let startPos: number
       if (firstChar < text.getNumberOfChars()) {
@@ -1637,8 +1650,8 @@ export class Visualizer {
     let width = 5
     let height = 5
     let color = 'black'
-    if ($.isNumeric(parsedSpec[1]) && parsedSpec[2]) {
-      if ($.isNumeric(parsedSpec[2]) && parsedSpec[3]) {
+    if (!isNaN(parseFloat(parsedSpec[1])) && parsedSpec[2]) {
+      if (!isNaN(parseFloat(parsedSpec[2])) && parsedSpec[3]) {
         // 3 args, 2 numeric: assume width, height, color
         width = parseFloat(parsedSpec[1])
         height = parseFloat(parsedSpec[2])
@@ -1734,7 +1747,7 @@ export class Visualizer {
       const thisCurlyHeight = span.drawCurly ? Configuration.visual.curlyHeight : 0
       const height = docData.sizes.fragments.height + thisCurlyHeight + Configuration.visual.boxSpacing +
         2 * Configuration.visual.margin.y - 3
-      $.each(floors, (floorNo, floor) => {
+      for (const floor of floors) {
         let floorAvailable = true
         for (let i = i1; i <= i2; i++) {
           if (!(reservations[i] && reservations[i][floor])) {
@@ -1742,12 +1755,13 @@ export class Visualizer {
           }
           const from = (i === i1) ? x1 : -inf
           const to = (i === i2) ? x2 : inf
-          $.each(reservations[i][floor], (resNo, res) => {
+          
+          for (const res of reservations[i][floor]) {
             if (res[0] < to && from < res[1]) {
               floorAvailable = false
-              return false
+              break
             }
-          })
+          }
         }
 
         if (floorAvailable) {
@@ -1755,12 +1769,12 @@ export class Visualizer {
             carpet = floor
           } else if (height + carpet <= floor) {
             // found our floor!
-            return false
+            break
           }
         } else {
           carpet = null
         }
-      })
+      }
 
       const reslen = reservations.length
       const makeNewFloorIfNeeded = function (floor: number) {
@@ -1815,7 +1829,7 @@ export class Visualizer {
     })
   }
 
-  private renderChunks (docData: DocumentData, sourceData: SourceData, chunks: Chunk[], maxTextWidth: number): [Row[], number[], unknown[]] {
+  private renderChunks (docData: DocumentData, sourceData: SourceData, chunks: Chunk[], maxTextWidth: number): [Row[], number[], MarkedTextHighlight[]] {
     let currentX: number
     if (this.rtlmode) {
       currentX = this.canvasWidth - (Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding)
@@ -1835,7 +1849,7 @@ export class Visualizer {
     row.backgroundIndex = sentenceToggle
     row.index = 0
 
-    const textMarkedRows: Array<MarkedRow> = []
+    const markedTextHighlights: Array<MarkedTextHighlight> = []
     let rowIndex = 0
 
     chunks.forEach((chunk: Chunk) => {
@@ -1919,7 +1933,8 @@ export class Visualizer {
         hh -= 2 * this.boxTextMargin.y
         xx += this.boxTextMargin.x
         ww -= 2 * this.boxTextMargin.x
-        let rectClass = 'span_' + (span.cue || span.type) + ' span_default' // TODO XXX first part unneeded I think; remove
+        // cue/type part required for adding reselect class when drawing arcs
+        let rectClass = 'span_' + (span.cue || span.type) + ' span_default'
 
         // attach e.g. "False_positive" into the type
         if (span.comment && span.comment.type) {
@@ -2183,31 +2198,31 @@ export class Visualizer {
       if (row.index !== lastRow.index) {
         $.each(openTextHighlights, (textId, textDesc) => {
           if (textDesc[3] !== lastX) {
-            let newDesc: MarkedRow
+            let newDesc: MarkedTextHighlight
             if (this.rtlmode) {
               newDesc = [lastRow, textDesc[3], lastX - boxX, textDesc[4]]
             } else {
               newDesc = [lastRow, textDesc[3], lastX + boxX, textDesc[4]]
             }
-            textMarkedRows.push(newDesc)
+            markedTextHighlights.push(newDesc)
           }
           textDesc[3] = currentX
         })
       }
 
       // open text highlights
-      $.each(chunk.markedTextStart, (textNo, textDesc) => {
-        textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX)
-        openTextHighlights[textDesc[0]] = textDesc
-      })
+      for (const textDesc of chunk.markedTextStart) {
+        textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX);
+        openTextHighlights[textDesc[0]] = textDesc;
+      }
 
       // close text highlights
-      $.each(chunk.markedTextEnd, (textNo, textDesc) => {
-        textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX)
-        const startDesc = openTextHighlights[textDesc[0]]
-        delete openTextHighlights[textDesc[0]]
-        textMarkedRows.push([row, startDesc[3], textDesc[3], startDesc[4]])
-      })
+      for (const textDesc of chunk.markedTextEnd) {
+        textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX);
+        const startDesc = openTextHighlights[textDesc[0]];
+        delete openTextHighlights[textDesc[0]];
+        markedTextHighlights.push([row, startDesc[3], textDesc[3], startDesc[4]]);
+      }
 
       // XXX check this - is it used? should it be lastRow?
       if (hasAnnotations) {
@@ -2261,10 +2276,10 @@ export class Visualizer {
     row.arcs = this.svg.group().addTo(row.group).addClass('arcs')
     rows.push(row)
 
-    return [rows, fragmentHeights, textMarkedRows]
+    return [rows, fragmentHeights, markedTextHighlights]
   }
 
-  private renderChunksPass2 (docData: DocumentData, textGroup: SVGTypeMapping<SVGGElement>, textMarkedRows) {
+  private renderChunksPass2 (docData: DocumentData, textGroup: SVGTypeMapping<SVGGElement>, markedTextHighlights: MarkedTextHighlight[]) {
     // chunk index sort functions for overlapping fragment drawing
     // algorithm; first for left-to-right pass, sorting primarily
     // by start offset, second for right-to-left pass by end
@@ -2488,7 +2503,7 @@ export class Visualizer {
     }
 
     // draw the markedText
-    for (const textRowDesc of textMarkedRows) {
+    for (const textRowDesc of markedTextHighlights) {
       this.svg.rect(textRowDesc[2] - textRowDesc[1] + 4, docData.sizes.fragments.height + 4)
         .translate(textRowDesc[1] - 2, textRowDesc[0].textY - docData.sizes.fragments.height)
         .addClass(textRowDesc[3])
@@ -3464,7 +3479,7 @@ export class Visualizer {
 
       Util.profileStart('chunks')
       this.renderLayoutFloorsAndCurlies(this.data, this.data.spanDrawOrderPermutation)
-      const [rows, fragmentHeights, textMarkedRows] = this.renderChunks(this.data, this.sourceData, this.data.chunks, maxTextWidth)
+      const [rows, fragmentHeights, markedTextHighlights] = this.renderChunks(this.data, this.sourceData, this.data.chunks, maxTextWidth)
       Util.profileEnd('chunks')
 
       Util.profileStart('arcsPrep')
@@ -3487,7 +3502,7 @@ export class Visualizer {
       Util.profileEnd('rows')
 
       Util.profileStart('chunkFinish')
-      this.renderChunksPass2(this.data, textGroup, textMarkedRows)
+      this.renderChunksPass2(this.data, textGroup, markedTextHighlights)
       Util.profileEnd('chunkFinish')
 
       Util.profileStart('finish')
@@ -3975,23 +3990,24 @@ export class Visualizer {
     }
   }
 
-  loadAttributeTypes (responseTypes) {
-    const processed = {}
-    $.each(responseTypes, (aTypeNo, aType) => {
-      processed[aType.type] = aType
-      // count the values; if only one, it's a boolean attribute
-      const values: string[] = []
-      for (const i in aType.values) {
-        if (Object.prototype.hasOwnProperty.call(aType.values, i)) {
-          values.push(i)
-        }
-      }
-      if (values.length === 1) {
-        aType.bool = values[0]
-      }
-    })
-    return processed
-  }
+  // INCEpTION does not use event attributes and entity attributes
+  //   loadAttributeTypes (responseTypes) {
+  //   const processed = {}
+  //   for (const type of responseTypes) {
+  //     processed[type.type] = type
+  //     // count the values; if only one, it's a boolean attribute
+  //     const values: string[] = []
+  //     for (const i in type.values) {
+  //       if (Object.prototype.hasOwnProperty.call(type.values, i)) {
+  //         values.push(i)
+  //       }
+  //     }
+  //     if (values.length === 1) {
+  //       type.bool = values[0]
+  //     }
+  //   }
+  //   return processed
+  // }
 
   loadRelationTypes (relationTypes: RelationTypeDto[]) {
     for (const relType of relationTypes) {
@@ -4253,6 +4269,21 @@ export class Visualizer {
    */
   getHighlightElementsForSpan (id: VID): ArrayLike<Element> {
     return this.svg.node.querySelectorAll(`[data-span-id="${id}"]`)
+  }
+
+  selectionToPoint (sel: Selection | null) : Offsets | null {
+    if (!sel || !sel.rangeCount) return null
+
+    const anchorNode = sel.getRangeAt(0).startContainer
+    const anchorOffset = sel.getRangeAt(0).startOffset
+
+    if (!anchorNode) return null
+
+    const range = new Range()
+    range.setStart(anchorNode, anchorOffset)
+    range.setEnd(anchorNode, anchorOffset)
+
+    return this.rangeToOffsets(range)
   }
 
   selectionToOffsets (sel: Selection | null) : Offsets | null {

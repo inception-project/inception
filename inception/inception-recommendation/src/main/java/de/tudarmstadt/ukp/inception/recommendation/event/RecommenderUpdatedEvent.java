@@ -44,7 +44,7 @@ public class RecommenderUpdatedEvent
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
         builder.append("RecommenderUpdatedEvent [recommender=");
         builder.append(recommender);
         builder.append("]");

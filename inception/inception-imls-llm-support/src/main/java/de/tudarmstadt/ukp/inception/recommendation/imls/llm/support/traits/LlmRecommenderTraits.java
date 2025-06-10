@@ -29,7 +29,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptingMode;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionMode;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraits;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -44,27 +43,19 @@ public class LlmRecommenderTraits
 
     private String prompt;
 
-    private PromptingMode promptingMode = PromptingMode.PER_ANNOTATION;
+    private PromptingMode promptingMode = PromptingMode.PER_PARAGRAPH;
 
-    private ExtractionMode extractionMode = ExtractionMode.RESPONSE_AS_LABEL;
+    private ExtractionMode extractionMode = ExtractionMode.MENTIONS_FROM_JSON;
 
     private @JsonInclude(NON_EMPTY) Map<String, Object> options = new LinkedHashMap<String, Object>();
 
+    private boolean structuredOutputSupported = true;
+
     private boolean interactive;
 
-    private ResponseFormat format;
+    private boolean justificationEnabled;
 
     private AuthenticationTraits authentication;
-
-    public ResponseFormat getFormat()
-    {
-        return format;
-    }
-
-    public void setFormat(ResponseFormat aFormat)
-    {
-        format = aFormat;
-    }
 
     public String getUrl()
     {
@@ -145,5 +136,25 @@ public class LlmRecommenderTraits
     public void setAuthentication(AuthenticationTraits aAuthentication)
     {
         authentication = aAuthentication;
+    }
+
+    public boolean isStructuredOutputSupported()
+    {
+        return structuredOutputSupported;
+    }
+
+    public void setStructuredOutputSupported(boolean aStructuredOutputSupported)
+    {
+        structuredOutputSupported = aStructuredOutputSupported;
+    }
+
+    public boolean isJustificationEnabled()
+    {
+        return justificationEnabled;
+    }
+
+    public void setJustificationEnabled(boolean aJustificationEnabled)
+    {
+        justificationEnabled = aJustificationEnabled;
     }
 }

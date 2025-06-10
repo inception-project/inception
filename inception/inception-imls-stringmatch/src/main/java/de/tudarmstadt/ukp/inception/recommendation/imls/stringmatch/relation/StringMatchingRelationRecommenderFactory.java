@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation;
 
-import org.apache.uima.cas.CAS;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
+
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -64,14 +65,27 @@ public class StringMatchingRelationRecommenderFactory
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public boolean accepts(AnnotationLayer aLayer)
     {
-        if (aLayer == null || aFeature == null) {
+        if (aLayer == null) {
             return false;
         }
 
-        return RelationLayerSupport.TYPE.equals(aLayer.getType()) && !aLayer.isAllowStacking()
-                && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
+        return RelationLayerSupport.TYPE.equals(aLayer.getType()) && !aLayer.isAllowStacking();
+    }
+
+    @Override
+    public boolean accepts(AnnotationFeature aFeature)
+    {
+        if (aFeature == null) {
+            return false;
+        }
+
+        if (!accepts(aFeature.getLayer())) {
+            return false;
+        }
+
+        return TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature();
     }
 
     @Override

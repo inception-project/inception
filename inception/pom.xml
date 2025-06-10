@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
-    <version>35.0-SNAPSHOT</version>
+    <version>37.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>inception-app</artifactId>
@@ -43,14 +43,14 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-dependencies</artifactId>
-        <version>35.0-SNAPSHOT</version>
+        <version>37.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-bom</artifactId>
-        <version>35.0-SNAPSHOT</version>
+        <version>37.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -267,7 +267,6 @@
     <module>inception-diam-compactv2</module>
     <module>inception-diam-editor</module>
     <module>inception-external-editor</module>
-    <module>inception-html-editor</module>
     <module>inception-html-apache-annotator-editor</module>
     <module>inception-html-recogito-editor</module>
     <module>inception-pdf-editor</module>
@@ -299,10 +298,6 @@
     <module>inception-workload-dynamic</module>
     <module>inception-workload-matrix</module>
     <module>inception-workload-ui</module>
-    <!-- Plug-in support -->
-    <module>inception-plugin-api</module>
-    <module>inception-plugin-manager</module>
-    <module>inception-plugin-parent</module>
     <!-- Application -->
     <module>inception-app-webapp</module>
     <!-- Examples -->
@@ -623,7 +618,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>versions-maven-plugin</artifactId>
-          <version>2.17.1</version>
+          <version>2.18.0</version>
           <configuration>
             <rulesUri>file:${maven.multiModuleProjectDirectory}/inception/inception-build/src/main/resources/inception/rules.xml</rulesUri>
             <!--
@@ -1138,6 +1133,7 @@
                   <exclude>src/main/ts_template/*.json</exclude>
                   <exclude>src/main/ts/node_modules/**/*</exclude>
                   <exclude>**/mocha-test-report.xml</exclude>
+                  <exclude>**/vite.config.js.timestamp*</exclude>
                 </excludes>
               </configuration>
             </plugin>

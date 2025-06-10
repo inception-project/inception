@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_settings_sharing]]
-= Invite Links Settings
+= 🧪 Invite Links Settings
 
 ====
 CAUTION: Experimental feature.

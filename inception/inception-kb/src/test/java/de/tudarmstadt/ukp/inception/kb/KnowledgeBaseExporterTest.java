@@ -119,7 +119,10 @@ public class KnowledgeBaseExporterTest
         var exportKbCaptor = ArgumentCaptor.forClass(KnowledgeBase.class);
         doNothing().when(kbService).registerKnowledgeBase(exportKbCaptor.capture(), any());
 
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         var zipFile = mock(ZipFile.class);
         var zipFileEntry = mock(ZipEntry.class);
         when(zipFile.getEntry(any())).thenReturn(zipFileEntry);
@@ -168,7 +171,10 @@ public class KnowledgeBaseExporterTest
         doNothing().when(schemaService).createFeature(importedAnnotationFeatureCaptor.capture());
 
         // Import the project again
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         var zipFile = mock(ZipFile.class);
         var zipFileEntry = mock(ZipEntry.class);
         when(zipFile.getEntry(any())).thenReturn(zipFileEntry);

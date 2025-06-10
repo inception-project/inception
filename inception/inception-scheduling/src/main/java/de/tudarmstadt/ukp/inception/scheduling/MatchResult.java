@@ -34,5 +34,11 @@ public enum MatchResult
      * Discard the incoming task if it matches an already enqueued task. If a matching task is
      * already scheduled or running, then queue the incoming task.
      */
-    DISCARD_OR_QUEUE_THIS;
+    DISCARD_OR_QUEUE_THIS,
+
+    /**
+     * Queue this task. It will be run immediately or after other matching tasks have been run. It
+     * will not run parallel to matching tasks.
+     */
+    QUEUE_THIS;
 }

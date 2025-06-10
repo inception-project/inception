@@ -85,6 +85,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature_;
@@ -105,7 +106,6 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.IllegalFeatureValueException;
@@ -1426,7 +1426,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     // NOTE: Using @Transactional here would significantly slow down things because getAdapter() is
-    // called rather often. It looks like listAnnotationFeature() works reasonably good also when
+    // called rather often. It looks like listSupportedFeatures() works reasonably good also when
     // not called within a transaction. Should it turn out that we would need a @Transactional here,
     // then this should be refactored in some way. E.g. we keep the list of all project layers
     // in the AnnotatorState now - maybe we can use it from there when calling relevant methods
@@ -1435,7 +1435,7 @@ public class AnnotationSchemaServiceImpl
     public TypeAdapter getAdapter(AnnotationLayer aLayer)
     {
         return layerSupportRegistry.getLayerSupport(aLayer) //
-                .createAdapter(aLayer, () -> listAnnotationFeature(aLayer));
+                .createAdapter(aLayer, () -> listSupportedFeatures(aLayer));
     }
 
     @Override

@@ -32,8 +32,10 @@ import org.springframework.security.core.session.SessionRegistry;
 import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.EncodingRegistry;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.AssistantServiceImpl;
+import de.tudarmstadt.ukp.inception.assistant.contextmenu.CheckAnnotationContextMenuItem;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentContextRetriever;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryServiceImpl;
@@ -51,6 +53,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @ConditionalOnWebApplication
 @Configuration
@@ -98,7 +101,8 @@ public class AssistantAutoConfiguration
     @Bean
     public DocumentQueryService documentQueryService(RepositoryProperties aRepositoryProperties,
             AssistantDocumentIndexProperties aIndexProperties, SchedulingService aSchedulingService,
-            OllamaClient aOllamaClient, EmbeddingService aEmbeddingService, DocumentService aDocumentService)
+            OllamaClient aOllamaClient, EmbeddingService aEmbeddingService,
+            DocumentService aDocumentService)
     {
         return new DocumentQueryServiceImpl(aRepositoryProperties, aIndexProperties,
                 aSchedulingService, aEmbeddingService, aDocumentService);
@@ -129,5 +133,14 @@ public class AssistantAutoConfiguration
             UserGuideQueryService aDocumentationIndexingService, AssistantProperties aProperties)
     {
         return new UserGuideRetriever(aDocumentationIndexingService, aProperties);
+    }
+
+    @Bean
+    public CheckAnnotationContextMenuItem CheckAnnotationContextMenuItem(
+            SchedulingService aSchedulingService, AssistantSidebarFactory aAssistantSidebarFactory,
+            AnnotationSchemaService aSchemaService, UserDao aUserService)
+    {
+        return new CheckAnnotationContextMenuItem(aSchedulingService, aAssistantSidebarFactory,
+                aSchemaService, aUserService);
     }
 }

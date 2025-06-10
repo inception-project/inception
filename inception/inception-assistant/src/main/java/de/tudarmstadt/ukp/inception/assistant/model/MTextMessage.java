@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
+import static java.util.Collections.emptyList;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,34 +45,40 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  * @param internal
  *            if the message is part of the inner monolog, RAG or similarly not normally exposed to
  *            the user
+ * @param ephemeral
+ *            if the message should disappear at once (i.e. it is not recorded)
  * @param performance
  *            optional performance metrics
  * @param references
  *            optional list of references
  */
 @JsonTypeName(MTextMessage.TYPE_TEXT_MESSAGE)
-public record MTextMessage(UUID id, String role, String actor, String message, boolean done, boolean internal,
-        MPerformanceMetrics performance, List<MReference> references)
+public record MTextMessage(UUID id, String role, String actor, String message, boolean done,
+        boolean internal, boolean ephemeral, MPerformanceMetrics performance,
+        List<MReference> references)
     implements MChatMessage
 {
+
     static final String TYPE_TEXT_MESSAGE = "textMessage";
 
     private MTextMessage(Builder aBuilder)
     {
-        this(aBuilder.id, aBuilder.role, aBuilder.actor, aBuilder.message, aBuilder.done, aBuilder.internal,
-                aBuilder.performance, aBuilder.references.values().stream().toList());
+        this(aBuilder.id, aBuilder.role, aBuilder.actor, aBuilder.message, aBuilder.done,
+                aBuilder.internal, aBuilder.ephemeral, aBuilder.performance,
+                aBuilder.references.values().stream().toList());
     }
 
     public MTextMessage append(MTextMessage aMessage)
     {
-        Objects.nonNull(id());
-        Objects.nonNull(id());
+        Objects.requireNonNull(id());
         Validate.isTrue(Objects.equals(aMessage.id(), id()));
         Validate.isTrue(Objects.equals(aMessage.role(), role()));
         Validate.isTrue(Objects.equals(aMessage.internal(), internal()));
+        Validate.isTrue(Objects.equals(aMessage.ephemeral(), ephemeral()));
         Validate.isTrue(!done());
 
-        var perf = performance() != null ? performance().merge(aMessage.performance())
+        var perf = performance() != null //
+                ? performance().merge(aMessage.performance()) //
                 : aMessage.performance();
 
         var refs = new LinkedHashMap<String, MReference>();
@@ -80,7 +88,7 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
         if (aMessage.references() != null) {
             aMessage.references().forEach(r -> refs.put(r.id(), r));
         }
-        
+
         var msg = new StringBuilder();
         if (message() != null) {
             msg.append(message());
@@ -89,8 +97,14 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
             msg.append(aMessage.message());
         }
 
-        return new MTextMessage(id(), role(), actor(), msg.toString(), aMessage.done(),
-                internal(), perf, refs.values().stream().toList());
+        return new MTextMessage(id(), role(), actor(), msg.toString(), aMessage.done(), internal(),
+                ephemeral(), perf, refs.values().stream().toList());
+    }
+
+    public MTextMessage withoutContent()
+    {
+        return new MTextMessage(id(), role(), actor(), "", done(), internal(), ephemeral(),
+                performance(), emptyList());
     }
 
     @JsonProperty(MMessage.TYPE_FIELD)
@@ -112,6 +126,7 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
         private String message;
         private boolean done = true;
         private boolean internal = false;
+        private boolean ephemeral = false;
         private MPerformanceMetrics performance;
         private Map<String, MReference> references = new LinkedHashMap<>();
 
@@ -140,6 +155,12 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
         public Builder internal()
         {
             internal = true;
+            return this;
+        }
+
+        public Builder ephemeral()
+        {
+            ephemeral = true;
             return this;
         }
 

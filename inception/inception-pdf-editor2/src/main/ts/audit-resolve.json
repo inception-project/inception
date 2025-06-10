@@ -3,6 +3,18 @@
     "1097504|pdfjs-dist": {
       "decision": "ignore",
       "madeAt": 1718722800964
+    },
+    "1101853|pdfjs-dist": {
+      "decision": "postpone",
+      "madeAt": 1745157177098
+    },
+    "1102341|@sveltejs/vite-plugin-svelte>@sveltejs/vite-plugin-svelte-inspector>vite>esbuild": {
+      "decision": "postpone",
+      "madeAt": 1742938037989
+    },
+    "1104044|pdfjs-dist": {
+      "decision": "postpone",
+      "madeAt": 1748329120038
     }
   },
   "rules": {},

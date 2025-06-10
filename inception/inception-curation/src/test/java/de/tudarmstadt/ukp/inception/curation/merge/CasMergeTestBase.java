@@ -93,6 +93,7 @@ public class CasMergeTestBase
     protected AnnotationFeature depFlavorFeature;
     protected AnnotationLayer slotLayer;
     protected AnnotationFeature slotFeature;
+    protected AnnotationFeature slotFeature2;
     protected AnnotationFeature stringFeature;
     protected AnnotationLayer multiValRel;
     protected AnnotationFeature multiValRelRel1;
@@ -115,6 +116,8 @@ public class CasMergeTestBase
     {
         slotHostDiffAdapter = new SpanDiffAdapter(HOST_TYPE);
         slotHostDiffAdapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES,
+                EXCLUDE);
+        slotHostDiffAdapter.addLinkFeature("altLinks", "role", "target", ONE_TARGET_MULTIPLE_ROLES,
                 EXCLUDE);
 
         diffAdapters = new ArrayList<>();
@@ -240,6 +243,21 @@ public class CasMergeTestBase
         slotFeature.setVisible(true);
         slotFeature.setCuratable(true);
 
+        slotFeature2 = new AnnotationFeature();
+        slotFeature2.setName("altLinks");
+        slotFeature2.setEnabled(true);
+        slotFeature2.setType(Token.class.getName());
+        slotFeature2.setMode(MultiValueMode.ARRAY);
+        slotFeature2.setLinkMode(LinkMode.WITH_ROLE);
+        slotFeature2.setLinkTypeName(CurationTestUtils.LINK_TYPE);
+        slotFeature2.setLinkTypeRoleFeatureName("role");
+        slotFeature2.setLinkTypeTargetFeatureName("target");
+        slotFeature2.setUiName("links");
+        slotFeature2.setLayer(slotLayer);
+        slotFeature2.setProject(project);
+        slotFeature2.setVisible(true);
+        slotFeature2.setCuratable(true);
+
         stringFeature = new AnnotationFeature();
         stringFeature.setName("f1");
         stringFeature.setEnabled(true);
@@ -350,7 +368,7 @@ public class CasMergeTestBase
                         return asList(neFeature, neIdentifierFeature);
                     }
                     if (type.getName().equals(HOST_TYPE)) {
-                        return asList(slotFeature, stringFeature);
+                        return asList(slotFeature, slotFeature2, stringFeature);
                     }
                     if (type.getName().equals("webanno.custom.Multivalrel")) {
                         return asList(multiValRelRel1, multiValRelRel2);

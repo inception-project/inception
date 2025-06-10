@@ -23,6 +23,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemContext;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemRegistry;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
@@ -74,7 +75,8 @@ public class ShowContextMenuHandler
 
             var vid = getVid(aRequest);
 
-            for (var ext : contextMenuItemRegistry.getExtensions(getPage())) {
+            for (var ext : contextMenuItemRegistry
+                    .getExtensions(new ContextMenuItemContext(vid, getPage()))) {
                 items.add(ext.createMenuItem(vid, clientX, clientY));
             }
 

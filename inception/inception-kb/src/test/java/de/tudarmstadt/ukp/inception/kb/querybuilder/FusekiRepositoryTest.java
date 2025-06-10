@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLoc
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.List;
@@ -46,6 +47,8 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -53,6 +56,8 @@ import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestS
 
 public class FusekiRepositoryTest
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private @TempDir Path temp;
     private FusekiServer fusekiServer;
     private Repository repository;
@@ -62,8 +67,7 @@ public class FusekiRepositoryTest
     public void setUp(TestInfo aTestInfo) throws Exception
     {
         var methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
-        System.out.printf("\n=== %s === %s =====================\n", methodName,
-                aTestInfo.getDisplayName());
+        LOG.info("=== {} === {} =====================", methodName, aTestInfo.getDisplayName());
 
         suspendSslVerification();
 

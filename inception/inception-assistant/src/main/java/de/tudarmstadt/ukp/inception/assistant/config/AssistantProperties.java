@@ -20,12 +20,10 @@ package de.tudarmstadt.ukp.inception.assistant.config;
 public interface AssistantProperties
 {
     String getUrl();
-    
+
     AssistantChatProperties getChat();
 
     AssistantEmbeddingProperties getEmbedding();
-
-    boolean isDevMode();
 
     String getNickname();
 

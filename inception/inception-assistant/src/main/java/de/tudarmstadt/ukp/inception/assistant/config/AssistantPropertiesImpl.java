@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.assistant.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties("assistant")
@@ -31,16 +30,14 @@ public class AssistantPropertiesImpl
     private final AssistantChatProperties chat = new AssistantChatPropertiesImpl();
     private final AssistantEmbeddingProperties embedding = new AssistantEmbeddingPropertiesImpl();
     private final AssitantUserGuidePropertiesImpl userGuide = new AssitantUserGuidePropertiesImpl();
+    private final AssistantToolPropertiesImpl tool = new AssistantToolPropertiesImpl();
     private final AssistantDocumentIndexProperties documentIndex;
-    
+
     @Autowired
     public AssistantPropertiesImpl(AssistantDocumentIndexProperties aDocumentIndex)
     {
         documentIndex = aDocumentIndex;
     }
-
-    @Value("${inception.dev:false}") // Inject system property or use default if not provided
-    private boolean devMode;
 
     @Override
     public String getNickname()
@@ -51,17 +48,6 @@ public class AssistantPropertiesImpl
     public void setNickname(String aNickname)
     {
         nickname = aNickname;
-    }
-
-    @Override
-    public boolean isDevMode()
-    {
-        return devMode;
-    }
-
-    public void setDevMode(boolean aDevMode)
-    {
-        devMode = aDevMode;
     }
 
     @Override
@@ -92,7 +78,12 @@ public class AssistantPropertiesImpl
     {
         return userGuide;
     }
-    
+
+    public AssistantToolPropertiesImpl getTool()
+    {
+        return tool;
+    }
+
     @Override
     public AssistantDocumentIndexProperties getDocumentIndex()
     {
@@ -305,6 +296,23 @@ public class AssistantPropertiesImpl
         public void setDimension(int aDimension)
         {
             dimension = aDimension;
+        }
+    }
+
+    public static class AssistantToolPropertiesImpl
+        implements AssistantToolProperties
+    {
+        private String model = "granite3-dense";
+
+        @Override
+        public String getModel()
+        {
+            return model;
+        }
+
+        public void setModel(String aModel)
+        {
+            model = aModel;
         }
     }
 }

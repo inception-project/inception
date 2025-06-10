@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer.Builder;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 
@@ -75,6 +76,24 @@ public class LayerFactory
                 .withValidationMode(NEVER) //
                 .withReadonly(true) //
                 .withCrossSentence(false) //
+                .withEnabled(false);
+    }
+
+    public static Builder sentenceLayer(Project aProject)
+    {
+        return AnnotationLayer.builder() //
+                .withProject(aProject) //
+                .forJCasClass(Sentence.class) //
+                .withType(SpanLayerSupport.TYPE) //
+                .withBuiltIn(true) //
+                .withAnchoringMode(TOKENS) //
+                .withOverlapMode(NO_OVERLAP) //
+                // Since the user cannot turn off validation for the sentence layer if there is any
+                // kind of problem with the validation functionality we are conservative here and
+                // disable validation from the start.
+                .withValidationMode(NEVER) //
+                .withReadonly(true) //
+                .withCrossSentence(true) //
                 .withEnabled(false);
     }
 }

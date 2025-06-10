@@ -17,7 +17,7 @@
  */
 import esbuild from 'esbuild'
 import esbuildSvelte from 'esbuild-svelte'
-import sveltePreprocess from 'svelte-preprocess'
+import { sveltePreprocess } from 'svelte-preprocess'
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 import { sassPlugin } from 'esbuild-sass-plugin'
@@ -53,7 +53,7 @@ const defaults = {
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
-  target: 'es2018',
+  target: 'es2019',
   loader: { '.ts': 'ts' },
   logLevel: 'info'
 }
@@ -63,21 +63,21 @@ fs.emptyDirSync(outbase)
 
 if (argv.live) {
   const context1 = await esbuild.context(Object.assign({
-    entryPoints: ['src/ActivitiesDashlet.svelte'],
+    entryPoints: ['src/ActivitiesDashletFactory.ts'],
     outfile: `${outbase}/ActivitiesDashlet.min.js`
   }, defaults))
   const context2 = await esbuild.context(Object.assign({
-    entryPoints: ['src/ActivityPanel.svelte'],
+    entryPoints: ['src/ActivityPanelFactory.ts'],
     outfile: `${outbase}/panel/ActivityPanel.min.js`
   }, defaults))
   await Promise.all([context1.watch(), context2.watch()])
 } else {
   esbuild.build(Object.assign({
-    entryPoints: ['src/ActivitiesDashlet.svelte'],
+    entryPoints: ['src/ActivitiesDashletFactory.ts'],
     outfile: `${outbase}/ActivitiesDashlet.min.js`
   }, defaults))
   esbuild.build(Object.assign({
-    entryPoints: ['src/ActivityPanel.svelte'],
+    entryPoints: ['src/ActivityPanelFactory.ts'],
     outfile: `${outbase}/panel/ActivityPanel.min.js`
   }, defaults))
 }

@@ -123,7 +123,7 @@ public class CasMergeRelationTest
         var result = sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer, targetCas,
                 clickedFs);
 
-        assertThat(result.getState()).isEqualTo(CREATED);
+        assertThat(result.state()).isEqualTo(CREATED);
         assertThat(targetCas.select(Dependency.class).asList()) //
                 .extracting( //
                         dep -> getFeature(dep, FEAT_REL_SOURCE, AnnotationFS.class).getBegin(), //
@@ -148,7 +148,7 @@ public class CasMergeRelationTest
         var result = sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer, targetCas,
                 clickedFs);
 
-        assertThat(result.getState()).isEqualTo(CREATED);
+        assertThat(result.state()).isEqualTo(CREATED);
         assertThat(targetCas.select(Dependency.class).asList()) //
                 .extracting( //
                         dep -> getFeature(dep, FEAT_REL_SOURCE, AnnotationFS.class).getBegin(), //

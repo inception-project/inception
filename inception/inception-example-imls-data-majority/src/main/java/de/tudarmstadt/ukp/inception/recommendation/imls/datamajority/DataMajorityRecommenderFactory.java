@@ -26,21 +26,19 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.plugin.api.ExportedComponent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 
 // tag::classDefinition[]
-@ExportedComponent
 @Component
 public class DataMajorityRecommenderFactory
     extends RecommendationEngineFactoryImplBase<Void>
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
-    public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityNerRecommender";
+    public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityRecommender";
 
     @Override
     public String getId()
@@ -61,15 +59,25 @@ public class DataMajorityRecommenderFactory
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public boolean accepts(AnnotationLayer aLayer)
     {
-        if (aLayer == null || aFeature == null) {
+        if (aLayer == null) {
             return false;
         }
 
         return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
-                && !aLayer.isCrossSentence() && SpanLayerSupport.TYPE.equals(aLayer.getType())
-                && CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature();
+                && !aLayer.isCrossSentence() && SpanLayerSupport.TYPE.equals(aLayer.getType());
+    }
+
+    @Override
+    public boolean accepts(AnnotationFeature aFeature)
+    {
+        if (aFeature == null) {
+            return false;
+        }
+
+        return accepts(aFeature.getLayer()) && CAS.TYPE_NAME_STRING.equals(aFeature.getType())
+                || aFeature.isVirtualFeature();
     }
 }
 // end::classDefinition[]

@@ -97,14 +97,28 @@ public class NamedEntityLinkerFactory
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public boolean accepts(AnnotationLayer aLayer)
     {
-        if (aLayer == null || aFeature == null) {
+        if (aLayer == null) {
             return false;
         }
+
         return asList(SINGLE_TOKEN, TOKENS, CHARACTERS).contains(aLayer.getAnchoringMode())
-                && SpanLayerSupport.TYPE.equals(aLayer.getType())
-                && aFeature.getType().startsWith(PREFIX);
+                && SpanLayerSupport.TYPE.equals(aLayer.getType());
+    }
+
+    @Override
+    public boolean accepts(AnnotationFeature aFeature)
+    {
+        if (aFeature == null) {
+            return false;
+        }
+
+        if (!accepts(aFeature.getLayer())) {
+            return false;
+        }
+
+        return aFeature.getType().startsWith(PREFIX);
     }
 
     @Override

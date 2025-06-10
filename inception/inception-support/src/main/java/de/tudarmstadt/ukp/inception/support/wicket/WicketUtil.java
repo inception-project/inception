@@ -19,13 +19,17 @@ package de.tudarmstadt.ukp.inception.support.wicket;
 
 import static java.lang.String.format;
 
+import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.apache.wicket.Application;
 import org.apache.wicket.Component;
+import org.apache.wicket.IMetadataContext;
+import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.Page;
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -51,6 +55,17 @@ public final class WicketUtil
     private WicketUtil()
     {
         // No instances
+    }
+
+    public static <M extends Serializable> M getMetaData(IMetadataContext<M, ?> aContext,
+            MetaDataKey<M> aKey, Supplier<M> aSupplier)
+    {
+        var value = aContext.getMetaData(aKey);
+        if (value == null) {
+            value = aSupplier.get();
+            aContext.setMetaData(aKey, value);
+        }
+        return value;
     }
 
     public static void ajaxFallbackScript(IHeaderResponse aResponse, String aScript)

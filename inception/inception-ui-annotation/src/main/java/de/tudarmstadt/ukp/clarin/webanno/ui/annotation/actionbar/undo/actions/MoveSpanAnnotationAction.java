@@ -21,10 +21,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostActionScrollToAndSelect;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.MoveSpanAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanMovedEvent;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
@@ -57,8 +57,12 @@ public class MoveSpanAnnotationAction
         throws AnnotationException
     {
         var adapter = (SpanAdapter) aSchemaService.getAdapter(getLayer());
-        AnnotationFS fs = ICasUtil.selectAnnotationByAddr(aCas, getVid().getId());
-        adapter.move(getDocument(), getUser(), aCas, fs, oldRange.getBegin(), oldRange.getEnd());
+        var fs = ICasUtil.selectAnnotationByAddr(aCas, getVid().getId());
+        adapter.handle(MoveSpanAnnotationRequest.builder() //
+                .withDocument(getDocument(), getUser(), aCas) //
+                .withAnnotation(fs) //
+                .withRange(oldRange.getBegin(), oldRange.getEnd()) //
+                .build());
         aMessages.add(LogMessage.info(this, "[%s] moved back", getLayer().getUiName()));
         return Optional.of(new PostActionScrollToAndSelect(getVid()));
     }
@@ -69,8 +73,12 @@ public class MoveSpanAnnotationAction
         throws AnnotationException
     {
         var adapter = (SpanAdapter) aSchemaService.getAdapter(getLayer());
-        AnnotationFS fs = ICasUtil.selectAnnotationByAddr(aCas, getVid().getId());
-        adapter.move(getDocument(), getUser(), aCas, fs, range.getBegin(), range.getEnd());
+        var fs = ICasUtil.selectAnnotationByAddr(aCas, getVid().getId());
+        adapter.handle(MoveSpanAnnotationRequest.builder() //
+                .withDocument(getDocument(), getUser(), aCas) //
+                .withAnnotation(fs) //
+                .withRange(range.getBegin(), range.getEnd()) //
+                .build());
         aMessages.add(LogMessage.info(this, "[%s] moved", getLayer().getUiName()));
         return Optional.of(new PostActionScrollToAndSelect(getVid()));
     }

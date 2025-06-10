@@ -58,7 +58,7 @@ class UserGuideQueryServiceImplTest
     private EmbeddingServiceImpl embeddingService;
 
     private static @TempDir Path applicationHome;
-    
+
     @BeforeAll
     static void checkIfOllamaIsRunning()
     {
@@ -73,7 +73,8 @@ class UserGuideQueryServiceImplTest
         assistantProperties = new AssistantPropertiesImpl(assistantDocumentIndexProperties);
         ollamaClient = new OllamaClientImpl();
         embeddingService = new EmbeddingServiceImpl(assistantProperties, ollamaClient);
-        sut = new UserGuideQueryServiceImpl(assistantProperties, schedulingService, embeddingService);
+        sut = new UserGuideQueryServiceImpl(assistantProperties, schedulingService,
+                embeddingService);
     }
 
     @AfterEach
@@ -87,8 +88,8 @@ class UserGuideQueryServiceImplTest
     {
         try (var iw = sut.getIndexWriter()) {
             sut.indexBlocks(iw, //
-                    "Waldi is a dog.",  //
-                    "Miau is a cat.",  //
+                    "Waldi is a dog.", //
+                    "Miau is a cat.", //
                     "Tweety is a bird.");
         }
         sut.markIndexUpToDate();

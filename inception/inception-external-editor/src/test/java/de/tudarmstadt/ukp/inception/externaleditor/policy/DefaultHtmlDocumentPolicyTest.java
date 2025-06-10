@@ -51,7 +51,7 @@ class DefaultHtmlDocumentPolicyTest
 
         var sut = new DefaultHtmlDocumentPolicy();
 
-        assertThat(sut.getPolicy().getElementPolicies()).hasSize(158);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(162);
 
         write(policyFile.toFile(), "policies: []", UTF_8);
         assertThat(policyFile).exists();
@@ -64,7 +64,7 @@ class DefaultHtmlDocumentPolicyTest
 
         Files.delete(policyFile);
         assertThat(policyFile).doesNotExist();
-        assertThat(sut.getPolicy().getElementPolicies()).hasSize(158);
+        assertThat(sut.getPolicy().getElementPolicies()).hasSize(162);
     }
 
     static List<Arguments> attributeActionDataSet()

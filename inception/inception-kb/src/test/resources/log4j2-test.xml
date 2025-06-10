@@ -14,7 +14,7 @@
     
     <Logger name="de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder" level="WARN"/>
     
-    <Root level="warn">
+    <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />
     </Root>
   </Loggers>

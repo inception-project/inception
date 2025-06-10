@@ -78,7 +78,7 @@ class ProjectLogExporterTest
         repositoryProperties.setPath(tempDir);
 
         projectService = new ProjectServiceImpl(userService, applicationEventPublisher,
-                repositoryProperties, emptyList(), null);
+                repositoryProperties, emptyList(), emptyList(), null);
 
         sut = new ProjectLogExporter(projectService);
     }

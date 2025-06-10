@@ -22,12 +22,14 @@ import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.util.List;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -59,13 +61,15 @@ public class SourceDocumentStateFilterPanel
             @Override
             protected void populateItem(ListItem<SourceDocumentState> aItem)
             {
-                LambdaAjaxLink link = new LambdaAjaxLink("stateFilterLink",
-                        (_target -> actionApplyStateFilter(_target, aItem.getModelObject())));
+                var state = aItem.getModelObject();
+                var link = new LambdaAjaxLink("stateFilterLink",
+                        (_target -> actionApplyStateFilter(_target, state)));
 
                 link.add(new SymbolLabel(MID_LABEL, aItem.getModel()));
                 link.add(new AttributeAppender("class",
-                        () -> aModel.getObject().contains(aItem.getModelObject()) ? "active" : "",
-                        " "));
+                        () -> aModel.getObject().contains(state) ? "active" : "", " "));
+                link.add(AttributeModifier.replace("title",
+                        new ResourceModel(state.getClass().getSimpleName() + "." + state.name())));
                 aItem.add(link);
             }
         };

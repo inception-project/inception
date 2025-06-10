@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.annotation.feature.link;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static de.tudarmstadt.ukp.inception.schema.api.feature.MaterializedLink.toMaterializedLink;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.collections4.CollectionUtils.disjunction;
 import static org.apache.uima.cas.CAS.TYPE_NAME_FS_ARRAY;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
@@ -28,7 +29,6 @@ import static org.apache.uima.cas.CAS.TYPE_NAME_TOP;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.text.WordUtils;
@@ -210,14 +210,18 @@ public class LinkFeatureSupport
     public List<LinkWithRoleModel> getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         var linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+        if (linkFeature == null) {
+            return emptyList();
+        }
+
         return wrapFeatureValue(aFeature, aFS.getCAS(), aFS.getFeatureValue(linkFeature));
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    public <V> V getNullFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
-        return (V) Collections.emptyList();
+        return (V) emptyList();
     }
 
     @Override

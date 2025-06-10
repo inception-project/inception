@@ -26,7 +26,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.ChatCompletionRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiChatCompletionRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Preset;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraitsEditor_ImplBase;
@@ -44,7 +44,8 @@ public class AzureAiOpenAiRecommenderTraitsEditor
     public AzureAiOpenAiRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender,
             IModel<List<Preset>> aPresets)
     {
-        super(aId, aRecommender, aPresets, new ListModel<>(ChatCompletionRequest.getAllOptions()));
+        super(aId, aRecommender, aPresets,
+                new ListModel<>(AzureAiChatCompletionRequest.getAllOptions()));
     }
 
     @Override

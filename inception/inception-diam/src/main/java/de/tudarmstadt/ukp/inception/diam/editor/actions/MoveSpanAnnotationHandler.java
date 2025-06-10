@@ -26,6 +26,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.inception.annotation.layer.span.MoveSpanAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
@@ -91,8 +92,11 @@ public class MoveSpanAnnotationHandler
 
         var adapter = (SpanAdapter) annotationService.findAdapter(state.getProject(), annoFs);
 
-        adapter.move(state.getDocument(), state.getUser().getUsername(), aCas, annoFs,
-                aRange.getBegin(), aRange.getEnd());
+        adapter.handle(MoveSpanAnnotationRequest.builder() //
+        .withDocument(state.getDocument(), state.getUser().getUsername(), aCas) //
+        .withAnnotation(annoFs) //
+        .withRange(aRange.getBegin(), aRange.getEnd()) //
+        .build());
 
         var sel = state.getSelection();
         if (sel.isSet() && sel.getAnnotation().getId() == aVid.getId()) {

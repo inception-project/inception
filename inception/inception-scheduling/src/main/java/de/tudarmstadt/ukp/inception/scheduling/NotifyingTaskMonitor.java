@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.scheduling;
 
 import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerWebsocketController;
 import de.tudarmstadt.ukp.inception.scheduling.controller.model.MTaskStateUpdate;
-import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class NotifyingTaskMonitor
     extends TaskMonitor
@@ -36,59 +35,14 @@ public class NotifyingTaskMonitor
     }
 
     @Override
-    public synchronized void setProgress(int aProgress)
-    {
-        super.setProgress(aProgress);
-        sendNotification();
-    }
-
-    @Override
-    public void addMessage(LogMessage aMessage)
-    {
-        super.addMessage(aMessage);
-        sendNotification();
-    }
-
-    @Override
-    public synchronized void setProgressWithMessage(int aProgress, int aMaxProgress,
-            LogMessage aMessage)
-    {
-        super.setProgressWithMessage(aProgress, aMaxProgress, aMessage);
-        sendNotification();
-    }
-
-    @Override
-    public synchronized void setState(TaskState aState)
-    {
-        super.setState(aState);
-        sendNotification();
-    }
-
-    @Override
-    public synchronized void setStateAndProgress(TaskState aState, int aProgress)
-    {
-        super.setState(aState);
-        super.setProgress(aProgress);
-        sendNotification();
-    }
-
-    @Override
-    public synchronized void setStateAndProgress(TaskState aState, int aProgress, int aMaxProgress)
-    {
-        super.setState(aState);
-        super.setProgress(aProgress);
-        super.setMaxProgress(aMaxProgress);
-        sendNotification();
-    }
-
-    @Override
     protected void onDestroy()
     {
         var msg = new MTaskStateUpdate(this, true);
         schedulerWebsocketController.dispatch(msg);
     }
 
-    protected void sendNotification()
+    @Override
+    protected void commit()
     {
         if (isDestroyed()) {
             return;

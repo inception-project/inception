@@ -24,15 +24,24 @@
         <wicket:message key="annotationSearchState"/>
       </div>
       <div class="card-body">
-        <div class="row form-row" wicket:enclosure="caseSensitive">
+        <div class="row form-row">
           <div class="offset-md-4 col-sm-8">
             <div class="form-check">
-              <input class="form-check-input" type="checkbox" wicket:id="caseSensitive">
-              <label class="form-check-label" wicket:for="caseSensitive">
-                <wicket:label key="caseSensitive"/>
+              <input class="form-check-input" type="checkbox" wicket:id="caseSensitiveDocumentText">
+              <label class="form-check-label" wicket:for="caseSensitiveDocumentText">
+                <wicket:label key="caseSensitiveDocumentText"/>
               </label>
             </div>
-            <span class="ms-3 small text-muted">Only takes effect after index has been re-built.</span>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" wicket:id="caseSensitiveFeatureValues">
+              <label class="form-check-label" wicket:for="caseSensitiveFeatureValues">
+                <wicket:label key="caseSensitiveFeatureValues"/>
+              </label>
+            </div>
+            <span class="ms-3 small text-muted">
+              When you disable case sensitivity, text or feature values in CQL queries need to be written in lower case to match!<br/>
+              Only takes effect after index has been re-built.
+            </span>
           </div>
         </div>
         <div class="row form-row" wicket:enclosure="reindexProject">

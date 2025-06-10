@@ -117,7 +117,10 @@ public class LoggedEventExporterTest
         // Import the project again
         lenient().doNothing().when(eventRepository).create(loggedEventCaptor.capture());
 
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         try (var zf = new ZipFile(zipFile)) {
             sut.importData(importRequest, targetProject, exportedProject, zf);
         }
@@ -154,7 +157,10 @@ public class LoggedEventExporterTest
         // Import the project again
         lenient().doNothing().when(eventRepository).create(loggedEventCaptor.capture());
 
-        var importRequest = new ProjectImportRequest(true);
+        var importRequest = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
         try (var zf = new ZipFile(zipFile)) {
             sut.importData(importRequest, targetProject, exportedProject, zf);
         }

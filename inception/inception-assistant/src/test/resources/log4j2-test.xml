@@ -17,7 +17,7 @@
 <!--     <Logger name="org.springframework.security" level="TRACE" /> -->
 <!--     <Logger name="org.springframework.security.authorization" level="TRACE" /> -->
 <!--     <Logger name="de.tudarmstadt.ukp.inception.support.test.websocket" level="TRACE" /> -->
-    <Logger name="de.tudarmstadt.ukp.inception.assistant" level="TRACE"/>
+<!--     <Logger name="de.tudarmstadt.ukp.inception.assistant" level="TRACE"/> -->
 
     <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />

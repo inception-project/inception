@@ -651,7 +651,8 @@ export class AnnotatorUI {
     if (evt.ctrlKey) return
 
     const sel = window.getSelection()
-    const offsets = this.visualizer.selectionToOffsets(sel)
+    let offsets = evt.shiftKey ? this.visualizer.selectionToPoint(sel) : this.visualizer.selectionToOffsets(sel)
+
     this.clearSelection()
     this.stopArcDrag(evt.target)
 

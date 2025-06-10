@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Annotation, DiamAjax, Offsets, VID, LazyDetailGroup } from '@inception-project/inception-js-api'
-import { DiamAjaxConnectOptions, DiamLoadAnnotationsOptions, DiamSelectAnnotationOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax'
+import { Annotation, DiamAjax, Offsets, VID, LazyDetailGroup, DiamAjaxConnectOptions, DiamLoadAnnotationsOptions, DiamSelectAnnotationOptions } from '@inception-project/inception-js-api'
 
 declare const Wicket: any
 

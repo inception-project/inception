@@ -44,12 +44,11 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementSummary;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -88,45 +87,42 @@ public class CalculatePerDocumentAgreementTask
     {
         summary = new PerDocumentAgreementResult(feature, traits);
 
-        var maxProgress = allAnnDocs.size();
-        var progress = 0;
-
         var docs = allAnnDocs.keySet().stream() //
                 .sorted(comparing(SourceDocument::getName)) //
                 .toList();
 
-        for (var doc : docs) {
-            var monitor = getMonitor();
-            if (monitor.isCancelled()) {
-                break;
-            }
+        try (var progress = getMonitor().openScope("documents", allAnnDocs.size())) {
+            for (var doc : docs) {
+                if (getMonitor().isCancelled()) {
+                    break;
+                }
 
-            monitor.setProgressWithMessage(progress, maxProgress,
-                    LogMessage.info(this, doc.getName()));
+                progress.update(up -> up.increment() //
+                        .addMessage(LogMessage.info(this, doc.getName())));
 
-            try (var session = CasStorageSession.openNested()) {
-                var casMap = new LinkedHashMap<String, CAS>();
-                for (var annDoc : allAnnDocs.get(doc)) {
-                    var dataOwner = annDoc.getUser();
-                    if (!annotators.contains(dataOwner)) {
-                        continue;
+                try (var session = CasStorageSession.openNested()) {
+                    var casMap = new LinkedHashMap<String, CAS>();
+                    for (var annDoc : allAnnDocs.get(doc)) {
+                        var dataOwner = annDoc.getUser();
+                        if (!annotators.contains(dataOwner)) {
+                            continue;
+                        }
+
+                        casMap.put(dataOwner, loadCas(annDoc.getDocument(), dataOwner));
                     }
 
-                    casMap.put(dataOwner, loadCas(annDoc.getDocument(), dataOwner));
+                    if (annotators.contains(CURATION_USER)) {
+                        casMap.put(CURATION_USER, loadCas(doc, CURATION_USER));
+                    }
+
+                    LOG.trace("Calculating agreement on {} for [{}] annotators", doc,
+                            casMap.size());
+                    var agreementResult = AgreementSummary.of(measure.getAgreement(casMap));
+                    summary.mergeResult(doc, agreementResult);
                 }
-
-                if (annotators.contains(CURATION_USER)) {
-                    casMap.put(CURATION_USER, loadCas(doc, CURATION_USER));
+                catch (Exception e) {
+                    LOG.error("Unable to load data", e);
                 }
-
-                LOG.trace("Calculating agreement on {} for [{}] annotators", doc, casMap.size());
-                var agreementResult = AgreementSummary.of(measure.getAgreement(casMap));
-                summary.mergeResult(doc, agreementResult);
-
-                progress++;
-            }
-            catch (Exception e) {
-                LOG.error("Unable to load data", e);
             }
         }
     }
@@ -184,7 +180,6 @@ public class CalculatePerDocumentAgreementTask
     {
         private List<String> annotators;
         private DefaultAgreementTraits traits;
-        private AnnotationLayer layer;
         private AnnotationFeature feature;
         private AgreementMeasure<?> measure;
         private Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
@@ -206,13 +201,6 @@ public class CalculatePerDocumentAgreementTask
         public T withTraits(DefaultAgreementTraits aTraits)
         {
             traits = aTraits;
-            return (T) this;
-        }
-
-        @SuppressWarnings("unchecked")
-        public T withLayer(AnnotationLayer aLayer)
-        {
-            layer = aLayer;
             return (T) this;
         }
 

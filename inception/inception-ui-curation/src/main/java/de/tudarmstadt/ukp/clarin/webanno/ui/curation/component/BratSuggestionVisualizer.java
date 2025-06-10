@@ -273,7 +273,7 @@ public abstract class BratSuggestionVisualizer
             // because even if we loaded it again now, its FS addresses could have changed over
             // what they were when the VDocument has first been created. Optimally, we wouldn't
             // need access to the request here at all and the important information would be
-            // contained in the VDocuemnt already.
+            // contained in the VDocument already.
             var request = RenderRequest.builder() //
                     .withState(state) //
                     .withSessionOwner(userService.getCurrentUser()) //

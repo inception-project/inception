@@ -17,17 +17,34 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.sidebar;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.spring.injection.annot.SpringBean;
+import static de.tudarmstadt.ukp.inception.assistant.sidebar.AssistantSidebarPrefs.KEY_ASSISTANT_SIDEBAR_PREFS;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.wicketstuff.event.annotation.OnEvent;
+
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome6IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService;
+import de.tudarmstadt.ukp.inception.bootstrap.IconToggleBox;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 
 public class AssistantSidebar
     extends AnnotationSidebar_ImplBase
@@ -37,31 +54,98 @@ public class AssistantSidebar
     private @SpringBean UserDao userService;
     private @SpringBean AssistantService assistantService;
     private @SpringBean DocumentQueryService documentQueryService;
+    private @SpringBean SchedulingService schedulingService;
+    private @SpringBean PreferencesService preferencesService;
 
     private AssistantPanel chat;
+
+    private CompoundPropertyModel<AssistantSidebarPrefs> sidebarPrefs;
+    private IModel<Boolean> debugMode;
 
     public AssistantSidebar(String aId, AnnotationActionHandler aActionHandler,
             CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
         super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
+        sidebarPrefs = new CompoundPropertyModel<>(Model.of(loadSidebarPrefs()));
+
+        debugMode = new LambdaModelAdapter<>( //
+                () -> assistantService.isDebugMode(userService.getCurrentUsername(),
+                        getModelObject().getProject()), //
+                onOff -> assistantService.setDebugMode(userService.getCurrentUsername(),
+                        getModelObject().getProject(), onOff));
+
         chat = new AssistantPanel("chat");
         queue(chat);
 
-        queue(new LambdaAjaxLink("reindex", this::actionReindex));
+        var form = new Form<>("form", sidebarPrefs);
+        add(form);
 
-        queue(new LambdaAjaxLink("clear", this::actionClear));
+        form.add(new LambdaAjaxLink("reindex", this::actionReindex));
+
+        form.add(new LambdaAjaxLink("clear", this::actionClear));
+
+        form.add(new IconToggleBox("watchMode") //
+                .setCheckedIcon(FontAwesome6IconType.eye_s) //
+                .setCheckedTitle(Model.of("Watching annotation actions and commenting")) //
+                .setUncheckedIcon(FontAwesome6IconType.eye_slash_s) //
+                .setUncheckedTitle(Model.of("Not watching annotation actions")) //
+                .add(new LambdaAjaxFormSubmittingBehavior(CHANGE_EVENT,
+                        _target -> saveSidebarPrefs())));
+
+        form.add(new IconToggleBox("debugMode") //
+                .setCheckedIcon(FontAwesome6IconType.bug_s) //
+                .setCheckedTitle(Model.of("Recording and showing internal messages")) //
+                .setUncheckedIcon(FontAwesome6IconType.bug_slash_s) //
+                .setUncheckedTitle(Model.of("Not recoording and showing internal messages")) //
+                .setModel(debugMode) //
+                .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                        _target -> _target.add(chat))));
+    }
+
+    private AssistantSidebarPrefs loadSidebarPrefs()
+    {
+        var sessionOwner = userService.getCurrentUser();
+        return preferencesService.loadTraitsForUserAndProject(KEY_ASSISTANT_SIDEBAR_PREFS,
+                sessionOwner, getModelObject().getProject());
+    }
+
+    private void saveSidebarPrefs()
+    {
+        var sessionOwner = userService.getCurrentUser();
+        preferencesService.saveTraitsForUserAndProject(KEY_ASSISTANT_SIDEBAR_PREFS, sessionOwner,
+                getModelObject().getProject(), sidebarPrefs.getObject());
     }
 
     private void actionReindex(AjaxRequestTarget aTarget)
     {
-        documentQueryService.rebuildIndexAsync(getAnnotationPage().getProject());
+        documentQueryService.rebuildIndexAsync(getModelObject().getProject());
     }
 
     private void actionClear(AjaxRequestTarget aTarget)
     {
         var sessionOwner = userService.getCurrentUsername();
-        var project = getAnnotationPage().getProject();
+        var project = getModelObject().getProject();
         assistantService.clearConversation(sessionOwner, project);
+    }
+
+    @OnEvent
+    public void onFeatureValueUpdated(FeatureValueUpdatedEvent aEvent)
+    {
+        if (!sidebarPrefs.map(AssistantSidebarPrefs::isWatchMode).orElse(false).getObject()
+                && aEvent.getNewValue() == null) {
+            return;
+        }
+
+        var sessionOwner = userService.getCurrentUser();
+
+        schedulingService.enqueue(WatchAnnotationTask.builder() //
+                .withTrigger("Assistant watching") //
+                .withSessionOwner(sessionOwner) //
+                .withProject(aEvent.getProject()) //
+                .withDocument(aEvent.getDocument()) //
+                .withDataOwner(aEvent.getDocumentOwner()) //
+                .withAnnotation(VID.of(aEvent.getFS())) //
+                .build());
     }
 }

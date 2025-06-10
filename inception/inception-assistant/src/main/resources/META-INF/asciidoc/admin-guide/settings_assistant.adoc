@@ -173,6 +173,14 @@ Tune the balance between more randomness (high >= 1.0) and less randomness (low,
 | `0.8`
 | `0.5`
 
+| `assistant.documents.unit-overlap`
+| Overlap between indexed chunks. 
+  When overlapping chunks are retrieved, they are used to reconstruct a consecutive larger chunk of the document which is then passed on to the model.
+  As a consequence, source attribution will link to a larger region of the document.
+  However, the response from the LLM may be more coherent.
+| `0`
+| `1`
+
 | `assistant.documents.idle-eviction-delay`
 | How often the index pool is checked for idle indexes.
 | `5m`
@@ -187,6 +195,7 @@ Tune the balance between more randomness (high >= 1.0) and less randomness (low,
 | How long to wait for access to an index before timing out.
 | `3m`
 | `15s`
+
 |===
 
 .Settings related to the user guide integration

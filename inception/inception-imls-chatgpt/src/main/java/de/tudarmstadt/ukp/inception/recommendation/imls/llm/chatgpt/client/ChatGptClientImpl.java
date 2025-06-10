@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client;
 
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Comparator.comparing;
 import static org.apache.commons.lang3.StringUtils.appendIfMissing;
@@ -96,10 +97,16 @@ public class ChatGptClientImpl
     }
 
     @Override
-    public String generate(String aUrl, ChatCompletionRequest aRequest) throws IOException
+    public String chat(String aUrl, ChatCompletionRequest aRequest) throws IOException
     {
+        var startTime = System.currentTimeMillis();
+
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Sending chat request: {}", JSONUtil.toPrettyJsonString(aRequest));
+        }
+
         var request = HttpRequest.newBuilder() //
-                .uri(URI.create(appendIfMissing(aUrl, "/") + "chat/completions")) //
+                .uri(URI.create(appendIfMissing(aUrl, "/") + "v1/chat/completions")) //
                 .header(CONTENT_TYPE, "application/json") //
                 .header(AUTHORIZATION, "Bearer " + aRequest.getApiKey()) //
                 .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
@@ -141,7 +148,8 @@ public class ChatGptClientImpl
 
             var completion = objectMapper.readValue(buffer, ChatCompletionResponse.class);
 
-            if (LOG.isDebugEnabled()) {
+            if (LOG.isDebugEnabled() && completion.getTimeInfo() != null
+                    && completion.getUsage() != null) {
                 var promptEvalTokenPerSecond = completion.getUsage().getPromptTokens()
                         / completion.getTimeInfo().getPromptTime();
                 var evalTokenPerSecond = completion.getUsage().getCompletionTokens()
@@ -161,13 +169,16 @@ public class ChatGptClientImpl
             result.append(completion.getChoices().get(0).getMessage().getContent());
         }
 
+        LOG.trace("[{}] responds ({} ms): [{}]", aRequest.getModel(),
+                currentTimeMillis() - startTime, result.toString());
+
         return result.toString();
     }
 
     public List<ChatGptModel> listModels(String aUrl, ListModelsRequest aRequest) throws IOException
     {
         var request = HttpRequest.newBuilder() //
-                .uri(URI.create(appendIfMissing(aUrl, "/") + "models")) //
+                .uri(URI.create(appendIfMissing(aUrl, "/") + "v1/models")) //
                 .header(CONTENT_TYPE, "application/json").GET() //
                 .header(AUTHORIZATION, "Bearer " + aRequest.getApiKey()) //
                 .timeout(Duration.ofSeconds(10)) //

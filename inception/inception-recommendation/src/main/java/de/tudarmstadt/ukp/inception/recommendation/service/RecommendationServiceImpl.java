@@ -23,8 +23,11 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
+import static java.util.Collections.emptySet;
+import static java.util.Optional.empty;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -46,8 +49,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.Validate;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -110,6 +111,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingInstance;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
@@ -341,21 +343,6 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    @Transactional
-    public List<Recommender> listRecommenders(Project aProject)
-    {
-        var cb = entityManager.getCriteriaBuilder();
-        var query = cb.createQuery(Recommender.class);
-        var root = query.from(Recommender.class);
-
-        query.select(root) //
-                .where(cb.equal(root.get(Recommender_.project), aProject)) //
-                .orderBy(cb.asc(root.get(Recommender_.name)));
-
-        return entityManager.createQuery(query).getResultList();
-    }
-
-    @Override
     public List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject)
     {
         var cb = entityManager.getCriteriaBuilder();
@@ -438,6 +425,57 @@ public class RecommendationServiceImpl
 
     @Override
     @Transactional
+    public List<Recommender> listRecommenders(Project aProject)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(Recommender.class);
+        var root = query.from(Recommender.class);
+
+        query.select(root) //
+                .where(cb.equal(root.get(Recommender_.project), aProject)) //
+                .orderBy(cb.asc(root.get(Recommender_.name)));
+
+        return entityManager.createQuery(query).getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<Recommender> listEnabledRecommenders(Project aProject)
+    {
+        var query = String.join("\n", //
+                "FROM Recommender WHERE", //
+                "project = :project AND", //
+                "enabled = :enabled", //
+                "ORDER BY name ASC");
+
+        return entityManager.createQuery(query, Recommender.class) //
+                .setParameter("project", aProject) //
+                .setParameter("enabled", true) //
+                .getResultList() //
+                .stream() //
+                .filter(rec -> getRecommenderFactory(rec).isPresent()) //
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public List<Recommender> listRecommenders(AnnotationLayer aLayer)
+    {
+        var query = String.join("\n", //
+                "FROM Recommender WHERE ", //
+                "layer = :layer", //
+                "ORDER BY name ASC");
+
+        return entityManager.createQuery(query, Recommender.class) //
+                .setParameter("layer", aLayer) //
+                .getResultList() //
+                .stream() //
+                .filter(rec -> getRecommenderFactory(rec).isPresent()) //
+                .toList();
+    }
+
+    @Override
+    @Transactional
     public List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer)
     {
         String query = String.join("\n", //
@@ -451,36 +489,6 @@ public class RecommendationServiceImpl
                 .setParameter("project", aLayer.getProject()) //
                 .setParameter("layer", aLayer) //
                 .setParameter("enabled", true) //
-                .getResultList();
-    }
-
-    @Override
-    @Transactional
-    public List<Recommender> listEnabledRecommenders(Project aProject)
-    {
-        String query = String.join("\n", //
-                "FROM Recommender WHERE", //
-                "project = :project AND", //
-                "enabled = :enabled", //
-                "ORDER BY name ASC");
-
-        return entityManager.createQuery(query, Recommender.class) //
-                .setParameter("project", aProject) //
-                .setParameter("enabled", true) //
-                .getResultList();
-    }
-
-    @Override
-    @Transactional
-    public List<Recommender> listRecommenders(AnnotationLayer aLayer)
-    {
-        String query = String.join("\n", //
-                "FROM Recommender WHERE ", //
-                "layer = :layer", //
-                "ORDER BY name ASC");
-
-        return entityManager.createQuery(query, Recommender.class) //
-                .setParameter("layer", aLayer) //
                 .getResultList();
     }
 
@@ -520,12 +528,7 @@ public class RecommendationServiceImpl
         // actions.
         var trigger = aEvent.getClass().getSimpleName();
         if (!predictionSessionExistedOnOpen) {
-            // Activate all non-trainable recommenders - execute synchronously - blocking
-            schedulingService.executeSync(NonTrainableRecommenderActivationTask.builder() //
-                    .withSessionOwner(sessionOwner) //
-                    .withProject(project) //
-                    .withTrigger(trigger) //
-                    .build());
+            activateNonTrainableRecommenersSync(project, sessionOwner, trigger);
         }
 
         // Check if there are any synchronous recommenders we need to run
@@ -537,7 +540,7 @@ public class RecommendationServiceImpl
 
         // Check if we need to wait for the initial recommender run before displaying the document
         // to the user
-        var predictionTriggered = nonTrainableRecommenderRunSync(doc, predictions, sessionOwner,
+        var predictionTriggered = runNonTrainableRecommenderSync(doc, predictions, sessionOwner,
                 trigger, dataOwner);
 
         // Is it the first time a document has been opened? If yes, there might be auto-accept
@@ -574,16 +577,27 @@ public class RecommendationServiceImpl
         }
     }
 
-    private boolean nonTrainableRecommenderRunSync(SourceDocument doc, Predictions predictions,
+    private void activateNonTrainableRecommenersSync(Project project, User sessionOwner,
+            String trigger)
+    {
+        if (sessionOwner == null || project.getId() == null) {
+            LOG.trace("Not activating non-trainable recommenders because we are outside a user "
+                    + "session or project has not yet been persisted");
+            return;
+        }
+
+        // Activate all non-trainable recommenders - execute synchronously - blocking
+        schedulingService.executeSync(NonTrainableRecommenderActivationTask.builder() //
+                .withSessionOwner(sessionOwner) //
+                .withProject(project) //
+                .withTrigger(trigger) //
+                .build());
+    }
+
+    private boolean runNonTrainableRecommenderSync(SourceDocument doc, Predictions predictions,
             User aSessionOwner, String trigger, String aDataOwner)
     {
         if (isSuspended(aSessionOwner.getUsername(), doc.getProject())) {
-            return false;
-        }
-
-        if (predictions != null && predictions.hasRunPredictionOnDocument(doc)) {
-            LOG.trace("Not running sync prediction for non-trainable recommenders as we already "
-                    + "have predictions");
             return false;
         }
 
@@ -592,6 +606,12 @@ public class RecommendationServiceImpl
         if (!settings.isWaitForRecommendersOnOpenDocument()) {
             LOG.trace("Not running sync prediction for non-trainable recommenders because the "
                     + "option is not enabled in the project settings");
+            return false;
+        }
+
+        if (predictions != null && predictions.hasRunPredictionOnDocument(doc)) {
+            LOG.trace("Not running sync prediction for non-trainable recommenders as we already "
+                    + "have predictions");
             return false;
         }
 
@@ -657,7 +677,7 @@ public class RecommendationServiceImpl
             AutoAcceptMode aAutoAcceptMode, Predictions predictions, CAS cas)
     {
         var accepted = 0;
-        var recommenderCache = listRecommenders(aDocument.getProject()).stream()
+        var recommenderCache = listEnabledRecommenders(aDocument.getProject()).stream()
                 .collect(toMap(Recommender::getId, identity()));
         var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
 
@@ -724,7 +744,38 @@ public class RecommendationServiceImpl
             requestCycle.setMetaData(DIRTIES, dirties);
         }
 
-        dirties.add(new DirtySpot(aEvent));
+        var incrementalTrainingData = new LinkedHashMap<Recommender, List<TrainingInstance>>();
+        var sessionOwner = userRepository.getCurrentUser();
+        var recommenders = getActiveRecommenders(sessionOwner, aEvent.getProject()).stream() //
+                .map(EvaluatedRecommender::getRecommender) //
+                .filter(Recommender::isEnabled) //
+                .filter(rec -> rec.getLayer() != null) //
+                .filter(rec -> rec.getLayer().isEnabled()) //
+                .filter(rec -> rec.getFeature().isEnabled()) //
+                .filter(rec -> rec.getLayer().equals(aEvent.getLayer())) //
+                .toList();
+
+        for (var recommender : recommenders) {
+            try {
+                var maybeFactory = getRecommenderFactory(recommender);
+                if (maybeFactory.isEmpty()) {
+                    continue;
+                }
+
+                var factory = maybeFactory.get();
+                var engine = factory.build(recommender);
+
+                incrementalTrainingData.computeIfAbsent(recommender, $ -> new ArrayList<>()) //
+                        .addAll(engine.generateIncrementalTrainingInstances(aEvent));
+            }
+            catch (Exception e) {
+                LOG.warn("Unable to collect incremental training data for active recommender {}",
+                        recommender);
+                continue;
+            }
+        }
+
+        dirties.add(new DirtySpot(aEvent, incrementalTrainingData));
     }
 
     /*
@@ -828,12 +879,6 @@ public class RecommendationServiceImpl
     }
 
     @EventListener
-    public void onRecommenderUpdated(RecommenderUpdatedEvent aEvent)
-    {
-        resetState(aEvent.getRecommender().getProject());
-    }
-
-    @EventListener
     public void onRecommenderDelete(RecommenderDeletedEvent aEvent)
     {
         // When removing a recommender, it is sufficient to delete its predictions from the current
@@ -843,16 +888,41 @@ public class RecommendationServiceImpl
     }
 
     @EventListener
+    public void onRecommenderUpdated(RecommenderUpdatedEvent aEvent)
+    {
+        removePredictions(aEvent.getRecommender());
+
+        var sessionOwner = userRepository.getCurrentUser();
+        var project = aEvent.getRecommender().getProject();
+
+        activateNonTrainableRecommenersSync(project, sessionOwner, "onRecommenderUpdated");
+    }
+
+    @EventListener
     public void onDocumentCreated(AfterDocumentCreatedEvent aEvent)
     {
-        resetState(aEvent.getDocument().getProject());
+        // I don't think we need to reset the state when a new document is created. Sure, we can get
+        // new training data if the document has been pre-annotated, but we will pick that up during
+        // the next training run regularly.
+        // resetState(aEvent.getDocument().getProject());
     }
 
     @EventListener
     public void onDocumentRemoval(BeforeDocumentRemovedEvent aEvent)
     {
-        resetState(aEvent.getDocument().getProject());
+        // I think we reset the state here primarily to remove predictions on documents which have
+        // been removed. Seems a bit of an overkill though.
+        // resetState(aEvent.getDocument().getProject());
         deleteLearningRecords(aEvent.getDocument());
+    }
+
+    @EventListener
+    public void onLayerConfigurationChangedEvent(LayerConfigurationChangedEvent aEvent)
+    {
+        // I think we reset the state here to ensure that we do not have any annotation suggestions
+        // that contradict the new layer configuration. In particular, since we do not know what
+        // actually changed in the schema.
+        resetState(aEvent.getProject());
     }
 
     @EventListener
@@ -865,12 +935,6 @@ public class RecommendationServiceImpl
     public void onAfterProjectRemoved(AfterProjectRemovedEvent aEvent)
     {
         clearState(aEvent.getProject());
-    }
-
-    @EventListener
-    public void onLayerConfigurationChangedEvent(LayerConfigurationChangedEvent aEvent)
-    {
-        resetState(aEvent.getProject());
     }
 
     @Override
@@ -904,7 +968,7 @@ public class RecommendationServiceImpl
         }
 
         triggerTraining(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, false,
-                null);
+                emptySet());
     }
 
     @Override
@@ -916,7 +980,7 @@ public class RecommendationServiceImpl
         }
 
         triggerTraining(aSessionOwner, aProject, aEventName, aCurrentDocument, aDataOwner, true,
-                null);
+                emptySet());
     }
 
     private void triggerTraining(String aSessionOwner, Project aProject, String aEventName,
@@ -927,15 +991,17 @@ public class RecommendationServiceImpl
             return;
         }
 
-        var user = userRepository.get(aSessionOwner);
-        // do not trigger training during when viewing others' work
-        if (user == null || !user.equals(userRepository.getCurrentUser())) {
+        // Do not trigger training during when viewing others' work
+        var sessionOwner = userRepository.get(aSessionOwner);
+        if (sessionOwner == null || !sessionOwner.equals(userRepository.getCurrentUser())) {
             return;
         }
 
+        commitIncrementalTrainingData(aSessionOwner, aDirties);
+
         // Update the task count
         var count = trainingTaskCounter.computeIfAbsent(
-                new RecommendationStateKey(user.getUsername(), aProject),
+                new RecommendationStateKey(aSessionOwner, aProject.getId()),
                 _key -> new AtomicInteger(0));
 
         // If there is no active recommender at all then let's try hard to make one active by
@@ -945,39 +1011,99 @@ public class RecommendationServiceImpl
         }
 
         if (aForceSelection || (count.getAndIncrement() % TRAININGS_PER_SELECTION == 0)) {
-            // If it is time for a selection task, we just start a selection task.
-            // The selection task then will start the training once its finished,
-            // i.e. we do not start it here.
-            schedulingService.enqueue(SelectionTask.builder() //
-                    .withSessionOwner(user) //
-                    .withProject(aProject) //
-                    .withTrigger(aEventName) //
-                    .withCurrentDocument(aCurrentDocument) //
-                    .withDataOwner(aDataOwner) //
-                    .build());
+            triggerSelectionRun(sessionOwner, aProject, aCurrentDocument, aDataOwner, aEventName);
+            return;
+        }
 
-            var state = getState(aSessionOwner, aProject);
-            synchronized (state) {
-                state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - 1);
-                state.setPredictionsSinceLastEvaluation(0);
+        triggerTrainingRun(sessionOwner, aProject, aCurrentDocument, aDataOwner, aEventName);
+    }
+
+    private void commitIncrementalTrainingData(String aSessionOwner, Set<DirtySpot> aDirties)
+    {
+        if (isEmpty(aDirties)) {
+            return;
+        }
+
+        var aggregatedIncrementalTrainingData = new LinkedHashMap<Recommender, List<TrainingInstance>>();
+        for (var dirtySpot : aDirties) {
+            for (var entry : dirtySpot.getIncrementalTrainingData().entrySet()) {
+                var recommender = entry.getKey();
+                aggregatedIncrementalTrainingData
+                        .computeIfAbsent(recommender, $ -> new ArrayList<>()) //
+                        .addAll(entry.getValue());
+            }
+        }
+
+        for (var entry : aggregatedIncrementalTrainingData.entrySet()) {
+            var recommender = entry.getKey();
+            var maybeContext = getContext(aSessionOwner, recommender);
+            if (maybeContext.isEmpty()) {
+                continue;
             }
 
+            try {
+                var maybeFactory = getRecommenderFactory(recommender);
+                if (maybeFactory.isEmpty()) {
+                    continue;
+                }
+
+                var factory = maybeFactory.get();
+                var engine = factory.build(recommender);
+                engine.putIncrementalTrainingData(maybeContext.get(), entry.getValue());
+            }
+            catch (Exception e) {
+                LOG.warn("Unable to collect incremental training data for active recommender {}",
+                        recommender);
+                continue;
+            }
+        }
+    }
+
+    private void triggerTrainingRun(User aSessionOwner, Project aProject, SourceDocument aDocument,
+            String aDataOwner, String aTrigger)
+    {
+        if (isSuspended(aSessionOwner.getUsername(), aProject)) {
             return;
         }
 
         schedulingService.enqueue(TrainingTask.builder() //
-                .withSessionOwner(user) //
+                .withSessionOwner(aSessionOwner) //
                 .withProject(aProject) //
-                .withTrigger(aEventName) //
-                .withCurrentDocument(aCurrentDocument) //
+                .withTrigger(aTrigger) //
+                .withCurrentDocument(aDocument) //
                 .withDataOwner(aDataOwner) //
                 .build());
 
-        var state = getState(aSessionOwner, aProject);
+        var state = getState(aSessionOwner.getUsername(), aProject);
         synchronized (state) {
             int predictions = state.getPredictionsSinceLastEvaluation() + 1;
             state.setPredictionsSinceLastEvaluation(predictions);
             state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - predictions - 1);
+        }
+    }
+
+    private void triggerSelectionRun(User aSessionOwner, Project aProject, SourceDocument aDocument,
+            String aDataOwner, String aEventName)
+    {
+        if (isSuspended(aSessionOwner.getUsername(), aProject)) {
+            return;
+        }
+
+        // If it is time for a selection task, we just start a selection task.
+        // The selection task then will start the training once its finished,
+        // i.e. we do not start it here.
+        schedulingService.enqueue(SelectionTask.builder() //
+                .withSessionOwner(aSessionOwner) //
+                .withProject(aProject) //
+                .withTrigger(aEventName) //
+                .withCurrentDocument(aDocument) //
+                .withDataOwner(aDataOwner) //
+                .build());
+
+        var state = getState(aSessionOwner.getUsername(), aProject);
+        synchronized (state) {
+            state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - 1);
+            state.setPredictionsSinceLastEvaluation(0);
         }
     }
 
@@ -1096,13 +1222,18 @@ public class RecommendationServiceImpl
     @Override
     public Optional<RecommendationEngineFactory<?>> getRecommenderFactory(Recommender aRecommender)
     {
+        if (aRecommender == null) {
+            return empty();
+        }
+
         return Optional.ofNullable(recommenderFactoryRegistry.getFactory(aRecommender.getTool()));
     }
 
     private RecommendationState getState(String aSessionOwner, Project aProject)
     {
         synchronized (states) {
-            return states.computeIfAbsent(new RecommendationStateKey(aSessionOwner, aProject),
+            return states.computeIfAbsent(
+                    new RecommendationStateKey(aSessionOwner, aProject.getId()),
                     (v) -> new RecommendationState());
         }
     }
@@ -1114,9 +1245,9 @@ public class RecommendationServiceImpl
 
         synchronized (states) {
             states.entrySet().stream() //
-                    .filter(e -> aSessionOwner.equals(e.getKey().getUser()))
+                    .filter(e -> aSessionOwner.equals(e.getKey().user()))
                     .forEach(e -> e.getValue().reset());
-            trainingTaskCounter.keySet().removeIf(key -> aSessionOwner.equals(key.getUser()));
+            trainingTaskCounter.keySet().removeIf(key -> aSessionOwner.equals(key.user()));
         }
     }
 
@@ -1125,8 +1256,8 @@ public class RecommendationServiceImpl
         Validate.notNull(aSessionOwner, "Username must be specified");
 
         synchronized (states) {
-            states.keySet().removeIf(key -> aSessionOwner.equals(key.getUser()));
-            trainingTaskCounter.keySet().removeIf(key -> aSessionOwner.equals(key.getUser()));
+            states.keySet().removeIf(key -> aSessionOwner.equals(key.user()));
+            trainingTaskCounter.keySet().removeIf(key -> aSessionOwner.equals(key.user()));
         }
     }
 
@@ -1136,10 +1267,10 @@ public class RecommendationServiceImpl
 
         synchronized (states) {
             states.entrySet().stream() //
-                    .filter(e -> Objects.equals(aProject.getId(), e.getKey().getProjectId()))
+                    .filter(e -> Objects.equals(aProject.getId(), e.getKey().projectId()))
                     .forEach(e -> e.getValue().reset());
             trainingTaskCounter.keySet()
-                    .removeIf(key -> Objects.equals(aProject.getId(), key.getProjectId()));
+                    .removeIf(key -> Objects.equals(aProject.getId(), key.projectId()));
         }
     }
 
@@ -1148,9 +1279,9 @@ public class RecommendationServiceImpl
         Validate.notNull(aProject, "Project must be specified");
 
         synchronized (states) {
-            states.keySet().removeIf(key -> Objects.equals(aProject.getId(), key.getProjectId()));
+            states.keySet().removeIf(key -> Objects.equals(aProject.getId(), key.projectId()));
             trainingTaskCounter.keySet()
-                    .removeIf(key -> Objects.equals(aProject.getId(), key.getProjectId()));
+                    .removeIf(key -> Objects.equals(aProject.getId(), key.projectId()));
         }
     }
 
@@ -1161,7 +1292,7 @@ public class RecommendationServiceImpl
         synchronized (states) {
             states.entrySet().stream()
                     .filter(entry -> Objects.equals(aRecommender.getProject().getId(),
-                            entry.getKey().getProjectId()))
+                            entry.getKey().projectId()))
                     .forEach(entry -> entry.getValue().removePredictions(aRecommender));
         }
     }
@@ -1312,49 +1443,7 @@ public class RecommendationServiceImpl
         }
     }
 
-    private static class RecommendationStateKey
-    {
-        private final String user;
-        private final long projectId;
-
-        public RecommendationStateKey(String aUser, long aProjectId)
-        {
-            user = aUser;
-            projectId = aProjectId;
-        }
-
-        public RecommendationStateKey(String aUser, Project aProject)
-        {
-            this(aUser, aProject.getId());
-        }
-
-        public long getProjectId()
-        {
-            return projectId;
-        }
-
-        public String getUser()
-        {
-            return user;
-        }
-
-        @Override
-        public boolean equals(final Object other)
-        {
-            if (!(other instanceof RecommendationStateKey)) {
-                return false;
-            }
-            RecommendationStateKey castOther = (RecommendationStateKey) other;
-            return new EqualsBuilder().append(user, castOther.user)
-                    .append(projectId, castOther.projectId).isEquals();
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return new HashCodeBuilder().append(user).append(projectId).toHashCode();
-        }
-    }
+    private static record RecommendationStateKey(String user, long projectId) {}
 
     /**
      * We are assuming that the user is actively working on one project at a time. Otherwise, the
@@ -1550,7 +1639,6 @@ public class RecommendationServiceImpl
             var newEvaluatedRecommenders = //
                     new HashSetValuedHashMap<AnnotationLayer, EvaluatedRecommender>();
             var it = evaluatedRecommenders.mapIterator();
-
             while (it.hasNext()) {
                 var layer = it.next();
                 var rec = it.getValue();
@@ -1688,7 +1776,7 @@ public class RecommendationServiceImpl
             var affectedProjects = dirties.stream() //
                     .map(DirtySpot::getProject) //
                     .distinct() //
-                    .collect(toMap(p -> p.getId(), p -> p));
+                    .collect(toMap(Project::getId, p -> p));
             for (var project : affectedProjects.values()) {
                 if (projectService.getProject(project.getId()) == null) {
                     dirties.removeIf(dirty -> dirty.getProject().equals(project));
@@ -1703,7 +1791,7 @@ public class RecommendationServiceImpl
 
             for (var contextDirties : dirtiesByContext.entrySet()) {
                 var key = contextDirties.getKey();
-                triggerTraining(key.getUser(), affectedProjects.get(key.getProjectId()),
+                triggerTraining(key.user(), affectedProjects.get(key.projectId()),
                         "Committed dirty CAS at end of request", currentDocument, dataOwner, false,
                         contextDirties.getValue());
             }

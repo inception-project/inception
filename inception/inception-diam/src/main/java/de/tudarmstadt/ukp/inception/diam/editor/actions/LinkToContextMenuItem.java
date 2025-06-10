@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
 import static de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider.getApplicationContext;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
+import static java.util.Arrays.asList;
 
 import java.io.IOException;
 
@@ -25,33 +27,70 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemContext;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemExtension;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
 
 public class LinkToContextMenuItem
     implements ContextMenuItemExtension
 {
-    @Override
-    public boolean accepts(AnnotationPageBase aPage)
-    {
-        var state = aPage.getModelObject();
+    private final AnnotationSchemaService schemaService;
+    private final CreateRelationAnnotationHandler createRelationAnnotationHandler;
 
-        return state.getSelection().isSpan();
+    public LinkToContextMenuItem(AnnotationSchemaService aSchemaService,
+            CreateRelationAnnotationHandler aCreateRelationAnnotationHandler)
+    {
+        schemaService = aSchemaService;
+        createRelationAnnotationHandler = aCreateRelationAnnotationHandler;
+    }
+
+    @Override
+    public boolean accepts(ContextMenuItemContext aCtx)
+    {
+        var state = aCtx.page().getModelObject();
+
+        // Origin of the relation needs to be a span
+        if (!state.getSelection().isSpan()) {
+            return false;
+        }
+
+        // Target also needs to be a span
+        try {
+            var cas = aCtx.page().getEditorCas();
+            var ann = selectAnnotationByAddr(cas, aCtx.vid().getId());
+            if (ann == null) {
+                return false;
+            }
+
+            var layer = schemaService.findLayer(state.getProject(), ann);
+            if (layer == null) {
+                return false;
+            }
+
+            return asList(SpanLayerSupport.TYPE, ChainLayerSupport.TYPE).contains(layer.getType());
+        }
+        catch (IOException e) {
+            return false;
+        }
     }
 
     @Override
     public IMenuItem createMenuItem(VID aVid, int aClientX, int aClientY)
     {
-        return new LambdaMenuItem("Link to ...", $ -> actionLinkTo($, aVid, aClientX, aClientY));
+        return new LambdaMenuItem("Link to ...", $ -> {
+            // Ensure that lambda is serializable
+            getApplicationContext() //
+                    .getBean(LinkToContextMenuItem.class) //
+                    .actionLinkTo($, aVid, aClientX, aClientY);
+        });
     }
 
-    /*
-     * This is a static method because it needs to be serializable!
-     */
-    private static void actionLinkTo(AjaxRequestTarget aTarget, VID paramId, int aClientX,
-            int aClientY)
+    private void actionLinkTo(AjaxRequestTarget aTarget, VID paramId, int aClientX, int aClientY)
         throws IOException, AnnotationException
     {
         var page = (AnnotationPageBase) aTarget.getPage();
@@ -68,10 +107,6 @@ public class LinkToContextMenuItem
         if (!state.getSelection().isSpan()) {
             return;
         }
-
-        // Need to fetch this here since the handler is not serializable
-        var createRelationAnnotationHandler = getApplicationContext()
-                .getBean(CreateRelationAnnotationHandler.class);
 
         createRelationAnnotationHandler.actionArc(maybeContextMenuLookup.get(), aTarget,
                 state.getSelection().getAnnotation(), paramId, aClientX, aClientY);

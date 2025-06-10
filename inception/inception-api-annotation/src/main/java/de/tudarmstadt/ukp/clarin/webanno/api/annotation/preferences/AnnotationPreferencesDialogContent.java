@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState.KEY_EDITOR_STATE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
+import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs.KEY_ANCHORING_MODE;
 import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference.FONT_ZOOM_MAX;
 import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference.FONT_ZOOM_MIN;
 import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference.SIDEBAR_SIZE_MAX;
@@ -181,6 +182,7 @@ public class AnnotationPreferencesDialogContent
     private void actionSave(AjaxRequestTarget aTarget, Form<Preferences> aForm)
     {
         try {
+            var sessionOwner = userDao.getCurrentUser();
             var state = stateModel.getObject();
             var model = form.getModelObject();
 
@@ -203,6 +205,12 @@ public class AnnotationPreferencesDialogContent
             // Make sure the visibility logic of the right sidebar sees if there are selectable
             // layers
             state.refreshSelectableLayers(annotationEditorProperties::isLayerBlocked);
+
+            if (state.getDefaultAnnotationLayer() != null) {
+                var anchoringPrefs = preferencesService.loadTraitsForUserAndProject(
+                        KEY_ANCHORING_MODE, sessionOwner, state.getProject());
+                state.syncAnchoringModeToDefaultLayer(anchoringPrefs);
+            }
 
             userPreferencesService.savePreferences(state, userDao.getCurrentUsername());
         }

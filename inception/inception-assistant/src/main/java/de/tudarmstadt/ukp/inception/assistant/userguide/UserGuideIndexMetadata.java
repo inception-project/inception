@@ -22,6 +22,4 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record UserGuideIndexMetadata(String version, String model, int dimension)
-{
-}
+public record UserGuideIndexMetadata(String version, String model, int dimension) {}

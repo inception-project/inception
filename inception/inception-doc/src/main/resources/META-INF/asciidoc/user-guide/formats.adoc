@@ -106,9 +106,9 @@ data in a particular format. The **feature flag** column shows which flags you c
 | `pdf2`
 | `format.pdf.enabled`
 
-| <<sect_formats_pdf_legacy>>
-| `pdf`
-| `format.pdf-legacy.enabled`
+// | <<sect_formats_pdf_legacy>>
+// | `pdf`
+// | `format.pdf-legacy.enabled`
 
 | <<sect_formats_text>>
 | `text`

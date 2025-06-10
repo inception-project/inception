@@ -95,9 +95,9 @@ public class CurationSidebarFactory
         if ((aContext instanceof AnnotationPage && curationSidebarProperties.isEnabled())
                 || aContext instanceof CurationPage) {
             var state = aContext.getModelObject();
-            var currentUser = userService.getCurrentUsername();
+            var sessionOwner = userService.getCurrentUsername();
             var isCurator = projectService.hasRole(state.getUser(), state.getProject(), CURATOR);
-            return isCurator && state.getUser().getUsername().equals(currentUser);
+            return isCurator && state.getUser().getUsername().equals(sessionOwner);
         }
 
         return false;

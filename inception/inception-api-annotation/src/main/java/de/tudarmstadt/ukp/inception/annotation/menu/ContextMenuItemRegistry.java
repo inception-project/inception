@@ -17,10 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.menu;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
 public interface ContextMenuItemRegistry
-    extends ExtensionPoint<AnnotationPageBase, ContextMenuItemExtension>
+    extends ExtensionPoint<ContextMenuItemContext, ContextMenuItemExtension>
 {
 }

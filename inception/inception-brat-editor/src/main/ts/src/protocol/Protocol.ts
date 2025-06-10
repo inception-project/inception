@@ -22,7 +22,7 @@ export type VID = string | number
 export type CommentType = 'AnnotatorNotes' | 'EditHighlight' | 'AnnotationError'
   | 'AnnotationIncomplete' | 'AnnotationUnconfirmed' | 'AnnotationWarning' | 'MissingAnnotation'
   | 'ChangedAnnotation' | 'Normalized' | 'True_positive' | 'False_positive' | 'False_negative'
-export type MarkerType = 'edited' | 'focus' | 'matchfocus' | 'match'
+export type MarkerType = 'edited' | 'focus' | 'matchfocus' | 'match' | 'warn'
 export type ClippedState = '' | 's' | 'e' | 'se'
 export type ColorCode = string
 
@@ -265,6 +265,7 @@ export type SourceData = {
   events: Array<EventDto>; // deprecated?
 }
 
+export const WARN: MarkerType = 'warn'
 export const EDITED: MarkerType = 'edited'
 export const FOCUS: MarkerType = 'focus'
 export const MATCH_FOCUS: MarkerType = 'matchfocus'

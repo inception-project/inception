@@ -107,6 +107,6 @@ public class RemoveDanglingRelationsRepairTest
 
         assertFalse(result);
 
-        messages.forEach(System.out::println);
+        // messages.forEach(System.out::println);
     }
 }

@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptingMode;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionMode;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Preset
@@ -33,11 +32,7 @@ public class Preset
 
     private String name;
 
-    private String model;
-
     private String prompt;
-
-    private ResponseFormat format;
 
     private PromptingMode promptingMode = PromptingMode.PER_ANNOTATION;
 
@@ -51,16 +46,6 @@ public class Preset
     public void setName(String aName)
     {
         name = aName;
-    }
-
-    public String getModel()
-    {
-        return model;
-    }
-
-    public void setModel(String aModel)
-    {
-        model = aModel;
     }
 
     public String getPrompt()
@@ -81,16 +66,6 @@ public class Preset
     public void setPromptingMode(PromptingMode aPromptingMode)
     {
         promptingMode = aPromptingMode;
-    }
-
-    public ResponseFormat getFormat()
-    {
-        return format;
-    }
-
-    public void setFormat(ResponseFormat aFormat)
-    {
-        format = aFormat;
     }
 
     public ExtractionMode getExtractionMode()

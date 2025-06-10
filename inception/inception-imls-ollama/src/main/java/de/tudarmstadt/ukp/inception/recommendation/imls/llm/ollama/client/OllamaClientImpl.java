@@ -18,10 +18,12 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.appendIfMissing;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
@@ -47,6 +49,8 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 public class OllamaClientImpl
     implements OllamaClient
 {
+    private static final String APPLICATION_JSON = "application/json";
+
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
@@ -103,7 +107,7 @@ public class OllamaClientImpl
     {
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(aUrl, "/") + "api/generate")) //
-                .header(CONTENT_TYPE, "application/json")
+                .header(CONTENT_TYPE, APPLICATION_JSON)
                 .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
                 .build();
 
@@ -113,7 +117,14 @@ public class OllamaClientImpl
 
         var result = new StringBuilder();
         try (var is = rawResponse.body()) {
-            var iter = objectMapper.readerFor(OllamaGenerateResponse.class).readValues(is);
+            var effectiveIs = is;
+            if (LOG.isTraceEnabled()) {
+                var json = new String(is.readAllBytes(), UTF_8);
+                LOG.trace("Response: {}", json);
+                effectiveIs = new ByteArrayInputStream(json.getBytes(UTF_8));
+            }
+
+            var iter = objectMapper.readerFor(OllamaGenerateResponse.class).readValues(effectiveIs);
             while (iter.hasNext()) {
                 var response = (OllamaGenerateResponse) iter.nextValue();
 
@@ -133,10 +144,12 @@ public class OllamaClientImpl
     }
 
     @Override
-    public OllamaChatResponse generate(String aUrl, OllamaChatRequest aRequest,
+    public OllamaChatResponse chat(String aUrl, OllamaChatRequest aRequest,
             Consumer<OllamaChatResponse> aCallback)
         throws IOException
     {
+        var startTime = currentTimeMillis();
+
         if (LOG.isTraceEnabled()) {
             LOG.trace("Sending chat request: {}", JSONUtil.toPrettyJsonString(aRequest));
         }
@@ -171,8 +184,15 @@ public class OllamaClientImpl
             }
         }
 
-        var role = finalResponse.getMessage().role();
-        finalResponse.setMessage(new OllamaChatMessage(role, result.toString().trim()));
+        if (finalResponse == null) {
+            throw new IOException("Request returned without a response");
+        }
+
+        finalResponse.setMessage(
+                new OllamaChatMessage(finalResponse.getMessage().role(), result.toString().trim()));
+
+        LOG.trace("[{}] responds ({} ms): [{}]", aRequest.getModel(),
+                currentTimeMillis() - startTime, finalResponse.getMessage().content());
 
         return finalResponse;
     }
@@ -254,7 +274,7 @@ public class OllamaClientImpl
     {
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(aUrl, "/") + "api/tags")) //
-                .header(CONTENT_TYPE, "application/json").GET() //
+                .header(CONTENT_TYPE, APPLICATION_JSON).GET() //
                 .timeout(TIMEOUT) //
                 .build();
 

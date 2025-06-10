@@ -17,29 +17,57 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContext;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
-public interface ResponseExtractor
+public sealed interface ResponseExtractor
+    permits MentionsFromStructuredOutputExtractor, MentionsFromJsonExtractor,
+    ResponseAsLabelExtractor
 {
-    void extract(RecommendationEngine aEngine, CAS aCas, PromptContext aCandidate,
-            String aResponse);
+    void extractMentions(RecommendationEngine aEngine, CAS aCas, PromptContext aCandidate,
+            String aResponse)
+        throws IOException;
 
-    List<MentionsSample> generate(RecommendationEngine aEngine, CAS aCas, int aNum);
+    Map<String, MentionResult> generateExamples(RecommendationEngine aEngine, CAS aCas, int aNum);
 
-    static ResponseExtractor getResponseExtractor(ExtractionMode aMode)
+    default Optional<JsonNode> getJsonSchema(Recommender aRecommender,
+            AnnotationSchemaService aSchemaService, LlmRecommenderTraits aTraits)
     {
-        switch (aMode) {
+        return Optional.empty();
+    }
+
+    static ResponseExtractor getResponseExtractor(LlmRecommenderTraits aTraits)
+    {
+        switch (aTraits.getExtractionMode()) {
         case RESPONSE_AS_LABEL:
             return new ResponseAsLabelExtractor();
         case MENTIONS_FROM_JSON:
-            return new MentionsFromJsonExtractor();
+            if (aTraits.isStructuredOutputSupported()) {
+                return new MentionsFromStructuredOutputExtractor();
+            }
+            else {
+                return new MentionsFromJsonExtractor();
+            }
         default:
-            throw new IllegalArgumentException("Unsupported extraction mode [" + aMode + "]");
+            throw new IllegalArgumentException("Unsupported extraction mode [" + aTraits + "]");
         }
     }
+
+    List<? extends ChatMessage> getFormatDefiningMessages(Recommender aRecommender,
+            AnnotationSchemaService aSchemaService);
+
+    Optional<ResponseFormat> getResponseFormat();
 }

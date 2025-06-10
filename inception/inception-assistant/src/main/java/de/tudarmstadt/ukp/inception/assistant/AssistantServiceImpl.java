@@ -18,16 +18,22 @@
 package de.tudarmstadt.ukp.inception.assistant;
 
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonString;
 import static java.lang.Math.floorDiv;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
+import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -43,20 +49,28 @@ import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionRegistry;
 
 import com.knuddels.jtokkit.api.EncodingRegistry;
+import com.networknt.schema.JsonSchema;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
+import de.tudarmstadt.ukp.inception.assistant.model.MCallResponse;
+import de.tudarmstadt.ukp.inception.assistant.model.MChatMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MRemoveConversationCommand;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPoint;
+import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceKey;
+import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceMapValue;
+import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
+import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class AssistantServiceImpl
-    implements AssistantService
+    implements AssistantService, ClientSideUserPreferencesProvider
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -67,6 +81,11 @@ public class AssistantServiceImpl
     private final AssistantProperties properties;
     private final EncodingRegistry encodingRegistry;
     private final RetrieverExtensionPoint retrieverExtensionPoint;
+
+    private static final ClientSidePreferenceKey<ClientSidePreferenceMapValue> KEY_ASSISTANT_PREFS = //
+            new ClientSidePreferenceKey<>(ClientSidePreferenceMapValue.class, "assistant/general");
+
+    private WatchedResourceFile<JsonSchema> userPreferencesSchema;
 
     public AssistantServiceImpl(SessionRegistry aSessionRegistry,
             SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
@@ -80,6 +99,11 @@ public class AssistantServiceImpl
         properties = aProperties;
         encodingRegistry = aEncodingRegistry;
         retrieverExtensionPoint = aRetrieverExtensionPoint;
+
+        var userPreferencesSchemaFile = getClass()
+                .getResource("AssistantServiceUserPreferences.schema.json");
+        userPreferencesSchema = new WatchedResourceFile<>(userPreferencesSchemaFile,
+                JSONUtil::loadJsonSchema);
     }
 
     // Set order so this is handled before session info is removed from sessionRegistry
@@ -127,6 +151,7 @@ public class AssistantServiceImpl
         return state.getMessages().stream() //
                 .filter(MTextMessage.class::isInstance) //
                 .map(MTextMessage.class::cast) //
+                .filter(msg -> state.isDebugMode() || !msg.internal()) //
                 .toList();
     }
 
@@ -143,14 +168,25 @@ public class AssistantServiceImpl
                 .toList();
     }
 
-    void recordMessage(String aSessionOwner, Project aProject, MMessage aMessage)
+    void recordMessage(String aSessionOwner, Project aProject, MChatMessage aMessage)
     {
+        if (!isDebugMode(aSessionOwner, aProject) && aMessage.ephemeral()) {
+            return;
+        }
+
         var state = getState(aSessionOwner, aProject);
         state.upsertMessage(aMessage);
     }
 
-    void dispatchMessage(String aSessionOwner, Project aProject, MMessage aMessage)
+    @Override
+    public void dispatchMessage(String aSessionOwner, Project aProject, MMessage aMessage)
     {
+        if (aMessage instanceof MChatMessage chatMessage) {
+            if (!isDebugMode(aSessionOwner, aProject) && chatMessage.internal()) {
+                return;
+            }
+        }
+
         // LOG.trace("Dispatching assistant message: {}", aMessage);
         var topic = AssistantWebsocketController.getChannel(aProject);
         msgTemplate.convertAndSend("/topic" + topic, aMessage);
@@ -160,51 +196,157 @@ public class AssistantServiceImpl
     public void clearConversation(String aSessionOwner, Project aProject)
     {
         synchronized (states) {
-            states.keySet().removeIf(key -> aSessionOwner.equals(key.user())
-                    && Objects.equals(aProject.getId(), key.projectId));
+            states.entrySet().stream() //
+                    .filter(e -> aSessionOwner.equals(e.getKey().user())
+                            && Objects.equals(aProject.getId(), e.getKey().projectId)) //
+                    .map(Entry::getValue) //
+                    .forEach(state -> state.clearMessages());
         }
 
         dispatchMessage(aSessionOwner, aProject, new MRemoveConversationCommand());
     }
 
     @Override
-    public void processUserMessage(String aSessionOwner, Project aProject,
+    public void setDebugMode(String aSessionOwner, Project aProject, boolean aOnOff)
+    {
+        synchronized (states) {
+            getState(aSessionOwner, aProject).setDebugMode(aOnOff);
+        }
+    }
+
+    @Override
+    public boolean isDebugMode(String aSessionOwner, Project aProject)
+    {
+        synchronized (states) {
+            return getState(aSessionOwner, aProject).isDebugMode();
+        }
+    }
+
+    @Override
+    public MTextMessage processInternalMessageSync(String aSessionOwner, Project aProject,
             MTextMessage aMessage)
+        throws IOException
+    {
+        Validate.isTrue(aMessage.internal());
+
+        if (isDebugMode(aSessionOwner, aProject)) {
+            recordMessage(aSessionOwner, aProject, aMessage);
+            dispatchMessage(aSessionOwner, aProject, aMessage);
+        }
+
+        var assistant = new ChatContext(properties, ollamaClient, aSessionOwner, aProject);
+        return assistant.chat(asList(aMessage));
+    }
+
+    @Override
+    public <T> MCallResponse<T> processInternalCallSync(String aSessionOwner, Project aProject,
+            Class<T> aType, MTextMessage aMessage)
+        throws IOException
+    {
+        Validate.isTrue(aMessage.internal());
+
+        if (isDebugMode(aSessionOwner, aProject)) {
+            recordMessage(aSessionOwner, aProject, aMessage);
+            dispatchMessage(aSessionOwner, aProject, aMessage);
+        }
+
+        var assistant = new ChatContext(properties, ollamaClient, aSessionOwner, aProject);
+        var result = assistant.call(aType, asList(aMessage));
+
+        if (isDebugMode(aSessionOwner, aProject)) {
+            var resultMessage = MTextMessage.builder() //
+                    .withRole(SYSTEM).internal().ephemeral() //
+                    .withActor(aMessage.actor()) //
+                    .withMessage("```json\n" + toPrettyJsonString(result.payload()) + "\n```") //
+                    .withPerformance(result.performance()) //
+                    .build();
+            recordMessage(aSessionOwner, aProject, resultMessage);
+            dispatchMessage(aSessionOwner, aProject, resultMessage);
+        }
+
+        return result;
+    }
+
+    @Override
+    public void processAgentMessage(String aSessionOwner, Project aProject, MTextMessage aMessage,
+            MTextMessage... aContextMessages)
     {
         var assistant = new ChatContext(properties, ollamaClient, aSessionOwner, aProject);
-        
+
         // Dispatch message early so the front-end can enter waiting state
         dispatchMessage(aSessionOwner, aProject, aMessage);
 
         try {
             var systemMessages = generateSystemMessages();
-            var transientMessages = generateTransientMessages(assistant, aMessage);
-            var conversationMessages = getChatMessages(aSessionOwner, aProject);
+
+            recordMessage(aSessionOwner, aProject, aMessage);
+
+            var recentConversation = limitConversationToContextLength(systemMessages, emptyList(),
+                    emptyList(), aMessage, properties.getChat().getContextLength());
+
+            var responseMessage = assistant.chat(recentConversation,
+                    (id, r) -> handleStreamedMessageFragment(aSessionOwner, aProject, id, r));
+
+            recordMessage(aSessionOwner, aProject, responseMessage);
+
+            dispatchMessage(aSessionOwner, aProject, responseMessage.withoutContent());
+        }
+        catch (IOException e) {
+            var errorMessage = MTextMessage.builder() //
+                    .withActor("Error").withRole(SYSTEM).internal().ephemeral() //
+                    .withMessage("Error: " + e.getMessage()) //
+                    .build();
+            recordMessage(aSessionOwner, aProject, errorMessage);
+            dispatchMessage(aSessionOwner, aProject, errorMessage);
+        }
+    }
+
+    @Override
+    public void processUserMessage(String aSessionOwner, Project aProject, MTextMessage aMessage,
+            MTextMessage... aContextMessages)
+    {
+        var assistant = new ChatContext(properties, ollamaClient, aSessionOwner, aProject);
+
+        // Dispatch message early so the front-end can enter waiting state
+        dispatchMessage(aSessionOwner, aProject, aMessage);
+
+        try {
+            var systemMessages = generateSystemMessages();
+
+            List<MTextMessage> contextMessages = isNotEmpty(aContextMessages)
+                    ? asList(aContextMessages)
+                    : emptyList();
+            List<MTextMessage> ephemeralMessages = contextMessages.isEmpty()
+                    ? generateEphemeralMessages(assistant, aMessage)
+                    : contextMessages;
+            List<MTextMessage> conversationMessages = contextMessages.isEmpty()
+                    ? getChatMessages(aSessionOwner, aProject)
+                    : emptyList();
 
             // We record the message only now to ensure it is not included in the listMessages above
             recordMessage(aSessionOwner, aProject, aMessage);
 
-            if (properties.isDevMode()) {
-                for (var msg : transientMessages) {
+            if (isDebugMode(aSessionOwner, aProject)) {
+                for (var msg : ephemeralMessages) {
                     recordMessage(aSessionOwner, aProject, msg);
                     dispatchMessage(aSessionOwner, aProject, msg);
                 }
             }
 
             var recentConversation = limitConversationToContextLength(systemMessages,
-                    transientMessages, conversationMessages, aMessage,
+                    ephemeralMessages, conversationMessages, aMessage,
                     properties.getChat().getContextLength());
 
-            var responseMessage = assistant.generate(recentConversation,
+            var responseMessage = assistant.chat(recentConversation,
                     (id, r) -> handleStreamedMessageFragment(aSessionOwner, aProject, id, r));
-            
+
             recordMessage(aSessionOwner, aProject, responseMessage);
-            dispatchMessage(aSessionOwner, aProject, responseMessage);
+
+            dispatchMessage(aSessionOwner, aProject, responseMessage.withoutContent());
         }
         catch (IOException e) {
             var errorMessage = MTextMessage.builder() //
-                    .withActor("Error")
-                    .withRole(SYSTEM) //
+                    .withActor("Error").withRole(SYSTEM).internal().ephemeral() //
                     .withMessage("Error: " + e.getMessage()) //
                     .build();
             recordMessage(aSessionOwner, aProject, errorMessage);
@@ -219,27 +361,24 @@ public class AssistantServiceImpl
         dispatchMessage(aSessionOwner, aProject, responseMessage);
     }
 
-    private List<MTextMessage> generateTransientMessages(ChatContext aAssistant, MTextMessage aMessage)
+    private List<MTextMessage> generateEphemeralMessages(ChatContext aAssistant,
+            MTextMessage aMessage)
     {
-        var transientMessages = new ArrayList<MTextMessage>();
+        var messages = new ArrayList<MTextMessage>();
 
         for (var retriever : retrieverExtensionPoint.getExtensions(aAssistant.getProject())) {
-            transientMessages.addAll(retriever.retrieve(aAssistant, aMessage));
+            messages.addAll(retriever.retrieve(aAssistant, aMessage));
         }
 
-        return transientMessages;
+        return messages;
     }
 
     private List<MTextMessage> generateSystemMessages()
     {
-        var primeDirectives = asList(
-                "Your name is " + properties.getNickname() + ".",
+        var primeDirectives = asList("Your name is " + properties.getNickname() + ".",
                 "You are a helpful assistant within the annotation tool INCEpTION.",
                 "INCEpTION always refers to the annotation tool, never anything else such as the movie.",
-                "Do not include references to INCEpTION unless the user explicitly asks about the environment itself.",
-                "The document retriever automatically provides you with relevant information from the current project.",
-                "The user guide retriever automatically provides you with relevant information from the user guide.",
-                "Use this relevant information when responding to the user."
+                "Do not include references to INCEpTION unless the user explicitly asks about the environment itself."
         // If you use information from the user manual in your response, prepend it with
         // "According to the user manual".
         // """,
@@ -250,16 +389,14 @@ public class AssistantServiceImpl
         );
 
         return asList(MTextMessage.builder() //
-                .withRole(SYSTEM).internal() //
+                .withRole(SYSTEM).internal().ephemeral() //
                 .withMessage(join("\n\n", primeDirectives)) //
                 .build());
     }
 
-    private List<MTextMessage> limitConversationToContextLength(
-            List<MTextMessage> aSystemMessages,
-            List<MTextMessage> aTransientMessages,
-            List<MTextMessage> aRecentMessages, MTextMessage aLatestUserMessage,
-            int aContextLength)
+    private List<MTextMessage> limitConversationToContextLength(List<MTextMessage> aSystemMessages,
+            List<MTextMessage> aEphemeralMessages, List<MTextMessage> aRecentMessages,
+            MTextMessage aLatestUserMessage, int aContextLength)
     {
         // We don't really know which tokenizer the LLM uses. In case
         // the tokenizer we use counts fewer tokens than the one user by
@@ -273,12 +410,12 @@ public class AssistantServiceImpl
         var headMessages = new ArrayList<MTextMessage>();
         var tailMessages = new LinkedList<MTextMessage>();
 
-        var totalMessages = aSystemMessages.size() + aTransientMessages.size()
+        var totalMessages = aSystemMessages.size() + aEphemeralMessages.size()
                 + aRecentMessages.size() + 1;
         var allTokens = 0;
         var systemTokens = 0;
         var recentTokens = 0;
-        var transientTokens = 0;
+        var ephemeralTokens = 0;
 
         // System prompts from the start as context limit allows
         var systemMsgIterator = aSystemMessages.iterator();
@@ -305,19 +442,19 @@ public class AssistantServiceImpl
         allTokens += latestUserMsgTokens;
         tailMessages.addLast(aLatestUserMessage);
 
-        // Add transient messages as context limit allows
-        var transientMsgIterator = aTransientMessages.listIterator(aTransientMessages.size());
-        while (transientMsgIterator.hasPrevious() && allTokens < limit) {
-            var msg = transientMsgIterator.previous();
+        // Add ephemeral messages as context limit allows
+        var ephemeralMsgIterator = aEphemeralMessages.listIterator(aEphemeralMessages.size());
+        while (ephemeralMsgIterator.hasPrevious() && allTokens < limit) {
+            var msg = ephemeralMsgIterator.previous();
             var msgTokens = encoding.countTokensOrdinary(msg.message());
             if (allTokens + msgTokens > limit) {
-                LOG.trace("Transient message exceeds remaining token limit ({}): [{}]", msgTokens,
+                LOG.trace("Ephemeral message exceeds remaining token limit ({}): [{}]", msgTokens,
                         msg.message());
                 continue;
             }
 
             allTokens += msgTokens;
-            transientTokens += msgTokens;
+            ephemeralTokens += msgTokens;
             tailMessages.addFirst(msg);
         }
 
@@ -339,19 +476,43 @@ public class AssistantServiceImpl
         allMessages.addAll(tailMessages);
 
         LOG.trace(
-                "Reduced from {} to {} messages with a total of {} / {} tokens (system: {}, transient: {}, recent: {} )",
+                "Reduced from {} to {} messages with a total of {} / {} tokens (system: {}, ephemeral: {}, recent: {} )",
                 totalMessages, headMessages.size() + tailMessages.size(), allTokens, limit,
-                systemTokens, transientTokens, recentTokens);
+                systemTokens, ephemeralTokens, recentTokens);
 
         return allMessages;
+    }
+
+    @SuppressWarnings({ "unchecked" })
+    @Override
+    public Optional<ClientSidePreferenceKey<ClientSidePreferenceMapValue>> getUserPreferencesKey()
+    {
+        return Optional.of(KEY_ASSISTANT_PREFS);
+    }
+
+    @Override
+    public Optional<JsonSchema> getUserPreferencesSchema() throws IOException
+    {
+        return userPreferencesSchema.get();
     }
 
     private AssistentState getState(String aSessionOwner, Project aProject)
     {
         synchronized (states) {
             return states.computeIfAbsent(new AssistentStateKey(aSessionOwner, aProject.getId()),
-                    (v) -> new AssistentState());
+                    (v) -> newState());
         }
+    }
+
+    private AssistentState newState()
+    {
+        var state = new AssistentState();
+        // state.upsertMessage(MTextMessage.builder() //
+        // .withActor(properties.getNickname()) //
+        // .withRole(SYSTEM) //
+        // .withMessage("Hi") //
+        // .build());
+        return state;
     }
 
     private void clearState(Project aProject)
@@ -375,10 +536,28 @@ public class AssistantServiceImpl
     private static class AssistentState
     {
         private LinkedList<MMessage> messages = new LinkedList<>();
+        private boolean debugMode;
 
         public List<MMessage> getMessages()
         {
-            return new ArrayList<>(messages);
+            return unmodifiableList(new ArrayList<>(messages));
+        }
+
+        public void clearMessages()
+        {
+            synchronized (messages) {
+                messages.clear();
+            }
+        }
+
+        public void setDebugMode(boolean aOnOff)
+        {
+            debugMode = aOnOff;
+        }
+
+        public boolean isDebugMode()
+        {
+            return debugMode;
         }
 
         public void upsertMessage(MMessage aMessage)

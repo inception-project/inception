@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeClippedToD
 import java.io.IOException;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.request.IRequestParameters;
@@ -91,22 +92,34 @@ public class CreateSpanAnnotationHandler
 
             var adapter = schemaService.getAdapter(layer);
 
-            var request = new CreateSpanAnnotationRequest(state.getDocument(),
-                    state.getUser().getUsername(), cas, range.getBegin(), range.getEnd());
+            var request = CreateSpanAnnotationRequest.builder() //
+                    .withDocument(state.getDocument(), state.getUser().getUsername(), cas) //
+                    .withRange(range.getBegin(), range.getEnd()) //
+                    .withAnchoringMode(state.getAnchoringMode()) //
+                    .build();
 
             Selection selection;
+            AnnotationFS ann;
             if (adapter instanceof SpanAdapter spanAdapter) {
-                var ann = spanAdapter.handle(request);
+                ann = spanAdapter.handle(request);
                 selection = adapter.select(VID.of(ann), ann);
             }
             else if (adapter instanceof ChainAdapter chainAdapter) {
-                var ann = chainAdapter.handle(request);
+                ann = chainAdapter.handle(request);
                 selection = adapter.select(VID.of(ann), ann);
             }
             else {
                 throw new AnnotationException("Cannot create span annotation on ["
                         + state.getDefaultAnnotationLayer().getUiName() + "] of type ["
                         + state.getDefaultAnnotationLayer().getType() + "]");
+            }
+
+            for (var feature : adapter.listFeatures()) {
+                if (feature.isRemember()) {
+                    var value = state.getRememberedSpanFeatures().get(feature);
+                    adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), ann,
+                            feature, value);
+                }
             }
 
             commitAnnotation(aTarget, page, state, selection);

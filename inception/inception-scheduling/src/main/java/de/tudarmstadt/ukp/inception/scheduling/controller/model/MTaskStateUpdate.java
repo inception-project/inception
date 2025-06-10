@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling.controller.model;
 
+import java.util.List;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -42,6 +44,7 @@ public class MTaskStateUpdate
 
     private final int progress;
     private final int maxProgress;
+    private final List<MProgress> progresses;
 
     @JsonInclude(Include.NON_DEFAULT)
     private final boolean cancellable;
@@ -75,6 +78,9 @@ public class MTaskStateUpdate
 
         progress = aMonitor.getProgress();
         maxProgress = aMonitor.getMaxProgress();
+        progresses = aMonitor.getProgressList().stream() //
+                .map(p -> new MProgress(p.unit(), p.progress(), p.maxProgress())) //
+                .toList();
         cancellable = aMonitor.isCancellable();
 
         messageCount = aMonitor.getMessages().size();
@@ -116,6 +122,11 @@ public class MTaskStateUpdate
     public int getMaxProgress()
     {
         return maxProgress;
+    }
+
+    public List<MProgress> getProgresses()
+    {
+        return progresses;
     }
 
     public TaskState getState()
@@ -161,6 +172,8 @@ public class MTaskStateUpdate
                 .append(progress, castOther.progress) //
                 .append(maxProgress, castOther.maxProgress) //
                 .append(state, castOther.state) //
+                .append(latestMessage, castOther.latestMessage) //
+                .append(progresses, castOther.progresses) //
                 .isEquals();
     }
 
@@ -172,6 +185,8 @@ public class MTaskStateUpdate
                 .append(progress) //
                 .append(maxProgress) //
                 .append(state) //
+                .append(latestMessage) //
+                .append(progresses) //
                 .toHashCode();
     }
 }

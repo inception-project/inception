@@ -32,7 +32,7 @@ public class HtmlSupportAutoConfiguration
 {
     @Bean
     @ConditionalOnProperty(prefix = "format.html", name = "enabled", //
-            havingValue = "true", matchIfMissing = false)
+            havingValue = "true", matchIfMissing = true)
     public HtmlFormatSupport htmlFormatSupport(DefaultHtmlDocumentPolicy aDefaultPolicy)
     {
         return new HtmlFormatSupport(aDefaultPolicy);

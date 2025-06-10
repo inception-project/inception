@@ -78,7 +78,7 @@ public class InceptionRemoteApiJwtIntegrationTest
         var issuerUrl = oauth2Server.url(ISSUER_ID).toString();
 
         setProperty("java.awt.headless", "true");
-        setProperty("database.url", "jdbc:hsqldb:mem:testdb");
+        setProperty("database.url", "jdbc:hsqldb:mem:testdb;hsqldb.tx=mvcc");
         setProperty("inception.home", appHome.toString());
         setProperty("remote-api.enabled", "true");
         setProperty("remote-api.oauth2.enabled", "true");

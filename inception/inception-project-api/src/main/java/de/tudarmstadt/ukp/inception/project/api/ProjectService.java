@@ -532,6 +532,8 @@ public interface ProjectService
 
     List<ProjectInitializer> listProjectInitializers();
 
+    List<FeatureInitializer> listFeatureInitializers();
+
     static MDCContext withProjectLogger(Project aProject)
     {
         Validate.notNull(aProject, "Project must be given");

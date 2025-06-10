@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.project.export;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -40,22 +39,19 @@ public class ProjectImportExportUtils
      *             if an I/O error occurs.
      *
      */
-    @SuppressWarnings({ "rawtypes" })
     public static boolean isValidProjectArchive(File aZipFile) throws IOException
     {
-
-        boolean isZipValidWebanno = false;
-        try (ZipFile zip = new ZipFile(aZipFile)) {
-            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
-                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-                if (entry.toString().replace("/", "").startsWith(EXPORTED_PROJECT)
-                        && entry.toString().replace("/", "").endsWith(".json")) {
-                    isZipValidWebanno = true;
-                    break;
+        try (var zip = new ZipFile(aZipFile)) {
+            for (var zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+                var entry = (ZipEntry) zipEnumerate.nextElement();
+                var name = entry.getName().replace("/", "");
+                if (name.startsWith(EXPORTED_PROJECT) && name.endsWith(".json")) {
+                    return true;
                 }
             }
         }
-        return isZipValidWebanno;
+
+        return false;
     }
 
 }

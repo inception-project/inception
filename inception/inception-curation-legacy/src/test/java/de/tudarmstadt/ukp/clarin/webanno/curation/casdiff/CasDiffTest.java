@@ -37,6 +37,8 @@ import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDi
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.MULTIPLE_TARGETS_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.MULTIPLE_TARGETS_ONE_ROLE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -79,7 +81,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class CasDiffTest
 {
@@ -370,7 +371,7 @@ public class CasDiffTest
             casByUser.put("user2", jcasB.getCas());
 
             var diffAdapters = asList(new RelationDiffAdapter("webanno.custom.Relation",
-                    WebAnnoConst.FEAT_REL_TARGET, WebAnnoConst.FEAT_REL_SOURCE, "value"));
+                    FEAT_REL_TARGET, FEAT_REL_SOURCE, "value"));
 
             var result = doDiff(diffAdapters, casByUser).toResult();
 
@@ -379,7 +380,6 @@ public class CasDiffTest
             assertThat(result.getIncompleteConfigurationSets()).isEmpty();
             assertThat(calculateState(result)).isEqualTo(AGREE);
         }
-
     }
 
     @Nested

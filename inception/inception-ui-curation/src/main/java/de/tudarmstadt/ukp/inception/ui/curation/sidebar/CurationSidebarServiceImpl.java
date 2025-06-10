@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettings;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettingsId;
@@ -154,11 +153,13 @@ public class CurationSidebarServiceImpl
 
     private CurationSession getSession(String aSessionOwner, long aProjectId)
     {
-        if (sessions.containsKey(new CurationSessionKey(aSessionOwner, aProjectId))) {
-            return sessions.get(new CurationSessionKey(aSessionOwner, aProjectId));
-        }
-        else {
-            return readSession(aSessionOwner, aProjectId);
+        synchronized (sessions) {
+            if (sessions.containsKey(new CurationSessionKey(aSessionOwner, aProjectId))) {
+                return sessions.get(new CurationSessionKey(aSessionOwner, aProjectId));
+            }
+            else {
+                return readSession(aSessionOwner, aProjectId);
+            }
         }
     }
 
@@ -355,13 +356,6 @@ public class CurationSidebarServiceImpl
         synchronized (sessions) {
             sessions.remove(new CurationSessionKey(aSessionOwner, aProjectId));
         }
-    }
-
-    @EventListener
-    @Transactional
-    public void onDocumentOpened(DocumentOpenedEvent aEvent)
-    {
-        setDefaultSelectedUsersForDocument(aEvent.getSessionOwner(), aEvent.getDocument());
     }
 
     @Override

@@ -40,6 +40,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.dkpro.core.io.conll.Conll2006Reader;
@@ -56,6 +57,7 @@ public class CurationTestUtils
     public static final String TARGET_FEATURE = "target";
     public static final String ROLE_FEATURE = "role";
     public static final String LINKS_FEATURE = "links";
+    public static final String ALT_LINKS_FEATURE = "altLinks";
     public static final String HOST_TYPE = "webanno.custom.LinkHost";
     public static final String LINK_TYPE = "webanno.custom.LinkType";
 
@@ -268,15 +270,29 @@ public class CurationTestUtils
                 .buildAndAddToIndexes();
     }
 
+    public static FeatureStructure makeLinkFS(JCas aCas, int aTargetBegin, int aTargetEnd)
+    {
+        var filler = new NamedEntity(aCas, aTargetBegin, aTargetEnd);
+        filler.addToIndexes();
+
+        return linkTo(null, filler);
+
+    }
+
     public static FeatureStructure makeLinkFS(JCas aCas, String aRole, int aTargetBegin,
             int aTargetEnd)
     {
-        var token = new NamedEntity(aCas, aTargetBegin, aTargetEnd);
-        token.addToIndexes();
+        var filler = new NamedEntity(aCas, aTargetBegin, aTargetEnd);
+        filler.addToIndexes();
 
-        return buildFS(aCas.getCas(), LINK_TYPE) //
+        return linkTo(aRole, filler);
+    }
+
+    public static FeatureStructure linkTo(String aRole, Annotation aFiller)
+    {
+        return buildFS(aFiller.getJCas().getCas(), LINK_TYPE) //
                 .withFeature(ROLE_FEATURE, aRole) //
-                .withFeature(TARGET_FEATURE, token) //
+                .withFeature(TARGET_FEATURE, aFiller) //
                 .buildAndAddToIndexes();
     }
 }

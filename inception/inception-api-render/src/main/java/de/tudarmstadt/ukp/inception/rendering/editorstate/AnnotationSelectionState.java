@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.editorstate;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 
 public interface AnnotationSelectionState
@@ -45,4 +46,10 @@ public interface AnnotationSelectionState
     FeatureState getArmedFeature();
 
     int getArmedSlot();
+
+    AnchoringMode getAnchoringMode();
+
+    void setAnchoringMode(AnchoringMode aMode);
+
+    void syncAnchoringModeToDefaultLayer(AnchoringModePrefs aAnchoringPrefs);
 }

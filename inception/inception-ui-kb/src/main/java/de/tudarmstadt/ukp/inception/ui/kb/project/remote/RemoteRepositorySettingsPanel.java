@@ -17,32 +17,24 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project.remote;
 
-import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
 import static de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType.BASIC;
 import static de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType.OAUTH_CLIENT_CREDENTIALS;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
-import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 
-import java.util.List;
 import java.util.Map;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.list.ListItem;
-import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
-import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraitsEditor;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType;
@@ -52,8 +44,6 @@ import de.tudarmstadt.ukp.inception.security.client.auth.basic.BasicAuthenticati
 import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCredentialsAuthenticationTraits;
 import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCredentialsAuthenticationTraitsEditor;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseInfoPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
 import de.tudarmstadt.ukp.inception.ui.kb.project.validators.Validators;
 
@@ -64,13 +54,6 @@ public class RemoteRepositorySettingsPanel
 
     private static final String CID_AUTHENTICATION_TRAITS_EDITOR = "authenticationTraitsEditor";
 
-    private static final int MAXIMUM_REMOTE_REPO_SUGGESTIONS = 10;
-
-    private final Map<String, KnowledgeBaseProfile> knowledgeBaseProfiles;
-
-    private CompoundPropertyModel<KnowledgeBaseInfo> kbInfoModel;
-
-    private final KnowledgeBaseInfoPanel infoContainerRemote;
     private final TextField<String> urlField;
     private final CheckBox skipSslValidation;
     private final TextField<String> defaultDatasetField;
@@ -83,10 +66,6 @@ public class RemoteRepositorySettingsPanel
             Map<String, KnowledgeBaseProfile> aKnowledgeBaseProfiles)
     {
         super(aId, kbModel);
-
-        knowledgeBaseProfiles = aKnowledgeBaseProfiles;
-
-        kbInfoModel = CompoundPropertyModel.of(Model.of());
 
         urlField = new RequiredTextField<>("url");
         urlField.add(Validators.URL_VALIDATOR);
@@ -104,12 +83,6 @@ public class RemoteRepositorySettingsPanel
         skipSslValidation = new CheckBox("skipSslValidation", kbModel.bind("kb.skipSslValidation"));
         skipSslValidation.setOutputMarkupPlaceholderTag(true);
         queue(skipSslValidation);
-
-        infoContainerRemote = new KnowledgeBaseInfoPanel("infoContainer", kbInfoModel);
-        infoContainerRemote.setOutputMarkupId(true);
-        queue(infoContainerRemote);
-
-        queue(remoteSuggestionsList("suggestions"));
 
         defaultDatasetField = new TextField<>("defaultDataset",
                 kbModel.bind("kb.defaultDatasetIri"));
@@ -182,56 +155,6 @@ public class RemoteRepositorySettingsPanel
         }
 
         return authenticationTraitsEditor;
-    }
-
-    private ListView<KnowledgeBaseProfile> remoteSuggestionsList(String aId)
-    {
-        // for up to MAXIMUM_REMOTE_REPO_SUGGESTIONS of knowledge bases, create a link which
-        // directly fills in the URL field (convenient for both developers AND users :))
-        List<KnowledgeBaseProfile> suggestions = knowledgeBaseProfiles.values().stream() //
-                .filter(kb -> REMOTE == kb.getType()) //
-                .limit(MAXIMUM_REMOTE_REPO_SUGGESTIONS) //
-                .collect(toList());
-
-        var list = new ListView<KnowledgeBaseProfile>(aId, suggestions)
-        {
-            private static final long serialVersionUID = 4179629475064638272L;
-
-            @Override
-            protected void populateItem(ListItem<KnowledgeBaseProfile> item)
-            {
-                // add a link for one knowledge base with proper label
-                var link = new LambdaAjaxLink("suggestionLink",
-                        t -> actionPopulate(t, item.getModelObject()));
-                link.add(new Label("suggestionLabel", item.getModelObject().getName()));
-                item.add(link);
-            }
-        };
-
-        list.add(visibleWhen(getModel().map(KnowledgeBaseWrapper::getKb) //
-                .map(kb -> kb.getRepositoryId() == null) //
-                .orElse(false)));
-
-        return list;
-    }
-
-    private void actionPopulate(AjaxRequestTarget aTarget, KnowledgeBaseProfile aProfile)
-    {
-        // set all the fields according to the chosen profile
-        var kbw = getModel().getObject();
-        kbw.setUrl(aProfile.getAccess().getAccessUrl());
-        // sets root concepts list - if null then an empty list otherwise change the
-        // values to IRI and populate the list
-        var kb = kbw.getKb();
-        kb.applyRootConcepts(aProfile);
-        kb.applyAdditionalMatchingProperties(aProfile);
-        kb.applyMapping(aProfile.getMapping());
-        kbInfoModel.setObject(aProfile.getInfo());
-        kb.setFullTextSearchIri(aProfile.getAccess().getFullTextSearchIri());
-        kb.setDefaultLanguage(aProfile.getDefaultLanguage());
-        kb.setDefaultDatasetIri(aProfile.getDefaultDataset());
-        kb.setReification(aProfile.getReification());
-        aTarget.add(urlField, defaultDatasetField, infoContainerRemote);
     }
 
     public void applyState()

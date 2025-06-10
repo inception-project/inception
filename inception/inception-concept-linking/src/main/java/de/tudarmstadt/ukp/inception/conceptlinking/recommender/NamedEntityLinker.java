@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringAnnotations;
+import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_UNITS;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 
 import java.util.ArrayList;
@@ -104,25 +105,31 @@ public class NamedEntityLinker
         }
 
         Annotation prevCandidate = null;
-        for (var candidate : candidates) {
-            if (prevCandidate != null && colocated(candidate, prevCandidate)) {
-                // If we did already do a KB lookup at this position, no need to do one again. Mind
-                // that UIMA provides annotations with the same offsets as a block in iteration
-                // order
-                continue;
+        try (var progress = aContext.getMonitor().openScope(SCOPE_UNITS, candidates.size())) {
+            for (var candidate : candidates) {
+                progress.update(up -> up.increment());
+
+                if (prevCandidate != null && colocated(candidate, prevCandidate)) {
+                    // If we did already do a KB lookup at this position, no need to do one again.
+                    // Mind
+                    // that UIMA provides annotations with the same offsets as a block in iteration
+                    // order
+                    continue;
+                }
+
+                if (candidate.getFeatureValueAsString(predictedFeature) != null
+                        && (!stackingAllowed || traits.isEmptyCandidateFeatureRequired())) {
+                    // If the candidate feature is already filled, we can skip prediction if
+                    // stacking is
+                    // not allowed or if an empty candidate feature is required
+                    continue;
+                }
+
+                predictSingle(candidate.getCoveredText(), candidate.getBegin(), candidate.getEnd(),
+                        aCas, alreadyLinkedConcepts);
+
+                prevCandidate = candidate;
             }
-
-            if (candidate.getFeatureValueAsString(predictedFeature) != null
-                    && (!stackingAllowed || traits.isEmptyCandidateFeatureRequired())) {
-                // If the candidate feature is already filled, we can skip prediction if stacking is
-                // not allowed or if an empty candidate feature is required
-                continue;
-            }
-
-            predictSingle(candidate.getCoveredText(), candidate.getBegin(), candidate.getEnd(),
-                    aCas, alreadyLinkedConcepts);
-
-            prevCandidate = candidate;
         }
 
         return rangeCoveringAnnotations(candidates);

@@ -134,11 +134,13 @@ public class SchedulingServiceImpl
             runningTasks.remove(aTask);
         }
 
-        if (aTask.getMonitor().isCancelled() || !aTask.getScope().isDestroyOnEnd()) {
+        synchronized (pendingAcknowledgement) {
+            // if (aTask.getMonitor().isCancelled() || !aTask.getScope().isDestroyOnEnd()) {
             pendingAcknowledgement.add(aTask);
-        }
-        else {
-            aTask.destroy();
+            // }
+            // else {
+            // aTask.destroy();
+            // }
         }
     }
 
@@ -245,6 +247,10 @@ public class SchedulingServiceImpl
                 // the incoming task supersedes them).
                 tasksToUnqueue.add(enqueuedTask);
                 break;
+            case QUEUE_THIS:
+                // Queue this task to be run potentially after other matching tasks have been
+                // completed
+                break;
             case NO_MATCH:
                 // Ignore
                 break;
@@ -296,17 +302,20 @@ public class SchedulingServiceImpl
                     suspendCount);
         }
 
-        waitForProjectTasksToEnd(aProject, Duration.ofMinutes(1));
+        waitForProjectTasksToEnd(aProject, Duration.ofMinutes(1), true);
     }
 
-    private void waitForProjectTasksToEnd(Project aProject, Duration aTimeout)
+    private void waitForProjectTasksToEnd(Project aProject, Duration aTimeout,
+            boolean aResumeOnTimeout)
         throws TimeoutException
     {
         var startTime = currentTimeMillis();
         var timeoutMillis = aTimeout.toMillis();
 
-        while (runningTasks.stream().anyMatch(t -> aProject.equals(t.getProject()))) {
-            LOG.trace("Waiting for running tasks to end on project {}", aProject);
+        while (runningTasks.stream()
+                .anyMatch(t -> aProject.getId() != null ? aProject.equals(t.getProject())
+                        : aProject == t.getProject())) {
+            // LOG.trace("Waiting for running tasks to end on project {}", aProject);
 
             if (currentTimeMillis() - startTime > timeoutMillis) {
                 var msg = new StringBuilder();
@@ -318,13 +327,24 @@ public class SchedulingServiceImpl
                 msg.append("The following tasks are still running:\n");
                 runningTasks.stream() //
                         .filter(t -> aProject.equals(t.getProject())) //
-                        .forEach(t -> msg.append("- ").append(t).append("\n"));
-                resumeTasks(aProject);
+                        .forEach(t -> {
+                            msg.append("- ").append(t).append("\n");
+                            for (var frame : t.getThread().getStackTrace()) {
+                                msg.append("  ");
+                                msg.append(frame);
+                                msg.append("\n");
+                            }
+                        });
+
+                if (aResumeOnTimeout) {
+                    resumeTasks(aProject);
+                }
+
                 throw new TimeoutException(msg.toString());
             }
 
             try {
-                Thread.sleep(100);
+                Thread.sleep(50);
             }
             catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -411,6 +431,19 @@ public class SchedulingServiceImpl
 
     private synchronized void cleanUpTasks()
     {
+        pendingAcknowledgement.removeIf(runnable -> {
+            var task = (Task) runnable;
+
+            if (task.getScope().isDestroyOnEnd()
+                    && currentTimeMillis() - task.getMonitor().getEndTime() > 5000) {
+                LOG.debug("Destroying self-destrucing task after quiet period: {}", task);
+                task.destroy();
+                return true;
+            }
+
+            return false;
+        });
+
         // var activeSessionCount = 0;
         var activeUsers = new HashSet<String>();
         for (var principal : sessionRegistry.getAllPrincipals()) {
@@ -508,11 +541,15 @@ public class SchedulingServiceImpl
     }
 
     @Override
-    public synchronized void stopAllTasksMatching(Predicate<Task> aPredicate)
+    public synchronized int stopAllTasksMatching(Predicate<Task> aPredicate)
     {
+        AtomicInteger count = new AtomicInteger();
+
         enqueuedTasks.removeIf(task -> {
             if (aPredicate.test(task)) {
+                LOG.debug("Destroying queued task: {}", task);
                 task.destroy();
+                count.incrementAndGet();
                 return true;
             }
             return false;
@@ -521,7 +558,9 @@ public class SchedulingServiceImpl
         executor.getQueue().removeIf(runnable -> {
             var task = (Task) runnable;
             if (aPredicate.test(task)) {
+                LOG.debug("Destroying scheduled task: {}", task);
                 task.destroy();
+                count.incrementAndGet();
                 return true;
             }
             return false;
@@ -529,7 +568,9 @@ public class SchedulingServiceImpl
 
         runningTasks.forEach(task -> {
             if (aPredicate.test(task)) {
+                LOG.debug("Canceling running task: {}", task);
                 task.getMonitor().cancel();
+                count.incrementAndGet();
                 // The task will be destroyed if necessary by the afterExecute callback
             }
         });
@@ -537,23 +578,48 @@ public class SchedulingServiceImpl
         pendingAcknowledgement.removeIf(runnable -> {
             var task = (Task) runnable;
             if (aPredicate.test(task)) {
+                LOG.debug("Destroying ack-pending task: {}", task);
                 task.destroy();
+                count.incrementAndGet();
                 return true;
             }
             return false;
         });
+
+        return count.get();
     }
 
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     @EventListener
-    public void beforeProjectRemoved(BeforeProjectRemovedEvent aEvent) throws TimeoutException
+    public void onBeforeProjectRemoved(BeforeProjectRemovedEvent aEvent) throws TimeoutException
     {
         deletionPending.add(aEvent.getProject());
         stopAllTasksForProject(aEvent.getProject());
-        waitForProjectTasksToEnd(aEvent.getProject(), Duration.ofMinutes(1));
+        var timeout = Duration.ofMinutes(1);
+        try {
+            waitForProjectTasksToEnd(aEvent.getProject(), timeout, false);
+        }
+        catch (TimeoutException e) {
+            LOG.warn(
+                    "Running tasks for project {} did not terminate after {} - trying to interrupt them",
+                    aEvent.getProject(), timeout);
+            // Try interrupting running threads
+            runningTasks.forEach(task -> {
+                try {
+                    LOG.warn("Interrupting: {}", task);
+                    task.getThread().interrupt();
+                }
+                catch (Throwable t) {
+                    LOG.error("Error while interrupting hanging task {}", t, e);
+                }
+            });
+            waitForProjectTasksToEnd(aEvent.getProject(), timeout, false);
+        }
     }
 
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     @EventListener
-    public void afterProjectRemoved(AfterProjectRemovedEvent aEvent) throws IOException
+    public void onAfterProjectRemoved(AfterProjectRemovedEvent aEvent) throws IOException
     {
         stopAllTasksForProject(aEvent.getProject());
         deletionPending.remove(aEvent.getProject());

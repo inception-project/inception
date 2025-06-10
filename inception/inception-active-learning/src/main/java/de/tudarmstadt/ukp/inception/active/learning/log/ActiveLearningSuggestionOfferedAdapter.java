@@ -17,15 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning.log;
 
+import static java.util.stream.Collectors.joining;
+
 import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import de.tudarmstadt.ukp.inception.active.learning.config.ActiveLearningAutoConfiguration;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSuggestionOfferedEvent;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
@@ -58,31 +57,35 @@ public class ActiveLearningSuggestionOfferedAdapter
     @Override
     public String getDetails(ActiveLearningSuggestionOfferedEvent aEvent) throws IOException
     {
-        Details details = new Details();
-        details.ann = new AnnotationDetails();
-        details.ann.setBegin(aEvent.getCurrentRecommendation().getBegin());
-        details.ann.setEnd(aEvent.getCurrentRecommendation().getEnd());
-        details.ann.setText(aEvent.getCurrentRecommendation().getCoveredText());
-        details.ann.setType(aEvent.getLayer().getName());
-        details.annotationFeature = aEvent.getAnnotationFeature();
-        details.currentLabel = aEvent.getCurrentRecommendation().getLabel();
-        details.score = aEvent.getCurrentRecommendation().getScore();
-        details.recommenderId = aEvent.getCurrentRecommendation().getRecommenderId();
+        var rec = aEvent.getCurrentRecommendation();
 
-        List<String> allLabelList = aEvent.getAllRecommendations().stream().map(ao -> ao.getLabel())
-                .collect(Collectors.toList());
-        details.allLabels = String.join(", ", allLabelList);
+        var ann = new AnnotationDetails();
+        ann.setBegin(rec.getBegin());
+        ann.setEnd(rec.getEnd());
+        ann.setText(rec.getCoveredText());
+        ann.setType(aEvent.getLayer().getName());
+
+        var allLabels = aEvent.getAllRecommendations().stream() //
+                .map(ao -> ao.getLabel()) //
+                .collect(joining(", "));
+
+        var details = new Details( //
+                ann, //
+                aEvent.getAnnotationFeature(), //
+                rec.getLabel(), //
+                rec.getScore(), //
+                rec.getRecommenderId(), //
+                allLabels);
+
         return JSONUtil.toJsonString(details);
     }
 
-    public static class Details
-    {
-        public AnnotationDetails ann;
-        public String annotationFeature;
-        public LearningRecordUserAction userAction;
-        public String currentLabel;
-        public double score;
-        public long recommenderId;
-        public String allLabels;
-    }
+    record Details( //
+            AnnotationDetails ann, //
+            String annotationFeature, //
+            String currentLabel, //
+            double score, //
+            long recommenderId, //
+            String allLabels)
+    {}
 }

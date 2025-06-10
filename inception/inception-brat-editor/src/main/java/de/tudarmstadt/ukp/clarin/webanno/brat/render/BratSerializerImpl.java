@@ -19,15 +19,20 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGeneratorImpl.getBratTypeName;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection.RTL;
+import static de.tudarmstadt.ukp.inception.support.text.TrimUtils.trim;
+import static java.lang.Character.isWhitespace;
+import static java.lang.Character.toTitleCase;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.uima.cas.text.AnnotationPredicates.covering;
 import static org.apache.uima.cas.text.AnnotationPredicates.overlappingAtBegin;
 import static org.apache.uima.cas.text.AnnotationPredicates.overlappingAtEnd;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
+import java.lang.invoke.MethodHandles;
 import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,7 +46,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
@@ -56,7 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.TextMarker;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -64,7 +68,6 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSentenceMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
-import de.tudarmstadt.ukp.inception.support.text.TrimUtils;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
@@ -79,7 +82,8 @@ import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 public class BratSerializerImpl
     implements BratSerializer
 {
-    private static final Logger LOG = LoggerFactory.getLogger(BratAnnotationEditor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     public static final String ID = "Brat";
 
     private final BratAnnotationEditorProperties properties;
@@ -110,7 +114,7 @@ public class BratSerializerImpl
         // cross-row spans into multiple ranges
         renderBratRowsFromUnits(aResponse, aRequest);
 
-        renderBratTokensFromText(aResponse, aVDoc);
+        renderBratTokensFromText(aResponse, aRequest, aVDoc);
 
         renderLayers(aResponse, aVDoc);
 
@@ -129,8 +133,8 @@ public class BratSerializerImpl
                         .flatMap(range -> split(aResponse.getSentenceOffsets(), aVDoc.getText(),
                                 aVDoc.getWindowBegin(), range.getBegin(), range.getEnd()).stream())
                         .map(range -> {
-                            int[] span = { range.getBegin(), range.getEnd() };
-                            TrimUtils.trim(aResponse.getText(), span);
+                            var span = new int[] { range.getBegin(), range.getEnd() };
+                            trim(aResponse.getText(), span);
                             range.setBegin(span[0]);
                             range.setEnd(span[1]);
                             return range;
@@ -184,18 +188,11 @@ public class BratSerializerImpl
 
         Map<AnnotationFS, Integer> sentenceIndexes = null;
         for (var vcomment : aVDoc.comments()) {
-            String type;
-            switch (vcomment.getCommentType()) {
-            case ERROR:
-                type = AnnotationComment.ANNOTATION_ERROR;
-                break;
-            case INFO:
-                type = AnnotationComment.ANNOTATOR_NOTES;
-                break;
-            default:
-                type = AnnotationComment.ANNOTATOR_NOTES;
-                break;
-            }
+            var type = switch (vcomment.getCommentType()) {
+            case ERROR -> AnnotationComment.ANNOTATION_ERROR;
+            case INFO -> AnnotationComment.ANNOTATOR_NOTES;
+            default -> AnnotationComment.ANNOTATOR_NOTES;
+            };
 
             AnnotationFS fs;
             if (!vcomment.getVid().isSynthetic() && ((fs = ICasUtil.selectAnnotationByAddr(cas,
@@ -204,14 +201,14 @@ public class BratSerializerImpl
                 // Lazily fetching the sentences because we only need them for the comments
                 if (sentenceIndexes == null) {
                     sentenceIndexes = new HashMap<>();
-                    int i = 1;
+                    var i = 1;
                     for (var s : select(cas, getType(cas, Sentence.class))) {
                         sentenceIndexes.put(s, i);
                         i++;
                     }
                 }
 
-                int index = sentenceIndexes.get(fs);
+                var index = sentenceIndexes.get(fs);
                 aResponse.addComment(
                         new SentenceComment(VID.of(fs), index, type, vcomment.getComment()));
             }
@@ -258,7 +255,7 @@ public class BratSerializerImpl
 
         var visibleText = aVDoc.getText();
         char replacementChar = 0;
-        if (StringUtils.isNotEmpty(properties.getWhiteSpaceReplacementCharacter())) {
+        if (isNotEmpty(properties.getWhiteSpaceReplacementCharacter())) {
             replacementChar = properties.getWhiteSpaceReplacementCharacter().charAt(0);
         }
 
@@ -266,30 +263,76 @@ public class BratSerializerImpl
         aResponse.setText(visibleText);
     }
 
-    private void renderBratTokensFromText(GetDocumentResponse aResponse, VDocument aVDoc)
+    private void renderBratTokensFromText(GetDocumentResponse aResponse, RenderRequest aRequest,
+            VDocument aVDoc)
     {
         if (isEmpty(aVDoc.getText())) {
             return;
         }
 
+        // Collect additional split points based on where two tokens are directly adjacent
+        var extraSplits = new ArrayList<Integer>();
+        if (aRequest.getCas() != null) {
+            var tokenIterator = aRequest.getCas().select(Token.class) //
+                    .coveredBy(aVDoc.getWindowBegin(), aVDoc.getWindowEnd()) //
+                    .iterator();
+            if (tokenIterator.hasNext()) {
+                var prevToken = tokenIterator.next();
+                while (tokenIterator.hasNext()) {
+                    var token = tokenIterator.next();
+                    if (prevToken.getEnd() == token.getBegin()) {
+                        extraSplits.add(token.getBegin());
+                    }
+                    prevToken = token;
+                }
+            }
+        }
+
+        var extraSplitIterator = extraSplits.listIterator();
         var bratTokenOffsets = new ArrayList<Offsets>();
         var visibleText = aVDoc.getText();
         var bi = BreakIterator.getWordInstance(Locale.ROOT);
         bi.setText(visibleText);
-        int last = bi.first();
-        int cur = bi.next();
+        var last = bi.first();
+        var cur = bi.next();
         while (cur != BreakIterator.DONE) {
-            Offsets offsets = new Offsets(last, cur);
+            var offsets = new int[] { last, cur };
             trim(visibleText, offsets);
-            if (offsets.getBegin() < offsets.getEnd()) {
-                bratTokenOffsets.add(offsets);
+            if (offsets[0] < offsets[1]) {
+
+                // The idea here is that if somebody has created a token boundary inside a word, it
+                // may look better if brat would be able to pull the word apart. This, however, only
+                // works if for brat there is a token boundary at this location.
+                while (extraSplitIterator.hasNext()) {
+                    var candidateSplit = extraSplitIterator.next();
+                    if (candidateSplit < offsets[0]) {
+                        continue;
+                    }
+
+                    if (candidateSplit > offsets[1]) {
+                        extraSplitIterator.previous();
+                        break;
+                    }
+
+                    if (covering(offsets[0], offsets[1], candidateSplit, candidateSplit)) {
+                        if (offsets[0] < candidateSplit) {
+                            bratTokenOffsets.add(new Offsets(offsets[0], candidateSplit));
+                        }
+                        offsets[0] = candidateSplit;
+                        continue;
+                    }
+                }
+
+                if (offsets[0] < offsets[1]) {
+                    bratTokenOffsets.add(new Offsets(offsets[0], offsets[1]));
+                }
             }
             last = cur;
             cur = bi.next();
         }
 
         var rows = aResponse.getSentenceOffsets();
-        for (Offsets offsets : bratTokenOffsets) {
+        for (var offsets : bratTokenOffsets) {
             var ranges = split(rows, visibleText, aVDoc.getWindowBegin(), offsets.getBegin(),
                     offsets.getEnd());
             for (var range : ranges) {
@@ -300,13 +343,13 @@ public class BratSerializerImpl
 
     private void renderBratRowsFromUnits(GetDocumentResponse aResponse, RenderRequest aRequest)
     {
-        int windowBegin = aRequest.getWindowBeginOffset();
+        var windowBegin = aRequest.getWindowBeginOffset();
 
         aResponse.setSentenceNumberOffset(aRequest.getState().getFirstVisibleUnitIndex());
 
         // Render sentences
-        int unitNum = aResponse.getSentenceNumberOffset();
-        for (Unit unit : aRequest.getState().getVisibleUnits()) {
+        var unitNum = aResponse.getSentenceNumberOffset();
+        for (var unit : aRequest.getState().getVisibleUnits()) {
             aResponse.addSentence(unit.getBegin() - windowBegin, unit.getEnd() - windowBegin);
 
             // If there is a sentence ID, then make it accessible to the user via a sentence-level
@@ -374,16 +417,16 @@ public class BratSerializerImpl
 
         var segments = new ArrayList<Offsets>();
         for (var row : coveredRows) {
-            Offsets segment;
+            int[] segment;
 
             if (covering(aBegin, aEnd, row.getBegin(), row.getEnd())) {
-                segment = new Offsets(row.getBegin(), row.getEnd());
+                segment = new int[] { row.getBegin(), row.getEnd() };
             }
             else if (overlappingAtBegin(row.getBegin(), row.getEnd(), aBegin, aEnd)) {
-                segment = new Offsets(aBegin, row.getEnd());
+                segment = new int[] { aBegin, row.getEnd() };
             }
             else if (overlappingAtEnd(row.getBegin(), row.getEnd(), aBegin, aEnd)) {
-                segment = new Offsets(row.getBegin(), aEnd);
+                segment = new int[] { row.getBegin(), aEnd };
             }
             else {
                 continue;
@@ -391,8 +434,9 @@ public class BratSerializerImpl
 
             trim(aText, segment);
 
-            if (!segment.isEmpty()) {
-                segments.add(segment);
+            var segmentOffsets = new Offsets(segment[0], segment[1]);
+            if (!segmentOffsets.isEmpty()) {
+                segments.add(segmentOffsets);
             }
         }
 
@@ -405,20 +449,20 @@ public class BratSerializerImpl
             return aName;
         }
 
-        StringBuilder abbr = new StringBuilder();
-        int ti = 0;
-        boolean capitalizeNext = true;
+        var abbr = new StringBuilder();
+        var ti = 0;
+        var capitalizeNext = true;
         for (int i = 0; i < aName.length(); i++) {
             int ch = aName.charAt(i);
 
-            if (Character.isWhitespace(ch)) {
+            if (isWhitespace(ch)) {
                 capitalizeNext = true;
                 ti = 0;
             }
             else {
                 if (ti < 3) {
                     if (capitalizeNext) {
-                        ch = Character.toTitleCase(ch);
+                        ch = toTitleCase(ch);
                         capitalizeNext = false;
                     }
                     abbr.append((char) ch);
@@ -435,89 +479,5 @@ public class BratSerializerImpl
             abbr.append("...");
         }
         return abbr.toString();
-    }
-
-    /**
-     * Remove trailing or leading whitespace from the annotation.
-     * 
-     * @param aText
-     *            the text.
-     * @param aOffsets
-     *            the offsets.
-     */
-    static void trim(CharSequence aText, Offsets aOffsets)
-    {
-        if (aOffsets.getBegin() == aOffsets.getEnd()) {
-            // Nothing to do on empty spans
-            return;
-        }
-
-        int begin = aOffsets.getBegin();
-        int end = aOffsets.getEnd();
-
-        // First we trim at the end. If a trimmed span is empty, we want to return the original
-        // begin as the begin/end of the trimmed span
-        while ((end > 0) && end > begin && trimChar(aText.charAt(end - 1))) {
-            end--;
-        }
-
-        // Then, trim at the start
-        while ((begin < (aText.length() - 1)) && begin < end && trimChar(aText.charAt(begin))) {
-            begin++;
-        }
-
-        aOffsets.setBegin(begin);
-        aOffsets.setEnd(end);
-    }
-
-    static boolean trimChar(final char aChar)
-    {
-        switch (aChar) {
-        case '\n': // Line break
-        case '\r': // Carriage return
-        case '\t': // Tab
-        case '\u2000': // EN QUAD
-        case '\u2001': // EM QUAD
-        case '\u2002': // EN SPACE
-        case '\u2003': // EM SPACE
-        case '\u2004': // THREE-PER-EM SPACE
-        case '\u2005': // FOUR-PER-EM SPACE
-        case '\u2006': // SIX-PER-EM SPACE
-        case '\u2007': // FIGURE SPACE
-        case '\u2008': // PUNCTUATION SPACE
-        case '\u2009': // THIN SPACE
-        case '\u200A': // HAIR SPACE
-        case '\u200B': // ZERO WIDTH SPACE
-        case '\u200C': // ZERO WIDTH NON-JOINER
-        case '\u200D': // ZERO WIDTH JOINER
-        case '\u200E': // LEFT-TO-RIGHT MARK
-        case '\u200F': // RIGHT-TO-LEFT MARK
-        case '\u2028': // LINE SEPARATOR
-        case '\u2029': // PARAGRAPH SEPARATOR
-        case '\u202A': // LEFT-TO-RIGHT EMBEDDING
-        case '\u202B': // RIGHT-TO-LEFT EMBEDDING
-        case '\u202C': // POP DIRECTIONAL FORMATTING
-        case '\u202D': // LEFT-TO-RIGHT OVERRIDE
-        case '\u202E': // RIGHT-TO-LEFT OVERRIDE
-        case '\u202F': // NARROW NO-BREAK SPACE
-        case '\u2060': // WORD JOINER
-        case '\u2061': // FUNCTION APPLICATION
-        case '\u2062': // INVISIBLE TIMES
-        case '\u2063': // INVISIBLE SEPARATOR
-        case '\u2064': // INVISIBLE PLUS
-        case '\u2065': // <unassigned>
-        case '\u2066': // LEFT-TO-RIGHT ISOLATE
-        case '\u2067': // RIGHT-TO-LEFT ISOLATE
-        case '\u2068': // FIRST STRONG ISOLATE
-        case '\u2069': // POP DIRECTIONAL ISOLATE
-        case '\u206A': // INHIBIT SYMMETRIC SWAPPING
-        case '\u206B': // ACTIVATE SYMMETRIC SWAPPING
-        case '\u206C': // INHIBIT ARABIC FORM SHAPING
-        case '\u206D': // ACTIVATE ARABIC FORM SHAPING
-        case '\u206E': // NATIONAL DIGIT SHAPES
-        case '\u206F': // NOMINAL DIGIT SHAPES
-        default:
-            return Character.isWhitespace(aChar);
-        }
     }
 }

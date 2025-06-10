@@ -26,13 +26,13 @@ import java.io.File;
 import java.io.StringWriter;
 
 import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.pdf.type.PdfChunk;
 import org.dkpro.core.api.pdf.type.PdfPage;
+import org.dkpro.core.api.xml.type.XmlDocument;
+import org.dkpro.core.api.xml.type.XmlElement;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.OS;
@@ -72,6 +72,20 @@ class VisualPdfReaderTest
             }
             assertThat(pdfLine.getBegin() + totalCharWidth).isEqualTo(pdfLine.getEnd());
         }
+    }
+
+    @Test
+    void thatHtmlStructureIsGenerated() throws Exception
+    {
+        var reader = createReader( //
+                VisualPdfReader.class, //
+                VisualPdfReader.PARAM_SORT_BY_POSITION, true, //
+                VisualPdfReader.PARAM_GENERATE_HTML_STRUCTURE, true, //
+                VisualPdfReader.PARAM_SOURCE_LOCATION, testFilesBase + "eu-001.pdf");
+        reader.getNext(cas);
+
+        assertThat(cas.select(XmlDocument.class).asList()).hasSize(1);
+        assertThat(cas.select(XmlElement.class).asList()).hasSize(44);
     }
 
     @Test
@@ -348,7 +362,7 @@ class VisualPdfReaderTest
     {
         VModel expected;
         var textBuffer = new StringWriter();
-        try (PDDocument doc = Loader.loadPDF(new File(testFilesBase + "FC60_Times.pdf"))) {
+        try (var doc = Loader.loadPDF(new File(testFilesBase + "FC60_Times.pdf"))) {
             var extractor = new VisualPDFTextStripper();
             extractor.setSortByPosition(false);
             extractor.writeText(doc, textBuffer);
@@ -365,7 +379,7 @@ class VisualPdfReaderTest
         // assertThat(textBuffer.toString()) //
         // .isEqualTo(expectedText);
 
-        JCas jCas = JCasFactory.createJCas();
+        var jCas = JCasFactory.createJCas();
         jCas.setDocumentText(textBuffer.toString());
         VisualPdfReader.visualModelToCas(expected, jCas);
 
@@ -401,7 +415,7 @@ class VisualPdfReaderTest
                                 90.0f, //
                                 new float[] { 90.0f }));
 
-        VModel actual = VisualPdfReader.visualModelFromCas(jCas.getCas(),
+        var actual = VisualPdfReader.visualModelFromCas(jCas.getCas(),
                 jCas.select(PdfPage.class).asList());
 
         assertThat(actual.getPages().get(0).getChunks()) //

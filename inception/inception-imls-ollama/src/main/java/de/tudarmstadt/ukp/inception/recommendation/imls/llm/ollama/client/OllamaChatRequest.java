@@ -28,6 +28,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.Option;
 
@@ -37,7 +38,7 @@ public class OllamaChatRequest
     private String model;
     private List<OllamaChatMessage> messages;
     private boolean stream;
-    private @JsonInclude(Include.NON_NULL) OllamaGenerateResponseFormat format;
+    private @JsonInclude(Include.NON_NULL) JsonNode format;
     private @JsonInclude(Include.NON_DEFAULT) boolean raw;
     private @JsonInclude(Include.NON_EMPTY) Map<String, Object> options = new HashMap<>();
 
@@ -48,10 +49,12 @@ public class OllamaChatRequest
         format = builder.format;
         stream = builder.stream;
         raw = builder.raw;
-        options = builder.options;
+        for (var opt : builder.options.entrySet()) {
+            options.put(opt.getKey().getName(), opt.getValue());
+        }
     }
 
-    public OllamaGenerateResponseFormat getFormat()
+    public JsonNode getFormat()
     {
         return format;
     }
@@ -90,10 +93,10 @@ public class OllamaChatRequest
     {
         private String model;
         private List<OllamaChatMessage> messages = new ArrayList<>();
-        private OllamaGenerateResponseFormat format;
+        private JsonNode format;
         private boolean raw;
         private boolean stream;
-        private Map<String, Object> options = new HashMap<>();
+        private Map<Option<?>, Object> options = new HashMap<>();
 
         private Builder()
         {
@@ -121,7 +124,7 @@ public class OllamaChatRequest
             return this;
         }
 
-        public Builder withFormat(OllamaGenerateResponseFormat aFormat)
+        public Builder withFormat(JsonNode aFormat)
         {
             format = aFormat;
             return this;
@@ -142,19 +145,26 @@ public class OllamaChatRequest
         public <T> Builder withOption(Option<T> aOption, T aValue)
         {
             if (aValue != null) {
-                options.put(aOption.getName(), aValue);
+                options.put(aOption, aValue);
             }
             else {
-                options.remove(aOption.getName());
+                options.remove(aOption);
             }
             return this;
         }
 
-        public <T> Builder withOptions(Map<String, Object> aOptions)
+        public <T> Builder withExtraOptions(Map<String, Object> aOptions)
         {
             if (aOptions != null) {
-                options.putAll(aOptions);
+                for (var setting : aOptions.entrySet()) {
+                    var opt = OllamaOptions.getAllOptions().stream()
+                            .filter(o -> o.getName().equals(setting.getKey())).findFirst();
+                    if (opt.isPresent()) {
+                        withOption((Option) opt.get(), setting.getValue());
+                    }
+                }
             }
+
             return this;
         }
 

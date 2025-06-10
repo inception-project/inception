@@ -57,6 +57,7 @@ public class CasXmlHandler
     private XmlDocument docNode;
     private boolean captureText = true;
     private boolean splitSentencesInBlockElements = true;
+    private boolean commitText = true;
 
     private final Set<ElementListener> listeners = new LinkedHashSet<>();
 
@@ -65,6 +66,11 @@ public class CasXmlHandler
         jcas = aJCas;
         text = new StringBuilder();
         stack = new ArrayDeque<>();
+    }
+
+    public void setCommitText(boolean aCommitText)
+    {
+        commitText = aCommitText;
     }
 
     public void addListener(ElementListener aListener)
@@ -125,7 +131,9 @@ public class CasXmlHandler
             l.endDocument(docNode);
         }
 
-        jcas.setDocumentText(text.toString());
+        if (commitText) {
+            jcas.setDocumentText(text.toString());
+        }
 
         if (!blockElements.isEmpty()) {
             if (splitSentencesInBlockElements) {
@@ -213,7 +221,7 @@ public class CasXmlHandler
     }
 
     @Override
-    public void characters(char[] aCh, int aStart, int aLength) throws SAXException
+    public void characters(char[] aCh, int aStart, int aLength)
     {
         if (stack.isEmpty()) {
             // We ignore any characters outside the root elements. These could include e.g.
@@ -241,7 +249,7 @@ public class CasXmlHandler
     }
 
     @Override
-    public void ignorableWhitespace(char[] aCh, int aStart, int aLength) throws SAXException
+    public void ignorableWhitespace(char[] aCh, int aStart, int aLength)
     {
         characters(aCh, aStart, aLength);
     }

@@ -17,13 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai;
 
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionMode.MENTIONS_FROM_JSON;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat.JSON;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -42,7 +41,6 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Prese
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptingModeSelect;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionModeSelect;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.markdown.MarkdownLabel;
 
 public class AzureAiOpenAiInteractionPanel
@@ -54,10 +52,10 @@ public class AzureAiOpenAiInteractionPanel
     private static final String MID_PROMPT = "prompt";
     private static final String MID_NAME = "name";
     private static final String MID_PRESET = "preset";
-    private static final String MID_FORMAT = "format";
     private static final String MID_EXTRACTION_MODE = "extractionMode";
     private static final String MID_PROMPTING_MODE = "promptingMode";
     private static final String MID_PROMPT_HINTS = "promptHints";
+    private static final String MID_JUSTIFICATION_ENABLED = "justificationEnabled";
 
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean RecommendationEngineFactory<AzureAiOpenAiRecommenderTraits> toolFactory;
@@ -105,30 +103,13 @@ public class AzureAiOpenAiInteractionPanel
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                         _target -> _target.add(markdownLabel))));
 
-        var responseFormat = new AzureAiOpenAiResponseFormatSelect(MID_FORMAT);
-        responseFormat.setOutputMarkupPlaceholderTag(true);
-        responseFormat.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT));
-        responseFormat.add(LambdaBehavior
-                .visibleWhen(traits.map(t -> t.getExtractionMode() != MENTIONS_FROM_JSON)));
-        form.add(responseFormat);
-
         form.add(new ExtractionModeSelect(MID_EXTRACTION_MODE, traits.bind(MID_EXTRACTION_MODE),
-                getModel())
-                        .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
-                                _target -> actionExtractionModeChanged(markdownLabel,
-                                        responseFormat, _target))));
+                getModel()));
+
+        form.add(new CheckBox(MID_JUSTIFICATION_ENABLED) //
+                .setOutputMarkupId(true));
 
         add(form);
-    }
-
-    private void actionExtractionModeChanged(MarkdownLabel markdownLabel,
-            AzureAiOpenAiResponseFormatSelect responseFormat, AjaxRequestTarget _target)
-    {
-        if (traits.getObject().getExtractionMode() == MENTIONS_FROM_JSON) {
-            traits.getObject().setFormat(JSON);
-        }
-
-        _target.add(markdownLabel, responseFormat);
     }
 
     private void applyPreset(Form<AzureAiOpenAiRecommenderTraits> aForm, Preset aPreset,
@@ -138,7 +119,6 @@ public class AzureAiOpenAiInteractionPanel
             var settings = traits.getObject();
             settings.setPrompt(aPreset.getPrompt());
             settings.setExtractionMode(aPreset.getExtractionMode());
-            settings.setFormat(aPreset.getFormat());
             settings.setPromptingMode(aPreset.getPromptingMode());
         }
         aTarget.add(aForm);
@@ -146,6 +126,7 @@ public class AzureAiOpenAiInteractionPanel
 
     private String getPromptHints()
     {
-        return traits.getObject().getPromptingMode().getHints();
+        var promptingMode = traits.getObject().getPromptingMode();
+        return promptingMode != null ? promptingMode.getHints() : null;
     }
 }

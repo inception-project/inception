@@ -34,7 +34,7 @@ if (argv.live) {
 }
 
 const defaults = {
-  entryPoints: ['src/AssistantPanel.svelte'],
+  entryPoints: ['src/AssistantPanelFactory.ts'],
   outfile: `${outbase}/AssistantPanel.min.js`,
   mainFields: ['svelte', 'browser', 'module', 'main'],
   format: 'esm',
@@ -48,7 +48,7 @@ const defaults = {
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
-  target: 'es2018',
+  target: 'es2019',
   loader: { '.ts': 'ts' },
   logLevel: 'info'
 }

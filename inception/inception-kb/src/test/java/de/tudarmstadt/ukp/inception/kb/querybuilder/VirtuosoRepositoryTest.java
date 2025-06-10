@@ -81,9 +81,8 @@ public class VirtuosoRepositoryTest
     @BeforeEach
     public void setUp(TestInfo aTestInfo) throws Exception
     {
-        String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
-        System.out.printf("\n=== %s === %s =====================\n", methodName,
-                aTestInfo.getDisplayName());
+        var methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
+        LOG.info("=== {} === {} =====================", methodName, aTestInfo.getDisplayName());
 
         assertThat(VIRTUOSO.isRunning()).isTrue();
 

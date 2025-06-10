@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
-import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -26,6 +25,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaForm;
 
 public class OpenNlpPosRecommenderTraitsEditor
     extends DefaultTrainableRecommenderTraitsEditor
@@ -44,21 +44,11 @@ public class OpenNlpPosRecommenderTraitsEditor
 
         traits = toolFactory.readTraits(aRecommender.getObject());
 
-        Form<OpenNlpPosRecommenderTraits> form = new Form<OpenNlpPosRecommenderTraits>(MID_FORM,
-                new CompoundPropertyModel<>(traits))
-        {
-            private static final long serialVersionUID = -3109239605742291123L;
+        var form = new LambdaForm<OpenNlpPosRecommenderTraits>(MID_FORM,
+                new CompoundPropertyModel<>(traits));
+        form.onSubmit((t, f) -> toolFactory.writeTraits(aRecommender.getObject(), traits));
 
-            @Override
-            protected void onSubmit()
-            {
-                super.onSubmit();
-                toolFactory.writeTraits(aRecommender.getObject(), traits);
-            }
-        };
-
-        NumberTextField<Double> iterations = new NumberTextField<>("taggedTokensThreshold",
-                Double.class);
+        var iterations = new NumberTextField<>("taggedTokensThreshold", Double.class);
         iterations.setMinimum(1.0);
         iterations.setMaximum(100.0);
         form.add(iterations);

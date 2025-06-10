@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
+import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs.KEY_ANCHORING_MODE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
@@ -27,7 +28,6 @@ import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isSame;
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static wicket.contrib.input.events.EventType.click;
 import static wicket.contrib.input.events.key.KeyType.Delete;
@@ -81,6 +81,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDeletedEvent;
@@ -93,6 +94,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.CreateSpanAnnotationRe
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
@@ -127,6 +129,8 @@ public abstract class AnnotationDetailEditorPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaProperties schemaProperties;
+    private @SpringBean UserDao userService;
+    private @SpringBean PreferencesService preferencesService;
 
     // Top-level containers
     private final LayerSelectionPanel layerSelectionPanel;
@@ -273,8 +277,10 @@ public abstract class AnnotationDetailEditorPanel
                     + aAdapter.getClass().getSimpleName() + "] in this situation.");
         }
 
-        var request = new CreateSpanAnnotationRequest(state.getDocument(),
-                state.getUser().getUsername(), aCas, selection.getBegin(), selection.getEnd());
+        var request = CreateSpanAnnotationRequest.builder() //
+                .withDocument(state.getDocument(), state.getUser().getUsername(), aCas) //
+                .withRange(selection.getBegin(), selection.getEnd()) //
+                .build();
 
         if (aAdapter instanceof SpanAdapter spanAdapter) {
             var ann = spanAdapter.handle(request);
@@ -306,8 +312,11 @@ public abstract class AnnotationDetailEditorPanel
         var adapter = (SpanAdapter) annotationService.getAdapter(annotationService
                 .findLayer(state.getProject(), state.getArmedFeature().feature.getType()));
 
-        var slotFillerVid = VID.of(adapter.add(state.getDocument(), state.getUser().getUsername(),
-                aCas, aSlotFillerBegin, aSlotFillerEnd));
+        var slotFillerVid = VID.of(adapter.handle(CreateSpanAnnotationRequest.builder() //
+                .withDocument(state.getDocument(), state.getUser().getUsername(), aCas) //
+                .withRange(aSlotFillerBegin, aSlotFillerEnd) //
+                .withAnchoringMode(state.getAnchoringMode()) //
+                .build()));
 
         actionFillSlot(aTarget, aCas, slotFillerVid);
     }
@@ -804,8 +813,6 @@ public abstract class AnnotationDetailEditorPanel
 
                 relationAdapter.delete(state.getDocument(), state.getUser().getUsername(), aCas,
                         VID.of(rel.getRelation()));
-
-                info(generateMessage(relationAdapter.getLayer(), null, true));
             }
         }
 
@@ -826,8 +833,6 @@ public abstract class AnnotationDetailEditorPanel
 
         // Actually delete annotation
         adapter.delete(state.getDocument(), state.getUser().getUsername(), aCas, aVid);
-
-        info(generateMessage(adapter.getLayer(), null, true));
     }
 
     private void cleanUpLinkFeatures(CAS aCas, FeatureStructure fs, SpanAdapter adapter,
@@ -953,6 +958,13 @@ public abstract class AnnotationDetailEditorPanel
             // relation - so in this case, we leave the layers alone...
             if (!selection.isArc()) {
                 state.refreshSelectableLayers(schemaProperties::isLayerBlocked);
+
+                if (state.getDefaultAnnotationLayer() != null) {
+                    var sessionOwner = userService.getCurrentUser();
+                    var anchoringPrefs = preferencesService.loadTraitsForUserAndProject(
+                            KEY_ANCHORING_MODE, sessionOwner, state.getProject());
+                    state.syncAnchoringModeToDefaultLayer(anchoringPrefs);
+                }
             }
 
             if (selection.getAnnotation().isSet()) {
@@ -1075,8 +1087,11 @@ public abstract class AnnotationDetailEditorPanel
         setVisible(getModelObject() != null && getModelObject().getDocument() != null);
 
         // Set read only if annotation is finished or the user is viewing other's work
-        var selectedLayerIsReadOnly = getModel().map(AnnotatorState::getSelectedAnnotationLayer)
-                .map(AnnotationLayer::isReadonly).orElse(true).getObject();
+        var selectedLayerIsReadOnly = getModel() //
+                .map(AnnotatorState::getSelectedAnnotationLayer) //
+                .map(AnnotationLayer::isReadonly) //
+                .orElse(true) //
+                .getObject();
         setEnabled(editorPage.isEditable() && !selectedLayerIsReadOnly);
     }
 
@@ -1121,8 +1136,8 @@ public abstract class AnnotationDetailEditorPanel
 
         try {
             var selection = getModelObject().getSelection();
-            int id = selection.getAnnotation().getId();
-            boolean annotationStillExists = getEditorCas().select(Annotation.class) //
+            var id = selection.getAnnotation().getId();
+            var annotationStillExists = getEditorCas().select(Annotation.class) //
                     .at(selection.getBegin(), selection.getEnd()) //
                     .anyMatch(ann -> ann._id() == id);
 
@@ -1215,7 +1230,7 @@ public abstract class AnnotationDetailEditorPanel
     private static List<ReorderableTag> compareSortAndAdd(List<PossibleValue> aPossibleValues,
             List<ReorderableTag> aTags, RulesIndicator aRulesIndicator)
     {
-        List<ReorderableTag> returnList = new ArrayList<>();
+        var returnList = new ArrayList<ReorderableTag>();
 
         // if no possible values, means didn't satisfy conditions
         if (aPossibleValues.isEmpty()) {
@@ -1223,13 +1238,13 @@ public abstract class AnnotationDetailEditorPanel
             return aTags;
         }
 
-        Map<String, ReorderableTag> tagIndex = new LinkedHashMap<>();
+        var tagIndex = new LinkedHashMap<String, ReorderableTag>();
         for (ReorderableTag tag : aTags) {
             tagIndex.put(tag.getName(), tag);
         }
 
-        for (PossibleValue value : aPossibleValues) {
-            ReorderableTag tag = tagIndex.get(value.getValue());
+        for (var value : aPossibleValues) {
+            var tag = tagIndex.get(value.getValue());
             if (tag == null) {
                 continue;
             }
@@ -1264,7 +1279,7 @@ public abstract class AnnotationDetailEditorPanel
      */
     public void reset(AjaxRequestTarget aTarget)
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
 
         // Clear selection and feature states
         state.getFeatureStates().clear();
@@ -1272,6 +1287,14 @@ public abstract class AnnotationDetailEditorPanel
 
         // Refresh the selectable layers dropdown
         state.refreshSelectableLayers(schemaProperties::isLayerBlocked);
+
+        if (state.getDefaultAnnotationLayer() != null) {
+            var sessionOwner = userService.getCurrentUser();
+            var anchoringPrefs = preferencesService.loadTraitsForUserAndProject(KEY_ANCHORING_MODE,
+                    sessionOwner, state.getProject());
+            state.syncAnchoringModeToDefaultLayer(anchoringPrefs);
+        }
+
         if (aTarget != null) {
             aTarget.add(layerSelectionPanel);
         }
@@ -1323,18 +1346,6 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    private static String generateMessage(AnnotationLayer aLayer, String aLabel, boolean aDeleted)
-    {
-        var action = aDeleted ? "deleted" : "created/updated";
-
-        var msg = "The [" + aLayer.getUiName() + "] annotation has been " + action + ".";
-        if (isNotBlank(aLabel)) {
-            msg += " Label: [" + aLabel + "]";
-        }
-
-        return msg;
-    }
-
     private LambdaAjaxLink createClearButton()
     {
         var link = new LambdaAjaxLink("clear", this::actionClear);
@@ -1346,10 +1357,10 @@ public abstract class AnnotationDetailEditorPanel
 
     private Component createReverseButton()
     {
-        LambdaAjaxLink link = new LambdaAjaxLink("reverse", this::actionReverse);
+        var link = new LambdaAjaxLink("reverse", this::actionReverse);
         link.setOutputMarkupPlaceholderTag(true);
         link.add(LambdaBehavior.onConfigure(_this -> {
-            AnnotatorState state = getModelObject();
+            var state = getModelObject();
 
             _this.setVisible(
                     state.getSelection().getAnnotation().isSet() && state.getSelection().isArc()

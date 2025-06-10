@@ -25,6 +25,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.springframework.context.event.EventListener;
 
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class TokenAttachedSpanChangeListener
@@ -39,9 +40,11 @@ public class TokenAttachedSpanChangeListener
     @EventListener
     public void onSpanMovedEvent(SpanMovedEvent aEvent)
     {
-        adjustAttachedAnnotations(aEvent);
-        adjustSingleTokenAnchoredAnnotations(aEvent);
-        adjustTokenAnchoredAnnotations(aEvent);
+        if (aEvent.getAnnotation() instanceof Token) {
+            adjustAttachedAnnotations(aEvent);
+            adjustSingleTokenAnchoredAnnotations(aEvent);
+            adjustTokenAnchoredAnnotations(aEvent);
+        }
     }
 
     void adjustTokenAnchoredAnnotations(SpanMovedEvent aEvent)
@@ -128,5 +131,4 @@ public class TokenAttachedSpanChangeListener
         aAnn.setEnd(aUnit.getEnd());
         aAnn.addToIndexes();
     }
-
 }

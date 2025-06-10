@@ -19,8 +19,10 @@ import { Ajax } from './ajax/Ajax'
 import { INSTANCE as Util } from './util/Util'
 import { CurationMod } from './curation/CurationMod'
 import { factory as diamAjaxFactory } from '@inception-project/inception-diam'
-import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
+// import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
+import AnnotationDetailPopOver from './annotator_ui/AnnotationDetailPopOver.svelte'
 import './style-vis.scss'
+import { mount } from 'svelte'
 
 declare let Wicket
 
@@ -36,7 +38,7 @@ function brat (markupId: string, controllerCallbackUrl: string, collCallbackUrl:
       const element = Wicket.$(markupId)
 
       // eslint-disable-next-line no-new
-      new AnnotationDetailPopOver({
+      mount(AnnotationDetailPopOver, {
         target: document.body,
         props: {
           root: element,

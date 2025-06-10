@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor2.format;
 
+import static java.lang.Character.isSurrogatePair;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -33,7 +35,11 @@ import org.apache.uima.jcas.cas.IntegerArray;
 import org.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import org.dkpro.core.api.pdf.type.PdfChunk;
 import org.dkpro.core.api.pdf.type.PdfPage;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
+import de.tudarmstadt.ukp.inception.io.xml.dkprocore.CasXmlHandler;
+import de.tudarmstadt.ukp.inception.pdfeditor2.visual.PdfEventHandler;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.VisualPDFTextStripper;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VChunk;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VGlyph;
@@ -52,8 +58,85 @@ public class VisualPdfReader
      * @see VisualPDFTextStripper#setSortByPosition(boolean)
      */
     public static final String PARAM_SORT_BY_POSITION = "sortByPosition";
-    @ConfigurationParameter(name = PARAM_SORT_BY_POSITION, mandatory = false, defaultValue = "false")
+    @ConfigurationParameter(name = PARAM_SORT_BY_POSITION, defaultValue = "false")
     private boolean sortByPosition;
+
+    /**
+     * By default the text stripper will attempt to remove text that overlapps each other. Word
+     * paints the same character several times in order to make it look bold. By setting this to
+     * false all text will be extracted, which means that certain sections will be duplicated, but
+     * better performance will be noticed.
+     * 
+     * @see VisualPDFTextStripper#setSuppressDuplicateOverlappingText(boolean)
+     */
+    public static final String PARAM_SUPPRESS_DUPLICATE_OVERLAPPING_TEXT = "suppressDuplicateOverlappingText";
+    @ConfigurationParameter(name = PARAM_SUPPRESS_DUPLICATE_OVERLAPPING_TEXT, defaultValue = "true")
+    private boolean suppressDuplicateOverlappingText;
+
+    /**
+     * Set if the text stripper should group the text output by a list of beads.
+     * 
+     * @see VisualPDFTextStripper#setShouldSeparateByBeads(boolean)
+     */
+    public static final String PARAM_SHOULD_SEPARATE_BY_BEADS = "shouldSeparateByBeads";
+    @ConfigurationParameter(name = PARAM_SHOULD_SEPARATE_BY_BEADS, defaultValue = "true")
+    private boolean shouldSeparateByBeads;
+
+    /**
+     * There will some additional text formatting be added.
+     * 
+     * @see VisualPDFTextStripper#setAddMoreFormatting(boolean)
+     */
+    public static final String PARAM_ADD_MORE_FORMATTING = "addMoreFormatting";
+    @ConfigurationParameter(name = PARAM_ADD_MORE_FORMATTING, defaultValue = "true")
+    private boolean addMoreFormatting;
+
+    /**
+     * sets the multiple of whitespace character widths for the current text which the current line
+     * start can be indented from the previous line start beyond which the current line start is
+     * considered to be a paragraph start.
+     * 
+     * @see VisualPDFTextStripper#setIndentThreshold(float)
+     */
+    public static final String PARAM_INDENT_THRESHOLD = "indentThreshold";
+    @ConfigurationParameter(name = PARAM_INDENT_THRESHOLD, defaultValue = "2.0")
+    private float indentThreshold;
+
+    /**
+     * Sets the minimum whitespace, as a multiple of the max height of the current characters beyond
+     * which the current line start is considered to be a paragraph start.
+     * 
+     * @see VisualPDFTextStripper#setDropThreshold(float)
+     */
+    public static final String PARAM_DROP_THRESHOLD = "dropThreshold";
+    @ConfigurationParameter(name = PARAM_DROP_THRESHOLD, defaultValue = "2.5")
+    private float dropThreshold;
+
+    /**
+     * Set the character width-based tolerance value that is used to estimate where spaces in text
+     * should be added. Note that the default value for this has been determined from trial and
+     * error. Setting this value larger will reduce the number of spaces added.
+     * 
+     * @see VisualPDFTextStripper#setAverageCharTolerance(float)
+     */
+    public static final String PARAM_AVERAGE_CHAR_TOLERANCE = "averageCharTolerance";
+    @ConfigurationParameter(name = PARAM_AVERAGE_CHAR_TOLERANCE, defaultValue = "0.3")
+    private float averageCharTolerance;
+
+    /**
+     * Set the space width-based tolerance value that is used to estimate where spaces in text
+     * should be added. Note that the default value for this has been determined from trial and
+     * error. Setting this value larger will reduce the number of spaces added.
+     * 
+     * @see VisualPDFTextStripper#setSpacingTolerance(float)
+     */
+    public static final String PARAM_SPACING_TOLERANCE = "spacingTolerance";
+    @ConfigurationParameter(name = PARAM_SPACING_TOLERANCE, defaultValue = "0.5")
+    private float spacingTolerance;
+
+    public static final String PARAM_GENERATE_HTML_STRUCTURE = "generateHtmlStructure";
+    @ConfigurationParameter(name = PARAM_GENERATE_HTML_STRUCTURE, defaultValue = "false")
+    private boolean generateHtmlStructure;
 
     @Override
     public void getNext(JCas aJCas) throws IOException, CollectionException
@@ -67,13 +150,43 @@ public class VisualPdfReader
         try (var is = resource.getInputStream()) {
             try (var doc = Loader.loadPDF(IOUtils.toByteArray(is))) {
                 var stripper = new VisualPDFTextStripper();
+
                 stripper.setSortByPosition(sortByPosition);
+
+                stripper.setSuppressDuplicateOverlappingText(suppressDuplicateOverlappingText);
+                stripper.setShouldSeparateByBeads(shouldSeparateByBeads);
+                stripper.setAddMoreFormatting(addMoreFormatting);
+
+                stripper.setDropThreshold(dropThreshold);
+                stripper.setIndentThreshold(indentThreshold);
+
+                stripper.setAverageCharTolerance(averageCharTolerance);
+                stripper.setSpacingTolerance(spacingTolerance);
+
+                if (generateHtmlStructure) {
+                    var capture = new PdfStructureCapturer(aJCas);
+                    textBuffer = capture;
+                    stripper.setEventHandler(capture);
+                }
+
                 stripper.writeText(doc, textBuffer);
+
                 vModel = stripper.getVisualModel();
             }
         }
 
-        aJCas.setDocumentText(textBuffer.toString());
+        // Try working around PDFBOX-5747 until we have 3.0.5
+        var buf = textBuffer.getBuffer();
+        var len = buf.length();
+        for (int i = 0; i < len - 2; i++) {
+            if (isSurrogatePair(buf.charAt(i), buf.charAt(i + 2))) {
+                var c = buf.charAt(i + 2);
+                buf.setCharAt(i + 2, buf.charAt(i + 1));
+                buf.setCharAt(i + 1, c);
+            }
+        }
+
+        aJCas.setDocumentText(buf.toString());
 
         visualModelToCas(vModel, aJCas);
     }
@@ -196,4 +309,81 @@ public class VisualPdfReader
         return vModel;
     }
 
+    private static class PdfStructureCapturer
+        extends StringWriter
+        implements PdfEventHandler
+    {
+        private final JCas jCas;
+        private CasXmlHandler xmlCas;
+
+        private PdfStructureCapturer(JCas aJCas)
+        {
+            jCas = aJCas;
+            xmlCas = new CasXmlHandler(jCas);
+            xmlCas.setCommitText(false);
+        }
+
+        @Override
+        public void documentStart() throws SAXException
+        {
+            xmlCas.startDocument();
+            xmlCas.startElement("", "", "html", new AttributesImpl());
+            xmlCas.startElement("", "", "body", new AttributesImpl());
+        }
+
+        @Override
+        public void afterStartParagraph() throws Exception
+        {
+            xmlCas.startElement("", "", "p", new AttributesImpl());
+        }
+
+        @Override
+        public void beforeEndParagraph() throws Exception
+        {
+            xmlCas.endElement("", "", "p");
+        }
+
+        @Override
+        public void documentEnd() throws SAXException
+        {
+            xmlCas.endElement("", "", "body");
+            xmlCas.endElement("", "", "html");
+            xmlCas.endDocument();
+        }
+
+        @Override
+        public void write(String aStr, int aOff, int aLen)
+        {
+            super.write(aStr, aOff, aLen);
+            xmlCas.characters(aStr.toCharArray(), aOff, aLen);
+        }
+
+        @Override
+        public void write(char[] aCbuf) throws IOException
+        {
+            super.write(aCbuf);
+            xmlCas.characters(aCbuf, 0, aCbuf.length);
+        }
+
+        @Override
+        public void write(char[] aCbuf, int aOff, int aLen)
+        {
+            super.write(aCbuf, aOff, aLen);
+            xmlCas.characters(aCbuf, aOff, aLen);
+        }
+
+        @Override
+        public void write(int aC)
+        {
+            super.write(aC);
+            xmlCas.characters(new char[] { (char) aC }, 0, 1);
+        }
+
+        @Override
+        public void write(String aStr)
+        {
+            super.write(aStr);
+            xmlCas.characters(aStr.toCharArray(), 0, aStr.length());
+        }
+    }
 }

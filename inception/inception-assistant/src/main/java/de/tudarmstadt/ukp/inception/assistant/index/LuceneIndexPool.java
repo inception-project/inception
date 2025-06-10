@@ -152,7 +152,7 @@ public class LuceneIndexPool
         {
             var dir = new MMapDirectory(getIndexDirectory(aKey));
             var iwc = new IndexWriterConfig();
-            iwc.setCodec(new HighDimensionLucene99Codec(embeddingService.getDimension()));
+            iwc.setCodec(new HighDimensionLucene912Codec(embeddingService.getDimension()));
             return new PooledIndex(aKey, dir, new IndexWriter(dir, iwc));
         }
 

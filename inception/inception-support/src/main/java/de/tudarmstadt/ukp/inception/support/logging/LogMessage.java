@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.support.logging;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import org.apache.wicket.feedback.IFeedbackContributor;
 
@@ -103,5 +104,22 @@ public class LogMessage
     public static LogMessage error(Object aSource, String aFormat, Object... aValues)
     {
         return new LogMessage(aSource, LogLevel.ERROR, aFormat, aValues);
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof LogMessage)) {
+            return false;
+        }
+        LogMessage castOther = (LogMessage) other;
+        return Objects.equals(level, castOther.level) && Objects.equals(source, castOther.source)
+                && Objects.equals(message, castOther.message);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(level, source, message);
     }
 }

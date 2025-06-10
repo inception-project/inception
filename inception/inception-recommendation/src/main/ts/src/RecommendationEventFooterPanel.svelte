@@ -18,8 +18,7 @@
      */
 
     import { onMount, onDestroy } from "svelte"
-    import { get_current_component } from 'svelte/internal'
-    import { Client, Stomp, IFrame } from "@stomp/stompjs"
+    import { Client, Stomp, StompSubscription } from "@stomp/stompjs"
 
     interface RRecommenderLogMessage {
         level: "INFO" | "WARN" | "ERROR"
@@ -28,17 +27,26 @@
         removeClasses: string[]
     }
 
-    export let wsEndpointUrl: string; // should this be full ws://... url
-    export let topicChannel: string;
-    export let feedbackPanelId = null;
+    interface Props {
+        wsEndpointUrl: string; // should this be full ws://... url
+        topicChannel: string;
+        feedbackPanelId?: any;
+        csrfToken: string;
+    }
 
-    let socket: WebSocket = null;
-    let stompClient: Client = null;
+    let {
+        wsEndpointUrl,
+        topicChannel,
+        feedbackPanelId = null,
+        csrfToken
+    }: Props = $props();
+
+    let socket: WebSocket | null = null;
+    let stompClient: Client | null = null;
     let connected = false;
-    let subscription = null;
+    let subscription: StompSubscription | null = null;
     let feedbackPanelExtension = new FeedbackPanelExtension(feedbackPanelId);
-    let element = null;
-    let self = get_current_component()
+    let element: Element | null = $state(null);
 
     export function connect(): void {
         if (connected) return;
@@ -48,12 +56,17 @@
         wsEndpoint.protocol = protocol;
 
         stompClient = Stomp.over(() => (socket = new WebSocket(wsEndpoint.toString())));
+        stompClient.connectHeaders = {
+            'X-CSRF-TOKEN': csrfToken
+        } 
         stompClient.onConnect = () => onConnect();
         stompClient.onStompError = handleBrokerError;
         stompClient.activate();
     }
 
     export function onConnect() {
+        if (!stompClient) return;
+
         connected = true;
         subscription = stompClient.subscribe(
             "/user/queue/errors",
@@ -66,15 +79,17 @@
         stompClient.subscribe("/topic" + topicChannel, (msg) => messageRecieved(msg));
     }
 
-    export function messageRecieved(msg) {
+    export function messageRecieved(msg: any) {
+        if (!element) return;
+
         if (!document.body.contains(element)) {
             console.debug("Element is not part of the DOM anymore. Disconnecting and suiciding.")
-            self.$destroy()
+            disconnect()
             return;
         }
 
         var msgBody = JSON.parse(msg.body) as RRecommenderLogMessage;
-        console.log(msgBody)
+        // console.log(msgBody)
         msgBody.removeClasses?.forEach(c => document.body.classList.remove(c))
         msgBody.addClasses?.forEach(c => document.body.classList.add(c))
         switch (msgBody.level) {
@@ -93,13 +108,16 @@
     }
 
     export function disconnect() {
-        subscription.unsubscribe();
-        stompClient.deactivate();
-        socket.close();
+        if (subscription) subscription.unsubscribe();
+        if (stompClient) stompClient.deactivate();
+        if (socket) socket.close();
         connected = false;
+        subscription = null;
+        stompClient = null;
+        socket = null;
     }
 
-    function handleBrokerError(receipt: IFrame) {
+    function handleBrokerError(receipt: any) {
         console.log("Broker reported error: " + receipt.headers.message);
         console.log("Additional details: " + receipt.body);
     }
@@ -113,7 +131,8 @@
     });
 </script>
 
-<div bind:this={element} />
+<div bind:this={element}>
+</div>
 
 <style>
 </style>

@@ -31,6 +31,7 @@ import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -49,11 +50,13 @@ import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
@@ -66,6 +69,8 @@ import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestH
 
 public class DataMajorityNerRecommenderTest
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final File cache = DkproTestHelper.getCacheFolder();
     private static final DatasetFactory loader = new DatasetFactory(cache);
 
@@ -131,10 +136,10 @@ public class DataMajorityNerRecommenderTest
         double precision = result.computePrecisionScore();
         double recall = result.computeRecallScore();
 
-        System.out.printf("F1-Score: %f%n", fscore);
-        System.out.printf("Accuracy: %f%n", accuracy);
-        System.out.printf("Precision: %f%n", precision);
-        System.out.printf("Recall: %f%n", recall);
+        LOG.info("F1-Score:  {}", fscore);
+        LOG.info("Accuracy:  {}", accuracy);
+        LOG.info("Precision: {}", precision);
+        LOG.info("Recall:    {}", recall);
 
         assertThat(fscore).isStrictlyBetween(0.0, 1.0);
         assertThat(precision).isStrictlyBetween(0.0, 1.0);
@@ -181,7 +186,7 @@ public class DataMajorityNerRecommenderTest
 
         double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
-        System.out.printf("Score: %f%n", score);
+        LOG.info("Score: {}", score);
 
         assertThat(score).isBetween(0.0, 1.0);
     }
@@ -219,7 +224,7 @@ public class DataMajorityNerRecommenderTest
 
             double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
-            System.out.printf("Score: %f%n", score);
+            LOG.info("Score: {}", score);
 
             assertThat(score).isStrictlyBetween(0.0, 1.0);
 

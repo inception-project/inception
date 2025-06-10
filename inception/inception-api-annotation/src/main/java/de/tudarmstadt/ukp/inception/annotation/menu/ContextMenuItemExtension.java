@@ -19,12 +19,11 @@ package de.tudarmstadt.ukp.inception.annotation.menu;
 
 import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
 public interface ContextMenuItemExtension
-    extends Extension<AnnotationPageBase>
+    extends Extension<ContextMenuItemContext>
 {
     @Override
     default String getId()
@@ -33,7 +32,7 @@ public interface ContextMenuItemExtension
     }
 
     @Override
-    default boolean accepts(AnnotationPageBase aPage)
+    default boolean accepts(ContextMenuItemContext aPage)
     {
         return true;
     }

@@ -31,8 +31,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
-
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -342,7 +340,6 @@ public class OpenNlpPosRecommender
         return isNoneBlank(value) ? value : PAD;
     }
 
-    @Nullable
     private POSModel train(List<POSSample> aPosSamples, TrainingParameters aParameters)
         throws RecommendationException
     {

@@ -20,14 +20,15 @@ package de.tudarmstadt.ukp.inception.assistant.model;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
- * @param duration time it took to produce the messages in milliseconds
+ * @param duration
+ *            time it took to produce the messages in milliseconds
  */
 @JsonSerialize
-public record MPerformanceMetrics(long duration) {
+public record MPerformanceMetrics(long duration, int tokens) {
 
     private MPerformanceMetrics(Builder builder)
     {
-        this(builder.duration);
+        this(builder.duration, builder.tokens);
     }
 
     public MPerformanceMetrics merge(MPerformanceMetrics aPerformance)
@@ -35,7 +36,7 @@ public record MPerformanceMetrics(long duration) {
         if (aPerformance == null) {
             return this;
         }
-        
+
         return MPerformanceMetrics.builder() //
                 .withDuration((duration() + aPerformance.duration())) //
                 .build();
@@ -49,6 +50,7 @@ public record MPerformanceMetrics(long duration) {
     public static final class Builder
     {
         private long duration;
+        private int tokens;
 
         private Builder()
         {
@@ -57,6 +59,12 @@ public record MPerformanceMetrics(long duration) {
         public Builder withDuration(long aDuration)
         {
             duration = aDuration;
+            return this;
+        }
+
+        public Builder withTokens(int aTokens)
+        {
+            tokens = aTokens;
             return this;
         }
 

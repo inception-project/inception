@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     /*
      * Licensed to the Technische Universität Darmstadt under one
      * or more contributor license agreements.  See the NOTICE file
@@ -19,43 +21,49 @@
 
     import {
         AnnotatedText,
-        Annotation,
         AnnotationOverEvent,
         AnnotationOutEvent,
-        DiamAjax,
         Relation,
         Span,
+        compareOffsets,
+        type Annotation,
+        type DiamAjax,
     } from "@inception-project/inception-js-api";
-    import { compareOffsets } from "@inception-project/inception-js-api/src/model/Offsets";
     import LabelBadge from "./LabelBadge.svelte";
     import SpanText from "./SpanText.svelte";
     import { compareSpanText, debounce, filterAnnotations, groupBy, renderLabel, uniqueLabels } from "./Utils";
-    import { sortByScore, recommendationsFirst } from "./AnnotationBrowserState"
+    import { stateStore } from "./AnnotationBrowserState.svelte"
 
-    export let ajaxClient: DiamAjax
-    export let data: AnnotatedText
-    export let pinnedGroups: string[]
+    interface Props {
+        ajaxClient: DiamAjax;
+        data: AnnotatedText;
+        pinnedGroups: string[];
+    }
 
-    let groupedAnnotations: Record<string, Annotation[]>
-    let groups: { label: string, collapsed: boolean }[]
-    let collapsedGroups = new Set<string>()
-    let filter = '';
+    let { ajaxClient, data = $bindable(), pinnedGroups }: Props = $props();
 
-    $: {
+    let groupedAnnotations: Record<string, Annotation[]> = $state()
+    let groups: { label: string, collapsed: boolean }[] = $state()
+    let collapsedGroups: string[] = $state([]);
+    let filter = $state('');
+
+    run(() => {
         const sortedLabels = [...pinnedGroups, ...uniqueLabels(data).filter(v => !pinnedGroups.includes(v))]
 
         groups = sortedLabels.map(label => {
-            return { label: label, collapsed: collapsedGroups.has(label) };
+            return { label: label, collapsed: collapsedGroups.includes(label) };
         });
 
         const relations = data?.relations.values() || []
         const spans = data?.spans.values() || []
         groupedAnnotations = groupBy(
             [...spans, ...relations],
-            (s) => renderLabel(s)
+            (s) => renderLabel(data, s)
         )
+    })
 
-        for (let [key, items] of Object.entries(groupedAnnotations)) {
+    $effect(() => {
+            for (let [key, items] of Object.entries(groupedAnnotations)) {
             items = filterAnnotations(data, items, filter)
             items.sort((a, b) => {
                 if (a instanceof Span && !(b instanceof Span)) {
@@ -68,12 +76,12 @@
 
                 const aIsRec = a.vid.toString().startsWith("rec:")
                 const bIsRec = b.vid.toString().startsWith("rec:")
-                if ($sortByScore && aIsRec && !bIsRec) {
-                    return $recommendationsFirst ? -1 : 1;
+                if (stateStore.sortByScore && aIsRec && !bIsRec) {
+                    return stateStore.recommendationsFirst ? -1 : 1;
                 }
 
                 if (a instanceof Span && b instanceof Span) {
-                    if ($sortByScore && aIsRec && bIsRec) {
+                    if (stateStore.sortByScore && aIsRec && bIsRec) {
                         return b.score - a.score;
                     }
 
@@ -84,7 +92,7 @@
                 }
 
                 if (a instanceof Relation && b instanceof Relation) {
-                    if ($sortByScore && aIsRec && bIsRec) {
+                    if (stateStore.sortByScore && aIsRec && bIsRec) {
                         return b.score - a.score;
                     }
 
@@ -97,7 +105,7 @@
             });
             groupedAnnotations[key] = items
         }
-    }
+    });
 
     function scrollTo(ann: Annotation) {
         if (ann instanceof Span) {
@@ -117,25 +125,22 @@
     }
 
     function toggleCollapsed(group) {
-        if (!collapsedGroups.has(group.label)) {
-            collapsedGroups.add(group.label)
+        if (!collapsedGroups.includes(group.label)) {
+            collapsedGroups.push(group.label)
         }
         else {
-            collapsedGroups.delete(group.label)
+            collapsedGroups = collapsedGroups.filter(label => label !== group.label)
         }
-        data = data // Trigger reactive update
     }
 
     function collapseAll() {
         for (const group of groups) {
-            collapsedGroups.add(group.label)
+            collapsedGroups.push(group.label)
         }
-        data = data // Trigger reactive update
     }
 
     function expandAll() {
-        collapsedGroups.clear()
-        data = data // Trigger reactive update
+        collapsedGroups = []
     }
 
     const updateFilter = debounce(newFilter => { filter = newFilter }, 300);
@@ -156,7 +161,7 @@
     </div>
 {:else}
     <div class="d-flex flex-row flex-wrap">
-        <input type="text" class="form-control rounded-0" on:input={handleFilterChange} placeholder="Filter"/>
+        <input type="text" class="form-control rounded-0" oninput={handleFilterChange} placeholder="Filter"/>
     </div>
     <div class="d-flex flex-row flex-wrap">
         <div class="form-check form-switch mx-2">
@@ -165,19 +170,19 @@
                 type="checkbox"
                 role="switch"
                 id="sortByScore"
-                bind:checked={$sortByScore}
+                bind:checked={stateStore.sortByScore}
             />
             <label class="form-check-label" for="sortByScore"
                 >Sort by score</label
             >
         </div>
-        <div class="form-check form-switch mx-2" class:d-none={!$sortByScore}>
+        <div class="form-check form-switch mx-2" class:d-none={!stateStore.sortByScore}>
             <input
                 class="form-check-input"
                 type="checkbox"
                 role="switch"
                 id="recommendationsFirst"
-                bind:checked={$recommendationsFirst}
+                bind:checked={stateStore.recommendationsFirst}
             />
             <label class="form-check-label" for="recommendationsFirst"
                 >Suggestions first</label
@@ -185,11 +190,11 @@
         </div>
     </div>
     <div class="d-flex flex-row flex-wrap">
-        <button class="btn btn-outline-secondary btn-sm p-0 m-1" style="width: 2em;" on:click={expandAll}>
-            <i class="fas fa-caret-down"/>
+        <button class="btn btn-outline-secondary btn-sm p-0 m-1" style="width: 2em;" onclick={expandAll}>
+            <i class="fas fa-caret-down"></i>
         </button>
-        <button class="btn btn-outline-secondary btn-sm p-0 m-1" style="width: 2em;" on:click={collapseAll}>
-            <i class="fas fa-caret-down group-collapsed"/>
+        <button class="btn btn-outline-secondary btn-sm p-0 m-1" style="width: 2em;" onclick={collapseAll}>
+            <i class="fas fa-caret-down group-collapsed"></i>
         </button>
     </div>
     <div class="flex-content fit-child-snug">
@@ -197,13 +202,13 @@
             <ul class="scrolling flex-content list-group list-group-flush">
                 {#each groups as group}
                     <li class="list-group-item py-0 px-0 border-0">
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
                         <div
                             class="px-2 py-1 bg-light-subtle fw-bold sticky-top border-top border-bottom"
-                            on:click={() => toggleCollapsed(group)}
+                            onclick={() => toggleCollapsed(group)}
                         >
                             <button class="btn btn-link p-0" style="color: var(--bs-body-color)">
-                                <i class="fas fa-caret-down d-inline-block" class:group-collapsed={group.collapsed}/>
+                                <i class="fas fa-caret-down d-inline-block" class:group-collapsed={group.collapsed}></i>
                             </button>
                             <span class="badge rounded-pill text-bg-secondary float-end m-1">{groupedAnnotations[group.label].length}</span>
                             <span>{group.label || "No label"}</span>
@@ -211,28 +216,29 @@
                         <ul class="px-0 list-group list-group-flush" class:d-none={group.collapsed}>
                             {#if groupedAnnotations[group.label]}
                                 {#each groupedAnnotations[group.label] as ann}
-                                    <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+                                    <!-- svelte-ignore a11y_mouse_events_have_key_events -->
                                     <li
                                         class="list-group-item list-group-item-action p-0 d-flex"
-                                        on:mouseover={ev => mouseOverAnnotation(ev, ann)}
-                                        on:mouseout={ev => mouseOutAnnotation(ev, ann)}
+                                        onmouseover={ev => mouseOverAnnotation(ev, ann)}
+                                        onmouseout={ev => mouseOutAnnotation(ev, ann)}
                                     >
                                         <div
                                             class="text-secondary bg-light-subtle border-end px-2 d-flex align-items-center"
                                         >
                                             {#if ann instanceof Span}
-                                                <div class="annotation-type-marker i7n-icon-span"/>
+                                                <div class="annotation-type-marker i7n-icon-span"></div>
                                             {:else if ann instanceof Relation}
-                                                <div class="annotation-type-marker i7n-icon-relation"/>
+                                                <div class="annotation-type-marker i7n-icon-relation"></div>
                                             {/if}
                                         </div>
-                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                        <!-- svelte-ignore a11y_click_events_have_key_events -->
                                         <div
                                             class="flex-grow-1 my-1 mx-2 position-relative overflow-hidden"
-                                            on:click={() => scrollTo(ann)}
+                                            onclick={() => scrollTo(ann)}
                                         >
                                             <div class="float-end labels">
                                                 <LabelBadge
+                                                    {data}
                                                     annotation={ann}
                                                     {ajaxClient}
                                                     showText={false}
@@ -264,6 +270,9 @@
 {/if}
 
 <style lang="scss">
+    @import "@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss";
+    @import "@inception-project/inception-js-api/src/style/InceptionEditorColors.scss";
+
     .labels {
         background: linear-gradient(to right, transparent 0px, var(--bs-body-bg) 15px);
         padding-left: 20px;

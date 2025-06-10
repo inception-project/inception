@@ -17,32 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-@Deprecated
-public class Progress
-{
-    private final int done;
-    private final int total;
-
-    public Progress(int aDone, int aTotal)
-    {
-        done = aDone;
-        total = aTotal;
-    }
-
-    public int getDone()
-    {
-        return done;
-    }
-
-    public int getTotal()
-    {
-        return total;
-    }
-
+public record Progress(String unit, int progress, int maxProgress) {
     public int percent()
     {
-        if (total > 0) {
-            return done * 100 / total;
+        if (maxProgress > 0) {
+            return progress * 100 / maxProgress;
         }
         else {
             return 0;

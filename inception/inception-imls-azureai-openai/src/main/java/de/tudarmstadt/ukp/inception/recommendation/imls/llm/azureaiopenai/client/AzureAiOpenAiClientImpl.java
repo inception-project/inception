@@ -78,7 +78,7 @@ public class AzureAiOpenAiClientImpl
     }
 
     @Override
-    public String generate(String aUrl, ChatCompletionRequest aRequest) throws IOException
+    public String generate(String aUrl, AzureAiChatCompletionRequest aRequest) throws IOException
     {
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(
@@ -94,7 +94,7 @@ public class AzureAiOpenAiClientImpl
 
         var result = new StringBuilder();
         try (var is = response.body()) {
-            var completion = objectMapper.readValue(is, ChatCompletionResponse.class);
+            var completion = objectMapper.readValue(is, AzureAiChatCompletionResponse.class);
             result.append(completion.getChoices().get(0).getMessage().getContent());
         }
 

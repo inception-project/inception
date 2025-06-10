@@ -16,16 +16,38 @@
  * limitations under the License.
  */
 import { AnnotatedText, Annotation, Layer, Offsets, Relation, Span, VID } from '@inception-project/inception-js-api'
-import { compareOffsets } from '@inception-project/inception-js-api/src/model/Offsets'
+import { compareOffsets } from '@inception-project/inception-js-api'
 
-export function renderLabel (ann?: Annotation): string {
+export const ERROR_LABEL = '🔴'
+export const INFO_LABEL = 'ℹ️'
+export const WARN_LABEL = '⚠️'
+
+export function renderDecorations (data: AnnotatedText, ann?: Annotation): string {
   if (!ann) return ''
+
+  let label = ''
+
+  for (const marker of data.annotationMarkers.get(ann.vid) || []) {
+    if (marker.type === 'info') label += INFO_LABEL
+    if (marker.type === 'warn') label += WARN_LABEL
+    if (marker.type === 'error') label += ERROR_LABEL
+  }
+
+  return label
+}
+
+export function renderLabel (data: AnnotatedText, ann?: Annotation): string {
+  if (!ann) return ''
+
   const maxLength = 300
+
   let label = `${ann.label || `[${ann.layer.name}]`}`
+
   label = label.replace(/\s+/g, ' ').trim()
   if (label.length > maxLength) {
     label = label.substring(0, maxLength).trim() + '…'
   }
+
   return label
 }
 
@@ -48,7 +70,7 @@ export function uniqueLayers (data: AnnotatedText): Layer[] {
 export function uniqueLabels (data: AnnotatedText): string[] {
   if (!data) return []
 
-  const sortedLabelsWithDuplicates = Array.from(data.annotations(), (ann) => renderLabel(ann))
+  const sortedLabelsWithDuplicates = Array.from(data.annotations(), (ann) => renderLabel(data, ann))
     .sort((a, b) => a.localeCompare(b, undefined, { usage: 'sort', sensitivity: 'variant' }))
 
   const sortedLabels: string[] = []
@@ -106,7 +128,7 @@ export function groupBy<T> (data: Iterable<T>, keyMapper: (s: T) => string): Rec
  * @returns grouped spans
  */
 export function groupSpansByLabel (data: AnnotatedText): Record<string, Span[]> {
-  const groups = groupBy(data?.spans.values(), (s) => renderLabel(s))
+  const groups = groupBy(data?.spans.values(), (s) => renderLabel(data, s))
   for (const items of Object.values(groups)) {
     items.sort((a, b) => compareSpanText(data, a, b) || compareOffsets(a.offsets[0], b.offsets[0]))
   }
@@ -148,7 +170,7 @@ export function compareSpanText (data: AnnotatedText, a: Span, b: Span): number 
  * @returns grouped relations
  */
 export function groupRelationsByLabel (data: AnnotatedText): Record<string, Relation[]> {
-  const groups = groupBy(data?.relations.values(), (s) => renderLabel(s))
+  const groups = groupBy(data?.relations.values(), (s) => renderLabel(data, s))
   for (const items of Object.values(groups)) {
     items.sort((a, b) => compareOffsets(
       (a.arguments[0].target as Span).offsets[0],

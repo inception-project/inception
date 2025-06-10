@@ -30,6 +30,6 @@ public interface AssistantChatProperties
     double getTemperature();
 
     int getContextLength();
-    
+
     String getEncoding();
 }

@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Map;
@@ -46,8 +46,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableR
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.MentionsFromJsonExtractor;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.MentionsSample;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 class MentionsSampleTest
@@ -101,37 +99,40 @@ class MentionsSampleTest
                 .buildAndAddToIndexes();
 
         var sut = new MentionsFromJsonExtractor();
-        var examples = sut.generateSamples(engine, cas, 10);
+        var examples = sut.generateExamples(engine, cas, 10);
 
         assertThat(examples).containsKeys(text);
-        assertThat(examples.get(text).getLabelledMentions()) //
-                .contains(entry("John", "PER"), entry("Mary", "PER"));
+        assertThat(examples.get(text).getMentions()) //
+                .extracting(Mention::getCoveredText, Mention::getLabel) //
+                .contains( //
+                        tuple("John", "PER"), //
+                        tuple("Mary", "PER"));
 
         var template1 = """
-                        {% for sentence, example in examples.items() %}
-                        {{ sentence }}
-                        {% set mentions = example.getLabelledMentions() %}
-                        {% for mention, label in mentions.items() %}
-                        {{ mention }} :: {{ label }}
-                        {% endfor %}
-                        {% endfor %}""";
+                {% for sentence, example in examples.items() %}
+                {{ sentence }}
+                {% set mentions = example.getLabelledMentions() %}
+                {% for mention, label in mentions.items() %}
+                {{ mention }} :: {{ label }}
+                {% endfor %}
+                {% endfor %}""";
 
-        System.out.println(render(examples, template1));
+        // System.out.println(render(examples, template1));
 
         var template2 = """
-                        {% for sentence, example in examples.items() %}
-                        Extract and classify the named entities from the following sentence as JSON:
+                {% for sentence, example in examples.items() %}
+                Extract and classify the named entities from the following sentence as JSON:
 
-                        Text:
+                Text:
 
-                        '''
-                        {{ example.getText() }}
-                        '''
+                '''
+                {{ example.getText() }}
+                '''
 
-                        {{ example.getLabelledMentions() | tojson }}
-                        {% endfor %}""";
+                {{ example.getLabelledMentions() | tojson }}
+                {% endfor %}""";
 
-        System.out.println(render(examples, template2));
+        // System.out.println(render(examples, template2));
     }
 
     private String render(Map<String, MentionsSample> examples, String template)

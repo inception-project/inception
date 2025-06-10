@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.inception.assistant.retriever;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
-public interface RetrieverExtensionPoint extends ExtensionPoint<Project, Retriever>
+public interface RetrieverExtensionPoint
+    extends ExtensionPoint<Project, Retriever>
 {
 
 }

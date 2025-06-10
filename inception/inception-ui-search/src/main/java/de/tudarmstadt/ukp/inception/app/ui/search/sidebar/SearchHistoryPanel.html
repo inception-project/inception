@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:panel>
+  <div class="list-group scrolling">
+    <div wicket:id="noHistoryNotice" class="list-group-item">
+      <wicket:message key="noHistoryNotice"/>
+    </div>
+    <div wicket:id="entry" class="list-group-item list-group-item-action p-0 d-flex">
+      <a wicket:id="pin" class="p-2 text-decoration-none text-body">
+        <span wicket:id="pinState"/>
+      </a>
+      <a wicket:id="link" class="p-2 flex-grow-1 border-start border-1 text-decoration-none text-body">
+        <wicket:container wicket:id="query"/>
+        <small wicket:id="details" class="text-body-secondary fw-lighter"/>
+      </a>
+      <a wicket:id="delete" class="p-2 text-decoration-none text-body">
+        <i class="fa-solid fa-trash"></i>
+      </a>
+    </div>
+  </div>
+</wicket:panel>
+</html>

@@ -71,9 +71,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
@@ -92,6 +90,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.project.api.FeatureInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -120,22 +119,24 @@ public class ProjectServiceImpl
     private final UserDao userRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final RepositoryProperties repositoryProperties;
-    private final List<ProjectInitializer> initializerProxy;
+    private final List<ProjectInitializer> projectInitializerProxy;
+    private final List<FeatureInitializer> featureInitializerProxy;
 
-    private List<ProjectInitializer> initializers;
+    private List<ProjectInitializer> projectInitializers;
+    private List<FeatureInitializer> featureInitializers;
 
-    @Autowired
     public ProjectServiceImpl(UserDao aUserRepository,
             ApplicationEventPublisher aApplicationEventPublisher,
             RepositoryProperties aRepositoryProperties,
-            @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy,
-            EntityManager aEntityManager)
+            List<ProjectInitializer> aProjectInitializerProxy,
+            List<FeatureInitializer> aFeatureInitializerProxy, EntityManager aEntityManager)
     {
         entityManager = aEntityManager;
         userRepository = aUserRepository;
         applicationEventPublisher = aApplicationEventPublisher;
         repositoryProperties = aRepositoryProperties;
-        initializerProxy = aInitializerProxy;
+        projectInitializerProxy = aProjectInitializerProxy;
+        featureInitializerProxy = aFeatureInitializerProxy;
     }
 
     @Override
@@ -668,22 +669,22 @@ public class ProjectServiceImpl
             long start = System.currentTimeMillis();
 
             // remove metadata from DB
-            Project project = aProject;
+            var project = aProject;
             if (!entityManager.contains(project)) {
                 project = entityManager.merge(project);
             }
 
-            applicationEventPublisher.publishEvent(new BeforeProjectRemovedEvent(this, aProject));
+            applicationEventPublisher.publishEvent(new BeforeProjectRemovedEvent(this, project));
 
-            for (var permissions : getProjectPermissions(aProject)) {
+            for (var permissions : getProjectPermissions(project)) {
                 entityManager.remove(permissions);
             }
 
             entityManager.remove(project);
 
             // remove the project directory from the file system
-            String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
-                    + "/" + aProject.getId();
+            var path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                    + project.getId();
             try {
                 FastIOUtils.delete(new File(path));
             }
@@ -691,9 +692,9 @@ public class ProjectServiceImpl
                 LOG.info("Project directory to be deleted was not found: [{}]. Ignoring.", path);
             }
 
-            applicationEventPublisher.publishEvent(new AfterProjectRemovedEvent(this, aProject));
+            applicationEventPublisher.publishEvent(new AfterProjectRemovedEvent(this, project));
 
-            LOG.info("Removed project {} ({})", aProject,
+            LOG.info("Removed project {} ({})", project,
                     formatDurationWords(System.currentTimeMillis() - start, true, true));
         }
     }
@@ -806,14 +807,14 @@ public class ProjectServiceImpl
 
     /* package private */ void init()
     {
-        List<ProjectInitializer> inits = new ArrayList<>();
+        var projectInits = new ArrayList<ProjectInitializer>();
 
-        if (initializerProxy != null) {
-            inits.addAll(initializerProxy);
-            AnnotationAwareOrderComparator.sort(inits);
+        if (projectInitializerProxy != null) {
+            projectInits.addAll(projectInitializerProxy);
+            AnnotationAwareOrderComparator.sort(projectInits);
 
-            Set<Class<? extends ProjectInitializer>> initializerClasses = new HashSet<>();
-            for (ProjectInitializer init : inits) {
+            var initializerClasses = new HashSet<Class<? extends ProjectInitializer>>();
+            for (var init : projectInits) {
                 if (initializerClasses.add(init.getClass())) {
                     LOG.debug("Found project initializer: {}",
                             ClassUtils.getAbbreviatedName(init.getClass(), 20));
@@ -826,9 +827,33 @@ public class ProjectServiceImpl
             }
         }
 
-        BaseLoggers.BOOT_LOG.info("Found [{}] project initializers", inits.size());
+        BaseLoggers.BOOT_LOG.info("Found [{}] project initializers", projectInits.size());
 
-        initializers = unmodifiableList(inits);
+        projectInitializers = unmodifiableList(projectInits);
+
+        var featureInits = new ArrayList<FeatureInitializer>();
+
+        if (featureInitializerProxy != null) {
+            featureInits.addAll(featureInitializerProxy);
+            AnnotationAwareOrderComparator.sort(featureInits);
+
+            var initializerClasses = new HashSet<Class<? extends FeatureInitializer>>();
+            for (var init : featureInits) {
+                if (initializerClasses.add(init.getClass())) {
+                    LOG.debug("Found feature initializer: {}",
+                            ClassUtils.getAbbreviatedName(init.getClass(), 20));
+                }
+                else {
+                    throw new IllegalStateException("There cannot be more than once instance "
+                            + "of each feature initializer class! Duplicate instance of class: "
+                            + init.getClass());
+                }
+            }
+        }
+
+        BaseLoggers.BOOT_LOG.info("Found [{}] feature initializers", projectInits.size());
+
+        featureInitializers = unmodifiableList(featureInits);
     }
 
     private void addMissingProjectSlugs()
@@ -862,21 +887,27 @@ public class ProjectServiceImpl
     @Override
     public List<ProjectInitializer> listProjectInitializers()
     {
-        return initializers;
+        return projectInitializers;
+    }
+
+    @Override
+    public List<FeatureInitializer> listFeatureInitializers()
+    {
+        return featureInitializers;
     }
 
     @Override
     @Transactional
     public void initializeProject(ProjectInitializationRequest aRequest) throws IOException
     {
-        initializeProject(aRequest, initializers.stream() //
+        initializeProject(aRequest, projectInitializers.stream() //
                 .filter(ProjectInitializer::applyByDefault) //
                 .collect(Collectors.toList()));
     }
 
     private ProjectInitializer findProjectInitializer(Class<? extends ProjectInitializer> aType)
     {
-        return initializers.stream().filter(i -> aType.isAssignableFrom(i.getClass())) //
+        return projectInitializers.stream().filter(i -> aType.isAssignableFrom(i.getClass())) //
                 .findFirst() //
                 .orElseThrow(() -> new IllegalArgumentException(
                         "No initializer of type [" + aType + "] exists!"));
@@ -912,7 +943,7 @@ public class ProjectServiceImpl
     {
         var allInits = new HashSet<Class<? extends ProjectInitializer>>();
         var applied = new HashSet<Class<? extends ProjectInitializer>>();
-        for (var initializer : initializers) {
+        for (var initializer : projectInitializers) {
             allInits.add(initializer.getClass());
             if (initializer.alreadyApplied(aRequest.getProject())) {
                 applied.add(initializer.getClass());
@@ -1014,7 +1045,7 @@ public class ProjectServiceImpl
     @Transactional
     public void setProjectState(Project aProject, ProjectState aState)
     {
-        ProjectState oldState = aProject.getState();
+        var oldState = aProject.getState();
 
         aProject.setState(aState);
         updateProject(aProject);

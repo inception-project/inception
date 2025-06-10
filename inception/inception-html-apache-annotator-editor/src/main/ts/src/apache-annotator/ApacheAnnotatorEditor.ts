@@ -15,13 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AnnotationEditor, DiamAjax, Offsets, calculateStartOffset } from '@inception-project/inception-js-api'
-import { highlights, ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualizer'
+import { type AnnotationEditor, type DiamAjax, type Offsets, calculateStartOffset } from '@inception-project/inception-js-api'
+import { highlights, ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualizer.svelte'
 import { ApacheAnnotatorSelector } from './ApacheAnnotatorSelector'
 import ApacheAnnotatorToolbar from './ApacheAnnotatorToolbar.svelte'
-import { showDocumentStructure, documentStructureWidth, showLabels, showImages, showTables, showEmptyHighlights, showAggregatedLabels } from './ApacheAnnotatorState'
-import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
-import { Writable } from 'svelte/store'
+import { annotatorState } from './ApacheAnnotatorState.svelte'
+// import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
+import AnnotationDetailPopOver from './AnnotationDetailPopOver.svelte'
+import { mount, tick, unmount } from 'svelte'
 
 interface SelectionLike {
   anchorNode: Node | null | undefined
@@ -40,10 +41,13 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
   private sectionSelector: string
   private horizSplitPane: HTMLElement
   private documentStructureNavigator: Element
+  private userPreferencesKey: string
+  private navigatorContainer: HTMLElement
 
   public constructor (element: Element, ajax: DiamAjax, userPreferencesKey: string, sectionElementLocalNames: Set<string>) {
     this.ajax = ajax
     this.root = element
+    this.userPreferencesKey = userPreferencesKey
     this.sectionSelector = [...sectionElementLocalNames].join(',')
 
     const defaultPreferences = {
@@ -60,35 +64,21 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     ajax.loadPreferences(userPreferencesKey).then((p) => {
       preferences = Object.assign(preferences, defaultPreferences, p)
       console.log('Loaded preferences', preferences)
-      let preferencesDebounceTimeout: number | undefined = undefined
 
-      function bindPreference(writable: Writable<any>, propertyName: string) {
-        writable.set(
-          preferences[propertyName] !== undefined
-            ? preferences[propertyName]
-            : defaultPreferences[propertyName]
-        )
-
-        writable.subscribe((value) => {
-          preferences[propertyName] = value
-          if (preferencesDebounceTimeout) {
-            window.clearTimeout(preferencesDebounceTimeout)
-            preferencesDebounceTimeout = undefined
-          }
-          preferencesDebounceTimeout = window.setTimeout(() => { 
-            console.log("Saved preferences")
-            ajax.savePreferences(userPreferencesKey, preferences)
-          }, 250)
-        })
-      }
-
-      bindPreference(showLabels, "showLabels")
-      bindPreference(showAggregatedLabels, "showAggregatedLabels")
-      bindPreference(showEmptyHighlights, "showEmptyHighlights")
-      bindPreference(showDocumentStructure, "showDocumentStructure")
-      bindPreference(showImages, "showImages")
-      bindPreference(showTables, "showTables")
-      bindPreference(documentStructureWidth, "documentStructureWidth")
+      annotatorState.showLabels = 
+          preferences.showLabels ?? defaultPreferences.showLabels;
+      annotatorState.showAggregatedLabels = 
+          preferences.showAggregatedLabels ?? defaultPreferences.showAggregatedLabels;
+      annotatorState.showEmptyHighlights = 
+          preferences.showEmptyHighlights ?? defaultPreferences.showEmptyHighlights;
+      annotatorState.showDocumentStructure = 
+          preferences.showDocumentStructure ?? defaultPreferences.showDocumentStructure;
+      annotatorState.showImages = 
+          preferences.showImages ?? defaultPreferences.showImages;
+      annotatorState.showTables = 
+          preferences.showTables ?? defaultPreferences.showTables;
+      annotatorState.documentStructureWidth = 
+          preferences.documentStructureWidth ?? defaultPreferences.documentStructureWidth;
     }).then(() => {
       this.ensureSectionElementsHaveAnId()
 
@@ -98,11 +88,11 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
       [...this.root.ownerDocument.body.children].forEach(child => documentContainer.appendChild(child))
 
       // Set up a container for the document navigation sidebar
-      const navigatorContainer = this.root.ownerDocument.createElement('div')
-      navigatorContainer.classList.add('iaa-document-navigator');
+      this.navigatorContainer = this.root.ownerDocument.createElement('div')
+      this.navigatorContainer.classList.add('iaa-document-navigator');
 
       // Set up a split pane to host the document and the document structure navigation sidebar
-      this.horizSplitPane = this.createHorizontalSplitPane(navigatorContainer, documentContainer)
+      this.horizSplitPane = this.createHorizontalSplitPane(this.navigatorContainer, documentContainer)
 
       // Add the split pane to the document
       this.root.ownerDocument.body.appendChild(this.horizSplitPane)
@@ -112,10 +102,10 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
       this.selector = new ApacheAnnotatorSelector(this.root, this.ajax)
 
       // Add auxiliary controls
-      this.documentStructureNavigator = this.createDocumentNavigator(navigatorContainer)
+      this.documentStructureNavigator = this.createDocumentNavigator(this.navigatorContainer)
       this.toolbar = this.createToolbar()
 
-      this.popover = new AnnotationDetailPopOver({
+      this.popover = mount(AnnotationDetailPopOver, {
         target: this.root.ownerDocument.body,
         props: {
           root: this.root,
@@ -133,39 +123,6 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
       this.root.addEventListener('mousedown', e => this.cancelRightClick(e), { capture: true })
       this.root.addEventListener('mouseup', e => this.cancelRightClick(e), { capture: true })
       this.root.addEventListener('mouseclick', e => this.cancelRightClick(e), { capture: true })
-
-      showDocumentStructure.subscribe(enabled => {
-        navigatorContainer.style.display = enabled ? 'flex' : 'none'
-      })
-
-      showImages.subscribe(enabled => {
-        if (enabled) {
-          this.root.classList.remove("iaa-hide-images")
-        }
-        else {
-          this.root.classList.add("iaa-hide-images")
-        }
-      })
-
-      showTables.subscribe(enabled => {
-        if (enabled) {
-          this.root.classList.remove("iaa-hide-tables")
-        }
-        else {
-          this.root.classList.add("iaa-hide-tables")
-        }
-      })
-
-      // Delay subscription a bit so the browser has time to render and we can obtain the width
-      // of the split pane
-      window.setTimeout(() => documentStructureWidth.subscribe(relativeWidth => {
-        const totalWidth = this.horizSplitPane.getBoundingClientRect().width
-        const width = totalWidth * Math.max(0.1, Math.min(0.9, relativeWidth))
-        console.log(`width: ${width} / totalWidth: ${totalWidth}`)
-        navigatorContainer.style.width = `${width}px`
-        navigatorContainer.style.minWidth = `${width}px`
-        navigatorContainer.style.maxWidth = `${width}px`
-      }), 10)
     })
   }
 
@@ -202,7 +159,7 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
         glass = undefined
         const width = leftPane.getBoundingClientRect().width
         const relativeWidth = width / totalWidth
-        documentStructureWidth.set(relativeWidth)
+        annotatorState.documentStructureWidth = relativeWidth
       })
       glass.addEventListener('mousemove', e => { 
         if (e.buttons !== 1) {
@@ -218,7 +175,7 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
         leftPane.style.width = `${leftWidth}px`
         leftPane.style.minWidth = `${leftWidth}px`
         leftPane.style.maxWidth = `${leftWidth}px`
-        documentStructureWidth.set(relativeWidth)
+        annotatorState.documentStructureWidth = relativeWidth
       }, true)
       this.root.ownerDocument.body.appendChild(glass)
     })
@@ -246,8 +203,43 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     toolbarContainer.style.backgroundColor = '#fff'
     this.root.ownerDocument.body.insertBefore(toolbarContainer, this.root.ownerDocument.body.firstChild)
 
-    // @ts-ignore - VSCode does not seem to understand the Svelte component
-    return new ApacheAnnotatorToolbar({ target: toolbarContainer, props: { sectionSelector: this.sectionSelector } })
+    return mount(ApacheAnnotatorToolbar, { 
+        target: toolbarContainer, 
+        props: { 
+          userPreferencesKey: this.userPreferencesKey,
+          ajax: this.ajax,
+          sectionSelector: this.sectionSelector
+        },
+        events: {
+          'renderingPreferencesChanged': (e: Event) => { this.loadAnnotations() },
+          'cssRenderingPreferencesChanged': (e: Event) => {
+            if (annotatorState.showImages) {
+              this.root.classList.remove("iaa-hide-images")
+            }
+            else {
+              this.root.classList.add("iaa-hide-images")
+            }
+    
+            if (annotatorState.showTables) {
+              this.root.classList.remove("iaa-hide-tables")
+            }
+            else {
+              this.root.classList.add("iaa-hide-tables")
+            }
+          },
+          'documentStructurePreferencesChanged': (e: Event) => {
+            this.navigatorContainer.style.display = annotatorState.showDocumentStructure ? 'flex' : 'none'
+            tick().then(() => {
+              const totalWidth = this.horizSplitPane.getBoundingClientRect().width
+              const width = totalWidth * Math.max(0.1, Math.min(0.9, annotatorState.documentStructureWidth))
+              console.log(`width: ${width} / totalWidth: ${totalWidth}`)
+              this.navigatorContainer.style.width = `${width}px`
+              this.navigatorContainer.style.minWidth = `${width}px`
+              this.navigatorContainer.style.maxWidth = `${width}px`  
+            })
+          }
+        },
+    })
   }
 
   private createDocumentNavigator (target: HTMLElement) {
@@ -311,9 +303,16 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
   }
 
   destroy (): void {
-    if (this.popover?.$destroy) {
-      this.popover.$destroy()
+    if (this.popover) {
+      unmount(this.popover)
+      this.popover = undefined  
     }
+
+    if (this.toolbar) {
+      unmount(this.toolbar)
+      this.toolbar = undefined  
+    }
+
     this.vis?.destroy()
     this.selector?.destroy()
   }

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.format;
 
 import static de.tudarmstadt.ukp.inception.support.io.ZipUtils.zipFolder;
 import static java.io.File.createTempFile;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.empty;
@@ -133,7 +134,7 @@ public interface FormatSupport
      */
     default List<String> getSectionElements()
     {
-        return emptyList();
+        return asList("p");
     }
 
     default Optional<PolicyCollection> getPolicy() throws IOException

@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.support.uima.FeatureStructureBuilder.
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -33,6 +34,8 @@ import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -46,6 +49,8 @@ import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerS
 
 public class OpenNlpDoccatMetadataRecommenderTest
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private RecommenderContext context;
     private Recommender recommender;
     private OpenNlpDoccatRecommenderTraits traits;
@@ -129,10 +134,10 @@ public class OpenNlpDoccatMetadataRecommenderTest
         var precision = result.computePrecisionScore();
         var recall = result.computeRecallScore();
 
-        System.out.printf("F1-Score: %f%n", fscore);
-        System.out.printf("Accuracy: %f%n", accuracy);
-        System.out.printf("Precision: %f%n", precision);
-        System.out.printf("Recall: %f%n", recall);
+        LOG.info("F1-Score:  {}", fscore);
+        LOG.info("Accuracy:  {}", accuracy);
+        LOG.info("Precision: {}", precision);
+        LOG.info("Recall:    {}", recall);
 
         assertThat(fscore).isStrictlyBetween(0.0, 1.0);
         assertThat(precision).isStrictlyBetween(0.0, 1.0);

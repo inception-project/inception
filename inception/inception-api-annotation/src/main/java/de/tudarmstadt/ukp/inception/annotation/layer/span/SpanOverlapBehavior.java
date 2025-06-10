@@ -103,7 +103,7 @@ public class SpanOverlapBehavior
         final CAS aCas = aRequest.getCas();
         final int aBegin = aRequest.getBegin();
         final int aEnd = aRequest.getEnd();
-        Type type = getType(aCas, aAdapter.getAnnotationTypeName());
+        var type = getType(aCas, aAdapter.getAnnotationTypeName());
 
         switch (aAdapter.getLayer().getOverlapMode()) {
         case ANY_OVERLAP:
@@ -149,7 +149,7 @@ public class SpanOverlapBehavior
 
         // The following code requires annotations with the same offsets to be adjacent during
         // iteration, so we sort the entries here
-        AnnotationComparator cmp = new AnnotationComparator();
+        var cmp = new AnnotationComparator();
         final List<AnnotationFS> sortedSpans = aAnnoToSpanIdx.keySet().stream().sorted(cmp)
                 .collect(Collectors.toList());
 
@@ -224,15 +224,15 @@ public class SpanOverlapBehavior
     static int overlappingOrStackingSpans(Collection<? extends AnnotationFS> aSpans,
             Collection<AnnotationFS> aStacking, Collection<AnnotationFS> aOverlapping)
     {
-        AnnotationFS[] spans = aSpans.toArray(AnnotationFS[]::new);
+        var spans = aSpans.toArray(AnnotationFS[]::new);
 
         int n = 0;
 
         outer: for (int o = 0; o < spans.length - 1; o++) {
-            AnnotationFS span1 = spans[o];
+            var span1 = spans[o];
 
             inner: for (int i = o + 1; i < spans.length; i++) {
-                AnnotationFS span2 = spans[i];
+                var span2 = spans[i];
 
                 n++;
 
@@ -260,15 +260,15 @@ public class SpanOverlapBehavior
 
     static Set<AnnotationFS> overlappingNonStackingSpans(Collection<? extends AnnotationFS> aSpans)
     {
-        Set<AnnotationFS> overlapping = new HashSet<>();
+        var overlapping = new HashSet<AnnotationFS>();
 
-        AnnotationFS[] spans = aSpans.toArray(AnnotationFS[]::new);
+        var spans = aSpans.toArray(AnnotationFS[]::new);
 
         outer: for (int o = 0; o < spans.length - 1; o++) {
-            AnnotationFS span1 = spans[o];
+            var span1 = spans[o];
 
             inner: for (int i = o + 1; i < spans.length; i++) {
-                AnnotationFS span2 = spans[i];
+                var span2 = spans[i];
 
                 if (span2.getBegin() > span1.getEnd()) {
                     continue outer;
@@ -292,9 +292,9 @@ public class SpanOverlapBehavior
         // Since the annotations are sorted, we can easily find stacked annotation by scanning
         // through the entire list and checking if two adjacent annotations have the same
         // offsets
-        Set<AnnotationFS> stacking = new HashSet<>();
+        var stacking = new HashSet<AnnotationFS>();
         AnnotationFS prevFS = null;
-        for (AnnotationFS fs : aSpans) {
+        for (var fs : aSpans) {
             if (prevFS != null && prevFS.getBegin() == fs.getBegin()
                     && prevFS.getEnd() == fs.getEnd()) {
                 stacking.add(prevFS);

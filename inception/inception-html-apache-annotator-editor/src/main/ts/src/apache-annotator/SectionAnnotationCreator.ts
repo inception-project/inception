@@ -104,11 +104,11 @@ export class SectionAnnotationCreator {
 
   private handleIntersect(entries: IntersectionObserverEntry[], observer: IntersectionObserver): void {
     if (this.observerDebounceTimeout) {
-      window.cancelIdleCallback(this.observerDebounceTimeout)
+      window.cancelAnimationFrame(this.observerDebounceTimeout)
       this.observerDebounceTimeout = undefined
     }
 
-    this.observerDebounceTimeout = window.requestIdleCallback(() => {
+    this.observerDebounceTimeout = window.requestAnimationFrame(() => {
       const rootRect = this.root.getBoundingClientRect()
       const scrollY = (this.root.scrollTop || 0) - rootRect.top
 
@@ -128,7 +128,7 @@ export class SectionAnnotationCreator {
           panel.remove()
         }
       }
-    }, { timeout: 100 }) 
+    });
   }
 
   private createControl(): HTMLElement {
@@ -214,6 +214,11 @@ export class SectionAnnotationCreator {
     })
     const root = this.root.closest('.i7n-wrapper') || this.root
     const copy = root.cloneNode(true) as HTMLElement
+    if (!doc.body) {
+      // Fix for browsers like Firefox, which do not create a body element by default
+      const body = doc.createElement('body');
+      doc.documentElement ? doc.documentElement.appendChild(body) : doc.appendChild(body);
+    }
     doc.body.appendChild(copy)
     copy.querySelectorAll(".iaa-preview-frame, .iaa-section-control, " + 
       ".iaa-visible-annotations-panel, .iaa-visible-annotations-panel-spacer").forEach(n => n.remove())
