@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static de.tudarmstadt.ukp.inception.schema.api.feature.MaterializedLink.toMaterializedLink;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.collections4.CollectionUtils.disjunction;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.cas.CAS.TYPE_NAME_FS_ARRAY;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.apache.uima.cas.CAS.TYPE_NAME_TOP;
@@ -233,7 +234,11 @@ public class LinkFeatureSupport
                 if (!annotationService.existsTag(link.role, aFeature.getTagset())) {
                     if (!aFeature.getTagset().isCreateTag()) {
                         throw new IllegalArgumentException("[" + link.role
-                                + "] is not in the tag list. Please choose from the existing tags");
+                                + "] is not in the tag list. Please choose from the existing tags.");
+                    }
+
+                    if (isBlank(link.role)) {
+                        continue;
                     }
 
                     var selectedTag = new Tag();
