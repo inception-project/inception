@@ -16,60 +16,77 @@
 [[sect_knowledge_base]]
 == Knowledge Base 
 
-The knowledge base (KB) module of INCEpTION enables the user to create a KB from scratch or to import it from an RDF file. Alternatively, the user can connect to a remote KB using SPARQL. However, editing the content of remote KBs is currently not supported. This knowledge base can then be for instance used for entity linking.
+The knowledge base (KB) module of INCEpTION enables users to create a KB from scratch or import it from an RDF file.
+Alternatively, users can connect to a remote KB using SPARQL. 
+However, editing the content of remote KBs is currently not supported.
+The knowledge base can then be used, for instance, for entity linking.
 
-This section briefly describes how to set up a KB in the KB management page on *Projects Settings*, explains the functionalities provided by the *Knowledge Base* page and covers the *concept* and *property* feature types.
+This section briefly describes how to set up a KB in the KB management page under *Project Settings*, explains the functionalities provided by the *Knowledge Base* page, and covers the *concept* and *property* feature types.
 
-NOTE: In order for a knowledge base to be searchable (e.g. from the Knowledge Base page), 
-     the configured knowledge base needs to have labels for all items 
-     (e.g. concepts, instances, properties) that should be found.
+NOTE: For a knowledge base to be searchable (e.g., from the Knowledge Base page),  the configured knowledge base must have labels for all items (e.g., concepts, instances, properties) that should be found.
 
 === Knowledge Base Page
 
-The knowledge base page provides a concept tree hierarchy with a list of instances and statements, together with the list of properties as shown in the figure below. For local knowledge bases, the user can edit the KB contents here, which includes adding, editing and deleting concepts, properties, statements and instances.
+The knowledge base page provides:
 
-The knowledge base page provides the specific mentions of concepts and instances annotated in the text in the *Mentions* panel which integrates the knowledge base page with the annotated text.  
+- A concept tree hierarchy
+- A list of instances and statements
+- A list of properties (see figure below)
+
+For local knowledge bases, users can edit the KB contents here, including adding, editing, and deleting concepts, properties, statements, and instances.
+
+The *Mentions* panel connects the knowledge base page with the annotated text, showing specific mentions of concepts and instances annotated in the text.
 
 [.thumb]
 image::images/kb4.png[align="center"]
 
+The concept tree is organized using the *subClass* relationship as configured.
+Each concept can have a list of instances, shown in the *Instance* panel when a concept is selected.
+The *Mentions* of the concept in the annotated text are also displayed.
+Clicking on a specific instance shows the panel for the list of statements associated with the instance, along with its *Mentions* in the annotated text.
+The lower left side of the page lists the set of properties from the knowledge base.
+Clicking on a property displays the statements associated with it, such as labels, domains, ranges, etc.
 
-The concept tree in this page is designed using the *subClass* relationship for the configured mapping. Each concept associates itself with a list of instances (in case it has one) on the *Instance* panel which appear when we click on a specific concept along with the *Mentions* of the concept in the annotated text. The click on a specific instance shows the panel for the list of statements associated with the instance along with *Mentions* of the instance in the annotated text. In the left bottom side of the page, it lists the set of properties from the knowledge base. Clicking on the property showcases the statements associated with the property such as labels, domains, ranges, etc. 
+If the user has the privilege to edit the knowledge base, they may add statements for concepts, instances, and properties.
 
-In case the user has the privilege to edit the knowledge base, the user may add statements for concepts, instances and properties. 
+=== Statement Editors
 
-=== Statement editors
+INCEpTION allows users to edit local knowledge bases, including adding statements or subclassing concepts and their instances.
 
-INCEpTION allows the user to edit local knowledge bases. This includes adding statements or subclassing concepts and their instances.
+To create a statement for a particular knowledge base entity, use the *Create Statement* option.
 
-In order to create a statement for a particular knowledge base entity, the *Create Statement* can be used.
+When creating a new statement about an instance:
+- A list of available properties is shown.
+- After selecting a property, specify the object of the statement.
+- The possible properties for a given subject are restricted by the domain of the property (e.g., the property *born_in* would require an instance of *human* as the subject).
 
-When creating a new statement about an instance, a list of available properties is shown. After selecting the property of choice, the object of the statement has to be specified. The possible properties for a given subject are restricted by domain the domain of property, i.e. the property *born_in* would need an instance of *human* as the subject.
+The same applies to the object of a statement: after choosing the property for a concept, the object must be specified.
+The possible objects are limited by the range of the property, if given. Four different editors are available to specify features:
 
-The same is true for the object of a statement: After choosing the property for a concept, the object has to be specified. The possible objects are limited by the range of the property if given. Right now, four different editors are available to specify features for:
-
-1. *Boolean*: Allows either *true* or *false*
-
-2. *Numeric*: Accepts integers or decimals
-
-3. *String*: String with a language tag or an URI identifying a resource that is not in the knowledge base
-
-4. *KB Resource*: This is provided as an option when the property has a range as a particular concept from the knowledge base. In this option, the user is provided with an auto-complete field with a list of knowledge base entities. This includes the subclass and instances of the range specified for the property.
+1. *Boolean*: Allows either *true* or *false*.
+2. *Numeric*: Accepts integers or decimals.
+3. *String*: Accepts a string with a language tag or a URI identifying a resource not in the knowledge base.
+4. *KB Resource*: Provided as an option when the property has a range as a particular concept from the knowledge base. 
+   This option offers an auto-complete field with a list of knowledge base entities, including subclasses and instances of the specified range.
 
 [[sect_concept_features]]
-=== Concept features
+=== Concept Features
 
-Concept features are features that allow referencing concepts in the knowledge base during annotation.
+Concept features allow referencing concepts in the knowledge base during annotation.
 
-To create a new concept feature, a new feature has to be created under *Projects Settings* -> *Layers*. The type of the new feature should be *KB: Concept/Instance/Property*. Features of this type also can be configured to either take *only concepts*, *only instances*, *only properties* or either (select *any*).
+To create a new concept feature:
+- Create a new feature under *Project Settings* -> *Layers*.
+- Set the type of the new feature to *KB: Concept/Instance/Property*.
+- Features of this type can be configured to accept only concepts, only instances, only properties, or any of these (select *any*).
 
 [.thumb]
 image::images/kb5.png[align="center"]
 
-When creating a new annotation with this feature, then the user is offered a dropdown with possible entities from the knowledge base. This dropdown is then limited to only concepts or features or both when selecting the respective filter in the feature configuration.
+When creating a new annotation with this feature, the user is offered a dropdown with possible entities from the knowledge base.
+This dropdown can be limited to only concepts, only features, or both, depending on the selected filter in the feature configuration.
 
-The *scope* setting allows to limit linking candidates to a subtree of the knowledge base. 
+The *scope* setting allows limiting linking candidates to a subtree of the knowledge base.
 
-NOTE: Selecting scope means that full-text search cannot be used. This means that queries may become
-      very slow if the scope covers a large number concepts or instances. Therefore, it is best not to choose
-      too broad scopes.
+NOTE: Selecting a scope means that full-text search cannot be used.
+      Queries may become very slow if the scope covers a large number of concepts or instances.
+      Therefore, it is best not to choose too broad scopes.
