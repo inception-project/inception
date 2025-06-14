@@ -41,11 +41,20 @@ public class LinkWithRoleModel
     public int targetAddr = -1;
     public boolean autoCreated;
 
-    public LinkWithRoleModel()
+    private LinkWithRoleModel(Builder builder)
     {
-        // No-args constructor
+        role = builder.role;
+        label = builder.label;
+        targetAddr = builder.targetAddr;
+        autoCreated = builder.autoCreated;
     }
 
+    public LinkWithRoleModel()
+    {
+        // Needed for deserialization
+    }
+
+    @Deprecated
     public LinkWithRoleModel(LinkWithRoleModel aOther)
     {
         role = aOther.role;
@@ -53,6 +62,7 @@ public class LinkWithRoleModel
         targetAddr = aOther.targetAddr;
     }
 
+    @Deprecated
     public LinkWithRoleModel(String aRole, FeatureStructure aFS)
     {
         role = aRole;
@@ -60,6 +70,7 @@ public class LinkWithRoleModel
         targetAddr = aFS.getAddress();
     }
 
+    @Deprecated
     public LinkWithRoleModel(String aRole, String aLabel, int aTargetAddr)
     {
         role = aRole;
@@ -127,5 +138,57 @@ public class LinkWithRoleModel
         builder.append(autoCreated);
         builder.append("]");
         return builder.toString();
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private String role;
+        private String label = CLICK_HINT;
+        private int targetAddr = -1;
+        private boolean autoCreated;
+
+        private Builder()
+        {
+        }
+
+        public Builder withRole(String aRole)
+        {
+            role = aRole;
+            return this;
+        }
+
+        public Builder withLabel(String aLabel)
+        {
+            label = aLabel;
+            return this;
+        }
+
+        public Builder withTargetAddr(int aTargetAddr)
+        {
+            targetAddr = aTargetAddr;
+            return this;
+        }
+
+        public Builder withTarget(FeatureStructure aFS)
+        {
+            targetAddr = aFS.getAddress();
+            return this;
+        }
+
+        public Builder withAutoCreated(boolean aAutoCreated)
+        {
+            autoCreated = aAutoCreated;
+            return this;
+        }
+
+        public LinkWithRoleModel build()
+        {
+            return new LinkWithRoleModel(this);
+        }
     }
 }

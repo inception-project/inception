@@ -17,15 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.support.lambda;
 
-import static java.time.Duration.ofMillis;
-
 import java.time.Duration;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxCallListener;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
-import org.apache.wicket.ajax.attributes.IAjaxCallListener;
 import org.apache.wicket.ajax.attributes.ThrottlingSettings;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.feedback.IFeedback;
@@ -68,7 +65,7 @@ public class LambdaAjaxFormComponentUpdatingBehavior
 
     public LambdaAjaxFormComponentUpdatingBehavior withDebounce(Duration aDuration)
     {
-        throttlingSettings = new ThrottlingSettings(ofMillis(200), true);
+        throttlingSettings = new ThrottlingSettings(aDuration, true);
         return this;
     }
 
@@ -91,7 +88,7 @@ public class LambdaAjaxFormComponentUpdatingBehavior
         attributes.setThrottlingSettings(throttlingSettings);
 
         if (keyCode != 0) {
-            IAjaxCallListener listener = new AjaxCallListener()
+            var listener = new AjaxCallListener()
             {
                 private static final long serialVersionUID = 3873282863927185983L;
 
