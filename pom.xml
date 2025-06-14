@@ -185,7 +185,7 @@
 
     <node.version>20.12.2</node.version>
     <apache-annotator.version>0.2.0</apache-annotator.version>
-    <bootstrap.version>5.3.3</bootstrap.version>
+    <bootstrap.version>5.3.6</bootstrap.version>
     <cross-env.version>^7.0.3</cross-env.version>
     <color-convert.version>^2.0.1</color-convert.version>
     <dayjs.version>^1.11.13</dayjs.version>
