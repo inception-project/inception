@@ -19,10 +19,12 @@ package de.tudarmstadt.ukp.inception.schema.api.feature;
 
 import static de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil.setFeature;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
+import static java.lang.String.join;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -241,28 +243,6 @@ public interface FeatureSupport<T>
      * Gets the label that should be displayed for the given feature value in the UI. {@code null}
      * is an acceptable return value for this method.
      * 
-     * <b>NOTE:</b> If this method should never be overwritten! Overwrite
-     * {@link #renderFeatureValue(AnnotationFeature, String) instead}.
-     * 
-     * @param aFeature
-     *            the feature to be rendered.
-     * @param aFs
-     *            the feature structure from which to obtain the label.
-     * @return the UI label.
-     */
-    default String renderFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
-    {
-        var labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
-        if (labelFeature == null) {
-            return null;
-        }
-        return renderFeatureValue(aFeature, aFs.getFeatureValueAsString(labelFeature));
-    }
-
-    /**
-     * Gets the label that should be displayed for the given feature value in the UI. {@code null}
-     * is an acceptable return value for this method.
-     * 
      * @param aFeature
      *            the feature to be rendered.
      * @param aLabel
@@ -274,9 +254,60 @@ public interface FeatureSupport<T>
         return aLabel;
     }
 
+    /**
+     * Gets the label values that should be displayed for the given feature value in the UI.
+     * {@code null} is an acceptable return value for this method.
+     * 
+     * <b>NOTE:</b> In most cases, it is better to overwrite
+     * {@link #renderFeatureValue(AnnotationFeature, String) instead}.
+     * 
+     * @param aFeature
+     *            the feature to be rendered.
+     * @param aFs
+     *            the feature structure from which to obtain the label.
+     * @return the UI label.
+     */
+    default List<String> renderFeatureValues(AnnotationFeature aFeature, FeatureStructure aFs)
+    {
+        var labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+        if (labelFeature == null) {
+            return emptyList();
+        }
+
+        var featureValue = renderFeatureValue(aFeature, aFs.getFeatureValueAsString(labelFeature));
+        if (featureValue == null) {
+            return emptyList();
+        }
+
+        return asList(featureValue);
+    }
+
+    /**
+     * Gets the label that should be displayed for the given feature value in the UI. {@code null}
+     * is an acceptable return value for this method.
+     * 
+     * <b>NOTE:</b> In most cases, it is better to overwrite
+     * {@link #renderFeatureValue(AnnotationFeature, String) instead}.
+     * 
+     * @param aFeature
+     *            the feature to be rendered.
+     * @param aFs
+     *            the feature structure from which to obtain the label.
+     * @return the UI label.
+     */
+    default String renderFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
+    {
+        var values = renderFeatureValues(aFeature, aFs);
+        if (values.isEmpty()) {
+            return null;
+        }
+
+        return join(", ", renderFeatureValues(aFeature, aFs));
+    }
+
     default List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
-        return Collections.emptyList();
+        return emptyList();
     }
 
     /**

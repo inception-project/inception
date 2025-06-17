@@ -20,13 +20,19 @@ package de.tudarmstadt.ukp.inception.rendering;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType.ERROR;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
+import static java.lang.String.join;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
@@ -82,9 +88,17 @@ public interface Renderer
     default Map<String, String> renderLabelFeatureValues(TypeAdapter aAdapter, FeatureStructure aFs,
             List<AnnotationFeature> aFeatures)
     {
+        return renderLabelFeatureValues(aAdapter, aFs, aFeatures, emptyMap()).get();
+    }
+
+    default Optional<Map<String, String>> renderLabelFeatureValues(TypeAdapter aAdapter,
+            FeatureStructure aFs, List<AnnotationFeature> aFeatures,
+            Map<Long, Set<String>> aHiddenFeatureValues)
+    {
         var fsr = getFeatureSupportRegistry();
         var features = new LinkedHashMap<String, String>();
 
+        var hiddenFeatures = new HashSet<AnnotationFeature>();
         for (var feature : aFeatures) {
             if (!feature.isEnabled() || !feature.isVisible()) {
                 continue;
@@ -100,12 +114,35 @@ public interface Renderer
                 continue;
             }
 
-            var label = defaultString(featureSupport.renderFeatureValue(feature, aFs));
+            var values = featureSupport.renderFeatureValues(feature, aFs);
 
-            features.put(feature.getName(), label);
+            var hiddenValues = aHiddenFeatureValues.getOrDefault(feature.getId(), emptySet());
+            var shownValues = new ArrayList<String>();
+
+            for (var value : values) {
+                var v = defaultString(value);
+                if (hiddenValues.contains(v)) {
+                    hiddenFeatures.add(feature);
+                }
+                else {
+                    shownValues.add(v);
+                }
+            }
+
+            if (shownValues.isEmpty() && hiddenValues.contains("")) {
+                hiddenFeatures.add(feature);
+                continue;
+            }
+
+            features.put(feature.getName(), join(", ", shownValues));
         }
 
-        return features;
+        if (!hiddenFeatures.isEmpty() && features.isEmpty()) {
+            // If all features are empty or hidden, then we do not return any features
+            return Optional.empty();
+        }
+
+        return Optional.of(features);
     }
 
     default void renderRequiredFeatureErrors(RenderRequest aRequest,

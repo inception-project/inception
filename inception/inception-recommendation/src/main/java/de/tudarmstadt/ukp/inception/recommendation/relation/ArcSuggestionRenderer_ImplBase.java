@@ -120,7 +120,7 @@ public abstract class ArcSuggestionRenderer_ImplBase<T extends ArcSuggestion_Imp
                 FeatureSupport<?> featureSupport = fsRegistry.findExtension(feature).orElseThrow();
                 var annotation = featureSupport.renderFeatureValue(feature, suggestion.getLabel());
 
-                Map<String, String> featureAnnotation = annotation != null
+                Map<String, String> featureValues = annotation != null
                         ? Map.of(suggestion.getFeature(), annotation)
                         : Map.of();
 
@@ -133,7 +133,7 @@ public abstract class ArcSuggestionRenderer_ImplBase<T extends ArcSuggestion_Imp
                     return false;
                 });
 
-                var arc = renderArc(aLayer, suggestion, source, target, featureAnnotation);
+                var arc = renderArc(aLayer, suggestion, source, target, featureValues);
                 arc.setScore(suggestion.getScore());
                 arc.setHideScore(isRanker);
 

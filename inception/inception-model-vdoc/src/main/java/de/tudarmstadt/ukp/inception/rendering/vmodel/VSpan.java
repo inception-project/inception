@@ -60,18 +60,6 @@ public class VSpan
         ranges = asList(aOffsets);
     }
 
-    /**
-     * @deprecated Unused - to be removed without replacement
-     */
-    @SuppressWarnings("javadoc")
-    @Deprecated
-    public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, VRange aOffsets, int aEquivalenceClass,
-            Map<String, String> aFeatures)
-    {
-        super(aLayer, VID.of(aFS), aEquivalenceClass, aFeatures);
-        ranges = asList(aOffsets);
-    }
-
     public VSpan(AnnotationLayer aLayer, VID aVid, VRange aOffsets, Map<String, String> aFeatures)
     {
         this(aLayer, aVid, asList(aOffsets), aFeatures, null);
