@@ -26,12 +26,15 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.project.api.event.PrepareProjectExportEvent;
+import de.tudarmstadt.ukp.inception.project.api.event.ProjectPermissionsChangedEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
@@ -173,5 +176,23 @@ public class WorkloadManagementServiceImpl
                 .setParameter("document", aDocument) //
                 .setParameter("states", asList(IN_PROGRESS, FINISHED)) //
                 .getSingleResult();
+    }
+
+    @EventListener
+    public void onProjectPermissionsChangedEvent(ProjectPermissionsChangedEvent aEvent)
+    {
+        schedulingService.enqueue(RecalculateProjectStateTask.builder() //
+                .withProject(aEvent.getProject()) //
+                .withTrigger("onProjectPermissionsChangedEvent") //
+                .build());
+    }
+
+    @EventListener
+    public void onPrepareProjectExportEvent(PrepareProjectExportEvent aEvent)
+    {
+        schedulingService.executeSync(RecalculateProjectStateTask.builder() //
+                .withProject(aEvent.getProject()) //
+                .withTrigger("onPrepareProjectExportEvent") //
+                .build());
     }
 }

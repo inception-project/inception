@@ -20,10 +20,8 @@ package de.tudarmstadt.ukp.inception.workload.matrix.event;
 import org.springframework.context.event.EventListener;
 
 import de.tudarmstadt.ukp.inception.documents.event.AnnotationStateChangeEvent;
-import de.tudarmstadt.ukp.inception.project.api.event.ProjectPermissionsChangedEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
-import de.tudarmstadt.ukp.inception.workload.task.RecalculateProjectStateTask;
 
 /**
  * Watches the state of the annotations and documents in matrix projects.
@@ -42,21 +40,11 @@ public class MatrixWorkloadStateWatcher
     }
 
     @EventListener
-    public void onProjectPermissionsChangedEvent(ProjectPermissionsChangedEvent aEvent)
-    {
-        schedulingService.enqueue(RecalculateProjectStateTask.builder() //
-                .withProject(aEvent.getProject()) //
-                .withTrigger("onProjectPermissionsChangedEvent") //
-                .build());
-    }
-
-    @EventListener
     public void onAnnotationStateChangeEvent(AnnotationStateChangeEvent aEvent)
     {
-        var task = MatrixWorkloadUpdateDocumentStateTask.builder() //
+        schedulingService.enqueue(MatrixWorkloadUpdateDocumentStateTask.builder() //
                 .withDocument(aEvent.getDocument()) //
                 .withTrigger(getClass().getSimpleName()) //
-                .build();
-        schedulingService.enqueue(task);
+                .build());
     }
 }

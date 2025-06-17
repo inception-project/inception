@@ -787,8 +787,7 @@ public interface DocumentService
     Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument);
 
     Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument,
-            List<AnnotationDocument> aAllAnnotationDocumentsInProject,
-            List<User> aUsersWithPermission);
+            List<AnnotationDocument> aAllAnnotationDocumentsInProject, List<User> aRelevantUsers);
 
     SourceDocumentStateStats getSourceDocumentStats(Project aProject);
 
