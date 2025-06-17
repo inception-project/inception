@@ -27,13 +27,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
+import java.nio.file.Path;
 
 import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -42,7 +42,8 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurati
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.util.FileSystemUtils;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
@@ -73,8 +74,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "workload.matrix.enabled=true", //
-                "repository.path=" + MatrixWorkloadExtensionImplTest.TEST_OUTPUT_FOLDER })
+                "workload.matrix.enabled=true" })
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //
         "de.tudarmstadt.ukp.clarin.webanno" })
@@ -90,10 +90,8 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
         SchedulingServiceAutoConfiguration.class, //
         WorkloadManagementAutoConfiguration.class, //
         MatrixWorkloadManagerAutoConfiguration.class })
-public class MatrixWorkloadExtensionImplTest
+class MatrixWorkloadExtensionImplTest
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/MatrixWorkloadExtensionImplTest";
-
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
     private @Autowired UserDao userService;
@@ -109,14 +107,16 @@ public class MatrixWorkloadExtensionImplTest
     private AnnotationDocument annotationDocument1;
     private AnnotationDocument annotationDocument2;
 
-    @BeforeAll
-    public static void setupClass()
+    static @TempDir Path tempFolder;
+
+    @DynamicPropertySource
+    static void registerDynamicProperties(DynamicPropertyRegistry registry)
     {
-        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
+        registry.add("repository.path", () -> tempFolder.toAbsolutePath().toString());
     }
 
     @BeforeEach
-    public void setup() throws Exception
+    void setup() throws Exception
     {
         annotator1 = userService.create(new User("anno1"));
         annotator2 = userService.create(new User("anno2"));
@@ -146,13 +146,13 @@ public class MatrixWorkloadExtensionImplTest
     }
 
     @AfterEach
-    public void tearDown() throws Exception
+    void tearDown() throws Exception
     {
         projectService.removeProject(project);
     }
 
     @Test
-    public void thatRecalculatingStateDoesNotFallBackBehindCuration() throws Exception
+    void thatRecalculatingStateDoesNotFallBackBehindCuration() throws Exception
     {
         documentService.setSourceDocumentState(sourceDocument,
                 SourceDocumentState.CURATION_IN_PROGRESS);
@@ -169,7 +169,7 @@ public class MatrixWorkloadExtensionImplTest
     }
 
     @Test
-    public void thatAllAnnotatorsFinishedSetsDocumentToAnnotationFinished() throws Exception
+    void thatAllAnnotatorsFinishedSetsDocumentToAnnotationFinished() throws Exception
     {
         documentService.setSourceDocumentState(sourceDocument,
                 SourceDocumentState.ANNOTATION_IN_PROGRESS);
@@ -186,7 +186,7 @@ public class MatrixWorkloadExtensionImplTest
     }
 
     @Test
-    public void thatSomeAnnotatorsNotFinishedSetsDocumentToAnnotationInProgress() throws Exception
+    void thatSomeAnnotatorsNotFinishedSetsDocumentToAnnotationInProgress() throws Exception
     {
         documentService.setSourceDocumentState(sourceDocument,
                 SourceDocumentState.ANNOTATION_FINISHED);
@@ -203,7 +203,7 @@ public class MatrixWorkloadExtensionImplTest
     }
 
     @Test
-    public void thatNoAnnotatorsStartedSetsDocumentToNew() throws Exception
+    void thatNoAnnotatorsStartedSetsDocumentToNew() throws Exception
     {
         documentService.setSourceDocumentState(sourceDocument,
                 SourceDocumentState.ANNOTATION_FINISHED);
