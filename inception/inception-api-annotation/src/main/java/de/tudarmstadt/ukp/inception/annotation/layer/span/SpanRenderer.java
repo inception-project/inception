@@ -124,7 +124,9 @@ public class SpanRenderer
 
         if (aVid.getAttribute() != VID.NONE) {
             var adapter = getTypeAdapter();
-            var feature = adapter.listFeatures().stream().sequential().skip(aVid.getAttribute())
+            var feature = adapter.listFeatures().stream() //
+                    .sequential() //
+                    .skip(aVid.getAttribute()) //
                     .findFirst().get();
             List<LinkWithRoleModel> sourceLinks = adapter.getFeatureValue(feature, fs);
             var target = selectAnnotationByAddr(aCas, sourceLinks.get(aVid.getSlot()).targetAddr);
@@ -178,15 +180,20 @@ public class SpanRenderer
         if (!checkTypeSystem(aFS.getCAS())) {
             return emptyList();
         }
+        var typeAdapter = getTypeAdapter();
+        var labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures,
+                aRequest.getHiddenFeatureValues());
+
+        if (labelFeatures.isEmpty()) {
+            return Collections.emptyList();
+        }
 
         var range = VRange.clippedRange(aResponse, aFS);
 
         var spansAndSlots = new ArrayList<VObject>();
         VID source;
         if (range.isPresent()) {
-            var typeAdapter = getTypeAdapter();
-            var labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
-            var span = new VSpan(typeAdapter.getLayer(), aFS, range.get(), labelFeatures);
+            var span = new VSpan(typeAdapter.getLayer(), aFS, range.get(), labelFeatures.get());
             source = span.getVid();
             spansAndSlots.add(span);
         }

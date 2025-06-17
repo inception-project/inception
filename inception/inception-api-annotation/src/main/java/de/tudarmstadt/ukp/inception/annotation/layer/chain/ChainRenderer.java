@@ -187,9 +187,14 @@ public class ChainRenderer
                         label = getUiLabelText(typeAdapter, prevLinkFs, emptyList());
                     }
 
-                    aResponse.add(new VArc(typeAdapter.getLayer(),
-                            new VID(prevLinkFs, 1, VID.NONE, VID.NONE), prevLinkFs, linkFs,
-                            colorIndex, label));
+                    aResponse.add(VArc.builder() //
+                            .withLayer(typeAdapter.getLayer()) //
+                            .withVid(new VID(prevLinkFs, 1, VID.NONE, VID.NONE)) //
+                            .withSource(prevLinkFs) //
+                            .withTarget(linkFs) //
+                            .withEquivalenceSet(colorIndex) //
+                            .withLabel(label) //
+                            .build());
                 }
 
                 // Render errors if required features are missing

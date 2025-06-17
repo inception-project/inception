@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.joining;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -28,11 +28,9 @@ import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.StringArrayFS;
 import org.apache.uima.fit.util.FSUtil;
@@ -223,7 +221,7 @@ public class MultiValueConceptFeatureSupport
     @Override
     public <V> V getNullFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
-        return (V) Collections.emptyList();
+        return (V) emptyList();
     }
 
     @SuppressWarnings("unchecked")
@@ -331,27 +329,27 @@ public class MultiValueConceptFeatureSupport
             return null;
         }
 
-        MultiValueConceptFeatureTraits traits = readTraits(aFeature);
+        var traits = readTraits(aFeature);
         return labelCache.get(aFeature, traits.getRepositoryId(), aIdentifier).getUiLabel();
     }
 
     @Override
-    public String renderFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
+    public List<String> renderFeatureValues(AnnotationFeature aFeature, FeatureStructure aFs)
     {
-        Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+        var labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
 
         if (labelFeature == null) {
-            return null;
+            return emptyList();
         }
 
         List<KBHandle> handles = getFeatureValue(aFeature, aFs);
         if (handles == null || handles.isEmpty()) {
-            return null;
+            return emptyList();
         }
 
         return handles.stream() //
                 .map(KBHandle::getUiLabel) //
-                .collect(joining(", "));
+                .toList();
     }
 
     @Override
