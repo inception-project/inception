@@ -100,7 +100,7 @@ jobs:
 
     - name: Build with Maven
       if: "!(matrix.os == 'ubuntu-latest' && github.event_name == 'push')"
-      run: mvn --show-version --batch-mode --no-transfer-progress clean verify -T 1C
+      run: mvn --show-version --batch-mode --errors --fail-at-end --no-transfer-progress clean verify -T 1C
 
     - name: Build with Maven and publish artifacts
       if: matrix.os == 'ubuntu-latest' && github.event_name == 'push'
@@ -108,7 +108,7 @@ jobs:
         # `MAVEN_USERNAME` and `MAVEN_PASSWORD` are used in `~/.m2/settings.xml` created by `setup-java` action
         MAVEN_USERNAME: ${{ secrets.UKP_MAVEN_USER }}
         MAVEN_PASSWORD: ${{ secrets.UKP_MAVEN_TOKEN }}
-      run: mvn --show-version --batch-mode --errors --no-transfer-progress -DdeployAtEnd=true -DskipTests clean deploy
+      run: mvn --show-version --batch-mode --errors --fail-at-end --no-transfer-progress -DdeployAtEnd=true -DskipTests clean deploy
 
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@cf701569b05ccdd861a76b8607a66d76f6fd4857 # v5.5.1
