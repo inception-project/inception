@@ -1294,29 +1294,31 @@ public class DocumentServiceImpl
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument,
-            List<AnnotationDocument> aRelevantAnnotationDocuments, List<User> aUsersWithPermission)
+            List<AnnotationDocument> aRelevantAnnotationDocuments, List<User> aRelevantUsers)
     {
-        Set<String> users = aUsersWithPermission.stream() //
+        Set<String> users = aRelevantUsers.stream() //
                 .map(User::getUsername) //
                 .collect(toSet());
 
-        Map<AnnotationDocumentState, AtomicLong> counts = new LinkedHashMap<>();
+        // For each AnnotationDocumentState count the users having that for the given document
+        var counts = new LinkedHashMap<AnnotationDocumentState, AtomicLong>();
         aRelevantAnnotationDocuments.stream()
                 .filter(annDoc -> annDoc.getDocument().equals(aDocument)) //
                 .forEach(aDoc -> {
-                    AtomicLong count = counts.computeIfAbsent(aDoc.getState(),
-                            _key -> new AtomicLong(0));
+                    var count = counts.computeIfAbsent(aDoc.getState(), _key -> new AtomicLong(0));
                     count.incrementAndGet();
                     users.remove(aDoc.getUser());
                 });
 
+        // If we do not have an AnnotationDocumentState for users, we count them as NEW
         counts.computeIfAbsent(AnnotationDocumentState.NEW, _key -> new AtomicLong(0))
                 .addAndGet(users.size());
 
-        Map<AnnotationDocumentState, Long> finalCounts = new LinkedHashMap<>();
+        var finalCounts = new LinkedHashMap<AnnotationDocumentState, Long>();
         for (AnnotationDocumentState state : AnnotationDocumentState.values()) {
             finalCounts.put(state, 0l);
         }
+
         for (Entry<AnnotationDocumentState, AtomicLong> e : counts.entrySet()) {
             finalCounts.put(e.getKey(), e.getValue().get());
         }
