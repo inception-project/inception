@@ -99,7 +99,7 @@ jobs:
           nodejs-cache-${{ runner.os }}-
 
     - name: Build with Maven
-      if: "!('ubuntu-latest' && github.event_name == 'push')"
+      if: "!(matrix.os == 'ubuntu-latest' && github.event_name == 'push')"
       run: mvn --show-version --batch-mode --no-transfer-progress clean verify -T 1C
 
     - name: Build with Maven and publish artifacts
