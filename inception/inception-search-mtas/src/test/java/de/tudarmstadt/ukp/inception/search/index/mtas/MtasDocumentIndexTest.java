@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
@@ -51,6 +52,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -144,6 +146,7 @@ class MtasDocumentIndexTest
 
     private User user;
 
+    static ConfigurableApplicationContext applicationContext;
     static @TempDir Path tempFolder;
 
     @DynamicPropertySource
@@ -161,13 +164,23 @@ class MtasDocumentIndexTest
     }
 
     @BeforeEach
-    void setUp()
+    void setUp(@Autowired ConfigurableApplicationContext aApplicationContext)
     {
+        applicationContext = aApplicationContext;
+
         if (!userRepository.exists("admin")) {
             userRepository.create(new User("admin", Role.ROLE_ADMIN));
         }
 
         user = userRepository.get("admin");
+    }
+
+    @AfterAll
+    static void afterAll()
+    {
+        if (applicationContext != null && applicationContext.isActive()) {
+            applicationContext.close();
+        }
     }
 
     private void createProject(Project aProject) throws Exception
