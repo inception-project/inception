@@ -52,7 +52,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -92,7 +91,7 @@ import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfi
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.LayerStatistics;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
-import de.tudarmstadt.ukp.inception.search.SearchService;
+import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
 import de.tudarmstadt.ukp.inception.search.StatisticsResult;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
@@ -142,12 +141,12 @@ class MtasDocumentIndexTest
     private @Autowired UserDao userRepository;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
-    private @Autowired SearchService searchService;
+    private @Autowired SearchServiceImpl searchService;
 
     private User user;
 
-    static ConfigurableApplicationContext applicationContext;
     static @TempDir Path tempFolder;
+    static SearchServiceImpl _searchService;
 
     @DynamicPropertySource
     static void registerDynamicProperties(DynamicPropertyRegistry registry)
@@ -156,7 +155,7 @@ class MtasDocumentIndexTest
     }
 
     @BeforeEach
-    public void testWatcher(TestInfo aTestInfo)
+    void testWatcher(TestInfo aTestInfo)
     {
         var methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
         System.out.printf("\n=== %s === %s=====================\n", methodName,
@@ -164,9 +163,9 @@ class MtasDocumentIndexTest
     }
 
     @BeforeEach
-    void setUp(@Autowired ConfigurableApplicationContext aApplicationContext)
+    void setUp()
     {
-        applicationContext = aApplicationContext;
+        _searchService = searchService;
 
         if (!userRepository.exists("admin")) {
             userRepository.create(new User("admin", Role.ROLE_ADMIN));
@@ -178,8 +177,8 @@ class MtasDocumentIndexTest
     @AfterAll
     static void afterAll()
     {
-        if (applicationContext != null && applicationContext.isActive()) {
-            applicationContext.close();
+        if (_searchService != null) {
+            _searchService.destroy();
         }
     }
 

@@ -146,6 +146,10 @@ public class SearchServiceImpl
     @Override
     public void destroy()
     {
+        if (shutdown) {
+            return;
+        }
+
         LOG.info("Shutting down search service!");
 
         shutdown = true;
