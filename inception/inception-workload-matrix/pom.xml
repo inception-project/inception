@@ -20,7 +20,7 @@
   <parent>
     <artifactId>inception-app</artifactId>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    <version>37.1-SNAPSHOT</version>
+    <version>37.0</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>inception-workload-matrix</artifactId>
