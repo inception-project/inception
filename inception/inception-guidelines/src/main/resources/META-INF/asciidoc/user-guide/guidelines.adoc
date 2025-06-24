@@ -17,12 +17,19 @@
 [sect_annotation_guidelines]
 = Annotation Guidelines
 
-Providing your annotation team with guidelines helps assuring that every team member knows exactly
-what is expected of them.
+Clear annotation guidelines ensure that every team member understands what is expected of them during the annotation process.
 
-*Annotators* can access the guidelines via the *Guidelines* button on the *annotation page*.
+*Annotators* can access the guidelines by clicking the *Guidelines* button on the *annotation page*.
 
-*Project managers* can provide these guidelines via the *Guidelines* tab in the 
-*project settings*.
-Guidelines are provided as files (e.g. PDF files). To upload guidelines, click on *Choose files*, select a file from your local disc and then click *Import guidelines*. 
-Remove a guideline document by selecting it and pressing the *Delete* button.
+*Project managers* can upload and manage these guidelines via the *Guidelines* tab in the *project settings*.
+
+Guidelines are provided as files (e.g., PDF documents).
+
+To upload guideline document:
+1. Click *Choose files*.
+2. Select a file from your local disk.
+3. Click *Import guidelines*.
+
+To remove a guideline document:
+1. Select the document.
+2. Press the *Delete* button.
