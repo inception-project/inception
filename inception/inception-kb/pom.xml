@@ -183,6 +183,12 @@
     <dependency>
       <groupId>net.sourceforge.owlapi</groupId>
       <artifactId>owlapi-rio</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.eclipse.rdf4j</groupId>
+          <artifactId>rdf4j-rio-jsonld</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>net.sourceforge.owlapi</groupId>
