@@ -137,6 +137,10 @@ public class AeroTaskControllerTest
                 .build();
         schedulingService.enqueue(task);
 
+        await().atMost(ofSeconds(3)).alias("Task started").untilAsserted(() -> {
+            assertThat(schedulingService.getRunningTasks()).isNotEmpty();
+        });
+
         adminActor.listTasks(project.getId()) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
@@ -145,7 +149,7 @@ public class AeroTaskControllerTest
 
         schedulingService.stopAllTasksForProject(project);
 
-        await().atMost(ofSeconds(3)).untilAsserted(() -> {
+        await().atMost(ofSeconds(3)).alias("Task stopped").untilAsserted(() -> {
             assertThat(schedulingService.getRunningTasks()).isEmpty();
             assertThat(task.getMonitor().isDestroyed());
         });
@@ -169,12 +173,16 @@ public class AeroTaskControllerTest
                 .build();
         schedulingService.enqueue(task);
 
+        await().atMost(ofSeconds(3)).alias("Task started").untilAsserted(() -> {
+            assertThat(schedulingService.getRunningTasks()).isNotEmpty();
+        });
+
         adminActor.cancelTask(project.getId(), task.getId()) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
                 .andExpect(jsonPath("$.messages[0].message").value("Task cancelled"));
 
-        await().atMost(ofSeconds(3)).untilAsserted(() -> {
+        await().atMost(ofSeconds(3)).alias("Task destroyed").untilAsserted(() -> {
             assertThat(schedulingService.getRunningTasks()).isEmpty();
             assertThat(task.getMonitor().isDestroyed());
         });
