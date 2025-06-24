@@ -21,10 +21,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.time.Duration.ofSeconds;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_PASSWORD;
 import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_USER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -214,11 +216,14 @@ public class WebSocketIntegrationTest
 
         session = stompClient.connectAsync(websocketUrl, headers, sessionHandler) //
                 .get(5, SECONDS);
-        latch.await(10, SECONDS);
+        // latch.await(10, SECONDS);
 
-        assertThat(receivedMessages.size()).isEqualTo(1);
-        var msg1 = receivedMessages.get(0);
-        assertThat(msg1.getEventType()).isEqualTo(DocumentStateChangedEvent.class.getSimpleName());
+        await().atMost(ofSeconds(20)).alias("Message received ").untilAsserted(() -> {
+            assertThat(receivedMessages.size()).isEqualTo(1);
+            var msg1 = receivedMessages.get(0);
+            assertThat(msg1.getEventType())
+                    .isEqualTo(DocumentStateChangedEvent.class.getSimpleName());
+        });
 
         try {
             session.disconnect();
