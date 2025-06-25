@@ -623,11 +623,10 @@ public class SearchServiceImpl
     {
         var groupedResults = query(aUser, aProject, aQuery, aDocument, null, null, 0, MAX_VALUE);
 
-        var resultsAsList = new ArrayList<SearchResult>();
-        groupedResults.values().stream()
-                .forEach(resultsGroup -> resultsAsList.addAll(resultsGroup));
-
-        return resultsAsList;
+        return groupedResults.values().stream() //
+                .flatMap(resultsGroup -> resultsGroup.stream()) //
+                .distinct() //
+                .toList();
     }
 
     @Override
