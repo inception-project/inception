@@ -18,23 +18,19 @@
 package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x;
 
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.Test;
-
-import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvColumn;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSchema;
 
 public class Tsv3XSchemaAnalyzerTest
 {
     @Test
     public void testAnalyze() throws Exception
     {
-        JCas jcas = JCasFactory.createJCas();
+        var jcas = JCasFactory.createJCas();
 
-        TsvSchema schema = Tsv3XCasSchemaAnalyzer.analyze(jcas.getTypeSystem());
+        var schema = Tsv3XCasSchemaAnalyzer.analyze(jcas.getTypeSystem());
 
-        for (TsvColumn col : schema.getColumns()) {
-            System.out.println(col);
+        for (var col : schema.getColumns()) {
+            // System.out.println(col);
         }
     }
 }

@@ -97,6 +97,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.test.websocket.WebSocketStompTestClient;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
+import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest( //
@@ -107,7 +108,8 @@ import jakarta.persistence.EntityManager;
                 "websocket.enabled=true" })
 @SpringBootApplication( //
         exclude = { //
-                LiquibaseAutoConfiguration.class })
+                LiquibaseAutoConfiguration.class, //
+                WorkloadManagementAutoConfiguration.class })
 @ImportAutoConfiguration({ //
         PreferencesServiceAutoConfig.class, //
         CasDoctorAutoConfiguration.class, //
