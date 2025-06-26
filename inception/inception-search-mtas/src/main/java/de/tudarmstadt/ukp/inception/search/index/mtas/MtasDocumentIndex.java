@@ -692,12 +692,12 @@ public class MtasDocumentIndex
 
         ensureAllIsCommitted();
 
-        final MtasSpanQuery mtasSpanQuery;
+        final MtasSpanQuery query;
         try {
             var modifiedQuery = preprocessQuery(aRequest.getQuery(), aRequest.getSearchSettings());
             try (var reader = new StringReader(modifiedQuery)) {
                 var parser = new MtasCQLParser(reader);
-                mtasSpanQuery = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
+                query = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
             }
         }
         catch (ParseException | Error e) {
@@ -711,7 +711,7 @@ public class MtasDocumentIndex
         IndexSearcher searcher = null;
         try {
             searcher = getSearcherManager().acquire();
-            return aRunner.run(searcher, aRequest, mtasSpanQuery);
+            return aRunner.run(searcher, aRequest, query);
         }
         catch (Exception e) {
             throw new ExecutionException("Unable to execute query [" + aRequest.getQuery() + "]",
@@ -1173,14 +1173,8 @@ public class MtasDocumentIndex
     private void addToResults(Map<String, List<SearchResult>> aResultsMap, String aKey,
             SearchResult aSearchResult)
     {
-        if (aResultsMap.containsKey(aKey)) {
-            aResultsMap.get(aKey).add(aSearchResult);
-        }
-        else {
-            var searchResultsForKey = new ArrayList<SearchResult>();
-            searchResultsForKey.add(aSearchResult);
-            aResultsMap.put(aKey, searchResultsForKey);
-        }
+        var results = aResultsMap.computeIfAbsent(aKey, $ -> new ArrayList<SearchResult>());
+        results.add(aSearchResult);
     }
 
     private List<String> featureValuesAtMatch(List<MtasTokenString> aTokens, int aMatchStart,

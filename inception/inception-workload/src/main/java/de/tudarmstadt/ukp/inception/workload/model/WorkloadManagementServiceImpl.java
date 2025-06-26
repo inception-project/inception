@@ -110,7 +110,7 @@ public class WorkloadManagementServiceImpl
     @Transactional
     public WorkloadManagerExtension<?> getWorkloadManagerExtension(Project aProject)
     {
-        WorkloadManager currentWorkload = loadOrCreateWorkloadManagerConfiguration(aProject);
+        var currentWorkload = loadOrCreateWorkloadManagerConfiguration(aProject);
         return workloadManagerExtensionPoint.getExtension(currentWorkload.getType())
                 .orElse(workloadManagerExtensionPoint.getDefault());
     }
@@ -122,7 +122,7 @@ public class WorkloadManagementServiceImpl
     @Transactional
     public void saveConfiguration(WorkloadManager aManager)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "UPDATE WorkloadManager ", //
                 "SET workloadType = :workloadType, traits = :traits ", //
                 "WHERE project = :projectID");

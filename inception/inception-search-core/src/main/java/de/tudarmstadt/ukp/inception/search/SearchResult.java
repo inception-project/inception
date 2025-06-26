@@ -38,7 +38,7 @@ public class SearchResult
     private String documentTitle;
     private boolean readOnly;
 
-    // only used in the ui to simplify the selection of search results for annotation
+    // Only used in the UI to simplify the selection of search results for annotation
     private boolean isSelectedForAnnotation = true;
 
     public SearchResult()
@@ -201,12 +201,18 @@ public class SearchResult
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-                .append("documentId", documentId).append("documentTitle", documentTitle)
-                .append("tokenStart", tokenStart).append("tokenLength", tokenLength)
-                .append("offsetStart", offsetStart).append("offsetEnd", offsetEnd)
-                .append("leftContext", leftContext).append("text", text)
-                .append("rightContext", rightContext).toString();
+        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE) //
+                .append("documentId", documentId) //
+                .append("documentTitle", documentTitle) //
+                .append("tokenStart", tokenStart) //
+                .append("tokenLength", tokenLength) //
+                .append("offsetStart", offsetStart) //
+                .append("offsetEnd", offsetEnd) //
+                .append("leftContext", leftContext) //
+                .append("text", text) //
+                .append("rightContext", rightContext) //
+                .append("readOnly", readOnly) //
+                .toString();
     }
 
 }
