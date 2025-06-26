@@ -72,6 +72,7 @@
           <div wicket:id="projects" class="flex-content list-group-flush list-group border-0">
             <div wicket:id="project" class="list-group-item">
               <div class="d-flex">
+                <span wicket:id="stateIcon" class="text-secondary fs-3 me-3"/>
                 <div class="flex-grow-1 d-flex flex-column">
                   <div>
                     <a wicket:id="projectLink" class="text-decoration-none">
@@ -83,6 +84,7 @@
                   </div>
                 </div>
                 <div class="d-flex flex-column text-end">
+                  <div wicket:id="stats"/>
                   <div class="d-flex flex-nowrap flex-row-reverse">
                     <span wicket:id="role" class="badge bg-secondary ms-1"><wicket:container wicket:id="label"/></span>
                   </div>

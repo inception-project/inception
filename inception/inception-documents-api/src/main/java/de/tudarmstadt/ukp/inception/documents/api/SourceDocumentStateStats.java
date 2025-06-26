@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.documents.api;
 
+import java.io.Serializable;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 
 public final class SourceDocumentStateStats
+    implements Serializable
 {
     private final long total;
     private final long an;

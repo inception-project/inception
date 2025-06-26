@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
@@ -58,6 +59,7 @@ import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.navigation.paging.PagingNavigator;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.model.IModel;
@@ -85,6 +87,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectImportPanel;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterPanel;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterStateChanged;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -96,6 +99,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.support.markdown.TerseMarkdownLabel;
 import de.tudarmstadt.ukp.inception.support.wicket.SanitizingHtmlLabel;
+import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
@@ -136,6 +140,7 @@ public class ProjectsOverviewPage
     private @SpringBean ProjectExportService exportService;
     private @SpringBean DashboardProperties dashboardProperties;
     private @SpringBean PreferencesService userPrefService;
+    private @SpringBean DocumentService documentService;
 
     private IModel<List<ProjectEntry>> allAccessibleProjects;
     private IModel<User> currentUser;
@@ -413,6 +418,18 @@ public class ProjectsOverviewPage
                 addActionsDropdown(aItem);
                 aItem.add(projectLink);
                 aItem.add(createRoleBadges(aItem.getModelObject()));
+
+                var seeStats = projectService.hasRole(currentUser.getObject(), project, MANAGER,
+                        CURATOR);
+                if (seeStats) {
+                    var stats = documentService.getSourceDocumentStats(project);
+                    aItem.add(new ProjectDocumentStatsPanel("stats", Model.of(stats)));
+                    aItem.add(new SymbolLabel("stateIcon", stats.getProjectState()));
+                }
+                else {
+                    aItem.add(new EmptyPanel("stats"));
+                    aItem.add(new EmptyPanel("stateIcon"));
+                }
 
                 var createdLabel = new Label(MID_CREATED,
                         () -> project.getCreated() != null ? formatDate(project.getCreated())
