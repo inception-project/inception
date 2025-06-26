@@ -70,10 +70,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -1267,28 +1265,13 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument)
     {
-        Set<String> users = projectService.listProjectUsersWithPermissions(aDocument.getProject())
-                .stream().map(User::getUsername).collect(Collectors.toSet());
+        var users = projectService
+                .listProjectUsersWithPermissions(aDocument.getProject(), ANNOTATOR).stream()
+                .toList();
 
-        Map<AnnotationDocumentState, AtomicLong> counts = new LinkedHashMap<>();
-        for (AnnotationDocument aDoc : listAnnotationDocuments(aDocument)) {
-            AtomicLong count = counts.computeIfAbsent(aDoc.getState(), _key -> new AtomicLong(0));
-            count.incrementAndGet();
-            users.remove(aDoc.getUser());
-        }
+        var annDocs = listAnnotationDocuments(aDocument);
 
-        counts.computeIfAbsent(AnnotationDocumentState.NEW, _key -> new AtomicLong(0))
-                .addAndGet(users.size());
-
-        Map<AnnotationDocumentState, Long> finalCounts = new LinkedHashMap<>();
-        for (AnnotationDocumentState state : AnnotationDocumentState.values()) {
-            finalCounts.put(state, 0l);
-        }
-        for (Entry<AnnotationDocumentState, AtomicLong> e : counts.entrySet()) {
-            finalCounts.put(e.getKey(), e.getValue().get());
-        }
-
-        return finalCounts;
+        return getAnnotationDocumentStats(aDocument, annDocs, users);
     }
 
     @Override
@@ -1296,7 +1279,7 @@ public class DocumentServiceImpl
     public Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument,
             List<AnnotationDocument> aRelevantAnnotationDocuments, List<User> aRelevantUsers)
     {
-        Set<String> users = aRelevantUsers.stream() //
+        var users = aRelevantUsers.stream() //
                 .map(User::getUsername) //
                 .collect(toSet());
 
@@ -1304,6 +1287,7 @@ public class DocumentServiceImpl
         var counts = new LinkedHashMap<AnnotationDocumentState, AtomicLong>();
         aRelevantAnnotationDocuments.stream()
                 .filter(annDoc -> annDoc.getDocument().equals(aDocument)) //
+                .filter(anndoc -> users.contains(anndoc.getUser())) //
                 .forEach(aDoc -> {
                     var count = counts.computeIfAbsent(aDoc.getState(), _key -> new AtomicLong(0));
                     count.incrementAndGet();
@@ -1315,7 +1299,7 @@ public class DocumentServiceImpl
                 .addAndGet(users.size());
 
         var finalCounts = new LinkedHashMap<AnnotationDocumentState, Long>();
-        for (AnnotationDocumentState state : AnnotationDocumentState.values()) {
+        for (var state : AnnotationDocumentState.values()) {
             finalCounts.put(state, 0l);
         }
 
