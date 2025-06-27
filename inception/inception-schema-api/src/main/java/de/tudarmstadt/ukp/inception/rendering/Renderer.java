@@ -95,7 +95,6 @@ public interface Renderer
             FeatureStructure aFs, List<AnnotationFeature> aFeatures,
             Map<Long, Set<String>> aHiddenFeatureValues)
     {
-        var fsr = getFeatureSupportRegistry();
         var features = new LinkedHashMap<String, String>();
 
         var hiddenFeatures = new HashSet<AnnotationFeature>();
@@ -104,7 +103,7 @@ public interface Renderer
                 continue;
             }
 
-            var maybeFeatureSupport = fsr.findExtension(feature);
+            var maybeFeatureSupport = aAdapter.getFeatureSupport(feature.getName());
             if (maybeFeatureSupport.isEmpty()) {
                 continue;
             }

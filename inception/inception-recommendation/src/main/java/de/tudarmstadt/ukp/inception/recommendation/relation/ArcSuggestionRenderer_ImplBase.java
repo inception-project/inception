@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.relation;
 
+import static java.util.Collections.emptySet;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
@@ -93,6 +94,15 @@ public abstract class ArcSuggestionRenderer_ImplBase<T extends ArcSuggestion_Imp
                     continue;
                 }
 
+                var feature = features.get(suggestion.getFeature());
+
+                var hiddenValues = aRequest.getHiddenFeatureValues().getOrDefault(feature.getId(),
+                        emptySet());
+                if (hiddenValues.contains(suggestion.getLabel())) {
+                    // If the feature value is hidden, we do not render the suggestion
+                    continue;
+                }
+
                 var position = suggestion.getPosition();
                 int sourceBegin = position.getSourceBegin();
                 int sourceEnd = position.getSourceEnd();
@@ -100,7 +110,6 @@ public abstract class ArcSuggestionRenderer_ImplBase<T extends ArcSuggestion_Imp
                 int targetEnd = position.getTargetEnd();
 
                 // Retrieve the UI display label for the given feature value
-                var feature = features.get(suggestion.getFeature());
                 var sourceType = getSourceType(cas, aLayer, feature);
                 var targetType = getTargetType(cas, aLayer, feature);
 

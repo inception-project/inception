@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.layer;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptySet;
 
 import java.io.IOException;
@@ -198,21 +199,23 @@ public class LayerVisibilitySidebar
 
                 aItem.add(new Label("layerName", layer.getUiName()));
 
+                var features = annotationService.listEnabledFeatures(layer).stream() //
+                        .filter(AnnotationFeature::isVisible) //
+                        .toList();
+
                 var collapseLayer = new LambdaAjaxLink("collapseLayer",
                         _target -> actionCollapseLayer(_target, layer));
                 collapseLayer.add(new AttributeAppender("class",
                         () -> layerCollapseState.getOrDefault(layer, false) ? "group-collapsed"
                                 : "",
                         " "));
+                collapseLayer.add(visibleWhen(() -> !features.isEmpty()));
                 aItem.add(collapseLayer);
 
                 if (layerCollapseState.getOrDefault(layer, false)) {
                     aItem.add(new EmptyPanel("feature").setVisible(false));
                 }
                 else {
-                    var features = annotationService.listEnabledFeatures(layer).stream() //
-                            .filter(AnnotationFeature::isVisible) //
-                            .toList();
                     aItem.add(createFeatureContainer("feature", new ListModel<>(features)));
                 }
             }
