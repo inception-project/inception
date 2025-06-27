@@ -39,6 +39,10 @@
     .visibility-sidebar .group-collapsed {
       transform: rotate(-90deg);
     }
+    
+    .visibility-sidebar .collapse-layer-btn {
+      min-width: 0.75em;
+    }
   </style>
 </wicket:head>
 <wicket:panel>
@@ -52,9 +56,11 @@
           <li wicket:id="layer" class="list-group-item p-0">
             <div class="bg-body sticky-top border-bottom">
               <div class="bg-light-subtle px-2 py-1 showOnHoverTrigger">
-                <button wicket:id="collapseLayer" class="btn btn-link p-0 text-reset">
-                  <i class="fas fa-caret-down d-inline-block"></i>
-                </button>
+                <span class="collapse-layer-btn d-inline-block">
+                  <button wicket:id="collapseLayer" class="btn btn-link p-0 text-reset">
+                    <i class="fas fa-caret-down d-inline-block"></i>
+                  </button>
+                </span>
                 <span>
                   <i class="fas fa-layer-group m-1 text-body-secondary"/>
                   <span wicket:id="layerName" class="fw-bold"/>

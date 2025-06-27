@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.span;
 
+import static java.util.Collections.emptySet;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
@@ -44,7 +45,7 @@ public class SpanSuggestionRenderer
     implements SuggestionRenderer
 {
     private final RecommendationService recommendationService;
-    private final AnnotationSchemaService annotationService;
+    private final AnnotationSchemaService schemaService;
     private final FeatureSupportRegistry fsRegistry;
     private final RecommenderProperties recommenderProperties;
 
@@ -53,13 +54,13 @@ public class SpanSuggestionRenderer
             RecommenderProperties aRecommenderProperties)
     {
         recommendationService = aRecommendationService;
-        annotationService = aAnnotationService;
+        schemaService = aAnnotationService;
         fsRegistry = aFsRegistry;
         recommenderProperties = aRecommenderProperties;
     }
 
     @Override
-    public void render(VDocument vdoc, RenderRequest aRequest,
+    public void render(VDocument aVDoc, RenderRequest aRequest,
             SuggestionDocumentGroup<? extends AnnotationSuggestion> aSuggestions,
             AnnotationLayer aLayer)
     {
@@ -81,7 +82,7 @@ public class SpanSuggestionRenderer
                 aLayer.getProject());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
-        var features = annotationService.listSupportedFeatures(aLayer).stream()
+        var features = schemaService.listSupportedFeatures(aLayer).stream()
                 .collect(toMap(AnnotationFeature::getName, identity()));
 
         var rankerCache = new HashMap<Long, Boolean>();
@@ -89,12 +90,19 @@ public class SpanSuggestionRenderer
         for (var suggestionGroup : groups) {
             // Render annotations for each label
             for (var suggestion : suggestionGroup.bestSuggestions(pref)) {
-                var range = VRange.clippedRange(vdoc, suggestion.getBegin(), suggestion.getEnd());
+                var range = VRange.clippedRange(aVDoc, suggestion.getBegin(), suggestion.getEnd());
                 if (!range.isPresent()) {
                     continue;
                 }
 
                 var feature = features.get(suggestion.getFeature());
+
+                var hiddenValues = aRequest.getHiddenFeatureValues().getOrDefault(feature.getId(),
+                        emptySet());
+                if (hiddenValues.contains(suggestion.getLabel())) {
+                    // If the feature value is hidden, we do not render the suggestion
+                    continue;
+                }
 
                 // Retrieve the UI display label for the given feature value
                 var featureSupport = fsRegistry.findExtension(feature).orElseThrow();
@@ -118,10 +126,10 @@ public class SpanSuggestionRenderer
                 v.setScore(suggestion.getScore());
                 v.setHideScore(isRanker);
                 v.setActionButtons(recommenderProperties.isActionButtonsEnabled());
-                vdoc.add(v);
+                aVDoc.add(v);
 
                 if (suggestion.isCorrection()) {
-                    vdoc.add(new VAnnotationMarker(VMarker.WARN, v.getVid()));
+                    aVDoc.add(new VAnnotationMarker(VMarker.WARN, v.getVid()));
                 }
             }
         }

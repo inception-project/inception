@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static org.apache.uima.cas.text.AnnotationPredicates.overlapping;
 
@@ -201,12 +202,12 @@ public class SpanRenderer
             source = RelationRenderer.createEndpoint(aRequest, aResponse, aFS, getTypeAdapter());
         }
 
-        renderSlots(aRequest, aResponse, aFS, source, spansAndSlots);
+        renderLinks(aRequest, aResponse, aFS, source, spansAndSlots);
 
         return spansAndSlots;
     }
 
-    private void renderSlots(RenderRequest aRequest, VDocument aVDocument, AnnotationFS aFS,
+    private void renderLinks(RenderRequest aRequest, VDocument aVDocument, AnnotationFS aFS,
             VID aSource, List<VObject> aSpansAndSlots)
     {
         var typeAdapter = getTypeAdapter();
@@ -233,6 +234,17 @@ public class SpanRenderer
                     var arcEnd = Math.max(aFS.getEnd(), targetFS.getEnd());
 
                     if (overlapping(arcBegin, arcEnd, aWindowBegin, aWindowEnd)) {
+                        var label = traits.map(LinkFeatureTraits::isEnableRoleLabels).orElse(false)
+                                ? link.role
+                                : feat.getUiName();
+
+                        var hiddenValues = aRequest.getHiddenFeatureValues()
+                                .getOrDefault(feat.getId(), emptySet());
+                        if (hiddenValues.contains(label)) {
+                            // If the feature value is hidden, we do not render the suggestion
+                            continue;
+                        }
+
                         var target = RelationRenderer.createEndpoint(aRequest, aVDocument, targetFS,
                                 typeAdapter);
 
@@ -240,10 +252,6 @@ public class SpanRenderer
                                 .withAttribute(fi) //
                                 .withSlot(li) //
                                 .build();
-
-                        var label = traits.map(LinkFeatureTraits::isEnableRoleLabels).orElse(false)
-                                ? link.role
-                                : feat.getUiName();
 
                         var arc = VArc.builder() //
                                 .withLayer(layer) //
