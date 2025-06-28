@@ -420,7 +420,7 @@ public class ProjectsOverviewPage
                 aItem.add(createRoleBadges(aItem.getModelObject()));
 
                 var seeStats = projectService.hasRole(currentUser.getObject(), project, MANAGER,
-                        CURATOR);
+                        CURATOR) || userRepository.isAdministrator(currentUser.getObject());
                 if (seeStats) {
                     var stats = documentService.getSourceDocumentStats(project);
                     aItem.add(new ProjectDocumentStatsPanel("stats", Model.of(stats)));
