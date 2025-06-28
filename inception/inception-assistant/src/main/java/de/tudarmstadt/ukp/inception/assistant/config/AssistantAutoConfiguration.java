@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.AssistantServiceImpl;
 import de.tudarmstadt.ukp.inception.assistant.contextmenu.CheckAnnotationContextMenuItem;
+import de.tudarmstadt.ukp.inception.assistant.documents.AssistantIndexFootprintProvider;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentContextRetriever;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryServiceImpl;
@@ -142,5 +143,12 @@ public class AssistantAutoConfiguration
     {
         return new CheckAnnotationContextMenuItem(aSchedulingService, aAssistantSidebarFactory,
                 aSchemaService, aUserService);
+    }
+
+    @Bean
+    public AssistantIndexFootprintProvider assistantIndexFootprintProvider(
+            RepositoryProperties aRepositoryProperties)
+    {
+        return new AssistantIndexFootprintProvider(aRepositoryProperties);
     }
 }

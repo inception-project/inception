@@ -25,6 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.DocumentAccessImpl;
+import de.tudarmstadt.ukp.inception.documents.DocumentFootprintProvider;
 import de.tudarmstadt.ukp.inception.documents.DocumentServiceImpl;
 import de.tudarmstadt.ukp.inception.documents.DocumentStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
@@ -72,5 +73,12 @@ public class DocumentServiceAutoConfiguration
     public DocumentStorageService documentStorageService(RepositoryProperties aRepositoryProperties)
     {
         return new DocumentStorageServiceImpl(aRepositoryProperties);
+    }
+
+    @Bean
+    public DocumentFootprintProvider sourceDocumentFootprintProvider(
+            DocumentStorageServiceImpl aDocumentStorageService)
+    {
+        return new DocumentFootprintProvider(aDocumentStorageService);
     }
 }

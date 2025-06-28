@@ -15,22 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.search.index;
+package de.tudarmstadt.ukp.inception.project.api.footprint;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.Serializable;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-
-public interface PhysicalIndexFactory
+public record Footprint(String category, long size, String color)
+    implements Serializable
 {
-    String getBeanName();
 
-    String getDisplayName();
-
-    PhysicalIndex getPhysicalIndex(Project aProject);
-
-    File getIndexDir(Project aProject);
-
-    long getIndexSize(Project aProject) throws IOException;
 }
