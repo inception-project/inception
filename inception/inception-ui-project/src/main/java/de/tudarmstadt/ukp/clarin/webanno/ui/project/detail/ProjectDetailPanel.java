@@ -75,6 +75,7 @@ public class ProjectDetailPanel
     private boolean slugChanged = false;
 
     private Label idLabel;
+    private FootprintPanel footprintPanel;
 
     public ProjectDetailPanel(String id, IModel<Project> aModel)
     {
@@ -128,7 +129,15 @@ public class ProjectDetailPanel
 
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
 
-        form.add(new FootprintPanel("footprint", getModel()));
+        footprintPanel = new FootprintPanel("footprint", getModel());
+        form.add(footprintPanel);
+    }
+
+    @Override
+    protected void onModelChanged()
+    {
+        super.onModelChanged();
+        footprintPanel.modelChanged();
     }
 
     private Optional<String> deriveSlugFromName(Project aProject)

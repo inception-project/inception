@@ -19,14 +19,17 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.detail;
 
 import static java.util.Comparator.comparing;
 import static java.util.Locale.ROOT;
-import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 
+import java.util.ArrayList;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -41,22 +44,20 @@ public class FootprintPanel
 
     private @SpringBean FootprintProviderRegistry footprintProviderRegistry;
 
+    private final ListModel<Footprint> footPrints = new ListModel<>(new ArrayList<>());
+
     public FootprintPanel(String aId, IModel<Project> aModel)
     {
         super(aId, aModel);
 
-        var footPrints = footprintProviderRegistry.getExtensions(aModel.getObject()).stream() //
-                .flatMap(provider -> provider.getFootprint(aModel.getObject()).stream()) //
-                .filter(footprint -> footprint.size() > 0) //
-                .sorted(comparing(Footprint::category)) //
-                .toList();
+        refresh();
 
-        var total = footPrints.stream() //
+        var total = footPrints.map(fp -> fp.stream() //
                 .mapToLong(Footprint::size) //
-                .sum();
+                .sum());
 
-        add(new Label("total", byteCountToDisplaySize(total)) //
-                .add(AttributeModifier.replace("title", total + " bytes")));
+        add(new Label("total", total.map(FileUtils::byteCountToDisplaySize)) //
+                .add(AttributeModifier.replace("title", total.map(v -> v + " bytes"))));
 
         add(new ListView<>("footprint", footPrints)
         {
@@ -67,15 +68,33 @@ public class FootprintPanel
             {
                 aItem.add(new LambdaStyleAttributeModifier(styles -> {
                     styles.put("width", String.format(ROOT, "%.3f",
-                            aItem.getModelObject().size() * 100.0 / total) + "%");
+                            total.map(v -> aItem.getModelObject().size() * 100.0 / v).getObject())
+                            + "%");
                     styles.put("background-color", aItem.getModelObject().color());
                     return styles;
                 }));
 
                 aItem.add(AttributeModifier.replace("title",
-                        byteCountToDisplaySize(aItem.getModelObject().size())));
+                        FileUtils.byteCountToDisplaySize(aItem.getModelObject().size())));
                 aItem.add(new Label("category", aItem.getModelObject().category()));
             }
         });
+    }
+
+    @Override
+    protected void onModelChanged()
+    {
+        super.onModelChanged();
+        refresh();
+    }
+
+    private void refresh()
+    {
+        var project = getModelObject();
+        footPrints.setObject(footprintProviderRegistry.getExtensions(project).stream() //
+                .flatMap(provider -> provider.getFootprint(project).stream()) //
+                .filter(footprint -> footprint.size() > 0) //
+                .sorted(comparing(Footprint::category)) //
+                .toList());
     }
 }

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.kb.footprint;
 
 import static java.util.Arrays.asList;
 
+import java.util.Collections;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -51,16 +52,21 @@ public class KnowledgeBaseFootprintProvider
     @Override
     public List<Footprint> getFootprint(Project aProject)
     {
-        var totalIndexSize = knowledgeBaseService.getKnowledgeBases(aProject).stream() //
-                .mapToLong(kb -> knowledgeBaseService.getIndexSize(kb)) //
-                .sum();
+        try {
+            var totalIndexSize = knowledgeBaseService.getKnowledgeBases(aProject).stream() //
+                    .mapToLong(kb -> knowledgeBaseService.getIndexSize(kb)) //
+                    .sum();
 
-        var totalDataSize = knowledgeBaseService.getKnowledgeBases(aProject).stream() //
-                .mapToLong(kb -> knowledgeBaseService.getRepositorySize(kb)) //
-                .sum();
+            var totalDataSize = knowledgeBaseService.getKnowledgeBases(aProject).stream() //
+                    .mapToLong(kb -> knowledgeBaseService.getRepositorySize(kb)) //
+                    .sum();
 
-        return asList( //
-                new Footprint("KB index", totalIndexSize, "blue"), //
-                new Footprint("KB data", totalDataSize, "lightblue"));
+            return asList( //
+                    new Footprint("KB index", totalIndexSize, "blue"), //
+                    new Footprint("KB data", totalDataSize, "lightblue"));
+        }
+        catch (Exception e) {
+            return Collections.emptyList();
+        }
     }
 }
