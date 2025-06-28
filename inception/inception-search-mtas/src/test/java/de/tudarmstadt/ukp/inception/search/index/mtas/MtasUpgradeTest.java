@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParserLuceneTest.createBinaryCasDocument;
 import static org.apache.commons.io.FileUtils.copyDirectory;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
@@ -132,9 +133,13 @@ public class MtasUpgradeTest
         documentService.createSourceDocument(srcDoc);
         documentService.createOrUpdateAnnotationDocument(annDoc);
 
-        index = new MtasDocumentIndex(project, documentService,
-                repositoryProperties.getPath().getAbsolutePath(), featureIndexingSupportRegistry,
-                featureSupportRegistry);
+        var indexDir = repositoryProperties.getPath().toPath() //
+                .resolve(PROJECT_FOLDER) //
+                .resolve(Long.toString(project.getId())) //
+                .resolve(MtasDocumentIndexFactory.INDEX) //
+                .toFile();
+        index = new MtasDocumentIndex(project, documentService, indexDir,
+                featureIndexingSupportRegistry, featureSupportRegistry);
     }
 
     @AfterEach

@@ -169,18 +169,18 @@ public interface Renderer
 
     default List<VLazyDetailGroup> lookupLazyDetails(CAS aCas, VID aVid)
     {
-        var fsr = getFeatureSupportRegistry();
-
         var aFs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
 
         var details = new ArrayList<VLazyDetailGroup>();
-        generateLazyDetailsForFeaturesIncludedInHover(fsr, details, aFs);
+        generateLazyDetailsForFeaturesIncludedInHover(details, aFs);
         return details;
     }
 
-    default void generateLazyDetailsForFeaturesIncludedInHover(FeatureSupportRegistry fsr,
-            List<VLazyDetailGroup> details, AnnotationFS aFs)
+    default void generateLazyDetailsForFeaturesIncludedInHover(List<VLazyDetailGroup> aDetails,
+            AnnotationFS aFs)
     {
+        var fsr = getFeatureSupportRegistry();
+
         for (var feature : getTypeAdapter().listFeatures()) {
             if (!feature.isEnabled() || !feature.isIncludeInHover()
                     || feature.getMultiValueMode() != NONE) {
@@ -192,7 +192,7 @@ public interface Renderer
             if (isNotBlank(label)) {
                 var group = new VLazyDetailGroup();
                 group.addDetail(new VLazyDetail(feature.getName(), label));
-                details.add(group);
+                aDetails.add(group);
             }
         }
     }

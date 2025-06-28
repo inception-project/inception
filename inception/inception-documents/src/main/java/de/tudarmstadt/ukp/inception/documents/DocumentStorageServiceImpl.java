@@ -36,6 +36,7 @@ import org.apache.commons.lang3.Validate;
 import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
@@ -50,20 +51,26 @@ public class DocumentStorageServiceImpl
         repositoryProperties = aRepositoryProperties;
     }
 
-    private Path getSourceDocumentFolder(SourceDocument aDocument)
+    Path getSourceDocumentFolder(SourceDocument aDocument)
     {
         Validate.notNull(aDocument, "Parameter [sourceDocument] must be specified");
         Validate.notNull(aDocument.getProject().getId(),
                 "Source document's project must have an ID");
         Validate.notNull(aDocument.getId(), "Source document must have an ID");
 
+        return getDocumentsFolder(aDocument.getProject()) //
+                .resolve(Long.toString(aDocument.getId())) //
+                .resolve(SOURCE_FOLDER);
+    }
+
+    Path getDocumentsFolder(Project aProject)
+    {
         return repositoryProperties.getPath().toPath() //
                 .toAbsolutePath() //
                 .resolve(PROJECT_FOLDER) //
-                .resolve(Long.toString(aDocument.getProject().getId())) //
+                .resolve(Long.toString(aProject.getId())) //
                 .resolve(DOCUMENT_FOLDER)//
-                .resolve(Long.toString(aDocument.getId())) //
-                .resolve(SOURCE_FOLDER);
+        ;
     }
 
     @Override

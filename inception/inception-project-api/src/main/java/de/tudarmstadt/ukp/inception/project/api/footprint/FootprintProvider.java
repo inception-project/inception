@@ -15,22 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.search.index;
+package de.tudarmstadt.ukp.inception.project.api.footprint;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
-public interface PhysicalIndexFactory
+public interface FootprintProvider
+    extends Extension<Project>
 {
-    String getBeanName();
-
-    String getDisplayName();
-
-    PhysicalIndex getPhysicalIndex(Project aProject);
-
-    File getIndexDir(Project aProject);
-
-    long getIndexSize(Project aProject) throws IOException;
+    List<Footprint> getFootprint(Project aProject);
 }
