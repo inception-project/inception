@@ -21,21 +21,23 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 
 public final class SourceDocumentStateStats
 {
+    private static final long serialVersionUID = -8098769134446827697L;
+
     private final long total;
-    private final long an;
-    private final long aip;
-    private final long af;
-    private final long cip;
-    private final long cf;
+    private final long annotationsNew;
+    private final long annotationsInProgress;
+    private final long annotationsFinished;
+    private final long curationsInProgress;
+    private final long curationsFinished;
 
     public SourceDocumentStateStats(Long aTotal, Long aAn, Long aAip, Long aAf, Long aCip, Long aCf)
     {
         total = aTotal != null ? aTotal : 0l;
-        an = aAn != null ? aAn : 0l;
-        aip = aAip != null ? aAip : 0l;
-        af = aAf != null ? aAf : 0l;
-        cip = aCip != null ? aCip : 0l;
-        cf = aCf != null ? aCf : 0l;
+        annotationsNew = aAn != null ? aAn : 0l;
+        annotationsInProgress = aAip != null ? aAip : 0l;
+        annotationsFinished = aAf != null ? aAf : 0l;
+        curationsInProgress = aCip != null ? aCip : 0l;
+        curationsFinished = aCf != null ? aCf : 0l;
     }
 
     public long getTotal()
@@ -45,70 +47,76 @@ public final class SourceDocumentStateStats
 
     public long getNewAnnotations()
     {
-        return an;
+        return annotationsNew;
     }
 
     public long getAnnotationsInProgress()
     {
-        return aip;
+        return annotationsInProgress;
     }
 
     public long getFinishedAnnotations()
     {
-        return af;
+        return annotationsFinished;
     }
 
     public long getCurationsInProgress()
     {
-        return cip;
+        return curationsInProgress;
     }
 
     public long getCurationsFinished()
     {
-        return cf;
+        return curationsFinished;
     }
 
     public ProjectState getProjectState()
     {
-        if (total == cf) {
-            return ProjectState.CURATION_FINISHED;
-        }
-        else if (total == af) {
-            return ProjectState.ANNOTATION_FINISHED;
-        }
-        else if (total == an) {
+        if (total == 0) {
             return ProjectState.NEW;
         }
-        else if (aip > 0 || an > 0) {
+
+        if (total == curationsFinished) {
+            return ProjectState.CURATION_FINISHED;
+        }
+
+        if (total == annotationsFinished) {
+            return ProjectState.ANNOTATION_FINISHED;
+        }
+
+        if (total == annotationsNew) {
+            return ProjectState.NEW;
+        }
+
+        if (annotationsInProgress > 0 || annotationsNew > 0) {
             return ProjectState.ANNOTATION_IN_PROGRESS;
         }
-        else if (af > 0 || cip > 0) {
+
+        if (annotationsFinished > 0 || curationsInProgress > 0) {
             return ProjectState.CURATION_IN_PROGRESS;
         }
-        else {
-            // This should actually never happen...
-            throw new IllegalStateException("Unable to determine project state from " + toString());
-        }
+
+        // This should actually never happen...
+        throw new IllegalStateException("Unable to determine project state from " + toString());
     }
 
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
         builder.append("SourceDocumentStateStats [total=");
         builder.append(total);
         builder.append(", an=");
-        builder.append(an);
+        builder.append(annotationsNew);
         builder.append(", aip=");
-        builder.append(aip);
+        builder.append(annotationsInProgress);
         builder.append(", af=");
-        builder.append(af);
+        builder.append(annotationsFinished);
         builder.append(", cip=");
-        builder.append(cip);
+        builder.append(curationsInProgress);
         builder.append(", cf=");
-        builder.append(cf);
+        builder.append(curationsFinished);
         builder.append("]");
         return builder.toString();
     }
-
 }
