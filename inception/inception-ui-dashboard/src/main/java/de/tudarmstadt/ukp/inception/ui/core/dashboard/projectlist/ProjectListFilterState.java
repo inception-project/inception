@@ -28,9 +28,19 @@ public class ProjectListFilterState
 {
     private static final long serialVersionUID = -6340607235253080789L;
 
-    private final List<PermissionLevel> roles = new ArrayList<>();
+    private String query;
 
-    private String projectName;
+    public String getQuery()
+    {
+        return query;
+    }
+
+    public void setQuery(String aQuery)
+    {
+        query = aQuery;
+    }
+
+    private final List<PermissionLevel> roles = new ArrayList<>();
 
     public List<PermissionLevel> getRoles()
     {
@@ -43,15 +53,5 @@ public class ProjectListFilterState
         if (aRoles != null) {
             roles.addAll(aRoles);
         }
-    }
-
-    public String getProjectName()
-    {
-        return projectName;
-    }
-
-    public void setProjectName(String aProjectName)
-    {
-        projectName = aProjectName;
     }
 }

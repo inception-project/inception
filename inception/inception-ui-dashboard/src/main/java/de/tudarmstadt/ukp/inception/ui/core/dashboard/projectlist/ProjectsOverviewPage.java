@@ -151,7 +151,7 @@ public class ProjectsOverviewPage
     private PagingNavigator navigator;
     private BootstrapModalDialog dialog;
     private Label noProjectsNotice;
-    private TextField<String> nameFilter;
+    private TextField<String> queryField;
     private LambdaAjaxLink newProjectLink;
 
     private Set<Long> highlightedProjects = new HashSet<>();
@@ -210,16 +210,16 @@ public class ProjectsOverviewPage
         }));
         queue(sortOrder);
 
-        nameFilter = new TextField<>("nameFilter",
-                PropertyModel.of(dataProvider.getFilterState(), "projectName"), String.class);
-        nameFilter.setOutputMarkupPlaceholderTag(true);
-        nameFilter.add(
+        queryField = new TextField<>("query",
+                PropertyModel.of(dataProvider.getFilterState(), "query"), String.class);
+        queryField.setOutputMarkupPlaceholderTag(true);
+        queryField.add(
                 new LambdaAjaxFormComponentUpdatingBehavior(INPUT_EVENT, this::actionApplyFilter)
                         .withDebounce(ofMillis(200)));
-        nameFilter.add(new LambdaAjaxFormComponentUpdatingBehavior(KEYDOWN_EVENT, this::actionOpen)
+        queryField.add(new LambdaAjaxFormComponentUpdatingBehavior(KEYDOWN_EVENT, this::actionOpen)
                 .withKeyCode(ENTER));
-        nameFilter.add(visibleWhen(() -> !allAccessibleProjects.getObject().isEmpty()));
-        queue(nameFilter);
+        queryField.add(visibleWhen(() -> !allAccessibleProjects.getObject().isEmpty()));
+        queue(queryField);
 
         dialog = new BootstrapModalDialog(MID_DIALOG);
         dialog.trapFocus();
@@ -240,7 +240,7 @@ public class ProjectsOverviewPage
                     .forScript(openCreateProjectDialogByDefaultBehavior.getCallbackScript()));
         }
         else {
-            WicketUtil.ajaxFallbackFocus(aResponse, nameFilter);
+            WicketUtil.ajaxFallbackFocus(aResponse, queryField);
         }
     }
 
