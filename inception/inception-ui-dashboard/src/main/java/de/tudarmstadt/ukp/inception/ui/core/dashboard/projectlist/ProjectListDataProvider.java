@@ -22,13 +22,15 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.containsAny;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.substringAfter;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
@@ -39,6 +41,8 @@ public class ProjectListDataProvider
     extends SortableDataProvider<ProjectEntry, ProjectListSortKeys>
     implements IFilterStateLocator<ProjectListFilterState>, Serializable
 {
+    private static final String NAME_DESC_SEP = "::";
+
     private static final long serialVersionUID = 2144634813265254948L;
 
     private static final Date BEGINNING_OF_TIME = new Date(0);
@@ -105,13 +109,33 @@ public class ProjectListDataProvider
 
     private List<ProjectEntry> filter(List<ProjectEntry> aData)
     {
-        Stream<ProjectEntry> projectStream = aData.stream();
+        var projectStream = aData.stream();
 
         // Filter by project name
-        if (filterState.getProjectName() != null) {
-            projectStream = projectStream
-                    .filter(doc -> containsIgnoreCase(doc.getProject().getName(),
-                            filterState.getProjectName()));
+        if (filterState.getQuery() != null) {
+            String nameFilter;
+            String descriptionFilter;
+
+            var query = filterState.getQuery();
+            if (query.contains(NAME_DESC_SEP)) {
+                nameFilter = substringBefore(query, NAME_DESC_SEP).trim();
+                descriptionFilter = substringAfter(query, NAME_DESC_SEP).trim();
+            }
+            else {
+                nameFilter = query.trim();
+                descriptionFilter = null;
+            }
+
+            if (isNotBlank(nameFilter)) {
+                projectStream = projectStream
+                        .filter(doc -> containsIgnoreCase(doc.getProject().getName(), nameFilter));
+            }
+
+            if (isNotBlank(descriptionFilter)) {
+                projectStream = projectStream
+                        .filter(doc -> containsIgnoreCase(doc.getProject().getDescription(),
+                                descriptionFilter));
+            }
         }
 
         // Filter by user roles
