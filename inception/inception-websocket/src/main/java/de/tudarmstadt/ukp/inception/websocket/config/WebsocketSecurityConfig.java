@@ -74,7 +74,6 @@ public class WebsocketSecurityConfig
             // messages other than MESSAGE,SUBSCRIBE are allowed for authenticated users
             .nullDestMatcher().authenticated() //
             .simpSubscribeDestMatchers("/*/errors*").hasRole("USER")
-            .simpSubscribeDestMatchers("/*/loggedEvents").hasRole("ADMIN")
             .simpSubscribeDestMatchers("/*/scheduler/user").hasRole("USER")
             .simpSubscribeDestMatchers("/*/scheduler" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}")
                 .access(expression(mah, "@projectAccess.canManageProject(#" + PARAM_PROJECT + ")"))
