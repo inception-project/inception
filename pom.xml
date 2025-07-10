@@ -176,6 +176,7 @@
     <jsonld-java.version>0.13.6</jsonld-java.version>
     <jna.version>5.17.0</jna.version>
     <jsoup.version>1.18.3</jsoup.version>
+    <matomo-java-tracker-core-version>3.4.0</matomo-java-tracker-core-version>
     <mime4j.version>0.8.11</mime4j.version>
     <hsqldb.version>2.7.4</hsqldb.version>
     <opensaml.version>4.3.2</opensaml.version>

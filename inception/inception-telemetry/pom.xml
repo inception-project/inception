@@ -130,20 +130,28 @@
 
     <dependency>
       <groupId>org.piwik.java.tracking</groupId>
+      <artifactId>matomo-java-tracker-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.piwik.java.tracking</groupId>
       <artifactId>matomo-java-tracker</artifactId>
-      <version>1.6</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpcore</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpasyncclient</artifactId>
     </dependency>
   </dependencies>
-</project>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <ignoredDependencies>
+              <!-- Used via reflection -->
+              <ignoredDependency>org.piwik.java.tracking:matomo-java-tracker</ignoredDependency>
+            </ignoredDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build></project>

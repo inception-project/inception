@@ -88,6 +88,17 @@
         <version>2.5.2</version>
       </dependency>
 
+      <dependency>
+        <groupId>org.piwik.java.tracking</groupId>
+        <artifactId>matomo-java-tracker-core</artifactId>
+        <version>${matomo-java-tracker-core-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.piwik.java.tracking</groupId>
+        <artifactId>matomo-java-tracker</artifactId>
+        <version>${matomo-java-tracker-core-version}</version>
+      </dependency>
+
       <!-- JAXB DEPENDENCIES -->
       <dependency>
         <groupId>org.glassfish.jaxb</groupId>
