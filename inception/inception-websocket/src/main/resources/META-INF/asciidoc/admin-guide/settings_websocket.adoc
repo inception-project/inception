@@ -33,11 +33,6 @@ Note that some features may no longer work when disabling websocket such as the 
 | true
 | false
 
-| websocket.logged-events.enabled
-| enable/disable push messages for logged events
-| false
-| true
-
 | websocket.recommender-events.enabled
 | enable/disable push messages for recommender events
 | true

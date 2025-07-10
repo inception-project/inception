@@ -331,10 +331,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-log</artifactId>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-log-ui</artifactId>
-    </dependency>
 
     <!-- INCEPTION - EDITORS -->
     <dependency>
@@ -1008,7 +1004,6 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-pubmed</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log-ui</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-ui</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-dynamic</usedDependency>
