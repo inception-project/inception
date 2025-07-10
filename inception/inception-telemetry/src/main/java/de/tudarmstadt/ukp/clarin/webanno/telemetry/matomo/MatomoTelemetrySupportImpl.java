@@ -26,6 +26,7 @@ import static java.util.Collections.newSetFromMap;
 import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
@@ -81,7 +82,7 @@ public class MatomoTelemetrySupportImpl
     public static final String ACTION_PING = "ping";
     public static final String ACTION_ALIVE = "alive";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final InstanceIdentityService identityService;
     private final TelemetryService telemetryService;
@@ -137,7 +138,7 @@ public class MatomoTelemetrySupportImpl
                     .build());
         }
         catch (Exception e) {
-            log.info("Unable to set up telemetry client: {}", e.getMessage());
+            LOG.info("Unable to set up telemetry client: {}", e.getMessage());
             tracker = null;
         }
 
@@ -242,7 +243,7 @@ public class MatomoTelemetrySupportImpl
             sendTelemetry(ACTION_BOOT);
         }
         else {
-            log.debug("Telemetry disabled");
+            LOG.debug("Telemetry disabled");
         }
     }
 
@@ -256,7 +257,7 @@ public class MatomoTelemetrySupportImpl
         }
         else {
             resetActivePrincipals();
-            log.debug("Telemetry disabled");
+            LOG.debug("Telemetry disabled");
         }
     }
 
@@ -296,11 +297,11 @@ public class MatomoTelemetrySupportImpl
         var hasActiveSessions = !activePrincipals.isEmpty();
 
         if (!hasActiveSessions) {
-            log.debug("Telemetry detected no active principals: {}", activePrincipals);
+            LOG.debug("Telemetry detected no active principals: {}", activePrincipals);
             return;
         }
         else {
-            log.debug("Telemetry detected active principals: {}", activePrincipals);
+            LOG.debug("Telemetry detected active principals: {}", activePrincipals);
         }
 
         // Clear the active principals from the last period and perform an initial collection for
@@ -323,34 +324,40 @@ public class MatomoTelemetrySupportImpl
     private void sendTelemetry(String aAction)
     {
         if (getTracker() == null) {
-            log.debug("Telemetry unavailable");
+            LOG.debug("Telemetry unavailable");
             return;
         }
 
-        var id = identityService.getInstanceIdentity();
+        try {
+            var id = identityService.getInstanceIdentity();
 
-        var uuid = UUID.fromString(id.getId());
+            var uuid = UUID.fromString(id.getId());
 
-        var request = MatomoRequest.request() //
-                .siteId(properties.getSiteId()) //
-                .actionUrl(properties.getContext()) //
-                .build();
-        request.setHeaderUserAgent(System.getProperty("os.name"));
-        request.setActionName(aAction);
-        request.setVisitorId(VisitorId.fromHex(format("%016x", uuid.getMostSignificantBits())));
-        request.setUserId(id.getId());
-        request.setVisitCustomVariable(new CustomVariable("app", applicationName), 1);
-        request.setVisitCustomVariable(
-                new CustomVariable("version", getVersionProperties().getProperty(PROP_VERSION)), 2);
-        request.setVisitCustomVariable(new CustomVariable("activeUsers",
-                String.valueOf(sessionRegistry.getAllPrincipals().size())), 3);
-        request.setVisitCustomVariable(new CustomVariable("enabledUsers",
-                String.valueOf(userService.listEnabledUsers().size())), 4);
-        request.setVisitCustomVariable(new CustomVariable("deploymentMode",
-                telemetryService.getDeploymentMode().toString()), 5);
+            var request = MatomoRequest.request() //
+                    .siteId(properties.getSiteId()) //
+                    .actionUrl(properties.getContext()) //
+                    .build();
+            request.setHeaderUserAgent(System.getProperty("os.name"));
+            request.setActionName(aAction);
+            request.setVisitorId(VisitorId.fromHex(format("%016x", uuid.getMostSignificantBits())));
+            request.setUserId(id.getId());
+            request.setVisitCustomVariable(new CustomVariable("app", applicationName), 1);
+            request.setVisitCustomVariable(
+                    new CustomVariable("version", getVersionProperties().getProperty(PROP_VERSION)),
+                    2);
+            request.setVisitCustomVariable(new CustomVariable("activeUsers",
+                    String.valueOf(sessionRegistry.getAllPrincipals().size())), 3);
+            request.setVisitCustomVariable(new CustomVariable("enabledUsers",
+                    String.valueOf(userService.listEnabledUsers().size())), 4);
+            request.setVisitCustomVariable(new CustomVariable("deploymentMode",
+                    telemetryService.getDeploymentMode().toString()), 5);
 
-        getTracker().sendRequestAsync(request);
-        log.debug("Telemetry sent ({})", aAction);
+            getTracker().sendRequestAsync(request);
+            LOG.debug("Telemetry sent ({})", aAction);
+        }
+        catch (Exception e) {
+            LOG.debug("Unable to send telemetry server", e);
+        }
     }
 
     @Override
@@ -413,7 +420,7 @@ public class MatomoTelemetrySupportImpl
             traits = JSONUtil.fromJsonString(MatomoTelemetryTraits.class, aSettings.getTraits());
         }
         catch (IOException e) {
-            log.error("Unable to read traits", e);
+            LOG.error("Unable to read traits", e);
         }
 
         if (traits == null) {
@@ -430,7 +437,7 @@ public class MatomoTelemetrySupportImpl
             aSettings.setTraits(JSONUtil.toJsonString(aTraits));
         }
         catch (IOException e) {
-            log.error("Unable to write traits", e);
+            LOG.error("Unable to write traits", e);
         }
     }
 
