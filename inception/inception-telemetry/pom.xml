@@ -131,7 +131,7 @@
     <dependency>
       <groupId>org.piwik.java.tracking</groupId>
       <artifactId>matomo-java-tracker</artifactId>
-      <version>1.6</version>
+      <version>3.4.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
