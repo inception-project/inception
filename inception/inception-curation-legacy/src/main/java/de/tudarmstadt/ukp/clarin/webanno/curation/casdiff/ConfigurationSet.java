@@ -65,6 +65,15 @@ public class ConfigurationSet
         return this;
     }
 
+    public ConfigurationSet removeTags(Tag... aTag)
+    {
+        if (aTag != null) {
+            tags.removeAll(asList(aTag));
+        }
+
+        return this;
+    }
+
     /**
      * @return tags added during agreement calculation (not by {@link CasDiff}!)
      */

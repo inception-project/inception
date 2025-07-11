@@ -166,18 +166,18 @@ public class CodingStudyUtils
 
             var values = new Object[users.size()];
             var i = 0;
-            for (var user : users) {
+            nextUser: for (var user : users) {
                 if (!cfgSet.getCasGroupIds().contains(user)) {
                     cfgSet.addTags(Tag.INCOMPLETE_POSITION);
                     i++;
-                    continue;
+                    continue nextUser;
                 }
 
                 // Make sure a single user didn't do multiple alternative annotations at a single
                 // position. So there is currently no support for calculating agreement on stacking
                 // annotations.
                 var cfgs = cfgSet.getConfigurations(user);
-                if (cfgs.size() > 1) {
+                if (cfgs.size() > 1 || cfgSet.hasTag(STACKED)) {
                     cfgSet.addTags(STACKED);
 
                     for (var cfg : cfgs) {
@@ -185,7 +185,8 @@ public class CodingStudyUtils
                         cfgSet.addValue(user, value);
                     }
 
-                    continue nextPosition;
+                    i++;
+                    continue nextUser;
                 }
 
                 var cfg = cfgs.get(0);
@@ -215,7 +216,6 @@ public class CodingStudyUtils
                             source.getBegin(), source.getEnd());
                     if (sourceCandidates.size() > 1) {
                         cfgSet.addTags(STACKED);
-                        continue nextPosition;
                     }
 
                     // Check if the target of the relation is stacked
@@ -224,7 +224,6 @@ public class CodingStudyUtils
                             target.getBegin(), target.getEnd());
                     if (targetCandidates.size() > 1) {
                         cfgSet.addTags(STACKED);
-                        continue nextPosition;
                     }
                 }
 
@@ -245,11 +244,20 @@ public class CodingStudyUtils
             assert cfgSet.getPosition().getLinkFeature() == null
                     || cfgSet.getPosition().getLinkFeature().equals(aFeature);
 
-            if (!containsAny(cfgSet.getTags(), INCOMPLETE_LABEL, INCOMPLETE_POSITION)) {
+            // STACKED supersedes INCOMPLETE_LABEL and INCOMPLETE_POSITION
+            // FIXME: Should we maybe keep the INCOMPLETE_X tags and handle the STACKED
+            // elsewhere?
+            if (containsAny(cfgSet.getTags(), STACKED)) {
+                cfgSet.removeTags(INCOMPLETE_LABEL, INCOMPLETE_POSITION);
+            }
+
+            // FIXME: Should we keep the COMPLETE tag even when stacked and handle the
+            // STACKED elsewhere?
+            if (!containsAny(cfgSet.getTags(), INCOMPLETE_LABEL, INCOMPLETE_POSITION, STACKED)) {
                 cfgSet.addTags(COMPLETE);
             }
 
-            if (!aExcludeIncomplete || cfgSet.hasTag(COMPLETE)) {
+            if ((!aExcludeIncomplete || cfgSet.hasTag(COMPLETE)) && !cfgSet.hasTag(STACKED)) {
                 cfgSet.addTags(USED);
                 study.addItemAsArray(values);
             }
