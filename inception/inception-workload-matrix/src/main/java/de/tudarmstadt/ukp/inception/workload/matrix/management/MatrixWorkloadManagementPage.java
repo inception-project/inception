@@ -36,14 +36,17 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.INPUT_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.csv.CSVFormat.EXCEL;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -53,6 +56,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
@@ -75,6 +79,7 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.SetModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.resource.IResourceStream;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -83,6 +88,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.comment.AnnotatorCommentDialogPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -103,7 +109,9 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdati
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
+import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
+import de.tudarmstadt.ukp.inception.support.wicket.PipedStreamResource;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellClickEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellOpenContextMenuEvent;
@@ -263,6 +271,52 @@ public class MatrixWorkloadManagementPage
         actionContainer.add(toggleBulkChange);
 
         add(contextMenu = new ContextMenu("contextMenu"));
+
+        var exportButton = new AjaxDownloadLink("export", () -> "workload.csv",
+                this::exportWorkload);
+        exportButton.add(visibleWhen(() -> documentMatrix.getItemCount() > 0));
+        queue(exportButton);
+    }
+
+    private IResourceStream exportWorkload()
+    {
+        var annotators = projectService.listProjectUsersWithPermissions(getProject(), ANNOTATOR)
+                .stream() //
+                .map(User::getUsername) //
+                .sorted() //
+                .toList();
+
+        return new PipedStreamResource(os -> {
+            try (var aOut = new CSVPrinter(new OutputStreamWriter(os, UTF_8), EXCEL)) {
+                var headers = new ArrayList<String>();
+                headers.add("document name");
+                headers.add("document state");
+                headers.add("curation state");
+                headers.addAll(annotators);
+
+                aOut.printRecord(headers);
+
+                var provider = documentMatrix.getDataProvider();
+                var i = provider.iterator(0, provider.size());
+                while (i.hasNext()) {
+                    var rowIn = i.next();
+                    var rowOut = new ArrayList<String>(headers.size());
+                    rowOut.add(rowIn.getSourceDocument().getName());
+                    rowOut.add(rowIn.getState().getId());
+                    rowOut.add(rowIn.getCurationState().getId());
+                    for (var annotator : annotators) {
+                        var annDoc = rowIn.getAnnotationDocument(annotator);
+                        if (annDoc != null) {
+                            rowOut.add(annDoc.getState().getId());
+                        }
+                        else {
+                            rowOut.add(AnnotationDocumentState.NEW.getId());
+                        }
+                    }
+                    aOut.printRecord(rowOut);
+                }
+            }
+        });
     }
 
     @OnEvent
