@@ -79,6 +79,7 @@
     <Logger name="de.tudarmstadt.ukp.inception" level="INFO"/>
     <Logger name="org.springframework.boot.web.embedded.tomcat.TomcatWebServer" level="INFO"/>
     <Logger name="liquibase" level="WARN"/>
+    <Logger name="liquibase.analytics.configuration.AnalyticsArgs" level="FATAL" />
     <Logger name="org.apache.uima" level="ERROR"/>
     <Logger name="ch.rasc.piwik.tracking.PiwikTracker" level="FATAL"/>
     <Logger name="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" level="ERROR"/>
