@@ -80,6 +80,7 @@ import org.apache.wicket.model.util.SetModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
+import org.springframework.http.MediaType;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -316,7 +317,7 @@ public class MatrixWorkloadManagementPage
                     aOut.printRecord(rowOut);
                 }
             }
-        });
+        }, MediaType.valueOf("text/csv"));
     }
 
     @OnEvent

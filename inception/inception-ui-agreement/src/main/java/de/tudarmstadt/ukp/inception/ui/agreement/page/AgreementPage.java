@@ -62,6 +62,7 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -77,6 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePairwiseAgreeme
 import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePerDocumentAgreementTask;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -388,7 +390,7 @@ public class AgreementPage
                 os.write("Unexpected error during export, see log for details.".getBytes(UTF_8));
                 LOG.error("Unexpected error while exporting diff", e);
             }
-        }));
+        }, MediaType.valueOf("text/csv")));
 
     }
 
@@ -438,7 +440,7 @@ public class AgreementPage
                 os.write("Unexpected error during export, see log for details.".getBytes(UTF_8));
                 LOG.error("Unexpected error while exporting diff", e);
             }
-        }));
+        }, MediaType.APPLICATION_JSON));
     }
 
     private void actionExportCsv(AjaxRequestTarget aTarget, Form<AgreementFormModel> aForm)
@@ -464,19 +466,27 @@ public class AgreementPage
         }
         filename += ".csv";
 
-        downloadBehavior.initiate(aTarget, filename, new PipedStreamResource(os -> {
-            // PipedStreamResource runs the lambda in a separate thread, so we need to make
-            // sure the MDC is correctly set up here.
-            var sessionOwner = userRepository.getCurrentUser();
-            try (var ctx = new DefaultMdcSetup(repositoryProperties, project, sessionOwner)) {
-                agreementService.exportSpanLayerDataAsCsv(os, layer, feature, traits,
-                        selectedDocuments, annotators);
-            }
-            catch (Exception e) {
-                os.write("Unexpected error during export, see log for details.".getBytes(UTF_8));
-                LOG.error("Unexpected error while exporting diff", e);
-            }
-        }));
+        downloadBehavior.initiate(aTarget, filename, new PipedStreamResource(
+                os -> exportCsv(os, project, layer, feature, traits, annotators, selectedDocuments),
+                MediaType.valueOf("text/csv")));
+    }
+
+    private void exportCsv(OutputStream aOut, Project aProject, AnnotationLayer aLayer,
+            AnnotationFeature aFeature, DefaultAgreementTraits aTraits, List<String> aAnnotators,
+            List<SourceDocument> aSelectedDocuments)
+        throws IOException
+    {
+        // PipedStreamResource runs the lambda in a separate thread, so we need to make
+        // sure the MDC is correctly set up here.
+        var sessionOwner = userRepository.getCurrentUser();
+        try (var ctx = new DefaultMdcSetup(repositoryProperties, aProject, sessionOwner)) {
+            agreementService.exportSpanLayerDataAsCsv(aOut, aLayer, aFeature, aTraits,
+                    aSelectedDocuments, aAnnotators);
+        }
+        catch (Exception e) {
+            aOut.write("Unexpected error during export, see log for details.".getBytes(UTF_8));
+            LOG.error("Unexpected error while exporting diff", e);
+        }
     }
 
     private void actionCalculatePairwiseAgreement(AjaxRequestTarget aTarget,
@@ -695,7 +705,7 @@ public class AgreementPage
                 }
 
             }
-        }));
+        }, MediaType.valueOf("text/csv")));
     }
 
     private DefaultAgreementTraits getTraits()

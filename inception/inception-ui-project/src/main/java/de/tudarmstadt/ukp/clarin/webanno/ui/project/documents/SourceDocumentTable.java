@@ -58,6 +58,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
@@ -168,7 +169,7 @@ public class SourceDocumentTable
         queue(new LambdaAjaxLink("bulkDelete", this::actionBulkDeleteDocuments));
         queue(new AjaxDownloadLink("bulkExport", //
                 Model.of("files.zip"), //
-                LoadableDetachableModel.of(this::exportDocuments)));
+                LoadableDetachableModel.of(this::exportDocumentsAsZip)));
 
         queue(new SourceDocumentStateFilterPanel(CID_STATE_FILTERS,
                 () -> dataProvider.getFilterState().getStates()));
@@ -302,18 +303,18 @@ public class SourceDocumentTable
 
     private List<SourceDocument> getSelectedDocuments()
     {
-        var selectedDocuments = dataProvider.getModel().getObject().stream() //
+        return dataProvider.getModel().getObject().stream() //
                 .filter(SourceDocumentTableRow::isSelected) //
                 .map(SourceDocumentTableRow::getDocument) //
                 .collect(toList());
-        return selectedDocuments;
     }
 
-    private IResourceStream exportDocuments()
+    private IResourceStream exportDocumentsAsZip()
     {
         var selectedDocuments = getSelectedDocuments();
         return new PipedStreamResource(
-                os -> documentService.exportSourceDocuments(os, selectedDocuments));
+                os -> documentService.exportSourceDocuments(os, selectedDocuments),
+                MediaType.valueOf("application/zip"));
     }
 
     private void actionDeleteDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
@@ -321,7 +322,7 @@ public class SourceDocumentTable
         var dialogContent = new DeleteDocumentConfirmationDialogContentPanel(
                 ModalDialog.CONTENT_ID);
 
-        IModel<String> documentNameModel = Model.of(aDocument.getName());
+        var documentNameModel = Model.of(aDocument.getName());
         dialogContent.setExpectedResponseModel(documentNameModel);
         dialogContent.setConfirmAction($ -> actionConfirmDeleteDocuments($, asList(aDocument)));
 
@@ -340,7 +341,7 @@ public class SourceDocumentTable
 
         var project = selectedDocuments.get(0).getProject();
 
-        IModel<String> projectNameModel = Model.of(project.getName());
+        var projectNameModel = Model.of(project.getName());
 
         var dialogContent = new DeleteDocumentConfirmationDialogContentPanel(ModalDialog.CONTENT_ID,
                 Model.of(selectedDocuments));
