@@ -90,7 +90,7 @@ class AgreementServiceImplTest
 
         assertThat(generateReport(userCount, data).lines()).contains( //
                 "SpanPosition,,,de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity,"
-                        + "value,8-12 [John],STACKED,\"LOC, PER\",<no annotation>");
+                        + "value,8-12 [John],STACKED,\"LOC, PER\",ORG");
     }
 
     @SuppressWarnings("unchecked")
