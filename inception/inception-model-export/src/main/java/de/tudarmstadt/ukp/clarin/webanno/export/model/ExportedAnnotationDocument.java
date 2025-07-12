@@ -52,6 +52,10 @@ public class ExportedAnnotationDocument
     @JsonProperty("timestamp")
     private Date timestamp;
 
+    /**
+     * @deprecated no longer used.
+     */
+    @Deprecated
     @JsonProperty("sentence_accessed")
     private int sentenceAccessed = 0;
 
@@ -63,11 +67,18 @@ public class ExportedAnnotationDocument
     @Temporal(TemporalType.TIMESTAMP)
     private Date updated;
 
+    /**
+     * @return the name of the source document this annotation document belongs to.
+     */
     public String getName()
     {
         return name;
     }
 
+    /**
+     * @param name
+     *            the name of the source document this annotation document belongs to.
+     */
     public void setName(String name)
     {
         this.name = name;
@@ -123,11 +134,19 @@ public class ExportedAnnotationDocument
         this.timestamp = timestamp;
     }
 
+    /**
+     * @deprecated no longer used.
+     */
+    @Deprecated
     public int getSentenceAccessed()
     {
         return sentenceAccessed;
     }
 
+    /**
+     * @deprecated no longer used.
+     */
+    @Deprecated
     public void setSentenceAccessed(int sentenceAccessed)
     {
         this.sentenceAccessed = sentenceAccessed;
