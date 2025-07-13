@@ -30,6 +30,11 @@
 
     <!-- Import -->
     <div wicket:enclosure="uploadForm">
+      <div wicket:id="wizardDescription" class="row form-row mb-5">
+        <div class="col-sm-9">
+          <wicket:message key="kb.local.fileupload.explanation" />
+        </div>
+      </div>
       <div class="row form-row">
         <label class="col-form-label col-sm-3">
           <wicket:message key="kb.details.local.contents" />
@@ -40,7 +45,7 @@
               <input type="file" wicket:id="uploadField" multiple="multiple" />
             </form>
           </div>
-          <div id="supportedList">
+          <div>
             <small class="text-muted">
               <wicket:message key="kb.local.fileupload.supported.list" />
             </small>
