@@ -173,13 +173,14 @@ public class AnnotationDocument
     @Deprecated
     public String getName()
     {
-        return name;
+        return document.getName();
     }
 
     @Deprecated
     public void setName(String aName)
     {
-        name = aName;
+        // No-op
+        // name = aName;
     }
 
     /**
@@ -189,13 +190,14 @@ public class AnnotationDocument
     @Deprecated
     public Project getProject()
     {
-        return project;
+        return document.getProject();
     }
 
     @Deprecated
     public void setProject(Project aProject)
     {
-        project = aProject;
+        // No-op
+        // project = aProject;
     }
 
     public String getUser()
