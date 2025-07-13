@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.project.initializers.phi;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState.KEY_EDITOR_STATE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs.KEY_ANNOTATION_EDITOR_MANAGER_PREFS;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -160,10 +160,10 @@ public class PhiProjectInitializer
 
         var bratEditorFactory = context.getBean(BratTokenWrappingAnnotationEditorFactory.class);
         if (bratEditorFactory != null) {
-            var editorState = preferencesService.loadDefaultTraitsForProject(KEY_EDITOR_STATE,
+            var editorState = preferencesService.loadDefaultTraitsForProject(KEY_ANNOTATION_EDITOR_MANAGER_PREFS,
                     project);
             editorState.setDefaultEditor(bratEditorFactory.getBeanName());
-            preferencesService.saveDefaultTraitsForProject(KEY_EDITOR_STATE, project, editorState);
+            preferencesService.saveDefaultTraitsForProject(KEY_ANNOTATION_EDITOR_MANAGER_PREFS, project, editorState);
         }
     }
 

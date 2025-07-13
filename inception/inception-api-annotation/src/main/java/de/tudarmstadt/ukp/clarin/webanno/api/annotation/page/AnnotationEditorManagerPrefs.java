@@ -23,13 +23,13 @@ import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
 import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AnnotationEditorState
+public class AnnotationEditorManagerPrefs
     implements PreferenceValue
 {
     private static final long serialVersionUID = -1637731874872789592L;
 
-    public static final PreferenceKey<AnnotationEditorState> KEY_EDITOR_STATE = new PreferenceKey<>(
-            AnnotationEditorState.class, "annotation/editor");
+    public static final PreferenceKey<AnnotationEditorManagerPrefs> KEY_ANNOTATION_EDITOR_MANAGER_PREFS = new PreferenceKey<>(
+            AnnotationEditorManagerPrefs.class, "annotation/editor");
 
     private String defaultEditor;
 

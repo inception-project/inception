@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState.KEY_EDITOR_STATE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs.KEY_ANNOTATION_EDITOR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.util.List;
@@ -29,30 +29,30 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaForm;
 
-public class DefaultAnnotationEditorStatePanel
-    extends Panel
+public class AnnotationEditorManagerPrefsPanel
+    extends GenericPanel<Project>
 {
     private static final long serialVersionUID = 4663693446465391162L;
 
     private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
     private @SpringBean PreferencesService preferencesService;
 
-    private IModel<AnnotationEditorState> state;
+    private IModel<AnnotationEditorManagerPrefs> state;
     private IModel<Pair<String, String>> defaultEditor;
 
-    public DefaultAnnotationEditorStatePanel(String aId, IModel<Project> aProjectModel)
+    public AnnotationEditorManagerPrefsPanel(String aId, IModel<Project> aProjectModel)
     {
         super(aId, aProjectModel);
         setOutputMarkupPlaceholderTag(true);
@@ -60,9 +60,9 @@ public class DefaultAnnotationEditorStatePanel
         state = CompoundPropertyModel.of(null);
         defaultEditor = Model.of();
 
-        var form = new LambdaForm<AnnotationEditorState>("form", state);
+        var form = new LambdaForm<AnnotationEditorManagerPrefs>("form", state);
 
-        DropDownChoice<Pair<String, String>> editor = new DropDownChoice<>("defaultEditor");
+        var editor = new DropDownChoice<Pair<String, String>>("defaultEditor");
         editor.setModel(defaultEditor);
         editor.setChoiceRenderer(new ChoiceRenderer<>("value"));
         editor.setChoices(listAvailableEditors());
@@ -86,16 +86,10 @@ public class DefaultAnnotationEditorStatePanel
                 .toList();
     }
 
-    @SuppressWarnings("unchecked")
-    public IModel<Project> getModel()
-    {
-        return (IModel<Project>) getDefaultModel();
-    }
-
     private void actionLoad()
     {
-        state.setObject(preferencesService.loadDefaultTraitsForProject(KEY_EDITOR_STATE,
-                getModel().getObject()));
+        state.setObject(preferencesService.loadDefaultTraitsForProject(
+                KEY_ANNOTATION_EDITOR_MANAGER_PREFS, getModel().getObject()));
 
         var defaultEditorId = state.getObject().getDefaultEditor();
         var factory = annotationEditorRegistry.getEditorFactory(defaultEditorId);
@@ -111,12 +105,12 @@ public class DefaultAnnotationEditorStatePanel
         }
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<AnnotationEditorState> aDummy)
+    private void actionSave(AjaxRequestTarget aTarget, Form<AnnotationEditorManagerPrefs> aDummy)
     {
         state.getObject()
                 .setDefaultEditor(defaultEditor.map(Pair::getKey).orElse(null).getObject());
 
-        preferencesService.saveDefaultTraitsForProject(KEY_EDITOR_STATE, getModel().getObject(),
-                state.getObject());
+        preferencesService.saveDefaultTraitsForProject(KEY_ANNOTATION_EDITOR_MANAGER_PREFS,
+                getModel().getObject(), state.getObject());
     }
 }
