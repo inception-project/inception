@@ -53,9 +53,11 @@ public class AnnotationDocument
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Deprecated
     @Column(nullable = false)
     private String name;
 
+    @Deprecated
     @ManyToOne
     @JoinColumn(name = "project")
     private Project project;
@@ -173,14 +175,13 @@ public class AnnotationDocument
     @Deprecated
     public String getName()
     {
-        return document.getName();
+        return name;
     }
 
     @Deprecated
     public void setName(String aName)
     {
-        // No-op
-        // name = aName;
+        name = aName;
     }
 
     /**
@@ -190,14 +191,13 @@ public class AnnotationDocument
     @Deprecated
     public Project getProject()
     {
-        return document.getProject();
+        return project;
     }
 
     @Deprecated
     public void setProject(Project aProject)
     {
-        // No-op
-        // project = aProject;
+        project = aProject;
     }
 
     public String getUser()
