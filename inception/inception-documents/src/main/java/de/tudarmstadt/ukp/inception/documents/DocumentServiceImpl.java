@@ -620,6 +620,22 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
+    public List<SourceDocument> listSupportedSourceDocuments(Project aProject)
+    {
+        var allDocuments = listSourceDocuments(aProject);
+
+        if (allDocuments.isEmpty()) {
+            return allDocuments;
+        }
+
+        // Filter out documents that do not have a supported format
+        return allDocuments.stream()
+                .filter(doc -> importExportService.getFormatById(doc.getFormat()).isPresent())
+                .toList();
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public List<SourceDocument> listSourceDocumentsInState(Project aProject,
             SourceDocumentState... aStates)
     {

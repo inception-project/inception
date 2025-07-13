@@ -77,7 +77,9 @@ public interface DocumentImportExportService
 
     default Optional<FormatSupport> getFormatById(String aFormatId)
     {
-        return getFormats().stream().filter(f -> f.getId().equals(aFormatId)).findFirst();
+        return getFormats().stream() //
+                .filter(f -> f.getId().equals(aFormatId)) //
+                .findFirst();
     }
 
     default Optional<FormatSupport> getFormatByName(String aFormatName)

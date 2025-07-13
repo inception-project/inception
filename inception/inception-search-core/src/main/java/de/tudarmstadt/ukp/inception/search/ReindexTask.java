@@ -129,10 +129,11 @@ public class ReindexTask
                     .stream() //
                     .map(User::getUsername) //
                     .collect(toUnmodifiableSet());
+            var sourceDocuments = documentService.listSupportedSourceDocuments(project);
             var annotationDocuments = documentService.listAnnotationDocuments(project).stream()
                     .filter(annDoc -> usersWithPermissions.contains(annDoc.getUser())) //
+                    .filter(annDoc -> sourceDocuments.contains(annDoc.getDocument())) //
                     .toList();
-            var sourceDocuments = documentService.listSourceDocuments(project);
 
             // We do not need write access and do not want to add to the exclusive access CAS cache,
             // so we would normally use SHARED_READ_ONLY_ACCESS. However, that mode can only be used

@@ -73,7 +73,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class AeroAnnotationController
     extends Controller_ImplBase
 {
-    private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Operation(summary = "List annotations of a document in a project")
     @GetMapping( //
