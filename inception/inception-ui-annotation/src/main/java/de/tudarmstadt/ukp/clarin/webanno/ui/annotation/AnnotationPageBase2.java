@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState.KEY_EDITOR_STATE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs.KEY_ANNOTATION_EDITOR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
@@ -310,7 +310,7 @@ public abstract class AnnotationPageBase2
             return;
         }
 
-        var editorState = preferencesService.loadDefaultTraitsForProject(KEY_EDITOR_STATE,
+        var editorState = preferencesService.loadDefaultTraitsForProject(KEY_ANNOTATION_EDITOR_MANAGER_PREFS,
                 getProject());
 
         var editorId = editorState.getDefaultEditor();

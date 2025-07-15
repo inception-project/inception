@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState.KEY_EDITOR_STATE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs.KEY_ANNOTATION_EDITOR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 
 import org.apache.wicket.markup.html.panel.Panel;
@@ -25,7 +25,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
@@ -45,8 +45,8 @@ public class UserPreferencesActionBarExtension
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {
-        AnnotationEditorState editorState = preferencesService
-                .loadDefaultTraitsForProject(KEY_EDITOR_STATE, aPage.getProject());
+        AnnotationEditorManagerPrefs editorState = preferencesService
+                .loadDefaultTraitsForProject(KEY_ANNOTATION_EDITOR_MANAGER_PREFS, aPage.getProject());
 
         return editorState.isPreferencesAccessAllowed()
                 || aPage.getModelObject().getMode() == CURATION;

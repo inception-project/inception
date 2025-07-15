@@ -50,9 +50,10 @@ public class CurationProjectSettingsPanel
 {
     private static final long serialVersionUID = 4618192360418016955L;
 
-    private static final String MID_FORM = "form";
-    private static final String MID_MERGE_STRATEGY = "mergeStrategy";
-    private static final String MID_SAVE = "save";
+    private static final String CID_FORM = "form";
+    private static final String CID_MERGE_STRATEGY = "mergeStrategy";
+    private static final String CID_SAVE = "save";
+    private static final String CID_NAVIGATION_PREFS = "navigationPrefs";
 
     private @SpringBean CurationService curationService;
     private @SpringBean ProjectService projectService;
@@ -65,26 +66,26 @@ public class CurationProjectSettingsPanel
 
     private MarkupContainer mergeStrategyPanel;
 
-    public CurationProjectSettingsPanel(String aId, IModel<Project> aProjectModel)
+    public CurationProjectSettingsPanel(String aId, IModel<Project> aProject)
     {
-        super(aId, aProjectModel);
+        super(aId, CompoundPropertyModel.of(aProject));
         setOutputMarkupPlaceholderTag(true);
 
-        var form = new LambdaForm<Project>(MID_FORM, CompoundPropertyModel.of(aProjectModel));
+        var form = new LambdaForm<Project>(CID_FORM, CompoundPropertyModel.of(aProject));
         add(form);
 
         curationWorkflowModel = Model.of(loadCurationWorkflow());
         curationSidebarPrefs = new CompoundPropertyModel<>(Model.of(loadSidebarPrefs()));
         curationPrefs = new CompoundPropertyModel<>(Model.of(loadCurationPrefs()));
 
-        mergeStrategyPanel = new MergeStrategyPanel(MID_MERGE_STRATEGY, curationWorkflowModel);
+        mergeStrategyPanel = new MergeStrategyPanel(CID_MERGE_STRATEGY, curationWorkflowModel);
         form.add(mergeStrategyPanel);
 
         form.add(new CheckBox("anonymousCuration").setOutputMarkupPlaceholderTag(true));
 
         form.add(new CheckBox("autoMergeCurationSidebar") //
                 .setModel(curationSidebarPrefs.bind("autoMergeCurationSidebar")) //
-                .add(visibleWhen(() -> curationSidebarProperties.isEnabled())) //
+                .add(visibleWhen(curationSidebarProperties::isEnabled)) //
                 .setOutputMarkupPlaceholderTag(true));
 
         form.add(new DropDownChoice<CurationPageType>("curationPageType") //
@@ -93,7 +94,9 @@ public class CurationProjectSettingsPanel
                 .setModel(curationPrefs.bind("curationPageType")) //
                 .setOutputMarkupPlaceholderTag(true));
 
-        form.add(new LambdaAjaxButton<>(MID_SAVE, this::actionSave).triggerAfterSubmit());
+        queue(new CurationNavigationUserPrefsPanel(CID_NAVIGATION_PREFS, aProject));
+
+        form.add(new LambdaAjaxButton<>(CID_SAVE, this::actionSave).triggerAfterSubmit());
     }
 
     @Override
