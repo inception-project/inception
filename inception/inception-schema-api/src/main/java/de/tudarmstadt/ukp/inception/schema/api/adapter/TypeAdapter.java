@@ -236,7 +236,7 @@ public interface TypeAdapter
 
     <T> Optional<T> getFeatureTraits(AnnotationFeature aFeature, Class<T> aInterface);
 
-    default boolean isEquivalentAnnotation(AnnotationFS aFS1, AnnotationFS aFS2)
+    default boolean isEquivalentAnnotation(FeatureStructure aFS1, FeatureStructure aFS2)
     {
         if (!isSamePosition(aFS1, aFS2)) {
             return false;

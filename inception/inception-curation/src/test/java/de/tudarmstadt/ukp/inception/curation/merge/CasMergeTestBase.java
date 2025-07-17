@@ -43,6 +43,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.docmeta.DocumentMetadataDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -67,10 +68,13 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 @ExtendWith(MockitoExtension.class)
 public class CasMergeTestBase
 {
+    protected static final String DOCUMENT_LABEL_TYPE = "custom.DocumentLabel";
+
     protected @Mock ConstraintsService constraintsService;
     protected @Mock AnnotationSchemaService schemaService;
 
@@ -102,9 +106,12 @@ public class CasMergeTestBase
     protected AnnotationFeature multiValSpanF1;
     protected AnnotationFeature multiValSpanF2;
     protected SourceDocument document;
+    protected AnnotationLayer documentLabelLayer;
+    protected AnnotationFeature documentLabelLayerFeature;
 
     protected List<DiffAdapter> diffAdapters;
     protected SpanDiffAdapter slotHostDiffAdapter;
+    protected DocumentMetadataDiffAdapter documentLabelDiffAdapter;
 
     protected static final RelationDiffAdapter MULTIVALREL_DIFF_ADAPTER = new RelationDiffAdapter(
             "webanno.custom.Multivalrel", "Dependent", "Governor", "rel1", "rel2");
@@ -120,6 +127,8 @@ public class CasMergeTestBase
         slotHostDiffAdapter.addLinkFeature("altLinks", "role", "target", ONE_TARGET_MULTIPLE_ROLES,
                 EXCLUDE);
 
+        documentLabelDiffAdapter = new DocumentMetadataDiffAdapter(DOCUMENT_LABEL_TYPE, "label");
+
         diffAdapters = new ArrayList<>();
         // diffAdapters.add(TOKEN_DIFF_ADAPTER);
         // diffAdapters.add(SENTENCE_DIFF_ADAPTER);
@@ -129,6 +138,7 @@ public class CasMergeTestBase
         diffAdapters.add(MULTIVALREL_DIFF_ADAPTER);
         diffAdapters.add(MULTIVALSPAN_DIFF_ADAPTER);
         diffAdapters.add(slotHostDiffAdapter);
+        diffAdapters.add(documentLabelDiffAdapter);
 
         project = new Project();
 
@@ -315,6 +325,21 @@ public class CasMergeTestBase
         multiValRelRel2.setVisible(true);
         multiValRelRel2.setCuratable(true);
 
+        documentLabelLayer = AnnotationLayer.builder() //
+                .withName(DOCUMENT_LABEL_TYPE) //
+                .withType(DocumentMetadataLayerSupport.TYPE) // )
+                .build();
+
+        documentLabelLayerFeature = new AnnotationFeature();
+        documentLabelLayerFeature.setName("label");
+        documentLabelLayerFeature.setEnabled(true);
+        documentLabelLayerFeature.setType(TYPE_NAME_STRING);
+        documentLabelLayerFeature.setUiName("label");
+        documentLabelLayerFeature.setLayer(documentLabelLayer);
+        documentLabelLayerFeature.setProject(project);
+        documentLabelLayerFeature.setVisible(true);
+        documentLabelLayerFeature.setCuratable(true);
+
         lenient().when(schemaService.findLayer(any(Project.class), any(String.class)))
                 .thenAnswer(call -> {
                     String type = call.getArgument(1, String.class);
@@ -335,6 +360,9 @@ public class CasMergeTestBase
                     }
                     if (type.equals(CurationTestUtils.HOST_TYPE)) {
                         return slotLayer;
+                    }
+                    if (type.equals(DOCUMENT_LABEL_TYPE)) {
+                        return documentLabelLayer;
                     }
                     if (type.equals("webanno.custom.Multivalrel")) {
                         return multiValRel;
@@ -370,6 +398,9 @@ public class CasMergeTestBase
                     if (type.getName().equals(HOST_TYPE)) {
                         return asList(slotFeature, slotFeature2, stringFeature);
                     }
+                    if (type.getName().equals(DOCUMENT_LABEL_TYPE)) {
+                        return asList(documentLabelLayerFeature);
+                    }
                     if (type.getName().equals("webanno.custom.Multivalrel")) {
                         return asList(multiValRelRel1, multiValRelRel2);
                     }
@@ -399,7 +430,9 @@ public class CasMergeTestBase
                 new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService),
                 new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
-                        constraintsService)));
+                        constraintsService),
+                new DocumentMetadataLayerSupport(featureSupportRegistry, null, null,
+                        layerBehaviorRegistry, constraintsService)));
         layerSupportRegistry.init();
 
         sut = new CasMerge(schemaService, null);

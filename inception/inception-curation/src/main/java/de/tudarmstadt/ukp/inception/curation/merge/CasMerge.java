@@ -38,6 +38,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.cas.AnnotationBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -45,6 +46,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.docmeta.DocumentPosition;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosition;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -215,7 +217,11 @@ public class CasMerge
         mergeSpanLayers(aDiff, aTargetDocument, aTargetUsername, aTargetCas, aCasMap, localContext,
                 type2layer, layerNames);
 
-        // After the spans are in place, we can merge the link features
+        // Next we process document metadata
+        mergeDocumentMetadataLayers(aDiff, aTargetDocument, aTargetUsername, aTargetCas, aCasMap,
+                localContext, type2layer, layerNames);
+
+        // After the spans and document metadata are in place, we can merge the link features
         mergeLinkFeatures(aDiff, aTargetDocument, aTargetUsername, aTargetCas, aCasMap,
                 localContext, type2layer, layerNames);
 
@@ -232,6 +238,69 @@ public class CasMerge
         }
 
         return localContext;
+    }
+
+    private void mergeDocumentMetadataLayers(DiffResult aDiff, SourceDocument aTargetDocument,
+            String aTargetUsername, CAS aTargetCas, Map<String, CAS> aCasMap,
+            PerCasMergeContext aLocalContext, Map<String, AnnotationLayer> aType2layer,
+            ArrayList<String> aLayerNames)
+    {
+        for (var layerName : aLayerNames) {
+            var positions = aDiff.getPositions().stream()
+                    .filter(pos -> layerName.equals(pos.getType()))
+                    .filter(pos -> pos instanceof DocumentPosition)
+                    .map(pos -> (DocumentPosition) pos) //
+                    .toList();
+
+            if (positions.isEmpty()) {
+                continue;
+            }
+
+            LOG.debug("Processing [{}] document metadata positions on layer [{}]", positions.size(),
+                    layerName);
+
+            for (var position : positions) {
+                mergeDocumentMetadataPosition(aDiff, aTargetDocument, aTargetUsername, aTargetCas,
+                        aCasMap, aLocalContext, aType2layer, position);
+            }
+        }
+    }
+
+    private void mergeDocumentMetadataPosition(DiffResult aDiff, SourceDocument aTargetDocument,
+            String aTargetUsername, CAS aTargetCas, Map<String, CAS> aCasMap,
+            PerCasMergeContext localContext, Map<String, AnnotationLayer> type2layer,
+            DocumentPosition aPosition)
+    {
+        LOG.trace(" |   processing {}", aPosition);
+        var layer = type2layer.get(aPosition.getType());
+        var cfgs = aDiff.getConfigurationSet(aPosition);
+
+        for (var cfgsToMerge : mergeStrategy.chooseConfigurationsToMerge(aDiff, cfgs, layer)) {
+            var sourceFS = (AnnotationBase) cfgsToMerge.getRepresentative(aCasMap);
+            try {
+                var result = mergeDocumentAnnotation(aTargetDocument, aTargetUsername,
+                        type2layer.get(aPosition.getType()), aTargetCas, sourceFS);
+
+                switch (result.state()) {
+                case CREATED:
+                    LOG.trace(" `-> merged document annotation [{}] (created) -> [{}]",
+                            sourceFS.getAddress(), result.targetAddress());
+                    localContext.created++;
+                    break;
+                case UPDATED:
+                    LOG.trace(" `-> merged document annotation [{}] (updated) -> [{}]",
+                            sourceFS.getAddress(), result.targetAddress());
+                    localContext.updated++;
+                    break;
+                }
+            }
+            catch (AnnotationException e) {
+                LOG.trace(" `-> not merged document annotation [{}]: {}", sourceFS.getAddress(),
+                        e.getMessage());
+                localContext.notMerged++;
+                localContext.messages.add(LogMessage.error(this, "%s", e.getMessage()));
+            }
+        }
     }
 
     private void mergeRelationLayers(DiffResult aDiff, SourceDocument aTargetDocument,
@@ -557,5 +626,13 @@ public class CasMerge
     {
         return CasMergeSpan.mergeSpanAnnotation(context, aDoc, aSrcUser, aLayer, aTargetCas,
                 aSourceAnnotation, aLayer.isAllowStacking());
+    }
+
+    public CasMergeOperationResult mergeDocumentAnnotation(SourceDocument aDoc, String aSrcUser,
+            AnnotationLayer aLayer, CAS aTargetCas, AnnotationBase aSourceAnnotation)
+        throws AnnotationException
+    {
+        return CasMergeDocument.mergeDocumentAnnotation(context, aDoc, aSrcUser, aLayer, aTargetCas,
+                aSourceAnnotation);
     }
 }

@@ -34,6 +34,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.cas.AnnotationBase;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
@@ -112,12 +113,12 @@ public class DocumentMetadataLayerAdapter
      * @throws AnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public AnnotationBaseFS add(SourceDocument aDocument, String aUsername, CAS aCas)
+    public AnnotationBase add(SourceDocument aDocument, String aUsername, CAS aCas)
         throws AnnotationException
     {
         var type = getType(aCas, getAnnotationTypeName());
 
-        AnnotationBaseFS newAnnotation = aCas.createFS(type);
+        AnnotationBase newAnnotation = aCas.createFS(type);
         var maxOrder = aCas.select(type) //
                 .mapToInt(fs -> FSUtil.getFeature(fs, FEATURE_NAME_ORDER, Integer.class)) //
                 .max() //
@@ -189,14 +190,23 @@ public class DocumentMetadataLayerAdapter
                     + "] but got [" + aFS2.getType().getName() + "]");
         }
 
-        if (aFS1 instanceof AnnotationBaseFS ann1 && aFS2 instanceof AnnotationBaseFS ann2) {
-            if (aFS1 == aFS2) {
-                return true;
-            }
-
-            return ann1.getView() == ann2.getView();
+        if (aFS1 instanceof AnnotationBaseFS && aFS2 instanceof AnnotationBaseFS) {
+            return true;
+            // if (aFS1 == aFS2) {
+            // return true;
+            // }
+            //
+            // return Objects.equals(ann1.getView().getViewName(), ann2.getView().getViewName());
         }
 
         throw new IllegalArgumentException("Feature structures need to be AnnotationBaseFS");
+    }
+
+    public AnnotationBase handle(CreateDocumentAnnotationRequest aCreateDocumentAnnotationRequest)
+        throws AnnotationException
+    {
+        return add(aCreateDocumentAnnotationRequest.getDocument(),
+                aCreateDocumentAnnotationRequest.getDocumentOwner(),
+                aCreateDocumentAnnotationRequest.getCas());
     }
 }
