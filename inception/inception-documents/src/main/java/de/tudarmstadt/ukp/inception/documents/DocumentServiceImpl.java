@@ -194,6 +194,39 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
+    public void renameSourceDocument(SourceDocument aDocument, String aNewName)
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notBlank(aNewName, "New name must be specified");
+
+        var nameValidationResult = validateDocumentName(aNewName);
+        if (!nameValidationResult.isEmpty()) {
+            throw new IllegalArgumentException(nameValidationResult.get(0).getMessage());
+        }
+
+        // Update the name
+        aDocument.setName(aNewName);
+
+        // Persist the change
+        createSourceDocument(aDocument);
+
+        // Update all the annotation documents for this source document
+        for (var annDoc : listAnnotationDocuments(aDocument)) {
+            annDoc.setName(aNewName);
+            createOrUpdateAnnotationDocument(annDoc);
+        }
+
+        // Rename the source document file on disk
+        try {
+            documentStorageService.renameSourceDocumentFile(aDocument, aNewName);
+        }
+        catch (IOException e) {
+            throw new IllegalStateException("Error renaming file for document " + aDocument, e);
+        }
+    }
+
+    @Override
+    @Transactional
     public SourceDocument createSourceDocument(SourceDocument aDocument)
     {
         Validate.notNull(aDocument, "Source document must be specified");
@@ -1113,11 +1146,10 @@ public class DocumentServiceImpl
 
         // We read the initial CAS and then use it to override the CAS for the given document/user.
         // In order to do that, we must read the initial CAS unmanaged.
-        CAS cas = createOrReadInitialCas(aDocument, FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
+        var cas = createOrReadInitialCas(aDocument, FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
 
         // Add/update the CAS metadata
-        Optional<Long> timestamp = casStorageService.getCasTimestamp(aDocument,
-                aUser.getUsername());
+        var timestamp = casStorageService.getCasTimestamp(aDocument, aUser.getUsername());
         if (timestamp.isPresent()) {
             addOrUpdateCasMetadata(cas, timestamp.get(), aDocument, aUser.getUsername());
         }
@@ -1142,7 +1174,7 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public boolean isAnnotationFinished(SourceDocument aDocument, String aUsername)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "SELECT COUNT(*) FROM AnnotationDocument", //
                 "WHERE document = :document", //
                 "  AND user     = :user", //
@@ -1159,7 +1191,7 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public List<AnnotationDocument> listAnnotationDocuments(Project aProject)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "SELECT doc", //
                 " FROM AnnotationDocument AS doc", //
                 " JOIN ProjectPermission AS perm", //
@@ -1179,7 +1211,7 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public List<AnnotationDocument> listAnnotationDocuments(SourceDocument aDocument)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "SELECT doc", //
                 " FROM AnnotationDocument AS doc", //
                 " JOIN ProjectPermission AS perm", //

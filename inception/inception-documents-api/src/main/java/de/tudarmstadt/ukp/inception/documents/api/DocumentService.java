@@ -799,4 +799,6 @@ public interface DocumentService
     boolean isValidDocumentName(String aDocumentName);
 
     List<ValidationError> validateDocumentName(String aName);
+
+    void renameSourceDocument(SourceDocument aDocument, String aNewName);
 }

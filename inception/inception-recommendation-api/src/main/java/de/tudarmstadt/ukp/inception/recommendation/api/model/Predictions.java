@@ -38,7 +38,6 @@ import org.apache.uima.cas.text.AnnotationPredicates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -129,7 +128,7 @@ public class Predictions
 
         var docs = aDocumentService.listAnnotationDocuments(project, sessionOwner);
 
-        for (AnnotationDocument doc : docs) {
+        for (var doc : docs) {
             // TODO #176 use the document Id once it it available in the CAS
             var p = getGroupedPredictions(type, doc.getName(), aLayer, -1, -1);
             result.put(doc.getName(), p);

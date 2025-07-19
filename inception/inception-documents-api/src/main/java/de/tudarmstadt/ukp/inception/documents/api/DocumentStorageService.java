@@ -78,4 +78,6 @@ public interface DocumentStorageService
     void removeSourceDocumentFile(SourceDocument aDocument) throws IOException;
 
     boolean existsSourceDocumentFile(SourceDocument aDocument) throws IOException;
+
+    void renameSourceDocumentFile(SourceDocument aDocument, String aNewName) throws IOException;
 }
