@@ -358,9 +358,14 @@ export class ApacheAnnotatorVisualizer {
     if (classList.includes('iaa-marker-error')) decorations += ERROR_LABEL
     if (decorations) decorations += ' '
 
+    let label = `${decorations}${span.label || `[${span.layer.name}]` || NO_LABEL}`
+    if (span.score && !span.hideScore) {
+      label += ` [${span.score.toFixed(2)}]`
+    }
+
     const attributes = {
       'data-iaa-id': `${span.vid}`,
-      'data-iaa-label': `${decorations}${span.label || `[${span.layer.name}]` || NO_LABEL}`,
+      'data-iaa-label': label,
       class: classList.join(' '),
       style: styleList.join('; ')
     }
