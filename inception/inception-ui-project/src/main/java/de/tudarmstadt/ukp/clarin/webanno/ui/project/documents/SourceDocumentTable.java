@@ -133,6 +133,7 @@ public class SourceDocumentTable
                 $ -> renderDate($.getDocument().getCreated())));
         columns.add(new SourceDocumentTableDeleteActionColumn(this));
         columns.add(new SourceDocumentTableExportActionColumn(this));
+        columns.add(new SourceDocumentTableRenameActionColumn(this));
         if (getApplication().getConfigurationType() == DEVELOPMENT) {
             columns.add(new LambdaColumn<>(new ResourceModel("id"), FORMAT,
                     $ -> $.getDocument().getId()));
@@ -277,6 +278,13 @@ public class SourceDocumentTable
     }
 
     @OnEvent
+    public void onSourceDocumentTableRenameDocumentEvent(
+            SourceDocumentTableRenameDocumentEvent aEvent)
+    {
+        actionRenameDocument(aEvent.getTarget(), aEvent.getDocument());
+    }
+
+    @OnEvent
     public void onSourceDocumentTableToggleSelectAllEvent(
             SourceDocumentTableToggleSelectAllEvent aEvent)
     {
@@ -327,6 +335,26 @@ public class SourceDocumentTable
         dialogContent.setConfirmAction($ -> actionConfirmDeleteDocuments($, asList(aDocument)));
 
         confirmationDialog.open(dialogContent, aTarget);
+    }
+
+    private void actionRenameDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
+    {
+        var dialogContent = new RenameDocumentDialogContent(ModalDialog.CONTENT_ID,
+                Model.of(aDocument),
+                (_target, _newName) -> actionConfirmRenameDocument(_target, aDocument, _newName));
+
+        confirmationDialog.open(dialogContent, aTarget);
+    }
+
+    private void actionConfirmRenameDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            String aNewName)
+    {
+        documentService.renameSourceDocument(aDocument, aNewName);
+        success("Document [" + aDocument.getName() + "] has been renamed to [" + aNewName + "]");
+        confirmationDialog.close(aTarget);
+        aTarget.addChildren(getPage(), IFeedback.class);
+        dataProvider.refresh();
+        aTarget.add(table);
     }
 
     private void actionBulkDeleteDocuments(AjaxRequestTarget aTarget)

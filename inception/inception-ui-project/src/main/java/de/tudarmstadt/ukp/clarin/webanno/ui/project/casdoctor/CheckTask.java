@@ -106,7 +106,7 @@ public class CheckTask
                         messageSet.add(LogMessage.error(getClass(),
                                 "Error checking initial CAS for [%s]: %s", sd.getName(),
                                 e.getMessage()));
-                        LOG.error("Error checking initial CAS for [{}]", sd.getName(), e);
+                        LOG.error("Error checking initial CAS for {}", sd, e);
                     }
 
                     noticeIfThereAreNoMessages(messageSet);
@@ -136,8 +136,8 @@ public class CheckTask
                         messageSet.add(LogMessage.error(getClass(),
                                 "Error checking annotations for [%s] for [%s]: %s", CURATION_USER,
                                 sd.getName(), e.getMessage()));
-                        LOG.error("Error checking annotations for [{}] for [{}]", CURATION_USER,
-                                sd.getName(), e);
+                        LOG.error("Error checking annotations for [{}] for {}", CURATION_USER, sd,
+                                e);
                     }
 
                     noticeIfThereAreNoMessages(messageSet);
@@ -162,8 +162,8 @@ public class CheckTask
                         messageSet.add(LogMessage.error(getClass(),
                                 "Error checking annotations of user [%s] for [%s]: %s",
                                 ad.getUser(), sd.getName(), e.getMessage()));
-                        LOG.error("Error checking annotations of user [{}] for [{}]", ad.getUser(),
-                                sd.getName(), e);
+                        LOG.error("Error checking annotations of user [{}] for {}", ad.getUser(),
+                                sd, e);
                     }
 
                     noticeIfThereAreNoMessages(messageSet);

@@ -26,8 +26,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -39,7 +37,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.export.task.ProjectExportTask_ImplBase;
@@ -131,7 +128,7 @@ public class CuratedDocumentsProjectExportTask
         var project = aModel.getProject();
 
         // Get all the source documents from the project
-        List<SourceDocument> documents = documentService.listSourceDocuments(project);
+        var documents = documentService.listSourceDocuments(project);
 
         // Determine which format to use for export.
         FormatSupport format;
@@ -156,11 +153,11 @@ public class CuratedDocumentsProjectExportTask
             }
 
             try (var session = CasStorageSession.openNested()) {
-                File curationCasDir = new File(
+                var curationCasDir = new File(
                         aCopyDir + CURATION_AS_SERIALISED_CAS + sourceDocument.getName());
                 FileUtils.forceMkdir(curationCasDir);
 
-                File curationDir = new File(aCopyDir + CURATION_FOLDER + sourceDocument.getName());
+                var curationDir = new File(aCopyDir + CURATION_FOLDER + sourceDocument.getName());
                 FileUtils.forceMkdir(curationDir);
 
                 // If depending on a InProgress, include only the the curation documents that are
@@ -171,14 +168,14 @@ public class CuratedDocumentsProjectExportTask
                                 .equals(sourceDocument.getState())) {
                     if (documentService.existsCas(sourceDocument, CURATION_USER)) {
                         // Copy CAS - this is used when importing the project again
-                        try (OutputStream os = new FileOutputStream(
+                        try (var os = new FileOutputStream(
                                 new File(curationDir, CURATION_USER + ".ser"))) {
                             documentService.exportCas(sourceDocument, CURATION_USER, os);
                         }
 
                         // Copy secondary export format for convenience - not used during import
                         try {
-                            File curationFile = importExportService.exportAnnotationDocument(
+                            var curationFile = importExportService.exportAnnotationDocument(
                                     sourceDocument, WebAnnoConst.CURATION_USER, format,
                                     WebAnnoConst.CURATION_USER, Mode.CURATION);
                             FileUtils.copyFileToDirectory(curationFile, curationDir);

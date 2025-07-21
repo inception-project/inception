@@ -122,9 +122,8 @@ public class RecommendationRenderer
             return;
         }
 
-        var suggestions = predictions.getPredictionsByDocument(
-                aRequest.getSourceDocument().getName(), aRequest.getWindowBeginOffset(),
-                aRequest.getWindowEndOffset());
+        var suggestions = predictions.getSuggestionsByDocument(aRequest.getSourceDocument(),
+                aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
         var suggestionsByLayer = suggestions.stream()
                 .collect(groupingBy(AnnotationSuggestion::getLayerId));
 

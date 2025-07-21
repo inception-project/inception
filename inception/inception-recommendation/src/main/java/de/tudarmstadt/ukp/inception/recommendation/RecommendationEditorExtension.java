@@ -337,7 +337,7 @@ public class RecommendationEditorExtension
 
             var sao = representative.get();
             var group = predictions
-                    .getGroupedPredictions(AnnotationSuggestion.class, aDocument.getName(),
+                    .getGroupedPredictions(AnnotationSuggestion.class, aDocument,
                             aFeature.getLayer(), sao.getWindowBegin(), sao.getWindowEnd())
                     .stream() //
                     .filter(g -> g.contains(representative.get())) //

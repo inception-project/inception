@@ -142,7 +142,7 @@ public class AnnotationDocumentExporter
 
         for (var annotationDocument : documentService.listAnnotationDocuments(aProject)) {
             var exAnnotationDocument = new ExportedAnnotationDocument();
-            exAnnotationDocument.setName(annotationDocument.getName());
+            exAnnotationDocument.setName(annotationDocument.getDocument().getName());
             exAnnotationDocument.setState(annotationDocument.getState());
             exAnnotationDocument.setAnnotatorState(annotationDocument.getAnnotatorState());
             exAnnotationDocument.setAnnotatorComment(annotationDocument.getAnnotatorComment());
@@ -302,7 +302,7 @@ public class AnnotationDocumentExporter
             }
         }
         catch (UIMAException e) {
-            throw new ProjectExportException("Error exporting annotations of " + srcDoc.getName()
+            throw new ProjectExportException("Error exporting annotations of " + srcDoc
                     + " for user [" + aUsername + "] as [" + format.getName() + "]: "
                     + ExceptionUtils.getRootCauseMessage(e), e);
         }
@@ -347,15 +347,17 @@ public class AnnotationDocumentExporter
         throws IOException
     {
         for (var exAnnotationDocument : aExProject.getAnnotationDocuments()) {
+            var sourceDocumentName = exAnnotationDocument.getName();
+            var sourceDocument = aNameToDoc.get(sourceDocumentName);
             var annotationDocument = new AnnotationDocument();
-            annotationDocument.setName(exAnnotationDocument.getName());
+            annotationDocument.setDocument(sourceDocument);
+            annotationDocument.setProject(aProject);
+            annotationDocument.setName(sourceDocumentName);
             annotationDocument.setState(exAnnotationDocument.getState());
             annotationDocument.setAnnotatorState(exAnnotationDocument.getAnnotatorState());
             annotationDocument.setAnnotatorComment(exAnnotationDocument.getAnnotatorComment());
-            annotationDocument.setProject(aProject);
             annotationDocument.setUser(exAnnotationDocument.getUser());
             annotationDocument.setTimestamp(exAnnotationDocument.getTimestamp());
-            annotationDocument.setDocument(aNameToDoc.get(exAnnotationDocument.getName()));
             annotationDocument.setSentenceAccessed(exAnnotationDocument.getSentenceAccessed());
             annotationDocument.setCreated(exAnnotationDocument.getCreated());
             annotationDocument.setUpdated(exAnnotationDocument.getUpdated());

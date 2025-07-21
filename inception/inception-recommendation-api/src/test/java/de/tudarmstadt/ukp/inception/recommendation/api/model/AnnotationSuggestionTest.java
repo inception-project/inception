@@ -31,13 +31,21 @@ public class AnnotationSuggestionTest
     @Test
     public void thatEqualsAndHashCodeAndCompareToWorkCorrectly()
     {
-        var doc = SourceDocument.builder().withName("doc1").build();
-        var layer = AnnotationLayer.builder().withId(1l).build();
+        var doc = SourceDocument.builder() //
+                .withId(1L) //
+                .withName("doc1") //
+                .build();
+        var layer = AnnotationLayer.builder() //
+                .withId(2l) //
+                .build();
         var feature = AnnotationFeature.builder().withLayer(layer).withName("value").build();
         var rec1 = Recommender.builder().withId(1l).withLayer(layer).withFeature(feature).build();
         var rec2 = Recommender.builder().withId(2l).withLayer(layer).withFeature(feature).build();
 
-        var builder = SpanSuggestion.builder().withLayerId(1).withFeature("value").withDocument(doc)
+        var builder = SpanSuggestion.builder() //
+                .withLayerId(1) //
+                .withFeature("value") //
+                .withDocument(doc) //
                 .withPosition(0, 1);
 
         builder.withRecommender(rec1);

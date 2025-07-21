@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.KEY_RECOMMENDER_GENERAL_SETTINGS;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getDocumentTitle;
 import static java.util.stream.Collectors.groupingBy;
 
 import java.io.IOException;
@@ -269,13 +268,11 @@ public class RecommenderInfoPanel
 
         var pref = recommendationService.getPreferences(sessionOwner, state.getProject());
 
-        // TODO #176 use the document Id once it it available in the CAS
-        String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(cas)
-                .orElse(getDocumentTitle(cas));
+        var sourceDocumentId = CasMetadataUtils.getSourceDocumentId(cas).orElseThrow();
 
         // Extract all predictions for the current document / recommender
         var suggestionGroups = predictions
-                .getPredictionsByRecommenderAndDocument(aRecommender, sourceDocumentName).stream() //
+                .getSuggestionsByRecommenderAndDocument(aRecommender, sourceDocumentId).stream() //
                 .filter(f -> f instanceof SpanSuggestion) //
                 .map(f -> (SpanSuggestion) f) //
                 .filter(s -> s.isVisible() && s.getScore() >= pref.getScoreThreshold()) //

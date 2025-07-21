@@ -83,6 +83,32 @@ public class DocumentStorageServiceImpl
     }
 
     @Override
+    public void renameSourceDocumentFile(SourceDocument aDocument, String aNewName)
+        throws IOException
+    {
+        Validate.notNull(aDocument, "Parameter [sourceDocument] must be specified");
+        Validate.notBlank(aNewName, "Parameter [newName] must be specified");
+
+        var oldFile = getSourceDocumentFile(aDocument);
+        if (!oldFile.exists()) {
+            throw new IllegalStateException("Source document file does not exist: " + oldFile);
+        }
+
+        var newFile = getSourceDocumentFolder(aDocument).resolve(aNewName).toFile();
+        if (newFile.exists()) {
+            throw new IllegalStateException("Target file already exists: " + newFile);
+        }
+
+        try {
+            Files.move(oldFile.toPath(), newFile.toPath());
+        }
+        catch (IOException e) {
+            throw new IOException("Failed to rename source document file from [" + oldFile.getName()
+                    + "] to [" + newFile.getName() + "]: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public void removeSourceDocumentFile(SourceDocument aDocument) throws IOException
     {
         Validate.notNull(aDocument, "Parameter [sourceDocument] must be specified");

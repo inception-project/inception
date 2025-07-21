@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.workload.matrix.Fixtures.importTestSourceDocumentAndAddNamedEntity;
-import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -29,6 +29,7 @@ import static org.mockito.Mockito.when;
 
 import java.nio.file.Path;
 
+import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfigurati
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
@@ -227,7 +229,9 @@ class MatrixWorkloadExtensionImplTest
                 AnnotationSchemaService aSchemaService)
             throws Exception
         {
-            var tsd = createTypeSystemDescription();
+            var internalTsd = CasMetadataUtils.getInternalTypeSystem();
+            var globalTsd = TypeSystemDescriptionFactory.createTypeSystemDescription();
+            var tsd = CasCreationUtils.mergeTypeSystems(asList(globalTsd, internalTsd));
             var importService = mock(DocumentImportExportService.class);
             when(importService.importCasFromFileNoChecks(any(), any(), any()))
                     .thenReturn(CasCreationUtils.createCas(tsd, null, null, null));

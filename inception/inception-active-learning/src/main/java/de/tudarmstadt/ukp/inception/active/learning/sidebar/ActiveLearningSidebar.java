@@ -187,7 +187,7 @@ public class ActiveLearningSidebar
     private Form<Void> sessionControlForm;
 
     private AnnotationSuggestion highlightSuggestion;
-    private String highlightDocumentName;
+    private Long highlightDocumentId;
     private VID highlightVID;
     private Offset highlightSpan;
     private boolean protectHighlight;
@@ -415,7 +415,7 @@ public class ActiveLearningSidebar
         highlightSuggestion = aSuggestion;
         highlightVID = aSuggestion.getVID();
         highlightSpan = new Offset(aSuggestion.getBegin(), aSuggestion.getEnd());
-        highlightDocumentName = aSuggestion.getDocumentName();
+        highlightDocumentId = aSuggestion.getDocumentId();
     }
 
     private void setActiveLearningHighlight(LearningRecord aRecord)
@@ -424,7 +424,7 @@ public class ActiveLearningSidebar
         highlightSuggestion = null;
         highlightVID = null;
         highlightSpan = new Offset(aRecord.getOffsetBegin(), aRecord.getOffsetEnd());
-        highlightDocumentName = aRecord.getSourceDocument().getName();
+        highlightDocumentId = aRecord.getSourceDocument().getId();
         // This is a bit of hack. Consider the following case:
         // - use removes an ACCEPT history item
         // - user clicks then on another history item
@@ -439,7 +439,7 @@ public class ActiveLearningSidebar
         highlightSuggestion = null;
         highlightVID = new VID(ICasUtil.getAddr(aAnnotation));
         highlightSpan = new Offset(aAnnotation.getBegin(), aAnnotation.getEnd());
-        highlightDocumentName = aDocument.getName();
+        highlightDocumentId = aDocument.getId();
         protectHighlight = false;
     }
 
@@ -452,7 +452,7 @@ public class ActiveLearningSidebar
         }
 
         LOG.trace("Active learning sidebar cleared highlights");
-        highlightDocumentName = null;
+        highlightDocumentId = null;
         highlightSpan = null;
         highlightVID = null;
     }
@@ -581,8 +581,8 @@ public class ActiveLearningSidebar
         // predictions to switch. If the suggestion is no longer visible in the switched predictions
         // (e.g. because it is no longer predicted), then we jump to nothing?
         actionShowSelectedDocument(aTarget,
-                documentService.getSourceDocument(this.getModelObject().getProject(),
-                        suggestion.getDocumentName()),
+                documentService.getSourceDocument(this.getModelObject().getProject().getId(),
+                        suggestion.getDocumentId()),
                 suggestion.getBegin(), suggestion.getEnd());
     }
 
@@ -717,8 +717,8 @@ public class ActiveLearningSidebar
         // from the update event created by acceptSuggestion/upsertSpanFeature.
         requestClearningSelectionAndJumpingToSuggestion();
 
-        var document = documentService.getSourceDocument(state.getProject(),
-                suggestion.getDocumentName());
+        var document = documentService.getSourceDocument(state.getProject().getId(),
+                suggestion.getDocumentId());
         activeLearningService.acceptSpanSuggestion(document, state.getUser(), suggestion,
                 editor.getModelObject().value);
 
@@ -809,7 +809,8 @@ public class ActiveLearningSidebar
 
         // If there is a suggestion, open it in the sidebar and take the main editor to its location
         var suggestion = alState.getSuggestion().get();
-        var document = documentService.getSourceDocument(project, suggestion.getDocumentName());
+        var document = documentService.getSourceDocument(project.getId(),
+                suggestion.getDocumentId());
         loadSuggestionInActiveLearningSidebar(aTarget, suggestion, document);
 
         if (shouldBeClearningSelectionAndJumpingToSuggestion()) {
@@ -843,8 +844,8 @@ public class ActiveLearningSidebar
         var state = getModelObject();
         var project = state.getProject();
         var user = state.getUser();
-        var sourceDocument = documentService.getSourceDocument(project,
-                suggestion.getDocumentName());
+        var sourceDocument = documentService.getSourceDocument(project.getId(),
+                suggestion.getDocumentId());
 
         LOG.trace("Jumping to {}", suggestion);
 
@@ -1001,7 +1002,7 @@ public class ActiveLearningSidebar
     private List<SpanSuggestion> getMatchingSuggestion(
             List<SuggestionGroup<SpanSuggestion>> aSuggestions, LearningRecord aRecord)
     {
-        return getMatchingSuggestion(aSuggestions, aRecord.getSourceDocument().getName(),
+        return getMatchingSuggestion(aSuggestions, aRecord.getSourceDocument().getId(),
                 aRecord.getLayer().getId(), aRecord.getAnnotationFeature().getName(),
                 aRecord.getOffsetBegin(), aRecord.getOffsetEnd(), aRecord.getAnnotation());
     }
@@ -1009,18 +1010,18 @@ public class ActiveLearningSidebar
     private List<SpanSuggestion> getMatchingSuggestion(
             List<SuggestionGroup<SpanSuggestion>> aSuggestions, SpanSuggestion aSuggestion)
     {
-        return getMatchingSuggestion(aSuggestions, aSuggestion.getDocumentName(),
+        return getMatchingSuggestion(aSuggestions, aSuggestion.getDocumentId(),
                 aSuggestion.getLayerId(), aSuggestion.getFeature(), aSuggestion.getBegin(),
                 aSuggestion.getEnd(), aSuggestion.getLabel());
     }
 
     private List<SpanSuggestion> getMatchingSuggestion(
-            List<SuggestionGroup<SpanSuggestion>> aSuggestions, String aDocumentName, long aLayerId,
+            List<SuggestionGroup<SpanSuggestion>> aSuggestions, long aDocumentId, long aLayerId,
             String aFeature, int aBegin, int aEnd, String aLabel)
     {
         return aSuggestions.stream() //
                 .filter(group -> group.getPosition() instanceof Offset) //
-                .filter(group -> aDocumentName.equals(group.getDocumentName())
+                .filter(group -> aDocumentId == group.getDocumentId()
                         && aLayerId == group.getLayerId()
                         && (aFeature == null || aFeature.equals(group.getFeature()))
                         && (aBegin == -1 || aBegin == ((Offset) group.getPosition()).getBegin())
@@ -1246,7 +1247,7 @@ public class ActiveLearningSidebar
             // Update visibility in case the that was created/deleted overlaps with any suggestions
             var cas = documentService.readAnnotationCas(aDocument, dataOwner.getUsername());
             var group = SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class,
-                    predictions.getPredictionsByDocument(aDocument.getName()));
+                    predictions.getPredictionsByDocument(aDocument.getId()));
             recommendationService.calculateSuggestionVisibility(sessionOwner, aDocument, cas,
                     dataOwner.getUsername(), aLayer, group, 0, cas.getDocumentText().length());
 
@@ -1371,15 +1372,15 @@ public class ActiveLearningSidebar
         // recreate them because the VIDs may have changed
         aVDoc.getMarkers().removeIf(marker -> marker.getSource() == this);
 
-        if (highlightDocumentName == null) {
+        if (highlightDocumentId == null) {
             LOG.trace("Active learning sidebar has no highlights to render");
             return;
         }
 
-        String currentDoc = getModelObject().getDocument().getName();
-        if (!currentDoc.equals(highlightDocumentName)) {
+        var currentDoc = getModelObject().getDocument();
+        if (!Objects.equals(currentDoc.getId(), highlightDocumentId)) {
             LOG.trace("Active learning sidebar highlights are in document [{}], not in [{}]",
-                    highlightDocumentName, currentDoc);
+                    highlightDocumentId, currentDoc);
             return;
         }
 

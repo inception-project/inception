@@ -53,9 +53,11 @@ public class AnnotationDocument
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Deprecated
     @Column(nullable = false)
     private String name;
 
+    @Deprecated
     @ManyToOne
     @JoinColumn(name = "project")
     private Project project;
@@ -102,6 +104,10 @@ public class AnnotationDocument
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
+    /**
+     * @deprecated no longer used.
+     */
+    @Deprecated
     @Column(name = "sentenceAccessed")
     private int sentenceAccessed = 0;
 
@@ -162,21 +168,33 @@ public class AnnotationDocument
         id = aId;
     }
 
+    /**
+     * @deprecated Use {@link #getDocument() getDocument().getName()} instead.
+     * @return the name of the source document this annotation document is for.
+     */
+    @Deprecated
     public String getName()
     {
         return name;
     }
 
+    @Deprecated
     public void setName(String aName)
     {
         name = aName;
     }
 
+    /**
+     * @deprecated Use {@link #getDocument() getDocument().getProject()} instead.
+     * @return the project of the source document this annotation document is for.
+     */
+    @Deprecated
     public Project getProject()
     {
         return project;
     }
 
+    @Deprecated
     public void setProject(Project aProject)
     {
         project = aProject;
@@ -237,11 +255,19 @@ public class AnnotationDocument
         timestamp = aTimestamp;
     }
 
+    /**
+     * @deprecated no longer used.
+     */
+    @Deprecated
     public int getSentenceAccessed()
     {
         return sentenceAccessed;
     }
 
+    /**
+     * @deprecated no longer used.
+     */
+    @Deprecated
     public void setSentenceAccessed(int sentenceAccessed)
     {
         this.sentenceAccessed = sentenceAccessed;
@@ -327,6 +353,10 @@ public class AnnotationDocument
         private AnnotationDocumentState annotatorState;
         private String annotatorComment;
         private Date timestamp;
+        /**
+         * @deprecated no longer used.
+         */
+        @Deprecated
         private int sentenceAccessed = 0;
         private Date created;
         private Date updated;
@@ -398,6 +428,10 @@ public class AnnotationDocument
             return this;
         }
 
+        /**
+         * @deprecated no longer used.
+         */
+        @Deprecated
         public Builder withSentenceAccessed(int aSentenceAccessed)
         {
             sentenceAccessed = aSentenceAccessed;

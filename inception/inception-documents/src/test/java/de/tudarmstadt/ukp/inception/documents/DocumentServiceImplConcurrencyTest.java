@@ -35,15 +35,14 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.fit.factory.CasFactory;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,7 +67,6 @@ import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
-import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
@@ -83,7 +81,7 @@ public class DocumentServiceImplConcurrencyTest
 {
     private static final int DOC_SIZE = 100_000;
 
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Mock(stubOnly = true) DocumentImportExportService importExportService;
     private @Mock(stubOnly = true) ProjectService projectService;
@@ -105,6 +103,7 @@ public class DocumentServiceImplConcurrencyTest
     private RepositoryProperties repositoryProperties;
     private CasStorageService casStorageService;
     private DocumentStorageService docStorageService;
+    private TypeSystemDescription typeSystem;
 
     @BeforeEach
     public void setup() throws Exception
@@ -117,11 +116,14 @@ public class DocumentServiceImplConcurrencyTest
         deleteCounter.set(0);
         deleteInitialCounter.set(0);
 
+        typeSystem = mergeTypeSystems(
+                asList(createTypeSystemDescription(), getInternalTypeSystem()));
+
         repositoryProperties = new RepositoryPropertiesImpl();
         repositoryProperties.setPath(testFolder);
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
-        CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
+        var driver = new FileSystemCasStorageDriver(repositoryProperties,
                 new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
         casStorageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(),
@@ -135,21 +137,21 @@ public class DocumentServiceImplConcurrencyTest
                 .stubOnly().defaultAnswer(Answers.CALLS_REAL_METHODS));
 
         lenient().doAnswer(_invocation -> {
-            SourceDocument doc = _invocation.getArgument(0, SourceDocument.class);
-            String user = _invocation.getArgument(1, String.class);
+            var doc = _invocation.getArgument(0, SourceDocument.class);
+            var user = _invocation.getArgument(1, String.class);
             return new AnnotationDocument(user, doc);
         }).when(sut).getAnnotationDocument(any(), any(String.class));
 
-        lenient()
-                .when(importExportService.importCasFromFileNoChecks(any(File.class),
-                        any(SourceDocument.class), any()))
-                .thenReturn(CasFactory.createText("Test"));
+        var cas = createCas(typeSystem);
+        cas.setDocumentText("Test");
+        lenient().when(importExportService.importCasFromFileNoChecks(any(File.class),
+                any(SourceDocument.class), any())).thenReturn(cas);
     }
 
     @Test
     public void thatCreatingOrReadingInitialCasForNewDocumentCreatesNewCas() throws Exception
     {
-        try (CasStorageSession session = CasStorageSession.open()) {
+        try (var session = CasStorageSession.open()) {
             var doc = makeSourceDocument(1l, 1l, "test");
 
             var cas = sut.createOrReadInitialCas(doc).getJCas();
@@ -163,11 +165,11 @@ public class DocumentServiceImplConcurrencyTest
     @Test
     public void thatReadingNonExistentAnnotationCasCreatesNewCas() throws Exception
     {
-        try (CasStorageSession session = CasStorageSession.open()) {
-            SourceDocument sourceDocument = makeSourceDocument(1l, 1l, "test");
-            User user = makeUser();
+        try (var session = CasStorageSession.open()) {
+            var sourceDocument = makeSourceDocument(1l, 1l, "test");
+            var user = makeUser();
 
-            JCas cas = sut.readAnnotationCas(sourceDocument, user.getUsername()).getJCas();
+            var cas = sut.readAnnotationCas(sourceDocument, user.getUsername()).getJCas();
 
             assertThat(cas).isNotNull();
             assertThat(cas.getDocumentText()).isEqualTo("Test");
@@ -179,66 +181,64 @@ public class DocumentServiceImplConcurrencyTest
     public void testHighConcurrencySingleUser() throws Exception
     {
         var docText = repeat("This is a test.\n", DOC_SIZE);
-        var typeSystem = mergeTypeSystems(
-                asList(createTypeSystemDescription(), getInternalTypeSystem()));
 
         when(importExportService.importCasFromFileNoChecks(any(File.class),
                 any(SourceDocument.class), any())).then(_invocation -> {
-                    CAS cas = createCas(typeSystem);
+                    var cas = createCas(typeSystem);
                     cas.setDocumentText(docText);
                     return cas;
                 });
 
-        SourceDocument doc = makeSourceDocument(2l, 2l, "doc");
-        String user = "annotator";
+        var doc = makeSourceDocument(2l, 2l, "doc");
+        var user = "annotator";
 
         // Primary tasks run for a certain number of iterations
         // Secondary tasks run as long as any primary task is still running
-        List<Thread> tasks = new ArrayList<>();
-        List<Thread> primaryTasks = new ArrayList<>();
-        List<Thread> secondaryTasks = new ArrayList<>();
+        var tasks = new ArrayList<Thread>();
+        var primaryTasks = new ArrayList<Thread>();
+        var secondaryTasks = new ArrayList<Thread>();
 
-        int threadGroupCount = 4;
-        int iterations = 50;
-        for (int n = 0; n < threadGroupCount; n++) {
-            Thread rw = new ExclusiveReadWriteTask(n, doc, user, iterations);
+        var threadGroupCount = 4;
+        var iterations = 50;
+        for (var n = 0; n < threadGroupCount; n++) {
+            var rw = new ExclusiveReadWriteTask(n, doc, user, iterations);
             primaryTasks.add(rw);
             tasks.add(rw);
 
-            Thread ro = new SharedReadOnlyTask(n, doc, user);
+            var ro = new SharedReadOnlyTask(n, doc, user);
             secondaryTasks.add(ro);
             tasks.add(ro);
 
-            Thread un = new UnmanagedTask(n, doc, user);
+            var un = new UnmanagedTask(n, doc, user);
             secondaryTasks.add(un);
             tasks.add(un);
 
-            DeleterTask xx = new DeleterTask(n, doc, user);
+            var xx = new DeleterTask(n, doc, user);
             secondaryTasks.add(xx);
             tasks.add(xx);
         }
 
-        log.info("---- Starting all threads ----");
+        LOG.info("---- Starting all threads ----");
         tasks.forEach(Thread::start);
 
-        log.info("---- Wait for primary threads to complete ----");
-        boolean done = false;
+        LOG.info("---- Wait for primary threads to complete ----");
+        var done = false;
         while (!done) {
             long running = primaryTasks.stream().filter(Thread::isAlive).count();
             done = running == 0l;
             sleep(1000);
-            log.info("running {}  complete {}%  rw {}  ro {}  un {}  xx {} XX {}", running,
+            LOG.info("running {}  complete {}%  rw {}  ro {}  un {}  xx {} XX {}", running,
                     (writeCounter.get() * 100) / (threadGroupCount * iterations), writeCounter,
                     managedReadCounter, unmanagedReadCounter, deleteCounter, deleteInitialCounter);
         }
 
-        log.info("---- Wait for threads secondary threads to wrap up ----");
+        LOG.info("---- Wait for threads secondary threads to wrap up ----");
         rwTasksCompleted.set(true);
         for (Thread thread : secondaryTasks) {
             thread.join();
         }
 
-        log.info("---- Test is done ----");
+        LOG.info("---- Test is done ----");
 
         assertThat(exception).isFalse();
     }
@@ -257,67 +257,67 @@ public class DocumentServiceImplConcurrencyTest
                     return cas;
                 });
 
-        SourceDocument doc = makeSourceDocument(3l, 3l, "doc");
-        String user = "annotator";
+        var doc = makeSourceDocument(3l, 3l, "doc");
+        var user = "annotator";
 
         // Primary tasks run for a certain number of iterations
         // Secondary tasks run as long as any primary task is still running
-        List<Thread> tasks = new ArrayList<>();
-        List<Thread> primaryTasks = new ArrayList<>();
-        List<Thread> secondaryTasks = new ArrayList<>();
+        var tasks = new ArrayList<Thread>();
+        var primaryTasks = new ArrayList<Thread>();
+        var secondaryTasks = new ArrayList<Thread>();
 
-        int threadGroupCount = 4;
-        int iterations = 50;
-        int userCount = 4;
-        for (int u = 0; u < userCount; u++) {
-            for (int n = 0; n < threadGroupCount; n++) {
-                Thread rw = new ExclusiveReadWriteTask(n, doc, user + n, iterations);
+        var threadGroupCount = 4;
+        var iterations = 50;
+        var userCount = 4;
+        for (var u = 0; u < userCount; u++) {
+            for (var n = 0; n < threadGroupCount; n++) {
+                var rw = new ExclusiveReadWriteTask(n, doc, user + n, iterations);
                 primaryTasks.add(rw);
                 tasks.add(rw);
 
-                Thread ro = new SharedReadOnlyTask(n, doc, user + n);
+                var ro = new SharedReadOnlyTask(n, doc, user + n);
                 secondaryTasks.add(ro);
                 tasks.add(ro);
 
-                Thread un = new UnmanagedTask(n, doc, user + n);
+                var un = new UnmanagedTask(n, doc, user + n);
                 secondaryTasks.add(un);
                 tasks.add(un);
 
-                DeleterTask xx = new DeleterTask(n, doc, user + n);
+                var xx = new DeleterTask(n, doc, user + n);
                 secondaryTasks.add(xx);
                 tasks.add(xx);
             }
         }
 
-        log.info("---- Starting all threads ----");
+        LOG.info("---- Starting all threads ----");
         tasks.forEach(Thread::start);
 
-        log.info("---- Wait for primary threads to complete ----");
-        boolean done = false;
+        LOG.info("---- Wait for primary threads to complete ----");
+        var done = false;
         while (!done) {
-            long running = primaryTasks.stream().filter(Thread::isAlive).count();
+            var running = primaryTasks.stream().filter(Thread::isAlive).count();
             done = running == 0l;
             sleep(1000);
-            long freeMemory = Runtime.getRuntime().freeMemory();
-            long totalMemory = Runtime.getRuntime().totalMemory();
-            long maxMemory = Runtime.getRuntime().maxMemory();
-            long realFree = maxMemory - totalMemory + freeMemory;
-            long used = maxMemory - realFree;
-            long perc = (used * 100) / maxMemory;
-            log.info("running {}  complete {}%  rw {}  ro {}  un {}  xx {} XX {} [{}% {}/{}]",
+            var freeMemory = Runtime.getRuntime().freeMemory();
+            var totalMemory = Runtime.getRuntime().totalMemory();
+            var maxMemory = Runtime.getRuntime().maxMemory();
+            var realFree = maxMemory - totalMemory + freeMemory;
+            var used = maxMemory - realFree;
+            var perc = (used * 100) / maxMemory;
+            LOG.info("running {}  complete {}%  rw {}  ro {}  un {}  xx {} XX {} [{}% {}/{}]",
                     running,
                     (writeCounter.get() * 100) / (userCount * threadGroupCount * iterations),
                     writeCounter, managedReadCounter, unmanagedReadCounter, deleteCounter,
                     deleteInitialCounter, perc, used, maxMemory);
         }
 
-        log.info("---- Wait for threads secondary threads to wrap up ----");
+        LOG.info("---- Wait for threads secondary threads to wrap up ----");
         rwTasksCompleted.set(true);
         for (Thread thread : secondaryTasks) {
             thread.join();
         }
 
-        log.info("---- Test is done ----");
+        LOG.info("---- Test is done ----");
 
         assertThat(exception).isFalse();
     }
@@ -342,7 +342,7 @@ public class DocumentServiceImplConcurrencyTest
         {
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
-            for (int n = 0; n < repeat; n++) {
+            for (var n = 0; n < repeat; n++) {
                 if (exception.get()) {
                     return;
                 }
@@ -380,7 +380,7 @@ public class DocumentServiceImplConcurrencyTest
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
             while (!(exception.get() || rwTasksCompleted.get())) {
-                try (CasStorageSession session = openNested()) {
+                try (var session = openNested()) {
                     sut.readAnnotationCas(doc, user, AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
                     managedReadCounter.incrementAndGet();
                     Thread.sleep(50);
@@ -414,7 +414,7 @@ public class DocumentServiceImplConcurrencyTest
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
             while (!(exception.get() || rwTasksCompleted.get())) {
-                try (CasStorageSession session = openNested()) {
+                try (var session = openNested()) {
                     Thread.sleep(2500 + rnd.nextInt(2500));
                     if (rnd.nextInt(100) >= 75) {
                         sut.deleteAnnotationCas(doc, INITIAL_CAS_PSEUDO_USER);
@@ -450,7 +450,7 @@ public class DocumentServiceImplConcurrencyTest
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
             while (!(exception.get() || rwTasksCompleted.get())) {
-                try (CasStorageSession session = openNested()) {
+                try (var session = openNested()) {
                     sut.readAnnotationCas(doc, user, AUTO_CAS_UPGRADE, UNMANAGED_ACCESS);
                     unmanagedReadCounter.incrementAndGet();
                     Thread.sleep(50);
@@ -465,10 +465,10 @@ public class DocumentServiceImplConcurrencyTest
 
     private SourceDocument makeSourceDocument(long aProjectId, long aDocumentId, String aDocName)
     {
-        Project project = new Project();
+        var project = new Project();
         project.setId(aProjectId);
 
-        SourceDocument doc = new SourceDocument();
+        var doc = new SourceDocument();
         doc.setProject(project);
         doc.setId(aDocumentId);
         doc.setName(aDocName);
@@ -478,7 +478,7 @@ public class DocumentServiceImplConcurrencyTest
 
     private User makeUser()
     {
-        User user = new User();
+        var user = new User();
         user.setUsername("Test user");
         return user;
     }

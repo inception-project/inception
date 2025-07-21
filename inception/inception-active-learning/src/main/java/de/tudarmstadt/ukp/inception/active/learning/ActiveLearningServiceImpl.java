@@ -31,6 +31,7 @@ import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang3.ClassUtils;
@@ -139,8 +140,9 @@ public class ActiveLearningServiceImpl
                     continue;
                 }
 
-                records.stream().filter(
-                        r -> r.getSourceDocument().getName().equals(suggestion.getDocumentName())
+                records.stream()
+                        .filter(r -> Objects.equals(r.getSourceDocument().getId(),
+                                suggestion.getDocumentId())
                                 && r.getOffsetBegin() == suggestion.getBegin()
                                 && r.getOffsetEnd() == suggestion.getEnd()
                                 && suggestion.labelEquals(r.getAnnotation()))
@@ -232,7 +234,7 @@ public class ActiveLearningServiceImpl
         // the suggestion
         var alternativeSuggestions = recommendationService
                 .getPredictions(aDataOwner, feature.getProject())
-                .getPredictionsByTokenAndFeature(suggestionWithUserSelectedLabel.getDocumentName(),
+                .getPredictionsByTokenAndFeature(suggestionWithUserSelectedLabel.getDocumentId(),
                         feature.getLayer(), suggestionWithUserSelectedLabel.getBegin(),
                         suggestionWithUserSelectedLabel.getEnd(),
                         suggestionWithUserSelectedLabel.getFeature());
@@ -272,8 +274,8 @@ public class ActiveLearningServiceImpl
             SpanSuggestion aSuggestion)
         throws AnnotationException
     {
-        var document = documentService.getSourceDocument(aLayer.getProject(),
-                aSuggestion.getDocumentName());
+        var document = documentService.getSourceDocument(aLayer.getProject().getId(),
+                aSuggestion.getDocumentId());
         recommendationService.rejectSuggestion(aSessionOwner, document, aDataOwner.getUsername(),
                 aSuggestion, AL_SIDEBAR);
 
@@ -281,7 +283,7 @@ public class ActiveLearningServiceImpl
         // the suggestion
         var alternativeSuggestions = recommendationService
                 .getPredictions(aDataOwner, aLayer.getProject())
-                .getPredictionsByTokenAndFeature(aSuggestion.getDocumentName(), aLayer,
+                .getPredictionsByTokenAndFeature(aSuggestion.getDocumentId(), aLayer,
                         aSuggestion.getBegin(), aSuggestion.getEnd(), aSuggestion.getFeature());
         applicationEventPublisher.publishEvent(new ActiveLearningRecommendationEvent(this, document,
                 aSuggestion, aDataOwner.getUsername(), aLayer, aSuggestion.getFeature(), REJECTED,
@@ -294,8 +296,8 @@ public class ActiveLearningServiceImpl
             SpanSuggestion aSuggestion)
         throws AnnotationException
     {
-        var document = documentService.getSourceDocument(aLayer.getProject(),
-                aSuggestion.getDocumentName());
+        var document = documentService.getSourceDocument(aLayer.getProject().getId(),
+                aSuggestion.getDocumentId());
         recommendationService.skipSuggestion(aSessionOwner, document, aDataOwner.getUsername(),
                 aSuggestion, AL_SIDEBAR);
 
@@ -303,7 +305,7 @@ public class ActiveLearningServiceImpl
         // the suggestion
         var alternativeSuggestions = recommendationService
                 .getPredictions(aDataOwner, aLayer.getProject())
-                .getPredictionsByTokenAndFeature(aSuggestion.getDocumentName(), aLayer,
+                .getPredictionsByTokenAndFeature(aSuggestion.getDocumentId(), aLayer,
                         aSuggestion.getBegin(), aSuggestion.getEnd(), aSuggestion.getFeature());
         applicationEventPublisher.publishEvent(new ActiveLearningRecommendationEvent(this, document,
                 aSuggestion, aDataOwner.getUsername(), aLayer, aSuggestion.getFeature(), SKIPPED,
@@ -334,12 +336,12 @@ public class ActiveLearningServiceImpl
     {
         var source = recommendationItem.getRecommenderName();
         var annotation = recommendationItem.getLabel();
-        var documentName = recommendationItem.getDocumentName();
+        var documentId = recommendationItem.getDocumentId();
 
         for (var existingRecommendation : cleanRecommendationList) {
             var areLabelsEqual = existingRecommendation.labelEquals(annotation);
             if (existingRecommendation.getRecommenderName().equals(source) && areLabelsEqual
-                    && existingRecommendation.getDocumentName().equals(documentName)) {
+                    && existingRecommendation.getDocumentId() == documentId) {
                 return true;
             }
         }

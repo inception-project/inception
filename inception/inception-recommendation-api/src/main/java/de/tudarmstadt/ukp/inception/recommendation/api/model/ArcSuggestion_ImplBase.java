@@ -34,7 +34,7 @@ public abstract class ArcSuggestion_ImplBase<P extends ArcPosition_ImplBase<?>>
     protected ArcSuggestion_ImplBase(Builder<?, P> builder)
     {
         super(builder.id, builder.generation, builder.age, builder.recommenderId,
-                builder.recommenderName, builder.layerId, builder.feature, builder.documentName,
+                builder.recommenderName, builder.layerId, builder.feature, builder.documentId,
                 builder.label, builder.uiLabel, builder.score, builder.scoreExplanation,
                 builder.autoAcceptMode, builder.hidingFlags, builder.correction,
                 builder.correctionExplanation);
@@ -77,7 +77,7 @@ public abstract class ArcSuggestion_ImplBase<P extends ArcPosition_ImplBase<?>>
                 .append("recommenderName", recommenderName) //
                 .append("layerId", layerId) //
                 .append("feature", feature) //
-                .append("documentName", documentName) //
+                .append("documentId", documentId) //
                 .append("position", position) //
                 .append("windowBegin", getWindowBegin()) //
                 .append("windowEnd", getWindowEnd()) //
@@ -107,7 +107,7 @@ public abstract class ArcSuggestion_ImplBase<P extends ArcPosition_ImplBase<?>>
         protected String recommenderName;
         protected long layerId;
         protected String feature;
-        protected String documentName;
+        protected long documentId;
         protected String label;
         protected String uiLabel;
         protected double score;
@@ -179,14 +179,14 @@ public abstract class ArcSuggestion_ImplBase<P extends ArcPosition_ImplBase<?>>
 
         public T withDocument(SourceDocument aDocument)
         {
-            this.documentName = aDocument.getName();
+            this.documentId = aDocument.getId();
             return (T) this;
         }
 
         @Deprecated
-        public T withDocumentName(String aDocumentName)
+        public T withDocument(long aDocumentId)
         {
-            this.documentName = aDocumentName;
+            this.documentId = aDocumentId;
             return (T) this;
         }
 
