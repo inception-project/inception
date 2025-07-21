@@ -201,7 +201,9 @@ public class AgreementServiceImpl
 
         var project = aLayer.getProject();
         var allAnnDocs = getDocumentsToEvaluate(project, aDocuments, aTraits);
-        var docs = allAnnDocs.keySet().stream().sorted(comparing(SourceDocument::getName)).toList();
+        var docs = allAnnDocs.keySet().stream() //
+                .sorted(comparing(SourceDocument::getName)) //
+                .toList();
         var featureName = aFeature != null ? aFeature.getName() : null;
         var adapter = schemaService.getAdapter(aLayer);
 

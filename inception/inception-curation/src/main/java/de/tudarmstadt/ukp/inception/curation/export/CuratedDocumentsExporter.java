@@ -192,7 +192,7 @@ public class CuratedDocumentsExporter
                     });
         }
         catch (UIMAException | IOException e) {
-            throw new ProjectExportException("Error exporting annotations of " + srcDoc.getName()
+            throw new ProjectExportException("Error exporting annotations of " + srcDoc
                     + " for user [" + CURATION_USER + "] as [" + format.getName() + "]: "
                     + ExceptionUtils.getRootCauseMessage(e), e);
         }

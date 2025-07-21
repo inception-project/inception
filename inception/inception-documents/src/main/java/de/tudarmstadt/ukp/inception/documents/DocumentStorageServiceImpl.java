@@ -99,9 +99,12 @@ public class DocumentStorageServiceImpl
             throw new IllegalStateException("Target file already exists: " + newFile);
         }
 
-        if (!oldFile.renameTo(newFile)) {
-            throw new IOException("Failed to rename source document file from [" + oldFile
-                    + "] to [" + newFile + "]");
+        try {
+            Files.move(oldFile.toPath(), newFile.toPath());
+        }
+        catch (IOException e) {
+            throw new IOException("Failed to rename source document file from [" + oldFile.getName()
+                    + "] to [" + newFile.getName() + "]: " + e.getMessage(), e);
         }
     }
 

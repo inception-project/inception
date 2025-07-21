@@ -302,7 +302,7 @@ public class AnnotationDocumentExporter
             }
         }
         catch (UIMAException e) {
-            throw new ProjectExportException("Error exporting annotations of " + srcDoc.getName()
+            throw new ProjectExportException("Error exporting annotations of " + srcDoc
                     + " for user [" + aUsername + "] as [" + format.getName() + "]: "
                     + ExceptionUtils.getRootCauseMessage(e), e);
         }

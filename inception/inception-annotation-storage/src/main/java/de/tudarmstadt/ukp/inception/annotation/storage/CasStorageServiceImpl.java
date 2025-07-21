@@ -221,9 +221,8 @@ public class CasStorageServiceImpl
             if (session.contains(aCas)) {
                 if (!session.isWritingPermitted(aCas)) {
                     throw new IOException("Session does not permit the CAS for user [" + aUserName
-                            + "] on document [" + aDocument.getName() + "](" + aDocument.getId()
-                            + ") in project [" + aDocument.getProject().getName() + "]("
-                            + aDocument.getProject().getId() + ") to be written");
+                            + "] on document " + aDocument + " in project " + aDocument.getProject()
+                            + " to be written");
                 }
 
                 // When overriding a stored CAS using an different CAS, the new CAS must be
@@ -234,10 +233,8 @@ public class CasStorageServiceImpl
                         aUserName);
                 if (mCas.isPresent() && mCas.get().getCas() != aCas) {
                     throw new IOException("Cannot override managed CAS [" + aUserName
-                            + "] on document [" + aDocument.getName() + "](" + aDocument.getId()
-                            + ") in project [" + aDocument.getProject().getName() + "]("
-                            + aDocument.getProject().getId()
-                            + ") with another managed CAS for user [" + mCas.get().getUserId()
+                            + "] on document " + aDocument + " in project " + aDocument.getProject()
+                            + " with another managed CAS for user [" + mCas.get().getUserId()
                             + "] on document [" + mCas.get().getSourceDocumentId() + "]");
                 }
 
@@ -904,13 +901,13 @@ public class CasStorageServiceImpl
             var session = CasStorageSession.get();
 
             if (!session.hasExclusiveAccess(aDocument, aUser)) {
-                LOG.trace("CAS storage session [{}]: trying to briefly borrow CAS [{}]@[{}]({})",
-                        session.hashCode(), aUser, aDocument.getName(), aDocument.getId());
+                LOG.trace("CAS storage session [{}]: trying to briefly borrow CAS [{}]@{}",
+                        session.hashCode(), aUser, aDocument);
 
                 holder = borrowCas(key);
 
-                LOG.trace("CAS storage session [{}]: briefly borrowed CAS [{}]@[{}]({})",
-                        session.hashCode(), aUser, aDocument.getName(), aDocument.getId());
+                LOG.trace("CAS storage session [{}]: briefly borrowed CAS [{}]@{}",
+                        session.hashCode(), aUser, aDocument);
 
                 if (holder.isCasSet()) {
                     transferCasOwnershipToCurrentThread(holder.getCas());

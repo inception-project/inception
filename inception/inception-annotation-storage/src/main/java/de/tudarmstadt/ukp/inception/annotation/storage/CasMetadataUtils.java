@@ -108,8 +108,8 @@ public class CasMetadataUtils
 
         if (cmd.getType().getFeatureByBaseName(CASMetadata._FeatName_lastChangedOnDisk) != null) {
             setFeature(cmd, CASMetadata._FeatName_lastChangedOnDisk, aTimeStamp);
-            LOG.trace("CAS [{}] for [{}]@[{}]({}): set lastChangedOnDisk: {}", aCas.hashCode(),
-                    aUsername, aDocument.getName(), aDocument.getId(), aTimeStamp);
+            LOG.trace("CAS [{}] for [{}]@{}: set lastChangedOnDisk: {}", aCas.hashCode(), aUsername,
+                    aDocument, aTimeStamp);
         }
 
         aCas.addFsToIndexes(cmd);
