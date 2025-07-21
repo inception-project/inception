@@ -30,7 +30,7 @@ public class MetadataSuggestion
     private MetadataSuggestion(Builder builder)
     {
         super(builder.id, builder.generation, builder.age, builder.recommenderId,
-                builder.recommenderName, builder.layerId, builder.feature, builder.documentName,
+                builder.recommenderName, builder.layerId, builder.feature, builder.documentId,
                 builder.label, builder.uiLabel, builder.score, builder.scoreExplanation,
                 builder.autoAcceptMode, builder.hidingFlags, builder.correction,
                 builder.correctionExplanation);
@@ -75,7 +75,7 @@ public class MetadataSuggestion
                 .withRecommenderName(recommenderName) //
                 .withLayerId(layerId) //
                 .withFeature(feature) //
-                .withDocumentName(documentName) //
+                .withDocument(documentId) //
                 .withLabel(label) //
                 .withUiLabel(uiLabel) //
                 .withScore(score) //
@@ -95,7 +95,7 @@ public class MetadataSuggestion
         private String recommenderName;
         private long layerId;
         private String feature;
-        private String documentName;
+        private long documentId;
         private String label;
         private String uiLabel;
         private double score;
@@ -166,14 +166,14 @@ public class MetadataSuggestion
 
         public Builder withDocument(SourceDocument aDocument)
         {
-            this.documentName = aDocument.getName();
+            this.documentId = aDocument.getId();
             return this;
         }
 
         @Deprecated
-        Builder withDocumentName(String aDocumentName)
+        Builder withDocument(long aDocumentId)
         {
-            this.documentName = aDocumentName;
+            this.documentId = aDocumentId;
             return this;
         }
 

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,6 +36,8 @@ import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
+import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -76,6 +79,7 @@ import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguratio
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
@@ -222,7 +226,10 @@ class MtasDocumentIndexTest
         LOG.info("Preparing annotated document....");
 
         // Manually build annotated CAS
-        var jCas = JCasFactory.createJCas();
+        var internalTsd = CasMetadataUtils.getInternalTypeSystem();
+        var globalTsd = TypeSystemDescriptionFactory.createTypeSystemDescription();
+        var tsd = CasCreationUtils.mergeTypeSystems(asList(globalTsd, internalTsd));
+        var jCas = JCasFactory.createJCas(tsd);
 
         var builder = new JCasBuilder(jCas);
 
@@ -277,7 +284,10 @@ class MtasDocumentIndexTest
         LOG.info("Preparing annotated document....");
 
         // Manually build annotated CAS
-        var jCas = JCasFactory.createJCas();
+        var internalTsd = CasMetadataUtils.getInternalTypeSystem();
+        var globalTsd = TypeSystemDescriptionFactory.createTypeSystemDescription();
+        var tsd = CasCreationUtils.mergeTypeSystems(asList(globalTsd, internalTsd));
+        var jCas = JCasFactory.createJCas(tsd);
 
         var builder = new JCasBuilder(jCas);
 

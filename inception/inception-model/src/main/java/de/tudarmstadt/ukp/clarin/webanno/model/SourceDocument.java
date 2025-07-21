@@ -204,6 +204,10 @@ public class SourceDocument
     @Override
     public int hashCode()
     {
+        if (id != null) {
+            return Objects.hash(id);
+        }
+
         return Objects.hash(name, project);
     }
 
@@ -219,7 +223,13 @@ public class SourceDocument
         if (getClass() != obj.getClass()) {
             return false;
         }
-        SourceDocument other = (SourceDocument) obj;
+
+        var other = (SourceDocument) obj;
+
+        if (id != null && other.id != null) {
+            return Objects.equals(id, other.id);
+        }
+
         return Objects.equals(name, other.name) && Objects.equals(project, other.project);
     }
 

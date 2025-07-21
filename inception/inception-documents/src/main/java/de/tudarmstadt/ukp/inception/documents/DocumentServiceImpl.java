@@ -204,6 +204,14 @@ public class DocumentServiceImpl
             throw new IllegalArgumentException(nameValidationResult.get(0).getMessage());
         }
 
+        // Rename the source document file on disk
+        try {
+            documentStorageService.renameSourceDocumentFile(aDocument, aNewName);
+        }
+        catch (IOException e) {
+            throw new IllegalStateException("Error renaming file for document " + aDocument, e);
+        }
+
         // Update the name
         aDocument.setName(aNewName);
 
@@ -214,14 +222,6 @@ public class DocumentServiceImpl
         for (var annDoc : listAnnotationDocuments(aDocument)) {
             annDoc.setName(aNewName);
             createOrUpdateAnnotationDocument(annDoc);
-        }
-
-        // Rename the source document file on disk
-        try {
-            documentStorageService.renameSourceDocumentFile(aDocument, aNewName);
-        }
-        catch (IOException e) {
-            throw new IllegalStateException("Error renaming file for document " + aDocument, e);
         }
     }
 

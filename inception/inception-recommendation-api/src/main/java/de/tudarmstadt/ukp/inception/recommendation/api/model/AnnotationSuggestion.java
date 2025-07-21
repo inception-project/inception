@@ -79,7 +79,7 @@ public abstract class AnnotationSuggestion
     protected final String recommenderName;
     protected final long layerId;
     protected final String feature;
-    protected final String documentName;
+    protected final long documentId;
     protected final String label;
     protected final String uiLabel;
     protected final double score;
@@ -92,7 +92,7 @@ public abstract class AnnotationSuggestion
     private int age = 0;
 
     public AnnotationSuggestion(int aId, int aGeneration, int aAge, long aRecommenderId,
-            String aRecommenderName, long aLayerId, String aFeature, String aDocumentName,
+            String aRecommenderName, long aLayerId, String aFeature, long aDocumentId,
             String aLabel, String aUiLabel, double aScore, String aScoreExplanation,
             AutoAcceptMode aAutoAcceptMode, int aHidingFlags, boolean aCorrection,
             String aCorrectionExplanation)
@@ -108,7 +108,7 @@ public abstract class AnnotationSuggestion
         score = aScore;
         scoreExplanation = aScoreExplanation;
         recommenderId = aRecommenderId;
-        documentName = aDocumentName;
+        documentId = aDocumentId;
         autoAcceptMode = aAutoAcceptMode != null ? aAutoAcceptMode : AutoAcceptMode.NEVER;
         hidingFlags = aHidingFlags;
         correction = aCorrection;
@@ -172,9 +172,9 @@ public abstract class AnnotationSuggestion
         return recommenderId;
     }
 
-    public String getDocumentName()
+    public long getDocumentId()
     {
-        return documentName;
+        return documentId;
     }
 
     public void hide(int aFlags)
@@ -252,7 +252,7 @@ public abstract class AnnotationSuggestion
     {
         // The recommenderId captures uniquely the project, layer and feature, so we do not have to
         // check them separately
-        return Objects.hash(id, recommenderId, documentName);
+        return Objects.hash(id, recommenderId, documentId);
     }
 
     @Override
@@ -268,7 +268,7 @@ public abstract class AnnotationSuggestion
         }
         AnnotationSuggestion that = (AnnotationSuggestion) o;
         return id == that.id && recommenderId == that.recommenderId
-                && documentName.equals(that.documentName);
+                && documentId == that.documentId;
     }
 
     /**

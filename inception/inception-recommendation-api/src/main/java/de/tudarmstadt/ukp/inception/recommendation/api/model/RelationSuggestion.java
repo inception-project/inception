@@ -41,7 +41,7 @@ public class RelationSuggestion
                 .withRecommenderName(recommenderName) //
                 .withLayerId(layerId) //
                 .withFeature(feature) //
-                .withDocumentName(documentName) //
+                .withDocument(documentId) //
                 .withLabel(label) //
                 .withUiLabel(uiLabel) //
                 .withScore(score) //

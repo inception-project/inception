@@ -598,8 +598,8 @@ public class PredictionTask
     private void inheritSuggestionsAtRecommenderLevel(Predictions aPredictions,
             Recommender aRecommender, Predictions activePredictions, SourceDocument document)
     {
-        var suggestions = activePredictions.getPredictionsByRecommenderAndDocument(aRecommender,
-                document.getName());
+        var suggestions = activePredictions.getSuggestionsByRecommenderAndDocument(aRecommender,
+                document);
 
         if (suggestions.isEmpty()) {
             logNoInheritablePredictions(aPredictions, aRecommender, document);
@@ -622,7 +622,7 @@ public class PredictionTask
             return;
         }
 
-        var suggestions = aOldPredictions.getPredictionsByDocument(aDocument.getName());
+        var suggestions = aOldPredictions.getPredictionsByDocument(aDocument.getId());
 
         logPredictionsInherited(aProject, aDocument, suggestions);
 
@@ -635,7 +635,7 @@ public class PredictionTask
             Range predictedRange, List<AnnotationSuggestion> suggestions, int aged)
     {
         var inheritableSuggestions = aActivePredictions
-                .getPredictionsByRecommenderAndDocument(aRecommender, aDocument.getName()).stream() //
+                .getSuggestionsByRecommenderAndDocument(aRecommender, aDocument).stream() //
                 .filter(s -> !s.coveredBy(predictedRange)) //
                 .collect(toList());
 
@@ -696,7 +696,7 @@ public class PredictionTask
         var agedSuggestionsCount = 0;
 
         var predictionsByRecommenderAndDocument = aActivePredictions
-                .getPredictionsByRecommenderAndDocument(recommender, aDocument.getName());
+                .getSuggestionsByRecommenderAndDocument(recommender, aDocument);
 
         var existingSuggestionsByPosition = predictionsByRecommenderAndDocument.stream() //
                 .filter(s -> s.coveredBy(predictedRange)) //

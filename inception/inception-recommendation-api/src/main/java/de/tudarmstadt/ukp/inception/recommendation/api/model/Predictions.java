@@ -62,10 +62,10 @@ public class Predictions
     private final User sessionOwner;
     private final String dataOwner;
 
-    private final Map<String, Map<ExtendedId, AnnotationSuggestion>> idxDocuments = new HashMap<>();
+    private final Map<Long, Map<ExtendedId, AnnotationSuggestion>> idxDocuments = new HashMap<>();
 
     private final Object predictionsLock = new Object();
-    private final Set<String> seenDocumentsForPrediction = new HashSet<>();
+    private final Set<Long> seenDocumentsForPrediction = new HashSet<>();
     private final List<LogMessage> log = new ArrayList<>();
 
     // Predictions are (currently) scoped to a user session. We assume that within a single user
@@ -121,17 +121,16 @@ public class Predictions
      *         of tokens and the inner list is a list of predictions for a token. The method filters
      *         all tokens which already have an annotation and don't need further recommendation.
      */
-    public <T extends AnnotationSuggestion> Map<String, SuggestionDocumentGroup<T>> getPredictionsForWholeProject(
+    public <T extends AnnotationSuggestion> Map<Long, SuggestionDocumentGroup<T>> getPredictionsForWholeProject(
             Class<T> type, AnnotationLayer aLayer, DocumentService aDocumentService)
     {
-        var result = new HashMap<String, SuggestionDocumentGroup<T>>();
+        var result = new HashMap<Long, SuggestionDocumentGroup<T>>();
 
         var docs = aDocumentService.listAnnotationDocuments(project, sessionOwner);
 
         for (var doc : docs) {
-            // TODO #176 use the document Id once it it available in the CAS
-            var p = getGroupedPredictions(type, doc.getName(), aLayer, -1, -1);
-            result.put(doc.getName(), p);
+            var p = getGroupedPredictions(type, doc.getDocument(), aLayer, -1, -1);
+            result.put(doc.getDocument().getId(), p);
         }
 
         return result;
@@ -144,8 +143,8 @@ public class Predictions
      * 
      * @param type
      *            the type of suggestions to retrieve
-     * @param aDocumentName
-     *            the name of the document to retrieve suggestions for
+     * @param aDocument
+     *            the document to retrieve suggestions for
      * @param aLayer
      *            the layer to retrieve suggestions for
      * @param aWindowBegin
@@ -159,11 +158,19 @@ public class Predictions
      *         inner list is a list of predictions for a token
      */
     public <T extends AnnotationSuggestion> SuggestionDocumentGroup<T> getGroupedPredictions(
-            Class<T> type, String aDocumentName, AnnotationLayer aLayer, int aWindowBegin,
+            Class<T> type, SourceDocument aDocument, AnnotationLayer aLayer, int aWindowBegin,
             int aWindowEnd)
     {
         return SuggestionDocumentGroup.groupsOfType(type,
-                getFlattenedPredictions(type, aDocumentName, aLayer, aWindowBegin, aWindowEnd));
+                getFlattenedPredictions(type, aDocument.getId(), aLayer, aWindowBegin, aWindowEnd));
+    }
+
+    public <T extends AnnotationSuggestion> SuggestionDocumentGroup<T> getGroupedPredictions(
+            Class<T> type, long aDocumentId, AnnotationLayer aLayer, int aWindowBegin,
+            int aWindowEnd)
+    {
+        return SuggestionDocumentGroup.groupsOfType(type,
+                getFlattenedPredictions(type, aDocumentId, aLayer, aWindowBegin, aWindowEnd));
     }
 
     /**
@@ -175,13 +182,13 @@ public class Predictions
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private <T extends AnnotationSuggestion> List<T> getFlattenedPredictions(Class<T> type,
-            String aDocumentName, AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
+            long aDocumentId, AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
         var windowBegin = aWindowBegin == -1 ? 0 : aWindowBegin;
         var windowEnd = aWindowEnd == -1 ? Integer.MAX_VALUE : aWindowEnd;
 
         synchronized (predictionsLock) {
-            var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
+            var byDocument = idxDocuments.getOrDefault(aDocumentId, emptyMap());
             return byDocument.entrySet().stream() //
                     .filter(f -> type.isInstance(f.getValue())) //
                     .map(f -> (Entry<ExtendedId, T>) (Entry) f) //
@@ -205,7 +212,7 @@ public class Predictions
     public Optional<AnnotationSuggestion> getPredictionByVID(SourceDocument aDocument, VID aVID)
     {
         synchronized (predictionsLock) {
-            var byDocument = idxDocuments.getOrDefault(aDocument.getName(), emptyMap());
+            var byDocument = idxDocuments.getOrDefault(aDocument.getId(), emptyMap());
             return byDocument.values().stream() //
                     .filter(suggestion -> suggestion.getId() == aVID.getSubId()) //
                     .filter(suggestion -> suggestion.getRecommenderId() == aVID.getId()) //
@@ -234,7 +241,7 @@ public class Predictions
                 }
 
                 var xid = new ExtendedId(suggestion);
-                var byDocument = idxDocuments.computeIfAbsent(suggestion.getDocumentName(),
+                var byDocument = idxDocuments.computeIfAbsent(suggestion.getDocumentId(),
                         $ -> new HashMap<>());
                 byDocument.put(xid, suggestion);
 
@@ -260,7 +267,7 @@ public class Predictions
                 }
 
                 var xid = new ExtendedId(prediction);
-                var byDocument = idxDocuments.computeIfAbsent(prediction.getDocumentName(),
+                var byDocument = idxDocuments.computeIfAbsent(prediction.getDocumentId(),
                         $ -> new HashMap<>());
                 byDocument.put(xid, prediction);
             }
@@ -308,7 +315,7 @@ public class Predictions
     public List<SpanSuggestion> getAlternativeSuggestions(SpanSuggestion aSuggestion)
     {
         synchronized (predictionsLock) {
-            var byDocument = idxDocuments.getOrDefault(aSuggestion.getDocumentName(), emptyMap());
+            var byDocument = idxDocuments.getOrDefault(aSuggestion.getDocumentId(), emptyMap());
             return byDocument.entrySet().stream() //
                     .filter(f -> f.getValue() instanceof SpanSuggestion) //
                     .map(f -> (Entry<ExtendedId, SpanSuggestion>) (Entry) f) //
@@ -325,8 +332,8 @@ public class Predictions
      * Returns a list of predictions for a given token that matches the given layer and the
      * annotation feature in the given document
      *
-     * @param aDocumentName
-     *            the given document name
+     * @param aDocumentId
+     *            the given document ID
      * @param aLayer
      *            the given layer
      * @param aBegin
@@ -339,11 +346,11 @@ public class Predictions
      */
     // TODO #176 use the document Id once it it available in the CAS
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public List<SpanSuggestion> getPredictionsByTokenAndFeature(String aDocumentName,
+    public List<SpanSuggestion> getPredictionsByTokenAndFeature(long aDocumentId,
             AnnotationLayer aLayer, int aBegin, int aEnd, String aFeature)
     {
         synchronized (predictionsLock) {
-            var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
+            var byDocument = idxDocuments.getOrDefault(aDocumentId, emptyMap());
             return byDocument.entrySet().stream() //
                     .filter(f -> f.getValue() instanceof SpanSuggestion) //
                     .map(f -> (Entry<ExtendedId, SpanSuggestion>) (Entry) f) //
@@ -356,11 +363,17 @@ public class Predictions
         }
     }
 
-    public List<AnnotationSuggestion> getPredictionsByRecommenderAndDocument(
-            Recommender aRecommender, String aDocumentName)
+    public List<AnnotationSuggestion> getSuggestionsByRecommenderAndDocument(
+            Recommender aRecommender, SourceDocument aDocument)
+    {
+        return getSuggestionsByRecommenderAndDocument(aRecommender, aDocument.getId());
+    }
+
+    public List<AnnotationSuggestion> getSuggestionsByRecommenderAndDocument(
+            Recommender aRecommender, long aDocumentId)
     {
         synchronized (predictionsLock) {
-            var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
+            var byDocument = idxDocuments.getOrDefault(aDocumentId, emptyMap());
             return byDocument.entrySet().stream() //
                     .filter(f -> f.getKey().getRecommenderId() == (long) aRecommender.getId())
                     .map(Map.Entry::getValue) //
@@ -368,26 +381,26 @@ public class Predictions
         }
     }
 
-    public List<AnnotationSuggestion> getPredictionsByDocument(SourceDocument aDocument)
+    public List<AnnotationSuggestion> getSuggestionsByDocument(SourceDocument aDocument)
     {
-        return getPredictionsByDocument(aDocument.getName());
+        return getPredictionsByDocument(aDocument.getId());
     }
 
-    public List<AnnotationSuggestion> getPredictionsByDocument(String aDocumentName)
+    public List<AnnotationSuggestion> getPredictionsByDocument(long aDocumentId)
     {
         synchronized (predictionsLock) {
-            var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
+            var byDocument = idxDocuments.getOrDefault(aDocumentId, emptyMap());
             return byDocument.entrySet().stream() //
                     .map(Map.Entry::getValue) //
                     .toList();
         }
     }
 
-    public List<AnnotationSuggestion> getPredictionsByDocument(String aDocumentName,
+    public List<AnnotationSuggestion> getSuggestionsByDocument(SourceDocument aDocument,
             int aWindowBegin, int aWindowEnd)
     {
         synchronized (predictionsLock) {
-            var byDocument = idxDocuments.getOrDefault(aDocumentName, emptyMap());
+            var byDocument = idxDocuments.getOrDefault(aDocument.getId(), emptyMap());
             return byDocument.entrySet().stream() //
                     .filter(f -> AnnotationPredicates.overlapping(f.getValue().getWindowBegin(),
                             f.getValue().getWindowEnd(), aWindowBegin, aWindowEnd))
@@ -400,7 +413,7 @@ public class Predictions
     public void markDocumentAsPredictionCompleted(SourceDocument aDocument)
     {
         synchronized (seenDocumentsForPrediction) {
-            seenDocumentsForPrediction.add(aDocument.getName());
+            seenDocumentsForPrediction.add(aDocument.getId());
         }
     }
 
@@ -411,7 +424,7 @@ public class Predictions
         }
     }
 
-    Set<String> documentsSeen()
+    Set<Long> documentsSeen()
     {
         return unmodifiableSet(seenDocumentsForPrediction);
     }
@@ -419,7 +432,7 @@ public class Predictions
     public boolean hasRunPredictionOnDocument(SourceDocument aDocument)
     {
         synchronized (seenDocumentsForPrediction) {
-            return seenDocumentsForPrediction.contains(aDocument.getName());
+            return seenDocumentsForPrediction.contains(aDocument.getId());
         }
     }
 

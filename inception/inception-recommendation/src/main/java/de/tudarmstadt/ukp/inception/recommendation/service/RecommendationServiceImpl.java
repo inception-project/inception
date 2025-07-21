@@ -681,7 +681,7 @@ public class RecommendationServiceImpl
                 .collect(toMap(Recommender::getId, identity()));
         var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
 
-        for (var prediction : predictions.getPredictionsByDocument(aDocument.getName())) {
+        for (var prediction : predictions.getPredictionsByDocument(aDocument.getId())) {
             if (prediction.getAutoAcceptMode() != aAutoAcceptMode) {
                 continue;
             }

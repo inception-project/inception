@@ -512,13 +512,14 @@ public class DocumentMetadataAnnotationSelectionPanel
         var predictions = recommendationService.getPredictions(state.getUser(), state.getProject());
         if (predictions != null) {
             var predictionsByDocument = predictions
-                    .getPredictionsByDocument(state.getDocument().getName());
+                    .getPredictionsByDocument(state.getDocument().getId());
 
             var group = SuggestionDocumentGroup.groupsOfType(MetadataSuggestion.class,
                     predictionsByDocument);
 
             recommendationService.calculateSuggestionVisibility(userService.getCurrentUsername(),
-                    state.getDocument(), aCas, state.getUser().getUsername(), aLayer, group, -1, -1);
+                    state.getDocument(), aCas, state.getUser().getUsername(), aLayer, group, -1,
+                    -1);
 
             var pref = recommendationService.getPreferences(state.getUser(), state.getProject());
 
@@ -535,8 +536,8 @@ public class DocumentMetadataAnnotationSelectionPanel
                     var featureSupport = fsRegistry.findExtension(feature).orElseThrow();
                     var annotation = featureSupport.renderFeatureValue(feature,
                             suggestion.getLabel());
-                    aItems.add(new AnnotationListItem(suggestion.getVID(), annotation, aLayer, false,
-                            suggestion.getScore(), aItems.size()));
+                    aItems.add(new AnnotationListItem(suggestion.getVID(), annotation, aLayer,
+                            false, suggestion.getScore(), aItems.size()));
                 }
             }
         }

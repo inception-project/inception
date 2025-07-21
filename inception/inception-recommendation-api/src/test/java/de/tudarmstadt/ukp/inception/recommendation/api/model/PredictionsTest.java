@@ -81,8 +81,7 @@ class PredictionsTest
         sut.inheritSuggestions(generatePredictions(100, 1, 100));
         assertThat(sut.size()).isEqualTo(10000);
 
-        var groups = sut.getGroupedPredictions(SpanSuggestion.class, "doc10", layer, winBegin,
-                winEnd);
+        var groups = sut.getGroupedPredictions(SpanSuggestion.class, 10L, layer, winBegin, winEnd);
         assertThat(groups).isNotEmpty();
     }
 
@@ -97,7 +96,7 @@ class PredictionsTest
         var generatedPredictions = generatePredictions(10_000, 1, 1_000);
         sut.inheritSuggestions(generatedPredictions);
         var documents = generatedPredictions.stream() //
-                .map(AnnotationSuggestion::getDocumentName) //
+                .map(AnnotationSuggestion::getDocumentId) //
                 .distinct() //
                 .collect(toList());
 
@@ -114,7 +113,10 @@ class PredictionsTest
     @Test
     void thatIdsAreAssigned() throws Exception
     {
-        var doc = SourceDocument.builder().withName("doc").build();
+        var doc = SourceDocument.builder() //
+                .withId(1L) //
+                .withName("doc") //
+                .build();
         sut = new Predictions(user, user.getUsername(), project);
         sut.putSuggestions(1, 0, 0, asList( //
                 SpanSuggestion.builder() //
@@ -122,11 +124,11 @@ class PredictionsTest
                         .withDocument(doc) //
                         .build()));
 
-        assertThat(sut.getPredictionsByDocument(doc)) //
+        assertThat(sut.getSuggestionsByDocument(doc)) //
                 .extracting(AnnotationSuggestion::getId) //
                 .containsExactly(0);
 
-        var inheritedPredictions = sut.getPredictionsByDocument(doc);
+        var inheritedPredictions = sut.getSuggestionsByDocument(doc);
         sut = new Predictions(sut);
         sut.putSuggestions(1, 0, 0, asList( //
                 SpanSuggestion.builder() //
@@ -135,7 +137,7 @@ class PredictionsTest
                         .build()));
         sut.inheritSuggestions(inheritedPredictions);
 
-        assertThat(sut.getPredictionsByDocument(doc)) //
+        assertThat(sut.getSuggestionsByDocument(doc)) //
                 .extracting(AnnotationSuggestion::getId) //
                 .containsExactlyInAnyOrder(0, 1);
     }

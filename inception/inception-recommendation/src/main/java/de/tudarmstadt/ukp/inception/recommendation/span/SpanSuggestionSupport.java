@@ -416,8 +416,8 @@ public class SpanSuggestionSupport
                 .filter(r -> Objects.equals(r.getLayer().getId(), aSuggestion.getLayerId())) //
                 .filter(r -> Objects.equals(r.getAnnotationFeature().getName(),
                         aSuggestion.getFeature())) //
-                .filter(r -> Objects.equals(r.getSourceDocument().getName(),
-                        aSuggestion.getDocumentName())) //
+                .filter(r -> Objects.equals(r.getSourceDocument().getId(),
+                        aSuggestion.getDocumentId())) //
                 .filter(r -> aSuggestion.labelEquals(r.getAnnotation())) //
                 .filter(r -> r.getOffsetBegin() == aSuggestion.getBegin()
                         && r.getOffsetEnd() == aSuggestion.getEnd()) //

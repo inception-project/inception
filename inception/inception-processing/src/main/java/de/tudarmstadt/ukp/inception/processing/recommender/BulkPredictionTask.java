@@ -251,7 +251,7 @@ public class BulkPredictionTask
         var accepted = 0;
         var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
 
-        for (var prediction : predictions.getPredictionsByDocument(aDocument.getName())) {
+        for (var prediction : predictions.getPredictionsByDocument(aDocument.getId())) {
             if (!Objects.equals(prediction.getRecommenderId(), recommender.getId())) {
                 continue;
             }
