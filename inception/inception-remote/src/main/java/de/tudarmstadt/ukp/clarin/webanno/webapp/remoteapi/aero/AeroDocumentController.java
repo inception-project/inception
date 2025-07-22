@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.DO
 import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.DOCUMENT_STATE_NEW;
 import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.parseSourceDocumentState;
 import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.sourceDocumentStateToString;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
@@ -295,11 +296,12 @@ public class AeroDocumentController
         File exportedFile = null;
         try {
             // Load the converted file into memory
-            exportedFile = importExportService.exportCasToFile(cas, doc, doc.getName(), format);
+            exportedFile = importExportService.exportCasToFile(cas, doc, INITIAL_CAS_PSEUDO_USER,
+                    format);
             var resource = FileUtils.readFileToByteArray(exportedFile);
 
             // Send it back to the client
-            HttpHeaders httpHeaders = new HttpHeaders();
+            var httpHeaders = new HttpHeaders();
             httpHeaders.setContentLength(resource.length);
             httpHeaders.set("Content-Disposition",
                     "attachment; filename=\"" + exportedFile.getName() + "\"");
