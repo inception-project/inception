@@ -24,6 +24,8 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.pdfeditor2.PdfAnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.pdfeditor2.format.PdfFormatSupport;
+import de.tudarmstadt.ukp.inception.pdfeditor2.format.PdfJsonCasFormatSupport;
+import de.tudarmstadt.ukp.inception.pdfeditor2.format.PdfXmiCasFormatSupport;
 import de.tudarmstadt.ukp.inception.pdfeditor2.view.PdfDocumentIFrameViewFactory;
 
 /**
@@ -52,5 +54,19 @@ public class PdfAnnotationEditor2SupportAutoConfiguration
     public PdfFormatSupport pdfFormat2Support(PdfFormatProperties aProperties)
     {
         return new PdfFormatSupport(aProperties);
+    }
+
+    @ConditionalOnProperty(prefix = "format.pdf-json-cas", name = "enabled", havingValue = "true", matchIfMissing = false)
+    @Bean
+    public PdfJsonCasFormatSupport pdfJsonCasFormatSupport()
+    {
+        return new PdfJsonCasFormatSupport();
+    }
+
+    @ConditionalOnProperty(prefix = "format.pdf-xmi-cas", name = "enabled", havingValue = "true", matchIfMissing = false)
+    @Bean
+    public PdfXmiCasFormatSupport pdfXmiCasFormatSupport()
+    {
+        return new PdfXmiCasFormatSupport();
     }
 }

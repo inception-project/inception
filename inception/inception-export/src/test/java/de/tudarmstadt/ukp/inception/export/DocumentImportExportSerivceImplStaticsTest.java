@@ -49,11 +49,12 @@ public class DocumentImportExportSerivceImplStaticsTest
         addOrUpdateDocumentMetadata(jcas.getCas(), sourceDocument, username);
 
         var dmd = DocumentMetaData.get(jcas.getCas());
-        assertThat(dmd.getDocumentTitle()).isEqualTo(sourceDocument.getName());
-        assertThat(dmd.getDocumentUri()).isEqualTo(slug + "/" + username);
-        assertThat(dmd.getDocumentBaseUri()).isEqualTo(slug);
-        assertThat(dmd.getCollectionId()).isEqualTo(slug);
-        assertThat(dmd.getDocumentId()).isEqualTo(username);
+        assertThat(dmd.getDocumentTitle()).as("documentTitle").isEqualTo(sourceDocument.getName());
+        assertThat(dmd.getDocumentUri()).as("documentUri")
+                .isEqualTo(slug + "/" + sourceDocument.getName());
+        assertThat(dmd.getDocumentBaseUri()).as("documentBaseUri").isEqualTo(slug);
+        assertThat(dmd.getCollectionId()).as("collectionId").isEqualTo(slug);
+        assertThat(dmd.getDocumentId()).as("documentId").isEqualTo(username);
 
     }
 

@@ -17,39 +17,30 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor2.format;
 
+import static de.tudarmstadt.ukp.inception.pdfeditor2.format.VisualPdfWriter.CAS_XMI_XML_1_0;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
-import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.pdfeditor2.config.PdfAnnotationEditor2SupportAutoConfiguration;
-import de.tudarmstadt.ukp.inception.pdfeditor2.config.PdfFormatProperties;
 
 /**
  * Support for PDF file format.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link PdfAnnotationEditor2SupportAutoConfiguration#pdfFormat2Support}.
+ * {@link PdfAnnotationEditor2SupportAutoConfiguration#pdfXmiCasFormatSupport}.
  * </p>
  */
-public class PdfFormatSupport
+public class PdfXmiCasFormatSupport
     implements FormatSupport
 {
-    public static final String ID = "pdf2";
-    public static final String NAME = "PDF";
-
-    private final PdfFormatProperties properties;
-
-    public PdfFormatSupport(PdfFormatProperties aProperties)
-    {
-        properties = aProperties;
-    }
+    public static final String ID = "pdf2XmiCas";
+    public static final String NAME = "PDF (with embedded XMI CAS)";
 
     @Override
     public String getId()
@@ -64,34 +55,9 @@ public class PdfFormatSupport
     }
 
     @Override
-    public boolean isReadable()
-    {
-        return true;
-    }
-
-    @Override
     public boolean isWritable()
     {
         return true;
-    }
-
-    @Override
-    public CollectionReaderDescription getReaderDescription(Project aProject,
-            TypeSystemDescription aTSD)
-        throws ResourceInitializationException
-    {
-        return createReaderDescription(VisualPdfReader.class, aTSD, //
-                VisualPdfReader.PARAM_ADD_MORE_FORMATTING, properties.isAddMoreFormatting(), //
-                VisualPdfReader.PARAM_AVERAGE_CHAR_TOLERANCE, properties.getAverageCharTolerance(), //
-                VisualPdfReader.PARAM_DROP_THRESHOLD, properties.getDropThreshold(), //
-                VisualPdfReader.PARAM_GENERATE_HTML_STRUCTURE, properties.isGenerateHtmlStructure(), //
-                VisualPdfReader.PARAM_INDENT_THRESHOLD, properties.getIndentThreshold(), //
-                VisualPdfReader.PARAM_SHOULD_SEPARATE_BY_BEADS,
-                properties.isShouldSeparateByBeads(), //
-                VisualPdfReader.PARAM_SORT_BY_POSITION, properties.isSortByPosition(), //
-                VisualPdfReader.PARAM_SPACING_TOLERANCE, properties.getSpacingTolerance(), //
-                VisualPdfReader.PARAM_SUPPRESS_DUPLICATE_OVERLAPPING_TEXT,
-                properties.isSuppressDuplicateOverlappingText());
     }
 
     @Override
@@ -101,6 +67,7 @@ public class PdfFormatSupport
     {
         return createEngineDescription( //
                 VisualPdfWriter.class, aTSD, //
+                VisualPdfWriter.PARAM_EMBEDDED_CAS_FORMAT, CAS_XMI_XML_1_0, //
                 VisualPdfWriter.PARAM_PROJECT_ID, aProject.getId());
     }
 }

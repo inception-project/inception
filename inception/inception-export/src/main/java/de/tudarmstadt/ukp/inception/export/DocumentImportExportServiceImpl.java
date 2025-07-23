@@ -198,37 +198,38 @@ public class DocumentImportExportServiceImpl
 
     @Override
     @Transactional
-    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
+    public File exportAnnotationDocument(SourceDocument aDocument, String aDataOwner,
             FormatSupport aFormat, Mode aMode)
         throws UIMAException, IOException
     {
-        return exportAnnotationDocument(aDocument, aUser, aFormat, aDocument.getName(), aMode, true,
+        return exportAnnotationDocument(aDocument, aDataOwner, aFormat, aDocument.getName(), aMode,
+                true, null);
+    }
+
+    @Override
+    @Transactional
+    public File exportAnnotationDocument(SourceDocument aDocument, String aDataOwner,
+            FormatSupport aFormat, String aFileName, Mode aMode)
+        throws UIMAException, IOException
+    {
+        return exportAnnotationDocument(aDocument, aDataOwner, aFormat, aFileName, aMode, true,
                 null);
     }
 
     @Override
     @Transactional
-    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
-            FormatSupport aFormat, String aFileName, Mode aMode)
-        throws UIMAException, IOException
-    {
-        return exportAnnotationDocument(aDocument, aUser, aFormat, aFileName, aMode, true, null);
-    }
-
-    @Override
-    @Transactional
-    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
+    public File exportAnnotationDocument(SourceDocument aDocument, String aDataOwner,
             FormatSupport aFormat, Mode aMode, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws IOException, UIMAException
     {
-        return exportAnnotationDocument(aDocument, aUser, aFormat, aDocument.getName(), aMode,
+        return exportAnnotationDocument(aDocument, aDataOwner, aFormat, aDocument.getName(), aMode,
                 aStripExtension, aBulkOperationContext);
     }
 
     @Override
     @Transactional
-    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
+    public File exportAnnotationDocument(SourceDocument aDocument, String aDataOwner,
             FormatSupport aFormat, String aFileName, Mode aMode, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws IOException, UIMAException
@@ -239,14 +240,14 @@ public class DocumentImportExportServiceImpl
                 bulkOperationContext = new HashMap<>();
             }
 
-            String username;
+            String dataOwner;
             switch (aMode) {
             case ANNOTATION:
-                username = aUser;
+                dataOwner = aDataOwner;
                 break;
             case CURATION:
                 // The merge result will be exported
-                username = CURATION_USER;
+                dataOwner = CURATION_USER;
                 break;
             default:
                 throw new IllegalArgumentException("Unknown mode [" + aMode + "]");
@@ -254,16 +255,16 @@ public class DocumentImportExportServiceImpl
 
             // Read file
             File exportFile;
-            try (CasStorageSession session = CasStorageSession.openNested()) {
+            try (var session = CasStorageSession.openNested()) {
                 // We do not want to add the CAS to the exclusive access pool here to avoid
                 // potentially running out of memory when exporting a large project
-                CAS cas = casStorageService.readCas(aDocument, username, UNMANAGED_ACCESS);
-                exportFile = exportCasToFile(cas, aDocument, aFileName, aFormat, aStripExtension,
+                var cas = casStorageService.readCas(aDocument, dataOwner, UNMANAGED_ACCESS);
+                exportFile = exportCasToFile(cas, aDocument, dataOwner, aFormat, aStripExtension,
                         bulkOperationContext);
             }
 
-            LOG.info("Exported annotations for [{}]@{} in {} using format [{}]", aUser, aDocument,
-                    aDocument.getProject(), aFormat.getId());
+            LOG.info("Exported annotations for [{}]@{} in {} using format [{}]", aDataOwner,
+                    aDocument, aDocument.getProject(), aFormat.getId());
 
             return exportFile;
         }
@@ -426,15 +427,15 @@ public class DocumentImportExportServiceImpl
     }
 
     @Override
-    public File exportCasToFile(CAS aCas, SourceDocument aDocument, String aFileName,
+    public File exportCasToFile(CAS aCas, SourceDocument aDocument, String aDataOwner,
             FormatSupport aFormat)
         throws IOException, UIMAException
     {
-        return exportCasToFile(aCas, aDocument, aFileName, aFormat, true, null);
+        return exportCasToFile(aCas, aDocument, aDataOwner, aFormat, true, null);
     }
 
     @Override
-    public File exportCasToFile(CAS aCas, SourceDocument aDocument, String aFileName,
+    public File exportCasToFile(CAS aCas, SourceDocument aDocument, String aDataOwner,
             FormatSupport aFormat, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws IOException, UIMAException
@@ -466,7 +467,7 @@ public class DocumentImportExportServiceImpl
 
                 // Update the source file name in case it is changed for some reason. This is
                 // necessary for the writers to create the files under the correct names.
-                addOrUpdateDocumentMetadata(exportCas, aDocument, aFileName);
+                addOrUpdateDocumentMetadata(exportCas, aDocument, aDataOwner);
 
                 addLayerAndFeatureDefinitionAnnotations(exportCas, project, bulkOperationContext);
 
@@ -550,16 +551,16 @@ public class DocumentImportExportServiceImpl
         return features;
     }
 
-    static void addOrUpdateDocumentMetadata(CAS aCas, SourceDocument aDocument, String aFileName)
+    static void addOrUpdateDocumentMetadata(CAS aCas, SourceDocument aDocument, String aDataOwner)
         throws MalformedURLException, CASException
     {
         var slug = aDocument.getProject().getSlug();
         var documentMetadata = DocumentMetaData.get(aCas.getJCas());
         documentMetadata.setDocumentTitle(aDocument.getName());
         documentMetadata.setCollectionId(slug);
-        documentMetadata.setDocumentId(aFileName);
+        documentMetadata.setDocumentId(aDataOwner);
         documentMetadata.setDocumentBaseUri(slug);
-        documentMetadata.setDocumentUri(slug + "/" + aFileName);
+        documentMetadata.setDocumentUri(slug + "/" + aDocument.getName());
     }
 
     private void addLayerAndFeatureDefinitionAnnotations(CAS aCas, Project aProject,

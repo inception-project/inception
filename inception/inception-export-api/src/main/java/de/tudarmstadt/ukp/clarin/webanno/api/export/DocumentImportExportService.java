@@ -189,8 +189,8 @@ public interface DocumentImportExportService
      *            the CAS to export
      * @param aDocument
      *            the document to which the CAS belongs
-     * @param aFileName
-     *            the name the exported file should have - only the name, no path!
+     * @param aDataOwner
+     *            the user owning the CAS file
      * @param aFormat
      *            the format in which to export
      * @return the exported file
@@ -199,7 +199,8 @@ public interface DocumentImportExportService
      * @throws UIMAException
      *             if there was an UIMA-level problem
      */
-    File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName, FormatSupport aFormat)
+    File exportCasToFile(CAS cas, SourceDocument aDocument, String aDataOwner,
+            FormatSupport aFormat)
         throws IOException, UIMAException;
 
     /**
@@ -213,8 +214,8 @@ public interface DocumentImportExportService
      *            the CAS to export
      * @param aDocument
      *            the document to which the CAS belongs
-     * @param aFileName
-     *            the name the exported file should have - only the name, no path!
+     * @param aDataOwner
+     *            the user owning the CAS file
      * @param aFormat
      *            the format in which to export
      * @param aStripExtension
@@ -227,8 +228,9 @@ public interface DocumentImportExportService
      * @throws UIMAException
      *             if there was an UIMA-level problem
      */
-    File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName, FormatSupport aFormat,
-            boolean aStripExtension, Map<Pair<Project, String>, Object> aBulkOperationContext)
+    File exportCasToFile(CAS cas, SourceDocument aDocument, String aDataOwner,
+            FormatSupport aFormat, boolean aStripExtension,
+            Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws IOException, UIMAException;
 
     /**
@@ -237,7 +239,7 @@ public interface DocumentImportExportService
      * @param document
      *            The {@link SourceDocument} where we get the id which hosts both the source
      *            Document and the annotated document
-     * @param user
+     * @param aDataOwner
      *            the {@link User} who annotates the document.
      * @param aFormat
      *            the format.
@@ -253,7 +255,7 @@ public interface DocumentImportExportService
      * @throws ClassNotFoundException
      *             if the DKPro Core writer could not be found.
      */
-    File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,
+    File exportAnnotationDocument(SourceDocument document, String aDataOwner, FormatSupport aFormat,
             String fileName, Mode mode)
         throws UIMAException, IOException, ClassNotFoundException;
 
@@ -263,7 +265,7 @@ public interface DocumentImportExportService
      * @param document
      *            The {@link SourceDocument} where we get the id which hosts both the source
      *            Document and the annotated document
-     * @param user
+     * @param aDataOwner
      *            the {@link User} who annotates the document.
      * @param aFormat
      *            the format.
@@ -277,16 +279,16 @@ public interface DocumentImportExportService
      * @throws ClassNotFoundException
      *             if the DKPro Core writer could not be found.
      */
-    File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,
+    File exportAnnotationDocument(SourceDocument document, String aDataOwner, FormatSupport aFormat,
             Mode mode)
         throws UIMAException, IOException, ClassNotFoundException;
 
-    File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,
+    File exportAnnotationDocument(SourceDocument document, String aDataOwner, FormatSupport aFormat,
             String fileName, Mode mode, boolean stripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws UIMAException, IOException;
 
-    File exportAnnotationDocument(SourceDocument aDocument, String aUser, FormatSupport aFormat,
+    File exportAnnotationDocument(SourceDocument aDocument, String aDataOwner, FormatSupport aFormat,
             Mode aMode, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws UIMAException, IOException;
