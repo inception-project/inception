@@ -86,6 +86,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.project.AjaxProjectImportedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectImportPanel;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterPanel;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterStateChanged;
+import de.tudarmstadt.ukp.inception.annotation.filters.ProjectStateFilterPanel;
+import de.tudarmstadt.ukp.inception.annotation.filters.ProjectStateFilterStateChanged;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
@@ -118,6 +120,7 @@ public class ProjectsOverviewPage
     private static final String MID_LABEL = "label";
     private static final String MID_ROLE = "role";
     private static final String MID_ROLE_FILTER = "roleFilter";
+    private static final String MID_STATE_FILTER = "stateFilter";
     private static final String MID_PROJECTS = "projects";
     private static final String MID_PROJECT = "project";
     private static final String MID_ID = "id";
@@ -127,7 +130,6 @@ public class ProjectsOverviewPage
     private static final String MID_DIALOG = "dialog";
     private static final String MID_EMPTY_LIST_LABEL = "emptyListLabel";
     private static final String MID_START_TUTORIAL = "startTutorial";
-    private static final String MID_IMPORT_PROJECT_BUTTON = "importProjectBtn";
     private static final String MID_PAGING_NAVIGATOR = "pagingNavigator";
 
     private static final long serialVersionUID = -2159246322262294746L;
@@ -197,6 +199,8 @@ public class ProjectsOverviewPage
         queue(createProjectImportGroup());
         queue(new ProjectRoleFilterPanel(MID_ROLE_FILTER,
                 () -> dataProvider.getFilterState().getRoles()));
+        queue(new ProjectStateFilterPanel(MID_STATE_FILTER,
+                () -> dataProvider.getFilterState().getStates()));
 
         var sortOrder = new DropDownChoice<ProjectListSortStrategy>("sortOrder");
         sortOrder.setModel(sortStrategy);
@@ -261,6 +265,12 @@ public class ProjectsOverviewPage
 
     @OnEvent
     public void onProjectRoleFilterStateChanged(ProjectRoleFilterStateChanged aEvent)
+    {
+        actionApplyFilter(aEvent.getTarget());
+    }
+
+    @OnEvent
+    public void onProjectStateFilterStateChanged(ProjectStateFilterStateChanged aEvent)
     {
         actionApplyFilter(aEvent.getTarget());
     }

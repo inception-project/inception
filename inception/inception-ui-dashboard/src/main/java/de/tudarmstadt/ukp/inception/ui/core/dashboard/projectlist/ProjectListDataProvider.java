@@ -141,7 +141,12 @@ public class ProjectListDataProvider
         // Filter by user roles
         if (isNotEmpty(filterState.getRoles())) {
             projectStream = projectStream
-                    .filter(doc -> containsAny(filterState.getRoles(), doc.getLevels()));
+                    .filter(project -> containsAny(filterState.getRoles(), project.getLevels()));
+        }
+
+        if (isNotEmpty(filterState.getStates())) {
+            projectStream = projectStream.filter(
+                    project -> filterState.getStates().contains(project.getProject().getState()));
         }
 
         return projectStream.collect(toList());

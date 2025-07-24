@@ -31,45 +31,45 @@ import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.ResourceModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
 
-public class ProjectRoleFilterPanel
-    extends GenericPanel<List<PermissionLevel>>
+public class ProjectStateFilterPanel
+    extends GenericPanel<List<ProjectState>>
 {
     private static final long serialVersionUID = 8632088780379498284L;
 
     private static final String MID_LABEL = "label";
 
-    public ProjectRoleFilterPanel(String aId, IModel<List<PermissionLevel>> aModel)
+    public ProjectStateFilterPanel(String aId, IModel<List<ProjectState>> aModel)
     {
-        this(aId, aModel, PermissionLevel.values());
+        this(aId, aModel, ProjectState.values());
     }
 
-    public ProjectRoleFilterPanel(String aId, IModel<List<PermissionLevel>> aModel,
-            PermissionLevel... aStates)
+    public ProjectStateFilterPanel(String aId, IModel<List<ProjectState>> aModel,
+            ProjectState... aStates)
     {
         super(aId, aModel);
 
         setOutputMarkupId(true);
 
-        var listview = new ListView<>("roleFilter", asList(aStates))
+        var listview = new ListView<>("stateFilter", asList(aStates))
         {
             private static final long serialVersionUID = -2292408105823066466L;
 
             @Override
-            protected void populateItem(ListItem<PermissionLevel> aItem)
+            protected void populateItem(ListItem<ProjectState> aItem)
             {
-                var role = aItem.getModelObject();
-                LambdaAjaxLink link = new LambdaAjaxLink("roleFilterLink",
-                        (_target -> actionApplyStateFilter(_target, role)));
+                var state = aItem.getModelObject();
+                LambdaAjaxLink link = new LambdaAjaxLink("stateFilterLink",
+                        (_target -> actionApplyStateFilter(_target, state)));
 
                 link.add(new SymbolLabel(MID_LABEL, aItem.getModel()));
                 link.add(new AttributeAppender("class",
-                        () -> aModel.getObject().contains(role) ? "active" : "", " "));
+                        () -> aModel.getObject().contains(state) ? "active" : "", " "));
                 link.add(AttributeModifier.replace("title",
-                        new ResourceModel(role.getClass().getSimpleName() + "." + role.name())));
+                        new ResourceModel(state.getClass().getSimpleName() + "." + state.name())));
                 aItem.add(link);
             }
         };
@@ -77,18 +77,18 @@ public class ProjectRoleFilterPanel
         queue(listview);
     }
 
-    private void actionApplyStateFilter(AjaxRequestTarget aTarget, PermissionLevel aRole)
+    private void actionApplyStateFilter(AjaxRequestTarget aTarget, ProjectState aState)
     {
-        List<PermissionLevel> selectedStates = getModel().getObject();
-        if (selectedStates.contains(aRole)) {
-            selectedStates.remove(aRole);
+        List<ProjectState> selectedStates = getModel().getObject();
+        if (selectedStates.contains(aState)) {
+            selectedStates.remove(aState);
         }
         else {
-            selectedStates.add(aRole);
+            selectedStates.add(aState);
         }
 
         aTarget.add(this);
 
-        send(this, BUBBLE, new ProjectRoleFilterStateChanged(aTarget, selectedStates));
+        send(this, BUBBLE, new ProjectStateFilterStateChanged(aTarget, selectedStates));
     }
 }

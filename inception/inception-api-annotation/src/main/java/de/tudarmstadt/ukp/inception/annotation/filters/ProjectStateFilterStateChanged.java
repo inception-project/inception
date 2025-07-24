@@ -22,23 +22,23 @@ import java.util.List;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 
-public class ProjectRoleFilterStateChanged
+public class ProjectStateFilterStateChanged
     extends AbstractAjaxAwareEvent
 {
-    private final List<PermissionLevel> selectedRoles;
+    private final List<ProjectState> selectedStates;
 
-    public ProjectRoleFilterStateChanged(AjaxRequestTarget aTarget,
-            List<PermissionLevel> aSelectedRoles)
+    public ProjectStateFilterStateChanged(AjaxRequestTarget aTarget,
+            List<ProjectState> aSelectedStates)
     {
         super(aTarget);
 
-        selectedRoles = aSelectedRoles;
+        selectedStates = aSelectedStates;
     }
 
-    public List<PermissionLevel> getSelectedRoles()
+    public List<ProjectState> getSelectedStates()
     {
-        return selectedRoles;
+        return selectedStates;
     }
 }
