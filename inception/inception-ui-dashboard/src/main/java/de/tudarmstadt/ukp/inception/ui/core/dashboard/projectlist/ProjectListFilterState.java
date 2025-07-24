@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 
 public class ProjectListFilterState
     implements Serializable
@@ -29,6 +30,8 @@ public class ProjectListFilterState
     private static final long serialVersionUID = -6340607235253080789L;
 
     private String query;
+    private final List<PermissionLevel> roles = new ArrayList<>();
+    private final List<ProjectState> states = new ArrayList<>();
 
     public String getQuery()
     {
@@ -40,8 +43,6 @@ public class ProjectListFilterState
         query = aQuery;
     }
 
-    private final List<PermissionLevel> roles = new ArrayList<>();
-
     public List<PermissionLevel> getRoles()
     {
         return roles;
@@ -52,6 +53,19 @@ public class ProjectListFilterState
         roles.clear();
         if (aRoles != null) {
             roles.addAll(aRoles);
+        }
+    }
+
+    public List<ProjectState> getStates()
+    {
+        return states;
+    }
+
+    public void setStates(List<ProjectState> aStates)
+    {
+        states.clear();
+        if (aStates != null) {
+            states.addAll(aStates);
         }
     }
 }
