@@ -310,6 +310,9 @@ export class SectionAnnotationVisualizer {
       e.classList.add('iaa-focussed')
     }
     e.textContent = ann.label || `[${ann.layer.name}]` || "No label"
+    if (ann.score && !ann.hideScore) {
+      e.textContent += ` [${ann.score.toFixed(2)}]`
+    }
     e.style.color = bgToFgColor(ann.color || '#000000')
     e.style.backgroundColor = `${ann.color}`
     e.addEventListener('click', event => this.selectAnnotation(event))
