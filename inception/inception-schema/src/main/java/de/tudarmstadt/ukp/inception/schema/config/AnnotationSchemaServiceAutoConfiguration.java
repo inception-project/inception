@@ -27,11 +27,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.feature.bool.BooleanFeatureSupport;
-import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
-import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupportPropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.feature.multistring.MultiValueStringFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
@@ -40,16 +37,6 @@ import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSuppo
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistryImpl;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAttachmentBehavior;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCrossSentenceBehavior;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointChangeListener;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationOverlapBehavior;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAnchoringModeBehavior;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCrossSentenceBehavior;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanOverlapBehavior;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -71,8 +58,7 @@ import jakarta.persistence.PersistenceContext;
 @Configuration
 @EnableConfigurationProperties({ //
         AnnotationSchemaPropertiesImpl.class, //
-        StringFeatureSupportPropertiesImpl.class, //
-        LinkFeatureSupportPropertiesImpl.class })
+        StringFeatureSupportPropertiesImpl.class })
 public class AnnotationSchemaServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
@@ -122,12 +108,6 @@ public class AnnotationSchemaServiceAutoConfiguration
     }
 
     @Bean
-    public LinkFeatureSupport linkFeatureSupport(AnnotationSchemaService aAnnotationService)
-    {
-        return new LinkFeatureSupport(aAnnotationService);
-    }
-
-    @Bean
     public LayerSupportRegistry layerSupportRegistry(
             @Lazy @Autowired(required = false) List<LayerSupport<?, ?>> aLayerSupports)
     {
@@ -135,80 +115,10 @@ public class AnnotationSchemaServiceAutoConfiguration
     }
 
     @Bean
-    public SpanLayerSupport spanLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry, ConstraintsService aConstraintsService)
-    {
-        return new SpanLayerSupport(aFeatureSupportRegistry, aEventPublisher,
-                aLayerBehaviorsRegistry, aConstraintsService);
-    }
-
-    @Bean
-    public RelationLayerSupport relationLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry, ConstraintsService aConstraintsService)
-    {
-        return new RelationLayerSupport(aFeatureSupportRegistry, aEventPublisher,
-                aLayerBehaviorsRegistry, aConstraintsService);
-    }
-
-    @Bean
-    public RelationEndpointChangeListener relationEndpointChangeListener(
-            AnnotationSchemaService aSchemaService)
-    {
-        return new RelationEndpointChangeListener(aSchemaService);
-    }
-
-    @Bean
-    public ChainLayerSupport chainLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aEventPublisher,
-            LayerBehaviorRegistry aLayerBehaviorsRegistry, ConstraintsService aConstraintsService)
-    {
-        return new ChainLayerSupport(aFeatureSupportRegistry, aEventPublisher,
-                aLayerBehaviorsRegistry, aConstraintsService);
-    }
-
-    @Bean
     public LayerBehaviorRegistry LayerBehaviorRegistry(
             @Lazy @Autowired(required = false) List<LayerBehavior> aLayerSupports)
     {
         return new LayerBehaviorRegistryImpl(aLayerSupports);
-    }
-
-    @Bean
-    public RelationAttachmentBehavior relationAttachmentBehavior()
-    {
-        return new RelationAttachmentBehavior();
-    }
-
-    @Bean
-    public RelationCrossSentenceBehavior relationCrossSentenceBehavior()
-    {
-        return new RelationCrossSentenceBehavior();
-    }
-
-    @Bean
-    public RelationOverlapBehavior relationOverlapBehavior()
-    {
-        return new RelationOverlapBehavior();
-    }
-
-    @Bean
-    public SpanAnchoringModeBehavior spanAnchoringModeBehavior()
-    {
-        return new SpanAnchoringModeBehavior();
-    }
-
-    @Bean
-    public SpanCrossSentenceBehavior spanCrossSentenceBehavior()
-    {
-        return new SpanCrossSentenceBehavior();
-    }
-
-    @Bean
-    public SpanOverlapBehavior spanOverlapBehavior()
-    {
-        return new SpanOverlapBehavior();
     }
 
     @Bean

@@ -62,13 +62,16 @@ import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistryImpl;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupportImpl;
 
 @ExtendWith(MockitoExtension.class)
 public class CasMergeTestBase
@@ -425,13 +428,13 @@ public class CasMergeTestBase
         layerBehaviorRegistry.init();
 
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new SpanLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService),
-                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new RelationLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService),
-                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new ChainLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService),
-                new DocumentMetadataLayerSupport(featureSupportRegistry, null, null,
+                new DocumentMetadataLayerSupportImpl(featureSupportRegistry, null, null,
                         layerBehaviorRegistry, constraintsService)));
         layerSupportRegistry.init();
 

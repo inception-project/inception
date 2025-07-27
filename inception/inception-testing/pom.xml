@@ -22,16 +22,20 @@
     <artifactId>inception-app</artifactId>
     <version>38.0-SNAPSHOT</version>
   </parent>
+
   <artifactId>inception-testing</artifactId>
   <name>INCEpTION - Test Support library</name>
+
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation-api</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-schema</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>

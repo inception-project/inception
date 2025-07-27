@@ -53,8 +53,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.recommender.RelationSuggestionSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapterImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.recommender.SpanSuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
@@ -65,8 +67,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.relation.RelationSuggestionSupport;
-import de.tudarmstadt.ukp.inception.recommendation.span.SpanSuggestionSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
@@ -210,8 +210,8 @@ public class RecommendationServiceImplIntegrationTest
                 .withId(1l) //
                 .withProject(project) //
                 .build();
-        var adapter = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null, spanLayer,
-                () -> asList(), asList(), constraintsService);
+        var adapter = new SpanAdapterImpl(layerSupportRegistry, featureSupportRegistry, null,
+                spanLayer, () -> asList(), asList(), constraintsService);
 
         when(schemaService.getLayer(anyLong())).thenReturn(spanLayer);
         when(schemaService.getAdapter(any())).thenReturn(adapter);

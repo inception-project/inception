@@ -47,7 +47,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupportImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.recommender.RelationSuggestionSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -90,9 +92,9 @@ public class RelationSuggestionVisibilityCalculationTest
     public void setUp() throws Exception
     {
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new SpanLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService),
-                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new RelationLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService)));
         layerSupportRegistry.init();
 

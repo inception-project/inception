@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.event.CreateDocumentMetadataAnnotationAction;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.undo.CreateDocumentMetadataAnnotationAction;
 
 public abstract class DocumentMetadataLayerBehavior
     implements LayerBehavior

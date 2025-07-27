@@ -56,6 +56,19 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
  */
 public interface Renderer
 {
+    final String REL_EXTENSION_ID = "rel";
+    final VID VID_BEFORE = VID.builder() //
+            .withExtensionId(REL_EXTENSION_ID) //
+            .withAnnotationId(0) //
+            .withExtensionPayload("before") //
+            .build();
+
+    final VID VID_AFTER = VID.builder() //
+            .withExtensionId(REL_EXTENSION_ID) //
+            .withAnnotationId(1) //
+            .withExtensionPayload("after") //
+            .build();
+
     TypeAdapter getTypeAdapter();
 
     /**

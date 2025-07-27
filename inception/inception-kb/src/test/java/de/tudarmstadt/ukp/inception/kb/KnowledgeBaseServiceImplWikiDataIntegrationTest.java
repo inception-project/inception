@@ -72,7 +72,7 @@ import jakarta.persistence.EntityManager;
 public class KnowledgeBaseServiceImplWikiDataIntegrationTest
 {
     static {
-        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
+        // System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
         System.setProperty("spring.main.banner-mode", "off");
     }
 

@@ -58,8 +58,6 @@ import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.log.model.SummarizedLoggedEvent;
-import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 
 @EnableAutoConfiguration
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
@@ -74,7 +72,6 @@ import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoCon
         DocumentServiceAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
-        AnnotationSchemaServiceAutoConfiguration.class, //
         SecurityAutoConfiguration.class })
 public class EventRepositoryImplIntegrationTest
 {
@@ -347,9 +344,7 @@ public class EventRepositoryImplIntegrationTest
     public static class TestContext
     {
         @Bean
-        DocumentImportExportService documentImportExportService(
-                AnnotationSchemaService aSchemaService)
-            throws Exception
+        DocumentImportExportService documentImportExportService() throws Exception
         {
             var tsd = createTypeSystemDescription();
             var importService = mock(DocumentImportExportService.class);

@@ -35,6 +35,7 @@ import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -56,6 +57,7 @@ import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.parallel.Execution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -76,6 +78,7 @@ import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEv
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
+@Execution(CONCURRENT)
 public class CasStorageServiceImplTest
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());

@@ -166,7 +166,6 @@ public class NoMultipleIncomingRelationsCheckTest
     @Test
     public void testOkBecauseCoref() throws Exception
     {
-
         var relationLayer = new AnnotationLayer();
         relationLayer.setName(CoreferenceChain.class.getName());
         relationLayer.setType(ChainLayerSupport.TYPE);

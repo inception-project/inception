@@ -67,7 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
+import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -362,7 +362,7 @@ public class DocumentImportExportServiceImpl
         }
 
         var messages = new ArrayList<LogMessage>();
-        var casDoctor = new CasDoctor(checksRegistry, repairsRegistry);
+        var casDoctor = new CasDoctorImpl(checksRegistry, repairsRegistry);
         casDoctor.setActiveChecks(
                 checksRegistry.getExtensions().stream().map(c -> c.getId()).toArray(String[]::new));
         casDoctor.analyze(aDocument, INITIAL_CAS_PSEUDO_USER, aCas, messages, true);

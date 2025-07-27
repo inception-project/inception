@@ -57,7 +57,7 @@ import de.tudarmstadt.ukp.inception.annotation.feature.multistring.MultiValueStr
 import de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportPropertiesImpl;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapterImpl;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
@@ -399,8 +399,8 @@ public class MtasUimaParserTest
         d1.addToIndexes();
 
         when(annotationSchemaService.getAdapter(depLayer)) //
-                .thenReturn(new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                        depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+                .thenReturn(new RelationAdapterImpl(layerSupportRegistry, featureSupportRegistry,
+                        null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
                         () -> asList(dependencyLayerGovernor, dependencyLayerDependent),
                         emptyList(), constraintsService));
 

@@ -21,7 +21,7 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.event.SpanEvent;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 

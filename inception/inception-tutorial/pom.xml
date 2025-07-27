@@ -22,6 +22,7 @@
     <artifactId>inception-app</artifactId>
     <version>38.0-SNAPSHOT</version>
   </parent>
+
   <artifactId>inception-tutorial</artifactId>
   <name>INCEpTION - UI - Tutorial</name>
 
@@ -29,6 +30,7 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-core</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>

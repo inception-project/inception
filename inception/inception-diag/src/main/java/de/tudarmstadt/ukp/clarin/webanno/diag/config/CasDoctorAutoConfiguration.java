@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
+import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
@@ -73,7 +74,7 @@ public class CasDoctorAutoConfiguration
     CasDoctor casDoctor(CasDoctorProperties aProperties, ChecksRegistry aChecksRegistry,
             RepairsRegistry aRepairsRegistry)
     {
-        return new CasDoctor(aProperties, aChecksRegistry, aRepairsRegistry);
+        return new CasDoctorImpl(aProperties, aChecksRegistry, aRepairsRegistry);
     }
 
     @Bean

@@ -38,6 +38,7 @@ import static org.apache.uima.fit.util.FSUtil.getFeature;
 import static org.apache.uima.fit.util.FSUtil.setFeature;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
@@ -48,6 +49,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +60,7 @@ import de.tudarmstadt.ukp.inception.curation.merge.strategy.ThresholdBasedMergeS
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 import de.tudarmstadt.ukp.inception.schema.api.feature.MaterializedLink;
 
+@Execution(CONCURRENT)
 public class CasMergeLinkTest
     extends CasMergeTestBase
 {
