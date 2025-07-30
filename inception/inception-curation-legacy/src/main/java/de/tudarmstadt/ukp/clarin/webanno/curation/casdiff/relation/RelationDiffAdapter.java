@@ -41,7 +41,6 @@ import org.apache.uima.jcas.tcas.Annotation;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationRenderer;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class RelationDiffAdapter
@@ -79,7 +78,7 @@ public class RelationDiffAdapter
     }
 
     /**
-     * @see RelationRenderer#selectAnnotationsInWindow
+     * @see {@code RelationRenderer#selectAnnotationsInWindow}
      */
     @Override
     public List<Annotation> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)

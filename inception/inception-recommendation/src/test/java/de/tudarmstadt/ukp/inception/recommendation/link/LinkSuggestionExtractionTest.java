@@ -50,8 +50,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.recommender.LinkSuggestionSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtils;
@@ -99,7 +101,7 @@ class LinkSuggestionExtractionTest
         linkFeatureSupport = new LinkFeatureSupport(schemaService);
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList(linkFeatureSupport));
         featureSupportRegistry.init();
-        layerSupportRegistry = new LayerSupportRegistryImpl(asList(new SpanLayerSupport(
+        layerSupportRegistry = new LayerSupportRegistryImpl(asList(new SpanLayerSupportImpl(
                 featureSupportRegistry, null, layerBehaviorRegistry, constraintsService)));
         layerSupportRegistry.init();
 

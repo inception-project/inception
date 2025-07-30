@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
+import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -74,7 +74,7 @@ public class RepairTask
     @Override
     public void execute()
     {
-        var casDoctor = new CasDoctor(checksRegistry, repairsRegistry);
+        var casDoctor = new CasDoctorImpl(checksRegistry, repairsRegistry);
         casDoctor.setFatalChecks(false);
         casDoctor.setActiveRepairs(repairs.toArray(String[]::new));
 

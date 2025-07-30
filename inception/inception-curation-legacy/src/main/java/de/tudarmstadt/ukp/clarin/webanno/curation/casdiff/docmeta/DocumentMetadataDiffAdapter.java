@@ -32,7 +32,6 @@ import org.apache.uima.jcas.cas.AnnotationBase;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanRenderer;
 
 public class DocumentMetadataDiffAdapter
     extends DiffAdapter_ImplBase
@@ -48,7 +47,7 @@ public class DocumentMetadataDiffAdapter
     }
 
     /**
-     * @see SpanRenderer#selectAnnotationsInWindow
+     * see {@code SpanRenderer#selectAnnotationsInWindow}
      */
     @Override
     public List<AnnotationBase> selectAnnotationsInWindow(CAS aCas, int aWindowBegin,

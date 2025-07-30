@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.editor.state;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.wicket.event.Broadcast.BREADTH;
@@ -54,8 +53,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs;
@@ -68,6 +65,7 @@ import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderSlotsEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerTypes;
 
 /**
  * Data model for annotation editors
@@ -438,7 +436,7 @@ public class AnnotatorStateImpl
         // Make sure the currently selected layer is actually visible/exists
         if (!annotationLayers.contains(selectedAnnotationLayer)) {
             selectedAnnotationLayer = annotationLayers.stream() //
-                    .filter(layer -> layer.getType().equals(SPAN_TYPE)) //
+                    .filter(layer -> layer.getType().equals(LayerTypes.SPAN_LAYER_TYPE)) //
                     .findFirst() //
                     .orElse(null);
             defaultAnnotationLayer = selectedAnnotationLayer;
@@ -466,8 +464,8 @@ public class AnnotatorStateImpl
                 continue;
             }
 
-            if (layer.getType().equals(SpanLayerSupport.TYPE)
-                    || layer.getType().equals(ChainLayerSupport.TYPE)) {
+            if (layer.getType().equals(LayerTypes.SPAN_LAYER_TYPE)
+                    || layer.getType().equals(LayerTypes.CHAIN_LAYER_TYPE)) {
                 selectableLayers.add(layer);
             }
         }

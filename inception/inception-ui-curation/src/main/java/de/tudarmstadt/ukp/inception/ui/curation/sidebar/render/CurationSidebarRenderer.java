@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar.render;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
-import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationRenderer.REL_EXTENSION_ID;
+import static de.tudarmstadt.ukp.inception.annotation.layer.span.SpanRenderer.REL_EXTENSION_ID;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;

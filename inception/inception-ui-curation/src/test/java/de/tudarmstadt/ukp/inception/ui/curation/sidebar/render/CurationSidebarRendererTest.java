@@ -61,8 +61,10 @@ import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSuppo
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistryImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -124,9 +126,9 @@ class CurationSidebarRendererTest
         layerBehaviorRegistry.init();
 
         layerSupportRegistry = new LayerSupportRegistryImpl(asList( //
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new SpanLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService), //
-                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new RelationLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService)));
         layerSupportRegistry.init();
 

@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.exporter.LearningRecordExporter;
 import de.tudarmstadt.ukp.inception.recommendation.exporter.RecommenderExporter;
 import de.tudarmstadt.ukp.inception.recommendation.footer.RecommendationEventFooterItem;
-import de.tudarmstadt.ukp.inception.recommendation.link.LinkSuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationAcceptedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationRejectedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderDeletedEventAdapter;
@@ -52,14 +51,12 @@ import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.metrics.RecommendationMetricsImpl;
 import de.tudarmstadt.ukp.inception.recommendation.project.ProjectRecommendersMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderProjectSettingsPanelFactory;
-import de.tudarmstadt.ukp.inception.recommendation.relation.RelationSuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommenderFactoryRegistryImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.SuggestionSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.recommendation.sidebar.RecommendationSidebarFactory;
 import de.tudarmstadt.ukp.inception.recommendation.sidebar.llm.InteractiveRecommenderSidebarFactory;
-import de.tudarmstadt.ukp.inception.recommendation.span.SpanSuggestionSupport;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
@@ -210,39 +207,6 @@ public class RecommenderServiceAutoConfiguration
             RecommendationService aRecommendationService)
     {
         return new RecommenderActionBarExtension(aRecommendationService);
-    }
-
-    @Bean
-    public SpanSuggestionSupport spanSuggestionSupport(RecommendationService aRecommendationService,
-            LearningRecordService aLearningRecordService,
-            ApplicationEventPublisher aApplicationEventPublisher,
-            AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry,
-            RecommenderProperties aRecommenderProperties)
-    {
-        return new SpanSuggestionSupport(aRecommendationService, aLearningRecordService,
-                aApplicationEventPublisher, aSchemaService, aFeatureSupportRegistry,
-                aRecommenderProperties);
-    }
-
-    @Bean
-    public RelationSuggestionSupport relationSuggestionSupport(
-            RecommendationService aRecommendationService,
-            LearningRecordService aLearningRecordService,
-            ApplicationEventPublisher aApplicationEventPublisher,
-            AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry)
-    {
-        return new RelationSuggestionSupport(aRecommendationService, aLearningRecordService,
-                aApplicationEventPublisher, aSchemaService, aFeatureSupportRegistry);
-    }
-
-    @Bean
-    public LinkSuggestionSupport linkSuggestionSupport(RecommendationService aRecommendationService,
-            LearningRecordService aLearningRecordService,
-            ApplicationEventPublisher aApplicationEventPublisher,
-            AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry)
-    {
-        return new LinkSuggestionSupport(aRecommendationService, aLearningRecordService,
-                aApplicationEventPublisher, aSchemaService, aFeatureSupportRegistry);
     }
 
     @Bean

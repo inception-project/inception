@@ -33,8 +33,8 @@ import org.wicketstuff.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.inception.annotation.feature.string.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.support.kendo.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.support.kendo.KendoStyleUtils;
 
 public class ReorderableTagAutoCompleteField

@@ -80,6 +80,7 @@ import jakarta.persistence.EntityManager;
 @SpringBootTest( //
         webEnvironment = RANDOM_PORT, //
         properties = { //
+                "recommender.enabled=false", //
                 "server.address=127.0.0.1", //
                 "spring.main.banner-mode=off", //
                 "assistant.enabled=true", //

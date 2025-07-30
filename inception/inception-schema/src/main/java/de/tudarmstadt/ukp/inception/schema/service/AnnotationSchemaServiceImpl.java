@@ -37,10 +37,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
-import static org.apache.uima.cas.impl.TypeSystemUtils.isIdentifier;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
-import static org.hibernate.annotations.QueryHints.CACHEABLE;
+import static org.apache.uima.util.TypeSystemUtil.isFeatureName;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -61,7 +60,6 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASImpl;
-import org.apache.uima.cas.impl.TypeSystemUtils;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.util.CasUtil;
@@ -631,7 +629,6 @@ public class AnnotationSchemaServiceImpl
         return entityManager.createQuery(query, AnnotationLayer.class) //
                 .setParameter("name", aName) //
                 .setParameter("project", aProject) //
-                .setHint(CACHEABLE, true) //
                 .getResultStream() //
                 .findFirst();
     }
@@ -747,7 +744,6 @@ public class AnnotationSchemaServiceImpl
 
         return entityManager.createQuery(query, AnnotationLayer.class)
                 .setParameter("project", aProject) //
-                .setHint(CACHEABLE, true) //
                 .getResultList();
     }
 
@@ -827,7 +823,6 @@ public class AnnotationSchemaServiceImpl
                 .setParameter("attachType", asList(aLayer.getName(), CAS.TYPE_NAME_ANNOTATION))
                 // Checking for project is necessary because type match is string-based
                 .setParameter("project", aLayer.getProject()) //
-                .setHint(CACHEABLE, true) //
                 .getResultList();
     }
 
@@ -842,7 +837,7 @@ public class AnnotationSchemaServiceImpl
                 "ORDER BY l.attachFeature.rank ASC, l.attachFeature.uiName ASC");
 
         return entityManager.createQuery(query, AnnotationFeature.class)
-                .setParameter("layer", aLayer).setHint(CACHEABLE, true) //
+                .setParameter("layer", aLayer) //
                 .getResultList();
     }
 
@@ -863,7 +858,7 @@ public class AnnotationSchemaServiceImpl
                 .orderBy(cb.asc(root.get(AnnotationFeature_.rank)),
                         cb.asc(root.get(AnnotationFeature_.uiName)));
 
-        return entityManager.createQuery(query).setHint(CACHEABLE, true).getResultList();
+        return entityManager.createQuery(query).getResultList();
     }
 
     @Override
@@ -891,7 +886,6 @@ public class AnnotationSchemaServiceImpl
                         cb.asc(root.get(AnnotationFeature_.uiName)));
 
         return entityManager.createQuery(query) //
-                .setHint(CACHEABLE, true) //
                 .getResultList();
     }
 
@@ -1269,7 +1263,7 @@ public class AnnotationSchemaServiceImpl
     public boolean upgradeCasIfRequired(CAS aCas, AnnotationDocument aAnnotationDocument)
         throws UIMAException, IOException
     {
-        return upgradeCasIfRequired(asList(aCas), aAnnotationDocument.getProject());
+        return upgradeCasIfRequired(asList(aCas), aAnnotationDocument.getDocument().getProject());
     }
 
     @Override
@@ -1759,7 +1753,7 @@ public class AnnotationSchemaServiceImpl
 
         // Checking if feature name doesn't start with a number or underscore
         // And only uses alphanumeric characters
-        if (!TypeSystemUtils.isIdentifier(name)) {
+        if (!isFeatureName(name)) {
             errors.add(new ValidationError("Invalid feature name [" + name
                     + "].  Feature names must start with a letter and consist only of letters, digits, or underscores."));
             return errors;
@@ -1816,7 +1810,7 @@ public class AnnotationSchemaServiceImpl
     {
         var tok = new StringTokenizer(name, NAMESPACE_SEPARATOR_AS_STRING, true);
         while (tok.hasMoreTokens()) {
-            if (!isIdentifier(tok.nextToken())) {
+            if (!isFeatureName(tok.nextToken())) {
                 return false;
             }
             if (tok.hasMoreTokens()) {

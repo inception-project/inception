@@ -47,7 +47,6 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -105,11 +104,11 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .collect(toList());
     }
 
-    @BeforeAll
-    public static void setUpOnce()
-    {
-        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
-    }
+    // @BeforeAll
+    // public static void setUpOnce()
+    // {
+    // System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
+    // }
 
     public void setUp(Reification reification) throws Exception
     {

@@ -79,6 +79,7 @@ import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguratio
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.config.RelationLayerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -112,6 +113,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
         excludeAutoConfiguration = LiquibaseAutoConfiguration.class, //
         showSql = false, //
         properties = { //
+                "recommender.enabled=false", //
                 "spring.main.banner-mode=off", //
                 "debug.cas-doctor.force-release-behavior=true", //
                 "document-import.run-cas-doctor-on-import=OFF" })
@@ -135,7 +137,8 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
         SearchServiceAutoConfiguration.class, //
         SchedulingServiceAutoConfiguration.class, //
         MtasDocumentIndexAutoConfiguration.class, //
-        KnowledgeBaseServiceAutoConfiguration.class })
+        KnowledgeBaseServiceAutoConfiguration.class, //
+        RelationLayerAutoConfiguration.class })
 class MtasDocumentIndexTest
 {
 

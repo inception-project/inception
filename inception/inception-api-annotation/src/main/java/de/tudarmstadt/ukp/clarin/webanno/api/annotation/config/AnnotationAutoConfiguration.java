@@ -37,8 +37,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderNotificationRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointFeatureSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.TokenAttachedSpanChangeListener;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemExtension;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemRegistry;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemRegistryImpl;
@@ -103,19 +101,6 @@ public class AnnotationAutoConfiguration
         return new UserPreferencesServiceImpl(aDefaultPreferences, aAnnotationService,
                 aRepositoryProperties, aColoringService, aAnnotationEditorProperties,
                 aPreferencesService, aUserService);
-    }
-
-    @Bean
-    public RelationEndpointFeatureSupport relationEndpointFeatureSupport()
-    {
-        return new RelationEndpointFeatureSupport();
-    }
-
-    @Bean
-    public TokenAttachedSpanChangeListener tokenAttachedSpanChangeListener(
-            AnnotationSchemaService aSchemaService)
-    {
-        return new TokenAttachedSpanChangeListener(aSchemaService);
     }
 
     @Bean

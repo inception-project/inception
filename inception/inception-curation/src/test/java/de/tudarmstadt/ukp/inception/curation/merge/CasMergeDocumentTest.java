@@ -22,6 +22,7 @@ import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.cas.CAS;
@@ -31,11 +32,13 @@ import org.apache.uima.jcas.cas.AnnotationBase;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
 
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerTraits;
 
+@Execution(CONCURRENT)
 class CasMergeDocumentTest
     extends CasMergeTestBase
 {

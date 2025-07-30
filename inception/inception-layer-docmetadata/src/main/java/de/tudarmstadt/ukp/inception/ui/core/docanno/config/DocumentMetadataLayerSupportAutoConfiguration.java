@@ -35,11 +35,12 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerType;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSingletonCreatingWatcher;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.recommendation.MetadataSuggestionSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSidebarFactory;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.undo.DocumentMetadataAnnotationActionUndoSupport;
 
 /**
  * Provides support for document-level annotations.
@@ -70,7 +71,7 @@ public class DocumentMetadataLayerSupportAutoConfiguration
             DocumentMetadataLayerSupportProperties aProperties,
             LayerBehaviorRegistry aLayerBehaviorRegistry, ConstraintsService aConstraintsService)
     {
-        return new DocumentMetadataLayerSupport(aFeatureSupportRegistry, aEventPublisher,
+        return new DocumentMetadataLayerSupportImpl(aFeatureSupportRegistry, aEventPublisher,
                 aProperties, aLayerBehaviorRegistry, aConstraintsService);
     }
 
