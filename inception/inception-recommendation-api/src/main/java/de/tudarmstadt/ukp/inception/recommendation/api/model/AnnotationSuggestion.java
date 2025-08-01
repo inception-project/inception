@@ -82,10 +82,11 @@ public abstract class AnnotationSuggestion
     protected final long documentId;
     protected final String label;
     protected final String uiLabel;
-    protected final double score;
-    protected final String scoreExplanation;
-    protected final boolean correction;
-    protected final String correctionExplanation;
+
+    protected double score;
+    protected String scoreExplanation;
+    protected boolean correction;
+    protected String correctionExplanation;
 
     private AutoAcceptMode autoAcceptMode;
     private int hidingFlags = 0;
@@ -157,14 +158,44 @@ public abstract class AnnotationSuggestion
         return score;
     }
 
+    public void setScore(double aScore)
+    {
+        score = aScore;
+    }
+
     public Optional<String> getScoreExplanation()
     {
         return Optional.ofNullable(scoreExplanation);
     }
 
+    public void setScoreExplanation(String aScoreExplanation)
+    {
+        scoreExplanation = aScoreExplanation;
+    }
+
+    /**
+     * @return whether the suggestion is a correction suggestion for an existing annotation.
+     *         Corrections should not be hidden for overlap with an existing annotation unless the
+     *         label matches.
+     */
+    public boolean isCorrection()
+    {
+        return correction;
+    }
+
+    public void setCorrection(boolean aCorrection)
+    {
+        correction = aCorrection;
+    }
+
     public Optional<String> getCorrectionExplanation()
     {
         return Optional.ofNullable(correctionExplanation);
+    }
+
+    public void setCorrectionExplanation(String aCorrectionExplanation)
+    {
+        correctionExplanation = aCorrectionExplanation;
     }
 
     public long getRecommenderId()
@@ -219,16 +250,6 @@ public abstract class AnnotationSuggestion
     public boolean isVisible()
     {
         return hidingFlags == 0;
-    }
-
-    /**
-     * @return whether the suggestion is a correction suggestion for an existing annotation.
-     *         Corrections should not be hidden for overlap with an existing annotation unless the
-     *         label matches.
-     */
-    public boolean isCorrection()
-    {
-        return correction;
     }
 
     public AutoAcceptMode getAutoAcceptMode()
@@ -325,6 +346,16 @@ public abstract class AnnotationSuggestion
     public int getAge()
     {
         return age;
+    }
+
+    public AnnotationSuggestion reconcileWith(AnnotationSuggestion aNewSuggestion)
+    {
+        incrementAge();
+        setScore(aNewSuggestion.getScore());
+        aNewSuggestion.getScoreExplanation().ifPresent(this::setScoreExplanation);
+        setCorrection(aNewSuggestion.isCorrection());
+        aNewSuggestion.getCorrectionExplanation().ifPresent(this::setCorrectionExplanation);
+        return this;
     }
 
     /**

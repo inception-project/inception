@@ -721,7 +721,7 @@ public class PredictionTask
 
             var existingSuggestion = existingSuggestions.get(0);
             if (!reconciledSuggestions.contains(existingSuggestion)) {
-                existingSuggestion.incrementAge();
+                existingSuggestion.reconcileWith(newSuggestion);
                 agedSuggestionsCount++;
                 reconciledSuggestions.add(existingSuggestion);
             }
