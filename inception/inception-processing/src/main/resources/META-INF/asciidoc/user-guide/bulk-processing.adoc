@@ -1,0 +1,56 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_bulk_processing]]
+= Bulk Processing
+
+Bulk processing allows to perform operations across multiple documents in a single step.
+
+On this page, you can see a list of the bulk processing tasks that are available.
+When you click on a task, a dialog opens that allows you to configure the task and start it.
+In the sidebar on the right, you can see the status of the currently running tasks and completed tasks.
+
+== Extract Tag Set
+
+This tasks collects the labels from a specific string feature across all documents in the project and creates a tag set from them.
+You can either add the tags to an existing tag set or create a new one.
+
+== 🧪 Bulk Curation
+
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `bulk-processing.process.auto-curation.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+This process is still experimental and may not work as expected in all cases. 
+*It may override already curated documents.*
+It is strongly recommended to test this process on a copy of your project first.
+====
+
+
+The curation of a document starts with a curator opens the document on the curation page.
+At that point, an initial merge of the annotations done by the annotators is performed and the curation document is created.
+That means, a human curator would have to go over all the documents once to create the curation document, even if the annotators may all agree on the annotations.
+Using the bulk curation task, you can create the curation documents for all documents in a project in one step.
+If the annotators agree on the annotations, the process will already mark the documents as curated,leaving only those documents that have conflicting annotations for the curator to resolve.
+
+== 🧪 Apply Recommender
+
+====
+CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `bulk-processing.process.apply-recommender.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+====
+
+Recommenders are normally an interactive feature.
+The recommender generates annotation suggestions as the user is working on a document.
+However, in some cases, it may be useful to apply the recommender to all documents in a project.
+This task allows you to do that.

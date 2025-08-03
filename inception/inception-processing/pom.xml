@@ -112,6 +112,11 @@
       <artifactId>inception-documents-api</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-support-bootstrap</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.wicket</groupId>
@@ -128,6 +133,10 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-request</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-extensions</artifactId>
     </dependency>
     <dependency>
       <groupId>de.agilecoders.wicket</groupId>
