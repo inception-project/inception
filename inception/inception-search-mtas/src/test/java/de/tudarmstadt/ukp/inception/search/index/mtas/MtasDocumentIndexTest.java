@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -30,12 +32,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
+import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -77,6 +79,7 @@ import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguratio
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
@@ -192,11 +195,15 @@ class MtasDocumentIndexTest
     private final void uploadAndIndexDocument(Pair<SourceDocument, String>... aDocuments)
         throws Exception
     {
-        Project project = null;
-        try (var casStorageSession = CasStorageSession.open()) {
-            for (Pair<SourceDocument, String> doc : aDocuments) {
+        if (aDocuments == null || aDocuments.length == 0) {
+            throw new IllegalArgumentException("At least one document must be provided");
+        }
+
+        var project = aDocuments[0].getLeft().getProject();
+
+        try (var session = CasStorageSession.open()) {
+            for (var doc : aDocuments) {
                 LOG.info("Uploading document via documentService.uploadSourceDocument: {}", doc);
-                project = doc.getLeft().getProject();
 
                 try (var fileStream = new ByteArrayInputStream(doc.getRight().getBytes(UTF_8))) {
                     documentService.uploadSourceDocument(fileStream, doc.getLeft());
@@ -204,14 +211,12 @@ class MtasDocumentIndexTest
             }
         }
 
-        // Avoid the compiler complaining about project not being an effectively final variable
         LOG.info("Waiting for uploaded documents to be indexed...");
-        var p = project;
         await("Waiting for indexing process to complete") //
                 .atMost(60, SECONDS) //
-                .pollInterval(200, TimeUnit.MILLISECONDS) //
-                .until(() -> searchService.isIndexValid(p)
-                        && searchService.getIndexProgress(p).isEmpty());
+                .pollInterval(200, MILLISECONDS) //
+                .until(() -> searchService.isIndexValid(project)
+                        && searchService.getIndexProgress(project).isEmpty());
         LOG.info("Indexing complete!");
     }
 
@@ -221,7 +226,10 @@ class MtasDocumentIndexTest
         LOG.info("Preparing annotated document....");
 
         // Manually build annotated CAS
-        var jCas = JCasFactory.createJCas();
+        var internalTsd = CasMetadataUtils.getInternalTypeSystem();
+        var globalTsd = TypeSystemDescriptionFactory.createTypeSystemDescription();
+        var tsd = CasCreationUtils.mergeTypeSystems(asList(globalTsd, internalTsd));
+        var jCas = JCasFactory.createJCas(tsd);
 
         var builder = new JCasBuilder(jCas);
 
@@ -256,7 +264,7 @@ class MtasDocumentIndexTest
                 aUser);
 
         // Write annotated CAS to annotated document
-        try (CasStorageSession casStorageSession = CasStorageSession.open()) {
+        try (var casStorageSession = CasStorageSession.open()) {
             LOG.info("Writing annotated document using documentService.writeAnnotationCas");
             documentService.writeAnnotationCas(jCas.getCas(), annotationDocument);
         }
@@ -264,20 +272,22 @@ class MtasDocumentIndexTest
         LOG.info("Writing for annotated document to be indexed");
         await("Waiting for indexing process to complete") //
                 .atMost(60, SECONDS) //
-                .pollInterval(200, TimeUnit.MILLISECONDS) //
+                .pollInterval(200, MILLISECONDS) //
                 .until(() -> searchService.isIndexValid(aProject)
                         && searchService.getIndexProgress(aProject).isEmpty());
         LOG.info("Indexing complete!");
     }
 
-    public void annotateDocumentAdvanced(Project aProject, User aUser,
-            SourceDocument aSourceDocument)
+    void annotateDocumentAdvanced(Project aProject, User aUser, SourceDocument aSourceDocument)
         throws Exception
     {
         LOG.info("Preparing annotated document....");
 
         // Manually build annotated CAS
-        var jCas = JCasFactory.createJCas();
+        var internalTsd = CasMetadataUtils.getInternalTypeSystem();
+        var globalTsd = TypeSystemDescriptionFactory.createTypeSystemDescription();
+        var tsd = CasCreationUtils.mergeTypeSystems(asList(globalTsd, internalTsd));
+        var jCas = JCasFactory.createJCas(tsd);
 
         var builder = new JCasBuilder(jCas);
 
@@ -330,14 +340,14 @@ class MtasDocumentIndexTest
         LOG.info("Writing for annotated document to be indexed");
         await("Waiting for indexing process to complete") //
                 .atMost(60, SECONDS) //
-                .pollInterval(200, TimeUnit.MILLISECONDS) //
+                .pollInterval(200, MILLISECONDS) //
                 .until(() -> searchService.isIndexValid(aProject)
                         && searchService.getIndexProgress(aProject).isEmpty());
         LOG.info("Indexing complete!");
     }
 
     @Test
-    public void testRawTextQuery() throws Exception
+    void testRawTextQuery() throws Exception
     {
         var project = new Project("raw-text-query");
 
@@ -370,7 +380,7 @@ class MtasDocumentIndexTest
     }
 
     @Test
-    public void thatLastTokenInDocumentCanBeFound() throws Exception
+    void thatLastTokenInDocumentCanBeFound() throws Exception
     {
         var project = new Project("last-token-in-document-can-be-found");
 
@@ -407,7 +417,7 @@ class MtasDocumentIndexTest
     }
 
     @Test
-    public void testLimitQueryToDocument() throws Exception
+    void testLimitQueryToDocument() throws Exception
     {
         var project = new Project("limit-query-to-document");
 
@@ -458,20 +468,18 @@ class MtasDocumentIndexTest
     }
 
     @Test
-    public void testSimplifiedTokenTextQuery() throws Exception
+    void testSimplifiedTokenTextQuery() throws Exception
     {
         var project = new Project("simplified-token-text-query");
 
         createProject(project);
 
-        var sourceDocument = new SourceDocument();
-
-        sourceDocument.setName("Raw text document");
-        sourceDocument.setProject(project);
-        sourceDocument.setFormat("text");
-
+        var sourceDocument = SourceDocument.builder() //
+                .withName("Raw text document") //
+                .withProject(project) //
+                .withFormat("text") // v
+                .build();
         var fileContent = "The capital of Galicia is Santiago de Compostela.";
-
         uploadAndIndexDocument(Pair.of(sourceDocument, fileContent));
 
         var query = "\"galicia\"";
@@ -495,7 +503,7 @@ class MtasDocumentIndexTest
     }
 
     @Test
-    public void testAnnotationQuery() throws Exception
+    void testAnnotationQuery() throws Exception
     {
         var project = new Project("annotation-query");
 
@@ -530,20 +538,55 @@ class MtasDocumentIndexTest
     }
 
     @Test
-    public void testAnnotationQueryRegex() throws Exception
+    void testAnnotationQueryRegex() throws Exception
     {
-        Project project = new Project("annotation-query-regex");
+        var project = new Project("annotation-query-regex");
 
         createProject(project);
 
-        SourceDocument sourceDocument = new SourceDocument("Annotation document", project, "text");
+        var sourceDocument = new SourceDocument("Annotation document", project, "text");
 
-        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+        var fileContent = "The capital of Galicia is Santiago de Compostela.";
 
         uploadAndIndexDocument(Pair.of(sourceDocument, fileContent));
         annotateDocument(project, user, sourceDocument);
 
-        String query = "<Named_entity=\".*\"/>";
+        var query = "<Named_entity=\".*\"/>";
+
+        var results = searchService.query(user, project, query);
+
+        // Test results
+        var expectedResult = new SearchResult();
+        expectedResult.setDocumentId(sourceDocument.getId());
+        expectedResult.setDocumentTitle("Annotation document");
+        // When searching for an annotation, we don't get the matching
+        // text back... not sure why...
+        expectedResult.setText("");
+        expectedResult.setLeftContext("");
+        expectedResult.setRightContext("");
+        expectedResult.setOffsetStart(15);
+        expectedResult.setOffsetEnd(22);
+        expectedResult.setTokenStart(3);
+        expectedResult.setTokenLength(1);
+
+        assertThat(results).containsExactly(expectedResult);
+    }
+
+    @Test
+    void testAnnotationQueryMultiTokenWithoutConditions() throws Exception
+    {
+        var project = new Project("annotation-query-multi-token-no-cond");
+
+        createProject(project);
+
+        var sourceDocument = new SourceDocument("Annotation document", project, "text");
+
+        var fileContent = "The capital of Galicia is Santiago de Compostela.";
+
+        uploadAndIndexDocument(Pair.of(sourceDocument, fileContent));
+        annotateDocument(project, user, sourceDocument);
+
+        var query = "<Named_entity/>";
 
         List<SearchResult> results = searchService.query(user, project, query);
 
@@ -565,69 +608,26 @@ class MtasDocumentIndexTest
     }
 
     @Test
-    public void testAnnotationQueryMultiTokenWithoutConditions() throws Exception
+    void testKeepResultsOrdering() throws Exception
     {
-        Project project = new Project("annotation-query-multi-token-no-cond");
+        var project = new Project("keep-results-ordering");
 
         createProject(project);
 
-        SourceDocument sourceDocument = new SourceDocument("Annotation document", project, "text");
-
-        String fileContent = "The capital of Galicia is Santiago de Compostela.";
-
-        uploadAndIndexDocument(Pair.of(sourceDocument, fileContent));
-        annotateDocument(project, user, sourceDocument);
-
-        String query = "<Named_entity/>";
-
-        List<SearchResult> results = searchService.query(user, project, query);
-
-        // Test results
-        SearchResult expectedResult = new SearchResult();
-        expectedResult.setDocumentId(sourceDocument.getId());
-        expectedResult.setDocumentTitle("Annotation document");
-        // When searching for an annotation, we don't get the matching
-        // text back... not sure why...
-        expectedResult.setText("");
-        expectedResult.setLeftContext("");
-        expectedResult.setRightContext("");
-        expectedResult.setOffsetStart(15);
-        expectedResult.setOffsetEnd(22);
-        expectedResult.setTokenStart(3);
-        expectedResult.setTokenLength(1);
-
-        assertThat(results).containsExactly(expectedResult);
-    }
-
-    @Test
-    public void testKeepResultsOrdering() throws Exception
-    {
-        Project project = new Project("keep-results-ordering");
-
-        createProject(project);
-
-        SourceDocument sourceDocument1 = new SourceDocument("Annotation document 1", project,
-                "text");
-
-        String fileContent1 = "The capital of Galicia is Santiago de Compostela.";
-
+        var sourceDocument1 = new SourceDocument("Annotation document 1", project, "text");
+        var fileContent1 = "The capital of Galicia is Santiago de Compostela.";
         uploadAndIndexDocument(Pair.of(sourceDocument1, fileContent1));
         annotateDocument(project, user, sourceDocument1);
 
-        SourceDocument sourceDocument2 = new SourceDocument("Annotation document 2", project,
-                "text");
-
-        String fileContent2 = "The capital of Galicia is Santiago de Compostela.";
-
+        var sourceDocument2 = new SourceDocument("Annotation document 2", project, "text");
+        var fileContent2 = "The capital of Galicia is Santiago de Compostela.";
         uploadAndIndexDocument(Pair.of(sourceDocument2, fileContent2));
         annotateDocument(project, user, sourceDocument2);
 
-        String query = "<Named_entity.value=\"LOC\"/>";
-
+        var query = "<Named_entity.value=\"LOC\"/>";
         annotateDocument(project, user, sourceDocument1);
 
         var resultsBefore = searchService.query(user, project, query, null, null, null, 0, 10);
-
         annotateDocument(project, user, sourceDocument1);
 
         var resultsAfter = searchService.query(user, project, query, null, null, null, 0, 10);
@@ -641,60 +641,60 @@ class MtasDocumentIndexTest
 
     @Disabled("This test is flaky, but I do not know why - maybe some race condition in the indexing")
     @Test
-    public void testStatistics() throws Exception
+    void testStatistics() throws Exception
     {
         // Create sample project with two documents
-        Project project = new Project("statistics");
+        var project = new Project("statistics");
 
         createProject(project);
 
-        SourceDocument sourceDocument = new SourceDocument("Annotation document", project, "text");
+        var sourceDocument = new SourceDocument("Annotation document", project, "text");
 
-        String sourceContent = "The capital of Galicia is Santiago de Compostela.";
+        var sourceContent = "The capital of Galicia is Santiago de Compostela.";
 
         uploadAndIndexDocument(Pair.of(sourceDocument, sourceContent));
         annotateDocumentAdvanced(project, user, sourceDocument);
 
-        SourceDocument otherDocument = new SourceDocument("Other document", project, "text");
+        var otherDocument = new SourceDocument("Other document", project, "text");
 
-        String otherContent = "Goodbye moon. Hello World.";
+        var otherContent = "Goodbye moon. Hello World.";
         uploadAndIndexDocument(Pair.of(otherDocument, otherContent));
 
         // Define input for the statistics methods
-        int minTokenPerDoc = Integer.MIN_VALUE;
-        int maxTokenPerDoc = Integer.MAX_VALUE;
+        var minTokenPerDoc = Integer.MIN_VALUE;
+        var maxTokenPerDoc = Integer.MAX_VALUE;
 
-        AnnotationLayer ne = new AnnotationLayer();
+        var ne = new AnnotationLayer();
         ne.setUiName("Named entity");
-        AnnotationFeature value = new AnnotationFeature();
+        var value = new AnnotationFeature();
         value.setUiName("value");
         value.setLayer(ne);
-        Set<AnnotationFeature> features = new HashSet<AnnotationFeature>();
+        var features = new HashSet<AnnotationFeature>();
         features.add(value);
 
-        AnnotationLayer raw = new AnnotationLayer();
+        var raw = new AnnotationLayer();
         raw.setUiName("Segmentation");
-        AnnotationFeature sent = new AnnotationFeature();
+        var sent = new AnnotationFeature();
         sent.setUiName("sentence");
         sent.setLayer(raw);
-        AnnotationFeature token = new AnnotationFeature();
+        var token = new AnnotationFeature();
         token.setUiName("token");
         token.setLayer(raw);
 
         // Check layer-based statistics
-        StatisticsResult statsResults = searchService.getProjectStatistics(user, project,
-                minTokenPerDoc, maxTokenPerDoc, features);
+        var statsResults = searchService.getProjectStatistics(user, project, minTokenPerDoc,
+                maxTokenPerDoc, features);
 
         Map<String, LayerStatistics> expectedResults = new HashMap<String, LayerStatistics>();
 
-        LayerStatistics expectedNamedEntity = new LayerStatistics(2.0, 2.0, 0.0, 1.0, 1.0,
-                Math.pow(2, 0.5), 2.0, 2.0, 0.0, 1.0, 1.0, Math.pow(2, 0.5), 2.0);
+        var expectedNamedEntity = new LayerStatistics(2.0, 2.0, 0.0, 1.0, 1.0, Math.pow(2, 0.5),
+                2.0, 2.0, 0.0, 1.0, 1.0, Math.pow(2, 0.5), 2.0);
         expectedNamedEntity.setFeature(value);
-        LayerStatistics expectedToken = new LayerStatistics(15.0, 9.0, 6.0, 7.5, 7.5,
-                Math.pow(4.5, 0.5), 12.0, 9.0, 3.0, 6.0, 6.0, Math.pow(18, 0.5), 2.0);
+        var expectedToken = new LayerStatistics(15.0, 9.0, 6.0, 7.5, 7.5, Math.pow(4.5, 0.5), 12.0,
+                9.0, 3.0, 6.0, 6.0, Math.pow(18, 0.5), 2.0);
         expectedToken.setFeature(token);
-        LayerStatistics expectedSentence = new LayerStatistics(3.0, 2.0, 1.0, 1.5, 1.5,
-                Math.pow(0.5, 0.5), 2.0, 1.0, 1.0, 1.0, 1.0, 0.0, 2.0);
+        var expectedSentence = new LayerStatistics(3.0, 2.0, 1.0, 1.5, 1.5, Math.pow(0.5, 0.5), 2.0,
+                1.0, 1.0, 1.0, 1.0, 0.0, 2.0);
         expectedSentence.setFeature(sent);
 
         expectedResults.put("Named entity.value", expectedNamedEntity);
@@ -713,10 +713,10 @@ class MtasDocumentIndexTest
         StatisticsResult queryStatsResults = searchService.getQueryStatistics(user, project, query,
                 minTokenPerDoc, maxTokenPerDoc, features);
 
-        Map<String, LayerStatistics> expected = new HashMap<String, LayerStatistics>();
+        var expected = new HashMap<String, LayerStatistics>();
 
-        LayerStatistics expectedSearch = new LayerStatistics(1.0, 1.0, 0.0, 0.5, 0.5,
-                Math.pow(0.5, 0.5), 0.5, 0.5, 0.0, 0.25, 0.25, Math.pow(0.125, 0.5), 2.0);
+        var expectedSearch = new LayerStatistics(1.0, 1.0, 0.0, 0.5, 0.5, Math.pow(0.5, 0.5), 0.5,
+                0.5, 0.0, 0.25, 0.25, Math.pow(0.125, 0.5), 2.0);
         expectedSearch.setQuery("moon");
         expected.put("query.moon", expectedSearch);
 
