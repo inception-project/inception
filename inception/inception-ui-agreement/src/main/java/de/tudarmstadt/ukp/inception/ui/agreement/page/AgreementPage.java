@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporter.EXT_CSV;
+import static de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporter.EXT_JSON;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.LAST_USER_SESSION;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
@@ -41,6 +43,7 @@ import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.Component;
@@ -78,7 +81,6 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePairwiseAgreeme
 import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePerDocumentAgreementTask;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -88,9 +90,10 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.project.users.ProjectUserPermissionC
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporter;
+import de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporterRegistry;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -115,12 +118,13 @@ public class AgreementPage
 
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
-    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean AnnotationSchemaService schemaService;
     private @SpringBean UserDao userRepository;
     private @SpringBean AgreementMeasureSupportRegistry agreementRegistry;
     private @SpringBean SchedulingService schedulingService;
     private @SpringBean RepositoryProperties repositoryProperties;
     private @SpringBean AgreementService agreementService;
+    private @SpringBean CrossDocumentExporterRegistry crossDocumentExporterRegistry;
 
     private Form<AgreementFormModel> form;
     private WebMarkupContainer resultsContainer;
@@ -213,12 +217,12 @@ public class AgreementPage
 
         exportJsonButton = new LambdaAjaxButton<>("exportJson", this::actionExportJson);
         exportJsonButton.triggerAfterSubmit();
-        exportJsonButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
+        exportJsonButton.add(enabledWhen(() -> featureList.getModelObject() != null));
         queue(exportJsonButton);
 
         exportCsvButton = new LambdaAjaxButton<>("exportCsv", this::actionExportCsv);
         exportCsvButton.triggerAfterSubmit();
-        exportCsvButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
+        exportCsvButton.add(enabledWhen(() -> featureList.getModelObject() != null));
         queue(exportCsvButton);
 
         if (featureList.getChoices().size() == 1) {
@@ -230,6 +234,11 @@ public class AgreementPage
 
     private void preselectBestAgreementMeasures()
     {
+        if (measureDropDown.getChoices().isEmpty()) {
+            measureDropDown.setModelObject(null);
+            return;
+        }
+
         // If possible use Krippendorff Alpha
         measureDropDown.getChoices().stream() //
                 .filter(p -> p.getKey().equals(KrippendorffAlphaAgreementMeasureSupport.ID))
@@ -407,86 +416,80 @@ public class AgreementPage
 
     private void actionExportJson(AjaxRequestTarget aTarget, Form<AgreementFormModel> aForm)
     {
-        var model = aForm.getModelObject();
-        var feature = model.layerAndFeature.getValue();
-        var layer = feature == null ? model.layerAndFeature.getKey() : feature.getLayer();
-
-        if (!SpanLayerSupport.TYPE.equals(layer.getType())) {
-            warn("Curently only supported for span layers");
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return;
-        }
-
-        var project = getProject();
-        var annotators = getAnnotators(model);
-        var selectedDocuments = model.documents;
-        var traits = getTraits();
-
-        var filename = project.getSlug() + "-" + layer.getName();
-        if (feature != null) {
-            filename += "-" + feature.getName();
-        }
-        filename += ".json";
-
-        downloadBehavior.initiate(aTarget, filename, new PipedStreamResource(os -> {
-            // PipedStreamResource runs the lambda in a separate thread, so we need to make
-            // sure the MDC is correctly set up here.
-            var sessionOwner = userRepository.getCurrentUser();
-            try (var ctx = new DefaultMdcSetup(repositoryProperties, project, sessionOwner)) {
-                agreementService.exportSpanLayerDataAsJson(os, layer, feature, traits,
-                        selectedDocuments, annotators);
-            }
-            catch (Exception e) {
-                os.write("Unexpected error during export, see log for details.".getBytes(UTF_8));
-                LOG.error("Unexpected error while exporting diff", e);
-            }
-        }, MediaType.APPLICATION_JSON));
+        initiateExport(aTarget, aForm, exp -> EXT_JSON.equals(exp.getFileExtension()));
     }
 
     private void actionExportCsv(AjaxRequestTarget aTarget, Form<AgreementFormModel> aForm)
     {
+        initiateExport(aTarget, aForm, exp -> EXT_CSV.equals(exp.getFileExtension()));
+    }
+
+    private void initiateExport(AjaxRequestTarget aTarget, Form<AgreementFormModel> aForm,
+            Predicate<CrossDocumentExporter> selector)
+    {
         var model = aForm.getModelObject();
         var feature = model.layerAndFeature.getValue();
         var layer = feature == null ? model.layerAndFeature.getKey() : feature.getLayer();
 
-        if (!SpanLayerSupport.TYPE.equals(layer.getType())) {
-            warn("Curently only supported for span layers");
+        var maybeExporter = crossDocumentExporterRegistry.getExtensions(layer, feature).stream() //
+                .filter(selector) //
+                .findFirst();
+
+        if (!maybeExporter.isPresent()) {
+            warn("No exporter available for layer / feature of type [" + layer.getType() + "] / ["
+                    + (feature != null ? feature.getType() : "<position>") + "]");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
 
-        var project = getProject();
         var annotators = getAnnotators(model);
         var selectedDocuments = model.documents;
+        var exporter = maybeExporter.get();
+        var filename = getLayerExportFilename(layer, feature, exporter.getFileExtension());
+        var mediaType = exporter.getMediaType();
         var traits = getTraits();
+        var exporterId = exporter.getId();
 
-        var filename = project.getSlug() + "-" + layer.getName();
-        if (feature != null) {
-            filename += "-" + feature.getName();
-        }
-        filename += ".csv";
+        var exportResource = new PipedStreamResource(os -> performExport(os, exporterId, layer,
+                feature, selectedDocuments, annotators, traits), mediaType);
 
-        downloadBehavior.initiate(aTarget, filename, new PipedStreamResource(
-                os -> exportCsv(os, project, layer, feature, traits, annotators, selectedDocuments),
-                MediaType.valueOf("text/csv")));
+        downloadBehavior.initiate(aTarget, filename, exportResource);
     }
 
-    private void exportCsv(OutputStream aOut, Project aProject, AnnotationLayer aLayer,
-            AnnotationFeature aFeature, DefaultAgreementTraits aTraits, List<String> aAnnotators,
-            List<SourceDocument> aSelectedDocuments)
+    private void performExport(OutputStream aOut, String aExporterId, AnnotationLayer aLayer,
+            AnnotationFeature aFeature, List<SourceDocument> aSelectedDocuments,
+            List<String> aAnnotators, DefaultAgreementTraits aTraits)
         throws IOException
     {
+        // Exporter is not serializable (and should not be), so we just pass the ID
+        // and fetch the exporter again here.
+        var exporter = crossDocumentExporterRegistry.getExtension(aExporterId).get();
+
         // PipedStreamResource runs the lambda in a separate thread, so we need to make
         // sure the MDC is correctly set up here.
+        var project = aLayer.getProject();
         var sessionOwner = userRepository.getCurrentUser();
-        try (var ctx = new DefaultMdcSetup(repositoryProperties, aProject, sessionOwner)) {
-            agreementService.exportSpanLayerDataAsCsv(aOut, aLayer, aFeature, aTraits,
-                    aSelectedDocuments, aAnnotators);
+        try (var ctx = new DefaultMdcSetup(repositoryProperties, project, sessionOwner)) {
+            var allAnnDocs = agreementService.getDocumentsToEvaluate(project, aSelectedDocuments,
+                    aTraits);
+            exporter.export(aOut, aLayer, aFeature, allAnnDocs, aAnnotators);
         }
         catch (Exception e) {
             aOut.write("Unexpected error during export, see log for details.".getBytes(UTF_8));
             LOG.error("Unexpected error while exporting diff", e);
         }
+    }
+
+    private String getLayerExportFilename(AnnotationLayer aLayer, AnnotationFeature aFeature,
+            String aSuffix)
+    {
+        var project = aLayer.getProject();
+        var filename = project.getSlug() + "-" + aLayer.getName();
+        if (aFeature != null) {
+            filename += "-" + aFeature.getName();
+        }
+        filename += aSuffix;
+        return filename;
     }
 
     private void actionCalculatePairwiseAgreement(AjaxRequestTarget aTarget,
@@ -640,11 +643,10 @@ public class AgreementPage
         var result = new ArrayList<Pair<AnnotationLayer, AnnotationFeature>>();
 
         // Collect layers (even without features)
-        var layers = annotationService.listEnabledLayers(getProject());
+        var layers = schemaService.listEnabledLayers(getProject());
         for (var layer : layers) {
             if (Token._TypeName.equals(layer.getName())
-                    || Sentence._TypeName.equals(layer.getName())
-                    || ChainLayerSupport.TYPE.equals(layer.getType())) {
+                    || Sentence._TypeName.equals(layer.getName())) {
                 continue;
             }
 
@@ -652,12 +654,15 @@ public class AgreementPage
         }
 
         // Now collect the features
-        var groupedFeatures = annotationService.listEnabledFeatures(getProject()).stream()
+        var groupedFeatures = schemaService.listEnabledFeatures(getProject()).stream()
                 .collect(groupingBy(AnnotationFeature::getLayer));
         for (var entry : groupedFeatures.entrySet()) {
             var layer = entry.getKey();
             var features = entry.getValue();
 
+            // We don't need chain layers here atm since they do not support custom
+            // features, in the CSV/JSON export, both built-in features are always
+            // included and in the pairwise agreement, they are not supported yet.
             if (Token._TypeName.equals(layer.getName())
                     || Sentence._TypeName.equals(layer.getName())
                     || ChainLayerSupport.TYPE.equals(layer.getType())) {
@@ -710,6 +715,11 @@ public class AgreementPage
 
     private DefaultAgreementTraits getTraits()
     {
+        var traitsPanel = traitsContainer.get(MID_TRAITS);
+        if (traitsPanel instanceof EmptyPanel) {
+            return new DefaultAgreementTraits();
+        }
+
         return (DefaultAgreementTraits) traitsContainer.get(MID_TRAITS).getDefaultModelObject();
     }
 

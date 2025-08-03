@@ -15,40 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.agreement;
+package de.tudarmstadt.ukp.inception.documents.api.export;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
+import org.springframework.http.MediaType;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
 
-public interface AgreementService
+public interface CrossDocumentExporter
 {
-    Map<SourceDocument, List<AnnotationDocument>> getDocumentsToEvaluate(Project aProject,
-            List<SourceDocument> aDocuments, DefaultAgreementTraits aTraits);
+    static final String EXT_CSV = ".csv";
+    static final String EXT_JSON = ".json";
 
     /**
-     * 
-     * @param aOut
-     *            target stream
-     * @param aLayer
-     *            the layer to diff.
-     * @param aFeature
-     *            the feature to diff. If this is null, then the diff is only based on positions.
-     * @param aTraits
-     *            the diff settings
-     * @param aDocuments
-     *            the documents to diff
-     * @param aAnnotators
-     *            the annotators to diff
+     * @return identifier for the extension unique within the respective
+     *         {@link ExtensionPoint_ImplBase}.
      */
-    void exportDiff(OutputStream aOut, AnnotationLayer aLayer, AnnotationFeature aFeature,
-            DefaultAgreementTraits aTraits, List<SourceDocument> aDocuments,
-            List<String> aAnnotators);
+    String getId();
+
+    boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature);
+
+    void export(OutputStream aOut, AnnotationLayer aLayer, AnnotationFeature aFeature,
+            Map<SourceDocument, List<AnnotationDocument>> aAllAnnDocs, List<String> aAnnotators)
+        throws IOException;
+
+    String getFileExtension();
+
+    MediaType getMediaType();
 }

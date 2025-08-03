@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.chain;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isSame;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
@@ -94,6 +92,7 @@ public class ChainAdapterImpl
         }
     }
 
+    @Override
     public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
     {
         var request = aRequest;
@@ -505,7 +504,7 @@ public class ChainAdapterImpl
     {
         var relationFeature = new AnnotationFeature();
         relationFeature.setType(CAS.TYPE_NAME_STRING);
-        relationFeature.setName(COREFERENCE_RELATION_FEATURE);
+        relationFeature.setName(ARC_LABEL_FEATURE);
         relationFeature.setLayer(getLayer());
         relationFeature.setEnabled(true);
         relationFeature.setUiName("Reference Relation");
@@ -515,7 +514,7 @@ public class ChainAdapterImpl
 
         var typeFeature = new AnnotationFeature();
         typeFeature.setType(CAS.TYPE_NAME_STRING);
-        typeFeature.setName(COREFERENCE_TYPE_FEATURE);
+        typeFeature.setName(SPAN_LABEL_FEATURE);
         typeFeature.setLayer(getLayer());
         typeFeature.setEnabled(true);
         typeFeature.setUiName("Reference Type");
@@ -552,6 +551,7 @@ public class ChainAdapterImpl
         return selection;
     }
 
+    @Override
     public Selection selectSpan(AnnotationFS aAnno)
     {
         var selection = new Selection();
@@ -559,6 +559,7 @@ public class ChainAdapterImpl
         return selection;
     }
 
+    @Override
     public Selection selectLink(AnnotationFS aAnno)
     {
         var selection = new Selection();

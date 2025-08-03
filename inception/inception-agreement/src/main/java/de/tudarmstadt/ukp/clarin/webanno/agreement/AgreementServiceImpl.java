@@ -50,16 +50,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.core.JsonFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
@@ -72,7 +68,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
@@ -124,114 +119,6 @@ public class AgreementServiceImpl
         }
 
         return allAnnDocs;
-    }
-
-    @Override
-    public void exportSpanLayerDataAsJson(OutputStream aOut, AnnotationLayer aLayer,
-            AnnotationFeature aFeature, DefaultAgreementTraits aTraits,
-            List<SourceDocument> aDocuments, List<String> aAnnotators)
-        throws IOException
-    {
-        if (!SpanLayerSupport.TYPE.equals(aLayer.getType())) {
-            throw new IllegalArgumentException(
-                    "Only span layers supported but got [" + aLayer.getType() + "]");
-        }
-
-        var project = aLayer.getProject();
-
-        var allAnnDocs = getDocumentsToEvaluate(project, aDocuments, aTraits);
-        var docs = allAnnDocs.keySet().stream() //
-                .sorted(comparing(SourceDocument::getName)) //
-                .toList();
-
-        var featureName = aFeature != null ? aFeature.getName() : null;
-
-        var jsonFactory = new JsonFactory();
-
-        var adapter = schemaService.getAdapter(aLayer);
-
-        try (var jg = jsonFactory.createGenerator(CloseShieldOutputStream.wrap(aOut))) {
-            jg.useDefaultPrettyPrinter();
-
-            jg.writeStartArray();
-
-            for (var doc : docs) {
-                var annDocs = allAnnDocs.get(doc);
-                try (var session = CasStorageSession.openNested()) {
-                    var casMap = loadCasForAnnotators(doc, annDocs, aAnnotators);
-
-                    for (var mapEntry : casMap.entrySet()) {
-                        var dataOwner = mapEntry.getKey();
-                        var cas = mapEntry.getValue();
-
-                        for (var ann : cas.<Annotation> select(adapter.getAnnotationTypeName())) {
-                            jg.writeStartObject();
-                            jg.writeStringField("doc", doc.getName());
-                            jg.writeStringField("user", dataOwner);
-                            jg.writeNumberField("begin", ann.getBegin());
-                            jg.writeNumberField("end", ann.getEnd());
-                            jg.writeStringField("text", ann.getCoveredText());
-                            if (featureName != null) {
-                                var label = adapter.renderFeatureValue(ann, featureName);
-                                jg.writeStringField("label", label);
-                            }
-                            jg.writeEndObject();
-                        }
-
-                        jg.flush();
-                    }
-                }
-            }
-
-            jg.writeEndArray();
-            jg.flush();
-        }
-    }
-
-    @Override
-    public void exportSpanLayerDataAsCsv(OutputStream aOut, AnnotationLayer aLayer,
-            AnnotationFeature aFeature, DefaultAgreementTraits aTraits,
-            List<SourceDocument> aDocuments, List<String> aAnnotators)
-        throws IOException
-    {
-        if (!SpanLayerSupport.TYPE.equals(aLayer.getType())) {
-            throw new IllegalArgumentException(
-                    "Only span layers supported but got [" + aLayer.getType() + "]");
-        }
-
-        var project = aLayer.getProject();
-        var allAnnDocs = getDocumentsToEvaluate(project, aDocuments, aTraits);
-        var docs = allAnnDocs.keySet().stream() //
-                .sorted(comparing(SourceDocument::getName)) //
-                .toList();
-        var featureName = aFeature != null ? aFeature.getName() : null;
-        var adapter = schemaService.getAdapter(aLayer);
-
-        try (var writer = new OutputStreamWriter(aOut, UTF_8);
-                var csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.builder()
-                        .setHeader("doc", "user", "begin", "end", "text", "label").get())) {
-
-            for (var doc : docs) {
-                var annDocs = allAnnDocs.get(doc);
-                try (var session = CasStorageSession.openNested()) {
-                    var casMap = loadCasForAnnotators(doc, annDocs, aAnnotators);
-
-                    for (var mapEntry : casMap.entrySet()) {
-                        var dataOwner = mapEntry.getKey();
-                        var cas = mapEntry.getValue();
-
-                        for (var ann : cas.<Annotation> select(adapter.getAnnotationTypeName())) {
-                            var label = featureName != null
-                                    ? adapter.renderFeatureValue(ann, featureName)
-                                    : "";
-                            csvPrinter.printRecord(doc.getName(), dataOwner, ann.getBegin(),
-                                    ann.getEnd(), ann.getCoveredText(), label);
-                        }
-                    }
-                }
-            }
-            csvPrinter.flush();
-        }
     }
 
     @Override

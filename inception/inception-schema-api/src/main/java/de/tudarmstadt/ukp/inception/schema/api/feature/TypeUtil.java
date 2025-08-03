@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 
@@ -188,8 +187,8 @@ public final class TypeUtil
                 continue;
             }
 
-            Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
-            String label = defaultString(aFs.getFeatureValueAsString(labelFeature));
+            var labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
+            var label = defaultString(aFs.getFeatureValueAsString(labelFeature));
 
             if (bratLabelText.length() > 0 && label.length() > 0) {
                 bratLabelText.append(TypeAdapter.FEATURE_SEPARATOR);
