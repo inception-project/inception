@@ -133,11 +133,6 @@
       <artifactId>dkpro-statistics-agreement</artifactId>
     </dependency>
     
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-    </dependency>
-
     <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework</groupId>
@@ -211,6 +206,12 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-layer-span</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-constraints</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
@@ -269,12 +270,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-layer-chain</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-layer-span</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

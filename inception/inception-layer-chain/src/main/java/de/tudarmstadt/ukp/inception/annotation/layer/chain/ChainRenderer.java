@@ -66,7 +66,7 @@ public class ChainRenderer
             behaviors = emptyList();
         }
         else {
-            List<SpanLayerBehavior> temp = new ArrayList<>(aBehaviors);
+            var temp = new ArrayList<SpanLayerBehavior>(aBehaviors);
             AnnotationAwareOrderComparator.sort(temp);
             behaviors = temp;
         }

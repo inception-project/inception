@@ -24,6 +24,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.CreateSpanAnnotationRe
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 /**
  * Manage interactions with annotations on a chain layer.
@@ -35,7 +36,10 @@ public interface ChainAdapter
     public static final String LINK = "Link";
     public static final String FEAT_FIRST = "first";
     public static final String FEAT_NEXT = "next";
-    
+
+    public static final String ARC_LABEL_FEATURE = WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+    public static final String SPAN_LABEL_FEATURE = WebAnnoConst.COREFERENCE_TYPE_FEATURE;
+
     String getChainTypeName();
 
     String getChainFirstFeatureName();

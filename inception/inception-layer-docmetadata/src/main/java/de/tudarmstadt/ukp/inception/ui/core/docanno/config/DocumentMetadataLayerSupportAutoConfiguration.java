@@ -35,6 +35,8 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerType;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.export.DocumentLayerToCsvExporter;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.export.DocumentLayerToJsonExporter;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSingletonCreatingWatcher;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupportImpl;
@@ -89,6 +91,20 @@ public class DocumentMetadataLayerSupportAutoConfiguration
     public DocumentMetadataAnnotationActionUndoSupport documentMetadataAnnotationActionUndoSupport()
     {
         return new DocumentMetadataAnnotationActionUndoSupport();
+    }
+
+    @Bean
+    public DocumentLayerToJsonExporter documentLayerToJsonExporter(
+            AnnotationSchemaService aSchemaService, DocumentService aDocumentService)
+    {
+        return new DocumentLayerToJsonExporter(aSchemaService, aDocumentService);
+    }
+
+    @Bean
+    public DocumentLayerToCsvExporter documentLayerToCsvExporter(
+            AnnotationSchemaService aSchemaService, DocumentService aDocumentService)
+    {
+        return new DocumentLayerToCsvExporter(aSchemaService, aDocumentService);
     }
 
     @Bean

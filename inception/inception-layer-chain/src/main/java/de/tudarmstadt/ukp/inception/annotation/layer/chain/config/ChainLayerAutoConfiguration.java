@@ -25,7 +25,11 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupportImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.export.ChainLayerToCsvExporter;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.export.ChainLayerToJsonExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.undo.ChainAnnotationActionUndoSupport;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 @Configuration
@@ -39,10 +43,24 @@ public class ChainLayerAutoConfiguration
         return new ChainLayerSupportImpl(aFeatureSupportRegistry, aEventPublisher,
                 aLayerBehaviorsRegistry, aConstraintsService);
     }
-    
+
     @Bean
     public ChainAnnotationActionUndoSupport chainAnnotationActionUndoSupport()
     {
         return new ChainAnnotationActionUndoSupport();
+    }
+
+    @Bean
+    public ChainLayerToJsonExporter chainLayerToJsonExporter(AnnotationSchemaService aSchemaService,
+            DocumentService aDocumentService)
+    {
+        return new ChainLayerToJsonExporter(aSchemaService, aDocumentService);
+    }
+
+    @Bean
+    public ChainLayerToCsvExporter chainLayerToCsvExporter(AnnotationSchemaService aSchemaService,
+            DocumentService aDocumentService)
+    {
+        return new ChainLayerToCsvExporter(aSchemaService, aDocumentService);
     }
 }

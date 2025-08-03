@@ -31,8 +31,11 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSuppo
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.behavior.RelationCrossSentenceBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.behavior.RelationOverlapBehavior;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.export.RelationLayerToCsvExporter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.export.RelationLayerToJsonExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.recommender.RelationSuggestionSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.undo.RelationAnnotationActionUndoSupport;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -56,7 +59,7 @@ public class RelationLayerAutoConfiguration
     {
         return new RelationEndpointChangeListener(aSchemaService);
     }
-    
+
     @Bean
     public RelationEndpointFeatureSupport relationEndpointFeatureSupport()
     {
@@ -85,6 +88,20 @@ public class RelationLayerAutoConfiguration
     public RelationOverlapBehavior relationOverlapBehavior()
     {
         return new RelationOverlapBehavior();
+    }
+
+    @Bean
+    public RelationLayerToJsonExporter relationLayerToJsonExporter(
+            AnnotationSchemaService aSchemaService, DocumentService aDocumentService)
+    {
+        return new RelationLayerToJsonExporter(aSchemaService, aDocumentService);
+    }
+
+    @Bean
+    public RelationLayerToCsvExporter relationLayerToCsvExporter(
+            AnnotationSchemaService aSchemaService, DocumentService aDocumentService)
+    {
+        return new RelationLayerToCsvExporter(aSchemaService, aDocumentService);
     }
 
     @ConditionalOnProperty(prefix = "recommender", name = "enabled", havingValue = "true", matchIfMissing = true)

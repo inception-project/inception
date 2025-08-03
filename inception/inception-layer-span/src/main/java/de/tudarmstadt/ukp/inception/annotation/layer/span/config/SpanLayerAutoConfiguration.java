@@ -28,9 +28,12 @@ import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegi
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.TokenAttachedSpanChangeListener;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.export.SpanLayerToCsvExporter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.export.SpanLayerToJsonExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.recommender.SpanSuggestionSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.undo.SpanAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.undo.UnitAnnotationActionUndoSupport;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -66,6 +69,20 @@ public class SpanLayerAutoConfiguration
     public UnitAnnotationActionUndoSupport unitAnnotationActionUndoSupport()
     {
         return new UnitAnnotationActionUndoSupport();
+    }
+
+    @Bean
+    public SpanLayerToJsonExporter spanLayerToJsonExporter(AnnotationSchemaService aSchemaService,
+            DocumentService aDocumentService)
+    {
+        return new SpanLayerToJsonExporter(aSchemaService, aDocumentService);
+    }
+
+    @Bean
+    public SpanLayerToCsvExporter spanLayerToCsvExporter(AnnotationSchemaService aSchemaService,
+            DocumentService aDocumentService)
+    {
+        return new SpanLayerToCsvExporter(aSchemaService, aDocumentService);
     }
 
     @ConditionalOnProperty(prefix = "recommender", name = "enabled", havingValue = "true", matchIfMissing = true)
