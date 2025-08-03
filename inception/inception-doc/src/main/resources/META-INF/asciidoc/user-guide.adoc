@@ -206,6 +206,10 @@ include::{include-dir}external-search-repos-pmc.adoc[leveloffset=+3]
 
 <<<
 
+include::{include-dir}bulk-processing.adoc[leveloffset=+1]
+
+<<<
+
 include::{include-dir}constraints.adoc[leveloffset=+1]
 
 <<<
