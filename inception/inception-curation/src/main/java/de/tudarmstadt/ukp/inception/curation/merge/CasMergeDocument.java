@@ -32,12 +32,12 @@ import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.layer.CreateDocumentAnnotationRequest;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.layer.DocumentMetadataLayerAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.layer.DocumentMetadataLayerTraits;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.CreateDocumentAnnotationRequest;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerTraits;
 
 class CasMergeDocument
 {
