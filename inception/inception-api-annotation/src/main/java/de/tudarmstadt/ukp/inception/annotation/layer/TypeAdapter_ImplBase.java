@@ -138,6 +138,12 @@ public abstract class TypeAdapter_ImplBase
         return getFeature(aName).flatMap(featureSupportRegistry::findExtension);
     }
 
+    @Override
+    public <T> Optional<FeatureSupport<T>> getFeatureSupport(AnnotationFeature aFeature)
+    {
+        return getFeature(aFeature.getName()).flatMap(featureSupportRegistry::findExtension);
+    }
+
     private void initFeaturesCacheIfNecessary()
     {
         if (features == null) {

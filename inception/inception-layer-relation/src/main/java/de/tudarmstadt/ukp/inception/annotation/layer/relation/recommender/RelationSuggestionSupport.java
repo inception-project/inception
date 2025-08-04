@@ -206,8 +206,7 @@ public class RelationSuggestionSupport
             }
 
             try {
-                commitLabel(aDocument, aDataOwner, aCas, aAdapter, aFeature, aSuggestion.getLabel(),
-                        annotation);
+                commitLabel(aDocument, aDataOwner, aAdapter, annotation, aFeature, aSuggestion);
             }
             catch (Exception e) {
                 if (annotationCreated) {
