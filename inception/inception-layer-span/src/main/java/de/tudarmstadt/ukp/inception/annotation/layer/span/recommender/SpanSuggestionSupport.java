@@ -142,12 +142,11 @@ public class SpanSuggestionSupport
             LearningRecordUserAction aAction)
         throws AnnotationException
     {
-        var aBegin = aSuggestion.getBegin();
-        var aEnd = aSuggestion.getEnd();
-        var aValue = aSuggestion.getLabel();
+        var begin = aSuggestion.getBegin();
+        var end = aSuggestion.getEnd();
 
         var candidates = aCas.<Annotation> select(aAdapter.getAnnotationTypeName()) //
-                .at(aBegin, aEnd) //
+                .at(begin, end) //
                 .asList();
 
         var candidateWithEmptyLabel = candidates.stream() //
@@ -167,7 +166,7 @@ public class SpanSuggestionSupport
                 // takes care of attaching to an annotation if necessary
                 annotation = aAdapter.handle(CreateSpanAnnotationRequest.builder() //
                         .withDocument(aDocument, aDataOwner, aCas) //
-                        .withRange(aBegin, aEnd) //
+                        .withRange(begin, end) //
                         .build());
                 annotationCreated = true;
             }
@@ -178,7 +177,7 @@ public class SpanSuggestionSupport
             }
 
             try {
-                commitLabel(aDocument, aDataOwner, aCas, aAdapter, aFeature, aValue, annotation);
+                commitLabel(aDocument, aDataOwner, aAdapter, annotation, aFeature, aSuggestion);
             }
             catch (Exception e) {
                 if (annotationCreated) {

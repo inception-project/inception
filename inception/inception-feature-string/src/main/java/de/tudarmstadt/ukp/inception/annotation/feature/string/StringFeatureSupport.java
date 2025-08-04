@@ -22,14 +22,13 @@ import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatu
 import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType.RADIOGROUP;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
@@ -97,7 +96,7 @@ public class StringFeatureSupport
     @Override
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
-        return Collections.unmodifiableList(primitiveTypes);
+        return unmodifiableList(primitiveTypes);
     }
 
     @Override
@@ -251,7 +250,7 @@ public class StringFeatureSupport
         throws AnnotationException
     {
         var traits = readTraits(aFeature);
-        if (StringUtils.isNotBlank(traits.getDefaultValue())) {
+        if (isNotBlank(traits.getDefaultValue())) {
             setFeatureValue(aFS.getCAS(), aFeature, ICasUtil.getAddr(aFS),
                     traits.getDefaultValue());
         }

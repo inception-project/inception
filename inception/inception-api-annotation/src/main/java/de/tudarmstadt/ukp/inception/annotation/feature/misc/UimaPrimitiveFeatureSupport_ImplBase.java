@@ -50,6 +50,7 @@ public abstract class UimaPrimitiveFeatureSupport_ImplBase<T>
         return (Serializable) aValue;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <V> V unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {

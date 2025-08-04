@@ -263,6 +263,8 @@ public interface TypeAdapter
 
     <T> Optional<FeatureSupport<T>> getFeatureSupport(String aName);
 
+    <T> Optional<FeatureSupport<T>> getFeatureSupport(AnnotationFeature aFeature);
+
     String renderFeatureValue(FeatureStructure aFS, String aFeature);
 
     boolean isFeatureValueEqual(AnnotationFeature aFeature, FeatureStructure aFS1,

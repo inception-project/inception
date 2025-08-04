@@ -100,8 +100,6 @@ public class MetadataSuggestionSupport
     {
         var adapter = (DocumentMetadataLayerAdapter) aAdapter;
 
-        var aValue = aSuggestion.getLabel();
-
         var candidates = aCas.<AnnotationBase> select(aAdapter.getAnnotationTypeName()) //
                 .asList();
 
@@ -130,7 +128,7 @@ public class MetadataSuggestionSupport
             }
 
             try {
-                commitLabel(aDocument, aDataOwner, aCas, aAdapter, aFeature, aValue, annotation);
+                commitLabel(aDocument, aDataOwner, aAdapter, annotation, aFeature, aSuggestion);
             }
             catch (Exception e) {
                 if (annotationCreated) {

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.revieweditor;
 
+import static org.apache.wicket.event.Broadcast.BUBBLE;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +27,7 @@ import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ClassAttributeModifier;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -72,40 +72,39 @@ public class SpanAnnotationPanel
         super(aId, aModel);
         state = aState;
 
-        VID vid = aModel.getObject();
+        var vid = aModel.getObject();
 
-        FeatureStructure fs = ICasUtil.selectFsByAddr(aCas, vid.getId());
-        AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
-        AnnotationFS aFS = ICasUtil.selectAnnotationByAddr(aCas, vid.getId());
-        int begin = aFS.getBegin();
-        int end = aFS.getEnd();
+        var fs = ICasUtil.selectAnnotationByAddr(aCas, vid.getId());
+        var layer = annotationService.findLayer(state.getProject(), fs);
+        var begin = fs.getBegin();
+        var end = fs.getEnd();
 
-        List<FeatureState> features = listFeatures(fs, layer, vid);
-        List<FeatureState> textFeatures = features.stream()
+        var features = listFeatures(fs, layer, vid);
+        var textFeatures = features.stream()
                 .filter(featureState -> featureState.feature.getType().equals(CAS.TYPE_NAME_STRING)
                         && featureState.feature.getTagset() == null)
                 .collect(Collectors.toList());
         features.removeAll(textFeatures);
 
-        LambdaAjaxLink selectButton = new LambdaAjaxLink(CID_SELECT, _target -> {
-            send(this, Broadcast.BUBBLE, new SelectAnnotationEvent(vid, begin, end, _target));
+        var selectButton = new LambdaAjaxLink(CID_SELECT, _target -> {
+            send(this, BUBBLE, new SelectAnnotationEvent(vid, begin, end, _target));
             _target.add(this);
         });
 
-        String text = aCas.getDocumentText();
-        int windowSize = 50;
-        int contextBegin = aFS.getBegin() < windowSize ? 0 : aFS.getBegin() - windowSize;
-        int contextEnd = aFS.getEnd() + windowSize > text.length() ? text.length()
-                : aFS.getEnd() + windowSize;
-        String preContext = text.substring(contextBegin, aFS.getBegin());
-        String postContext = text.substring(aFS.getEnd(), contextEnd);
+        var text = aCas.getDocumentText();
+        var windowSize = 50;
+        var contextBegin = fs.getBegin() < windowSize ? 0 : fs.getBegin() - windowSize;
+        var contextEnd = fs.getEnd() + windowSize > text.length() ? text.length()
+                : fs.getEnd() + windowSize;
+        var preContext = text.substring(contextBegin, fs.getBegin());
+        var postContext = text.substring(fs.getEnd(), contextEnd);
 
         featuresContainer = new WebMarkupContainer(CID_FEATURES_CONTAINER);
         featuresContainer.setOutputMarkupId(true);
         featuresContainer.add(createTextFeaturesList(textFeatures));
         featuresContainer.add(createFeaturesList(features));
         featuresContainer.add(new Label(CID_PRE_CONTEXT, preContext));
-        featuresContainer.add(new Label(CID_TEXT, aFS.getCoveredText()));
+        featuresContainer.add(new Label(CID_TEXT, fs.getCoveredText()));
         featuresContainer.add(new Label(CID_POST_CONTEXT, postContext));
         featuresContainer.add(selectButton);
 
@@ -136,7 +135,7 @@ public class SpanAnnotationPanel
         var adapter = annotationService.getAdapter(aLayer);
 
         // Populate from feature structure
-        List<FeatureState> featureStates = new ArrayList<>();
+        var featureStates = new ArrayList<FeatureState>();
         for (var feature : annotationService.listEnabledFeatures(aLayer)) {
             Serializable value = null;
             if (aFs != null) {

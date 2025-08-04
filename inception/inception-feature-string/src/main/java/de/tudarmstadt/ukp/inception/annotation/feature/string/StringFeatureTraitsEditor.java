@@ -135,6 +135,7 @@ public class StringFeatureTraitsEditor
         form.add(tagset);
 
         var multipleRows = new CheckBox("multipleRows");
+        multipleRows.setOutputMarkupId(true);
         multipleRows.setModel(PropertyModel.of(traits, "multipleRows"));
         multipleRows.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
             if (multipleRows.getModelObject()) {
@@ -146,6 +147,7 @@ public class StringFeatureTraitsEditor
         form.add(multipleRows);
 
         var dynamicSize = new CheckBox("dynamicSize");
+        dynamicSize.setOutputMarkupId(true);
         dynamicSize.setModel(PropertyModel.of(traits, "dynamicSize"));
         dynamicSize.add(
                 new LambdaAjaxFormComponentUpdatingBehavior("change", target -> target.add(form)));
@@ -184,6 +186,7 @@ public class StringFeatureTraitsEditor
         return panel;
     }
 
+    @SuppressWarnings("unchecked")
     private UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits> getFeatureSupport()
     {
         return (UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits>) featureSupportRegistry
