@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.processing.curation;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
@@ -45,6 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
@@ -70,6 +70,7 @@ public class BulkCurationTask
     private @Autowired CurationMergeService curationMergeService;
     private @Autowired CurationService curationService;
     private @Autowired AnnotationSchemaService schemaService;
+    private @Autowired DiffAdapterRegistry diffAdapterRegistry;
 
     private final List<AnnotationLayer> annotationLayers;
     private final CurationWorkflow curationWorkflow;
@@ -158,7 +159,7 @@ public class BulkCurationTask
         var allCasses = new HashMap<>(annotatorCasses);
         allCasses.put(targetUser, targetCas);
 
-        var adapters = getDiffAdapters(schemaService, annotationLayers);
+        var adapters = diffAdapterRegistry.getDiffAdapters(annotationLayers);
         var diff = doDiff(adapters, allCasses).toResult();
 
         if (LOG.isTraceEnabled()) {

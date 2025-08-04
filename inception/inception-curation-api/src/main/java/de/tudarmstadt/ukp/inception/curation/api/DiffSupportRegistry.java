@@ -15,35 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api;
+package de.tudarmstadt.ukp.inception.curation.api;
 
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import java.util.Optional;
 
-/**
- * Thrown if there is a problem during CAS diff computation.
- */
-public class CasDiffException
-    extends AnnotationException
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
+
+public interface DiffSupportRegistry extends ExtensionPoint<AnnotationLayer, DiffSupport>
 {
-    private static final long serialVersionUID = 1280015349963924638L;
-
-    public CasDiffException()
-    {
-        super();
-    }
-
-    public CasDiffException(String message)
-    {
-        super(message);
-    }
-
-    public CasDiffException(String aMessage, Throwable aCause)
-    {
-        super(aMessage, aCause);
-    }
-
-    public CasDiffException(Throwable aCause)
-    {
-        super(aCause);
+    default Optional<DiffSupport> getExtension(AnnotationLayer aLayer) {
+        return getExtensions(aLayer).stream().findFirst();
     }
 }

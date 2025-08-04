@@ -55,7 +55,7 @@ public class CohenKappaAgreementMeasureTest
     {
         super.setup();
 
-        sut = new CohenKappaAgreementMeasureSupport(annotationService);
+        sut = new CohenKappaAgreementMeasureSupport(annotationService, diffAdapterRegistry);
         traits = sut.createTraits();
     }
 

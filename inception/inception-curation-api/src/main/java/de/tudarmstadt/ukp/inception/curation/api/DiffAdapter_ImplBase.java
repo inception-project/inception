@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api;
+package de.tudarmstadt.ukp.inception.curation.api;
 
 import static java.util.Collections.unmodifiableSet;
 
@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkFeatureDecl;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
@@ -45,6 +44,7 @@ public abstract class DiffAdapter_ImplBase
         features = unmodifiableSet(new HashSet<>(aFeatures));
     }
 
+    @Override
     public void addLinkFeature(String aName, String aRoleFeature, String aTargetFeature,
             LinkFeatureMultiplicityMode aCompareBehavior, LinkFeatureDiffMode aDiffMode)
     {

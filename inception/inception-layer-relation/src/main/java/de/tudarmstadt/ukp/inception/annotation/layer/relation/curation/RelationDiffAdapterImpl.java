@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation;
+package de.tudarmstadt.ukp.inception.annotation.layer.relation.curation;
 
 import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
@@ -38,28 +38,31 @@ import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.cas.AnnotationBase;
 import org.apache.uima.jcas.tcas.Annotation;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationDiffAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationPosition;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapter_ImplBase;
+import de.tudarmstadt.ukp.inception.curation.api.Position;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
-public class RelationDiffAdapter
+public class RelationDiffAdapterImpl
     extends DiffAdapter_ImplBase
+    implements RelationDiffAdapter
 {
-    public static final RelationDiffAdapter DEPENDENCY_DIFF_ADAPTER = new RelationDiffAdapter(
+    public static final RelationDiffAdapterImpl DEPENDENCY_DIFF_ADAPTER = new RelationDiffAdapterImpl(
             Dependency.class.getName(), FEAT_REL_TARGET, FEAT_REL_SOURCE, "DependencyType",
             "flavor");
 
     private String sourceFeature;
     private String targetFeature;
 
-    public RelationDiffAdapter(String aType, String aSourceFeature, String aTargetFeature,
+    public RelationDiffAdapterImpl(String aType, String aSourceFeature, String aTargetFeature,
             String... aFeatures)
     {
         this(aType, aSourceFeature, aTargetFeature, new HashSet<>(asList(aFeatures)));
     }
 
-    public RelationDiffAdapter(String aType, String aSourceFeature, String aTargetFeature,
+    public RelationDiffAdapterImpl(String aType, String aSourceFeature, String aTargetFeature,
             Set<String> aFeatures)
     {
         super(aType, aFeatures);
@@ -67,11 +70,13 @@ public class RelationDiffAdapter
         targetFeature = aTargetFeature;
     }
 
+    @Override
     public String getSourceFeature()
     {
         return sourceFeature;
     }
 
+    @Override
     public String getTargetFeature()
     {
         return targetFeature;

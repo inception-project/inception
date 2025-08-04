@@ -55,7 +55,7 @@ public class FleissKappaAgreementMeasureTest
     {
         super.setup();
 
-        sut = new FleissKappaAgreementMeasureSupport(annotationService);
+        sut = new FleissKappaAgreementMeasureSupport(annotationService, diffAdapterRegistry);
         traits = sut.createTraits();
     }
 

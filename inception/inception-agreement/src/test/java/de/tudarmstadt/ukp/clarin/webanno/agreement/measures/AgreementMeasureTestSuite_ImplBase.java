@@ -53,6 +53,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.FullAgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -67,8 +69,10 @@ import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSuppo
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistryImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupportImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.curation.RelationDiffSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
@@ -83,6 +87,8 @@ public class AgreementMeasureTestSuite_ImplBase
     protected List<AnnotationLayer> layers;
     protected List<AnnotationFeature> features;
     protected LayerSupportRegistryImpl layerRegistry;
+    protected DiffSupportRegistryImpl diffSupportRegistry;
+    protected DiffAdapterRegistryImpl diffAdapterRegistry;
 
     @BeforeEach
     public void setup()
@@ -107,6 +113,13 @@ public class AgreementMeasureTestSuite_ImplBase
                 new ChainLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService)));
         layerRegistry.init();
+
+        diffSupportRegistry = new DiffSupportRegistryImpl(asList( //
+                new SpanDiffSupport(), //
+                new RelationDiffSupport(annotationService)));
+        diffSupportRegistry.init();
+
+        diffAdapterRegistry = new DiffAdapterRegistryImpl(annotationService, diffSupportRegistry);
 
         lenient().when(annotationService.getAdapter(any())).thenAnswer(a -> {
             var layer = a.getArgument(0, AnnotationLayer.class);

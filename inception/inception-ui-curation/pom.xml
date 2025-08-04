@@ -22,9 +22,10 @@
     <artifactId>inception-app</artifactId>
     <version>38.0-SNAPSHOT</version>
   </parent>
+
   <artifactId>inception-ui-curation</artifactId>
   <name>INCEpTION - UI - Curation</name>
-  <packaging>jar</packaging>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -44,6 +45,11 @@
       <artifactId>uimafit-core</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-curation-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-annotation</artifactId>
@@ -162,11 +168,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-layer-relation-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-layer-span</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -295,6 +296,12 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-feature-string</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-layer-span</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

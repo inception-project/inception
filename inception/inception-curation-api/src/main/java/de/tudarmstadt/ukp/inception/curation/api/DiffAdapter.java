@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api;
+package de.tudarmstadt.ukp.inception.curation.api;
 
 import java.util.Collection;
 import java.util.List;
@@ -24,7 +24,8 @@ import java.util.Set;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.cas.AnnotationBase;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkFeatureDecl;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 
 public interface DiffAdapter
 {
@@ -55,4 +56,7 @@ public interface DiffAdapter
             int aWindowEnd);
 
     boolean isIncludeInDiff(String aFeature);
+
+    void addLinkFeature(String aName, String aRoleFeature, String aTargetFeature,
+            LinkFeatureMultiplicityMode aCompareBehavior, LinkFeatureDiffMode aDiffMode);
 }

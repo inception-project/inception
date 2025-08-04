@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.curation.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -34,6 +33,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.PerCasMergeContext;
@@ -54,11 +54,14 @@ public class CurationMergeServiceImpl
 
     private final AnnotationSchemaService annotationService;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final DiffAdapterRegistry diffAdapterRegistry;
 
     public CurationMergeServiceImpl(AnnotationSchemaService aAnnotationService,
+            DiffAdapterRegistry aDiffAdapterRegistry,
             ApplicationEventPublisher aApplicationEventPublisher)
     {
         annotationService = aAnnotationService;
+        diffAdapterRegistry = aDiffAdapterRegistry;
         applicationEventPublisher = aApplicationEventPublisher;
     }
 
@@ -83,7 +86,7 @@ public class CurationMergeServiceImpl
     {
         DiffResult diff;
         try (var watch = new StopWatch(LOG, "CasDiff")) {
-            var adapters = getDiffAdapters(annotationService, aLayers);
+            var adapters = diffAdapterRegistry.getDiffAdapters(aLayers);
             diff = doDiff(adapters, aCassesToMerge).toResult();
         }
 

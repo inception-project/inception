@@ -57,7 +57,7 @@ public class KrippendorffAlphaNominalAgreementMeasureTest
     {
         super.setup();
 
-        sut = new KrippendorffAlphaAgreementMeasureSupport(annotationService);
+        sut = new KrippendorffAlphaAgreementMeasureSupport(annotationService, diffAdapterRegistry);
         traits = sut.createTraits();
     }
 

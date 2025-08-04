@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.export.CuratedDocumentsExporter;
 import de.tudarmstadt.ukp.inception.curation.export.CurationWorkflowExporter;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.DefaultMergeStrategyFactory;
@@ -45,7 +46,6 @@ import de.tudarmstadt.ukp.inception.curation.settings.CurationProjectSettingsPan
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarPropertiesImpl;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
@@ -83,10 +83,11 @@ public class CurationServiceAutoConfiguration
 
     @Bean
     public CurationMergeService curationMergeService(AnnotationSchemaService aAnnotationService,
-            AnnotationSchemaProperties aAnnotationEditorProperties,
+            DiffAdapterRegistry aDiffAdapterRegistry,
             ApplicationEventPublisher aApplicationEventPublisher)
     {
-        return new CurationMergeServiceImpl(aAnnotationService, aApplicationEventPublisher);
+        return new CurationMergeServiceImpl(aAnnotationService, aDiffAdapterRegistry,
+                aApplicationEventPublisher);
     }
 
     @Bean

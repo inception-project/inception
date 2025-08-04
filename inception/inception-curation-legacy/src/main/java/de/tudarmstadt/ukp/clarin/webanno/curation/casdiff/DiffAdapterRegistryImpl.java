@@ -34,28 +34,37 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.docmeta.DocumentMetadataDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureTraits;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.curation.DocumentMetadataDiffAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapter;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
+import de.tudarmstadt.ukp.inception.curation.api.DiffSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
-public class DiffAdapterRegistry
+public class DiffAdapterRegistryImpl
+    implements DiffAdapterRegistry
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    public static List<DiffAdapter> getDiffAdapters(AnnotationSchemaService aSchemaService,
-            Collection<AnnotationLayer> aLayers)
+    private final AnnotationSchemaService schemaService;
+    private final DiffSupportRegistry diffSupportRegistry;
+
+    public DiffAdapterRegistryImpl(AnnotationSchemaService aSchemaService,
+            DiffSupportRegistry aDiffSupportRegistry)
+    {
+        schemaService = aSchemaService;
+        diffSupportRegistry = aDiffSupportRegistry;
+    }
+
+    @Override
+    public List<DiffAdapter> getDiffAdapters(Collection<AnnotationLayer> aLayers)
     {
         if (aLayers.isEmpty()) {
             return emptyList();
@@ -63,7 +72,7 @@ public class DiffAdapterRegistry
 
         var project = aLayers.iterator().next().getProject();
 
-        var featuresByLayer = aSchemaService.listSupportedFeatures(project).stream() //
+        var featuresByLayer = schemaService.listSupportedFeatures(project).stream() //
                 .collect(groupingBy(AnnotationFeature::getLayer));
 
         var adapters = new ArrayList<DiffAdapter>();
@@ -74,16 +83,12 @@ public class DiffAdapterRegistry
 
             var featuresToCompare = collectFeaturesToCompare(featuresByLayer, layer);
 
-            DiffAdapter_ImplBase adapter;
+            DiffAdapter adapter;
             switch (layer.getType()) {
-            case SpanLayerSupport.TYPE: {
-                adapter = new SpanDiffAdapter(layer.getName(), featuresToCompare);
-                break;
-            }
+            case SpanLayerSupport.TYPE: // Fall through
             case RelationLayerSupport.TYPE: {
-                var typeAdpt = (RelationAdapter) aSchemaService.getAdapter(layer);
-                adapter = new RelationDiffAdapter(layer.getName(), typeAdpt.getSourceFeatureName(),
-                        typeAdpt.getTargetFeatureName(), featuresToCompare);
+                var diffSupport = diffSupportRegistry.getExtension(layer).get();
+                adapter = diffSupport.getAdapter(layer, featuresToCompare);
                 break;
             }
             case DocumentMetadataLayerSupport.TYPE: {
@@ -111,7 +116,7 @@ public class DiffAdapterRegistry
                             f.getLinkTypeTargetFeatureName(), ONE_TARGET_MULTIPLE_ROLES, EXCLUDE);
                     break;
                 case WITH_ROLE: {
-                    var typeAdpt = aSchemaService.getAdapter(layer);
+                    var typeAdpt = schemaService.getAdapter(layer);
                     var traits = typeAdpt.getFeatureTraits(f, LinkFeatureTraits.class)
                             .orElse(new LinkFeatureTraits());
                     adapter.addLinkFeature(f.getName(), f.getLinkTypeRoleFeatureName(),
@@ -130,11 +135,11 @@ public class DiffAdapterRegistry
         // If the token/sentence layer is not editable, we do not offer curation of the tokens.
         // Instead the tokens are obtained from a random template CAS when initializing the CAS - we
         // assume here that the tokens have never been modified.
-        if (!aSchemaService.isSentenceLayerEditable(project)) {
+        if (!schemaService.isSentenceLayerEditable(project)) {
             adapters.removeIf(adapter -> Sentence._TypeName.equals(adapter.getType()));
         }
 
-        if (!aSchemaService.isTokenLayerEditable(project)) {
+        if (!schemaService.isTokenLayerEditable(project)) {
             adapters.removeIf(adapter -> Token._TypeName.equals(adapter.getType()));
         }
 

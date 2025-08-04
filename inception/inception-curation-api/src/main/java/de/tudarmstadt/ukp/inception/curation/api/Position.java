@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api;
+package de.tudarmstadt.ukp.inception.curation.api;
 
 import java.io.Serializable;
 

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.docmeta;
+package de.tudarmstadt.ukp.inception.annotation.layer.document.curation;
 
 import static java.util.Arrays.asList;
 
@@ -30,8 +30,9 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.cas.AnnotationBase;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentPosition;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapter_ImplBase;
+import de.tudarmstadt.ukp.inception.curation.api.Position;
 
 public class DocumentMetadataDiffAdapter
     extends DiffAdapter_ImplBase

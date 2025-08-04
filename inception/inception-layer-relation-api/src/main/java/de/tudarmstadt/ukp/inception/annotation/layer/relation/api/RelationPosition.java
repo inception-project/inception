@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation;
+package de.tudarmstadt.ukp.inception.annotation.layer.relation.api;
 
 import java.util.Objects;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
+import de.tudarmstadt.ukp.inception.curation.api.Position;
+import de.tudarmstadt.ukp.inception.curation.api.Position_ImplBase;
 
 /**
  * Represents a span position in the text.

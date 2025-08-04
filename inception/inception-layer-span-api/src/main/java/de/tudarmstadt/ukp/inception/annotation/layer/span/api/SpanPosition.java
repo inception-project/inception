@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span;
+package de.tudarmstadt.ukp.inception.annotation.layer.span.api;
 
 import java.util.Objects;
 
@@ -23,9 +23,9 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
+import de.tudarmstadt.ukp.inception.curation.api.Position;
+import de.tudarmstadt.ukp.inception.curation.api.Position_ImplBase;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 /**

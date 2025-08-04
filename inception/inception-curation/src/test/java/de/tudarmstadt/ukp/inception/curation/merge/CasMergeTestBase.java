@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge;
 
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.NER_DIFF_ADAPTER;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
@@ -27,6 +24,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.EXCLUDE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.curation.RelationDiffAdapterImpl.DEPENDENCY_DIFF_ADAPTER;
+import static de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffAdapterImpl.NER_DIFF_ADAPTER;
+import static de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffAdapterImpl.POS_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.HOST_TYPE;
 import static java.util.Arrays.asList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
@@ -42,10 +42,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.docmeta.DocumentMetadataDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -65,10 +61,16 @@ import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegi
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.DocumentMetadataLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.curation.DocumentMetadataDiffAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupportImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationDiffAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.curation.RelationDiffAdapterImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupportImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanDiffAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffAdapterImpl;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
@@ -116,15 +118,15 @@ public class CasMergeTestBase
     protected SpanDiffAdapter slotHostDiffAdapter;
     protected DocumentMetadataDiffAdapter documentLabelDiffAdapter;
 
-    protected static final RelationDiffAdapter MULTIVALREL_DIFF_ADAPTER = new RelationDiffAdapter(
+    protected static final RelationDiffAdapter MULTIVALREL_DIFF_ADAPTER = new RelationDiffAdapterImpl(
             "webanno.custom.Multivalrel", "Dependent", "Governor", "rel1", "rel2");
-    protected static final SpanDiffAdapter MULTIVALSPAN_DIFF_ADAPTER = new SpanDiffAdapter(
+    protected static final SpanDiffAdapter MULTIVALSPAN_DIFF_ADAPTER = new SpanDiffAdapterImpl(
             "webanno.custom.Multivalspan", "f1", "f2");
 
     @BeforeEach
     public void setup() throws Exception
     {
-        slotHostDiffAdapter = new SpanDiffAdapter(HOST_TYPE);
+        slotHostDiffAdapter = new SpanDiffAdapterImpl(HOST_TYPE);
         slotHostDiffAdapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES,
                 EXCLUDE);
         slotHostDiffAdapter.addLinkFeature("altLinks", "role", "target", ONE_TARGET_MULTIPLE_ROLES,

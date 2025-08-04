@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span;
+package de.tudarmstadt.ukp.inception.annotation.layer.span.curation;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -32,34 +32,38 @@ import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.cas.AnnotationBase;
 import org.apache.uima.jcas.tcas.Annotation;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanDiffAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanPosition;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapter_ImplBase;
+import de.tudarmstadt.ukp.inception.curation.api.Position;
 
-public class SpanDiffAdapter
+public class SpanDiffAdapterImpl
     extends DiffAdapter_ImplBase
+    implements SpanDiffAdapter
 {
-    public static final SpanDiffAdapter TOKEN_DIFF_ADAPTER = new SpanDiffAdapter(
+    public static final SpanDiffAdapter TOKEN_DIFF_ADAPTER = new SpanDiffAdapterImpl(
             Token.class.getName());
 
-    public static final SpanDiffAdapter SENTENCE_DIFF_ADAPTER = new SpanDiffAdapter(
+    public static final SpanDiffAdapter SENTENCE_DIFF_ADAPTER = new SpanDiffAdapterImpl(
             Sentence.class.getName());
 
-    public static final SpanDiffAdapter POS_DIFF_ADAPTER = new SpanDiffAdapter(POS.class.getName(),
-            "PosValue", "coarseValue");
+    public static final SpanDiffAdapter POS_DIFF_ADAPTER = new SpanDiffAdapterImpl(
+            POS.class.getName(), POS._FeatName_PosValue, POS._FeatName_coarseValue);
 
-    public static final SpanDiffAdapter NER_DIFF_ADAPTER = new SpanDiffAdapter(
-            NamedEntity.class.getName(), "value", "identifier");
+    public static final SpanDiffAdapter NER_DIFF_ADAPTER = new SpanDiffAdapterImpl(
+            NamedEntity.class.getName(), NamedEntity._FeatName_value,
+            NamedEntity._FeatName_identifier);
 
-    public SpanDiffAdapter(String aType, String... aFeatures)
+    public SpanDiffAdapterImpl(String aType, String... aFeatures)
     {
         this(aType, new HashSet<>(asList(aFeatures)));
     }
 
-    public SpanDiffAdapter(String aType, Set<String> aFeatures)
+    public SpanDiffAdapterImpl(String aType, Set<String> aFeatures)
     {
         super(aType, aFeatures);
     }

@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.docmeta;
+package de.tudarmstadt.ukp.inception.annotation.layer.document.api;
 
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.cas.AnnotationBase;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
+import de.tudarmstadt.ukp.inception.curation.api.Position_ImplBase;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 /**

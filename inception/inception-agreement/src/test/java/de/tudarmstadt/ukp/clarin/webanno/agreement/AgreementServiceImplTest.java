@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.CodingStudyUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.NER_DIFF_ADAPTER;
+import static de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffAdapterImpl.NER_DIFF_ADAPTER;
 import static java.util.Arrays.asList;
 import static org.apache.commons.csv.CSVFormat.RFC4180;
 import static org.assertj.core.api.Assertions.assertThat;

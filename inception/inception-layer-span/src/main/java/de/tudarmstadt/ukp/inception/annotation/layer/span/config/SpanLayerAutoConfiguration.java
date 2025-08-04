@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegi
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.TokenAttachedSpanChangeListener;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.export.SpanLayerToCsvExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.export.SpanLayerToJsonExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.log.SpanEventAdapter;
@@ -90,6 +91,12 @@ public class SpanLayerAutoConfiguration
     public SpanEventAdapter spanEventAdapter()
     {
         return new SpanEventAdapter();
+    }
+
+    @Bean
+    public SpanDiffSupport spanDiffSupport()
+    {
+        return new SpanDiffSupport();
     }
 
     @ConditionalOnProperty(prefix = "recommender", name = "enabled", havingValue = "true", matchIfMissing = true)
