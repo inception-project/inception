@@ -234,6 +234,7 @@
     <module>inception-io-xmi</module>
     <module>inception-io-xml</module>
     <!-- Curation -->
+    <module>inception-curation-api</module>
     <module>inception-curation</module>
     <module>inception-curation-legacy</module>
     <module>inception-ui-curation</module>

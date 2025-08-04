@@ -30,6 +30,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.LayerTraitsEditor_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.OverlapModeSelect;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.ValidationModeSelect;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerTraits;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 
 public class RelationLayerTraitsEditor

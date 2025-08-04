@@ -21,7 +21,7 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.event.ChainLinkEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.event.ChainLinkEvent;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
 import de.tudarmstadt.ukp.inception.log.model.ChainLinkDetails;

@@ -35,6 +35,8 @@ import de.tudarmstadt.ukp.inception.annotation.layer.LayerTraitsEditor_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.AnchoringModeSelect;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.OverlapModeSelect;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.ValidationModeSelect;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerTraits;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 
 public class SpanLayerTraitsEditor

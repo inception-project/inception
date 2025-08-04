@@ -85,10 +85,10 @@ import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSuggesti
 import de.tudarmstadt.ukp.inception.active.learning.strategy.UncertaintySamplingStrategy;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.event.RelationCreatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.event.SpanCreatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.event.SpanDeletedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.event.RelationCreatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.event.SpanCreatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.event.SpanDeletedEvent;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;

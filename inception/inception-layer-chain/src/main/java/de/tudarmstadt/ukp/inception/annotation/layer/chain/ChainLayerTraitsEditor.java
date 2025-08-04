@@ -31,6 +31,8 @@ import de.tudarmstadt.ukp.inception.annotation.layer.LayerTraitsEditor_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.AnchoringModeSelect;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.OverlapModeSelect;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.ValidationModeSelect;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerTraits;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 
 public class ChainLayerTraitsEditor

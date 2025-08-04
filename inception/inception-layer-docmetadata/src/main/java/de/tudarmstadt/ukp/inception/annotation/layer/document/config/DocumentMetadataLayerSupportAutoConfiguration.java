@@ -27,11 +27,11 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.DocumentMetadataLayerSingletonCreatingWatcher;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.DocumentMetadataLayerSupportImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.export.DocumentLayerToCsvExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.export.DocumentLayerToJsonExporter;
-import de.tudarmstadt.ukp.inception.annotation.layer.document.layer.DocumentMetadataLayerSingletonCreatingWatcher;
-import de.tudarmstadt.ukp.inception.annotation.layer.document.layer.DocumentMetadataLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.document.layer.DocumentMetadataLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.recommender.MetadataSuggestionSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.sidebar.DocumentMetadataSidebarFactory;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.undo.DocumentMetadataAnnotationActionUndoSupport;
