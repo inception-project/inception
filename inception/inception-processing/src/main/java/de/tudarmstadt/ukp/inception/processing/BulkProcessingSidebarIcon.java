@@ -15,19 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.agreement.config;
+package de.tudarmstadt.ukp.inception.processing;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import java.lang.invoke.MethodHandles;
 
-import de.tudarmstadt.ukp.inception.ui.agreement.page.AgreementPageMenuItem;
+import org.apache.wicket.markup.html.image.Image;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.request.resource.PackageResourceReference;
 
-@Configuration
-public class AgreementUiAutoConfiguration
+public class BulkProcessingSidebarIcon
+    extends Panel
 {
-    @Bean
-    public AgreementPageMenuItem agreementPageMenuItem()
+    private static final long serialVersionUID = -267049823008051718L;
+
+    private static final PackageResourceReference ICON = new PackageResourceReference(
+            MethodHandles.lookup().lookupClass(), "BulkProcessingSidebarIcon.svg");
+
+    public BulkProcessingSidebarIcon(String aId)
     {
-        return new AgreementPageMenuItem();
+        super(aId);
+
+        add(new Image("icon", ICON));
     }
 }

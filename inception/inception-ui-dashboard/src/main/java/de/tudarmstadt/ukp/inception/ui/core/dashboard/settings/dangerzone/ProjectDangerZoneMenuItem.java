@@ -17,16 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.dangerzone;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 import de.tudarmstadt.ukp.inception.ui.project.dangerzone.ProjectDangerZonePanelFactory;
 
-@Component
 @Order(ProjectDangerZonePanelFactory.ORDER)
 public class ProjectDangerZoneMenuItem
     extends ProjectSettingsMenuItemBase
@@ -38,9 +37,9 @@ public class ProjectDangerZoneMenuItem
     }
 
     @Override
-    public IconType getIcon()
+    public Component getIcon(String aId)
     {
-        return FontAwesome5IconType.skull_crossbones_s;
+        return new Icon(aId, FontAwesome5IconType.skull_crossbones_s);
     }
 
     @Override

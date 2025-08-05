@@ -38,7 +38,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
@@ -177,7 +176,7 @@ public class DashboardMenu
             menulink = new BookmarkablePageLink<>("item", pageClass);
         }
 
-        menulink.add(new Icon("icon", item.getIcon()));
+        menulink.add(item.getIcon("icon"));
         menulink.add(new Label("label", item.getLabel()));
         menulink.add(AttributeAppender.append("class",
                 () -> getPage().getClass().equals(pageClass) ? "active" : ""));

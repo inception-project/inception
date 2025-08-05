@@ -17,16 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.menu;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import wicket.contrib.input.events.key.KeyType;
 
 public interface MenuItem
 {
     String getPath();
 
-    IconType getIcon();
+    Component getIcon(String aId);
 
     String getLabel();
 

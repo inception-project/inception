@@ -17,19 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import wicket.contrib.input.events.key.KeyType;
 
 @Order(200)
-@Component
 public class ManageUsersPageMenuItem
     implements MenuItem
 {
@@ -42,9 +41,9 @@ public class ManageUsersPageMenuItem
     }
 
     @Override
-    public IconType getIcon()
+    public Component getIcon(String aId)
     {
-        return FontAwesome5IconType.users_cog_s;
+        return new Icon(aId, FontAwesome5IconType.users_cog_s);
     }
 
     @Override

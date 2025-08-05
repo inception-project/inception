@@ -15,19 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.agreement.config;
+package de.tudarmstadt.ukp.clarin.webanno.ui.tagsets.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.ui.agreement.page.AgreementPageMenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.tagsets.ProjectTagSetsMenuItem;
 
+@ConditionalOnWebApplication
 @Configuration
-public class AgreementUiAutoConfiguration
+public class TagSetsUiAutoConfiguration
 {
     @Bean
-    public AgreementPageMenuItem agreementPageMenuItem()
+    public ProjectTagSetsMenuItem projectTagSetsMenuItem()
     {
-        return new AgreementPageMenuItem();
+        return new ProjectTagSetsMenuItem();
     }
 }
