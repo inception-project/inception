@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
-import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;

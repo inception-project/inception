@@ -26,8 +26,8 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.inception.annotation.layer.span.MoveSpanAnnotationRequest;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.MoveSpanAnnotationRequest;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;

@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.io.brat;
 
-import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
@@ -30,7 +30,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.io.brat.config.BratAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.BratReader;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.BratWriter;

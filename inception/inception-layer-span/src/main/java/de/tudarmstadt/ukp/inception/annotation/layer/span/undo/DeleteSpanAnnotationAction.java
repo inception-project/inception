@@ -23,7 +23,7 @@ import java.util.Optional;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.event.SpanEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.event.SpanEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;

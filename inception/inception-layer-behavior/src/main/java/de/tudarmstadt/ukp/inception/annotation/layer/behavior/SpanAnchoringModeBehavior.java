@@ -29,11 +29,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlaceme
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.CreateSpanAnnotationRequest;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.MoveSpanAnnotationRequest;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAnnotationRequest_ImplBase;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerBehavior;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.CreateSpanAnnotationRequest;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.MoveSpanAnnotationRequest;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAnnotationRequest_ImplBase;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerBehavior;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;

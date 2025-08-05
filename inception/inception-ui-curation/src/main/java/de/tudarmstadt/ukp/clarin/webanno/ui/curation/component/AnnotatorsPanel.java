@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ACCEPTED_BY_CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ANNOTATORS_AGREE;
@@ -73,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSe
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.AnnotationStateColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.merge.AlreadyMergedException;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
@@ -121,6 +121,7 @@ public class AnnotatorsPanel
     private @SpringBean CurationRenderer curationRenderer;
     private @SpringBean BratSchemaGenerator bratSchemaGenerator;
     private @SpringBean AnnotationSchemaProperties annotationEditorProperties;
+    private @SpringBean DiffAdapterRegistry diffAdapterRegistry;
 
     public AnnotatorsPanel(String id, IModel<List<AnnotatorSegmentState>> aModel)
     {
@@ -454,7 +455,7 @@ public class AnnotatorsPanel
     private Map<String, Map<VID, AnnotationState>> calculateAnnotationStates(AnnotatorState aState,
             Map<String, CAS> aCasses)
     {
-        var adapters = getDiffAdapters(schemaService, aState.getAnnotationLayers());
+        var adapters = diffAdapterRegistry.getDiffAdapters(aState.getAnnotationLayers());
         var diff = doDiff(adapters, aCasses, aState.getWindowBeginOffset(),
                 aState.getWindowEndOffset()).toResult();
 

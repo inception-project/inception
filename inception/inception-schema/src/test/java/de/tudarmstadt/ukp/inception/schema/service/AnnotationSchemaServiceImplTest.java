@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.schema.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport.FEATURE_NAME_FIRST;
+import static de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport.FEATURE_NAME_FIRST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -53,11 +53,11 @@ import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfig
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.config.ChainLayerAutoConfiguration;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.config.RelationLayerAutoConfiguration;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;

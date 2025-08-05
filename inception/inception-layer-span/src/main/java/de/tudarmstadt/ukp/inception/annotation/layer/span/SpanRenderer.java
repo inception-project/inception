@@ -42,6 +42,8 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureTraits;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerBehavior;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;

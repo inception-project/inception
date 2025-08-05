@@ -34,9 +34,9 @@ import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerTraits;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerTraits;
 
 @Execution(CONCURRENT)
 class CasMergeDocumentTest

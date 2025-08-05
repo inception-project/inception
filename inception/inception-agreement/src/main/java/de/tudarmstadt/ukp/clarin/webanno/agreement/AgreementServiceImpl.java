@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.USED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
@@ -68,6 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
@@ -83,13 +83,16 @@ public class AgreementServiceImpl
     private final DocumentService documentService;
     private final AnnotationSchemaService schemaService;
     private final UserDao userService;
+    private final DiffAdapterRegistry diffAdapterRegistry;
 
     public AgreementServiceImpl(DocumentService aDocumentService,
-            AnnotationSchemaService aSchemaService, UserDao aUserService)
+            AnnotationSchemaService aSchemaService, UserDao aUserService,
+            DiffAdapterRegistry aDiffAdapterRegistry)
     {
         documentService = aDocumentService;
         schemaService = aSchemaService;
         userService = aUserService;
+        diffAdapterRegistry = aDiffAdapterRegistry;
     }
 
     @Override
@@ -133,7 +136,7 @@ public class AgreementServiceImpl
                 .sorted(comparing(SourceDocument::getName)) //
                 .toList();
 
-        var adapters = getDiffAdapters(schemaService, asList(aLayer));
+        var adapters = diffAdapterRegistry.getDiffAdapters(asList(aLayer));
 
         Set<String> tagset = aFeature != null
                 ? schemaService.listTags(aFeature.getTagset()).stream() //

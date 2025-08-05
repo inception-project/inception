@@ -25,6 +25,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationRenderMode;
 
 public class RelationRenderModeSelect
     extends DropDownChoice<RelationRenderMode>

@@ -21,10 +21,10 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationActionSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.event.ChainLinkCreatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.event.ChainSpanCreatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.event.ChainSpanEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.config.ChainLayerAutoConfiguration;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.event.ChainLinkCreatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.event.ChainSpanCreatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.event.ChainSpanEvent;
 
 /**
  * <p>

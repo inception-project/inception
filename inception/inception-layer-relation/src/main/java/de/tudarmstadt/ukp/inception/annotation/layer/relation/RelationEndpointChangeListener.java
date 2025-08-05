@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.springframework.context.event.EventListener;
 
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanMovedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanMovedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class RelationEndpointChangeListener

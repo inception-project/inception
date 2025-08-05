@@ -50,9 +50,9 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosition;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationDiffAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationPosition;
 
 public class CodingStudyUtils
 {

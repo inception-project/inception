@@ -28,8 +28,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.AnnotationAction_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.RedoableAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationAction;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.event.SpanEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.event.SpanEvent;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;

@@ -27,8 +27,8 @@ import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegi
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAttachmentBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointChangeListener;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointFeatureSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupportImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.behavior.RelationCrossSentenceBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.behavior.RelationOverlapBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.export.RelationLayerToCsvExporter;

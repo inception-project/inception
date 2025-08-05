@@ -21,10 +21,10 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationActionSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.event.RelationCreatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.event.RelationDeletedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.event.RelationEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.config.RelationLayerAutoConfiguration;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.event.RelationCreatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.event.RelationDeletedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.event.RelationEvent;
 
 /**
  * <p>

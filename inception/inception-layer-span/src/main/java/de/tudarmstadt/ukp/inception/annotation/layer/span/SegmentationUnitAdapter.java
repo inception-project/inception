@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
-import static de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter.SpanOption.TRIM;
+import static de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter.SpanOption.TRIM;
 
 import java.util.Set;
 
@@ -29,6 +29,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlaceme
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.CreateSpanAnnotationRequest;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.DeleteSpanAnnotationRequest;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.MoveSpanAnnotationRequest;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.text.TrimUtils;

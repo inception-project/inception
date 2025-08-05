@@ -23,8 +23,8 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupportImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.export.ChainLayerToCsvExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.export.ChainLayerToJsonExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.undo.ChainAnnotationActionUndoSupport;

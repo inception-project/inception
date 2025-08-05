@@ -48,6 +48,8 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerTraits;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.behavior.RelationLayerBehavior;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;

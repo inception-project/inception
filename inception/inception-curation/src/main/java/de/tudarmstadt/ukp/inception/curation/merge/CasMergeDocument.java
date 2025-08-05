@@ -17,27 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static de.tudarmstadt.ukp.inception.curation.merge.CasMerge.copyFeatures;
 import static de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult.ResultState.CREATED;
 import static de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult.ResultState.UPDATED;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.getAddr;
 
-import java.util.stream.Stream;
-
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.cas.AnnotationBase;
-import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.CreateDocumentAnnotationRequest;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerTraits;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.CreateDocumentAnnotationRequest;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerTraits;
 
 class CasMergeDocument
 {
@@ -89,20 +84,6 @@ class CasMergeDocument
             var mergedSpanAddr = getAddr(annoToUpdate);
             return new CasMergeOperationResult(UPDATED, mergedSpanAddr);
         }
-    }
-
-    static Stream<Annotation> selectCandidateSpansAt(CAS aTargetCas, TypeAdapter aAdapter,
-            AnnotationFS aOriginal)
-    {
-        var targetType = aAdapter.getAnnotationType(aTargetCas);
-        if (targetType.isEmpty()) {
-            return Stream.empty();
-        }
-
-        return aTargetCas.<Annotation> select(targetType.get()) //
-                .at(aOriginal.getBegin(), aOriginal.getEnd()) //
-                .sorted((a, b) -> aAdapter.countNonEqualFeatures(a, b,
-                        (fs, f) -> f.getLinkMode() == NONE));
     }
 
     private static boolean existsEquivalent(CAS aTargetCas, TypeAdapter aAdapter,

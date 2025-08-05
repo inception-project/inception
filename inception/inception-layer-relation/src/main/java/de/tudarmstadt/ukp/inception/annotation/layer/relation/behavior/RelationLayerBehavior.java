@@ -27,9 +27,9 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehavior;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.CreateRelationAnnotationRequest;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.CreateRelationAnnotationRequest;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;

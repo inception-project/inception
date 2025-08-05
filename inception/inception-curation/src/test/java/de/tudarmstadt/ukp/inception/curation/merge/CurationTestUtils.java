@@ -49,7 +49,7 @@ import org.dkpro.core.io.xmi.XmiReader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XReader;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class CurationTestUtils

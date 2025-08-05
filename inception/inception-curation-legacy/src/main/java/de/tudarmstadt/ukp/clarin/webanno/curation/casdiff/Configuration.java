@@ -32,8 +32,8 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.cas.AnnotationBase;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
+import de.tudarmstadt.ukp.inception.curation.api.Position;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**

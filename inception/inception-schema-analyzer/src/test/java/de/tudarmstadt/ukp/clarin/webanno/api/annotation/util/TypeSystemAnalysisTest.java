@@ -40,9 +40,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 
 @ExtendWith(SoftAssertionsExtension.class)
 public class TypeSystemAnalysisTest

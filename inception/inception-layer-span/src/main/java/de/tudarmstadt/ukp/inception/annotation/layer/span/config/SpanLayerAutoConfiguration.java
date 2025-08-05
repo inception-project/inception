@@ -25,11 +25,13 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.TokenAttachedSpanChangeListener;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.export.SpanLayerToCsvExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.export.SpanLayerToJsonExporter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.log.SpanEventAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.recommender.SpanSuggestionSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.undo.SpanAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.undo.UnitAnnotationActionUndoSupport;
@@ -83,6 +85,18 @@ public class SpanLayerAutoConfiguration
             DocumentService aDocumentService)
     {
         return new SpanLayerToCsvExporter(aSchemaService, aDocumentService);
+    }
+
+    @Bean
+    public SpanEventAdapter spanEventAdapter()
+    {
+        return new SpanEventAdapter();
+    }
+
+    @Bean
+    public SpanDiffSupport spanDiffSupport()
+    {
+        return new SpanDiffSupport();
     }
 
     @ConditionalOnProperty(prefix = "recommender", name = "enabled", havingValue = "true", matchIfMissing = true)

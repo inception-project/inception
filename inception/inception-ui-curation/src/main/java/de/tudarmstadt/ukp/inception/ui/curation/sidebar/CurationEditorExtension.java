@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static java.util.Arrays.asList;
@@ -47,8 +46,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ScrollToHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
@@ -88,12 +88,14 @@ public class CurationEditorExtension
     private final CurationSidebarService curationSidebarService;
     private final FeatureSupportRegistry featureSupportRegistry;
     private final LazyDetailsLookupService detailsLookupService;
+    private final DiffAdapterRegistry diffAdapterRegistry;
 
     public CurationEditorExtension(AnnotationSchemaService aAnnotationService,
             DocumentService aDocumentService, ApplicationEventPublisher aApplicationEventPublisher,
             UserDao aUserRepository, CurationSidebarService aCurationSidebarService,
             FeatureSupportRegistry aFeatureSupportRegistry,
-            LazyDetailsLookupService aDetailsLookupService)
+            LazyDetailsLookupService aDetailsLookupService,
+            DiffAdapterRegistry aDiffAdapterRegistry)
     {
         annotationService = aAnnotationService;
         documentService = aDocumentService;
@@ -102,6 +104,7 @@ public class CurationEditorExtension
         curationSidebarService = aCurationSidebarService;
         featureSupportRegistry = aFeatureSupportRegistry;
         detailsLookupService = aDetailsLookupService;
+        diffAdapterRegistry = aDiffAdapterRegistry;
     }
 
     @Override
@@ -396,7 +399,7 @@ public class CurationEditorExtension
     private CasDiff createDiff(Map<String, CAS> aCasses, AnnotationLayer aLayer, int aBegin,
             int aEnd)
     {
-        var adapters = getDiffAdapters(annotationService, asList(aLayer));
+        var adapters = diffAdapterRegistry.getDiffAdapters(asList(aLayer));
         return doDiff(adapters, aCasses, aBegin, aEnd);
     }
 }

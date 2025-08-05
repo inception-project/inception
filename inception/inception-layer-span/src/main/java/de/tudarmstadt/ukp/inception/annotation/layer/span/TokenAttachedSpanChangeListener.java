@@ -26,6 +26,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.springframework.context.event.EventListener;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanMovedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class TokenAttachedSpanChangeListener
