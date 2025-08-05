@@ -15,19 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.agreement.config;
+package de.tudarmstadt.ukp.inception.workload.project.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.ui.agreement.page.AgreementPageMenuItem;
+import de.tudarmstadt.ukp.inception.workload.project.ProjectWorkloadMenuItem;
 
 @Configuration
-public class AgreementUiAutoConfiguration
+public class WorkloadUiAutoConfiguration
 {
-    @Bean
-    public AgreementPageMenuItem agreementPageMenuItem()
+    public ProjectWorkloadMenuItem projectWorkloadMenuItem()
     {
-        return new AgreementPageMenuItem();
+        return new ProjectWorkloadMenuItem();
     }
 }

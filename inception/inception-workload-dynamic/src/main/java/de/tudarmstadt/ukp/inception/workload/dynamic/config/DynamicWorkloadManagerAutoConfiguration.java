@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -35,6 +36,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtensionImp
 import de.tudarmstadt.ukp.inception.workload.dynamic.annotation.DynamicWorkflowActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.annotation.DynamicWorkflowDocumentNavigationActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.event.DynamicWorkloadStateWatcher;
+import de.tudarmstadt.ukp.inception.workload.dynamic.management.DynamicWorkloadManagementPageMenuItem;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPointImpl;
@@ -100,5 +102,15 @@ public class DynamicWorkloadManagerAutoConfiguration
         return new DynamicWorkflowDocumentNavigationActionBarExtension(aDocumentService,
                 aWorkloadManagementService, aDynamicWorkloadExtension, aProjectService,
                 aUserService);
+    }
+
+    @ConditionalOnWebApplication
+    @Bean
+    public DynamicWorkloadManagementPageMenuItem dynamicWorkloadManagementPageMenuItem(
+            UserDao aUserRepo, ProjectService aProjectService,
+            WorkloadManagementService aWorkloadManagementService)
+    {
+        return new DynamicWorkloadManagementPageMenuItem(aUserRepo, aProjectService,
+                aWorkloadManagementService);
     }
 }

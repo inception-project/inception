@@ -39,8 +39,16 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDa
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPageMenuBarItemSupport;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.ProjectsOverviewPageMenuBarItemSupport;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsDashboardMenuItem;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.annotation.AnnotationPreferencesMenuItem;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.casdoctor.ProjectCasDoctorMenuItem;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.constraints.ProjectConstraintsMenuItem;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.dangerzone.ProjectDangerZoneMenuItem;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.details.ProjectDetailMenuItem;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.documents.ProjectDocumentsMenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.export.LegacyProjectExportMenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.export.ProjectExportMenuItem;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.layers.ProjectLayersMenuItem;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.users.ProjectUsersMenuItem;
 
 @ConditionalOnWebApplication
 @Configuration
@@ -98,5 +106,53 @@ public class DashboardAutoConfiguration
             CsrfAttacksPreventionProperties aCsrfAttacksPreventionProperties)
     {
         return new SystemStatusServiceImpl(aCsrfAttacksPreventionProperties);
+    }
+
+    @Bean
+    public AnnotationPreferencesMenuItem annotationPreferencesMenuItem()
+    {
+        return new AnnotationPreferencesMenuItem();
+    }
+
+    @Bean
+    public ProjectCasDoctorMenuItem projectCasDoctorMenuItem()
+    {
+        return new ProjectCasDoctorMenuItem();
+    }
+
+    @Bean
+    public ProjectConstraintsMenuItem projectConstraintsMenuItem()
+    {
+        return new ProjectConstraintsMenuItem();
+    }
+
+    @Bean
+    public ProjectDangerZoneMenuItem projectDangerZoneMenuItem()
+    {
+        return new ProjectDangerZoneMenuItem();
+    }
+
+    @Bean
+    public ProjectDetailMenuItem projectDetailMenuItem()
+    {
+        return new ProjectDetailMenuItem();
+    }
+
+    @Bean
+    public ProjectDocumentsMenuItem projectDocumentsMenuItem()
+    {
+        return new ProjectDocumentsMenuItem();
+    }
+
+    @Bean
+    public ProjectLayersMenuItem projectLayersMenuItem()
+    {
+        return new ProjectLayersMenuItem();
+    }
+
+    @Bean
+    public ProjectUsersMenuItem projectUsersMenuItem()
+    {
+        return new ProjectUsersMenuItem();
     }
 }

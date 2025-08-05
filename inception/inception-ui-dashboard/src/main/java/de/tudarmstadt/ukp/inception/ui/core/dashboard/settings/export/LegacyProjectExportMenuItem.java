@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.export;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.springframework.core.annotation.Order;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.inception.project.export.legacy.LegacyExportProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.config.DashboardAutoConfiguration;
@@ -43,9 +44,9 @@ public class LegacyProjectExportMenuItem
     }
 
     @Override
-    public IconType getIcon()
+    public Component getIcon(String aId)
     {
-        return FontAwesome5IconType.download_s;
+        return new Icon(aId, FontAwesome5IconType.download_s);
     }
 
     @Override
