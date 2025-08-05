@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegi
 import de.tudarmstadt.ukp.inception.annotation.layer.document.DocumentMetadataLayerSingletonCreatingWatcher;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.DocumentMetadataLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.curation.DocumentMetadataDiffSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.export.DocumentLayerToCsvExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.export.DocumentLayerToJsonExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.recommender.MetadataSuggestionSupport;
@@ -105,6 +106,12 @@ public class DocumentMetadataLayerSupportAutoConfiguration
             AnnotationSchemaService aSchemaService, DocumentService aDocumentService)
     {
         return new DocumentLayerToCsvExporter(aSchemaService, aDocumentService);
+    }
+
+    @Bean
+    public DocumentMetadataDiffSupport documentMetadataDiffSupport()
+    {
+        return new DocumentMetadataDiffSupport();
     }
 
     @Bean

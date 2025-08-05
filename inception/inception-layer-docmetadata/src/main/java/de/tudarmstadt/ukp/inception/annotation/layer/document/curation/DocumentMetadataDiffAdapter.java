@@ -47,9 +47,6 @@ public class DocumentMetadataDiffAdapter
         super(aType, aLabelFeatures);
     }
 
-    /**
-     * see {@code SpanRenderer#selectAnnotationsInWindow}
-     */
     @Override
     public List<AnnotationBase> selectAnnotationsInWindow(CAS aCas, int aWindowBegin,
             int aWindowEnd)

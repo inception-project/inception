@@ -39,10 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureTraits;
-import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.document.curation.DocumentMetadataDiffAdapter;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapter;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.api.DiffSupportRegistry;
@@ -81,25 +77,15 @@ public class DiffAdapterRegistryImpl
                 continue nextLayer;
             }
 
-            var featuresToCompare = collectFeaturesToCompare(featuresByLayer, layer);
-
-            DiffAdapter adapter;
-            switch (layer.getType()) {
-            case SpanLayerSupport.TYPE: // Fall through
-            case RelationLayerSupport.TYPE: {
-                var diffSupport = diffSupportRegistry.getExtension(layer).get();
-                adapter = diffSupport.getAdapter(layer, featuresToCompare);
-                break;
-            }
-            case DocumentMetadataLayerSupport.TYPE: {
-                adapter = new DocumentMetadataDiffAdapter(layer.getName(), featuresToCompare);
-                break;
-            }
-            default:
+            var maybeDiffSupport = diffSupportRegistry.getExtension(layer);
+            if (maybeDiffSupport.isEmpty()) {
                 LOG.debug("Layer type [{}] not supported - ignoring", layer.getType());
                 continue nextLayer;
             }
 
+            var featuresToCompare = collectFeaturesToCompare(featuresByLayer, layer);
+
+            var adapter = maybeDiffSupport.get().getAdapter(layer, featuresToCompare);
             adapters.add(adapter);
 
             nextFeature: for (var f : featuresByLayer.getOrDefault(layer, emptyList())) {
