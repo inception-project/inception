@@ -1743,6 +1743,12 @@ public class AnnotationSchemaServiceImpl
             return errors;
         }
 
+        if (name.contains(FEATURE_SUFFIX_SEP)) {
+            errors.add(new ValidationError("[" + name + "] must not contain [__]. Please "
+                    + "use a different name for the feature."));
+            return errors;
+        }
+
         var layerSupport = layerSupportRegistry.getLayerSupport(aFeature.getLayer());
         errors.addAll(layerSupport.validateFeatureName(aFeature));
         if (!errors.isEmpty()) {

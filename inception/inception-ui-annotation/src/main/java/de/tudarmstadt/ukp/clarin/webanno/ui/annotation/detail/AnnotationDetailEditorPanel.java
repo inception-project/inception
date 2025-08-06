@@ -61,7 +61,7 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -119,7 +119,7 @@ import wicket.contrib.input.events.key.KeyType;
  * Annotation Detail Editor Panel.
  */
 public abstract class AnnotationDetailEditorPanel
-    extends Panel
+    extends GenericPanel<AnnotatorState>
     implements AnnotationActionHandler
 {
     private static final long serialVersionUID = 7324241992353693848L;
@@ -1023,6 +1023,8 @@ public abstract class AnnotationDetailEditorPanel
 
         state.getFeatureStates().clear();
 
+        var adapter = annotationService.getAdapter(aLayer);
+
         for (var feature : annotationService.listEnabledFeatures(aLayer)) {
             if (isFeatureSuppressed(state, feature)) {
                 continue;
@@ -1035,18 +1037,20 @@ public abstract class AnnotationDetailEditorPanel
                 return;
             }
 
-            Serializable value = null;
-            VID vid = null;
+            FeatureState featureState;
             if (aFS != null) {
-                value = annotationService.getAdapter(aLayer).getFeatureValue(feature, aFS);
-                vid = VID.of(aFS);
+                featureState = adapter.getFeatureState(feature, aFS);
             }
             else if (aRemembered != null) {
-                value = aRemembered.get(feature);
+                var value = aRemembered.get(feature);
+                featureState = new FeatureState(null, feature, value);
+            }
+            else {
+                featureState = new FeatureState(null, feature, null);
             }
 
-            var featureState = new FeatureState(vid, feature, value);
             populateTagset(aCas, state, featureState);
+
             state.getFeatureStates().add(featureState);
         }
     }
@@ -1151,33 +1155,22 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public IModel<AnnotatorState> getModel()
+    private void populateTagset(CAS aCas, AnnotatorState aState, FeatureState aFeatureState)
     {
-        return (IModel<AnnotatorState>) getDefaultModel();
-    }
-
-    public AnnotatorState getModelObject()
-    {
-        return (AnnotatorState) getDefaultModelObject();
-    }
-
-    private void populateTagset(CAS aCas, AnnotatorState state, FeatureState featureState)
-    {
-        if (featureState.feature.getTagset() == null) {
+        var tagset = aFeatureState.feature.getTagset();
+        if (tagset == null) {
             return;
         }
 
         // verification to check whether constraints exist for this project or NOT
-        if (state.getConstraints() != null && state.getSelection().getAnnotation().isSet()) {
+        if (aState.getConstraints() != null && aState.getSelection().getAnnotation().isSet()) {
             // indicator.setRulesExist(true);
-            populateTagsetBasedOnRules(aCas, featureState);
+            populateTagsetBasedOnRules(aCas, aFeatureState);
             return;
         }
 
         // indicator.setRulesExist(false);
-        featureState.tagset = annotationService
-                .listTagsReorderable(featureState.feature.getTagset());
+        aFeatureState.tagset = annotationService.listTagsReorderable(tagset);
     }
 
     /**

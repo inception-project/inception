@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.editorstate;
 
+import static java.util.Collections.emptyList;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,12 +35,15 @@ public class FeatureState
     implements Serializable
 {
     private static final long serialVersionUID = 3512979848975446735L;
+
     public final AnnotationFeature feature;
+    public final VID vid;
+    public final RulesIndicator indicator = new RulesIndicator();
+
     public Serializable value;
     public List<ReorderableTag> tagset;
     public List<PossibleValue> possibleValues;
-    public RulesIndicator indicator = new RulesIndicator();
-    public VID vid;
+    public List<SuggestionState> suggestionInfos = emptyList();
 
     public FeatureState(VID aVid, AnnotationFeature aFeature, Serializable aValue)
     {
@@ -48,10 +53,20 @@ public class FeatureState
 
         indicator.reset(); // reset the indicator
 
-        // Avoid having null here because otherwise we have to handle null in zillion places!
+        // Avoid having null here because otherwise we have to handle null in gadzillion places!
         if (value == null && MultiValueMode.ARRAY.equals(aFeature.getMultiValueMode())) {
             value = new ArrayList<>();
         }
+    }
+
+    public void setSuggestions(List<SuggestionState> aSuggestionInfos)
+    {
+        suggestionInfos = aSuggestionInfos;
+    }
+
+    public List<SuggestionState> getSuggestions()
+    {
+        return suggestionInfos;
     }
 
     public Serializable getValue()
@@ -67,11 +82,6 @@ public class FeatureState
     public VID getVid()
     {
         return vid;
-    }
-
-    public void setVid(VID aVid)
-    {
-        vid = aVid;
     }
 
     public AnnotationFeature getFeature()

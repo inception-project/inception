@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeatureFilter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -185,6 +186,8 @@ public interface TypeAdapter
      * @return the feature value.
      */
     <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs);
+
+    FeatureState getFeatureState(AnnotationFeature aFeature, FeatureStructure aFs);
 
     boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS);
 
