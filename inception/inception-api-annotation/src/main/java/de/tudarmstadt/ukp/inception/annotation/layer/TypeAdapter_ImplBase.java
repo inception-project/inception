@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer;
 
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 
+import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,6 +45,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
@@ -258,6 +261,17 @@ public abstract class TypeAdapter_ImplBase
                 .orElseThrow(() -> new NoSuchElementException(
                         "Unsupported feature type [" + aFeature.getType() + "]"))
                 .getFeatureValue(aFeature, aFs);
+    }
+
+    @Override
+    public FeatureState getFeatureState(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        Serializable value = getFeatureValue(aFeature, aFS);
+        var vid = VID.of(aFS);
+        var suggestionStates = getFeatureSupport(aFeature).get().getSuggestions(aFS, aFeature);
+        var state = new FeatureState(vid, aFeature, value);
+        state.setSuggestions(suggestionStates);
+        return state;
     }
 
     @Deprecated
