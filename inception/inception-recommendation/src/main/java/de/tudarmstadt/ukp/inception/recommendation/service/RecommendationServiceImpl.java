@@ -375,7 +375,7 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsRecommender(Project aProject, String aRecommender)
     {
         var cb = entityManager.getCriteriaBuilder();
@@ -478,7 +478,7 @@ public class RecommendationServiceImpl
     @Transactional
     public List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "FROM Recommender WHERE ", //
                 "project = :project AND", //
                 "layer = :layer AND", //
@@ -1799,7 +1799,7 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsEnabledRecommender(Project aProject)
     {
         var criteriaBuilder = entityManager.getCriteriaBuilder();
@@ -1819,14 +1819,14 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public long countEnabledRecommenders()
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "FROM Recommender WHERE", //
                 "enabled = :enabled");
 
-        List<Recommender> recommenders = entityManager.createQuery(query, Recommender.class) //
+        var recommenders = entityManager.createQuery(query, Recommender.class) //
                 .setParameter("enabled", true) //
                 .getResultList();
 
@@ -2086,16 +2086,16 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean hasSkippedSuggestions(String aSessionOwner, User aDataOwner,
             AnnotationLayer aLayer)
     {
-        String sql = String.join("\n", //
+        var sql = String.join("\n", //
                 "SELECT COUNT(*) FROM LearningRecord WHERE", //
                 "user = :user AND", //
                 "layer = :layer AND", //
                 "userAction = :action");
-        long count = entityManager.createQuery(sql, Long.class) //
+        var count = entityManager.createQuery(sql, Long.class) //
                 .setParameter("user", aDataOwner.getUsername()) //
                 .setParameter("layer", aLayer) //
                 .setParameter("action", SKIPPED) //

@@ -49,7 +49,6 @@ import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -187,7 +186,7 @@ public class ProjectServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsProjectWithName(String aName)
     {
         String query = "FROM Project WHERE name = :name";
@@ -203,7 +202,7 @@ public class ProjectServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsProjectWithSlug(String aSlug)
     {
         String query = "FROM Project WHERE slug = :slug";
@@ -219,16 +218,16 @@ public class ProjectServiceImpl
     }
 
     @Deprecated
-    @Transactional
     @Override
+    @Transactional(readOnly = true)
     public boolean existsProjectPermission(User aUser, Project aProject)
     {
         return hasAnyRole(aUser, aProject);
     }
 
     @Override
-    @Transactional
     @Deprecated
+    @Transactional(readOnly = true)
     public boolean existsProjectPermissionLevel(User aUser, Project aProject,
             PermissionLevel aLevel)
     {
@@ -260,7 +259,7 @@ public class ProjectServiceImpl
     @Transactional
     public List<PermissionLevel> listRoles(Project aProject, String aUser)
     {
-        String query = String.join("\n", //
+        String query = join("\n", //
                 "SELECT level ", //
                 "FROM ProjectPermission ", //
                 "WHERE user =:user AND project =:project ", //
@@ -283,7 +282,7 @@ public class ProjectServiceImpl
     @Transactional
     public List<ProjectPermission> listProjectPermissionLevel(String aUser, Project aProject)
     {
-        String query = String.join("\n", //
+        String query = join("\n", //
                 "FROM ProjectPermission ", //
                 "WHERE user =:user AND project =:project ", //
                 "ORDER BY user, level");
@@ -299,7 +298,7 @@ public class ProjectServiceImpl
     @Transactional
     public List<ProjectPermission> listProjectPermissions(User aUser)
     {
-        String query = String.join("\n", //
+        String query = join("\n", //
                 "FROM ProjectPermission ", //
                 "WHERE user =:user ", //
                 "ORDER BY project.name, level");
@@ -314,7 +313,7 @@ public class ProjectServiceImpl
     @Transactional
     public List<ProjectPermission> listProjectPermissions(Project aProject)
     {
-        String query = String.join("\n", //
+        String query = join("\n", //
                 "FROM ProjectPermission ", //
                 "WHERE project = :project", //
                 "ORDER BY user, level");
@@ -344,7 +343,8 @@ public class ProjectServiceImpl
                             .collect(toCollection(LinkedHashSet::new));
                     return new ProjectUserPermissions(aProject, username, user, roles);
                 }) //
-                .sorted(this::compareProjectUserPermissions).collect(toList());
+                .sorted(this::compareProjectUserPermissions) //
+                .collect(toList());
     }
 
     private int compareProjectUserPermissions(ProjectUserPermissions a, ProjectUserPermissions b)
@@ -366,10 +366,10 @@ public class ProjectServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean hasAnyRole(User aUser, Project aProject)
     {
-        String query = String.join("\n", //
+        var query = join("\n", //
                 "SELECT COUNT(*) FROM ProjectPermission ", //
                 "WHERE user = :user AND project = :project");
 
@@ -380,7 +380,7 @@ public class ProjectServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean hasRole(User aUser, Project aProject, PermissionLevel aRole,
             PermissionLevel... aMoreRoles)
     {
@@ -388,7 +388,7 @@ public class ProjectServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean hasRole(String aUser, Project aProject, PermissionLevel aRole,
             PermissionLevel... aMoreRoles)
     {
@@ -400,7 +400,7 @@ public class ProjectServiceImpl
             roles.addAll(asList(aMoreRoles));
         }
 
-        String query = String.join("\n", //
+        var query = join("\n", //
                 "SELECT COUNT(*) FROM ProjectPermission ", //
                 "WHERE user = :user AND project = :project AND level IN (:roles)");
 
@@ -412,7 +412,7 @@ public class ProjectServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean hasRoleInAnyProject(User aUser, PermissionLevel aRole,
             PermissionLevel... aMoreRoles)
     {
@@ -420,7 +420,7 @@ public class ProjectServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean hasRoleInAnyProject(String aUser, PermissionLevel aRole,
             PermissionLevel... aMoreRoles)
     {
@@ -432,7 +432,7 @@ public class ProjectServiceImpl
             roles.addAll(asList(aMoreRoles));
         }
 
-        String query = String.join("\n", //
+        var query = join("\n", //
                 "SELECT COUNT(*) FROM ProjectPermission ", //
                 "WHERE user = :user AND level IN (:roles)");
 
@@ -555,7 +555,7 @@ public class ProjectServiceImpl
     @Transactional
     public List<User> listProjectUsersWithPermissions(Project aProject)
     {
-        String query = join("\n", //
+        var query = join("\n", //
                 "SELECT DISTINCT u FROM User u, ProjectPermission pp ", //
                 "WHERE pp.user = u.username ", //
                 "AND pp.project = :project ", //
@@ -570,7 +570,7 @@ public class ProjectServiceImpl
     public List<User> listProjectUsersWithPermissions(Project aProject,
             PermissionLevel aPermissionLevel)
     {
-        String query = String.join("\n", //
+        var query = join("\n", //
                 "SELECT DISTINCT u FROM User u, ProjectPermission pp ", //
                 "WHERE pp.user = u.username ", //
                 "AND pp.project = :project ", //
@@ -587,7 +587,7 @@ public class ProjectServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public Project getProjectBySlug(String aSlug)
     {
-        String query = "FROM Project WHERE slug = :slug";
+        var query = "FROM Project WHERE slug = :slug";
         return entityManager.createQuery(query, Project.class) //
                 .setParameter("slug", aSlug) //
                 .getSingleResult();
@@ -597,7 +597,7 @@ public class ProjectServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public Project getProject(long aId)
     {
-        String query = "FROM Project " + "WHERE id = :id";
+        var query = "FROM Project " + "WHERE id = :id";
         return entityManager.createQuery(query, Project.class) //
                 .setParameter("id", aId) //
                 .getSingleResult();
@@ -612,10 +612,10 @@ public class ProjectServiceImpl
 
     @Deprecated
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Date getProjectTimeStamp(Project aProject, String aUsername)
     {
-        String query = String.join("\n", //
+        var query = join("\n", //
                 "SELECT MAX(ann.timestamp) ", //
                 "FROM AnnotationDocument AS ann ", //
                 "WHERE ann.project = :project AND ann.user = :user");
@@ -628,10 +628,10 @@ public class ProjectServiceImpl
 
     @Deprecated
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Date getProjectTimeStamp(Project aProject)
     {
-        String query = String.join("\n", //
+        var query = join("\n", //
                 "SELECT MAX(doc.timestamp) ", //
                 "FROM SourceDocument AS doc ", //
                 "WHERE doc.project = :project");
@@ -642,9 +642,10 @@ public class ProjectServiceImpl
     }
 
     @Override
+    @Transactional
     public List<Project> listProjectsWithFinishedAnnos()
     {
-        String query = String.join("\n", //
+        var query = join("\n", //
                 "SELECT DISTINCT ann.project ", //
                 "FROM AnnotationDocument AS ann ", //
                 "WHERE ann.state = :state");
@@ -657,7 +658,7 @@ public class ProjectServiceImpl
     @Transactional
     public List<Project> listProjects()
     {
-        String query = "FROM Project ORDER BY name ASC";
+        var query = "FROM Project ORDER BY name ASC";
         return entityManager.createQuery(query, Project.class).getResultList();
     }
 
@@ -666,7 +667,7 @@ public class ProjectServiceImpl
     public void removeProject(Project aProject) throws IOException
     {
         try (var logCtx = withProjectLogger(aProject)) {
-            long start = System.currentTimeMillis();
+            var start = System.currentTimeMillis();
 
             // remove metadata from DB
             var project = aProject;
@@ -751,15 +752,14 @@ public class ProjectServiceImpl
         // Admins have access to any project, but they may not have actual roles in them, so we
         // add all the projects without roles and then fill in any roles later
         if (userRepository.isAdministrator(aUser)) {
-            for (Project project : listProjects()) {
+            for (var project : listProjects()) {
                 result.computeIfAbsent(project, _p -> new LinkedHashSet<>());
             }
         }
 
-        List<ProjectPermission> permissionAssignments = listProjectPermissions(aUser);
-        for (ProjectPermission perm : permissionAssignments) {
-            Set<PermissionLevel> levels = result.computeIfAbsent(perm.getProject(),
-                    _p -> new HashSet<>());
+        var permissionAssignments = listProjectPermissions(aUser);
+        for (var perm : permissionAssignments) {
+            var levels = result.computeIfAbsent(perm.getProject(), _p -> new HashSet<>());
             levels.add(perm.getLevel());
         }
 
@@ -778,19 +778,19 @@ public class ProjectServiceImpl
         return listProjectsWithUserHavingRole(aUser, MANAGER);
     }
 
-    @Transactional
     @Override
-    public boolean managesAnyProject(User user)
+    @Transactional(readOnly = true)
+    public boolean managesAnyProject(User aUser)
     {
-        if (userRepository.isAdministrator(user)) {
+        if (userRepository.isAdministrator(aUser)) {
             return true;
         }
 
-        if (userRepository.isProjectCreator(user)) {
+        if (userRepository.isProjectCreator(aUser)) {
             return true;
         }
 
-        if (!listProjectsWithUserHavingRole(user, MANAGER).isEmpty()) {
+        if (!listProjectsWithUserHavingRole(aUser, MANAGER).isEmpty()) {
             return true;
         }
 
@@ -858,10 +858,10 @@ public class ProjectServiceImpl
 
     private void addMissingProjectSlugs()
     {
-        String query = "SELECT p FROM Project p WHERE slug IS NULL";
-        List<Project> projects = entityManager.createQuery(query, Project.class).getResultList();
-        for (Project project : projects) {
-            String slug = deriveSlugFromName(project.getName());
+        var query = "SELECT p FROM Project p WHERE slug IS NULL";
+        var projects = entityManager.createQuery(query, Project.class).getResultList();
+        for (var project : projects) {
+            var slug = deriveSlugFromName(project.getName());
             if (!isValidProjectSlug(slug)) {
                 LOG.warn("Attempt to derive slug from project name [{}] resulted in invalid slug "
                         + "[{}], generating random slug...", project.getName(), slug);
@@ -875,10 +875,10 @@ public class ProjectServiceImpl
 
     private String generateRandomSlug()
     {
-        String validChars = "abcdefghijklmnopqrstuvwxyz";
-        Random rnd = new Random();
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 32; i++) {
+        var validChars = "abcdefghijklmnopqrstuvwxyz";
+        var rnd = new Random();
+        var sb = new StringBuilder();
+        for (var i = 0; i < 32; i++) {
             sb.append(validChars.charAt(rnd.nextInt(validChars.length())));
         }
         return sb.toString();
@@ -915,11 +915,11 @@ public class ProjectServiceImpl
 
     private Set<ProjectInitializer> collectDependencies(List<ProjectInitializer> aInitializers)
     {
-        Set<ProjectInitializer> seen = new LinkedHashSet<>();
+        var seen = new LinkedHashSet<ProjectInitializer>();
 
-        Deque<ProjectInitializer> deque = new LinkedList<>(aInitializers);
+        var deque = new LinkedList<ProjectInitializer>(aInitializers);
         while (!deque.isEmpty()) {
-            ProjectInitializer initializer = deque.poll();
+            var initializer = deque.poll();
 
             if (seen.contains(initializer)) {
                 continue;
@@ -927,7 +927,7 @@ public class ProjectServiceImpl
 
             seen.add(initializer);
 
-            for (Class<? extends ProjectInitializer> depClass : initializer.getDependencies()) {
+            for (var depClass : initializer.getDependencies()) {
                 deque.add(findProjectInitializer(depClass));
             }
         }
@@ -1031,11 +1031,11 @@ public class ProjectServiceImpl
     @Transactional
     public List<Project> listProjectsWithUserHavingAnyRole(User aUser)
     {
-        String query = String.join("\n", //
+        var query = join("\n", //
                 "SELECT DISTINCT pp.project FROM ProjectPermission pp ", //
                 "WHERE pp.user = :username ", //
                 "ORDER BY pp.project.name ASC");
-        List<Project> projects = entityManager.createQuery(query, Project.class)
+        var projects = entityManager.createQuery(query, Project.class) //
                 .setParameter("username", aUser.getUsername()) //
                 .getResultList();
         return projects;
@@ -1063,15 +1063,15 @@ public class ProjectServiceImpl
             return null;
         }
 
-        String name = aName.trim().toLowerCase(Locale.ROOT);
+        var name = aName.trim().toLowerCase(Locale.ROOT);
         if (name.isEmpty()) {
             return "";
         }
 
-        StringBuilder buf = new StringBuilder();
-        boolean lastCharMappedToUnderscore = true;
-        for (int i = 0; i < min(name.length(), MAX_PROJECT_SLUG_LENGTH); i++) {
-            char c = name.charAt(i);
+        var buf = new StringBuilder();
+        var lastCharMappedToUnderscore = true;
+        for (var i = 0; i < min(name.length(), MAX_PROJECT_SLUG_LENGTH); i++) {
+            var c = name.charAt(i);
             if (Project.isValidProjectSlugCharacter(c)) {
                 lastCharMappedToUnderscore = c == '_';
                 buf.append(c);
@@ -1113,15 +1113,15 @@ public class ProjectServiceImpl
     @Override
     public String deriveUniqueSlug(String aSlug)
     {
-        int i = 0;
-        String slug = aSlug;
+        var i = 0;
+        var slug = aSlug;
         while (true) {
             if (!existsProjectWithSlug(slug)) {
                 return slug;
             }
 
             i++;
-            String suffix = "-" + i;
+            var suffix = "-" + i;
             if (MAX_PROJECT_SLUG_LENGTH - aSlug.length() <= suffix.length()) {
                 slug = aSlug.substring(0, MAX_PROJECT_SLUG_LENGTH - suffix.length()) + suffix;
             }
@@ -1140,8 +1140,8 @@ public class ProjectServiceImpl
                     "Project realm must start with [" + REALM_PROJECT_PREFIX + "]");
         }
 
-        long projectId = Long.valueOf(substringAfter(aRealmId, REALM_PROJECT_PREFIX));
-        Project project = getProject(projectId);
+        var projectId = Long.valueOf(substringAfter(aRealmId, REALM_PROJECT_PREFIX));
+        var project = getProject(projectId);
         if (project != null) {
             return new Realm(aRealmId, "<Project> " + project.getName());
         }

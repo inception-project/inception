@@ -164,10 +164,10 @@ public class WorkloadManagementServiceImpl
      * SourceDocument in a specific Project.
      */
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Long getNumberOfUsersWorkingOnADocument(SourceDocument aDocument)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "SELECT COUNT(*)", //
                 "FROM AnnotationDocument", //
                 "WHERE document = :document", "AND state IN (:states)");
