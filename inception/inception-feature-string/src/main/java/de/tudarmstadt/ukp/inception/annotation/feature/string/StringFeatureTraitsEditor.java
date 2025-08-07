@@ -164,6 +164,12 @@ public class StringFeatureTraitsEditor
         editorType.setChoices(Arrays.asList(StringFeatureTraits.EditorType.values()));
         editorType.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         editorTypeContainer.add(editorType);
+
+        var retainSuggestionInfo = new CheckBox("retainSuggestionInfo");
+        retainSuggestionInfo.setOutputMarkupId(true);
+        retainSuggestionInfo.setModel(PropertyModel.of(traits, "retainSuggestionInfo"));
+        form.add(retainSuggestionInfo);
+
         form.add(editorTypeContainer);
     }
 

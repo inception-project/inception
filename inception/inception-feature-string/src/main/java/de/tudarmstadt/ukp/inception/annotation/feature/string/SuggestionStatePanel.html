@@ -18,21 +18,12 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <div class="row form-row fe-input" wicket:enclosure="value">
-    <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label col-form-label">
-      <span wicket:id="feature"/>
-      <span class="float-end">
-        <span wicket:id="textIndicator"/>
-      </span>
-      <a wicket:id="openIri" class="float-end" target="_blank">
-        <i class="fas fa-external-link-alt"/>
-      </a>
-    </label>
-    <div class="feature-editor-value">
-      <input class="flex-content" wicket:id="value" type="text"/>
-      <div wicket:id="keyBindings" class="col-sm-12"/>
+  <div wicket:id="suggestion" class="small text-muted d-flex flex-grow-1 justify-content-between">
+    <div>
+      <span class="fas fa-robot"/>
+      <span wicket:id="value" class="me-2"/>
     </div>
-    <div wicket:id="suggestionInfo" class="d-flex"/>
+    <div wicket:id="score" class="font-monospace"/>
   </div>
 </wicket:panel>
 </html>
