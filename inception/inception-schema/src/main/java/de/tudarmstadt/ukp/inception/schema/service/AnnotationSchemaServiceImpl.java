@@ -46,7 +46,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
@@ -371,7 +370,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public boolean existsTagSet(String aName, Project aProject)
     {
         try {
@@ -389,7 +388,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public boolean existsTagSet(Project aProject)
     {
         try {
@@ -404,7 +403,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public boolean existsLayer(Project aProject)
     {
         return entityManager.createQuery(
@@ -416,7 +415,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public boolean existsLayer(String aName, Project aProject)
     {
         try {
@@ -434,7 +433,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public boolean existsLayer(String aName, String aType, Project aProject)
     {
         try {
@@ -453,7 +452,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsEnabledLayerOfType(Project aProject, String aType)
     {
         var query = String.join("\n", //
@@ -479,7 +478,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsFeature(String aName, AnnotationLayer aLayer)
     {
         try {
@@ -497,7 +496,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsEnabledFeatureOfType(Project aProject, String aType)
     {
         var query = String.join("\n", //
@@ -678,7 +677,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public boolean existsType(String aName, String aType)
     {
         try {
@@ -937,14 +936,13 @@ public class AnnotationSchemaServiceImpl
     public List<ImmutableTag> listTagsImmutable(TagSet aTagSet)
     {
         if (aTagSet == null) {
-            return Collections.emptyList();
+            return emptyList();
         }
 
         return immutableTagsCache.get(aTagSet);
     }
 
     @Override
-    @Transactional
     public List<ReorderableTag> listTagsReorderable(TagSet aTagSet)
     {
         return listTagsImmutable(aTagSet).stream() //
@@ -1433,7 +1431,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public TypeAdapter findAdapter(Project aProject, FeatureStructure aFS)
     {
         var layer = findLayer(aProject, aFS);
@@ -1634,7 +1632,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean isSentenceLayerEditable(Project aProject)
     {
         if (!annotationEditorProperties.isSentenceLayerEditable()) {
@@ -1651,7 +1649,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean isTokenLayerEditable(Project aProject)
     {
         if (!annotationEditorProperties.isTokenLayerEditable()) {

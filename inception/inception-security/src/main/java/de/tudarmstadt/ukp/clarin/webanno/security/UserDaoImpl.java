@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.security;
 import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.FILESYSTEM_ILLEGAL_PREFIX_CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.FILESYSTEM_RESERVED_CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
@@ -33,7 +34,7 @@ import static org.apache.commons.lang3.StringUtils.containsAny;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
-import java.security.Principal;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -50,7 +51,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
@@ -107,7 +107,7 @@ public class UserDaoImpl
     public static final Set<String> RESERVED_USERNAMES = Set.of(INITIAL_CAS_PSEUDO_USER,
             CURATION_USER, "anonymousUser");
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final EntityManager entityManager;
     private final SecurityProperties securityProperties;
@@ -168,7 +168,7 @@ public class UserDaoImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean exists(final String aUsername)
     {
         return entityManager
@@ -187,7 +187,7 @@ public class UserDaoImpl
 
         entityManager.persist(aUser);
         entityManager.flush();
-        log.debug("Created new user [" + aUser.getUsername() + "] with roles " + aUser.getRoles());
+        LOG.debug("Created new user {} with roles {}", aUser, aUser.getRoles());
         return aUser;
     }
 
@@ -207,7 +207,7 @@ public class UserDaoImpl
                     .forEach(_session -> _session.expireNow());
         }
 
-        User toDelete = get(aUsername);
+        var toDelete = get(aUsername);
         if (toDelete == null) {
             return 0;
         }
@@ -325,7 +325,7 @@ public class UserDaoImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean isEmpty()
     {
         var cb = entityManager.getCriteriaBuilder();
@@ -396,7 +396,7 @@ public class UserDaoImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public List<Authority> listAuthorities(User aUser)
     {
-        String query = "FROM Authority " + "WHERE username = :username";
+        var query = "FROM Authority " + "WHERE username = :username";
         return entityManager.createQuery(query, Authority.class) //
                 .setParameter("username", aUser) //
                 .getResultList();
@@ -406,21 +406,28 @@ public class UserDaoImpl
      * Check if the user has global administrator permissions.
      */
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean isAdministrator(User aUser)
     {
-        return hasRole(aUser, Role.ROLE_ADMIN);
+        return hasRole(aUser, ROLE_ADMIN);
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
+    public boolean isProjectCreator(User aUser)
+    {
+        return hasRole(aUser, ROLE_PROJECT_CREATOR);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public boolean hasRole(User aUser, Role aRole)
     {
         if (aUser == null) {
             return false;
         }
 
-        for (String role : getRoles(aUser)) {
+        for (var role : getRoles(aUser)) {
             if (aRole.name().equals(role)) {
                 return true;
             }
@@ -441,21 +448,6 @@ public class UserDaoImpl
         return authentication.getAuthorities().stream() //
                 .map(GrantedAuthority::getAuthority) //
                 .anyMatch(auth -> ROLE_ADMIN.name().equals(auth));
-    }
-
-    @Override
-    @Transactional
-    public boolean isProjectCreator(User aUser)
-    {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null) {
-            return false;
-        }
-
-        return authentication.getAuthorities().stream() //
-                .map(GrantedAuthority::getAuthority) //
-                .anyMatch(auth -> Role.ROLE_PROJECT_CREATOR.name().equals(auth));
     }
 
     @Override
@@ -621,7 +613,7 @@ public class UserDaoImpl
 
         // Password is too short or too long
         var len = aPassword.length();
-        int minimumPasswordLength = securityProperties.getMinimumPasswordLength();
+        var minimumPasswordLength = securityProperties.getMinimumPasswordLength();
         if (len < minimumPasswordLength) {
             errors.add(new ValidationError("Password too short. It must at least consist of "
                     + minimumPasswordLength + " characters.") //
@@ -629,7 +621,7 @@ public class UserDaoImpl
                             .setVariable(MVAR_LIMIT, minimumPasswordLength));
         }
 
-        int maximumPasswordLength = securityProperties.getMaximumPasswordLength();
+        var maximumPasswordLength = securityProperties.getMaximumPasswordLength();
         if (len > maximumPasswordLength) {
             errors.add(new ValidationError("Password too long. It can at most consist of "
                     + maximumPasswordLength + " characters.") //
@@ -637,7 +629,7 @@ public class UserDaoImpl
                             .setVariable(MVAR_LIMIT, maximumPasswordLength));
         }
 
-        Pattern passwordPattern = securityProperties.getPasswordPattern();
+        var passwordPattern = securityProperties.getPasswordPattern();
         if (!passwordPattern.matcher(aPassword).matches()) {
             errors.add(new ValidationError("Password invalid. It must match the pattern ["
                     + passwordPattern.pattern() + "].") //
@@ -655,29 +647,34 @@ public class UserDaoImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Set<String> getRoles(User aUser)
     {
         // When looking up roles for the user who is currently logged in, then we look in the
         // security context - otherwise we ask the database.
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        Set<String> roles = new HashSet<>();
+        var roles = new HashSet<String>();
         if (authentication != null && aUser.getUsername().equals(authentication.getName())) {
-            for (GrantedAuthority ga : SecurityContextHolder.getContext().getAuthentication()
-                    .getAuthorities()) {
+            for (var ga : SecurityContextHolder.getContext().getAuthentication().getAuthorities()) {
                 roles.add(ga.getAuthority());
             }
         }
         else {
-            for (Authority a : listAuthorities(aUser)) {
-                roles.add(a.getAuthority());
-            }
+            // Not using listAuthorities() here because that is not read-only
+            var query = "FROM Authority " + "WHERE username = :username";
+            entityManager.createQuery(query, Authority.class) //
+                    .setParameter("username", aUser) //
+                    .getResultStream() //
+                    .map(Authority::getAuthority) //
+                    .forEach(roles::add);
         }
+
         return roles;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long countEnabledUsers()
     {
         String query = String.join("\n", //
@@ -693,7 +690,7 @@ public class UserDaoImpl
     @Override
     public String getCurrentUsername()
     {
-        Principal authentication = SecurityContextHolder.getContext().getAuthentication();
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
 
         return authentication != null ? authentication.getName() : null;
     }
@@ -703,7 +700,7 @@ public class UserDaoImpl
     public boolean userHasNoPassword(User aUser)
     {
         var applicationContext = ApplicationContextProvider.getApplicationContext();
-        PasswordEncoder passwordEncoder = applicationContext.getBean(PasswordEncoder.class);
+        var passwordEncoder = applicationContext.getBean(PasswordEncoder.class);
         return aUser.getPassword() == null
                 || passwordEncoder.matches(EMPTY_PASSWORD, aUser.getPassword());
     }
@@ -719,7 +716,7 @@ public class UserDaoImpl
         // they would be able to log in via form-based login...
         if (ArrayUtils.contains(applicationContext.getEnvironment().getActiveProfiles(),
                 PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)) {
-            PasswordEncoder passwordEncoder = applicationContext.getBean(PasswordEncoder.class);
+            var passwordEncoder = applicationContext.getBean(PasswordEncoder.class);
             if (aUser.getPassword() == null
                     || passwordEncoder.matches(EMPTY_PASSWORD, aUser.getPassword())) {
                 return false;

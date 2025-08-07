@@ -197,7 +197,7 @@ public class GazeteerServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsGazeteer(Recommender aRecommender, String aName)
     {
         Validate.notNull(aRecommender, "Recommender must be specified");

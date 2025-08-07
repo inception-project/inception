@@ -191,15 +191,16 @@ public class CurationDocumentServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean isCurationFinished(SourceDocument aDocument)
     {
         Validate.notNull(aDocument, "Source document must be specified");
 
-        String query = String.join("\n", "FROM SourceDocument WHERE", "  id = :id");
+        var query = String.join("\n", "FROM SourceDocument WHERE", "  id = :id");
 
-        SourceDocument d = entityManager.createQuery(query, SourceDocument.class)
-                .setParameter("id", aDocument.getId()).getSingleResult();
+        var d = entityManager.createQuery(query, SourceDocument.class) //
+                .setParameter("id", aDocument.getId()) //
+                .getSingleResult();
 
         return SourceDocumentState.CURATION_FINISHED.equals(d.getState());
     }

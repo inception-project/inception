@@ -174,12 +174,11 @@ public class CurationSidebarServiceImpl
         else {
             var setting = settings.get(0);
             var project = projectService.getProject(aProjectId);
-            List<User> users = new ArrayList<>();
+            var users = new ArrayList<User>();
             if (!setting.getSelectedUserNames().isEmpty()) {
-                users = setting.getSelectedUserNames().stream()
-                        .map(username -> userRegistry.get(username))
+                setting.getSelectedUserNames().stream().map(username -> userRegistry.get(username))
                         .filter(user -> projectService.hasAnyRole(user, project)) //
-                        .toList();
+                        .forEach(users::add);
             }
             state = new CurationSession(setting.getCurationUserName(), users);
         }

@@ -401,8 +401,8 @@ public class KnowledgeBaseServiceImpl
         }
     }
 
-    @Transactional
     @Override
+    @Transactional(readOnly = true)
     public boolean knowledgeBaseExists(Project project, String kbName)
     {
         var query = entityManager.createNamedQuery("KnowledgeBase.getByName");
