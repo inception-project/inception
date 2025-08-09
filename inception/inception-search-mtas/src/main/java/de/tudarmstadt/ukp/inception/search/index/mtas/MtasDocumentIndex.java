@@ -403,17 +403,18 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public Map<String, List<SearchResult>> executeQuery(SearchQueryRequest aRequest)
+    public Map<String, List<SearchResult>> executeQuery(SearchQueryRequest aRequest,
+            AnnotationSearchState aPrefs)
         throws IOException, ExecutionException
     {
-        return _executeQuery(this::doQuery, aRequest);
+        return _executeQuery(this::doQuery, aRequest, aPrefs);
     }
 
     @Override
-    public long numberOfQueryResults(SearchQueryRequest aRequest)
+    public long numberOfQueryResults(SearchQueryRequest aRequest, AnnotationSearchState aPrefs)
         throws ExecutionException, IOException
     {
-        return _executeQuery(this::doCountResults, aRequest);
+        return _executeQuery(this::doCountResults, aRequest, aPrefs);
     }
 
     @Override
@@ -682,16 +683,19 @@ public class MtasDocumentIndex
         }
     }
 
-    private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest)
+    private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest,
+            AnnotationSearchState aPrefs)
         throws IOException, ExecutionException
     {
         LOG.debug("Executing query [{}] on index [{}]", aRequest, indexDir);
 
-        ensureAllIsCommitted();
+        if (aRequest.isCommitRequired()) {
+            ensureAllIsCommitted();
+        }
 
         final MtasSpanQuery query;
         try {
-            var modifiedQuery = preprocessQuery(aRequest.getQuery(), aRequest.getSearchSettings());
+            var modifiedQuery = preprocessQuery(aRequest.getQuery(), aPrefs);
             try (var reader = new StringReader(modifiedQuery)) {
                 var parser = new MtasCQLParser(reader);
                 query = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
