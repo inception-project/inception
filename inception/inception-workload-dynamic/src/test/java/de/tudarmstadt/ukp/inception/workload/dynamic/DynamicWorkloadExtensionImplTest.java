@@ -31,9 +31,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
+import javax.sql.DataSource;
+
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.util.CasCreationUtils;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -104,6 +105,7 @@ public class DynamicWorkloadExtensionImplTest
     private @Autowired UserDao userService;
     private @Autowired WorkloadManagementService workloadManagementService;
     private @Autowired DynamicWorkloadExtension dynamicWorkloadExtension;
+    private @Autowired DataSource dataSource;
 
     private User annotator;
     private User otherAnnotator;
@@ -132,12 +134,6 @@ public class DynamicWorkloadExtensionImplTest
         traits.setAbandonationState(AnnotationDocumentState.NEW);
         traits.setWorkflowType(DefaultWorkflowExtension.DEFAULT_WORKFLOW);
         dynamicWorkloadExtension.writeTraits(traits, project);
-    }
-
-    @AfterEach
-    public void tearDown() throws Exception
-    {
-        projectService.removeProject(project);
     }
 
     @Test

@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.StatisticRequest;
 import de.tudarmstadt.ukp.inception.search.StatisticsResult;
+import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
 
 public interface PhysicalIndex
 {
@@ -53,10 +54,11 @@ public interface PhysicalIndex
 
     void close();
 
-    Map<String, List<SearchResult>> executeQuery(SearchQueryRequest aRequest)
+    Map<String, List<SearchResult>> executeQuery(SearchQueryRequest aRequest,
+            AnnotationSearchState aPrefs)
         throws IOException, ExecutionException;
 
-    long numberOfQueryResults(SearchQueryRequest aSearchQueryRequest)
+    long numberOfQueryResults(SearchQueryRequest aSearchQueryRequest, AnnotationSearchState aPrefs)
         throws IOException, ExecutionException;
 
     public LayerStatistics getLayerStatistics(StatisticRequest aStatisticRequest,

@@ -636,8 +636,6 @@ public class SearchServiceImpl
             AnnotationFeature aAnnotationFeature, long offset, long count)
         throws IOException, ExecutionException
     {
-        var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
-
         return query(SearchQueryRequest.builder() //
                 .withProject(aProject) //
                 .withUser(aUser) //
@@ -646,25 +644,25 @@ public class SearchServiceImpl
                 .withAnnotationLayer(aAnnotationLayer) //
                 .withAnnotationFeature(aAnnotationFeature) //
                 .withOffset(offset) //
-                .withLimit(count) //
-                .withOptions(prefs) //
-                .build());
+                .withLimit(count).build());
     }
 
-    // This is not public because it includes the preferences (case sensitivity) and these must be
-    // consistent during indexing and query time. We cannot simply ask for case-insensitive search
-    // if the index has been written with mixed case
-    private Map<String, List<SearchResult>> query(SearchQueryRequest aRequest)
+    @Override
+    @Transactional
+    public Map<String, List<SearchResult>> query(SearchQueryRequest aRequest)
         throws ExecutionException, IOException
     {
         LOG.trace("Query [{}] for user {} in project {}", aRequest.getQuery(), aRequest.getUser(),
+                aRequest.getProject());
+
+        var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE,
                 aRequest.getProject());
 
         try (var pooledIndex = acquireIndex(aRequest.getProject().getId())) {
             var index = pooledIndex.get();
             ensureIndexIsCreatedAndValid(aRequest.getProject(), index);
 
-            return index.getPhysicalIndex().executeQuery(aRequest);
+            return index.getPhysicalIndex().executeQuery(aRequest, prefs);
         }
     }
 
@@ -772,7 +770,7 @@ public class SearchServiceImpl
             // Index is valid, try to execute the query
             var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
             return index.getPhysicalIndex().numberOfQueryResults(new SearchQueryRequest(aProject,
-                    aUser, aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L, prefs));
+                    aUser, aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L), prefs);
         }
     }
 

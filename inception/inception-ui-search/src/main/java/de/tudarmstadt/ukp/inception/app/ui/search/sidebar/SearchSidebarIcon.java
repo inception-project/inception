@@ -23,6 +23,7 @@ import static org.apache.uima.cas.text.AnnotationPredicates.overlapping;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -36,11 +37,14 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchOptions;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
+import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
+import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 
 public class SearchSidebarIcon
@@ -52,6 +56,7 @@ public class SearchSidebarIcon
 
     private @SpringBean SearchService searchService;
     private @SpringBean UserDao userService;
+    private @SpringBean PreferencesService preferencesService;
 
     public SearchSidebarIcon(String aId, IModel<AnnotatorState> aState)
     {
@@ -82,9 +87,7 @@ public class SearchSidebarIcon
         var selectedResult = searchOptions.map(SearchOptions::getSelectedResult).getObject();
         if (query.map(StringUtils::isNotBlank).orElse(false).getObject()) {
             try {
-                var state = getModelObject();
-                var results = searchService.query(state.getUser(), state.getProject(),
-                        query.getObject(), state.getDocument());
+                var results = query(query.getObject());
                 for (var result : results) {
                     if (result.equals(selectedResult)) {
                         // We render the selected result separately. Rendering it does not
@@ -114,5 +117,26 @@ public class SearchSidebarIcon
 
             range.ifPresent(r -> aEvent.getVDocument().add(new VTextMarker(MATCH_FOCUS, r)));
         }
+    }
+
+    private List<SearchResult> query(String aQuery) throws ExecutionException, IOException
+    {
+        var state = getModelObject();
+
+        var groupedResults = searchService.query(SearchQueryRequest.builder() //
+                .withProject(state.getProject()) //
+                .withUser(state.getUser()) //
+                .withQuery(aQuery) //
+                .withLimitedToDocument(state.getDocument()) //
+                // We don't want to wait for the latest index changes to be committed because
+                // that may take too long for huge documents - yes, that means that we might
+                // miss a highlight until the next rendering is done
+                .withCommitRequired(false) //
+                .build());
+
+        return groupedResults.values().stream() //
+                .flatMap(resultsGroup -> resultsGroup.stream()) //
+                .distinct() //
+                .toList();
     }
 }
