@@ -241,4 +241,9 @@ public interface FormatSupport
         copyFile(exportedFile, exportFile);
         return exportFile;
     }
+
+    default void prepareAnnotationCas(CAS aInitialCas, SourceDocument aDocument)
+    {
+        // Do nothing by default
+    }
 }

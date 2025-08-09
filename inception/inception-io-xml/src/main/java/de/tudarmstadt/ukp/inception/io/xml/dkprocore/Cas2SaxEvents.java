@@ -23,10 +23,8 @@ import static org.apache.uima.fit.util.JCasUtil.selectSingle;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.uima.jcas.JCas;
-import org.dkpro.core.api.xml.type.XmlAttribute;
 import org.dkpro.core.api.xml.type.XmlDocument;
 import org.dkpro.core.api.xml.type.XmlElement;
 import org.dkpro.core.api.xml.type.XmlNode;
@@ -59,7 +57,7 @@ public class Cas2SaxEvents
 
     public void process(JCas aJCas) throws SAXException
     {
-        XmlDocument doc = selectSingle(aJCas, XmlDocument.class);
+        var doc = selectSingle(aJCas, XmlDocument.class);
 
         process(doc);
     }
@@ -83,7 +81,7 @@ public class Cas2SaxEvents
         var localMappings = new LinkedHashMap<String, String>();
 
         if (namespaces) {
-            for (Entry<String, String> xmlns : prefixMappings(aElement).entrySet()) {
+            for (var xmlns : prefixMappings(aElement).entrySet()) {
                 var oldValue = namespaceMappings.put(xmlns.getKey(), xmlns.getValue());
                 if (oldValue == null) {
                     localMappings.put(xmlns.getKey(), xmlns.getValue());
@@ -92,10 +90,10 @@ public class Cas2SaxEvents
             }
         }
 
-        AttributesImpl attributes = attributes(aElement);
-        String uri = defaultString(aElement.getUri());
-        String localName = defaultString(aElement.getLocalName());
-        String qName = defaultString(aElement.getQName());
+        var attributes = attributes(aElement);
+        var uri = defaultString(aElement.getUri());
+        var localName = defaultString(aElement.getLocalName());
+        var qName = defaultString(aElement.getQName());
 
         handler.startElement(uri, localName, qName, attributes);
 
@@ -128,7 +126,7 @@ public class Cas2SaxEvents
     {
         var mappings = new LinkedHashMap<String, String>();
         if (aElement.getAttributes() != null) {
-            for (XmlAttribute attr : aElement.getAttributes()) {
+            for (var attr : aElement.getAttributes()) {
                 if (XMLNS.equals(attr.getQName())) {
                     mappings.put("", attr.getValue());
                 }
@@ -145,9 +143,9 @@ public class Cas2SaxEvents
         // FIXME: SAX parsers would skip xmlns attributes if namespace support is enabled. Maybe
         // we should do the same?
 
-        AttributesImpl attrs = new AttributesImpl();
+        var attrs = new AttributesImpl();
         if (aElement.getAttributes() != null) {
-            for (XmlAttribute attr : aElement.getAttributes()) {
+            for (var attr : aElement.getAttributes()) {
                 attrs.addAttribute(defaultString(attr.getUri()), defaultString(attr.getLocalName()),
                         defaultString(attr.getQName()), defaultString(attr.getValueType(), "CDATA"),
                         defaultString(attr.getValue()));

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -31,6 +32,8 @@ import org.apache.wicket.request.resource.ResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollectionIOUtils;
@@ -85,5 +88,11 @@ public class TeiXmlDocumentFormatSupport
         return new WatchedResourceFile<PolicyCollection>(
                 getClass().getResource("TeiXmlDocumentPolicy.yaml"),
                 PolicyCollectionIOUtils::loadPolicies).get();
+    }
+
+    @Override
+    public void prepareAnnotationCas(CAS aInitialCas, SourceDocument aDocument)
+    {
+        XmlNodeUtils.removeXmlDocumentStructure(aInitialCas);
     }
 }

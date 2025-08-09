@@ -33,6 +33,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
+/**
+ * @deprecated We no longer store the document structure in the annotator/curator CASes, only in the
+ *             INITIAL_CAS.
+ */
+@Deprecated
 public class XmlStructurePresentInCurationCasCheck
     implements Check
 {

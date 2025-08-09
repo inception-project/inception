@@ -28,7 +28,9 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.io.bioc.config.BioCAutoConfiguration;
+import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
 
 /**
  * Support for BioC format.
@@ -84,5 +86,11 @@ public class BioCXmlDocumentFormatSupport
         throws ResourceInitializationException
     {
         return createEngineDescription(BioCXmlDocumentWriter.class, aTSD);
+    }
+
+    @Override
+    public void prepareAnnotationCas(CAS aInitialCas, SourceDocument aDocument)
+    {
+        XmlNodeUtils.removeXmlDocumentStructure(aInitialCas);
     }
 }

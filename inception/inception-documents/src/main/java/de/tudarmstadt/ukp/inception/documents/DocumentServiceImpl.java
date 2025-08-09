@@ -957,8 +957,17 @@ public class DocumentServiceImpl
         // If there is no CAS yet for the source document, create one.
         CAS cas = casStorageService.readOrCreateCas(aDocument, aUserName, aUpgradeMode,
                 // Convert the source file into an annotation CAS
-                () -> createOrReadInitialCas(aDocument, NO_CAS_UPGRADE, UNMANAGED_ACCESS, null),
-                aMode);
+                () -> {
+                    var initialCas = createOrReadInitialCas(aDocument, NO_CAS_UPGRADE,
+                            UNMANAGED_ACCESS, null);
+
+                    var maybeFormatSupport = importExportService
+                            .getFormatById(aDocument.getFormat());
+                    maybeFormatSupport
+                            .ifPresent(fmt -> fmt.prepareAnnotationCas(initialCas, aDocument));
+
+                    return initialCas;
+                }, aMode);
 
         // We intentionally do not upgrade the CAS here because in general the IDs
         // must remain stable. If an upgrade is required the caller should do it
