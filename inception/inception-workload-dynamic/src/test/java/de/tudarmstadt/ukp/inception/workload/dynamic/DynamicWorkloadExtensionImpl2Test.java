@@ -34,7 +34,6 @@ import javax.sql.DataSource;
 
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.util.CasCreationUtils;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -155,12 +154,6 @@ class DynamicWorkloadExtensionImpl2Test
         var workloadManager = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project);
         workloadManager.setType(DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID);
-    }
-
-    @AfterEach
-    void tearDown() throws Exception
-    {
-        projectService.removeProject(project);
     }
 
     @Test
