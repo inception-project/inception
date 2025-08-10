@@ -33,7 +33,6 @@ import java.util.Date;
 import java.util.Optional;
 
 import org.apache.uima.util.CasCreationUtils;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -132,12 +131,6 @@ public class DynamicWorkloadExtensionImplTest
         traits.setAbandonationState(AnnotationDocumentState.NEW);
         traits.setWorkflowType(DefaultWorkflowExtension.DEFAULT_WORKFLOW);
         dynamicWorkloadExtension.writeTraits(traits, project);
-    }
-
-    @AfterEach
-    public void tearDown() throws Exception
-    {
-        projectService.removeProject(project);
     }
 
     @Test
