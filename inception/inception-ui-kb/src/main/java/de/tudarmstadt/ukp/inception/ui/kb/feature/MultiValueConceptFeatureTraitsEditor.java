@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.CONCEPT;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -25,7 +26,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -36,7 +36,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
@@ -84,7 +83,7 @@ public class MultiValueConceptFeatureTraitsEditor
         feature = aFeatureModel;
         traits = CompoundPropertyModel.of(readTraits());
 
-        Form<Traits> form = new Form<Traits>(MID_FORM, traits)
+        var form = new Form<Traits>(MID_FORM, traits)
         {
             private static final long serialVersionUID = -3109239605783291123L;
 
@@ -116,7 +115,7 @@ public class MultiValueConceptFeatureTraitsEditor
 
     private void refresh(AjaxRequestTarget aTarget)
     {
-        Traits t = traits.getObject();
+        var t = traits.getObject();
         t.setScope(loadConcept(t.getKnowledgeBase(),
                 t.getScope() != null ? t.getScope().getIdentifier() : null));
         aTarget.add(get(MID_FORM).get(MID_SCOPE));
@@ -148,11 +147,11 @@ public class MultiValueConceptFeatureTraitsEditor
      */
     private Traits readTraits()
     {
-        Project project = feature.getObject().getProject();
+        var project = feature.getObject().getProject();
 
-        Traits result = new Traits();
+        var result = new Traits();
 
-        MultiValueConceptFeatureTraits t = getFeatureSupport().readTraits(feature.getObject());
+        var t = getFeatureSupport().readTraits(feature.getObject());
 
         if (t.getRepositoryId() != null) {
             kbService.getKnowledgeBaseById(project, t.getRepositoryId())
@@ -178,7 +177,7 @@ public class MultiValueConceptFeatureTraitsEditor
      */
     private void writeTraits()
     {
-        MultiValueConceptFeatureTraits t = new MultiValueConceptFeatureTraits();
+        var t = new MultiValueConceptFeatureTraits();
         if (traits.getObject().knowledgeBase != null) {
             t.setRepositoryId(traits.getObject().knowledgeBase.getRepositoryId());
 
@@ -215,11 +214,11 @@ public class MultiValueConceptFeatureTraitsEditor
      */
     private List<KBHandle> listSearchResults(String aTypedString, ConceptFeatureValueType aType)
     {
-        if (StringUtils.isBlank(aTypedString)) {
+        if (isBlank(aTypedString)) {
             return Collections.emptyList();
         }
 
-        Traits t = traits.getObject();
+        var t = traits.getObject();
         return conceptLinkingService.getLinkingInstancesInKBScope(
                 t.knowledgeBase != null ? t.knowledgeBase.getRepositoryId() : null, null, aType,
                 aTypedString, null, -1, null, feature.getObject().getProject());

@@ -149,7 +149,7 @@ public class ConceptFeatureEditor
         // There is now KB selector in the browser yet, so we do not show it unless either the
         // feature is bound to a specific KB or there is only a single KB in the project.
         if (traits.getRepositoryId() == null && knowledgeBaseService
-                .getEnabledKnowledgeBases(getModelObject().feature.getProject()).size() > 1) {
+                .hasMoreThanOneEnabledKnowledgeBases(getModelObject().feature.getProject())) {
             return false;
         }
 

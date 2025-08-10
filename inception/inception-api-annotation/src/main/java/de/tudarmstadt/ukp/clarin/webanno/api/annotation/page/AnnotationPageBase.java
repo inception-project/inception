@@ -98,6 +98,9 @@ public abstract class AnnotationPageBase
     private LoadableDetachableModel<Boolean> annotationFinished = LoadableDetachableModel
             .of(this::loadAnnotationFinished);
 
+    private LoadableDetachableModel<String> annotationNotEditableReason = LoadableDetachableModel
+            .of(this::loadAnnotationNotEditableReason);
+
     protected AnnotationPageBase(PageParameters aParameters)
     {
         super(aParameters);
@@ -462,6 +465,20 @@ public abstract class AnnotationPageBase
         userPreferenceService.loadPreferences(state, userRepository.getCurrentUsername());
     }
 
+    private String loadAnnotationNotEditableReason()
+    {
+        try {
+            var state = getModelObject();
+            var sessionOwner = userRepository.getCurrentUser();
+            documentAccess.assertCanEditAnnotationDocument(sessionOwner, state.getDocument(),
+                    state.getUser().getUsername());
+            return null;
+        }
+        catch (AccessDeniedException e) {
+            return e.getMessage();
+        }
+    }
+
     public void ensureIsEditable() throws NotEditableException
     {
         var state = getModelObject();
@@ -470,14 +487,9 @@ public abstract class AnnotationPageBase
             throw new NotEditableException("No document selected");
         }
 
-        var sessionOwner = userRepository.getCurrentUser();
-
-        try {
-            documentAccess.assertCanEditAnnotationDocument(sessionOwner, state.getDocument(),
-                    state.getUser().getUsername());
-        }
-        catch (AccessDeniedException e) {
-            throw new NotEditableException(e.getMessage());
+        var notEditableReason = annotationNotEditableReason.getObject();
+        if (notEditableReason != null) {
+            throw new NotEditableException(notEditableReason);
         }
     }
 
@@ -508,6 +520,7 @@ public abstract class AnnotationPageBase
     {
         super.detachModels();
         annotationFinished.detach();
+        annotationNotEditableReason.detach();
     }
 
     public abstract IModel<List<DecoratedObject<Project>>> getAllowedProjects();
