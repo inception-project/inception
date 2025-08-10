@@ -249,17 +249,17 @@ public class ProjectServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<PermissionLevel> listRoles(Project aProject, User aUser)
     {
         return listRoles(aProject, aUser.getUsername());
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<PermissionLevel> listRoles(Project aProject, String aUser)
     {
-        String query = join("\n", //
+        var query = join("\n", //
                 "SELECT level ", //
                 "FROM ProjectPermission ", //
                 "WHERE user =:user AND project =:project ", //
