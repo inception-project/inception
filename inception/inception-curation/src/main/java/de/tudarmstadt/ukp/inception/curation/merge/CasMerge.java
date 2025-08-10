@@ -59,7 +59,6 @@ import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.curation.api.Position;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.DefaultMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
-import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.IllegalFeatureValueException;
@@ -540,7 +539,6 @@ public class CasMerge
         aCas.setDocumentText(backup.getDocumentText());
 
         transferSegmentation(aDocument.getProject(), aCas, backup);
-        XmlNodeUtils.transferXmlDocumentStructure(aCas, backup);
     }
 
     /**
