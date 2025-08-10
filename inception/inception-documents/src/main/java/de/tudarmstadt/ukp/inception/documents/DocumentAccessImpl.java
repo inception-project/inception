@@ -162,8 +162,10 @@ public class DocumentAccessImpl
     {
         var project = aDocument.getProject();
 
+        var roles = projectService.listRoles(project, aSessionOwner);
+
         // Is the user a curator?
-        if (projectService.hasRole(aSessionOwner, project, CURATOR)) {
+        if (roles.contains(CURATOR)) {
             // If curation is already done, document is no longer editable
             if (CURATION_USER.equals(aDataOwner)) {
                 if (aDocument.getState() == CURATION_FINISHED) {
@@ -179,7 +181,7 @@ public class DocumentAccessImpl
         }
 
         // Is the user an annotator?
-        if (projectService.hasRole(aSessionOwner, project, ANNOTATOR)) {
+        if (roles.contains(ANNOTATOR)) {
             // Annotators can edit their own annotations
             if (!aSessionOwner.getUsername().equals(aDataOwner)) {
                 throw new AccessDeniedException(

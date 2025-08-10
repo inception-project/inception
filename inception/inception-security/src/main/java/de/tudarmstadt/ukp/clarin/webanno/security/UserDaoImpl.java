@@ -413,6 +413,13 @@ public class UserDaoImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public boolean isProjectCreator(User aUser)
+    {
+        return hasRole(aUser, Role.ROLE_PROJECT_CREATOR);
+    }
+
+    @Override
     @Transactional
     public boolean hasRole(User aUser, Role aRole)
     {
@@ -441,21 +448,6 @@ public class UserDaoImpl
         return authentication.getAuthorities().stream() //
                 .map(GrantedAuthority::getAuthority) //
                 .anyMatch(auth -> ROLE_ADMIN.name().equals(auth));
-    }
-
-    @Override
-    @Transactional
-    public boolean isProjectCreator(User aUser)
-    {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null) {
-            return false;
-        }
-
-        return authentication.getAuthorities().stream() //
-                .map(GrantedAuthority::getAuthority) //
-                .anyMatch(auth -> Role.ROLE_PROJECT_CREATOR.name().equals(auth));
     }
 
     @Override
