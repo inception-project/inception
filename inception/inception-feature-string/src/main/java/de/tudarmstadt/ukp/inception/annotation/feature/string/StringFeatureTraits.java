@@ -30,13 +30,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingTrait;
+import de.tudarmstadt.ukp.inception.annotation.feature.RecommendableFeatureTrait;
 
 /**
  * Traits for input field text features.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StringFeatureTraits
-    implements Serializable, KeyBindingTrait
+    implements Serializable, KeyBindingTrait, RecommendableFeatureTrait
 {
     private static final long serialVersionUID = -8450181605003189055L;
 
@@ -65,6 +66,7 @@ public class StringFeatureTraits
     private EditorType editorType = EditorType.AUTO;
     private int collapsedRows = 1;
     private int expandedRows = 1;
+    private boolean retainSuggestionInfo = false;
     private @JsonInclude(NON_DEFAULT) boolean multipleRows = false;
     private @JsonInclude(NON_DEFAULT) boolean dynamicSize = false;
     private @JsonInclude(NON_EMPTY) List<KeyBinding> keyBindings = new ArrayList<>();
@@ -150,5 +152,17 @@ public class StringFeatureTraits
     public void setDefaultValue(String aDefaultValue)
     {
         defaultValue = aDefaultValue;
+    }
+
+    @Override
+    public boolean isRetainSuggestionInfo()
+    {
+        return retainSuggestionInfo;
+    }
+
+    @Override
+    public void setRetainSuggestionInfo(boolean aRetainSuggestionInfo)
+    {
+        retainSuggestionInfo = aRetainSuggestionInfo;
     }
 }

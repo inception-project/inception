@@ -816,10 +816,12 @@
               <typeSystemIncludes>
                 <include>src/main/resources/desc/type/**/*.xml</include>
                 <include>src/main/resources/de/tudarmstadt/ukp/clarin/webanno/**/type/**/*.xml</include>
+                <include>src/main/resources/de/tudarmstadt/ukp/inception/**/type/**/*.xml</include>
               </typeSystemIncludes>
               <typeSystemExcludes>
                 <exclude>src/main/resources/desc/type/**/*_customized.xml</exclude>
                 <exclude>src/main/resources/de/tudarmstadt/ukp/clarin/webanno/**/type/**/*_customized.xml</exclude>
+                <exclude>src/main/resources/de/tudarmstadt/ukp/inception/**/type/**/*_customized.xml</exclude>
               </typeSystemExcludes>
             </configuration>
             <executions>

@@ -34,6 +34,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.annotation.feature.RecommendableFeatureTrait;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -87,6 +88,18 @@ public abstract class SuggestionSupport_ImplBase
         var address = ICasUtil.getAddr(aAnnotation);
         aAdapter.pushFeatureValue(aDocument, aDataOwner, aAnnotation.getCAS(), address, aFeature,
                 aValue.getLabel());
+
+        // Update the suggestion information (if enabled)
+        var retainSuggestionInfo = aAdapter
+                .getFeatureTraits(aFeature, RecommendableFeatureTrait.class) //
+                .map(RecommendableFeatureTrait::isRetainSuggestionInfo) //
+                .orElse(false);
+
+        if (retainSuggestionInfo) {
+            var featureSupport = aAdapter.getFeatureSupport(aFeature).get();
+            featureSupport.pushSuggestion(aDocument, aDataOwner, aAnnotation, aFeature,
+                    aValue.getLabel(), aValue.getScore(), aValue.getRecommenderName());
+        }
     }
 
     protected void recordAndPublishAcceptance(String aSessionOwner, SourceDocument aDocument,

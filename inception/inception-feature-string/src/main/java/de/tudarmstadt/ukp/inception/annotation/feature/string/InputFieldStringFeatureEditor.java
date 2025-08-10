@@ -27,7 +27,6 @@ import org.apache.wicket.validation.validator.UrlValidator;
 import org.wicketstuff.kendo.ui.form.TextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -45,8 +44,8 @@ public class InputFieldStringFeatureEditor
     {
         super(aId, aItem, aModel);
 
-        AnnotationFeature feat = getModelObject().feature;
-        StringFeatureTraits traits = readFeatureTraits(feat);
+        var feat = getModelObject().feature;
+        var traits = readFeatureTraits(feat);
 
         var featureValueAsString = aModel.map(FeatureState::getValue).map(Object::toString);
 
@@ -60,6 +59,8 @@ public class InputFieldStringFeatureEditor
                 // editor is used in a "normal" context and not e.g. in the key bindings
                 // configuration panel
                 .add(visibleWhen(() -> getLabelComponent().isVisible())));
+
+        add(new SuggestionStatePanel("suggestionInfo", aModel.map(FeatureState::getSuggestions)));
     }
 
     @SuppressWarnings("rawtypes")
