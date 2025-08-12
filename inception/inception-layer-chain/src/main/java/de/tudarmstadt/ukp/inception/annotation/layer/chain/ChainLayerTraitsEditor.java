@@ -51,6 +51,8 @@ public class ChainLayerTraitsEditor
     @Override
     protected void initializeForm(Form<ChainLayerTraits> aForm)
     {
+        aForm.add(new ChainRenderModeSelect("renderMode"));
+
         aForm.add(new ValidationModeSelect("validationMode", getLayerModel()));
 
         aForm.add(new AnchoringModeSelect("anchoringMode", getLayerModel()));

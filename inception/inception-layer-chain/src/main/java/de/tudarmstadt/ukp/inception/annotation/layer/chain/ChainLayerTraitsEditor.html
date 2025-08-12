@@ -18,6 +18,12 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:extend>
+  <div class="form-row form-floating" wicket:enclosure="renderMode">
+    <select wicket:id="renderMode" class="form-select" wicket:message="placeholder:renderMode"/>
+    <label wicket:for="renderMode">
+      <wicket:label key="renderMode" />
+    </label>
+  </div>
   <div class="form-row form-floating" wicket:enclosure="validationMode">
     <select wicket:id="validationMode" class="form-select" wicket:message="placeholder:validationMode"/>
     <label wicket:for="validationMode">

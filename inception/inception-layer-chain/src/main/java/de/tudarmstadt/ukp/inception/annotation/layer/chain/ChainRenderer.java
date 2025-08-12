@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.chain;
 
+import static de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainAdapter.ARC_LABEL_FEATURE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainAdapter.SPAN_LABEL_FEATURE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainRenderMode.ALWAYS;
+import static de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainRenderMode.WHEN_SELECTED;
 import static de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil.getUiLabelText;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.cas.text.AnnotationPredicates.overlapping;
@@ -30,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -39,6 +42,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerTraits;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerBehavior;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
@@ -57,6 +61,7 @@ public class ChainRenderer
 
     private Type chainType;
     private Feature chainFirst;
+    private ChainLayerTraits traits;
 
     public ChainRenderer(ChainAdapter aTypeAdapter, LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry, List<SpanLayerBehavior> aBehaviors)
@@ -71,6 +76,9 @@ public class ChainRenderer
             AnnotationAwareOrderComparator.sort(temp);
             behaviors = temp;
         }
+
+        var typeAdapter = getTypeAdapter();
+        traits = typeAdapter.getTraits(ChainLayerTraits.class).orElseGet(ChainLayerTraits::new);
     }
 
     @Override
@@ -115,10 +123,10 @@ public class ChainRenderer
         AnnotationFeature spanLabelFeature = null;
         AnnotationFeature arcLabelFeature = null;
         for (var feature : aFeatures) {
-            if (COREFERENCE_TYPE_FEATURE.equals(feature.getName())) {
+            if (SPAN_LABEL_FEATURE.equals(feature.getName())) {
                 spanLabelFeature = feature;
             }
-            if (COREFERENCE_RELATION_FEATURE.equals(feature.getName())) {
+            if (ARC_LABEL_FEATURE.equals(feature.getName())) {
                 arcLabelFeature = feature;
             }
         }
@@ -135,15 +143,22 @@ public class ChainRenderer
         // Iterate over the chains
         var chains = aRequest.getCas().select(typeAdapter.getChainTypeName()).asList();
         for (var chainFs : chains) {
-            var linkFs = (AnnotationFS) chainFs.getFeatureValue(chainFirst);
+            var curLinkFs = (AnnotationFS) chainFs.getFeatureValue(chainFirst);
+            var linkNext = curLinkFs.getType()
+                    .getFeatureByBaseName(typeAdapter.getLinkNextFeatureName());
+
             AnnotationFS prevLinkFs = null;
 
-            // Iterate over the links of the chain
-            while (linkFs != null) {
-                var linkNext = linkFs.getType()
-                        .getFeatureByBaseName(typeAdapter.getLinkNextFeatureName());
-                var nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
+            var links = new ArrayList<AnnotationFS>();
+            while (curLinkFs != null) {
+                links.add(curLinkFs);
+                curLinkFs = (AnnotationFS) curLinkFs.getFeatureValue(linkNext);
+            }
 
+            var linksArray = links.toArray(AnnotationFS[]::new);
+
+            // Iterate over the links of the chain
+            for (var linkFs : linksArray) {
                 // Is link after window? If yes, we can skip the rest of the chain
                 if (linkFs.getBegin() >= windowEnd) {
                     break; // Go to next chain
@@ -153,7 +168,6 @@ public class ChainRenderer
                 // the viewport
                 if (!overlapping(linkFs, windowBegin, windowEnd)) {
                     // prevLinkFs remains null until we enter the window
-                    linkFs = nextLinkFs;
                     continue; // Go to next link
                 }
 
@@ -162,7 +176,7 @@ public class ChainRenderer
                     var range = VRange.clippedRange(aResponse, linkFs);
 
                     if (!range.isPresent()) {
-                        continue;
+                        continue; // Go to next link
                     }
 
                     var label = getUiLabelText(typeAdapter, linkFs,
@@ -188,21 +202,28 @@ public class ChainRenderer
                         label = getUiLabelText(typeAdapter, prevLinkFs, emptyList());
                     }
 
-                    aResponse.add(VArc.builder() //
-                            .withLayer(typeAdapter.getLayer()) //
-                            .withVid(new VID(prevLinkFs, 1, VID.NONE, VID.NONE)) //
-                            .withSource(prevLinkFs) //
-                            .withTarget(linkFs) //
-                            .withEquivalenceSet(colorIndex) //
-                            .withLabel(label) //
-                            .build());
+                    // When the request comes from the sidebar, the state is null - we render all
+                    // the arcs in that case
+                    var renderArc = aRequest.getState() == null || traits.getRenderMode() == ALWAYS
+                            || (traits.getRenderMode() == WHEN_SELECTED
+                                    && isSelected(aRequest, linksArray));
+
+                    if (renderArc) {
+                        aResponse.add(VArc.builder() //
+                                .withLayer(typeAdapter.getLayer()) //
+                                .withVid(new VID(prevLinkFs, 1, VID.NONE, VID.NONE)) //
+                                .withSource(prevLinkFs) //
+                                .withTarget(linkFs) //
+                                .withEquivalenceSet(colorIndex) //
+                                .withLabel(label) //
+                                .build());
+                    }
                 }
 
                 // Render errors if required features are missing
                 renderRequiredFeatureErrors(aRequest, aFeatures, linkFs, aResponse);
 
                 prevLinkFs = linkFs;
-                linkFs = nextLinkFs;
             }
 
             // The color index is updated even for chains that have no visible links in the current
@@ -214,6 +235,23 @@ public class ChainRenderer
         for (var behavior : behaviors) {
             behavior.onRender(typeAdapter, aResponse, annoToSpanIdx);
         }
+    }
+
+    private boolean isSelected(RenderRequest aRequest, FeatureStructure... aFSes)
+    {
+        var selection = aRequest.getState().getSelection();
+
+        if (!selection.isSet()) {
+            return false;
+        }
+
+        for (var fs : aFSes) {
+            if (VID.of(fs).getId() == selection.getAnnotation().getId()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
