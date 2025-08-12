@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.chain.api;
 
+import static de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainRenderMode.ALWAYS;
+
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -30,4 +32,20 @@ public class ChainLayerTraits
     implements Serializable
 {
     private static final long serialVersionUID = 8030133101616484443L;
+
+    private ChainRenderMode renderMode;
+
+    public ChainRenderMode getRenderMode()
+    {
+        if (renderMode == null) {
+            return ALWAYS;
+        }
+
+        return renderMode;
+    }
+
+    public void setRenderMode(ChainRenderMode aRenderMode)
+    {
+        renderMode = aRenderMode;
+    }
 }
