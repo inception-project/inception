@@ -31,13 +31,13 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers(disabledWithoutDocker = true)
-class InceptionPostgresql_16_3_IntegrationTest
+class InceptionPostgresql_16_9_IntegrationTest
 {
     // static DockerImageName image = DockerImageName.parse("pgvector/pgvector:pg16")
     // .asCompatibleSubstituteFor("postgres");
     @SuppressWarnings("resource")
     static final PostgreSQLContainer<?> dbContainer = new PostgreSQLContainer<>(
-            "postgres:16.6-alpine") //
+            "postgres:16.9-alpine") //
                     .withDatabaseName("testdb") //
                     .withUsername("test") //
                     .withPassword("test");

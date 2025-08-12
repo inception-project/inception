@@ -18,7 +18,9 @@
 package de.tudarmstadt.ukp.inception;
 
 import static com.nimbusds.jose.JOSEObjectType.JWT;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static java.lang.System.setProperty;
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -46,7 +48,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import com.nimbusds.jwt.SignedJWT;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import no.nav.security.mock.oauth2.MockOAuth2Server;
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback;
@@ -77,6 +78,7 @@ public class InceptionRemoteApiJwtIntegrationTest
 
         var issuerUrl = oauth2Server.url(ISSUER_ID).toString();
 
+        setProperty("spring.main.banner-mode", "off");
         setProperty("java.awt.headless", "true");
         setProperty("database.url", "jdbc:hsqldb:mem:testdb;hsqldb.tx=mvcc");
         setProperty("inception.home", appHome.toString());
@@ -85,7 +87,7 @@ public class InceptionRemoteApiJwtIntegrationTest
         setProperty("remote-api.oauth2.realm", CLIENT_ID);
         setProperty("remote-api.oauth2.user-name-attribute", PREFERRED_USERNAME_CLAIM);
         setProperty("spring.security.oauth2.resourceserver.jwt.issuer-uri", issuerUrl);
-        setProperty("logging.level.org.springframework.security", "TRACE");
+        // setProperty("logging.level.org.springframework.security", "TRACE");
 
         context = INCEpTION.start(new String[] {}, INCEpTION.class);
 
@@ -95,7 +97,7 @@ public class InceptionRemoteApiJwtIntegrationTest
 
         userService.create(User.builder().withUsername(REMOTE_ADMIN_USER_NAME)
                 .withRealm(UserDao.REALM_EXTERNAL_PREFIX + CLIENT_ID) //
-                .withRoles(ROLE_REMOTE, Role.ROLE_USER, Role.ROLE_ADMIN) //
+                .withRoles(ROLE_REMOTE, ROLE_USER, ROLE_ADMIN) //
                 .withEnabled(true) //
                 .build());
     }

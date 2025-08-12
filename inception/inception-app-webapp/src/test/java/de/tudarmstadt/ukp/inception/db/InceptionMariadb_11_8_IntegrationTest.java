@@ -31,10 +31,10 @@ import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers(disabledWithoutDocker = true)
-class InceptionMariadb_11_4_IntegrationTest
+class InceptionMariadb_11_8_IntegrationTest
 {
     @SuppressWarnings("resource")
-    static final MariaDBContainer<?> dbContainer = new MariaDBContainer<>("mariadb:11.4.7") //
+    static final MariaDBContainer<?> dbContainer = new MariaDBContainer<>("mariadb:11.8.2") //
             .withDatabaseName("testdb") //
             .withUsername("test") //
             .withPassword("test");
