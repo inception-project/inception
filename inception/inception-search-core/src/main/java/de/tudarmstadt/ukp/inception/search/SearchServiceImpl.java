@@ -69,7 +69,6 @@ import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
 import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.model.Index;
-import de.tudarmstadt.ukp.inception.search.model.Index_;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexingTask_ImplBase;
@@ -329,22 +328,6 @@ public class SearchServiceImpl
             if (index.getPhysicalIndex().isCreated()) {
                 index.getPhysicalIndex().delete();
             }
-
-            deleteIndexFromDb(index);
-        }
-    }
-
-    private void deleteIndexFromDb(Index aIndex)
-    {
-        var cb = entityManager.getCriteriaBuilder();
-        var delete = cb.createCriteriaDelete(Index.class);
-        var root = delete.from(Index.class);
-        delete.where(cb.equal(root.get(Index_.ID), aIndex.getId()));
-        int rowsDeleted = entityManager.createQuery(delete).executeUpdate();
-
-        if (rowsDeleted == 0) {
-            LOG.debug("Unable to delete index with ID {} from database - not found.",
-                    aIndex.getId());
         }
     }
 
