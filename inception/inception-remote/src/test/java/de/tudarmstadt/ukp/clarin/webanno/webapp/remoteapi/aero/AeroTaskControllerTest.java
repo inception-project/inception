@@ -64,7 +64,7 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
 @SpringBootTest( //
         webEnvironment = WebEnvironment.MOCK, //
         properties = { //
-                "debug=true", // "
+                // "debug=true", // "
                 "spring.main.banner-mode=off", //
                 "search.enabled=false", //
                 "remote-api.enabled=true", //
