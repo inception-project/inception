@@ -34,6 +34,7 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroAnnotationController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroCurationController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroDocumentController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroKnowledgeBaseController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroProjectController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.legacy.LegacyRemoteApiController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.menubar.SwaggerUiMenuBarItemSupport;
@@ -119,6 +120,13 @@ public class RemoteApiAutoConfiguration
     public LegacyRemoteApiController legacyRemoteApiController()
     {
         return new LegacyRemoteApiController();
+    }
+
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    @Bean
+    public AeroKnowledgeBaseController aeroKnowledgeBaseController()
+    {
+        return new AeroKnowledgeBaseController();
     }
 
     @ConditionalOnExpression("!(" + REMOTE_API_ENABLED_CONDITION + ")")
