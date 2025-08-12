@@ -88,6 +88,7 @@ public abstract class Controller_ImplBase
     public static final String STATE = "state";
     public static final String PERMISSIONS = "permissions";
     public static final String TASKS = "tasks";
+    public static final String KNOWLEDGE_BASES = "kbs";
 
     public static final String PARAM_FILE = "file";
     public static final String PARAM_CONTENT = "content";
@@ -103,12 +104,13 @@ public abstract class Controller_ImplBase
     public static final String PARAM_IMPORT_PERMISSIONS = "importPermissions";
     public static final String PARAM_ROLES = "roles";
     public static final String PARAM_TASK_ID = "taskId";
+    public static final String PARAM_KNOWLEDGE_BASE_ID = "kbId";
 
     public static final String VAL_ORIGINAL = "ORIGINAL";
 
     public static final String FORMAT_DEFAULT = "text";
 
-    private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     protected @Autowired DocumentService documentService;
     protected @Autowired ProjectService projectService;
