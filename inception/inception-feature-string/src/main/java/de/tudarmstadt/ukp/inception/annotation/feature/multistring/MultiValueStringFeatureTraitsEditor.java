@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -34,7 +35,7 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 public class MultiValueStringFeatureTraitsEditor
-    extends Panel
+    extends GenericPanel<AnnotationFeature>
 {
     private static final long serialVersionUID = -9082045435380184514L;
 
@@ -81,8 +82,14 @@ public class MultiValueStringFeatureTraitsEditor
         tagset.setChoices(LoadableDetachableModel
                 .of(() -> annotationService.listTagSets(aFeature.getObject().getProject())));
         form.add(tagset);
+
+        var retainSuggestionInfo = new CheckBox("retainSuggestionInfo");
+        retainSuggestionInfo.setOutputMarkupId(true);
+        retainSuggestionInfo.setModel(PropertyModel.of(traits, "retainSuggestionInfo"));
+        form.add(retainSuggestionInfo);
     }
 
+    @SuppressWarnings("unchecked")
     private UimaPrimitiveFeatureSupport_ImplBase<MultiValueStringFeatureTraits> getFeatureSupport()
     {
         return (UimaPrimitiveFeatureSupport_ImplBase<MultiValueStringFeatureTraits>) featureSupportRegistry

@@ -42,16 +42,17 @@ public class TextAreaFeatureEditor
     public TextAreaFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
     {
         super(aId, aItem, aModel);
+
+        add(new SuggestionStatePanel("suggestionInfo", aModel.map(FeatureState::getSuggestions)));
     }
 
     @Override
     protected AbstractTextComponent<String> createInputField()
     {
-        TextArea<String> textarea = new TextArea<>("value");
+        var textarea = new TextArea<String>("value");
         try {
-            String traitsString = getModelObject().feature.getTraits();
-            StringFeatureTraits traits = JSONUtil.fromJsonString(StringFeatureTraits.class,
-                    traitsString);
+            var traitsString = getModelObject().feature.getTraits();
+            var traits = JSONUtil.fromJsonString(StringFeatureTraits.class, traitsString);
             textarea.add(new AttributeModifier("rows", traits.getCollapsedRows()));
             textarea.add(new AttributeAppender("onfocus",
                     "this.rows=" + traits.getExpandedRows() + ";"));

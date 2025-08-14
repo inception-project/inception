@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.annotation.feature.string;
 import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType.AUTOCOMPLETE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType.COMBOBOX;
 import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType.RADIOGROUP;
-import static de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService.FEATURE_SUFFIX_SEP;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -73,8 +72,6 @@ import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 public class StringFeatureSupport
     extends UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits>
 {
-    private static final String SUFFIX_SUGGESTION_INFO = FEATURE_SUFFIX_SEP + "suggestionInfo";
-
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private List<FeatureType> primitiveTypes;
@@ -272,7 +269,7 @@ public class StringFeatureSupport
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)
     {
-        aTD.addFeature(aFeature.getName(), aFeature.getDescription(), aFeature.getType());
+        super.generateFeature(aTSD, aTD, aFeature);
 
         var traits = readTraits(aFeature);
         if (traits.isRetainSuggestionInfo()) {

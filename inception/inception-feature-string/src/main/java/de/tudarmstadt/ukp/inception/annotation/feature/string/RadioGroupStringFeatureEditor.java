@@ -87,6 +87,8 @@ public class RadioGroupStringFeatureEditor
         // actually react to the bindings
         keyBindingsPanel.setToggleVisibile(false);
         add(keyBindingsPanel);
+
+        add(new SuggestionStatePanel("suggestionInfo", aModel.map(FeatureState::getSuggestions)));
     }
 
     private void actionClear(AjaxRequestTarget aTarget)

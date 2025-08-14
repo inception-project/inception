@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.schema.api.feature;
 
+import static de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService.FEATURE_SUFFIX_SEP;
 import static de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil.setFeature;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static java.lang.String.join;
@@ -65,6 +66,8 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 public interface FeatureSupport<T>
     extends BeanNameAware, Extension<AnnotationFeature>
 {
+    String SUFFIX_SUGGESTION_INFO = FEATURE_SUFFIX_SEP + "suggestionInfo";
+
     @Override
     String getId();
 

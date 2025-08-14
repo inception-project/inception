@@ -41,6 +41,7 @@ import org.wicketstuff.kendo.ui.renderer.ChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.inception.annotation.feature.misc.ConstraintsInUseIndicator;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportProperties;
+import de.tudarmstadt.ukp.inception.annotation.feature.string.SuggestionStatePanel;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -78,6 +79,9 @@ public class MultiSelectTextFeatureEditor
         add(field);
 
         add(new ConstraintsInUseIndicator(CID_TEXT_INDICATOR, getModel()));
+
+        add(new SuggestionStatePanel("suggestionInfo",
+                aFeatureStateModel.map(FeatureState::getSuggestions)));
     }
 
     @SuppressWarnings("unchecked")

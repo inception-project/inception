@@ -77,6 +77,8 @@ public class KendoAutoCompleteTextFeatureEditor
                 // editor is used in a "normal" context and not e.g. in the keybindings
                 // configuration panel
                 .add(visibleWhen(() -> getLabelComponent().isVisible())));
+
+        add(new SuggestionStatePanel("suggestionInfo", aModel.map(FeatureState::getSuggestions)));
     }
 
     @Override

@@ -19,23 +19,28 @@ package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.uima.cas.CAS.TYPE_NAME_FS_ARRAY;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.StringArrayFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.cas.StringArray;
+import org.apache.uima.resource.metadata.TypeDescription;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -45,12 +50,16 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.feature.misc.UimaPrimitiveFeatureSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportProperties;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportPropertiesImpl;
+import de.tudarmstadt.ukp.inception.annotation.type.RecommenderDecl;
+import de.tudarmstadt.ukp.inception.annotation.type.StringSuggestion;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.SuggestionState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -68,7 +77,7 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
 public class MultiValueStringFeatureSupport
     extends UimaPrimitiveFeatureSupport_ImplBase<MultiValueStringFeatureTraits>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private List<FeatureType> primitiveTypes;
 
@@ -101,7 +110,7 @@ public class MultiValueStringFeatureSupport
     @Override
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
-        return Collections.unmodifiableList(primitiveTypes);
+        return unmodifiableList(primitiveTypes);
     }
 
     @Override
@@ -115,7 +124,7 @@ public class MultiValueStringFeatureSupport
     @Override
     public <V> V getNullFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
-        return (V) Collections.emptyList();
+        return (V) emptyList();
     }
 
     @SuppressWarnings("unchecked")
@@ -233,6 +242,58 @@ public class MultiValueStringFeatureSupport
     }
 
     @Override
+    public void pushSuggestion(SourceDocument aDocument, String aDataOwner,
+            AnnotationBaseFS aAnnotation, AnnotationFeature aFeature, String aLabel, double aScore,
+            String aRecommenderName)
+    {
+        var jcas = aAnnotation.getCAS().getJCasImpl();
+
+        var recommenderDecl = jcas.select(RecommenderDecl.class) //
+                .filter(rec -> aRecommenderName.equals(rec.getName())).findFirst().orElseGet(() -> {
+                    var decl = new RecommenderDecl(jcas);
+                    decl.setName(aRecommenderName);
+                    decl.addToIndexes();
+                    return decl;
+                });
+
+        var stringSuggestion = new StringSuggestion(jcas);
+        stringSuggestion.setLabel(aLabel);
+        stringSuggestion.setScore((float) aScore);
+        stringSuggestion.setRecommender(recommenderDecl);
+        FSUtil.setFeature(aAnnotation, aFeature.getName() + SUFFIX_SUGGESTION_INFO,
+                asList(stringSuggestion));
+    }
+
+    @Override
+    public List<SuggestionState> getSuggestions(FeatureStructure aAnnotation,
+            AnnotationFeature aFeature)
+    {
+        var cas = aAnnotation.getCAS();
+        var suggestionInfoFeature = aAnnotation.getType()
+                .getFeatureByBaseName(aFeature.getName() + SUFFIX_SUGGESTION_INFO);
+
+        if (suggestionInfoFeature == null) {
+            // If the feature does not exist, there is no info to return.
+            // Checking for the feature is faster than parsing the traits of the feature
+            // to check if it has suggestion info enabled.
+            return emptyList();
+        }
+
+        var suggestions = FSUtil.getFeature(aAnnotation, suggestionInfoFeature,
+                StringSuggestion[].class);
+        var suggestionStates = new ArrayList<SuggestionState>();
+        if (suggestions != null) {
+            for (var suggestion : suggestions) {
+                var state = new SuggestionState(suggestion.getRecommender().getName(),
+                        suggestion.getScore(),
+                        wrapFeatureValue(aFeature, cas, suggestion.getLabel()));
+                suggestionStates.add(state);
+            }
+        }
+        return suggestionStates;
+    }
+
+    @Override
     public boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         if (aFeature.isRequired()) {
@@ -337,5 +398,18 @@ public class MultiValueStringFeatureSupport
         }
 
         return (V) wrapFeatureValue(aFeature, aFS.getCAS(), value);
+    }
+
+    @Override
+    public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
+            AnnotationFeature aFeature)
+    {
+        super.generateFeature(aTSD, aTD, aFeature);
+
+        var traits = readTraits(aFeature);
+        if (traits.isRetainSuggestionInfo()) {
+            aTD.addFeature(aFeature.getName() + SUFFIX_SUGGESTION_INFO, "", TYPE_NAME_FS_ARRAY,
+                    StringSuggestion._TypeName, false);
+        }
     }
 }

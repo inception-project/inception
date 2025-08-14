@@ -37,6 +37,8 @@ public class DynamicTextAreaFeatureEditor
             IModel<FeatureState> aModel)
     {
         super(aId, aItem, aModel);
+
+        add(new SuggestionStatePanel("suggestionInfo", aModel.map(FeatureState::getSuggestions)));
     }
 
     @Override
