@@ -31,7 +31,6 @@ import java.nio.file.Path;
 
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.util.CasCreationUtils;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -145,12 +144,6 @@ class MatrixWorkloadExtensionImplTest
         var workloadManager = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project);
         workloadManager.setType(MatrixWorkloadExtension.MATRIX_WORKLOAD_MANAGER_EXTENSION_ID);
-    }
-
-    @AfterEach
-    void tearDown() throws Exception
-    {
-        projectService.removeProject(project);
     }
 
     @Test

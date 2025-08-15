@@ -19,9 +19,10 @@ package de.tudarmstadt.ukp.inception.assistant.sidebar;
 
 import java.lang.invoke.MethodHandles;
 
-import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.request.resource.PackageResourceReference;
+
+import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
 
 public class AssistantSidebarIcon
     extends Panel
@@ -35,6 +36,6 @@ public class AssistantSidebarIcon
     {
         super(aId);
 
-        add(new Image("icon", ICON));
+        add(new SymbolLabel("icon", ICON));
     }
 }
