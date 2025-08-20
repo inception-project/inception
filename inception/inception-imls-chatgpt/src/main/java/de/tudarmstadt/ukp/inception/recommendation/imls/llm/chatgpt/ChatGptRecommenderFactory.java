@@ -66,7 +66,7 @@ public class ChatGptRecommenderFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        ChatGptRecommenderTraits traits = readTraits(aRecommender);
+        var traits = readTraits(aRecommender);
         return new ChatGptRecommender(aRecommender, traits, client, schemaService);
     }
 

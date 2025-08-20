@@ -89,7 +89,7 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
     private final IModel<List<OptionSetting>> optionSettings;
     private final IModel<List<Option<?>>> options;
 
-    private final AuthenticationTraitsEditor authenticationTraitsEditor;
+    private final AuthenticationTraitsEditor<?> authenticationTraitsEditor;
 
     public LlmRecommenderTraitsEditor_ImplBase(String aId, IModel<Recommender> aRecommender,
             IModel<List<Preset>> aPresets, IModel<List<Option<?>>> aOptions)
@@ -191,7 +191,7 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
                 .setOutputMarkupId(true));
     }
 
-    protected AuthenticationTraitsEditor createAuthenticationTraitsEditor(String aId)
+    protected AuthenticationTraitsEditor<?> createAuthenticationTraitsEditor(String aId)
     {
         var editor = new NoAuthenticationTraitsEditor(aId);
         editor.setVisible(false);
