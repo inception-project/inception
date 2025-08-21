@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.security.client.auth;
 
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 
-public abstract class AuthenticationTraitsEditor
-    extends Panel
+public abstract class AuthenticationTraitsEditor<T extends AuthenticationTraits>
+    extends GenericPanel<T>
 {
     private static final long serialVersionUID = -5167115783065993309L;
 
@@ -30,7 +30,7 @@ public abstract class AuthenticationTraitsEditor
         super(aId);
     }
 
-    public AuthenticationTraitsEditor(String aId, IModel<?> aModel)
+    public AuthenticationTraitsEditor(String aId, IModel<T> aModel)
     {
         super(aId, aModel);
     }
