@@ -27,12 +27,15 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.LambdaChoiceRenderer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -46,7 +49,6 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaChoiceRenderer;
 
 /**
  * Component for editing the traits of knowledge-base-related features in the feature detail editor
@@ -110,16 +112,20 @@ public class MultiValueConceptFeatureTraitsEditor
 
         form.add(new DisabledKBWarning("disabledKBWarning", feature,
                 traits.bind("knowledgeBase.repositoryId")));
+
+        var retainSuggestionInfo = new CheckBox("retainSuggestionInfo");
+        retainSuggestionInfo.setOutputMarkupId(true);
+        retainSuggestionInfo.setModel(PropertyModel.of(traits, "retainSuggestionInfo"));
+        form.add(retainSuggestionInfo);
+
         add(form);
     }
 
     private void refresh(AjaxRequestTarget aTarget)
     {
         var t = traits.getObject();
-        t.setScope(loadConcept(t.getKnowledgeBase(),
-                t.getScope() != null ? t.getScope().getIdentifier() : null));
+        t.scope = loadConcept(t.knowledgeBase, t.scope != null ? t.scope.getIdentifier() : null);
         aTarget.add(get(MID_FORM).get(MID_SCOPE));
-
     }
 
     private KBHandle loadConcept(KnowledgeBase aKB, String aIdentifier)
@@ -155,18 +161,19 @@ public class MultiValueConceptFeatureTraitsEditor
 
         if (t.getRepositoryId() != null) {
             kbService.getKnowledgeBaseById(project, t.getRepositoryId())
-                    .ifPresent(result::setKnowledgeBase);
+                    .ifPresent(kb -> result.knowledgeBase = kb);
         }
 
         if (t.getAllowedValueType() != null) {
-            result.setAllowedValueType(t.getAllowedValueType());
+            result.allowedValueType = t.getAllowedValueType();
         }
         else {
             // Allow all values as default
-            result.setAllowedValueType(ConceptFeatureValueType.ANY_OBJECT);
+            result.allowedValueType = ConceptFeatureValueType.ANY_OBJECT;
         }
 
-        result.setScope(loadConcept(result.getKnowledgeBase(), t.getScope()));
+        result.scope = loadConcept(result.knowledgeBase, t.getScope());
+        result.retainSuggestionInfo = t.isRetainSuggestionInfo();
 
         return result;
     }
@@ -188,6 +195,7 @@ public class MultiValueConceptFeatureTraitsEditor
         }
 
         t.setAllowedValueType(traits.getObject().allowedValueType);
+        t.setRetainSuggestionInfo(traits.getObject().retainSuggestionInfo);
 
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
@@ -235,39 +243,9 @@ public class MultiValueConceptFeatureTraitsEditor
     {
         private static final long serialVersionUID = 5804584375190949088L;
 
-        private KnowledgeBase knowledgeBase;
-        private KBHandle scope;
-        private ConceptFeatureValueType allowedValueType;
-
-        public KBHandle getScope()
-        {
-            return scope;
-        }
-
-        public void setScope(KBHandle aScope)
-        {
-            scope = aScope;
-        }
-
-        public KnowledgeBase getKnowledgeBase()
-        {
-            return knowledgeBase;
-        }
-
-        public void setKnowledgeBase(KnowledgeBase aKnowledgeBase)
-        {
-            knowledgeBase = aKnowledgeBase;
-        }
-
-        @SuppressWarnings("unused")
-        public ConceptFeatureValueType getAllowedValueType()
-        {
-            return allowedValueType;
-        }
-
-        public void setAllowedValueType(ConceptFeatureValueType aAllows)
-        {
-            allowedValueType = aAllows;
-        }
+        KnowledgeBase knowledgeBase;
+        KBHandle scope;
+        ConceptFeatureValueType allowedValueType;
+        boolean retainSuggestionInfo = false;
     }
 }

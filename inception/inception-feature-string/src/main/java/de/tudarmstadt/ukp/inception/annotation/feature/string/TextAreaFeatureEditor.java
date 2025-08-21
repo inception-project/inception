@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.schema.api.feature.SuggestionStatePanel;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class TextAreaFeatureEditor
@@ -43,7 +44,7 @@ public class TextAreaFeatureEditor
     {
         super(aId, aItem, aModel);
 
-        add(new SuggestionStatePanel("suggestionInfo", aModel.map(FeatureState::getSuggestions)));
+        add(new SuggestionStatePanel("suggestionInfo", aModel));
     }
 
     @Override

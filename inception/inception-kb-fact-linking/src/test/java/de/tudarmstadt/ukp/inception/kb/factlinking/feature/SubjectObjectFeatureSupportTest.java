@@ -93,9 +93,9 @@ public class SubjectObjectFeatureSupportTest
         assertThatThrownBy(() -> sut.wrapFeatureValue(feat1, cas, new Object()))
                 .isInstanceOf(IllegalArgumentException.class);
 
-        assertThat(sut.unwrapFeatureValue(feat1, cas, links)).isSameAs(links);
-        assertThat(sut.unwrapFeatureValue(feat1, cas, null)).isNull();
-        assertThatThrownBy(() -> sut.unwrapFeatureValue(feat1, cas, new Object()))
+        assertThat(sut.unwrapFeatureValue(feat1, links)).isSameAs(links);
+        assertThat(sut.unwrapFeatureValue(feat1, null)).isNull();
+        assertThatThrownBy(() -> sut.unwrapFeatureValue(feat1, new Object()))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -29,6 +29,7 @@ import org.wicketstuff.kendo.ui.form.TextField;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.schema.api.feature.SuggestionStatePanel;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 public class InputFieldStringFeatureEditor
@@ -60,7 +61,7 @@ public class InputFieldStringFeatureEditor
                 // configuration panel
                 .add(visibleWhen(() -> getLabelComponent().isVisible())));
 
-        add(new SuggestionStatePanel("suggestionInfo", aModel.map(FeatureState::getSuggestions)));
+        add(new SuggestionStatePanel("suggestionInfo", aModel));
     }
 
     @SuppressWarnings("rawtypes")

@@ -147,7 +147,7 @@ public class KeyBindingsConfigurationPanel
         // to the list
         var feature = getModelObject();
         FeatureSupport<?> fs = featureSupportRegistry.findExtension(feature).orElseThrow();
-        keyBinding.setValue(fs.unwrapFeatureValue(feature, null, featureState.getObject().value));
+        keyBinding.setValue(fs.unwrapFeatureValue(feature, featureState.getObject().value));
         keyBindings.getObject().add(keyBinding);
 
         // Clear form and value editor

@@ -129,7 +129,7 @@ public class MultiValueStringFeatureSupport
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<String> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    public List<String> unwrapFeatureValue(AnnotationFeature aFeature, Object aValue)
     {
         if (aValue == null) {
             return null;
@@ -179,7 +179,7 @@ public class MultiValueStringFeatureSupport
         }
 
         var fs = getFS(aCas, aFeature, aAddress);
-        var values = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
+        var values = unwrapFeatureValue(aFeature, aValue);
         if (values == null || values.isEmpty()) {
             FSUtil.setFeature(fs, aFeature.getName(), (Collection<String>) null);
             return;
@@ -210,7 +210,7 @@ public class MultiValueStringFeatureSupport
         }
 
         var fs = getFS(aCas, aFeature, aAddress);
-        var newValues = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
+        var newValues = unwrapFeatureValue(aFeature, aValue);
         if (newValues == null || newValues.isEmpty()) {
             return;
         }
@@ -220,13 +220,15 @@ public class MultiValueStringFeatureSupport
         }
 
         var feature = fs.getType().getFeatureByBaseName(aFeature.getName());
-        var oldValues = (Collection<String>) wrapFeatureValue(aFeature, fs.getCAS(),
-                fs.getFeatureValue(feature));
+        var oldValues = FSUtil.getFeature(fs, aFeature.getName(), StringArrayFS.class);
 
         var mergedValues = new LinkedHashSet<String>();
         if (oldValues != null) {
-            mergedValues.addAll(oldValues);
+            for (var i = 0; i < oldValues.size(); i++) {
+                mergedValues.add(oldValues.get(i));
+            }
         }
+
         mergedValues.addAll(newValues);
 
         // Create a new array if size differs otherwise re-use existing one

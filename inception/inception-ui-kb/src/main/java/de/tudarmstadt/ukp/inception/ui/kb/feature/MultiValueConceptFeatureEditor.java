@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 import static org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog.CONTENT_ID;
 
@@ -49,9 +50,9 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.SuggestionStatePanel;
 import de.tudarmstadt.ukp.inception.support.kendo.KendoStyleUtils;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 
@@ -90,7 +91,9 @@ public class MultiValueConceptFeatureEditor
         queue(dialog);
 
         queue(new LambdaAjaxLink("openBrowseDialog", this::actionOpenBrowseDialog)
-                .add(LambdaBehavior.visibleWhen(this::isBrowsingAllowed)));
+                .add(visibleWhen(this::isBrowsingAllowed)));
+
+        add(new SuggestionStatePanel("suggestionInfo", aModel));
     }
 
     @SuppressWarnings("unchecked")

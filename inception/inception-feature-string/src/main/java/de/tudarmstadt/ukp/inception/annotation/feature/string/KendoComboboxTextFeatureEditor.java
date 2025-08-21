@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.api.event.TagEvent;
+import de.tudarmstadt.ukp.inception.schema.api.feature.SuggestionStatePanel;
 import de.tudarmstadt.ukp.inception.support.kendo.KendoChoiceDescriptionScriptReference;
 
 /**
@@ -85,7 +86,7 @@ public class KendoComboboxTextFeatureEditor
                 // configuration panel
                 .add(visibleWhen(() -> getLabelComponent().isVisible())));
 
-        add(new SuggestionStatePanel("suggestionInfo", aModel.map(FeatureState::getSuggestions)));
+        add(new SuggestionStatePanel("suggestionInfo", aModel));
     }
 
     @Override

@@ -18,27 +18,29 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.CONCEPT;
+import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.LambdaChoiceRenderer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsConfigurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
@@ -48,7 +50,6 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaChoiceRenderer;
 
 /**
  * Component for editing the traits of knowledge-base-related features in the feature detail editor
@@ -90,7 +91,7 @@ public class ConceptFeatureTraitsEditor
         feature = aFeatureModel;
         traits = CompoundPropertyModel.of(readTraits());
 
-        Form<Traits> form = new Form<Traits>(MID_FORM, traits)
+        var form = new Form<Traits>(MID_FORM, traits)
         {
             private static final long serialVersionUID = -3109239605783291123L;
 
@@ -117,15 +118,20 @@ public class ConceptFeatureTraitsEditor
                 traits.bind("knowledgeBase.repositoryId")));
         add(form);
 
+        var retainSuggestionInfo = new CheckBox("retainSuggestionInfo");
+        retainSuggestionInfo.setOutputMarkupId(true);
+        retainSuggestionInfo.setModel(PropertyModel.of(traits, "retainSuggestionInfo"));
+        form.add(retainSuggestionInfo);
+
         add(new KeyBindingsConfigurationPanel(MID_KEY_BINDINGS, aFeatureModel,
                 traits.bind(MID_KEY_BINDINGS)).setOutputMarkupId(true));
+
     }
 
     private void refresh(AjaxRequestTarget aTarget)
     {
-        Traits t = traits.getObject();
-        t.setScope(loadConcept(t.getKnowledgeBase(),
-                t.getScope() != null ? t.getScope().getIdentifier() : null));
+        var t = traits.getObject();
+        t.scope = loadConcept(t.knowledgeBase, t.scope != null ? t.scope.getIdentifier() : null);
         aTarget.add(get(MID_FORM).get(MID_SCOPE), get(MID_KEY_BINDINGS));
 
     }
@@ -155,28 +161,28 @@ public class ConceptFeatureTraitsEditor
      */
     private Traits readTraits()
     {
-        Project project = feature.getObject().getProject();
+        var project = feature.getObject().getProject();
 
-        Traits result = new Traits();
+        var result = new Traits();
 
-        ConceptFeatureTraits t = getFeatureSupport().readTraits(feature.getObject());
+        var t = getFeatureSupport().readTraits(feature.getObject());
 
         if (t.getRepositoryId() != null) {
             kbService.getKnowledgeBaseById(project, t.getRepositoryId())
-                    .ifPresent(result::setKnowledgeBase);
+                    .ifPresent(kb -> result.knowledgeBase = kb);
         }
 
         if (t.getAllowedValueType() != null) {
-            result.setAllowedValueType(t.getAllowedValueType());
+            result.allowedValueType = t.getAllowedValueType();
         }
         else {
             // Allow all values as default
-            result.setAllowedValueType(ConceptFeatureValueType.ANY_OBJECT);
+            result.allowedValueType = ConceptFeatureValueType.ANY_OBJECT;
         }
 
-        result.setScope(loadConcept(result.getKnowledgeBase(), t.getScope()));
-
-        result.setKeyBindings(t.getKeyBindings());
+        result.scope = loadConcept(result.knowledgeBase, t.getScope());
+        result.keyBindings = t.getKeyBindings();
+        result.retainSuggestionInfo = t.isRetainSuggestionInfo();
 
         return result;
     }
@@ -187,7 +193,7 @@ public class ConceptFeatureTraitsEditor
      */
     private void writeTraits()
     {
-        ConceptFeatureTraits t = new ConceptFeatureTraits();
+        var t = new ConceptFeatureTraits();
         if (traits.getObject().knowledgeBase != null) {
             t.setRepositoryId(traits.getObject().knowledgeBase.getRepositoryId());
 
@@ -198,7 +204,8 @@ public class ConceptFeatureTraitsEditor
         }
 
         t.setAllowedValueType(traits.getObject().allowedValueType);
-        t.setKeyBindings(traits.getObject().getKeyBindings());
+        t.setKeyBindings(traits.getObject().keyBindings);
+        t.setRetainSuggestionInfo(traits.getObject().retainSuggestionInfo);
 
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
@@ -225,11 +232,11 @@ public class ConceptFeatureTraitsEditor
      */
     private List<KBHandle> listSearchResults(String aTypedString, ConceptFeatureValueType aType)
     {
-        if (StringUtils.isBlank(aTypedString)) {
-            return Collections.emptyList();
+        if (isBlank(aTypedString)) {
+            return emptyList();
         }
 
-        Traits t = traits.getObject();
+        var t = traits.getObject();
         return conceptLinkingService.getLinkingInstancesInKBScope(
                 t.knowledgeBase != null ? t.knowledgeBase.getRepositoryId() : null, null, aType,
                 aTypedString, null, -1, null, feature.getObject().getProject());
@@ -240,55 +247,16 @@ public class ConceptFeatureTraitsEditor
      * actual {@link ConceptFeatureTraits} via {@link ConceptFeatureTraitsEditor#readTraits()} and
      * {@link ConceptFeatureTraitsEditor#writeTraits()}.
      */
+    @SuppressWarnings("unused")
     private static class Traits
         implements Serializable
     {
-        private static final long serialVersionUID = 5804584375190949088L;
+        private static final long serialVersionUID = 7746975883022031685L;
 
-        private KnowledgeBase knowledgeBase;
-        private KBHandle scope;
-        private ConceptFeatureValueType allowedValueType;
-        private List<KeyBinding> keyBindings;
-
-        public KBHandle getScope()
-        {
-            return scope;
-        }
-
-        public void setScope(KBHandle aScope)
-        {
-            scope = aScope;
-        }
-
-        public KnowledgeBase getKnowledgeBase()
-        {
-            return knowledgeBase;
-        }
-
-        public void setKnowledgeBase(KnowledgeBase aKnowledgeBase)
-        {
-            knowledgeBase = aKnowledgeBase;
-        }
-
-        @SuppressWarnings("unused")
-        public ConceptFeatureValueType getAllowedValueType()
-        {
-            return allowedValueType;
-        }
-
-        public void setAllowedValueType(ConceptFeatureValueType aAllows)
-        {
-            allowedValueType = aAllows;
-        }
-
-        public List<KeyBinding> getKeyBindings()
-        {
-            return keyBindings;
-        }
-
-        public void setKeyBindings(List<KeyBinding> aKeyBindings)
-        {
-            keyBindings = aKeyBindings;
-        }
+        KnowledgeBase knowledgeBase;
+        KBHandle scope;
+        ConceptFeatureValueType allowedValueType;
+        List<KeyBinding> keyBindings;
+        boolean retainSuggestionInfo = false;
     }
 }

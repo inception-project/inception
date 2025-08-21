@@ -177,7 +177,7 @@ public class RelationEndpointFeatureSupport
     }
 
     @Override
-    public <V> V unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    public <V> V unwrapFeatureValue(AnnotationFeature aFeature, Object aValue)
     {
         throw new NotImplementedException("Relation endpoints do not support unwrapFeatureValue");
     }

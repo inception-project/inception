@@ -50,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChangedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.feature.SuggestionStatePanel;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior.Mode;
@@ -88,7 +89,7 @@ public class RadioGroupStringFeatureEditor
         keyBindingsPanel.setToggleVisibile(false);
         add(keyBindingsPanel);
 
-        add(new SuggestionStatePanel("suggestionInfo", aModel.map(FeatureState::getSuggestions)));
+        add(new SuggestionStatePanel("suggestionInfo", aModel));
     }
 
     private void actionClear(AjaxRequestTarget aTarget)

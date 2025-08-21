@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.SuggestionStatePanel;
 import de.tudarmstadt.ukp.inception.support.kendo.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
@@ -126,6 +127,8 @@ public class ConceptFeatureEditor
 
         add(focusComponent = new AutoCompleteField(MID_VALUE,
                 _query -> getCandidates(aStateModel, aHandler, _query)));
+
+        add(new SuggestionStatePanel("suggestionInfo", aModel));
 
         add(new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(), aModel, aHandler)
                 // The key bindings are only visible when the label is also enabled, i.e. when the

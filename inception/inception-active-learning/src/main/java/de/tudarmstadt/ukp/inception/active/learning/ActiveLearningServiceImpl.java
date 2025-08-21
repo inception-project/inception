@@ -247,7 +247,7 @@ public class ActiveLearningServiceImpl
     private String unwrapLabel(Object aValue, AnnotationFeature feature, CAS cas,
             FeatureSupport<Object> featureSupport)
     {
-        Object rawLabel = featureSupport.unwrapFeatureValue(feature, cas, aValue);
+        Object rawLabel = featureSupport.unwrapFeatureValue(feature, aValue);
         if (rawLabel instanceof Collection collectionValue) {
             rawLabel = collectionValue.iterator().next();
         }
