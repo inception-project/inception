@@ -148,19 +148,21 @@ public class LinkSuggestionSupport
 
         try (var eventBatch = adapter.batchEvents()) {
             if (linkHost == null || slotFiller == null) {
-                String msg = "Cannot find link host or slot filler to establish link between";
+                var msg = "Cannot find link host or slot filler to establish link between";
                 LOG.error(msg);
                 throw new IllegalStateException(msg);
             }
 
             var annotationCreated = false;
 
-            var oldLinks = (List<LinkWithRoleModel>) adapter.getFeatureValue(aFeature, linkHost);
+            List<LinkWithRoleModel> oldLinks = adapter.getFeatureValue(aFeature, linkHost);
             try {
                 var newLinks = new ArrayList<>(oldLinks);
-                var link = new LinkWithRoleModel(suggestion.getLabel(), suggestion.getLabel(),
-                        slotFiller.getAddress());
-                newLinks.add(link);
+                newLinks.add(LinkWithRoleModel.builder() //
+                        .withLabel(suggestion.getLabel()) //
+                        .withRole(suggestion.getLabel()) //
+                        .withTarget(slotFiller) //
+                        .build());
                 adapter.setFeatureValue(aDocument, aDataOwner, aCas, linkHost.getAddress(),
                         aFeature, newLinks);
 

@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraitsEdi
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
 public class HeaderAuthenticationTraitsEditor
-    extends AuthenticationTraitsEditor
+    extends AuthenticationTraitsEditor<HeaderAuthenticationTraits>
 {
     private static final long serialVersionUID = -2171643131419507935L;
 
@@ -54,7 +54,7 @@ public class HeaderAuthenticationTraitsEditor
 
         setOutputMarkupId(true);
 
-        editMode = Model.of(aModel.getObject().getHeader() == null);
+        editMode = Model.of(getModelObject().getHeader() == null);
 
         queue(new Label("status", LoadableDetachableModel.of(this::getStatus))
                 .add(visibleWhenNot(editMode)));
@@ -96,15 +96,9 @@ public class HeaderAuthenticationTraitsEditor
                 .add(visibleWhen(editMode)));
     }
 
-    @SuppressWarnings("unchecked")
-    IModel<HeaderAuthenticationTraits> getModel()
-    {
-        return (IModel<HeaderAuthenticationTraits>) getDefaultModel();
-    }
-
     private String getStatus()
     {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append("Header is ");
         sb.append(getModel().map(HeaderAuthenticationTraits::getHeader) //
                 .map(username -> "[" + username + "]")//

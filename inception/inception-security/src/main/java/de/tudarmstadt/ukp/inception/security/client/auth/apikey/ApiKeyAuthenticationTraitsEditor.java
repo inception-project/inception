@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraitsEdi
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
 public class ApiKeyAuthenticationTraitsEditor
-    extends AuthenticationTraitsEditor
+    extends AuthenticationTraitsEditor<ApiKeyAuthenticationTraits>
 {
     private static final long serialVersionUID = -2171643131419507935L;
 
@@ -54,7 +54,7 @@ public class ApiKeyAuthenticationTraitsEditor
 
         setOutputMarkupId(true);
 
-        editMode = Model.of(aModel.getObject().getApiKey() == null);
+        editMode = Model.of(getModelObject().getApiKey() == null);
 
         queue(new Label("status", LoadableDetachableModel.of(this::getStatus))
                 .add(visibleWhenNot(editMode)));
@@ -77,12 +77,6 @@ public class ApiKeyAuthenticationTraitsEditor
                     }
                 })//
                 .add(visibleWhen(editMode)));
-    }
-
-    @SuppressWarnings("unchecked")
-    IModel<ApiKeyAuthenticationTraits> getModel()
-    {
-        return (IModel<ApiKeyAuthenticationTraits>) getDefaultModel();
     }
 
     private String getStatus()
@@ -112,7 +106,7 @@ public class ApiKeyAuthenticationTraitsEditor
     public void commit()
     {
         if (newApiKey != null) {
-            getModel().getObject().setApiKey(newApiKey);
+            getModelObject().setApiKey(newApiKey);
         }
 
         setEditMode(false);

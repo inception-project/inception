@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.inception.schema.api.feature.MaterializedLink.t
 import static java.util.Collections.emptyList;
 import static org.apache.commons.collections4.CollectionUtils.disjunction;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.text.WordUtils.capitalize;
 import static org.apache.uima.cas.CAS.TYPE_NAME_FS_ARRAY;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.apache.uima.cas.CAS.TYPE_NAME_TOP;
@@ -32,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.text.WordUtils;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
@@ -189,7 +189,7 @@ public class LinkFeatureSupport
         aFeature.setLinkTypeRoleFeatureName(FEATURE_NAME_ROLE);
         aFeature.setLinkTypeTargetFeatureName(FEATURE_NAME_TARGET);
         aFeature.setLinkTypeName(
-                aFeature.getLayer().getName() + WordUtils.capitalize(aFeature.getName()) + "Link");
+                aFeature.getLayer().getName() + capitalize(aFeature.getName()) + "Link");
     }
 
     @Override

@@ -269,7 +269,8 @@ public class ExternalRecommender
         var type = tsd.getType(layer.getName());
         type.setDescription(layer.getDescription());
 
-        stream(type.getFeatures()).filter(f -> f.getName().equals(feature.getName()))
+        stream(type.getFeatures()) //
+                .filter(f -> f.getName().equals(feature.getName())) //
                 .forEach(f -> f.setDescription(feature.getDescription()));
 
         try (var out = new StringWriter()) {
