@@ -97,10 +97,6 @@
     </dependency>
     <dependency>
       <groupId>org.wicketstuff</groupId>
-      <artifactId>wicketstuff-jquery-ui</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-jquery-ui-core</artifactId>
     </dependency>
     

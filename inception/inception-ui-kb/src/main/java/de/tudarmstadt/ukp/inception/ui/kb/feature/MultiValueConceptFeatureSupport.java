@@ -22,14 +22,16 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.uima.cas.CAS.TYPE_NAME_FS_ARRAY;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 
+import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.StringArrayFS;
@@ -46,13 +48,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.annotation.type.RecommenderDecl;
+import de.tudarmstadt.ukp.inception.annotation.type.StringSuggestion;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.kb.MultiValueConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.SuggestionState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
@@ -133,10 +140,77 @@ public class MultiValueConceptFeatureSupport
     }
 
     @Override
+    public void pushFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
+        throws AnnotationException
+    {
+        if (!accepts(aFeature)) {
+            throw unsupportedFeatureTypeException(aFeature);
+        }
+
+        var fs = getFS(aCas, aFeature, aAddress);
+        var newValues = unwrapFeatureValue(aFeature, aValue);
+        if (newValues == null || newValues.isEmpty()) {
+            return;
+        }
+
+        var feature = fs.getType().getFeatureByBaseName(aFeature.getName());
+        var oldValues = FSUtil.getFeature(fs, aFeature.getName(), StringArrayFS.class);
+
+        var mergedValues = new LinkedHashSet<String>();
+        if (oldValues != null) {
+            for (var i = 0; i < oldValues.size(); i++) {
+                mergedValues.add(oldValues.get(i));
+            }
+        }
+
+        mergedValues.addAll(newValues);
+
+        // Create a new array if size differs otherwise re-use existing one
+        var array = FSUtil.getFeature(fs, aFeature.getName(), StringArrayFS.class);
+        if (array == null || (array.size() != mergedValues.size())) {
+            array = fs.getCAS().createStringArrayFS(mergedValues.size());
+        }
+
+        array.copyFromArray(mergedValues.toArray(new String[mergedValues.size()]), 0, 0,
+                mergedValues.size());
+
+        fs.setFeatureValue(feature, array);
+    }
+
+    @Override
+    public void pushSuggestion(SourceDocument aDocument, String aDataOwner,
+            AnnotationBaseFS aAnnotation, AnnotationFeature aFeature, String aLabel, double aScore,
+            String aRecommenderName)
+    {
+        var jcas = aAnnotation.getCAS().getJCasImpl();
+
+        var recommenderDecl = jcas.select(RecommenderDecl.class) //
+                .filter(rec -> aRecommenderName.equals(rec.getName())).findFirst().orElseGet(() -> {
+                    var decl = new RecommenderDecl(jcas);
+                    decl.setName(aRecommenderName);
+                    decl.addToIndexes();
+                    return decl;
+                });
+
+        var stringSuggestion = new StringSuggestion(jcas);
+        stringSuggestion.setLabel(aLabel);
+        stringSuggestion.setScore((float) aScore);
+        stringSuggestion.setRecommender(recommenderDecl);
+        FSUtil.setFeature(aAnnotation, aFeature.getName() + SUFFIX_SUGGESTION_INFO,
+                asList(stringSuggestion));
+    }
+
+    @Override
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)
     {
         aTD.addFeature(aFeature.getName(), aFeature.getDescription(), CAS.TYPE_NAME_STRING_ARRAY);
+
+        var traits = readTraits(aFeature);
+        if (traits.isRetainSuggestionInfo()) {
+            aTD.addFeature(aFeature.getName() + SUFFIX_SUGGESTION_INFO, "", TYPE_NAME_FS_ARRAY,
+                    StringSuggestion._TypeName, false);
+        }
     }
 
     @Override
@@ -226,7 +300,7 @@ public class MultiValueConceptFeatureSupport
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<String> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    public List<String> unwrapFeatureValue(AnnotationFeature aFeature, Object aValue)
     {
         if (aValue == null) {
             return null;
@@ -248,7 +322,7 @@ public class MultiValueConceptFeatureSupport
     }
 
     @Override
-    public Serializable wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    public ArrayList<KBHandle> wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
         if (aValue == null) {
             return null;
@@ -304,7 +378,7 @@ public class MultiValueConceptFeatureSupport
         }
 
         FeatureStructure fs = getFS(aCas, aFeature, aAddress);
-        List<String> values = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
+        List<String> values = unwrapFeatureValue(aFeature, aValue);
         if (values == null || values.isEmpty()) {
             FSUtil.setFeature(fs, aFeature.getName(), (Collection<String>) null);
             return;
@@ -353,6 +427,39 @@ public class MultiValueConceptFeatureSupport
     }
 
     @Override
+    public String renderWrappedFeatureValue(Object aValue)
+    {
+        if (aValue == null) {
+            return null;
+        }
+
+        if (aValue instanceof List list) {
+            var sb = new StringBuilder();
+            for (var item : list) {
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
+                if (item == null) {
+                    sb.append("no label");
+                }
+                else if (item instanceof KBHandle handle) {
+                    sb.append(handle.getUiLabel());
+                }
+                else {
+                    throw new IllegalArgumentException(
+                            "Expected List<KBHandle> but encounterd item of type ["
+                                    + item.getClass() + "]");
+
+                }
+            }
+            return sb.toString();
+        }
+
+        throw new IllegalArgumentException(
+                "Expected List<KBHandle> but was [" + aValue.getClass() + "]");
+    }
+
+    @Override
     public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
         var result = new VLazyDetailGroup();
@@ -372,5 +479,34 @@ public class MultiValueConceptFeatureSupport
         }
 
         return asList(result);
+    }
+
+    @Override
+    public List<SuggestionState> getSuggestions(FeatureStructure aAnnotation,
+            AnnotationFeature aFeature)
+    {
+        var cas = aAnnotation.getCAS();
+        var suggestionInfoFeature = aAnnotation.getType()
+                .getFeatureByBaseName(aFeature.getName() + SUFFIX_SUGGESTION_INFO);
+
+        if (suggestionInfoFeature == null) {
+            // If the feature does not exist, there is no info to return.
+            // Checking for the feature is faster than parsing the traits of the feature
+            // to check if it has suggestion info enabled.
+            return emptyList();
+        }
+
+        var suggestions = FSUtil.getFeature(aAnnotation, suggestionInfoFeature,
+                StringSuggestion[].class);
+        var suggestionStates = new ArrayList<SuggestionState>();
+        if (suggestions != null) {
+            for (var suggestion : suggestions) {
+                var state = new SuggestionState(suggestion.getRecommender().getName(),
+                        suggestion.getScore(),
+                        wrapFeatureValue(aFeature, cas, suggestion.getLabel()));
+                suggestionStates.add(state);
+            }
+        }
+        return suggestionStates;
     }
 }

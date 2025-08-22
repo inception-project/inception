@@ -21,17 +21,33 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import de.tudarmstadt.ukp.inception.annotation.feature.RecommendableFeatureTrait;
+
 /**
  * Traits for multi-value input field text features.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MultiValueStringFeatureTraits
-    implements Serializable
+    implements Serializable, RecommendableFeatureTrait
 {
     private static final long serialVersionUID = -8450181605003189055L;
+
+    private boolean retainSuggestionInfo = false;
 
     public MultiValueStringFeatureTraits()
     {
         // Nothing to do
+    }
+
+    @Override
+    public boolean isRetainSuggestionInfo()
+    {
+        return retainSuggestionInfo;
+    }
+
+    @Override
+    public void setRetainSuggestionInfo(boolean aRetainSuggestionInfo)
+    {
+        retainSuggestionInfo = aRetainSuggestionInfo;
     }
 }

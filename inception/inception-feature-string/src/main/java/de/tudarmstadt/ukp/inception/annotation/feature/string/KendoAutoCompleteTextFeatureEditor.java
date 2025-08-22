@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.inception.annotation.feature.misc.ReorderableTagAutoCompleteField;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.schema.api.feature.SuggestionStatePanel;
 import de.tudarmstadt.ukp.inception.support.kendo.KendoChoiceDescriptionScriptReference;
 
 /**
@@ -77,6 +78,8 @@ public class KendoAutoCompleteTextFeatureEditor
                 // editor is used in a "normal" context and not e.g. in the keybindings
                 // configuration panel
                 .add(visibleWhen(() -> getLabelComponent().isVisible())));
+
+        add(new SuggestionStatePanel("suggestionInfo", aModel));
     }
 
     @Override

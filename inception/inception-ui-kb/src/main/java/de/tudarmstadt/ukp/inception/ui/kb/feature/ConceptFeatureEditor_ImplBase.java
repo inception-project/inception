@@ -78,8 +78,8 @@ public abstract class ConceptFeatureEditor_ImplBase
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
 
-        AnnotationFeature feat = getModelObject().feature;
-        ConceptFeatureTraits_ImplBase traits = readFeatureTraits(feat);
+        var feat = getModelObject().feature;
+        var traits = readFeatureTraits(feat);
 
         add(new DisabledKBWarning("disabledKBWarning", Model.of(feat),
                 Model.of(traits.getRepositoryId())));

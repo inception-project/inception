@@ -306,8 +306,7 @@ public class SpanSuggestionSupport
             for (var annotation : annotations.get(annotationOffset)) {
                 var featureSupport = featureSupportRegistry.findExtension(feature).get();
                 var wrappedValue = featureSupport.getFeatureValue(feature, annotation);
-                var value = featureSupport.unwrapFeatureValue(feature, annotation.getCAS(),
-                        wrappedValue);
+                var value = featureSupport.unwrapFeatureValue(feature, wrappedValue);
 
                 var labelObjects = value instanceof Iterable values ? values : asList(value);
 

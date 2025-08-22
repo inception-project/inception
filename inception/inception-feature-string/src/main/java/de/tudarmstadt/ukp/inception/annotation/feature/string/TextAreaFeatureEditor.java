@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.schema.api.feature.SuggestionStatePanel;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class TextAreaFeatureEditor
@@ -42,16 +43,17 @@ public class TextAreaFeatureEditor
     public TextAreaFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
     {
         super(aId, aItem, aModel);
+
+        add(new SuggestionStatePanel("suggestionInfo", aModel));
     }
 
     @Override
     protected AbstractTextComponent<String> createInputField()
     {
-        TextArea<String> textarea = new TextArea<>("value");
+        var textarea = new TextArea<String>("value");
         try {
-            String traitsString = getModelObject().feature.getTraits();
-            StringFeatureTraits traits = JSONUtil.fromJsonString(StringFeatureTraits.class,
-                    traitsString);
+            var traitsString = getModelObject().feature.getTraits();
+            var traits = JSONUtil.fromJsonString(StringFeatureTraits.class, traitsString);
             textarea.add(new AttributeModifier("rows", traits.getCollapsedRows()));
             textarea.add(new AttributeAppender("onfocus",
                     "this.rows=" + traits.getExpandedRows() + ";"));

@@ -28,11 +28,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public abstract class ConceptFeatureTraits_ImplBase
     implements Serializable
 {
-    private static final long serialVersionUID = 6303541487449965932L;
+    private static final long serialVersionUID = 3351053348043107018L;
 
     private String repositoryId;
     private String scope;
     private ConceptFeatureValueType allowedValueType;
+    private boolean retainSuggestionInfo = false;
 
     public ConceptFeatureTraits_ImplBase()
     {
@@ -67,5 +68,15 @@ public abstract class ConceptFeatureTraits_ImplBase
     public void setAllowedValueType(ConceptFeatureValueType aAllowedType)
     {
         allowedValueType = aAllowedType;
+    }
+
+    public boolean isRetainSuggestionInfo()
+    {
+        return retainSuggestionInfo;
+    }
+
+    public void setRetainSuggestionInfo(boolean aRetainSuggestionInfo)
+    {
+        retainSuggestionInfo = aRetainSuggestionInfo;
     }
 }

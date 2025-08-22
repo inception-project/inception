@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.SuggestionStatePanel;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.kendo.KendoChoiceDescriptionScriptReference;
 
@@ -70,14 +71,16 @@ public class MultiSelectTextFeatureEditor
     private boolean featureUpdateBehaviorAdded = false;
 
     public MultiSelectTextFeatureEditor(String aId, MarkupContainer aOwner,
-            final IModel<FeatureState> aFeatureStateModel, AnnotationActionHandler aHandler)
+            final IModel<FeatureState> aModel, AnnotationActionHandler aHandler)
     {
-        super(aId, aOwner, CompoundPropertyModel.of(aFeatureStateModel));
+        super(aId, aOwner, CompoundPropertyModel.of(aModel));
 
         field = createInput();
         add(field);
 
         add(new ConstraintsInUseIndicator(CID_TEXT_INDICATOR, getModel()));
+
+        add(new SuggestionStatePanel("suggestionInfo", aModel));
     }
 
     @SuppressWarnings("unchecked")

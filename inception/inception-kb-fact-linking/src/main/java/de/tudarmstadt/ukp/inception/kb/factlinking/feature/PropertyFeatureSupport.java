@@ -156,7 +156,7 @@ public class PropertyFeatureSupport
 
     @SuppressWarnings("unchecked")
     @Override
-    public String unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    public String unwrapFeatureValue(AnnotationFeature aFeature, Object aValue)
     {
         // Normally, we get KBProperty back from the feature editors
         if (aValue instanceof KBProperty) {

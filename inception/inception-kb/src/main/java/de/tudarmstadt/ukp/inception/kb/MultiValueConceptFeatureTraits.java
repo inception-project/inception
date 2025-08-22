@@ -21,13 +21,15 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import de.tudarmstadt.ukp.inception.annotation.feature.RecommendableFeatureTrait;
+
 /**
  * Traits for knowledge-base-related features.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MultiValueConceptFeatureTraits
     extends ConceptFeatureTraits_ImplBase
-    implements Serializable
+    implements Serializable, RecommendableFeatureTrait
 {
     private static final long serialVersionUID = -7104243059568629203L;
 

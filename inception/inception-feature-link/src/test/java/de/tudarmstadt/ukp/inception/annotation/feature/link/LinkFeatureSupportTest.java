@@ -112,9 +112,9 @@ public class LinkFeatureSupportTest
         assertThatThrownBy(() -> sut.wrapFeatureValue(slotFeature, cas, new Object()))
                 .isInstanceOf(IllegalArgumentException.class);
 
-        assertThat(sut.unwrapFeatureValue(slotFeature, cas, links)).isSameAs(links);
-        assertThat(sut.unwrapFeatureValue(slotFeature, cas, null)).isNull();
-        assertThatThrownBy(() -> sut.unwrapFeatureValue(slotFeature, cas, new Object()))
+        assertThat(sut.unwrapFeatureValue(slotFeature, links)).isSameAs(links);
+        assertThat(sut.unwrapFeatureValue(slotFeature, null)).isNull();
+        assertThatThrownBy(() -> sut.unwrapFeatureValue(slotFeature, new Object()))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

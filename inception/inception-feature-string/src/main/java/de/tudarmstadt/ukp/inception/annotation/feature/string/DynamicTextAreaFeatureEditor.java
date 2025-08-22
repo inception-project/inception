@@ -26,6 +26,7 @@ import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.schema.api.feature.SuggestionStatePanel;
 
 public class DynamicTextAreaFeatureEditor
     extends TextFeatureEditorBase
@@ -37,6 +38,8 @@ public class DynamicTextAreaFeatureEditor
             IModel<FeatureState> aModel)
     {
         super(aId, aItem, aModel);
+
+        add(new SuggestionStatePanel("suggestionInfo", aModel));
     }
 
     @Override

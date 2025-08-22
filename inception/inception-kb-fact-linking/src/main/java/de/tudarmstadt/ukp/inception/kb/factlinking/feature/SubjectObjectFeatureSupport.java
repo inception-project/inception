@@ -179,8 +179,7 @@ public class SubjectObjectFeatureSupport
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<LinkWithRoleModel> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS,
-            Object aValue)
+    public List<LinkWithRoleModel> unwrapFeatureValue(AnnotationFeature aFeature, Object aValue)
     {
         if (aValue instanceof List) {
             // This is not actually implemented because the setFeatureValue knows how to deal with

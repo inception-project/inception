@@ -39,11 +39,11 @@ import org.wicketstuff.kendo.ui.form.combobox.ComboBox;
 import org.wicketstuff.kendo.ui.form.combobox.ComboBoxBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.api.event.TagEvent;
+import de.tudarmstadt.ukp.inception.schema.api.feature.SuggestionStatePanel;
 import de.tudarmstadt.ukp.inception.support.kendo.KendoChoiceDescriptionScriptReference;
 
 /**
@@ -77,14 +77,16 @@ public class KendoComboboxTextFeatureEditor
     {
         super(aId, aItem, aModel);
 
-        AnnotationFeature feat = getModelObject().feature;
-        StringFeatureTraits traits = readFeatureTraits(feat);
+        var feat = getModelObject().feature;
+        var traits = readFeatureTraits(feat);
 
         add(new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(), aModel, aHandler)
                 // The key bindings are only visible when the label is also enabled, i.e. when the
                 // editor is used in a "normal" context and not e.g. in the keybindings
                 // configuration panel
                 .add(visibleWhen(() -> getLabelComponent().isVisible())));
+
+        add(new SuggestionStatePanel("suggestionInfo", aModel));
     }
 
     @Override

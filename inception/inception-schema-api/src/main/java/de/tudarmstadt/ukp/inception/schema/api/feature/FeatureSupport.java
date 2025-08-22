@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.schema.api.feature;
 
+import static de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService.FEATURE_SUFFIX_SEP;
 import static de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil.setFeature;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static java.lang.String.join;
@@ -65,6 +66,8 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 public interface FeatureSupport<T>
     extends BeanNameAware, Extension<AnnotationFeature>
 {
+    String SUFFIX_SUGGESTION_INFO = FEATURE_SUFFIX_SEP + "suggestionInfo";
+
     @Override
     String getId();
 
@@ -345,7 +348,7 @@ public interface FeatureSupport<T>
 
         var fs = selectFsByAddr(aCas, aAddress);
 
-        var value = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
+        var value = unwrapFeatureValue(aFeature, aValue);
         setFeature(fs, aFeature, value);
     }
 
@@ -405,13 +408,11 @@ public interface FeatureSupport<T>
      *            the value type
      * @param aFeature
      *            the feature.
-     * @param aCAS
-     *            the CAS being edited
      * @param aValue
      *            the value provided from the feature editor.
      * @return the CAS value.
      */
-    <V> V unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue);
+    <V> V unwrapFeatureValue(AnnotationFeature aFeature, Object aValue);
 
     /**
      * Convert a CAS representation of the feature value to the type of value which the feature
@@ -550,5 +551,18 @@ public interface FeatureSupport<T>
     {
         // No default implementation
         return Collections.emptyList();
+    }
+
+    default String renderWrappedFeatureValue(Object aValue)
+    {
+        if (aValue == null) {
+            return null;
+        }
+
+        if (aValue instanceof Iterable multiValue) {
+            return String.join(", ", multiValue);
+        }
+
+        return aValue.toString();
     }
 }
