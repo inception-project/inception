@@ -183,13 +183,14 @@ public class DocumentMetadataAnnotationSelectionPanel
             var state = getModelObject();
             var dataOwner = state.getUser().getUsername();
             var sessionOwner = userService.getCurrentUser();
-            var suggestion = recommendationService.getPredictions(sessionOwner, state.getProject())
-                    .getPredictionByVID(state.getDocument(), aItem.vid).get();
+            var predictions = recommendationService.getPredictions(sessionOwner,
+                    state.getProject());
+            var suggestion = predictions.getPredictionByVID(state.getDocument(), aItem.vid).get();
 
             var aCas = casProvider.get();
 
             recommendationService.acceptSuggestion(sessionOwner.getUsername(), state.getDocument(),
-                    dataOwner, aCas, suggestion, MAIN_EDITOR);
+                    dataOwner, aCas, predictions, suggestion, MAIN_EDITOR);
 
             page.writeEditorCas(aCas);
 

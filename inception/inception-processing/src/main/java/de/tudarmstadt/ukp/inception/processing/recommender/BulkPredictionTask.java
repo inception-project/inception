@@ -246,12 +246,12 @@ public class BulkPredictionTask
         return predictionTask.getPredictions();
     }
 
-    private int autoAccept(SourceDocument aDocument, Predictions predictions, CAS cas)
+    private int autoAccept(SourceDocument aDocument, Predictions aPredictions, CAS aCas)
     {
         var accepted = 0;
         var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
 
-        for (var prediction : predictions.getPredictionsByDocument(aDocument.getId())) {
+        for (var prediction : aPredictions.getPredictionsByDocument(aDocument.getId())) {
             if (!Objects.equals(prediction.getRecommenderId(), recommender.getId())) {
                 continue;
             }
@@ -267,8 +267,8 @@ public class BulkPredictionTask
             adapter.silenceEvents();
 
             try {
-                suggestionSupport.get().acceptSuggestion(null, aDocument, dataOwner, cas, adapter,
-                        feature, prediction, AUTO_ACCEPT, ACCEPTED);
+                suggestionSupport.get().acceptSuggestion(null, aDocument, dataOwner, aCas, adapter,
+                        feature, aPredictions, prediction, AUTO_ACCEPT, ACCEPTED);
                 accepted++;
             }
             catch (AnnotationException e) {
@@ -276,7 +276,7 @@ public class BulkPredictionTask
             }
         }
 
-        predictions.log(LogMessage.info(this, "Auto-accepted [%d] suggestions", accepted));
+        aPredictions.log(LogMessage.info(this, "Auto-accepted [%d] suggestions", accepted));
         LOG.debug("Auto-accepted [{}] suggestions", accepted);
         return accepted;
     }

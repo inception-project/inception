@@ -227,6 +227,13 @@ public class RecommendationServiceImpl
     }
 
     @Override
+    public Predictions getPredictions(String aSessionOwner, Project aProject)
+    {
+        var state = getState(aSessionOwner, aProject);
+        return state.getActivePredictions();
+    }
+
+    @Override
     public Predictions getPredictions(User aSessionOwner, Project aProject)
     {
         var state = getState(aSessionOwner.getUsername(), aProject);
@@ -710,8 +717,8 @@ public class RecommendationServiceImpl
 
             try {
                 suggestionSupport.get().acceptSuggestion(null, aDocument,
-                        aSessionOwner.getUsername(), cas, adapter, feature, prediction, AUTO_ACCEPT,
-                        ACCEPTED);
+                        aSessionOwner.getUsername(), cas, adapter, feature, predictions, prediction,
+                        AUTO_ACCEPT, ACCEPTED);
                 accepted++;
             }
             catch (AnnotationException e) {
@@ -1337,8 +1344,9 @@ public class RecommendationServiceImpl
     @Override
     @Transactional
     public AnnotationFS correctSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, SpanSuggestion aOriginalSuggestion,
-            SpanSuggestion aCorrectedSuggestion, LearningRecordChangeLocation aLocation)
+            String aDataOwner, CAS aCas, Predictions aPredictions,
+            SpanSuggestion aOriginalSuggestion, SpanSuggestion aCorrectedSuggestion,
+            LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
         var layer = schemaService.getLayer(aOriginalSuggestion.getLayerId());
@@ -1361,8 +1369,8 @@ public class RecommendationServiceImpl
             var adapter = schemaService.getAdapter(layer);
 
             return (AnnotationFS) originalSuggestionSupport.get().acceptSuggestion(aSessionOwner,
-                    aDocument, aDataOwner, aCas, adapter, feature, aCorrectedSuggestion, aLocation,
-                    CORRECTED);
+                    aDocument, aDataOwner, aCas, adapter, feature, aPredictions,
+                    aCorrectedSuggestion, aLocation, CORRECTED);
         }
 
         return null;
@@ -1371,7 +1379,7 @@ public class RecommendationServiceImpl
     @Override
     @Transactional
     public AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, AnnotationSuggestion aSuggestion,
+            String aDataOwner, CAS aCas, Predictions aPredictions, AnnotationSuggestion aSuggestion,
             LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
@@ -1384,7 +1392,7 @@ public class RecommendationServiceImpl
 
         if (rls.isPresent()) {
             return rls.get().acceptSuggestion(aSessionOwner, aDocument, aDataOwner, aCas, adapter,
-                    feature, aSuggestion, aLocation, ACCEPTED);
+                    feature, aPredictions, aSuggestion, aLocation, ACCEPTED);
         }
 
         return null;

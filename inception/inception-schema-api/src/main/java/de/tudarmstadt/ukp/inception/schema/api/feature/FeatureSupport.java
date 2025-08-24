@@ -539,9 +539,9 @@ public interface FeatureSupport<T>
         return true;
     }
 
-    default void pushSuggestion(SourceDocument aDocument, String aDataOwner,
-            AnnotationBaseFS aAnnotation, AnnotationFeature aFeature, String aLabel, double aScore,
-            String aRecommenderName)
+    default void pushSuggestions(SourceDocument aDocument, String aDataOwner,
+            AnnotationBaseFS aAnnotation, AnnotationFeature aFeature,
+            List<SuggestionState> aSuggestions)
     {
         // No default implementation;
     }

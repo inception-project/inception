@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.inception.annotation.type.StringSuggestionUtil.appendStringSuggestions;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -49,7 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.annotation.type.RecommenderDecl;
 import de.tudarmstadt.ukp.inception.annotation.type.StringSuggestion;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.kb.MultiValueConceptFeatureTraits;
@@ -178,26 +178,12 @@ public class MultiValueConceptFeatureSupport
     }
 
     @Override
-    public void pushSuggestion(SourceDocument aDocument, String aDataOwner,
-            AnnotationBaseFS aAnnotation, AnnotationFeature aFeature, String aLabel, double aScore,
-            String aRecommenderName)
+    public void pushSuggestions(SourceDocument aDocument, String aDataOwner,
+            AnnotationBaseFS aAnnotation, AnnotationFeature aFeature,
+            List<SuggestionState> aSuggestions)
     {
-        var jcas = aAnnotation.getCAS().getJCasImpl();
-
-        var recommenderDecl = jcas.select(RecommenderDecl.class) //
-                .filter(rec -> aRecommenderName.equals(rec.getName())).findFirst().orElseGet(() -> {
-                    var decl = new RecommenderDecl(jcas);
-                    decl.setName(aRecommenderName);
-                    decl.addToIndexes();
-                    return decl;
-                });
-
-        var stringSuggestion = new StringSuggestion(jcas);
-        stringSuggestion.setLabel(aLabel);
-        stringSuggestion.setScore((float) aScore);
-        stringSuggestion.setRecommender(recommenderDecl);
-        FSUtil.setFeature(aAnnotation, aFeature.getName() + SUFFIX_SUGGESTION_INFO,
-                asList(stringSuggestion));
+        appendStringSuggestions(aAnnotation, aFeature.getName() + SUFFIX_SUGGESTION_INFO,
+                aSuggestions);
     }
 
     @Override

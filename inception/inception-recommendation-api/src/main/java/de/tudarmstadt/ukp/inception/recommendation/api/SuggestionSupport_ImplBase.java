@@ -24,6 +24,9 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
+import static java.util.Arrays.asList;
+
+import java.util.Objects;
 
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.Feature;
@@ -41,6 +44,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.SuggestionState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
@@ -81,13 +86,13 @@ public abstract class SuggestionSupport_ImplBase
 
     protected final void commitLabel(SourceDocument aDocument, String aDataOwner,
             TypeAdapter aAdapter, AnnotationBaseFS aAnnotation, AnnotationFeature aFeature,
-            AnnotationSuggestion aValue)
+            Predictions aPredictions, AnnotationSuggestion aSuggestion)
         throws AnnotationException
     {
         // Update the feature value
         var address = ICasUtil.getAddr(aAnnotation);
         aAdapter.pushFeatureValue(aDocument, aDataOwner, aAnnotation.getCAS(), address, aFeature,
-                aValue.getLabel());
+                aSuggestion.getLabel());
 
         // Update the suggestion information (if enabled)
         var retainSuggestionInfo = aAdapter
@@ -97,8 +102,35 @@ public abstract class SuggestionSupport_ImplBase
 
         if (retainSuggestionInfo) {
             var featureSupport = aAdapter.getFeatureSupport(aFeature).get();
-            featureSupport.pushSuggestion(aDocument, aDataOwner, aAnnotation, aFeature,
-                    aValue.getLabel(), aValue.getScore(), aValue.getRecommenderName());
+
+            // Always push the given suggestion
+            featureSupport.pushSuggestions(aDocument, aDataOwner, aAnnotation, aFeature,
+                    asList(new SuggestionState(aSuggestion.getRecommenderName(),
+                            aSuggestion.getScore(), aSuggestion.getLabel())));
+
+            // If we have context predictions check if any other recommender has also suggested this
+            // label and
+            // if so, also push those.
+            if (aPredictions != null) {
+                var group = aPredictions
+                        .getGroupedPredictions(AnnotationSuggestion.class, aDocument,
+                                aFeature.getLayer(), aSuggestion.getWindowBegin(),
+                                aSuggestion.getWindowEnd())
+                        .stream() //
+                        .filter(g -> g.contains(aSuggestion)) //
+                        .findFirst();
+
+                if (!group.isEmpty()) {
+                    var suggestions = group.get().stream() //
+                            .filter(s -> !s.equals(aSuggestion)) // Already added above
+                            .filter(s -> Objects.equals(s.getLabel(), aSuggestion.getLabel()))
+                            .map(s -> new SuggestionState(s.getRecommenderName(), s.getScore(),
+                                    s.getLabel()))
+                            .toList();
+                    featureSupport.pushSuggestions(aDocument, aDataOwner, aAnnotation, aFeature,
+                            suggestions);
+                }
+            }
         }
     }
 

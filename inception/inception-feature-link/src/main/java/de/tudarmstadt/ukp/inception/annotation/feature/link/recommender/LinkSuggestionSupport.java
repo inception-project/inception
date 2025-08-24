@@ -52,6 +52,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserA
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LinkPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LinkSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -106,8 +107,8 @@ public class LinkSuggestionSupport
     @Override
     public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordUserAction aAction)
+            Predictions aPredictions, AnnotationSuggestion aSuggestion,
+            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException
     {
         var suggestion = (LinkSuggestion) aSuggestion;

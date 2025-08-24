@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
@@ -94,8 +95,8 @@ public class MetadataSuggestionSupport
     @Override
     public AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordUserAction aAction)
+            Predictions aPredictions, AnnotationSuggestion aSuggestion,
+            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException
     {
         var adapter = (DocumentMetadataLayerAdapter) aAdapter;
@@ -128,7 +129,8 @@ public class MetadataSuggestionSupport
             }
 
             try {
-                commitLabel(aDocument, aDataOwner, aAdapter, annotation, aFeature, aSuggestion);
+                commitLabel(aDocument, aDataOwner, aAdapter, annotation, aFeature, aPredictions,
+                        aSuggestion);
             }
             catch (Exception e) {
                 if (annotationCreated) {
