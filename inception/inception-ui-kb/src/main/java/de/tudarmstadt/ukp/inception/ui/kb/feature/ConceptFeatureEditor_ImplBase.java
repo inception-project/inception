@@ -21,7 +21,6 @@ import static java.lang.System.currentTimeMillis;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
@@ -32,6 +31,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
@@ -171,7 +171,7 @@ public abstract class ConceptFeatureEditor_ImplBase
 
         if (labelFilter) {
             choices = choices.stream() //
-                    .filter(kb -> containsIgnoreCase(kb.getUiLabel(), finalInput))
+                    .filter(kb -> Strings.CI.contains(kb.getUiLabel(), finalInput))
                     .collect(Collectors.toList());
         }
 
@@ -190,12 +190,12 @@ public abstract class ConceptFeatureEditor_ImplBase
 
     private boolean applySecondaryFilter(KBHandle aObject, String aFilter)
     {
-        if (containsIgnoreCase(aObject.getDescription(), aFilter)) {
+        if (Strings.CI.contains(aObject.getDescription(), aFilter)) {
             return true;
         }
 
         if (aObject.getQueryBestMatchTerm() != null
-                && containsIgnoreCase(aObject.getUiLabel(), aFilter)) {
+                && Strings.CI.contains(aObject.getUiLabel(), aFilter)) {
             return true;
         }
 

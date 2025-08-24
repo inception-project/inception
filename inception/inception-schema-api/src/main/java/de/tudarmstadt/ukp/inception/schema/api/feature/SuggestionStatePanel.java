@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.schema.api.feature;
 
 import static java.lang.String.format;
+import static org.apache.commons.collections4.CollectionUtils.containsAny;
 
 import java.util.Objects;
 
@@ -29,6 +30,10 @@ import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.SuggestionState;
 
@@ -38,10 +43,28 @@ public class SuggestionStatePanel
     private static final long serialVersionUID = -1639295549080031870L;
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean ProjectService projectService;
+    private @SpringBean UserDao userService;
 
     public SuggestionStatePanel(String aId, IModel<FeatureState> aModel)
     {
         super(aId, aModel);
+
+        var sessionOwner = userService.getCurrentUsername();
+
+        var projectRoles = aModel.map(FeatureState::getFeature) //
+                .map(AnnotationFeature::getProject) //
+                .map(project -> projectService.listProjectPermissionLevel(sessionOwner, project)
+                        .stream().map(ProjectPermission::getLevel).toList());
+
+        var rolesSeeingSuggestionInfo = aModel.map(FeatureState::getFeature) //
+                .map(f -> featureSupportRegistry.readTraits(f, () -> null)) //
+                .map(t -> (RecommendableFeatureTrait) t) //
+                .map(t -> t.getRolesSeeingSuggestionInfo());
+
+        setVisible(projectRoles //
+                .map(r1 -> rolesSeeingSuggestionInfo.map(r2 -> containsAny(r1, r2)).getObject())
+                .getObject());
 
         add(new ListView<SuggestionState>("suggestion", aModel.map(FeatureState::getSuggestions))
         {

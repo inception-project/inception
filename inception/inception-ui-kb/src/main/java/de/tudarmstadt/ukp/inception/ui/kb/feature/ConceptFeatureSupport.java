@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.inception.annotation.type.StringSuggestionUtil.setStringSuggestions;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -255,7 +256,9 @@ public class ConceptFeatureSupport
     @Override
     public ConceptFeatureTraits createDefaultTraits()
     {
-        return new ConceptFeatureTraits();
+        var traits = new ConceptFeatureTraits();
+        traits.setRolesSeeingSuggestionInfo(asList(CURATOR));
+        return traits;
     }
 
     @Override

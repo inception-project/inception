@@ -17,10 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.CONCEPT;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -29,6 +35,7 @@ import java.util.Optional;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.LambdaChoiceRenderer;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -39,6 +46,8 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapCheckBoxMultipleChoice;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
@@ -96,6 +105,7 @@ public class MultiValueConceptFeatureTraitsEditor
                 writeTraits();
             }
         };
+        add(form);
 
         form.add(new KnowledgeBaseItemAutoCompleteField(MID_SCOPE,
                 _query -> listSearchResults(_query, CONCEPT)) //
@@ -118,7 +128,18 @@ public class MultiValueConceptFeatureTraitsEditor
         retainSuggestionInfo.setModel(PropertyModel.of(traits, "retainSuggestionInfo"));
         form.add(retainSuggestionInfo);
 
-        add(form);
+        var rolesSeeingSuggestionInfo = new BootstrapCheckBoxMultipleChoice<PermissionLevel>(
+                "rolesSeeingSuggestionInfo");
+        rolesSeeingSuggestionInfo.setOutputMarkupPlaceholderTag(true);
+        rolesSeeingSuggestionInfo.setModel(PropertyModel.of(traits, "rolesSeeingSuggestionInfo"));
+        rolesSeeingSuggestionInfo.setChoices(asList(ANNOTATOR, CURATOR));
+        rolesSeeingSuggestionInfo
+                .setChoiceRenderer(new EnumChoiceRenderer<>(rolesSeeingSuggestionInfo));
+        rolesSeeingSuggestionInfo.add(visibleWhen(retainSuggestionInfo.getModel()));
+        form.add(rolesSeeingSuggestionInfo);
+
+        retainSuggestionInfo.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                _target -> _target.add(rolesSeeingSuggestionInfo)));
     }
 
     private void refresh(AjaxRequestTarget aTarget)
@@ -174,6 +195,7 @@ public class MultiValueConceptFeatureTraitsEditor
 
         result.scope = loadConcept(result.knowledgeBase, t.getScope());
         result.retainSuggestionInfo = t.isRetainSuggestionInfo();
+        result.rolesSeeingSuggestionInfo = new ArrayList<>(t.getRolesSeeingSuggestionInfo());
 
         return result;
     }
@@ -196,6 +218,8 @@ public class MultiValueConceptFeatureTraitsEditor
 
         t.setAllowedValueType(traits.getObject().allowedValueType);
         t.setRetainSuggestionInfo(traits.getObject().retainSuggestionInfo);
+        t.setRolesSeeingSuggestionInfo(
+                new ArrayList<>(traits.getObject().rolesSeeingSuggestionInfo));
 
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
@@ -247,5 +271,6 @@ public class MultiValueConceptFeatureTraitsEditor
         KBHandle scope;
         ConceptFeatureValueType allowedValueType;
         boolean retainSuggestionInfo = false;
+        List<PermissionLevel> rolesSeeingSuggestionInfo = new ArrayList<>();
     }
 }

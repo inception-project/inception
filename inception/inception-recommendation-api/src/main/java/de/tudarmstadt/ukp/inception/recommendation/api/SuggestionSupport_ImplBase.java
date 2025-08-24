@@ -37,7 +37,6 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.annotation.feature.RecommendableFeatureTrait;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -49,6 +48,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.SuggestionState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.RecommendableFeatureTrait;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public abstract class SuggestionSupport_ImplBase

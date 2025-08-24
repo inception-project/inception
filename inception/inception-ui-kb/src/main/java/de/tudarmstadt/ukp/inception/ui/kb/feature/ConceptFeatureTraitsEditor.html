@@ -48,10 +48,7 @@
       </div>
     </div>
     <div class="row form-row" wicket:enclosure="retainSuggestionInfo">
-      <label wicket:for="retainSuggestionInfo" class="col-sm-4 col-form-label">
-        Recommender
-      </label>
-      <div class="col-sm-8">
+      <div class="col-sm-8 offset-sm-4 mt-2">
         <div class="form-check">
           <input wicket:id="retainSuggestionInfo" class="form-check-input" type="checkbox">
           <label wicket:for="retainSuggestionInfo" class="form-check-label">
@@ -59,6 +56,12 @@
           </label>
         </div>
       </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="rolesSeeingSuggestionInfo">
+      <label wicket:for="rolesSeeingSuggestionInfo" class="col-sm-4 col-form-label">
+        Suggestion info visible for
+      </label>
+      <div wicket:id="rolesSeeingSuggestionInfo" class="col-sm-8 mt-2"/>
     </div>
   </form>
   <div class="row form-row">

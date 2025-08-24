@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.inception.annotation.type.StringSuggestionUtil.appendStringSuggestions;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -214,7 +215,9 @@ public class MultiValueConceptFeatureSupport
     @Override
     public MultiValueConceptFeatureTraits createDefaultTraits()
     {
-        return new MultiValueConceptFeatureTraits();
+        var traits = new MultiValueConceptFeatureTraits();
+        traits.setRolesSeeingSuggestionInfo(asList(CURATOR));
+        return traits;
     }
 
     @Override

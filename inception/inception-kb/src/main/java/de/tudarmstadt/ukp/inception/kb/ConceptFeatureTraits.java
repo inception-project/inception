@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingTrait;
-import de.tudarmstadt.ukp.inception.annotation.feature.RecommendableFeatureTrait;
+import de.tudarmstadt.ukp.inception.schema.api.feature.RecommendableFeatureTrait;
 
 /**
  * Traits for knowledge-base-related features.

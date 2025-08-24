@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.string;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType.AUTOCOMPLETE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType.COMBOBOX;
 import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType.RADIOGROUP;
@@ -219,7 +220,9 @@ public class StringFeatureSupport
     @Override
     public StringFeatureTraits createDefaultTraits()
     {
-        return new StringFeatureTraits();
+        var traits = new StringFeatureTraits();
+        traits.setRolesSeeingSuggestionInfo(asList(CURATOR));
+        return traits;
     }
 
     @Override
