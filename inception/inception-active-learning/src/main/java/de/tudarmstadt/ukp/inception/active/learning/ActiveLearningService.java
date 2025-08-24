@@ -26,6 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl.ActiveLearningUserState;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
@@ -61,8 +62,8 @@ public interface ActiveLearningService
     Optional<Delta<SpanSuggestion>> generateNextSuggestion(String aSessionOwner, User aDataOwner,
             ActiveLearningUserState aAlState);
 
-    void acceptSpanSuggestion(SourceDocument aDocument, User aDataOwner, SpanSuggestion aSuggestion,
-            Object aValue)
+    void acceptSpanSuggestion(SourceDocument aDocument, User aDataOwner, Predictions aPredictions,
+            SpanSuggestion aSuggestion, Object aValue)
         throws IOException, AnnotationException;
 
     void rejectSpanSuggestion(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer,

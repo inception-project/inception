@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.annotation.feature.string;
 import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType.AUTOCOMPLETE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType.COMBOBOX;
 import static de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType.RADIOGROUP;
+import static de.tudarmstadt.ukp.inception.annotation.type.StringSuggestionUtil.setStringSuggestions;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -49,7 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.feature.misc.UimaPrimitiveFeatureSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureTraits.EditorType;
-import de.tudarmstadt.ukp.inception.annotation.type.RecommenderDecl;
 import de.tudarmstadt.ukp.inception.annotation.type.StringSuggestion;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -279,26 +279,12 @@ public class StringFeatureSupport
     }
 
     @Override
-    public void pushSuggestion(SourceDocument aDocument, String aDataOwner,
-            AnnotationBaseFS aAnnotation, AnnotationFeature aFeature, String aLabel, double aScore,
-            String aRecommenderName)
+    public void pushSuggestions(SourceDocument aDocument, String aDataOwner,
+            AnnotationBaseFS aAnnotation, AnnotationFeature aFeature,
+            List<SuggestionState> aSuggestions)
     {
-        var jcas = aAnnotation.getCAS().getJCasImpl();
-
-        var recommenderDecl = jcas.select(RecommenderDecl.class) //
-                .filter(rec -> aRecommenderName.equals(rec.getName())).findFirst().orElseGet(() -> {
-                    var decl = new RecommenderDecl(jcas);
-                    decl.setName(aRecommenderName);
-                    decl.addToIndexes();
-                    return decl;
-                });
-
-        var stringSuggestion = new StringSuggestion(jcas);
-        stringSuggestion.setLabel(aLabel);
-        stringSuggestion.setScore((float) aScore);
-        stringSuggestion.setRecommender(recommenderDecl);
-        FSUtil.setFeature(aAnnotation, aFeature.getName() + SUFFIX_SUGGESTION_INFO,
-                asList(stringSuggestion));
+        setStringSuggestions(aAnnotation, aFeature.getName() + SUFFIX_SUGGESTION_INFO,
+                aSuggestions);
     }
 
     @Override

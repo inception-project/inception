@@ -72,6 +72,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
@@ -128,18 +129,19 @@ public class SpanSuggestionSupport
     @Override
     public AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordUserAction aAction)
+            Predictions aPredictions, AnnotationSuggestion aSuggestion,
+            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException
     {
         return acceptOrCorrectSuggestion(aSessionOwner, aDocument, aDataOwner, aCas,
-                (SpanAdapter) aAdapter, aFeature, (SpanSuggestion) aSuggestion, aLocation, aAction);
+                (SpanAdapter) aAdapter, aFeature, aPredictions, (SpanSuggestion) aSuggestion,
+                aLocation, aAction);
     }
 
     public AnnotationFS acceptOrCorrectSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, SpanAdapter aAdapter, AnnotationFeature aFeature,
-            SpanSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordUserAction aAction)
+            Predictions aPredictions, SpanSuggestion aSuggestion,
+            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException
     {
         var begin = aSuggestion.getBegin();
@@ -177,7 +179,8 @@ public class SpanSuggestionSupport
             }
 
             try {
-                commitLabel(aDocument, aDataOwner, aAdapter, annotation, aFeature, aSuggestion);
+                commitLabel(aDocument, aDataOwner, aAdapter, annotation, aFeature, aPredictions,
+                        aSuggestion);
             }
             catch (Exception e) {
                 if (annotationCreated) {

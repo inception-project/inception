@@ -18,13 +18,15 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <div wicket:id="suggestion" class="small text-muted d-flex flex-grow-1 justify-content-between">
-    <div>
-      <span class="fas fa-robot"/>
-      <span wicket:id="recommender" class="me-2"/>
-      <span wicket:id="value" class="me-2 badge rounded-pill text-bg-secondary"/>
+  <div class="d-flex flex-column flex-grow-1">
+    <div wicket:id="suggestion" class="small text-muted d-flex flex-grow-1 justify-content-between">
+      <div>
+        <span class="fas fa-robot"/>
+        <span wicket:id="recommender" class="me-2"/>
+        <span wicket:id="value" class="me-2 badge rounded-pill text-bg-secondary"/>
+      </div>
+      <small wicket:id="score" class="font-monospace"/>
     </div>
-    <small wicket:id="score" class="font-monospace"/>
   </div>
 </wicket:panel>
 </html>

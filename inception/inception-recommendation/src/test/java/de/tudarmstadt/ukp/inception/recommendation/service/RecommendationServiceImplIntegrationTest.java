@@ -225,7 +225,7 @@ public class RecommendationServiceImplIntegrationTest
 
         var s1 = SpanSuggestion.builder().withLabel("V1").withRecommender(spanLayerRecommender)
                 .withPosition(new Offset(targetFS)).build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s1, MAIN_EDITOR);
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), null, s1, MAIN_EDITOR);
 
         assertThat(targetFS.getValue()) //
                 .as("Label was merged into existing annotation replacing unset label") //
@@ -233,7 +233,7 @@ public class RecommendationServiceImplIntegrationTest
 
         var s2 = SpanSuggestion.builder().withLabel("V2").withRecommender(spanLayerRecommender)
                 .withPosition(new Offset(targetFS)).build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s2, MAIN_EDITOR);
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), null, s2, MAIN_EDITOR);
 
         assertThat(targetFS.getValue()) //
                 .as("Label was merged into existing annotation replacing previous label") //
@@ -241,7 +241,7 @@ public class RecommendationServiceImplIntegrationTest
 
         var s3 = SpanSuggestion.builder().withLabel("V3").withRecommender(spanLayerRecommender)
                 .withPosition(new Offset(10, 20)).build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s3, MAIN_EDITOR);
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), null, s3, MAIN_EDITOR);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged as new annotation") //
@@ -258,7 +258,7 @@ public class RecommendationServiceImplIntegrationTest
 
         var s4 = SpanSuggestion.builder().withLabel("V1").withRecommender(spanLayerRecommender)
                 .withPosition(new Offset(targetFS)).build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s4, MAIN_EDITOR);
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), null, s4, MAIN_EDITOR);
 
         assertThat(targetFS.getValue()) //
                 .as("Label was merged into existing annotation replacing unset label") //
@@ -266,7 +266,7 @@ public class RecommendationServiceImplIntegrationTest
 
         var s5 = SpanSuggestion.builder().withLabel("V2").withRecommender(spanLayerRecommender)
                 .withPosition(new Offset(targetFS)).build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s5, MAIN_EDITOR);
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), null, s5, MAIN_EDITOR);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged as new annotation") //
@@ -277,7 +277,7 @@ public class RecommendationServiceImplIntegrationTest
 
         var s6 = SpanSuggestion.builder().withLabel("V3").withRecommender(spanLayerRecommender)
                 .withPosition(new Offset(10, 20)).build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s6, MAIN_EDITOR);
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), null, s6, MAIN_EDITOR);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged as new annotation") //
@@ -292,7 +292,7 @@ public class RecommendationServiceImplIntegrationTest
 
         var s7 = SpanSuggestion.builder().withLabel("V4").withRecommender(spanLayerRecommender)
                 .withPosition(new Offset(0, 10)).build();
-        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), s7, MAIN_EDITOR);
+        sut.acceptSuggestion(USER_NAME, doc, docOwner, cas.getCas(), null, s7, MAIN_EDITOR);
 
         assertThat(cas.select(NamedEntity.class).asList()) //
                 .as("Label was merged again into one of the entities without a label") //

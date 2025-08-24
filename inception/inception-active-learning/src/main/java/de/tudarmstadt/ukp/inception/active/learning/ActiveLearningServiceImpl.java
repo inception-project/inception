@@ -54,6 +54,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
@@ -190,7 +191,7 @@ public class ActiveLearningServiceImpl
     @Override
     @Transactional
     public void acceptSpanSuggestion(SourceDocument aDocument, User aDataOwner,
-            SpanSuggestion aSuggestion, Object aValue)
+            Predictions aPredictions, SpanSuggestion aSuggestion, Object aValue)
         throws IOException, AnnotationException
     {
         // Upsert an annotation based on the suggestion
@@ -219,11 +220,11 @@ public class ActiveLearningServiceImpl
         var action = aSuggestion.labelEquals(label) ? ACCEPTED : CORRECTED;
         if (action == CORRECTED) {
             recommendationService.correctSuggestion(sessionOwner, aDocument, dataOwner, cas,
-                    aSuggestion, suggestionWithUserSelectedLabel, AL_SIDEBAR);
+                    aPredictions, aSuggestion, suggestionWithUserSelectedLabel, AL_SIDEBAR);
         }
         else {
             recommendationService.acceptSuggestion(sessionOwner, aDocument, dataOwner, cas,
-                    suggestionWithUserSelectedLabel, AL_SIDEBAR);
+                    aPredictions, suggestionWithUserSelectedLabel, AL_SIDEBAR);
         }
 
         // Save CAS after annotation has been created

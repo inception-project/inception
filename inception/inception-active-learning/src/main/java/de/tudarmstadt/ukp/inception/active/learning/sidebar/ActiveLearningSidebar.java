@@ -717,10 +717,13 @@ public class ActiveLearningSidebar
         // from the update event created by acceptSuggestion/upsertSpanFeature.
         requestClearningSelectionAndJumpingToSuggestion();
 
+        var project = state.getProject();
+        var dataOwner = state.getUser();
         var document = documentService.getSourceDocument(state.getProject().getId(),
                 suggestion.getDocumentId());
-        activeLearningService.acceptSpanSuggestion(document, state.getUser(), suggestion,
-                editor.getModelObject().value);
+        var predictions = recommendationService.getPredictions(dataOwner, project);
+        activeLearningService.acceptSpanSuggestion(document, state.getUser(), predictions,
+                suggestion, editor.getModelObject().value);
 
         // If the currently displayed document is the same one where the annotation was created,
         // then update timestamp in state to avoid concurrent modification errors

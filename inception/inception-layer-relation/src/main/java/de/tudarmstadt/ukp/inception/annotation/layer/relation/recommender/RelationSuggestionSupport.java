@@ -52,6 +52,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
@@ -132,8 +133,8 @@ public class RelationSuggestionSupport
     @Override
     public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordUserAction aAction)
+            Predictions aPredictions, AnnotationSuggestion aSuggestion,
+            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException
     {
         var suggestion = (RelationSuggestion) aSuggestion;
@@ -206,7 +207,8 @@ public class RelationSuggestionSupport
             }
 
             try {
-                commitLabel(aDocument, aDataOwner, aAdapter, annotation, aFeature, aSuggestion);
+                commitLabel(aDocument, aDataOwner, aAdapter, annotation, aFeature, aPredictions,
+                        aSuggestion);
             }
             catch (Exception e) {
                 if (annotationCreated) {

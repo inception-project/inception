@@ -15,13 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.rendering.editorstate;
+package de.tudarmstadt.ukp.inception.annotation.type;
 
-import java.io.Serializable;
+import org.apache.uima.cas.CAS;
 
-public record SuggestionState(String recommender, double score, Serializable value)
-    implements Serializable
+public final class RecommenderDeclUtil
 {
-    private static final long serialVersionUID = 840347251712535019L;
+    private RecommenderDeclUtil()
+    {
+        // No instances
+    }
 
+    public static RecommenderDecl getOrCreateRecommenderDecl(CAS aCas, String aRecommenderName)
+    {
+        return aCas.select(RecommenderDecl.class) //
+                .filter(rec -> aRecommenderName.equals(rec.getName())).findFirst().orElseGet(() -> {
+                    var decl = new RecommenderDecl(aCas.getJCasImpl());
+                    decl.setName(aRecommenderName);
+                    decl.addToIndexes();
+                    return decl;
+                });
+    }
 }
