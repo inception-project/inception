@@ -17,9 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
+
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -29,10 +36,13 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.inception.annotation.feature.misc.UimaPrimitiveFeatureSupport_ImplBase;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapCheckBoxMultipleChoice;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 public class MultiValueStringFeatureTraitsEditor
     extends GenericPanel<AnnotationFeature>
@@ -87,6 +97,19 @@ public class MultiValueStringFeatureTraitsEditor
         retainSuggestionInfo.setOutputMarkupId(true);
         retainSuggestionInfo.setModel(PropertyModel.of(traits, "retainSuggestionInfo"));
         form.add(retainSuggestionInfo);
+
+        var rolesSeeingSuggestionInfo = new BootstrapCheckBoxMultipleChoice<PermissionLevel>(
+                "rolesSeeingSuggestionInfo");
+        rolesSeeingSuggestionInfo.setOutputMarkupPlaceholderTag(true);
+        rolesSeeingSuggestionInfo.setModel(PropertyModel.of(traits, "rolesSeeingSuggestionInfo"));
+        rolesSeeingSuggestionInfo.setChoices(asList(ANNOTATOR, CURATOR));
+        rolesSeeingSuggestionInfo
+                .setChoiceRenderer(new EnumChoiceRenderer<>(rolesSeeingSuggestionInfo));
+        rolesSeeingSuggestionInfo.add(visibleWhen(retainSuggestionInfo.getModel()));
+        form.add(rolesSeeingSuggestionInfo);
+
+        retainSuggestionInfo.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                _target -> _target.add(rolesSeeingSuggestionInfo)));
     }
 
     @SuppressWarnings("unchecked")

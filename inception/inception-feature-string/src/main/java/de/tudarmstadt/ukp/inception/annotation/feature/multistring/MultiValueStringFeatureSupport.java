@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.inception.annotation.type.StringSuggestionUtil.appendStringSuggestions;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -321,7 +322,9 @@ public class MultiValueStringFeatureSupport
     @Override
     public MultiValueStringFeatureTraits createDefaultTraits()
     {
-        return new MultiValueStringFeatureTraits();
+        var traits = new MultiValueStringFeatureTraits();
+        traits.setRolesSeeingSuggestionInfo(asList(CURATOR));
+        return traits;
     }
 
     @Override

@@ -17,11 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.CONCEPT;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +35,7 @@ import java.util.Optional;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.LambdaChoiceRenderer;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -41,6 +48,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsConfigurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapCheckBoxMultipleChoice;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
@@ -102,6 +111,7 @@ public class ConceptFeatureTraitsEditor
                 writeTraits();
             }
         };
+        add(form);
 
         form.add(new KnowledgeBaseItemAutoCompleteField(MID_SCOPE,
                 _query -> listSearchResults(_query, CONCEPT)).setOutputMarkupPlaceholderTag(true));
@@ -116,12 +126,24 @@ public class ConceptFeatureTraitsEditor
 
         form.add(new DisabledKBWarning("disabledKBWarning", feature,
                 traits.bind("knowledgeBase.repositoryId")));
-        add(form);
 
         var retainSuggestionInfo = new CheckBox("retainSuggestionInfo");
         retainSuggestionInfo.setOutputMarkupId(true);
         retainSuggestionInfo.setModel(PropertyModel.of(traits, "retainSuggestionInfo"));
         form.add(retainSuggestionInfo);
+
+        var rolesSeeingSuggestionInfo = new BootstrapCheckBoxMultipleChoice<PermissionLevel>(
+                "rolesSeeingSuggestionInfo");
+        rolesSeeingSuggestionInfo.setOutputMarkupPlaceholderTag(true);
+        rolesSeeingSuggestionInfo.setModel(PropertyModel.of(traits, "rolesSeeingSuggestionInfo"));
+        rolesSeeingSuggestionInfo.setChoices(asList(ANNOTATOR, CURATOR));
+        rolesSeeingSuggestionInfo
+                .setChoiceRenderer(new EnumChoiceRenderer<>(rolesSeeingSuggestionInfo));
+        rolesSeeingSuggestionInfo.add(visibleWhen(retainSuggestionInfo.getModel()));
+        form.add(rolesSeeingSuggestionInfo);
+
+        retainSuggestionInfo.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                _target -> _target.add(rolesSeeingSuggestionInfo)));
 
         add(new KeyBindingsConfigurationPanel(MID_KEY_BINDINGS, aFeatureModel,
                 traits.bind(MID_KEY_BINDINGS)).setOutputMarkupId(true));
@@ -183,6 +205,7 @@ public class ConceptFeatureTraitsEditor
         result.scope = loadConcept(result.knowledgeBase, t.getScope());
         result.keyBindings = t.getKeyBindings();
         result.retainSuggestionInfo = t.isRetainSuggestionInfo();
+        result.rolesSeeingSuggestionInfo = new ArrayList<>(t.getRolesSeeingSuggestionInfo());
 
         return result;
     }
@@ -206,6 +229,7 @@ public class ConceptFeatureTraitsEditor
         t.setAllowedValueType(traits.getObject().allowedValueType);
         t.setKeyBindings(traits.getObject().keyBindings);
         t.setRetainSuggestionInfo(traits.getObject().retainSuggestionInfo);
+        t.setRolesSeeingSuggestionInfo(traits.getObject().rolesSeeingSuggestionInfo);
 
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
@@ -258,5 +282,6 @@ public class ConceptFeatureTraitsEditor
         ConceptFeatureValueType allowedValueType;
         List<KeyBinding> keyBindings;
         boolean retainSuggestionInfo = false;
+        List<PermissionLevel> rolesSeeingSuggestionInfo = new ArrayList<>();
     }
 }

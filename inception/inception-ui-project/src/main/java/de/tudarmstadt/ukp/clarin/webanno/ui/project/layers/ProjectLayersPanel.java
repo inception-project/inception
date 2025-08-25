@@ -143,19 +143,20 @@ public class ProjectLayersPanel
 
         featureSelectionForm = new FeatureSelectionForm(MID_FEATURE_SELECTION_FORM,
                 selectedFeature);
+        queue(featureSelectionForm);
+
         featureDetailForm = new FeatureDetailForm(MID_FEATURE_DETAIL_FORM, selectedFeature);
+        queue(featureDetailForm);
 
         layerSelectionPane = new LayerSelectionPane("layerSelectionPane", selectedLayer);
+        queue(layerSelectionPane);
+
         layerDetailForm = new LayerDetailForm("layerDetailForm", selectedLayer,
                 featureSelectionForm, featureDetailForm);
-
-        add(layerSelectionPane);
-        add(featureSelectionForm);
-        add(layerDetailForm);
-        add(featureDetailForm);
+        queue(layerDetailForm);
 
         importLayerForm = new ImportLayerForm("importLayerForm");
-        layerSelectionPane.add(importLayerForm);
+        queue(importLayerForm);
     }
 
     @Override

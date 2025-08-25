@@ -17,11 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-import de.tudarmstadt.ukp.inception.annotation.feature.RecommendableFeatureTrait;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
+import de.tudarmstadt.ukp.inception.schema.api.feature.RecommendableFeatureTrait;
 
 /**
  * Traits for multi-value input field text features.
@@ -33,6 +39,7 @@ public class MultiValueStringFeatureTraits
     private static final long serialVersionUID = -8450181605003189055L;
 
     private boolean retainSuggestionInfo = false;
+    private @JsonInclude(NON_EMPTY) List<PermissionLevel> rolesSeeingSuggestionInfo = new ArrayList<>();
 
     public MultiValueStringFeatureTraits()
     {
@@ -49,5 +56,22 @@ public class MultiValueStringFeatureTraits
     public void setRetainSuggestionInfo(boolean aRetainSuggestionInfo)
     {
         retainSuggestionInfo = aRetainSuggestionInfo;
+    }
+
+    @Override
+    public void setRolesSeeingSuggestionInfo(List<PermissionLevel> aRolesSeeingSuggestionInfo)
+    {
+        if (aRolesSeeingSuggestionInfo == null) {
+            rolesSeeingSuggestionInfo = new ArrayList<>();
+        }
+        else {
+            rolesSeeingSuggestionInfo = aRolesSeeingSuggestionInfo;
+        }
+    }
+
+    @Override
+    public List<PermissionLevel> getRolesSeeingSuggestionInfo()
+    {
+        return rolesSeeingSuggestionInfo;
     }
 }

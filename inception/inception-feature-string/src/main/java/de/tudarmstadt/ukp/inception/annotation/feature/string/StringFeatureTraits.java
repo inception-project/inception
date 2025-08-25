@@ -30,7 +30,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingTrait;
-import de.tudarmstadt.ukp.inception.annotation.feature.RecommendableFeatureTrait;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
+import de.tudarmstadt.ukp.inception.schema.api.feature.RecommendableFeatureTrait;
 
 /**
  * Traits for input field text features.
@@ -71,6 +72,7 @@ public class StringFeatureTraits
     private @JsonInclude(NON_DEFAULT) boolean dynamicSize = false;
     private @JsonInclude(NON_EMPTY) List<KeyBinding> keyBindings = new ArrayList<>();
     private @JsonInclude(NON_EMPTY) String defaultValue;
+    private @JsonInclude(NON_EMPTY) List<PermissionLevel> rolesSeeingSuggestionInfo = new ArrayList<>();
 
     public StringFeatureTraits()
     {
@@ -164,5 +166,22 @@ public class StringFeatureTraits
     public void setRetainSuggestionInfo(boolean aRetainSuggestionInfo)
     {
         retainSuggestionInfo = aRetainSuggestionInfo;
+    }
+
+    @Override
+    public void setRolesSeeingSuggestionInfo(List<PermissionLevel> aRolesSeeingSuggestionInfo)
+    {
+        if (aRolesSeeingSuggestionInfo == null) {
+            rolesSeeingSuggestionInfo = new ArrayList<>();
+        }
+        else {
+            rolesSeeingSuggestionInfo = aRolesSeeingSuggestionInfo;
+        }
+    }
+
+    @Override
+    public List<PermissionLevel> getRolesSeeingSuggestionInfo()
+    {
+        return rolesSeeingSuggestionInfo;
     }
 }

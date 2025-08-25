@@ -17,7 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.string;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
 
 import java.util.Arrays;
 
@@ -26,6 +30,7 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -39,8 +44,10 @@ import org.wicketstuff.kendo.ui.form.NumberTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsConfigurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.inception.annotation.feature.misc.UimaPrimitiveFeatureSupport_ImplBase;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapCheckBoxMultipleChoice;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -158,6 +165,7 @@ public class StringFeatureTraitsEditor
         editorTypeContainer.setOutputMarkupPlaceholderTag(true);
         editorTypeContainer.add(visibleWhen(() -> !traits.getObject().isMultipleRows()
                 && aFeature.getObject().getTagset() != null));
+        form.add(editorTypeContainer);
 
         var editorType = new DropDownChoice<StringFeatureTraits.EditorType>("editorType");
         editorType.setModel(PropertyModel.of(traits, "editorType"));
@@ -170,7 +178,18 @@ public class StringFeatureTraitsEditor
         retainSuggestionInfo.setModel(PropertyModel.of(traits, "retainSuggestionInfo"));
         form.add(retainSuggestionInfo);
 
-        form.add(editorTypeContainer);
+        var rolesSeeingSuggestionInfo = new BootstrapCheckBoxMultipleChoice<PermissionLevel>(
+                "rolesSeeingSuggestionInfo");
+        rolesSeeingSuggestionInfo.setOutputMarkupPlaceholderTag(true);
+        rolesSeeingSuggestionInfo.setModel(PropertyModel.of(traits, "rolesSeeingSuggestionInfo"));
+        rolesSeeingSuggestionInfo.setChoices(asList(ANNOTATOR, CURATOR));
+        rolesSeeingSuggestionInfo
+                .setChoiceRenderer(new EnumChoiceRenderer<>(rolesSeeingSuggestionInfo));
+        rolesSeeingSuggestionInfo.add(visibleWhen(retainSuggestionInfo.getModel()));
+        form.add(rolesSeeingSuggestionInfo);
+
+        retainSuggestionInfo.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                _target -> _target.add(rolesSeeingSuggestionInfo)));
     }
 
     private void refreshKeyBindings(AjaxRequestTarget aTarget, IModel<AnnotationFeature> aFeature)

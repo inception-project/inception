@@ -15,11 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.annotation.feature;
+package de.tudarmstadt.ukp.inception.schema.api.feature;
+
+import java.util.List;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 
 public interface RecommendableFeatureTrait
 {
-    public boolean isRetainSuggestionInfo();
+    boolean isRetainSuggestionInfo();
 
-    public void setRetainSuggestionInfo(boolean aRetainSuggestionInfo);
+    void setRetainSuggestionInfo(boolean aRetainSuggestionInfo);
+
+    void setRolesSeeingSuggestionInfo(List<PermissionLevel> aRolesSeeingSuggestionInfo);
+
+    List<PermissionLevel> getRolesSeeingSuggestionInfo();
 }
