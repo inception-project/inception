@@ -35,6 +35,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.codec.net.URLCodec;
@@ -47,7 +48,6 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
-import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
@@ -151,8 +151,9 @@ public class TestFixtures
             assumeTrue(isReachable(profile.getAccess().getAccessUrl()), "Remote repository at ["
                     + profile.getAccess().getAccessUrl() + "] is not reachable");
 
-            SPARQLRepository repo = new SPARQLRepository(profile.getAccess().getAccessUrl());
+            var repo = new SPARQLRepository(profile.getAccess().getAccessUrl());
             repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
+            repo.setAdditionalHttpHeaders(Map.of("User-Agent", "INCEpTION/0.0.1-SNAPSHOT"));
             repo.init();
             return repo;
         }
@@ -235,14 +236,15 @@ public class TestFixtures
         }
 
         try {
-            URL url = new URL(aUrl + "?query="
+            var url = new URL(aUrl + "?query="
                     + new URLCodec().encode("SELECT ?v WHERE { BIND (true AS ?v)}"));
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            var con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("HEAD");
             con.setConnectTimeout(7_500);
             con.setReadTimeout(7_500);
             con.setRequestProperty("Content-Type", "application/sparql-query");
-            int status = con.getResponseCode();
+            con.setRequestProperty("User-Agent", "INCEpTION/0.0.1-SNAPSHOT");
+            var status = con.getResponseCode();
 
             if (status == HTTP_MOVED_TEMP || status == HTTP_MOVED_PERM) {
                 String location = con.getHeaderField("Location");
@@ -255,11 +257,12 @@ public class TestFixtures
             return false;
         }
 
-        SPARQLRepository r = new SPARQLRepository(aUrl);
+        var r = new SPARQLRepository(aUrl);
         r.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
+        r.setAdditionalHttpHeaders(Map.of("User-Agent", "INCEpTION/0.0.1-SNAPSHOT"));
         r.init();
-        try (RepositoryConnection conn = r.getConnection()) {
-            TupleQuery query = conn.prepareTupleQuery("SELECT ?v WHERE { BIND (true AS ?v)}");
+        try (var conn = r.getConnection()) {
+            var query = conn.prepareTupleQuery("SELECT ?v WHERE { BIND (true AS ?v)}");
             query.setMaxExecutionTime(5);
             try (TupleQueryResult result = query.evaluate()) {
                 return true;
