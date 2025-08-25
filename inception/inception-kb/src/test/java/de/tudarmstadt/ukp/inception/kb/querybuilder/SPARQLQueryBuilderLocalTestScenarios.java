@@ -38,6 +38,7 @@ import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -364,6 +365,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
     {
         var repo = new SPARQLRepository(aUrl);
         repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
+        repo.setAdditionalHttpHeaders(Map.of("User-Agent", "INCEpTION/0.0.1-SNAPSHOT"));
         repo.init();
         return repo;
     }
@@ -372,6 +374,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
     {
         var repo = new SPARQLRepository(aQueryUrl, aUpdateUrl);
         repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
+        repo.setAdditionalHttpHeaders(Map.of("User-Agent", "INCEpTION/0.0.1-SNAPSHOT"));
         repo.init();
         return repo;
     }

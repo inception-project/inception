@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClien
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.skipCertificateChecks;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DEFAULT_LIMIT;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.PROP_VERSION;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getVersionProperties;
 import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -110,6 +112,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpHeaders;
@@ -173,6 +176,9 @@ public class KnowledgeBaseServiceImpl
 
     private final LoadingCache<QueryKey, List<KBHandle>> queryCache;
     private final MemoryOAuthSessionRepository<KnowledgeBase> oAuthSessionRepository;
+
+    @Value("spring.application.name")
+    private String applicationName;
 
     @Autowired
     public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
@@ -552,6 +558,10 @@ public class KnowledgeBaseServiceImpl
 
         if (repo instanceof SPARQLRepository sparqlRepo) {
             var sparqlRepoConfig = (SPARQLRepositoryConfig) getKnowledgeBaseConfig(kb);
+
+            sparqlRepo.setAdditionalHttpHeaders(Map.of("User-Agent", applicationName + "/"
+                    + getVersionProperties().getProperty(PROP_VERSION, "unknown")));
+
             applyBasicHttpAuthenticationConfigurationFromUrl(sparqlRepoConfig, sparqlRepo);
             var traits = readTraits(kb);
 
@@ -565,6 +575,9 @@ public class KnowledgeBaseServiceImpl
                     applyOAuthConfiguration(kb, sparqlRepo, traits);
                     break;
                 }
+                default:
+                    // Do nothing
+                    break;
                 }
             }
         }
