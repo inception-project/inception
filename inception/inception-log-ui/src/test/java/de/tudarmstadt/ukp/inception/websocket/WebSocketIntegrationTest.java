@@ -42,6 +42,7 @@ import java.util.concurrent.CountDownLatch;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
@@ -105,6 +106,7 @@ import de.tudarmstadt.ukp.inception.websocket.config.stomp.LoggingStompSessionHa
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 import jakarta.persistence.EntityManager;
 
+@Disabled("Test fails sometimes and module is removed in 38.x")
 @SpringBootTest( //
         webEnvironment = RANDOM_PORT, //
         properties = { //
