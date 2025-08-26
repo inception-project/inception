@@ -51,6 +51,7 @@ import java.io.OutputStream;
 import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -548,7 +549,7 @@ public class KnowledgeBaseServiceImpl
         if (repo instanceof SPARQLRepository sparqlRepo) {
             var sparqlRepoConfig = (SPARQLRepositoryConfig) getKnowledgeBaseConfig(kb);
 
-            sparqlRepo.setAdditionalHttpHeaders(Map.of("User-Agent", applicationName + "/"
+            addAdditionalHeaders(sparqlRepo, Map.of("User-Agent", applicationName + "/"
                     + getVersionProperties().getProperty(PROP_VERSION, "unknown")));
 
             applyBasicHttpAuthenticationConfigurationFromUrl(sparqlRepoConfig, sparqlRepo);
@@ -637,8 +638,21 @@ public class KnowledgeBaseServiceImpl
             throw new IllegalStateException(e);
         }
 
-        var headers = Map.of(HttpHeaders.AUTHORIZATION, "Bearer " + session.getAccessToken());
-        sparqlRepo.setAdditionalHttpHeaders(headers);
+        addAdditionalHeaders(sparqlRepo,
+                Map.of(HttpHeaders.AUTHORIZATION, "Bearer " + session.getAccessToken()));
+    }
+
+    private void addAdditionalHeaders(SPARQLRepository aSparqlRepo, Map<String, String> aHeaders)
+    {
+        var existingHeaders = aSparqlRepo.getAdditionalHttpHeaders();
+        var newHeaders = new LinkedHashMap<String, String>();
+        if (existingHeaders != null) {
+            newHeaders.putAll(existingHeaders);
+        }
+        if (aHeaders != null) {
+            newHeaders.putAll(aHeaders);
+        }
+        aSparqlRepo.setAdditionalHttpHeaders(newHeaders);
     }
 
     private void applyBasicHttpAuthenticationConfigurationFromUrl(
