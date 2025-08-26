@@ -1173,14 +1173,8 @@ public class MtasDocumentIndex
     private void addToResults(Map<String, List<SearchResult>> aResultsMap, String aKey,
             SearchResult aSearchResult)
     {
-        if (aResultsMap.containsKey(aKey)) {
-            aResultsMap.get(aKey).add(aSearchResult);
-        }
-        else {
-            var searchResultsForKey = new ArrayList<SearchResult>();
-            searchResultsForKey.add(aSearchResult);
-            aResultsMap.put(aKey, searchResultsForKey);
-        }
+        var results = aResultsMap.computeIfAbsent(aKey, $ -> new ArrayList<SearchResult>());
+        results.add(aSearchResult);
     }
 
     private List<String> featureValuesAtMatch(List<MtasTokenString> aTokens, int aMatchStart,
