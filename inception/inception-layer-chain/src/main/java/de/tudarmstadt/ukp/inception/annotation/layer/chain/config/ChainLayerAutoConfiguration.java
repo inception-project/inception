@@ -27,6 +27,8 @@ import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupportImpl
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.export.ChainLayerToCsvExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.export.ChainLayerToJsonExporter;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.pivot.ChainCoveredTextExtractorSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.pivot.ChainRangeExtractorSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.undo.ChainAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -62,5 +64,17 @@ public class ChainLayerAutoConfiguration
             DocumentService aDocumentService)
     {
         return new ChainLayerToCsvExporter(aSchemaService, aDocumentService);
+    }
+
+    @Bean
+    public ChainCoveredTextExtractorSupport chainCoveredTextExtractorSupport()
+    {
+        return new ChainCoveredTextExtractorSupport();
+    }
+
+    @Bean
+    public ChainRangeExtractorSupport chainRangeExtractorSupport()
+    {
+        return new ChainRangeExtractorSupport();
     }
 }

@@ -22,9 +22,11 @@ import java.util.Optional;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
-public interface DiffSupportRegistry extends ExtensionPoint<AnnotationLayer, DiffSupport>
+public interface DiffSupportRegistry
+    extends ExtensionPoint<AnnotationLayer, DiffSupport>
 {
-    default Optional<DiffSupport> getExtension(AnnotationLayer aLayer) {
+    default Optional<DiffSupport> getExtension(AnnotationLayer aLayer)
+    {
         return getExtensions(aLayer).stream().findFirst();
     }
 }

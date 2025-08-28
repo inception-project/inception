@@ -114,8 +114,8 @@ public class ChainLayerSupportImpl
     public ChainAdapter createAdapter(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
-        return new ChainAdapterImpl(getLayerSupportRegistry(), featureSupportRegistry, eventPublisher,
-                aLayer, aFeatures,
+        return new ChainAdapterImpl(getLayerSupportRegistry(), featureSupportRegistry,
+                eventPublisher, aLayer, aFeatures,
                 layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class),
                 constraintsService);
     }

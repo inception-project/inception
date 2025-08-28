@@ -132,8 +132,8 @@ public class AnnotationPreferencesDialogContent
         fontZoomField.setMaximum(FONT_ZOOM_MAX);
         form.add(fontZoomField);
 
-        var state = preferencesService.loadDefaultTraitsForProject(KEY_ANNOTATION_EDITOR_MANAGER_PREFS,
-                stateModel.getObject().getProject());
+        var state = preferencesService.loadDefaultTraitsForProject(
+                KEY_ANNOTATION_EDITOR_MANAGER_PREFS, stateModel.getObject().getProject());
 
         var editor = new DropDownChoice<Pair<String, String>>("editor");
         editor.setChoiceRenderer(new ChoiceRenderer<>("value"));

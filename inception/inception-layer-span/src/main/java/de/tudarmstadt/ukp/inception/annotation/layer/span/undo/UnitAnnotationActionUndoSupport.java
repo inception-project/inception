@@ -21,6 +21,7 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationActionSupport;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.config.UndoAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.UnitEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.UnitMergedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.UnitSplitEvent;

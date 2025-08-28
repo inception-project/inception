@@ -159,7 +159,7 @@ public class VArc
             label = aLabel;
             return this;
         }
-        
+
         public Builder withColor(String aColor)
         {
             color = aColor;

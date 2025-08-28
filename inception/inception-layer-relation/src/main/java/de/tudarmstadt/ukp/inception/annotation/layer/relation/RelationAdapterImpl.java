@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
-import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointFeatureSupport.PREFIX_SOURCE;
-import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointFeatureSupport.PREFIX_TARGET;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.PREFIX_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.PREFIX_TARGET;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.hasSameType;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static java.lang.System.currentTimeMillis;

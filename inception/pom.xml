@@ -306,6 +306,9 @@
     <module>inception-workload-dynamic</module>
     <module>inception-workload-matrix</module>
     <module>inception-workload-ui</module>
+    <!-- Analytics and reporting -->
+    <module>inception-pivot</module>
+    <module>inception-pivot-api</module>
     <!-- Application -->
     <module>inception-app-webapp</module>
     <!-- Examples -->

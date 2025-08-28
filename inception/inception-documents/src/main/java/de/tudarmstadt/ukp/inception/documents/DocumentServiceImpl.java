@@ -699,7 +699,7 @@ public class DocumentServiceImpl
 
         if (ArrayUtils.contains(aStates, AnnotationDocumentState.NEW)) {
             throw new IllegalArgumentException(
-                    "Querying for annotation documents in state NEW because if the state is NEW, "
+                    "Querying for annotation documents in state NEW is not allowed because if the state is NEW, "
                             + "the annotation document entity might not even have been created yet.");
         }
 

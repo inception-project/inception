@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
 import org.springframework.context.ApplicationEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.config.UndoAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 
 /**

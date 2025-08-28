@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
 import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.PREFIX_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.PREFIX_TARGET;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
@@ -41,10 +43,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.config.RelationLayerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
@@ -57,16 +59,13 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
  * Extension providing image-related features for annotations.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationAutoConfiguration#relationEndpointFeatureSupport}.
+ * {@link RelationLayerAutoConfiguration#relationEndpointFeatureSupport}.
  * </p>
  */
 public class RelationEndpointFeatureSupport
     implements FeatureSupport<RelationEndpointFeatureTraits>
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
-    public static final String PREFIX_SOURCE = "rel-source:";
-    public static final String PREFIX_TARGET = "rel-target:";
 
     private String featureSupportId;
 
