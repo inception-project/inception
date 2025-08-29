@@ -19,23 +19,33 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:extend>
-    <div class="flex-content flex-v-container">
-      <div class="annotation-editor-container flex-content flex-h-container flex-gutter flex-no-initial-gutter">
-        <div wicket:id="leftSidebar" class="flex-v-container flex-gutter"></div>
-        <div wicket:id="centerArea" class="flex-content flex-v-container flex-gutter">
-          <div class="flex-content card overflow-hidden">
-            <div class="card-header border-bottom-0">
-              <span wicket:id="documentNamePanel"/> 
-              <span wicket:id="numberOfPages" class="small text-muted float-end"/>
+    <div class="flex-content flex-v-container annotation-editor-container">
+      <div wicket:id="splitter-right" class="flex-content">
+        <div class="fit-child-snug">
+          <div wicket:id="splitter-left">
+            <div wicket:id="leftSidebarContainer">
+              <div wicket:id="leftSidebar" class="flex-v-container flex-gutter"></div>
             </div>
-            <div class="card-body flex-v-container" style="padding: 0px;">
-              <nav wicket:id="actionBar" class="action-bar"/>
-              <div wicket:id="editor" class="flex-content flex-v-container" style="padding: 0px;"/>
+            <div wicket:id="centerAreaContainer">
+              <div wicket:id="centerArea" class="flex-content flex-v-container flex-gutter">
+                <div class="flex-content card overflow-hidden">
+                  <div class="card-header border-bottom-0">
+                    <span wicket:id="documentNamePanel"/> 
+                    <span wicket:id="numberOfPages" class="small text-muted float-end"/>
+                  </div>
+                  <div class="card-body flex-v-container" style="padding: 0px;">
+                    <nav wicket:id="actionBar" class="action-bar"/>
+                    <div wicket:id="editor" class="flex-content flex-v-container" style="padding: 0px;"/>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <div wicket:id="rightSidebar" class="flex-sidebar flex-v-container">
-          <wicket:container wicket:id="annotationDetailEditorPanel"/>
+        <div class="fit-child-snug">
+          <div wicket:id="rightSidebar" class="flex-sidebar flex-v-container">
+            <wicket:container wicket:id="annotationDetailEditorPanel"/>
+          </div>
         </div>
       </div>
     </div>
