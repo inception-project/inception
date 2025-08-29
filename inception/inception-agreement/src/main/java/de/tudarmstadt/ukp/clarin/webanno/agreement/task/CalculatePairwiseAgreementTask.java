@@ -203,7 +203,7 @@ public class CalculatePairwiseAgreementTask
         }
 
         if (!documentService.existsCas(aDocument, aDataOwner)) {
-            Optional.of(loadInitialCas(aDocument));
+            return Optional.of(loadInitialCas(aDocument));
         }
 
         return loadCas(aDocument, aDataOwner);
