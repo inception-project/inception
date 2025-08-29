@@ -26,7 +26,8 @@ import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
  * {@code AnnotationServiceAutoConfiguration#chainLayerSupport}.
  * </p>
  */
-public interface ChainLayerSupport extends LayerSupport<ChainAdapter, ChainLayerTraits>
+public interface ChainLayerSupport
+    extends LayerSupport<ChainAdapter, ChainLayerTraits>
 {
     public static final String TYPE = WebAnnoConst.CHAIN_TYPE;
 

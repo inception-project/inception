@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 @Configuration
 @EnableConfigurationProperties({ //
-    LinkFeatureSupportPropertiesImpl.class })
+        LinkFeatureSupportPropertiesImpl.class })
 public class LinkFeatureAutoConfiguration
 {
     @Bean

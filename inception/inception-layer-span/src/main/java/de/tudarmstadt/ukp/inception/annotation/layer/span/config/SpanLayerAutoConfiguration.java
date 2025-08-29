@@ -32,6 +32,8 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffSuppo
 import de.tudarmstadt.ukp.inception.annotation.layer.span.export.SpanLayerToCsvExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.export.SpanLayerToJsonExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.log.SpanEventAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.pivot.SpanCoveredTextExtractorSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.pivot.SpanRangeExtractorSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.recommender.SpanSuggestionSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.undo.SpanAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.undo.UnitAnnotationActionUndoSupport;
@@ -110,5 +112,17 @@ public class SpanLayerAutoConfiguration
         return new SpanSuggestionSupport(aRecommendationService, aLearningRecordService,
                 aApplicationEventPublisher, aSchemaService, aFeatureSupportRegistry,
                 aRecommenderProperties);
+    }
+
+    @Bean
+    public SpanCoveredTextExtractorSupport spanCoveredTextExtractorSupport()
+    {
+        return new SpanCoveredTextExtractorSupport();
+    }
+
+    @Bean
+    public SpanRangeExtractorSupport spanRangeExtractorSupport()
+    {
+        return new SpanRangeExtractorSupport();
     }
 }

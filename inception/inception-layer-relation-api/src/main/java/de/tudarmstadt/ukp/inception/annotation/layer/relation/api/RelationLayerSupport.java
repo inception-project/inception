@@ -25,11 +25,14 @@ public interface RelationLayerSupport
     extends LayerSupport<RelationAdapter, RelationLayerTraits>
 {
     @SuppressWarnings("deprecation")
-    public static final String FEAT_REL_TARGET = WebAnnoConst.FEAT_REL_TARGET;
+    String FEAT_REL_TARGET = WebAnnoConst.FEAT_REL_TARGET;
 
     @SuppressWarnings("deprecation")
-    public static final String FEAT_REL_SOURCE = WebAnnoConst.FEAT_REL_SOURCE;
+    String FEAT_REL_SOURCE = WebAnnoConst.FEAT_REL_SOURCE;
 
     @SuppressWarnings("deprecation")
-    public static final String TYPE = LayerTypes.RELATION_LAYER_TYPE;
+    String TYPE = LayerTypes.RELATION_LAYER_TYPE;
+
+    String PREFIX_SOURCE = "rel-source:";
+    String PREFIX_TARGET = "rel-target:";
 }

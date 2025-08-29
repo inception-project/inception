@@ -32,6 +32,8 @@ import de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanLayerIni
 import de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanRecommenderInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanTagSetInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.CommentFeatureInitializer;
+import de.tudarmstadt.ukp.inception.project.initializers.basic.RelationSourceFeatureInitializer;
+import de.tudarmstadt.ukp.inception.project.initializers.basic.RelationTargetFeatureInitializer;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
@@ -106,5 +108,19 @@ public class InceptionBasicProjectInitializersAutoConfiguration
             AnnotationSchemaService aAnnotationSchemaService)
     {
         return new BasicSpanTagSetInitializer(aAnnotationSchemaService);
+    }
+
+    @Bean
+    public RelationSourceFeatureInitializer relationSourceFeatureInitializer(
+            AnnotationSchemaService aAnnotationSchemaService)
+    {
+        return new RelationSourceFeatureInitializer(aAnnotationSchemaService);
+    }
+
+    @Bean
+    public RelationTargetFeatureInitializer relationTargetFeatureInitializer(
+            AnnotationSchemaService aAnnotationSchemaService)
+    {
+        return new RelationTargetFeatureInitializer(aAnnotationSchemaService);
     }
 }

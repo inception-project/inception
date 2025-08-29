@@ -33,6 +33,10 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.behavior.RelationC
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.behavior.RelationOverlapBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.export.RelationLayerToCsvExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.export.RelationLayerToJsonExporter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.pivot.RelationSourceRangeExtractorSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.pivot.RelationSourceTextExtractorSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.pivot.RelationTargetRangeExtractorSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.pivot.RelationTargetTextExtractorSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.recommender.RelationSuggestionSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.undo.RelationAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -114,5 +118,33 @@ public class RelationLayerAutoConfiguration
     {
         return new RelationSuggestionSupport(aRecommendationService, aLearningRecordService,
                 aApplicationEventPublisher, aSchemaService, aFeatureSupportRegistry);
+    }
+
+    @Bean
+    public RelationSourceTextExtractorSupport relationSourceTextExtractorSupport(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new RelationSourceTextExtractorSupport(aSchemaService);
+    }
+
+    @Bean
+    public RelationTargetTextExtractorSupport relationTargetTextExtractorSupport(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new RelationTargetTextExtractorSupport(aSchemaService);
+    }
+
+    @Bean
+    public RelationSourceRangeExtractorSupport relationSourceRangeExtractorSupport(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new RelationSourceRangeExtractorSupport(aSchemaService);
+    }
+
+    @Bean
+    public RelationTargetRangeExtractorSupport relationTargetRangeExtractorSupport(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new RelationTargetRangeExtractorSupport(aSchemaService);
     }
 }

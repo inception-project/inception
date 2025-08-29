@@ -310,8 +310,8 @@ public abstract class AnnotationPageBase2
             return;
         }
 
-        var editorState = preferencesService.loadDefaultTraitsForProject(KEY_ANNOTATION_EDITOR_MANAGER_PREFS,
-                getProject());
+        var editorState = preferencesService
+                .loadDefaultTraitsForProject(KEY_ANNOTATION_EDITOR_MANAGER_PREFS, getProject());
 
         var editorId = editorState.getDefaultEditor();
 

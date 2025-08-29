@@ -142,8 +142,8 @@ public class RelationAdapterTest
             pos.addToIndexes();
         }
 
-        var sut = new RelationAdapterImpl(layerSupportRegistry, featureSupportRegistry, null, depLayer,
-                FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        var sut = new RelationAdapterImpl(layerSupportRegistry, featureSupportRegistry, null,
+                depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
                 () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
                 constraintsService);
 
@@ -173,8 +173,8 @@ public class RelationAdapterTest
             pos.addToIndexes();
         }
 
-        var sut = new RelationAdapterImpl(layerSupportRegistry, featureSupportRegistry, null, depLayer,
-                FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        var sut = new RelationAdapterImpl(layerSupportRegistry, featureSupportRegistry, null,
+                depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
                 () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
                 constraintsService);
 
@@ -200,8 +200,8 @@ public class RelationAdapterTest
             pos.addToIndexes();
         }
 
-        var sut = new RelationAdapterImpl(layerSupportRegistry, featureSupportRegistry, null, depLayer,
-                FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        var sut = new RelationAdapterImpl(layerSupportRegistry, featureSupportRegistry, null,
+                depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
                 () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
                 constraintsService);
 
@@ -231,8 +231,8 @@ public class RelationAdapterTest
             pos.addToIndexes();
         }
 
-        var sut = new RelationAdapterImpl(layerSupportRegistry, featureSupportRegistry, null, depLayer,
-                FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        var sut = new RelationAdapterImpl(layerSupportRegistry, featureSupportRegistry, null,
+                depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
                 () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
                 constraintsService);
 
@@ -260,8 +260,8 @@ public class RelationAdapterTest
             pos.addToIndexes();
         }
 
-        var sut = new RelationAdapterImpl(layerSupportRegistry, featureSupportRegistry, null, depLayer,
-                FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        var sut = new RelationAdapterImpl(layerSupportRegistry, featureSupportRegistry, null,
+                depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
                 () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
                 constraintsService);
 
@@ -307,8 +307,8 @@ public class RelationAdapterTest
             pos.addToIndexes();
         }
 
-        var sut = new RelationAdapterImpl(layerSupportRegistry, featureSupportRegistry, null, depLayer,
-                FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        var sut = new RelationAdapterImpl(layerSupportRegistry, featureSupportRegistry, null,
+                depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
                 () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors,
                 constraintsService);
 

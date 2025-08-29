@@ -288,8 +288,8 @@ public interface DocumentImportExportService
             Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws UIMAException, IOException;
 
-    File exportAnnotationDocument(SourceDocument aDocument, String aDataOwner, FormatSupport aFormat,
-            Mode aMode, boolean aStripExtension,
+    File exportAnnotationDocument(SourceDocument aDocument, String aDataOwner,
+            FormatSupport aFormat, Mode aMode, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws UIMAException, IOException;
 

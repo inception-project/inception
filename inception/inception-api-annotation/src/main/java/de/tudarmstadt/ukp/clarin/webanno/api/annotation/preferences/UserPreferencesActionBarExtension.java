@@ -45,8 +45,8 @@ public class UserPreferencesActionBarExtension
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {
-        AnnotationEditorManagerPrefs editorState = preferencesService
-                .loadDefaultTraitsForProject(KEY_ANNOTATION_EDITOR_MANAGER_PREFS, aPage.getProject());
+        AnnotationEditorManagerPrefs editorState = preferencesService.loadDefaultTraitsForProject(
+                KEY_ANNOTATION_EDITOR_MANAGER_PREFS, aPage.getProject());
 
         return editorState.isPreferencesAccessAllowed()
                 || aPage.getModelObject().getMode() == CURATION;

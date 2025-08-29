@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.config.UndoAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
 
 /**

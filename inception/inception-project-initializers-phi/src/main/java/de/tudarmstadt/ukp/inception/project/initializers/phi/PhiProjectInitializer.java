@@ -160,10 +160,11 @@ public class PhiProjectInitializer
 
         var bratEditorFactory = context.getBean(BratTokenWrappingAnnotationEditorFactory.class);
         if (bratEditorFactory != null) {
-            var editorState = preferencesService.loadDefaultTraitsForProject(KEY_ANNOTATION_EDITOR_MANAGER_PREFS,
-                    project);
+            var editorState = preferencesService
+                    .loadDefaultTraitsForProject(KEY_ANNOTATION_EDITOR_MANAGER_PREFS, project);
             editorState.setDefaultEditor(bratEditorFactory.getBeanName());
-            preferencesService.saveDefaultTraitsForProject(KEY_ANNOTATION_EDITOR_MANAGER_PREFS, project, editorState);
+            preferencesService.saveDefaultTraitsForProject(KEY_ANNOTATION_EDITOR_MANAGER_PREFS,
+                    project, editorState);
         }
     }
 

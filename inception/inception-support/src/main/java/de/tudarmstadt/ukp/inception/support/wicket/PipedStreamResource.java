@@ -29,6 +29,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.wicket.ThreadContext;
 import org.apache.wicket.util.resource.AbstractResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 import org.slf4j.Logger;
@@ -87,7 +88,13 @@ public class PipedStreamResource
             throw new ResourceStreamNotFoundException(e);
         }
 
+        var wicketApp = ThreadContext.getApplication();
+        var requestCycle = ThreadContext.getRequestCycle();
+        var session = ThreadContext.getSession();
         var supplierThread = new Thread(() -> {
+            ThreadContext.setApplication(wicketApp);
+            ThreadContext.setRequestCycle(requestCycle);
+            ThreadContext.setSession(session);
             try {
                 supplier.write(os);
             }
@@ -95,6 +102,7 @@ public class PipedStreamResource
                 LOG.error("Error producing resource", e);
             }
             finally {
+                ThreadContext.detach();
                 if (os != null) {
                     try {
                         os.close();

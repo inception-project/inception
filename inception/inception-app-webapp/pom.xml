@@ -291,6 +291,11 @@
       <artifactId>inception-layer-span-api</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-pivot</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <!--
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -1174,6 +1179,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-sentencelabeling</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-ud</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-wikidatalinking</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pivot</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-brat-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-editor</usedDependency>

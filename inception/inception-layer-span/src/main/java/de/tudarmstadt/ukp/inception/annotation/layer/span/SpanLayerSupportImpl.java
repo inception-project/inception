@@ -105,8 +105,8 @@ public class SpanLayerSupportImpl
     public SpanAdapter createAdapter(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
     {
-        return new SpanAdapterImpl(getLayerSupportRegistry(), featureSupportRegistry, eventPublisher,
-                aLayer, aFeatures,
+        return new SpanAdapterImpl(getLayerSupportRegistry(), featureSupportRegistry,
+                eventPublisher, aLayer, aFeatures,
                 layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class),
                 constraintsService);
     }
