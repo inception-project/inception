@@ -313,7 +313,7 @@ public class AgreementServiceImpl
         }
 
         if (!documentService.existsCas(aDocument, aDataOwner)) {
-            Optional.empty();
+            return Optional.empty();
         }
 
         return loadCas(aDocument, aDataOwner);
