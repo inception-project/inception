@@ -67,6 +67,9 @@ public class PivotTable<A extends Serializable, T>
         var table = new DataTable<Row<A>, CompoundKey>("table", columns, aDataProvider, 100);
         table.setOutputMarkupId(true);
         table.addTopToolbar(new AjaxFallbackHeadersToolbar<CompoundKey>(table, aDataProvider));
+        table.add(new StickyRowHeaderBehavior("td.headers > div"));
+        // Keeping the columns sticky does not seem to work
+        // table.add(new StickyColumnHeaderBehavior("tr.headers > th:not(:first-child) > a > span"));
         queue(table);
 
         var navigatorLabel = new NavigatorLabel("navigatorLabel", table);

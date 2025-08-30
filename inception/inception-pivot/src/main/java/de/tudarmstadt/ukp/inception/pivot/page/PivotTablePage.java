@@ -24,11 +24,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
@@ -44,7 +44,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -233,11 +232,9 @@ public class PivotTablePage
         queue(addCell);
         queue(new LambdaAjaxButton<State>("run", this::actionRun));
 
-        queue(new CheckBox("compareWithCurator").setOutputMarkupId(true));
-
         var annotatorList = new ListMultipleChoice<ProjectUserPermissions>("annotators");
         annotatorList.setChoiceRenderer(new ProjectUserPermissionChoiceRenderer());
-        annotatorList.setChoices(listUsersWithPermissions());
+        annotatorList.setChoices(listDataOwners());
         queue(annotatorList);
 
         var documentList = new ListMultipleChoice<SourceDocument>("documents");
@@ -246,12 +243,20 @@ public class PivotTablePage
         queue(documentList);
     }
 
-    private List<ProjectUserPermissions> listUsersWithPermissions()
+    private List<ProjectUserPermissions> listDataOwners()
     {
-        return projectService.listProjectUserPermissions(getProject()).stream() //
+        var dataOwners = new ArrayList<ProjectUserPermissions>();
+
+        projectService.listProjectUserPermissions(getProject()).stream() //
                 .filter(p -> p.getRoles().contains(ANNOTATOR)) //
                 .sorted(comparing(p -> p.getUser().map(User::getUiName).orElse(p.getUsername()))) //
-                .toList();
+                .forEach(dataOwners::add);
+
+        var curationUser = userService.getCurationUser();
+        dataOwners.add(new ProjectUserPermissions(getProject(), curationUser.getUsername(),
+                curationUser, emptySet()));
+
+        return dataOwners;
     }
 
     private List<SourceDocument> listDocuments()
@@ -353,10 +358,12 @@ public class PivotTablePage
                 : emptyList();
         var agg = getAggregatorSupport(state.aggregator);
 
-        var annotators = state.annotators.isEmpty()
-                ? projectService.listProjectUsersWithPermissions(getProject(), ANNOTATOR)
-                : state.annotators.stream().map(ProjectUserPermissions::getUser)
-                        .filter(Optional::isPresent).map(Optional::get).toList();
+        var dataOwners = (state.annotators.isEmpty() ? listDataOwners() : state.annotators).stream() //
+                .map(ProjectUserPermissions::getUser) //
+                .filter(Optional::isPresent) //
+                .map(Optional::get) //
+                .map(User::getUsername).toList();
+
         var sessionOwner = userService.getCurrentUser();
         var states = state.states.isEmpty() ? asList(IN_PROGRESS, FINISHED) : state.states;
         var allAnnDocs = documentService.listAnnotationDocumentsInState(getProject(), //
@@ -373,12 +380,6 @@ public class PivotTablePage
             for (var doc : documentService.listSourceDocuments(getProject())) {
                 allAnnDocs.computeIfAbsent(doc, $ -> emptyList());
             }
-        }
-
-        var dataOwners = new ArrayList<String>();
-        annotators.stream().map(User::getUsername).forEach(dataOwners::add);
-        if (state.compareWithCurator) {
-            dataOwners.add(CURATION_USER);
         }
 
         @SuppressWarnings("rawtypes")
@@ -494,7 +495,6 @@ public class PivotTablePage
         AnnotationLayer layer;
         ExtractorDecl extractor;
         AggregatorDecl aggregator;
-        boolean compareWithCurator;
 
         List<ProjectUserPermissions> annotators = new ArrayList<>();
         List<SourceDocument> documents = new ArrayList<>();
