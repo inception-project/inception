@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.security.model;
 
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -26,12 +27,15 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.CollectionTable;
@@ -104,6 +108,9 @@ public class User
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date updated;
+
+    @Column(name = "opt_unique_key", nullable = true, length = 64)
+    private String optUniqueKey;
 
     public User()
     {
@@ -298,12 +305,14 @@ public class User
             created = new Date();
             updated = created;
         }
+        updateOptUniqueKey();
     }
 
     @PreUpdate
     protected void onUpdate()
     {
         updated = new Date();
+        updateOptUniqueKey();
     }
 
     public Date getCreated()
@@ -324,6 +333,22 @@ public class User
     public void setUpdated(Date aUpdated)
     {
         updated = aUpdated;
+    }
+
+    public void updateOptUniqueKey()
+    {
+        // For project-bound users, the UI name must be unique because in the guest annotator mode,
+        // we use the UI name during "authentication".
+        if (realm != null && realm.startsWith(UserDao.REALM_PROJECT_PREFIX)) {
+            var digest = DigestUtils.getSha256Digest();
+            digest.update(realm.getBytes(UTF_8));
+            digest.update((byte) 0x01);
+            digest.update(uiName.getBytes(UTF_8));
+            optUniqueKey = Hex.encodeHexString(digest.digest());
+        }
+        else {
+            optUniqueKey = null;
+        }
     }
 
     @Override

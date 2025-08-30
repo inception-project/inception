@@ -28,7 +28,6 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.Serializable;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -235,8 +234,7 @@ public class AcceptInvitePage
 
     private User signInAsProjectUser(FormData aFormData)
     {
-        Optional<User> existingUser = inviteService.getProjectUser(getProject(),
-                aFormData.username);
+        var existingUser = projectService.getProjectUser(getProject(), aFormData.username);
 
         if (existingUser.isPresent() && !existingUser.get().isEnabled()) {
             error("User deactivated");
@@ -251,7 +249,7 @@ public class AcceptInvitePage
             }
         }
 
-        User user = inviteService.getOrCreateProjectUser(getProject(), aFormData.username);
+        var user = projectService.getOrCreateProjectUser(getProject(), aFormData.username);
         if (aFormData.eMail != null && user.getEmail() == null) {
             user.setEmail(aFormData.eMail);
             userRepository.update(user);
@@ -266,7 +264,7 @@ public class AcceptInvitePage
 
     private User signInAsRegisteredUserIfNecessary()
     {
-        User user = userRepository.getCurrentUser();
+        var user = userRepository.getCurrentUser();
 
         if (user == null) {
             FormData data = formModel.getObject();

@@ -22,7 +22,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MAX_PROJECT_SLUG_L
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MIN_PROJECT_SLUG_LENGTH;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlug;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlugInitialCharacter;
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static java.lang.Math.min;
 import static java.lang.String.join;
@@ -46,7 +48,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.NoSuchFileException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -58,6 +62,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -114,12 +119,15 @@ public class ProjectServiceImpl
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    public static final int RANDOM_USERNAME_BYTE_LENGTH = 16;
+
     private final EntityManager entityManager;
     private final UserDao userRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final RepositoryProperties repositoryProperties;
     private final List<ProjectInitializer> projectInitializerProxy;
     private final List<FeatureInitializer> featureInitializerProxy;
+    private final SecureRandom random;
 
     private List<ProjectInitializer> projectInitializers;
     private List<FeatureInitializer> featureInitializers;
@@ -136,6 +144,7 @@ public class ProjectServiceImpl
         repositoryProperties = aRepositoryProperties;
         projectInitializerProxy = aProjectInitializerProxy;
         featureInitializerProxy = aFeatureInitializerProxy;
+        random = new SecureRandom();
     }
 
     @Override
@@ -624,6 +633,60 @@ public class ProjectServiceImpl
                 .setParameter("project", aProject) //
                 .setParameter("user", aUsername) //
                 .getSingleResult();
+    }
+
+    @Override
+    public Optional<User> getProjectUser(Project aProject, String aUiName)
+    {
+        var realm = getProjectRealm(aProject);
+
+        return Optional.ofNullable(userRepository.getUserByRealmAndUiName(realm, aUiName));
+    }
+
+    public Realm getProjectRealm(Project aProject)
+    {
+        return Realm.forProject(aProject.getId(), aProject.getName());
+    }
+
+    @Override
+    @Transactional
+    public User getOrCreateProjectUser(Project aProject, String aUiName)
+    {
+        var realm = getProjectRealm(aProject);
+
+        var user = userRepository.getUserByRealmAndUiName(realm, aUiName);
+
+        if (user != null) {
+            return user;
+        }
+
+        return userRepository.create(User.builder() //
+                .withUsername(generateRandomUsername()) //
+                .withUiName(aUiName) //
+                .withPassword(EMPTY_PASSWORD) //
+                .withRealm(realm) //
+                .withEnabled(true) //
+                .withRoles(ROLE_USER) //
+                .build());
+    }
+
+    private String generateRandomUsername()
+    {
+        nextName: while (true) {
+            var bytes = new byte[RANDOM_USERNAME_BYTE_LENGTH];
+            random.nextBytes(bytes);
+            var randomUserId = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+
+            // Do not accept base64 values which contain characters that are not safe for file
+            // names / not valid as usernames
+            if (!userRepository.isValidUsername(randomUserId)) {
+                continue nextName;
+            }
+
+            if (!userRepository.exists(randomUserId)) {
+                return randomUserId;
+            }
+        }
     }
 
     @Deprecated

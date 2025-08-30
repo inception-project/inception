@@ -115,6 +115,8 @@ public interface UserDao
 
     User getCurationUser();
 
+    User getUserByRealmAndUiName(Realm aRealm, String aUiName);
+
     User getUserByRealmAndUiName(String aRealm, String aUiName);
 
     /**
