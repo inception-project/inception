@@ -221,6 +221,7 @@ public class PivotTablePage
         queue(noCellExtractors);
 
         queue(new LambdaAjaxButton<State>("switchRowsCols", this::actionSwitchRowsCols));
+        queue(new LambdaAjaxButton<State>("switchColsCells", this::actionSwitchColsCells));
         queue(new LambdaAjaxButton<State>("addRow",
                 (t, f) -> actionAddExtractor(t, f.getModelObject(), rowExtractors)));
         queue(new LambdaAjaxButton<State>("addCol",
@@ -293,6 +294,21 @@ public class PivotTablePage
         aTarget.add(sidebar);
     }
 
+    private void actionSwitchColsCells(AjaxRequestTarget aTarget, Form<State> aForm)
+    {
+        var state = aForm.getModelObject();
+        var cols = new ArrayList<>(state.colExtractors);
+        var cells = new ArrayList<>(state.cellExtractors);
+
+        state.colExtractors.clear();
+        state.colExtractors.addAll(cells);
+
+        state.cellExtractors.clear();
+        state.cellExtractors.addAll(cols);
+
+        aTarget.add(sidebar);
+    }
+
     private void actionRemoveExtractor(AjaxRequestTarget aTarget, ListItem<ExtractorDecl> aItem,
             ListView<ExtractorDecl> aListView)
     {
@@ -332,7 +348,9 @@ public class PivotTablePage
 
         var rows = state.rowExtractors.stream().map(this::createExtractor).toList();
         var cols = state.colExtractors.stream().map(this::createExtractor).toList();
-        var cells = state.cellExtractors.stream().map(this::createExtractor).toList();
+        var cells = state.aggregator.supportsCells
+                ? state.cellExtractors.stream().map(this::createExtractor).toList()
+                : emptyList();
         var agg = getAggregatorSupport(state.aggregator);
 
         var annotators = state.annotators.isEmpty()

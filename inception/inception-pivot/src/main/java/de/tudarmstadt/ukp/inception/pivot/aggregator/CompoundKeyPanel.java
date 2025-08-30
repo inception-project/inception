@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.pivot.aggregator;
 import java.io.Serializable;
 import java.util.Map.Entry;
 
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -27,6 +28,8 @@ import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.inception.pivot.table.CompoundKey;
+import de.tudarmstadt.ukp.inception.pivot.table.PivotTable;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaClassAttributeModifier;
 
 public class CompoundKeyPanel
     extends GenericPanel<CompoundKey>
@@ -36,8 +39,29 @@ public class CompoundKeyPanel
     public CompoundKeyPanel(String aId, IModel<CompoundKey> aModel)
     {
         super(aId, aModel);
+    }
 
-        add(new ListView<Entry<String, Serializable>>("key", aModel.map(CompoundKey::entries))
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
+
+        var pivotTable = findParent(PivotTable.class);
+
+        var container = new WebMarkupContainer("container");
+        container.add(new LambdaClassAttributeModifier(classes -> {
+            if (pivotTable.isCompoundKeyHorizontal()) {
+                classes.add("list-group-horizontal");
+            }
+            else {
+                classes.add("list-group-flush");
+            }
+            return classes;
+        }));
+        queue(container);
+
+        var model = getModel();
+        queue(new ListView<Entry<String, Serializable>>("key", model.map(CompoundKey::entries))
         {
             private static final long serialVersionUID = 1L;
 
@@ -45,7 +69,7 @@ public class CompoundKeyPanel
             protected void populateItem(ListItem<Entry<String, Serializable>> aItem)
             {
                 var name = new Label("name", aItem.getModel().map(Entry::getKey));
-                name.setVisible(aModel.map(CompoundKey::isMultiValue).getObject());
+                name.setVisible(model.map(CompoundKey::isMultiValue).getObject());
                 aItem.add(name);
 
                 aItem.add(

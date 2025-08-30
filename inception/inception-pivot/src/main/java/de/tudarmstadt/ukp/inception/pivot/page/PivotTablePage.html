@@ -42,18 +42,15 @@
               <button wicket:id="addRow" class="btn btn-primary me-2 flex-fill">
                 <i class="fa-solid fa-arrows-up-down me-2"></i>Row
               </button>
-              <button wicket:id="addCol" class="btn btn-primary me-2 flex-fill">
+              <button wicket:id="addCol" class="btn btn-primary flex-fill">
                 <i class="fa-solid fa-arrows-left-right me-2"></i>Column
               </button>
-              <button wicket:id="addCell" class="btn btn-primary flex-fill">
+              <button wicket:id="addCell" class="btn btn-primary ms-2 flex-fill">
                 <i class="fa-solid fa-square me-2"></i>Cell
               </button>
             </div>
             <div class="mb-2 mt-2">
               <i class="fa-solid fa-table me-2"></i>Structure
-              <button wicket:id="switchRowsCols" class="btn btn-sm btn-outline-secondary float-end py-0">
-                <i class="fa-solid fa-arrows-rotate me-2"></i>Flip
-              </button>
             </div>
             <div class="form-row form-floating mb-3" wicket:enclosure="aggregator">
               <select wicket:id="aggregator" class="form-select" />
@@ -75,33 +72,43 @@
                 </li>
               </ol>
             </div>
-            <div class="card overflow-hidden mb-2">
-              <div class="card-header" style="font-size: 85%">Columns</div>
-              <ol class="card-body list-group list-group-flush p-0">
-                <li wicket:id="noColExtractors" class="list-group-item text-muted">
-                  <small>Add one or more column extractors</small>
-                </li>
-                <li wicket:id="colExtractors" class="list-group-item">
-                  <span wicket:id="name" />
-                  <a wicket:id="remove" class="float-end">
-                    <i class="fa-solid fa-xmark"></i>
-                  </a>
-                </li>
-              </ol>
+            <div class="position-relative">
+              <button wicket:id="switchRowsCols" class="btn btn-sm btn-outline-secondary float-end py-0 position-absolute bg-body" style="z-index: 1; right: -0.25rem; top: -1rem;">
+                <i class="fa-solid fa-arrows-rotate me-2"></i>Flip
+              </button>
+              <div class="card overflow-hidden mb-2">
+                <div class="card-header" style="font-size: 85%">Columns</div>
+                <ol class="card-body list-group list-group-flush p-0">
+                  <li wicket:id="noColExtractors" class="list-group-item text-muted">
+                    <small>Add one or more column extractors</small>
+                  </li>
+                  <li wicket:id="colExtractors" class="list-group-item">
+                    <span wicket:id="name" />
+                    <a wicket:id="remove" class="float-end">
+                      <i class="fa-solid fa-xmark"></i>
+                    </a>
+                  </li>
+                </ol>
+              </div>
             </div>
-            <div wicket:id="cellExtractorsContainer" class="card overflow-hidden mb-2">
-              <div class="card-header" style="font-size: 85%">Cells</div>
-              <ol class="card-body list-group list-group-flush p-0">
-                <li wicket:id="noCellExtractors" class="list-group-item text-muted">
-                  <small>Add one or more cell extractors</small>
-                </li>
-                <li wicket:id="cellExtractors" class="list-group-item">
-                  <span wicket:id="name" />
-                  <a wicket:id="remove" class="float-end">
-                    <i class="fa-solid fa-xmark"></i>
-                  </a>
-                </li>
-              </ol>
+            <div wicket:id="cellExtractorsContainer" class="position-relative">
+              <button wicket:id="switchColsCells" class="btn btn-sm btn-outline-secondary float-end py-0 position-absolute bg-body" style="z-index: 1; right: -0.25rem; top: -1rem;">
+                <i class="fa-solid fa-arrows-rotate me-2"></i>Flip
+              </button>
+              <div class="card overflow-hidden mb-2">
+                <div class="card-header" style="font-size: 85%">Cells</div>
+                <ol class="card-body list-group list-group-flush p-0">
+                  <li wicket:id="noCellExtractors" class="list-group-item text-muted">
+                    <small>Add one or more cell extractors</small>
+                  </li>
+                  <li wicket:id="cellExtractors" class="list-group-item">
+                    <span wicket:id="name" />
+                    <a wicket:id="remove" class="float-end">
+                      <i class="fa-solid fa-xmark"></i>
+                    </a>
+                  </li>
+                </ol>
+              </div>
             </div>
             <div class="mb-2">
               <i class="fa-solid fa-filter me-2"></i>Filters

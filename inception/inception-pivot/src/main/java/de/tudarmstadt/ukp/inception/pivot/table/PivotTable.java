@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.pivot.table;
 
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,13 +29,17 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.NavigatorLabel;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.export.CSVDataExporter;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.export.IExportableColumn;
+import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.util.resource.IResourceStream;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.ajax.BootstrapAjaxPagingNavigator;
 import de.tudarmstadt.ukp.inception.pivot.api.aggregator.CellRenderer;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.inception.support.wicket.PipedStreamResource;
 
@@ -44,16 +50,74 @@ public class PivotTable<A extends Serializable, T>
 
     private List<IExportableColumn<Row<A>, CompoundKey>> columns;
     private PivotTableDataProvider<A, T> dataProvider;
+    private IModel<Boolean> valueSetOrientation = Model.of(false);
+    private IModel<Boolean> compoundKeyOrientation = Model.of(false);
 
     public PivotTable(String aId, PivotTableDataProvider<A, T> aDataProvider,
             CellRenderer aCellRenderer)
     {
         super(aId);
+
         setOutputMarkupPlaceholderTag(true);
+
         dataProvider = aDataProvider;
-        columns = buildColumns(dataProvider, aCellRenderer);
-        createTable(aDataProvider, columns);
         setVisible(dataProvider.size() > 0);
+
+        columns = buildColumns(dataProvider, aCellRenderer);
+        var table = new DataTable<Row<A>, CompoundKey>("table", columns, aDataProvider, 100);
+        table.setOutputMarkupId(true);
+        table.addTopToolbar(new AjaxFallbackHeadersToolbar<CompoundKey>(table, aDataProvider));
+        queue(table);
+
+        var navigatorLabel = new NavigatorLabel("navigatorLabel", table);
+        navigatorLabel.setOutputMarkupId(true);
+        queue(navigatorLabel);
+
+        var navigator = new BootstrapAjaxPagingNavigator("navigator", table)
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onAjaxEvent(AjaxRequestTarget aTarget)
+            {
+                super.onAjaxEvent(aTarget);
+                aTarget.add(navigatorLabel);
+            }
+        };
+        queue(navigator);
+
+        var csvExportLink = new AjaxDownloadLink("download", Model.of("pivot.csv"),
+                LoadableDetachableModel.of(() -> actionExport()));
+        queue(csvExportLink);
+
+        var cellOrientationControls = new WebMarkupContainer("cell-orientation-controls");
+        cellOrientationControls.setVisible(dataProvider.isShowCellControls());
+        queue(cellOrientationControls);
+
+        var valueSetOrientationCheck = new CheckBox("valueSetOrientation", valueSetOrientation);
+        valueSetOrientationCheck
+                .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
+                    _target.add(table);
+                }));
+        queue(valueSetOrientationCheck);
+
+        var compoundKeyOrientationCheck = new CheckBox("compoundKeyOrientation",
+                compoundKeyOrientation);
+        compoundKeyOrientationCheck
+                .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
+                    _target.add(table);
+                }));
+        queue(compoundKeyOrientationCheck);
+    }
+
+    public boolean isCompoundKeyHorizontal()
+    {
+        return compoundKeyOrientation.getObject();
+    }
+
+    public boolean isValueSetHorizontal()
+    {
+        return valueSetOrientation.getObject();
     }
 
     private List<IExportableColumn<Row<A>, CompoundKey>> buildColumns(
@@ -66,37 +130,6 @@ public class PivotTable<A extends Serializable, T>
             cols.add(new PivotColumn<>(Model.of(columnKey), aCellRenderer, columnKey));
         }
         return cols;
-    }
-
-    private void createTable(PivotTableDataProvider<A, T> aDataProvider,
-            List<IExportableColumn<Row<A>, CompoundKey>> aColumns)
-    {
-        var newTable = new DataTable<Row<A>, CompoundKey>("table", aColumns, aDataProvider, 100);
-        newTable.setOutputMarkupId(true);
-        newTable.addTopToolbar(
-                new AjaxFallbackHeadersToolbar<CompoundKey>(newTable, aDataProvider));
-        addOrReplace(newTable);
-
-        var navigatorLabel = new NavigatorLabel("navigatorLabel", newTable);
-        navigatorLabel.setOutputMarkupId(true);
-        addOrReplace(navigatorLabel);
-
-        var navigator = new BootstrapAjaxPagingNavigator("navigator", newTable)
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void onAjaxEvent(AjaxRequestTarget aTarget)
-            {
-                super.onAjaxEvent(aTarget);
-                aTarget.add(navigatorLabel);
-            }
-        };
-        addOrReplace(navigator);
-
-        var csvExportLink = new AjaxDownloadLink("download", Model.of("pivot.csv"),
-                LoadableDetachableModel.of(() -> actionExport()));
-        addOrReplace(csvExportLink);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
