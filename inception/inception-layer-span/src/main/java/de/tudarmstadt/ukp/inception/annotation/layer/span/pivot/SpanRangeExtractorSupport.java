@@ -30,10 +30,6 @@ public class SpanRangeExtractorSupport
     @Override
     public String renderName(AnnotationLayer aLayer)
     {
-        if (aLayer == null) {
-            return "<range>";
-        }
-
         return aLayer.getUiName() + " :: <range>";
     }
 
@@ -41,7 +37,7 @@ public class SpanRangeExtractorSupport
     public boolean accepts(AnnotationLayer aContext)
     {
         if (aContext == null) {
-            return true;
+            return false;
         }
 
         return SpanLayerSupport.TYPE.equals(aContext.getType());

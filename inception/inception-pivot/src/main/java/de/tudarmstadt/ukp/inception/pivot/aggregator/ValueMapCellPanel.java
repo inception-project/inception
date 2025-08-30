@@ -17,14 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.pivot.aggregator;
 
-import static java.lang.String.CASE_INSENSITIVE_ORDER;
-import static java.util.Comparator.naturalOrder;
+import static java.util.Comparator.comparing;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.LinkedHashMap;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -38,12 +37,12 @@ import de.tudarmstadt.ukp.inception.pivot.table.CompoundKey;
 import de.tudarmstadt.ukp.inception.pivot.table.PivotTable;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaClassAttributeModifier;
 
-public class ValueSetCellPanel
-    extends GenericPanel<LinkedHashSet<Serializable>>
+public class ValueMapCellPanel
+    extends GenericPanel<LinkedHashMap<Serializable, Integer>>
 {
     private static final long serialVersionUID = -6396333508191887738L;
 
-    public ValueSetCellPanel(String aId, IModel<LinkedHashSet<Serializable>> aModel)
+    public ValueMapCellPanel(String aId, IModel<LinkedHashMap<Serializable, Integer>> aModel)
     {
         super(aId, aModel);
     }
@@ -53,14 +52,10 @@ public class ValueSetCellPanel
     {
         super.onInitialize();
 
-        var data = new ArrayList<>(getModelObject());
-        if (!data.isEmpty()) {
-            if (data.get(0) instanceof String) {
-                ((List) data).sort(CASE_INSENSITIVE_ORDER);
-            }
-            else {
-                ((List) data).sort(naturalOrder());
-            }
+        var data = new ArrayList<Pair<Serializable, Integer>>();
+        if (!getModelObject().isEmpty()) {
+            getModelObject().entrySet().forEach(e -> data.add(Pair.of(e.getKey(), e.getValue())));
+            data.sort(comparing(Pair::getValue));
         }
 
         var pivotTable = findParent(PivotTable.class);
@@ -82,14 +77,18 @@ public class ValueSetCellPanel
             private static final long serialVersionUID = 6683848758703612359L;
 
             @Override
-            protected void populateItem(ListItem<Serializable> aItem)
+            protected void populateItem(ListItem<Pair<Serializable, Integer>> aItem)
             {
-                if (aItem.getModelObject() instanceof CompoundKey key) {
+                var value = aItem.getModelObject().getKey();
+                if (value instanceof CompoundKey key) {
                     aItem.add(new CompoundKeyPanel("value", Model.of(key)));
                 }
                 else {
-                    aItem.add(new Label("value", aItem.getModel()));
+                    aItem.add(new Label("value", aItem.getModel().map(Pair::getKey)));
                 }
+
+                var count = aItem.getModelObject().getValue();
+                aItem.add(new Label("count", count));
             }
         });
     }

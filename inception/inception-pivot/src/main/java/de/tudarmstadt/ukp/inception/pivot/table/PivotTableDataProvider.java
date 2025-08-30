@@ -50,9 +50,11 @@ public class PivotTableDataProvider<A extends Serializable, T>
     private final Map<CompoundKey, Map<CompoundKey, A>> rows;
     private final List<CompoundKey> rowKeys = new ArrayList<>();
     private final Set<CompoundKey> columnKeys;
+    private final boolean showCellControls;
 
     public PivotTableDataProvider(Builder<A, T> aBuilder)
     {
+        showCellControls = aBuilder.cellBuilder.getSchema().size() > 1;
         rows = aBuilder.rows;
         rowKeys.addAll(aBuilder.rows.keySet());
         columnKeys = aBuilder.columnKeys;
@@ -144,6 +146,11 @@ public class PivotTableDataProvider<A extends Serializable, T>
     public Collection<CompoundKey> rowKeys()
     {
         return rowKeys;
+    }
+
+    public boolean isShowCellControls()
+    {
+        return showCellControls;
     }
 
     @Override

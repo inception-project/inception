@@ -30,10 +30,6 @@ public class SpanCoveredTextExtractorSupport
     @Override
     public String renderName(AnnotationLayer aLayer)
     {
-        if (aLayer == null) {
-            return "<text>";
-        }
-
         return aLayer.getUiName() + " :: <text>";
     }
 
@@ -41,7 +37,7 @@ public class SpanCoveredTextExtractorSupport
     public boolean accepts(AnnotationLayer aContext)
     {
         if (aContext == null) {
-            return true;
+            return false;
         }
 
         return asList(SpanLayerSupport.TYPE).contains(aContext.getType());

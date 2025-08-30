@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.inception.pivot.aggregator.AggregatorSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.pivot.aggregator.CountAggregatorSupport;
+import de.tudarmstadt.ukp.inception.pivot.aggregator.ValueMapAggregatorSupport;
 import de.tudarmstadt.ukp.inception.pivot.aggregator.ValueSetAggregatorSupport;
 import de.tudarmstadt.ukp.inception.pivot.api.aggregator.AggregatorSupport;
 import de.tudarmstadt.ukp.inception.pivot.api.aggregator.AggregatorSupportRegistry;
@@ -98,5 +99,11 @@ public class PivotAutoConfiguration
     public ValueSetAggregatorSupport valueSetAggregatorSupport()
     {
         return new ValueSetAggregatorSupport();
+    }
+
+    @Bean
+    public ValueMapAggregatorSupport valueMapAggregatorSupport()
+    {
+        return new ValueMapAggregatorSupport();
     }
 }
