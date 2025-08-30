@@ -84,7 +84,7 @@ class UserSelectionPanel
         add(overviewList);
 
         IModel<Collection<User>> usersToAddModel = new CollectionModel<>(new ArrayList<>());
-        Form<Collection<User>> form = new Form<>("form", usersToAddModel);
+        var form = new Form<>("form", usersToAddModel);
         add(form);
 
         var userRenderer = new ChoiceRenderer<User>("username")
@@ -131,12 +131,12 @@ class UserSelectionPanel
             @Override
             public List<User> getChoices(String aInput)
             {
-                List<User> result = new ArrayList<>();
+                var result = new ArrayList<User>();
 
                 if (config.isHideUsers()) {
                     // only offer the user matching what the input entered into the field
                     if (isNotBlank(aInput)) {
-                        User user = userRepository.get(aInput);
+                        var user = userRepository.get(aInput);
                         if (user != null) {
                             result.add(user);
                         }
@@ -166,13 +166,13 @@ class UserSelectionPanel
                     return;
                 }
 
-                final String[] values = this.getInputAsArray();
+                var values = this.getInputAsArray();
                 if (values == null) {
                     return;
                 }
 
                 List<User> result = new ArrayList<>();
-                for (String value : values) {
+                for (var value : values) {
                     if (isBlank(value)) {
                         continue;
                     }
@@ -190,7 +190,9 @@ class UserSelectionPanel
         };
         usersToAdd.setModel(usersToAddModel);
         form.add(usersToAdd);
+
         form.add(new LambdaAjaxButton<>("add", this::actionAdd));
+        form.add(new LambdaAjaxButton<>("new", this::actionNew));
     }
 
     private List<ProjectUserPermissions> listUsersWithPermissions()
@@ -198,9 +200,13 @@ class UserSelectionPanel
         return projectRepository.listProjectUserPermissions(projectModel.getObject());
     }
 
+    private void actionNew(AjaxRequestTarget aTarget, Form<List<User>> aForm)
+    {
+    }
+
     private void actionAdd(AjaxRequestTarget aTarget, Form<List<User>> aForm)
     {
-        for (User user : aForm.getModelObject()) {
+        for (var user : aForm.getModelObject()) {
             projectRepository.assignRole(projectModel.getObject(), user, ANNOTATOR);
         }
 

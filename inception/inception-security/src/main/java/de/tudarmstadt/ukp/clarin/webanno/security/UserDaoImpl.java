@@ -130,6 +130,8 @@ public class UserDaoImpl
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         installDefaultAdminUser();
+
+        ensureUniqueProjectBoundUserKeys();
     }
 
     void installDefaultAdminUser()
@@ -163,6 +165,32 @@ public class UserDaoImpl
                     admin.setRoles(EnumSet.of(ROLE_ADMIN, ROLE_USER));
                 }
                 create(admin);
+            }
+        });
+    }
+
+    private void ensureUniqueProjectBoundUserKeys()
+    {
+        if (transactionManager == null) {
+            return;
+        }
+
+        new TransactionTemplate(transactionManager).executeWithoutResult(transactionStatus -> {
+            var cb = entityManager.getCriteriaBuilder();
+            var query = cb.createQuery(User.class);
+            var root = query.from(User.class);
+
+            // WHERE u.realm LIKE :prefix AND u.optUniqueKey IS NULL
+            var realmPredicate = cb.like(root.get("realm"), UserDao.REALM_PROJECT_PREFIX + "%");
+            var keyNullPredicate = cb.isNull(root.get("optUniqueKey"));
+            query.select(root).where(cb.and(realmPredicate, keyNullPredicate));
+
+            var usersToUpdate = entityManager.createQuery(query).getResultList();
+
+            // Persist again to trigger @PreUpdate
+            for (var user : usersToUpdate) {
+                user.updateOptUniqueKey();
+                entityManager.merge(user);
             }
         });
     }
@@ -295,6 +323,13 @@ public class UserDaoImpl
         Validate.notBlank(aUsername, "User must be specified");
 
         return entityManager.find(User.class, aUsername);
+    }
+
+    @Override
+    @Transactional
+    public User getUserByRealmAndUiName(Realm aRealm, String aUiName)
+    {
+        return getUserByRealmAndUiName(aRealm.getId(), aUiName);
     }
 
     @Override

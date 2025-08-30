@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
@@ -548,4 +549,8 @@ public interface ProjectService
     String deriveUniqueSlug(String aSlug);
 
     Realm getRealm(String aRealmId);
+
+    Optional<User> getProjectUser(Project aProject, String aUsername);
+
+    User getOrCreateProjectUser(Project aProject, String aUsername);
 }
