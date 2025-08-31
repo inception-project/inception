@@ -135,7 +135,7 @@ public class CurationDocumentServiceImpl
         Validate.notNull(aProject, "Project must be specified");
 
         // Get all annotators in the project
-        var users = projectService.listProjectUsersWithPermissions(aProject, ANNOTATOR);
+        var users = projectService.listUsersWithRoleInProject(aProject, ANNOTATOR);
         // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
         if (users.isEmpty()) {
             return new ArrayList<>();

@@ -95,7 +95,7 @@ public class ProjectPermissionsExporterTest
 
         sut = new ProjectPermissionsExporter(projectService, userService);
 
-        when(projectService.listProjectUsersWithPermissions(any()))
+        when(projectService.listUsersWithAnyRoleInProject(any()))
                 .thenReturn(asList(manager, annotator));
         when(projectService.listProjectPermissionLevel(manager, project))
                 .thenReturn(managerPermissions);

@@ -154,7 +154,7 @@ public class BulkRecommenderPanel
 
     private List<User> listUsers()
     {
-        return projectService.listProjectUsersWithPermissions(getModelObject(), ANNOTATOR);
+        return projectService.listUsersWithRoleInProject(getModelObject(), ANNOTATOR);
     }
 
     private List<AnnotationLayer> listDocumentMetadataLayers()

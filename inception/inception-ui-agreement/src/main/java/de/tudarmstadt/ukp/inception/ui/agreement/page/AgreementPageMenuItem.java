@@ -68,7 +68,7 @@ public class AgreementPageMenuItem
     {
         // Show agreement menu item only if we have at least 2 annotators or we cannot calculate
         // pairwise agreement
-        if (projectService.listProjectUsersWithPermissions(aProject, ANNOTATOR).size() < 2) {
+        if (projectService.listUsersWithRoleInProject(aProject, ANNOTATOR).size() < 2) {
             return false;
         }
 

@@ -144,16 +144,16 @@ public class User
 
     private User(Builder builder)
     {
-        this.username = builder.username;
-        this.password = builder.password;
-        this.realm = builder.realm;
-        this.uiName = builder.uiName;
-        this.enabled = builder.enabled;
-        this.lastLogin = builder.lastLogin;
-        this.email = builder.email;
-        this.roles = builder.roles;
-        this.created = builder.created;
-        this.updated = builder.updated;
+        username = builder.username;
+        realm = builder.realm;
+        uiName = builder.uiName;
+        enabled = builder.enabled;
+        lastLogin = builder.lastLogin;
+        email = builder.email;
+        roles = builder.roles;
+        created = builder.created;
+        updated = builder.updated;
+        setPassword(builder.password);
     }
 
     private synchronized PasswordEncoder getPasswordEncoder()
@@ -349,6 +349,29 @@ public class User
         else {
             optUniqueKey = null;
         }
+    }
+
+    public String toLongString()
+    {
+        var builder = new StringBuilder();
+
+        if (uiName != null) {
+            builder.append(uiName);
+            if (!username.equals(uiName)) {
+                builder.append(" (");
+                builder.append(username);
+                builder.append(")");
+            }
+        }
+        else {
+            builder.append(username);
+        }
+
+        if (!isEnabled()) {
+            builder.append(" (deactivated)");
+        }
+
+        return builder.toString();
     }
 
     @Override

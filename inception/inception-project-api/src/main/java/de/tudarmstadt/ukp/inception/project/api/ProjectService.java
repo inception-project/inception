@@ -183,7 +183,7 @@ public interface ProjectService
      *            the project.
      * @return the users.
      */
-    List<User> listProjectUsersWithPermissions(Project aProject);
+    List<User> listUsersWithAnyRoleInProject(Project aProject);
 
     /**
      * List of users with the a given {@link PermissionLevel}
@@ -194,7 +194,7 @@ public interface ProjectService
      *            The {@link PermissionLevel}
      * @return the users.
      */
-    List<User> listProjectUsersWithPermissions(Project aProject, PermissionLevel aPermissionLevel);
+    List<User> listUsersWithRoleInProject(Project aProject, PermissionLevel aPermissionLevel);
 
     /**
      * Removes all permissions for the given user to the given project.
@@ -550,7 +550,11 @@ public interface ProjectService
 
     Realm getRealm(String aRealmId);
 
+    Realm getRealm(Project aProject);
+
     Optional<User> getProjectUser(Project aProject, String aUsername);
 
     User getOrCreateProjectUser(Project aProject, String aUsername);
+
+    List<User> listProjectBoundUsers(Project aProject);
 }

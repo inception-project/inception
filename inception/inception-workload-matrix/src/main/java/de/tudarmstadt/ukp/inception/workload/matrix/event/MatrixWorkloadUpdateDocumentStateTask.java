@@ -94,7 +94,7 @@ public class MatrixWorkloadUpdateDocumentStateTask
             return;
         }
 
-        int annotatorCount = projectService.listProjectUsersWithPermissions(project, ANNOTATOR)
+        int annotatorCount = projectService.listUsersWithRoleInProject(project, ANNOTATOR)
                 .size();
 
         matrixWorkloadExtension.updateDocumentState(doc, annotatorCount);

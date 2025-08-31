@@ -281,7 +281,7 @@ public class MatrixWorkloadManagementPage
 
     private IResourceStream exportWorkload()
     {
-        var annotators = projectService.listProjectUsersWithPermissions(getProject(), ANNOTATOR)
+        var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR)
                 .stream() //
                 .map(User::getUsername) //
                 .sorted() //
@@ -385,7 +385,7 @@ public class MatrixWorkloadManagementPage
         columns.add(new DocumentMatrixNameColumn());
         columns.add(new DocumentMatrixCuratorColumn());
 
-        var annotators = projectService.listProjectUsersWithPermissions(getProject(), ANNOTATOR);
+        var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR);
 
         if (StringUtils.isNotBlank(filter.getObject().getUserName())) {
             if (filter.getObject().isMatchUserNameAsRegex()) {
@@ -973,7 +973,7 @@ public class MatrixWorkloadManagementPage
 
     private List<DocumentMatrixRow> getMatrixData()
     {
-        var annotators = projectService.listProjectUsersWithPermissions(getProject(), ANNOTATOR)
+        var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR)
                 .stream().map(User::getUsername) //
                 .collect(toSet());
 

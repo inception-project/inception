@@ -1323,7 +1323,7 @@ public class DocumentServiceImpl
     public Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument)
     {
         var users = projectService
-                .listProjectUsersWithPermissions(aDocument.getProject(), ANNOTATOR).stream()
+                .listUsersWithRoleInProject(aDocument.getProject(), ANNOTATOR).stream()
                 .toList();
 
         var annDocs = listAnnotationDocuments(aDocument);

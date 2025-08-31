@@ -125,7 +125,7 @@ public class ReindexTask
                 // We can ignore this since we are rebuilding the index already anyway
             }
 
-            var usersWithPermissions = projectService.listProjectUsersWithPermissions(project)
+            var usersWithPermissions = projectService.listUsersWithAnyRoleInProject(project)
                     .stream() //
                     .map(User::getUsername) //
                     .collect(toUnmodifiableSet());

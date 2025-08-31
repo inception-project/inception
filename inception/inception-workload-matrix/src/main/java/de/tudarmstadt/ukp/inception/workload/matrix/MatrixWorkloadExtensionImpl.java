@@ -160,7 +160,7 @@ public class MatrixWorkloadExtensionImpl
     @Transactional
     public ProjectState recalculate(Project aProject)
     {
-        var annotators = projectService.listProjectUsersWithPermissions(aProject, ANNOTATOR);
+        var annotators = projectService.listUsersWithRoleInProject(aProject, ANNOTATOR);
         var annDocs = documentService.listAnnotationDocuments(aProject);
 
         for (var doc : documentService.listSourceDocuments(aProject)) {
@@ -185,7 +185,7 @@ public class MatrixWorkloadExtensionImpl
     @Transactional
     public ProjectState freshenStatus(Project aProject)
     {
-        var annotators = projectService.listProjectUsersWithPermissions(aProject, ANNOTATOR);
+        var annotators = projectService.listUsersWithRoleInProject(aProject, ANNOTATOR);
         var annDocs = documentService.listAnnotationDocuments(aProject);
 
         // Update the annotation document and source document states for the abandoned documents

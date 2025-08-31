@@ -226,7 +226,7 @@ public class InviteServiceImpl
         }
 
         var annotatorCount = projectService
-                .listProjectUsersWithPermissions(aInvite.getProject(), ANNOTATOR).size();
+                .listUsersWithRoleInProject(aInvite.getProject(), ANNOTATOR).size();
 
         return annotatorCount >= aInvite.getMaxAnnotatorCount();
     }

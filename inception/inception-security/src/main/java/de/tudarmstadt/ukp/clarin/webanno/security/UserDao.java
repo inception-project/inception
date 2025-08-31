@@ -102,6 +102,8 @@ public interface UserDao
 
     List<User> listAllUsersFromRealm(String aString);
 
+    List<User> listAllUsersFromRealm(Realm aRealm);
+
     /**
      * get a {@link User} using a username
      * 

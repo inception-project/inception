@@ -322,7 +322,7 @@ public class ProjectServiceImpl
     @Transactional
     public List<ProjectPermission> listProjectPermissions(Project aProject)
     {
-        String query = join("\n", //
+        var query = join("\n", //
                 "FROM ProjectPermission ", //
                 "WHERE project = :project", //
                 "ORDER BY user, level");
@@ -334,10 +334,17 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
+    public List<User> listProjectBoundUsers(Project aProject)
+    {
+        return userRepository.listAllUsersFromRealm(getRealm(aProject));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ProjectUserPermissions> listProjectUserPermissions(Project aProject)
     {
         var userMap = new HashMap<String, User>();
-        listProjectUsersWithPermissions(aProject).stream() //
+        listUsersWithAnyRoleInProject(aProject).stream() //
                 .forEach(user -> userMap.put(user.getUsername(), user));
 
         var perUserPermissions = listProjectPermissions(aProject).stream() //
@@ -347,7 +354,8 @@ public class ProjectServiceImpl
                 .map(entry -> {
                     var username = entry.getKey();
                     var user = userMap.get(entry.getKey());
-                    var roles = entry.getValue().stream().map(ProjectPermission::getLevel) //
+                    var roles = entry.getValue().stream() //
+                            .map(ProjectPermission::getLevel) //
                             .sorted() //
                             .collect(toCollection(LinkedHashSet::new));
                     return new ProjectUserPermissions(aProject, username, user, roles);
@@ -562,7 +570,7 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
-    public List<User> listProjectUsersWithPermissions(Project aProject)
+    public List<User> listUsersWithAnyRoleInProject(Project aProject)
     {
         var query = join("\n", //
                 "SELECT DISTINCT u FROM User u, ProjectPermission pp ", //
@@ -570,14 +578,14 @@ public class ProjectServiceImpl
                 "AND pp.project = :project ", //
                 "ORDER BY u.username ASC");
 
-        return entityManager.createQuery(query, User.class).setParameter("project", aProject) //
+        return entityManager.createQuery(query, User.class) //
+                .setParameter("project", aProject) //
                 .getResultList();
     }
 
     @Override
     @Transactional
-    public List<User> listProjectUsersWithPermissions(Project aProject,
-            PermissionLevel aPermissionLevel)
+    public List<User> listUsersWithRoleInProject(Project aProject, PermissionLevel aPermissionLevel)
     {
         var query = join("\n", //
                 "SELECT DISTINCT u FROM User u, ProjectPermission pp ", //
@@ -638,12 +646,13 @@ public class ProjectServiceImpl
     @Override
     public Optional<User> getProjectUser(Project aProject, String aUiName)
     {
-        var realm = getProjectRealm(aProject);
+        var realm = getRealm(aProject);
 
         return Optional.ofNullable(userRepository.getUserByRealmAndUiName(realm, aUiName));
     }
 
-    public Realm getProjectRealm(Project aProject)
+    @Override
+    public Realm getRealm(Project aProject)
     {
         return Realm.forProject(aProject.getId(), aProject.getName());
     }
@@ -652,7 +661,7 @@ public class ProjectServiceImpl
     @Transactional
     public User getOrCreateProjectUser(Project aProject, String aUiName)
     {
-        var realm = getProjectRealm(aProject);
+        var realm = getRealm(aProject);
 
         var user = userRepository.getUserByRealmAndUiName(realm, aUiName);
 

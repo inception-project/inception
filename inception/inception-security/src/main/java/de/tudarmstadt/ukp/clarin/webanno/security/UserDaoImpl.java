@@ -29,6 +29,7 @@ import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServ
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCharacterMatching;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveDuplicateCharacters;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
+import static java.lang.String.join;
 import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.containsAny;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -259,9 +260,16 @@ public class UserDaoImpl
 
     @Override
     @Transactional
+    public List<User> listAllUsersFromRealm(Realm aRealm)
+    {
+        return listAllUsersFromRealm(aRealm.getId());
+    }
+
+    @Override
+    @Transactional
     public List<User> listAllUsersFromRealm(String aRealm)
     {
-        String query = String.join("\n", //
+        var query = join("\n", //
                 "FROM " + User.class.getName(), //
                 "WHERE realm = :realm");
 
@@ -286,7 +294,7 @@ public class UserDaoImpl
             return usersInRealm.size();
         }
 
-        String query = String.join("\n", //
+        String query = join("\n", //
                 "DELETE FROM " + User.class.getName(), //
                 "WHERE realm = :realm");
 
@@ -338,7 +346,7 @@ public class UserDaoImpl
     {
         Validate.notBlank(aUiName, "User must be specified");
 
-        var query = String.join("\n", //
+        var query = join("\n", //
                 "FROM " + User.class.getName(), //
                 "WHERE ((:realm is null and realm is null) or realm = :realm)", //
                 "AND   uiName = :uiName");
@@ -712,7 +720,7 @@ public class UserDaoImpl
     @Transactional(readOnly = true)
     public long countEnabledUsers()
     {
-        String query = String.join("\n", //
+        String query = join("\n", //
                 "SELECT COUNT(*)", //
                 "FROM " + User.class.getName(), //
                 "WHERE enabled = :enabled");

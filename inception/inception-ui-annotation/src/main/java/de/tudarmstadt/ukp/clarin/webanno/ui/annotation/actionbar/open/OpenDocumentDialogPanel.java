@@ -200,7 +200,7 @@ public class OpenDocumentDialogPanel
             return users;
         }
 
-        for (var user : projectService.listProjectUsersWithPermissions(project, ANNOTATOR)) {
+        for (var user : projectService.listUsersWithRoleInProject(project, ANNOTATOR)) {
             var du = DecoratedObject.of(user);
             du.setLabel(user.getUiName());
             if (user.equals(sessionOwner)) {

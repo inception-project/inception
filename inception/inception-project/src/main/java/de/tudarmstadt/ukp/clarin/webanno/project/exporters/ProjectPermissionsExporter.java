@@ -83,7 +83,7 @@ public class ProjectPermissionsExporter
 
         List<ExportedUser> projectUsers = new ArrayList<>();
         List<ExportedProjectPermission> projectPermissions = new ArrayList<>();
-        for (var user : projectService.listProjectUsersWithPermissions(project)) {
+        for (var user : projectService.listUsersWithAnyRoleInProject(project)) {
             if (startsWith(user.getRealm(), REALM_PROJECT_PREFIX)) {
                 var exUser = new ExportedUser();
                 exUser.setCreated(user.getCreated());
