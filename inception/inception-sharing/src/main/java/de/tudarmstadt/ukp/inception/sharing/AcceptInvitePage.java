@@ -234,7 +234,7 @@ public class AcceptInvitePage
 
     private User signInAsProjectUser(FormData aFormData)
     {
-        var existingUser = projectService.getProjectUser(getProject(), aFormData.username);
+        var existingUser = projectService.getProjectBoundUser(getProject(), aFormData.username);
 
         if (existingUser.isPresent() && !existingUser.get().isEnabled()) {
             error("User deactivated");
@@ -249,7 +249,7 @@ public class AcceptInvitePage
             }
         }
 
-        var user = projectService.getOrCreateProjectUser(getProject(), aFormData.username);
+        var user = projectService.getOrCreateProjectBoundUser(getProject(), aFormData.username);
         if (aFormData.eMail != null && user.getEmail() == null) {
             user.setEmail(aFormData.eMail);
             userRepository.update(user);

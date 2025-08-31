@@ -83,7 +83,7 @@ public class AddProjectUserPanel
 
     private void actionConfirm(AjaxRequestTarget aTarget, Form<FormData> aForm)
     {
-        var user = projectService.getOrCreateProjectUser(getModelObject(),
+        var user = projectService.getOrCreateProjectBoundUser(getModelObject(),
                 aForm.getModelObject().uiName);
         projectService.assignRole(getModelObject(), user, ANNOTATOR);
         aTarget.add(findParent(ProjectUsersPanel.class));

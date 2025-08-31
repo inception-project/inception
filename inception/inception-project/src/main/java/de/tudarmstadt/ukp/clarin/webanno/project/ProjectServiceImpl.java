@@ -643,7 +643,7 @@ public class ProjectServiceImpl
     }
 
     @Override
-    public Optional<User> getProjectUser(Project aProject, String aUiName)
+    public Optional<User> getProjectBoundUser(Project aProject, String aUiName)
     {
         var realm = getRealm(aProject);
 
@@ -658,7 +658,7 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
-    public User getOrCreateProjectUser(Project aProject, String aUiName)
+    public User getOrCreateProjectBoundUser(Project aProject, String aUiName)
     {
         var realm = getRealm(aProject);
 
@@ -676,6 +676,21 @@ public class ProjectServiceImpl
                 .withEnabled(true) //
                 .withRoles(ROLE_USER) //
                 .build());
+    }
+
+    @Override
+    @Transactional
+    public void deleteProjectBoundUser(Project aProject, User aUser)
+    {
+        var realm = getRealm(aProject);
+
+        var user = userRepository.getUserByRealmAndUiName(realm, aUser.getUiName());
+        if (user == null) {
+            throw new IllegalArgumentException(
+                    "User " + aUser + " does not exist in project " + aProject);
+        }
+
+        userRepository.delete(user);
     }
 
     private String generateRandomUsername()

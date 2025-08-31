@@ -42,7 +42,7 @@ public class ProjectUsersPanel
         selectedUser = Model.of();
         project = aProject;
 
-        var permissions = new UserPermissionsPanel("permissions", project, selectedUser);
+        var permissions = new ProjectUserDetailPanel("permissions", project, selectedUser);
         add(permissions);
 
         var users = new UserSelectionPanel("users", project, selectedUser);

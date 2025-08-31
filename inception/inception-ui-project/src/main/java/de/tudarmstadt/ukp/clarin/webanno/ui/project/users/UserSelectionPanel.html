@@ -28,13 +28,24 @@
           </label>
           <select class="flex-content" wicket:id="usersToAdd"></select>
           <button wicket:id="add" class="btn btn-primary text-nowrap">
-            <i class="fas fa-plus-square"></i>
-            <span class="d-none d-lg-inline me-2"><wicket:message key="add"/></span>
+            <i class="fas fa-plus-square me-2"></i>
+            <span class="d-none d-lg-inline"><wicket:message key="add"/></span>
           </button>
-          <button wicket:id="new" class="btn btn-primary text-nowrap">
-            <i class="fas fa-plus-square"></i>
-            <span class="d-none d-lg-inline me-2"><wicket:message key="create"/></span>
-          </button>
+          <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+            <button class="btn btn-action dropdown-toggle flex-content" type="button" data-bs-toggle="dropdown">
+              <i class="fas fa-ellipsis-v"/>
+            </button>
+            <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 220px;">
+              <li>
+                <button wicket:id="new" class="dropdown-item" type="button">
+                  <wicket:message key="create"/>...
+                  <span class="float-end badge badge-pill bg-secondary">
+                    <i class="fas fa-plus-square"/>
+                  </span>
+                </button>
+              </li>
+            </ul>
+          </span>
         </div>
       </form>
       <div class="flex-content fit-child-snug">

@@ -552,9 +552,11 @@ public interface ProjectService
 
     Realm getRealm(Project aProject);
 
-    Optional<User> getProjectUser(Project aProject, String aUsername);
+    Optional<User> getProjectBoundUser(Project aProject, String aUsername);
 
-    User getOrCreateProjectUser(Project aProject, String aUsername);
+    User getOrCreateProjectBoundUser(Project aProject, String aUsername);
 
     List<User> listProjectBoundUsers(Project aProject);
+
+    void deleteProjectBoundUser(Project aProject, User aUser);
 }
