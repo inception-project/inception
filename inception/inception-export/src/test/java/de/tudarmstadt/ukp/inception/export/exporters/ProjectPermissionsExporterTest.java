@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.export.exporters;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_GLOBAL;
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static java.util.Arrays.asList;
 import static org.apache.commons.collections4.CollectionUtils.union;
@@ -51,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.project.exporters.ProjectPermissionsExporter;
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -109,7 +108,7 @@ public class ProjectPermissionsExporterTest
     @Test
     public void thatUserPermissionsAreExportedAndImported() throws Exception
     {
-        annotator.setRealm(REALM_GLOBAL);
+        annotator.setRealm(Realm.REALM_GLOBAL);
 
         exportProject();
 
@@ -133,7 +132,7 @@ public class ProjectPermissionsExporterTest
     @Test
     public void thatUserPermissionsAreNotImported() throws Exception
     {
-        annotator.setRealm(REALM_GLOBAL);
+        annotator.setRealm(Realm.REALM_GLOBAL);
 
         exportProject();
 
@@ -157,7 +156,7 @@ public class ProjectPermissionsExporterTest
     @Test
     public void thatProjectSpecificPermissionsAreCreatedIfUserDidNotYetExist() throws Exception
     {
-        annotator.setRealm(REALM_PROJECT_PREFIX + project.getId());
+        annotator.setRealm(Realm.REALM_PROJECT_PREFIX + project.getId());
 
         exportProject();
 
@@ -185,7 +184,7 @@ public class ProjectPermissionsExporterTest
     @Test
     public void thatProjectSpecificPermissionsAreNotCreatedIfUserAlreadyExisted() throws Exception
     {
-        annotator.setRealm(REALM_PROJECT_PREFIX + project.getId());
+        annotator.setRealm(Realm.REALM_PROJECT_PREFIX + project.getId());
 
         exportProject();
 

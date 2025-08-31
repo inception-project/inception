@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.sharing;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.NOT_ALLOWED;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -39,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
@@ -330,6 +330,6 @@ public class InviteServiceImpl
     @Transactional
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws IOException
     {
-        userRepository.deleteAllUsersFromRealm(REALM_PROJECT_PREFIX + aEvent.getProject().getId());
+        userRepository.deleteAllUsersFromRealm(Realm.REALM_PROJECT_PREFIX + aEvent.getProject().getId());
     }
 }

@@ -182,7 +182,7 @@ public class UserDaoImpl
             var root = query.from(User.class);
 
             // WHERE u.realm LIKE :prefix AND u.optUniqueKey IS NULL
-            var realmPredicate = cb.like(root.get("realm"), UserDao.REALM_PROJECT_PREFIX + "%");
+            var realmPredicate = cb.like(root.get("realm"), Realm.REALM_PROJECT_PREFIX + "%");
             var keyNullPredicate = cb.isNull(root.get("optUniqueKey"));
             query.select(root).where(cb.and(realmPredicate, keyNullPredicate));
 
@@ -780,7 +780,7 @@ public class UserDaoImpl
             return false;
         }
 
-        if (startsWith(aUser.getRealm(), UserDao.REALM_PROJECT_PREFIX)) {
+        if (startsWith(aUser.getRealm(), Realm.REALM_PROJECT_PREFIX)) {
             // Project-bound users get no access to their profile. They could at most change their
             // display name and email, but since those are basically their logins, we don't want
             // them to be able to do that.

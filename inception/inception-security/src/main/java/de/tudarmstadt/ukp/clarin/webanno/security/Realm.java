@@ -17,14 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
-import static org.apache.commons.lang3.StringUtils.startsWith;
+import static org.apache.commons.lang3.Strings.CS;
 
 import java.io.Serializable;
 import java.util.Objects;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 
 public class Realm
@@ -34,7 +31,12 @@ public class Realm
 
     public static final String REALM_LOCAL_ID = null;
 
-    private static final Realm LOCAL_REALM = new Realm(REALM_LOCAL_ID);
+    public static final Realm LOCAL_REALM = new Realm(REALM_LOCAL_ID);
+
+    public static final String REALM_GLOBAL = null;
+    public static final String REALM_PROJECT_PREFIX = "project:";
+    public static final String REALM_EXTERNAL_PREFIX = "external:";
+    public static final String REALM_PREAUTH = "preauth";
 
     private final String id;
     private final String name;
@@ -98,7 +100,7 @@ public class Realm
             return 1;
         }
 
-        return StringUtils.compare(aOne.getName(), aOther.getName());
+        return CS.compare(aOne.getName(), aOther.getName());
     }
 
     public static Realm forProject(long aProjectId, String aProjectName)
@@ -124,6 +126,6 @@ public class Realm
 
     public static boolean isProjectRealm(String aRealm)
     {
-        return startsWith(aRealm, REALM_PROJECT_PREFIX);
+        return CS.startsWith(aRealm, Realm.REALM_PROJECT_PREFIX);
     }
 }

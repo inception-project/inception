@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.security.oauth;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,6 +47,7 @@ import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.InceptionSecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
@@ -107,7 +107,7 @@ class OAuth2AdapterImplTest
                 .ignoringFields(User_.CREATED, User_.UPDATED, User_.PASSWORD, "passwordEncoder") //
                 .isEqualTo(User.builder() //
                         .withUsername(USERNAME) //
-                        .withRealm(REALM_EXTERNAL_PREFIX + clientRegistration.getRegistrationId())
+                        .withRealm(Realm.REALM_EXTERNAL_PREFIX + clientRegistration.getRegistrationId())
                         .withRoles(Set.of(Role.ROLE_USER)) //
                         .withEnabled(true) //
                         .build());
@@ -122,7 +122,7 @@ class OAuth2AdapterImplTest
     {
         userService.create(User.builder() //
                 .withUsername(USERNAME) //
-                .withRealm(REALM_EXTERNAL_PREFIX + clientRegistration.getRegistrationId())
+                .withRealm(Realm.REALM_EXTERNAL_PREFIX + clientRegistration.getRegistrationId())
                 .withRoles(Set.of(Role.ROLE_USER)) //
                 .withEnabled(true) //
                 .build());

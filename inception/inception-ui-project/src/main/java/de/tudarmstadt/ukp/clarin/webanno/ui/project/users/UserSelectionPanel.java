@@ -43,6 +43,7 @@ import org.wicketstuff.kendo.ui.renderer.ChoiceRenderer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
@@ -163,7 +164,7 @@ class UserSelectionPanel
                                 }
 
                                 // Project-bound users from other projects cannot be added
-                                if (user.getRealm().startsWith(UserDao.REALM_PROJECT_PREFIX
+                                if (user.getRealm().startsWith(Realm.REALM_PROJECT_PREFIX
                                         + projectModel.getObject().getId())) {
                                     return true;
                                 }

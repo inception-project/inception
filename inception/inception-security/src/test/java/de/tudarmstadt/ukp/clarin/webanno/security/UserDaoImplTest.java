@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityPropertiesImpl.DEFAULT_MAXIMUM_USERNAME_LENGTH;
 import static de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityPropertiesImpl.DEFAULT_MINIMUM_PASSWORD_LENGTH;
 import static de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityPropertiesImpl.DEFAULT_MINIMUM_USERNAME_LENGTH;
@@ -298,7 +297,7 @@ class UserDaoImplTest
 
         userDao.create(User.builder() //
                 .withUsername("user3") //
-                .withRealm(new Realm(REALM_EXTERNAL_PREFIX + "client", "My SSO")) //
+                .withRealm(new Realm(Realm.REALM_EXTERNAL_PREFIX + "client", "My SSO")) //
                 .build());
 
         assertThat(userDao.listRealms()) //

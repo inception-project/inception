@@ -185,7 +185,7 @@ public class UserDetailPanel
 
         userService.listRealms().stream() //
                 // Do not permit to move users to project realms
-                .filter(_id -> !startsWith(_id, UserDao.REALM_PROJECT_PREFIX)) //
+                .filter(_id -> !startsWith(_id, Realm.REALM_PROJECT_PREFIX)) //
                 .map(Realm::new) //
                 .forEach(realms::add);
 

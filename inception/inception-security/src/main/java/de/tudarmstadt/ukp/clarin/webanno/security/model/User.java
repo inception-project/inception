@@ -35,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.CollectionTable;
@@ -215,7 +214,12 @@ public class User
 
     public void setPassword(String aPassword)
     {
-        password = getPasswordEncoder().encode(aPassword);
+        if (aPassword == null) {
+            password = null;
+        }
+        else {
+            password = getPasswordEncoder().encode(aPassword);
+        }
     }
 
     public void setEncodedPassword(String aPassword)
@@ -339,7 +343,7 @@ public class User
     {
         // For project-bound users, the UI name must be unique because in the guest annotator mode,
         // we use the UI name during "authentication".
-        if (realm != null && realm.startsWith(UserDao.REALM_PROJECT_PREFIX)) {
+        if (realm != null && realm.startsWith(Realm.REALM_PROJECT_PREFIX)) {
             var digest = DigestUtils.getSha256Digest();
             digest.update(realm.getBytes(UTF_8));
             digest.update((byte) 0x01);

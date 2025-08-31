@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.startsWith;
@@ -49,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedUser;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -84,7 +84,7 @@ public class ProjectPermissionsExporter
         List<ExportedUser> projectUsers = new ArrayList<>();
         List<ExportedProjectPermission> projectPermissions = new ArrayList<>();
         for (var user : projectService.listUsersWithAnyRoleInProject(project)) {
-            if (startsWith(user.getRealm(), REALM_PROJECT_PREFIX)) {
+            if (startsWith(user.getRealm(), Realm.REALM_PROJECT_PREFIX)) {
                 var exUser = new ExportedUser();
                 exUser.setCreated(user.getCreated());
                 exUser.setEmail(user.getEmail());
@@ -141,7 +141,7 @@ public class ProjectPermissionsExporter
             }
 
             var u = new User();
-            u.setRealm(REALM_PROJECT_PREFIX + aProject.getId());
+            u.setRealm(Realm.REALM_PROJECT_PREFIX + aProject.getId());
             u.setEmail(importedProjectUser.getEmail());
             u.setUiName(importedProjectUser.getUiName());
             u.setUsername(importedProjectUser.getUsername());

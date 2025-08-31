@@ -25,7 +25,7 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 
 public class ProjectUserPermissionChoiceRenderer
     extends ChoiceRenderer<ProjectUserPermissions>
@@ -93,7 +93,7 @@ public class ProjectUserPermissionChoiceRenderer
 
         if (markProjectBoundUsers && aPermissions.getUser().isPresent()) {
             var user = aPermissions.getUser().get();
-            if (CS.startsWith(user.getRealm(), UserDao.REALM_PROJECT_PREFIX)) {
+            if (CS.startsWith(user.getRealm(), Realm.REALM_PROJECT_PREFIX)) {
                 builder.append(" (project user)");
             }
         }

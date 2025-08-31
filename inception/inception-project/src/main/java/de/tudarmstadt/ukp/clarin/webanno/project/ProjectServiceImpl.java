@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MIN_PROJECT_SLUG_L
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlug;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlugInitialCharacter;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static java.lang.Math.min;
@@ -1207,12 +1206,12 @@ public class ProjectServiceImpl
     @Override
     public Realm getRealm(String aRealmId)
     {
-        if (!startsWith(aRealmId, REALM_PROJECT_PREFIX)) {
+        if (!startsWith(aRealmId, Realm.REALM_PROJECT_PREFIX)) {
             throw new IllegalArgumentException(
-                    "Project realm must start with [" + REALM_PROJECT_PREFIX + "]");
+                    "Project realm must start with [" + Realm.REALM_PROJECT_PREFIX + "]");
         }
 
-        var projectId = Long.valueOf(substringAfter(aRealmId, REALM_PROJECT_PREFIX));
+        var projectId = Long.valueOf(substringAfter(aRealmId, Realm.REALM_PROJECT_PREFIX));
         var project = getProject(projectId);
         if (project != null) {
             return new Realm(aRealmId, "<Project> " + project.getName());

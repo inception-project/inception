@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
@@ -54,6 +53,7 @@ import org.springframework.util.FileSystemUtils;
 import com.giffing.wicket.spring.boot.starter.WicketAutoConfiguration;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
@@ -154,17 +154,17 @@ class AeroRemoteApiController_Authentication_Jwt_Test
         projectService.createProject(project);
 
         remoteApiAdminUser = new User("admin", ROLE_ADMIN, ROLE_REMOTE);
-        remoteApiAdminUser.setRealm(REALM_EXTERNAL_PREFIX + REALM);
+        remoteApiAdminUser.setRealm(Realm.REALM_EXTERNAL_PREFIX + REALM);
         remoteApiAdminUser.setPassword(password);
         userRepository.create(remoteApiAdminUser);
 
         remoteApiNormalUser = new User("user", ROLE_USER, ROLE_REMOTE);
-        remoteApiNormalUser.setRealm(REALM_EXTERNAL_PREFIX + REALM);
+        remoteApiNormalUser.setRealm(Realm.REALM_EXTERNAL_PREFIX + REALM);
         remoteApiNormalUser.setPassword(password);
         userRepository.create(remoteApiNormalUser);
 
         nonRemoteNormalUser = new User("non-remote-user", ROLE_USER);
-        nonRemoteNormalUser.setRealm(REALM_EXTERNAL_PREFIX + REALM);
+        nonRemoteNormalUser.setRealm(Realm.REALM_EXTERNAL_PREFIX + REALM);
         nonRemoteNormalUser.setPassword(password);
         userRepository.create(nonRemoteNormalUser);
     }

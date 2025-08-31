@@ -40,11 +40,6 @@ public interface UserDao
 
     static final String EMPTY_PASSWORD = "";
 
-    static final String REALM_GLOBAL = null;
-    static final String REALM_PROJECT_PREFIX = "project:";
-    static final String REALM_EXTERNAL_PREFIX = "external:";
-    static final String REALM_PREAUTH = "preauth";
-
     User getCurrentUser();
 
     /**
