@@ -281,8 +281,7 @@ public class MatrixWorkloadManagementPage
 
     private IResourceStream exportWorkload()
     {
-        var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR)
-                .stream() //
+        var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR).stream() //
                 .map(User::getUsername) //
                 .sorted() //
                 .toList();
@@ -973,8 +972,8 @@ public class MatrixWorkloadManagementPage
 
     private List<DocumentMatrixRow> getMatrixData()
     {
-        var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR)
-                .stream().map(User::getUsername) //
+        var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR).stream()
+                .map(User::getUsername) //
                 .collect(toSet());
 
         var documentMatrixRows = new LinkedHashMap<SourceDocument, DocumentMatrixRow>();

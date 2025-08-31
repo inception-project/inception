@@ -244,7 +244,8 @@ class UserSelectionPanel
 
     private void actionNew(AjaxRequestTarget aTarget, Form<List<User>> aForm)
     {
-        dialog.open(new AddProjectUserPanel(ModalDialog.CONTENT_ID, projectModel), aTarget);
+        dialog.open(new AddProjectUserPanel(ModalDialog.CONTENT_ID, projectModel, userModel),
+                aTarget);
     }
 
     private void actionAdd(AjaxRequestTarget aTarget, Form<List<User>> aForm)

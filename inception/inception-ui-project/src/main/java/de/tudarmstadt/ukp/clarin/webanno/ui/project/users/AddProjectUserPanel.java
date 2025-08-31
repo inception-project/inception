@@ -33,6 +33,7 @@ import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.ValidationError;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
@@ -46,9 +47,13 @@ public class AddProjectUserPanel
     private @SpringBean UserDao userService;
     private @SpringBean ProjectService projectService;
 
-    public AddProjectUserPanel(String aId, IModel<Project> aModel)
+    private final IModel<ProjectUserPermissions> userModel;
+
+    public AddProjectUserPanel(String aId, IModel<Project> aModel,
+            IModel<ProjectUserPermissions> aUser)
     {
         super(aId, aModel);
+        userModel = aUser;
 
         queue(new Form<>("form", CompoundPropertyModel.of(new FormData())));
 
@@ -85,7 +90,11 @@ public class AddProjectUserPanel
     {
         var user = projectService.getOrCreateProjectBoundUser(getModelObject(),
                 aForm.getModelObject().uiName);
+
         projectService.assignRole(getModelObject(), user, ANNOTATOR);
+
+        userModel.setObject(projectService.getProjectUserPermissions(getModelObject(), user));
+
         aTarget.add(findParent(ProjectUsersPanel.class));
         findParent(ModalDialog.class).close(aTarget);
     }

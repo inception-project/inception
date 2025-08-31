@@ -107,7 +107,8 @@ class OAuth2AdapterImplTest
                 .ignoringFields(User_.CREATED, User_.UPDATED, User_.PASSWORD, "passwordEncoder") //
                 .isEqualTo(User.builder() //
                         .withUsername(USERNAME) //
-                        .withRealm(Realm.REALM_EXTERNAL_PREFIX + clientRegistration.getRegistrationId())
+                        .withRealm(Realm.REALM_EXTERNAL_PREFIX
+                                + clientRegistration.getRegistrationId())
                         .withRoles(Set.of(Role.ROLE_USER)) //
                         .withEnabled(true) //
                         .build());

@@ -29,6 +29,8 @@ import java.util.Optional;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
@@ -48,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapCheckBoxMultipleChoice;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -58,12 +61,15 @@ public class ProjectUserDetailPanel
 {
     private static final long serialVersionUID = -5278078988218713188L;
 
+    private static final String MID_DIALOG = "dialog";
+
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userService;
 
     private IModel<Project> project;
     private Form<Void> form;
     private CheckBoxMultipleChoice<PermissionLevel> levels;
+    private final BootstrapModalDialog dialog;
 
     public ProjectUserDetailPanel(String aId, IModel<Project> aProject,
             IModel<ProjectUserPermissions> aUser)
@@ -73,6 +79,10 @@ public class ProjectUserDetailPanel
         setOutputMarkupPlaceholderTag(true);
         add(visibleWhenModelIsNotNull(this));
         project = aProject;
+
+        dialog = new BootstrapModalDialog(MID_DIALOG);
+        dialog.trapFocus();
+        queue(dialog);
 
         form = new Form<>("form");
         queue(form);
@@ -107,7 +117,7 @@ public class ProjectUserDetailPanel
                 aUser.map(u -> u.getUser().map(User::toLongString).orElse(u.getUsername()))));
         queue(new LambdaAjaxButton<>("save", this::actionSave));
         queue(new LambdaAjaxLink("cancel", this::actionCancel));
-        queue(new LambdaAjaxLink("delete", this::actionDelete) //
+        queue(new LambdaAjaxLink("delete", this::actionDeleteRequested) //
                 .add(visibleWhen(this::isProjectBoundUser)));
     }
 
@@ -167,27 +177,40 @@ public class ProjectUserDetailPanel
         // processing cycle. So nothing special to do here.
 
         success("User saved");
+        aTarget.addChildren(getPage(), IFeedback.class);
 
-        // Reload whole page because master panel also needs to be reloaded.
-        aTarget.add(getPage());
+        aTarget.add(findParent(ProjectUsersPanel.class));
     }
 
     private void actionCancel(AjaxRequestTarget aTarget)
     {
         setModelObject(null);
 
-        // Reload whole page because master panel also needs to be reloaded.
-        aTarget.add(getPage());
+        aTarget.add(findParent(ProjectUsersPanel.class));
     }
 
-    private void actionDelete(AjaxRequestTarget aTarget)
+    private void actionDeleteRequested(AjaxRequestTarget aTarget)
     {
-        projectService.deleteProjectBoundUser(project.getObject(),
-                getModelObject().getUser().get());
+        var userModel = getModel().map(ProjectUserPermissions::getUser).map(Optional::get);
+        var dialogContent = new DeleteProjectBoundUserConfirmationDialogContentPanel(
+                ModalDialog.CONTENT_ID,
+                getModel().map(ProjectUserPermissions::getUser).map(Optional::get));
+        dialogContent.setExpectedResponseModel(userModel.map(User::getUiName));
+        dialogContent.setConfirmAction($ -> actionDeleteConfirmed($, userModel.getObject()));
+
+        dialog.open(dialogContent, aTarget);
+    }
+
+    private void actionDeleteConfirmed(AjaxRequestTarget aTarget, User aUser)
+    {
+        projectService.revokeAllRoles(project.getObject(), aUser);
+        projectService.deleteProjectBoundUser(project.getObject(), aUser);
+
+        success("User deleted");
+        aTarget.addChildren(getPage(), IFeedback.class);
 
         setModelObject(null);
 
-        // Reload whole page because master panel also needs to be reloaded.
-        aTarget.add(getPage());
+        aTarget.add(findParent(ProjectUsersPanel.class));
     }
 }

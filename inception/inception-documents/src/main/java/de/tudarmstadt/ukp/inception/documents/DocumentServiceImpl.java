@@ -1322,9 +1322,8 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument)
     {
-        var users = projectService
-                .listUsersWithRoleInProject(aDocument.getProject(), ANNOTATOR).stream()
-                .toList();
+        var users = projectService.listUsersWithRoleInProject(aDocument.getProject(), ANNOTATOR)
+                .stream().toList();
 
         var annDocs = listAnnotationDocuments(aDocument);
 

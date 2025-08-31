@@ -126,6 +126,8 @@ public interface ProjectService
 
     List<ProjectUserPermissions> listProjectUserPermissions(Project aProject);
 
+    ProjectUserPermissions getProjectUserPermissions(Project aProject, User aUser);
+
     /**
      * Get list of permissions a user have in a given project
      *

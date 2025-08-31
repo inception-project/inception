@@ -142,6 +142,7 @@ public class UserDaoImpl
         }
 
         if (transactionManager == null) {
+            LOG.warn("No transaction manager - cannot set up default admin user");
             return;
         }
 
@@ -173,6 +174,7 @@ public class UserDaoImpl
     private void ensureUniqueProjectBoundUserKeys()
     {
         if (transactionManager == null) {
+            LOG.warn("No transaction manager - cannot set up unique keys for project-bound users");
             return;
         }
 

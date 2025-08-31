@@ -363,6 +363,20 @@ public class ProjectServiceImpl
                 .collect(toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ProjectUserPermissions getProjectUserPermissions(Project aProject, User aUser)
+    {
+        // Collect all permissions for the given user in this project
+        var roles = listProjectPermissions(aProject).stream()
+                .filter(perm -> perm.getUser().equals(aUser.getUsername()))
+                .map(ProjectPermission::getLevel) //
+                .sorted() //
+                .collect(toCollection(LinkedHashSet::new));
+
+        return new ProjectUserPermissions(aProject, aUser.getUsername(), aUser, roles);
+    }
+
     private int compareProjectUserPermissions(ProjectUserPermissions a, ProjectUserPermissions b)
     {
         if (a.getUser().isPresent() && b.getUser().isPresent()) {
