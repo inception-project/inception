@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.security.saml;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.removeEnd;
@@ -44,6 +43,7 @@ import org.springframework.security.saml2.provider.service.registration.RelyingP
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.security.preauth.PreAuthUtils;
@@ -122,7 +122,7 @@ public class Saml2AdapterImpl
     @Override
     public User loadSamlUser(String aUsername, String aRegistrationId)
     {
-        var realm = REALM_EXTERNAL_PREFIX + aRegistrationId;
+        var realm = Realm.REALM_EXTERNAL_PREFIX + aRegistrationId;
 
         denyAccessToUsersWithIllegalUsername(aUsername);
 

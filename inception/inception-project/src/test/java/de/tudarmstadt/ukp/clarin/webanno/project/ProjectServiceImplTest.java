@@ -156,7 +156,7 @@ public class ProjectServiceImplTest
     @Test
     public void listProjectUsersWithPermissions_ShouldReturnUsers()
     {
-        List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject);
+        List<User> foundUsers = sut.listUsersWithAnyRoleInProject(testProject);
 
         assertThat(foundUsers).containsExactly(beate, kevin);
     }
@@ -164,7 +164,7 @@ public class ProjectServiceImplTest
     @Test
     public void listProjectUsersWithSpecificPermissions_ShouldReturnUsers()
     {
-        List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, ANNOTATOR);
+        List<User> foundUsers = sut.listUsersWithRoleInProject(testProject, ANNOTATOR);
 
         assertThat(foundUsers).containsExactly(beate, kevin);
     }
@@ -172,7 +172,7 @@ public class ProjectServiceImplTest
     @Test
     public void listProjectUsersWithSpecificPermissions_ShouldReturnAUser()
     {
-        List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, CURATOR);
+        List<User> foundUsers = sut.listUsersWithRoleInProject(testProject, CURATOR);
 
         assertThat(foundUsers).containsExactly(beate);
     }
@@ -180,7 +180,7 @@ public class ProjectServiceImplTest
     @Test
     public void listProjectUsersWithSpecificPermissions_ShouldReturnNoUsers()
     {
-        List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, MANAGER);
+        List<User> foundUsers = sut.listUsersWithRoleInProject(testProject, MANAGER);
 
         assertThat(foundUsers).isEmpty();
     }
@@ -190,7 +190,7 @@ public class ProjectServiceImplTest
     {
         testEntityManager.persist(new ProjectPermission(testProject, "ghost", ANNOTATOR));
 
-        List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, ANNOTATOR);
+        List<User> foundUsers = sut.listUsersWithRoleInProject(testProject, ANNOTATOR);
 
         assertThat(foundUsers).containsExactly(beate, kevin);
     }

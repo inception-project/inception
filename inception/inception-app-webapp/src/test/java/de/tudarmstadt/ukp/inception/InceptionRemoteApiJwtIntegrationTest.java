@@ -47,6 +47,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 import com.nimbusds.jwt.SignedJWT;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import no.nav.security.mock.oauth2.MockOAuth2Server;
@@ -96,7 +97,7 @@ public class InceptionRemoteApiJwtIntegrationTest
         userService = context.getBean(UserDao.class);
 
         userService.create(User.builder().withUsername(REMOTE_ADMIN_USER_NAME)
-                .withRealm(UserDao.REALM_EXTERNAL_PREFIX + CLIENT_ID) //
+                .withRealm(Realm.REALM_EXTERNAL_PREFIX + CLIENT_ID) //
                 .withRoles(ROLE_REMOTE, ROLE_USER, ROLE_ADMIN) //
                 .withEnabled(true) //
                 .build());

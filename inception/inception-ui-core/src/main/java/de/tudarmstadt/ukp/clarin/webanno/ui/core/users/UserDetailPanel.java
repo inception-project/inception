@@ -168,11 +168,11 @@ public class UserDetailPanel
         realm.setChoices(LoadableDetachableModel.of(this::listRealms));
         realm.setChoiceRenderer(new ChoiceRenderer<>("name"));
         realm.setOutputMarkupId(true);
-        realm.add(enabledWhen(() -> !viewingOwnUserDetails()
+        realm.add(enabledWhen(() -> !viewingOwnUserDetails()));
+        realm.add(visibleWhen(() -> realm.getChoicesModel().getObject().size() > 1
+                && userService.isCurrentUserAdmin()
                 // Do not permit moving users out of project realms
                 && !Realm.isProjectRealm(aModel.getObject().getRealm())));
-        realm.add(visibleWhen(() -> realm.getChoicesModel().getObject().size() > 1
-                && userService.isCurrentUserAdmin()));
         realm.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
             _target.add(oldPasswordField, passwordField, repeatPasswordField, passwordUnsetNotice);
         }));
@@ -185,7 +185,7 @@ public class UserDetailPanel
 
         userService.listRealms().stream() //
                 // Do not permit to move users to project realms
-                .filter(_id -> !startsWith(_id, UserDao.REALM_PROJECT_PREFIX)) //
+                .filter(_id -> !startsWith(_id, Realm.REALM_PROJECT_PREFIX)) //
                 .map(Realm::new) //
                 .forEach(realms::add);
 
@@ -285,7 +285,7 @@ public class UserDetailPanel
 
     private void validateUiName(IValidatable<String> aValidatable)
     {
-        User other = userService.getUserByRealmAndUiName(getModelObject().getRealm(),
+        var other = userService.getUserByRealmAndUiName(getModelObject().getRealm(),
                 aValidatable.getValue());
 
         if (other != null && !other.getUsername().equals(getModelObject().getUsername())) {
@@ -339,7 +339,7 @@ public class UserDetailPanel
             User user = getModelObject();
 
             if (password != null) {
-                success("Password for user [" + user.getUsername() + "] has been set.");
+                success("Password for user " + user + " has been set.");
                 user.setPassword(password);
             }
 
@@ -349,7 +349,7 @@ public class UserDetailPanel
             }
             else {
                 userService.update(user);
-                success("Details for user [" + user.getUsername() + "] have been updated.");
+                success("Details for user " + user + " have been updated.");
             }
 
             aTarget.addChildren(getPage(), IFeedback.class);

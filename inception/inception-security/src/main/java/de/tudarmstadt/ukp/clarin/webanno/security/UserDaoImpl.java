@@ -29,6 +29,7 @@ import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServ
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCharacterMatching;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveDuplicateCharacters;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
+import static java.lang.String.join;
 import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.containsAny;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -130,6 +131,8 @@ public class UserDaoImpl
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         installDefaultAdminUser();
+
+        ensureUniqueProjectBoundUserKeys();
     }
 
     void installDefaultAdminUser()
@@ -163,6 +166,32 @@ public class UserDaoImpl
                     admin.setRoles(EnumSet.of(ROLE_ADMIN, ROLE_USER));
                 }
                 create(admin);
+            }
+        });
+    }
+
+    private void ensureUniqueProjectBoundUserKeys()
+    {
+        if (transactionManager == null) {
+            return;
+        }
+
+        new TransactionTemplate(transactionManager).executeWithoutResult(transactionStatus -> {
+            var cb = entityManager.getCriteriaBuilder();
+            var query = cb.createQuery(User.class);
+            var root = query.from(User.class);
+
+            // WHERE u.realm LIKE :prefix AND u.optUniqueKey IS NULL
+            var realmPredicate = cb.like(root.get("realm"), Realm.REALM_PROJECT_PREFIX + "%");
+            var keyNullPredicate = cb.isNull(root.get("optUniqueKey"));
+            query.select(root).where(cb.and(realmPredicate, keyNullPredicate));
+
+            var usersToUpdate = entityManager.createQuery(query).getResultList();
+
+            // Persist again to trigger @PreUpdate
+            for (var user : usersToUpdate) {
+                user.updateOptUniqueKey();
+                entityManager.merge(user);
             }
         });
     }
@@ -231,9 +260,16 @@ public class UserDaoImpl
 
     @Override
     @Transactional
+    public List<User> listAllUsersFromRealm(Realm aRealm)
+    {
+        return listAllUsersFromRealm(aRealm.getId());
+    }
+
+    @Override
+    @Transactional
     public List<User> listAllUsersFromRealm(String aRealm)
     {
-        String query = String.join("\n", //
+        var query = join("\n", //
                 "FROM " + User.class.getName(), //
                 "WHERE realm = :realm");
 
@@ -258,7 +294,7 @@ public class UserDaoImpl
             return usersInRealm.size();
         }
 
-        String query = String.join("\n", //
+        String query = join("\n", //
                 "DELETE FROM " + User.class.getName(), //
                 "WHERE realm = :realm");
 
@@ -299,11 +335,18 @@ public class UserDaoImpl
 
     @Override
     @Transactional
+    public User getUserByRealmAndUiName(Realm aRealm, String aUiName)
+    {
+        return getUserByRealmAndUiName(aRealm.getId(), aUiName);
+    }
+
+    @Override
+    @Transactional
     public User getUserByRealmAndUiName(String aRealm, String aUiName)
     {
         Validate.notBlank(aUiName, "User must be specified");
 
-        var query = String.join("\n", //
+        var query = join("\n", //
                 "FROM " + User.class.getName(), //
                 "WHERE ((:realm is null and realm is null) or realm = :realm)", //
                 "AND   uiName = :uiName");
@@ -677,7 +720,7 @@ public class UserDaoImpl
     @Transactional(readOnly = true)
     public long countEnabledUsers()
     {
-        String query = String.join("\n", //
+        String query = join("\n", //
                 "SELECT COUNT(*)", //
                 "FROM " + User.class.getName(), //
                 "WHERE enabled = :enabled");
@@ -737,7 +780,7 @@ public class UserDaoImpl
             return false;
         }
 
-        if (startsWith(aUser.getRealm(), UserDao.REALM_PROJECT_PREFIX)) {
+        if (startsWith(aUser.getRealm(), Realm.REALM_PROJECT_PREFIX)) {
             // Project-bound users get no access to their profile. They could at most change their
             // display name and email, but since those are basically their logins, we don't want
             // them to be able to do that.

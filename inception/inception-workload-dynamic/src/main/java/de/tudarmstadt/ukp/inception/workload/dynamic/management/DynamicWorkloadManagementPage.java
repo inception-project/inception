@@ -553,7 +553,7 @@ public class DynamicWorkloadManagementPage
 
     private List<User> getUsersForCurrentProject()
     {
-        return projectService.listProjectUsersWithPermissions(currentProject.getObject());
+        return projectService.listUsersWithAnyRoleInProject(currentProject.getObject());
     }
 
     private void actionRefresh(AjaxRequestTarget aTarget)

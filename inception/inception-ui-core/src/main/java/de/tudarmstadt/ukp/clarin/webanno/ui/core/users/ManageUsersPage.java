@@ -91,10 +91,10 @@ public class ManageUsersPage
 
     private void checkAccess(final PageParameters aPageParameters)
     {
-        String username = aPageParameters.get(PARAM_USER).toOptionalString();
+        var username = aPageParameters.get(PARAM_USER).toOptionalString();
 
-        User currentUser = userService.getCurrentUser();
-        User userToOpen = isBlank(username) ? currentUser : userService.get(username);
+        var currentUser = userService.getCurrentUser();
+        var userToOpen = isBlank(username) ? currentUser : userService.get(username);
 
         // Admins can manage any user
         if (userService.isCurrentUserAdmin()) {

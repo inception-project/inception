@@ -245,7 +245,7 @@ class MatrixWorkloadServiceImplIntegrationTest
     @Test
     void testAssignWorkloadMoreAnnotatorsThanAvailable()
     {
-        var annotators = projectService.listProjectUsersWithPermissions(project, ANNOTATOR);
+        var annotators = projectService.listUsersWithRoleInProject(project, ANNOTATOR);
 
         sut.assignWorkload(project, annotators.size() + 1, true);
 

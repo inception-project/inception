@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,11 +43,11 @@ public class ShibbolethRequestHeaderAuthenticationFilter
 
     private void newUserLogin(String aUsername)
     {
-        User u = new User();
+        var u = new User();
         u.setUsername(aUsername);
         u.setPassword(EMPTY_PASSWORD);
         u.setEnabled(true);
-        u.setRealm(UserDao.REALM_PREAUTH);
+        u.setRealm(Realm.REALM_PREAUTH);
         u.setRoles(PreAuthUtils.getPreAuthenticationNewUserRoles(u));
 
         userRepository.create(u);
@@ -69,9 +70,9 @@ public class ShibbolethRequestHeaderAuthenticationFilter
     {
         denyAccessToUsersWithIllegalUsername(username);
 
-        User user = userRepository.get(username);
+        var user = userRepository.get(username);
         if (user != null) {
-            denyAccessOfRealmsDoNotMatch(UserDao.REALM_PREAUTH, user);
+            denyAccessOfRealmsDoNotMatch(Realm.REALM_PREAUTH, user);
             denyAccessToDeactivatedUsers(user);
         }
         else {
@@ -89,7 +90,7 @@ public class ShibbolethRequestHeaderAuthenticationFilter
 
         var userNameValidationResult = userRepository.validateUsername(aUsername);
         if (!userNameValidationResult.isEmpty()) {
-            String messages = userNameValidationResult.stream() //
+            var messages = userNameValidationResult.stream() //
                     .map(ValidationError::getMessage) //
                     .collect(joining("\n- ", "\n- ", ""));
             LOG.info("Prevented login of user [{}] with illegal username: {}", aUsername, messages);

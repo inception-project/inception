@@ -42,6 +42,7 @@ import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.InceptionSecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
@@ -98,7 +99,7 @@ class ShibbolethRequestHeaderAuthenticationFilterTest
                 .ignoringFields(User_.CREATED, User_.UPDATED, User_.PASSWORD, "passwordEncoder") //
                 .isEqualTo(User.builder() //
                         .withUsername(USERNAME) //
-                        .withRealm(UserDao.REALM_PREAUTH).withRoles(Set.of(Role.ROLE_USER)) //
+                        .withRealm(Realm.REALM_PREAUTH).withRoles(Set.of(Role.ROLE_USER)) //
                         .withEnabled(true) //
                         .build());
 
@@ -112,7 +113,7 @@ class ShibbolethRequestHeaderAuthenticationFilterTest
     {
         userService.create(User.builder() //
                 .withUsername(USERNAME) //
-                .withRealm(UserDao.REALM_PREAUTH) //
+                .withRealm(Realm.REALM_PREAUTH) //
                 .withRoles(Set.of(Role.ROLE_USER)) //
                 .withEnabled(true) //
                 .build());
