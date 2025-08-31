@@ -330,6 +330,7 @@ public class InviteServiceImpl
     @Transactional
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws IOException
     {
-        userRepository.deleteAllUsersFromRealm(Realm.REALM_PROJECT_PREFIX + aEvent.getProject().getId());
+        userRepository
+                .deleteAllUsersFromRealm(Realm.REALM_PROJECT_PREFIX + aEvent.getProject().getId());
     }
 }

@@ -33,11 +33,11 @@ public class InceptionDaoAuthenticationProvider
             UsernamePasswordAuthenticationToken aAuthentication)
         throws AuthenticationException
     {
-        String presentedPassword = aAuthentication.getCredentials().toString();
+        var presentedPassword = aAuthentication.getCredentials().toString();
 
         // Users which are created through the pre-auth mechanism end up with an empty password.
         // So we do not want to accept these blank passwords when we have a non-preauth login.
-        if (EMPTY_PASSWORD.equals(presentedPassword)) {
+        if (presentedPassword == null || EMPTY_PASSWORD.equals(presentedPassword)) {
 
             throw new BadCredentialsException(messages.getMessage(
                     "AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials"));

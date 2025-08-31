@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
@@ -193,7 +192,7 @@ public class LayerDetailForm
         };
         attachTypeSelect.setNullValid(true);
         attachTypeSelect.add(visibleWhen(() -> isNull(getModelObject().getId())
-                && RELATION_TYPE.equals(getModelObject().getType())));
+                && RelationLayerSupport.TYPE.equals(getModelObject().getType())));
         attachTypeSelect.setOutputMarkupPlaceholderTag(true);
         add(attachTypeSelect);
 
@@ -201,7 +200,7 @@ public class LayerDetailForm
                 LoadableDetachableModel.of(this::getEffectiveAttachTypeUiName));
         effectiveAttachType.setOutputMarkupPlaceholderTag(true);
         effectiveAttachType.add(visibleWhen(() -> !isNull(getModelObject().getId())
-                && RELATION_TYPE.equals(getModelObject().getType())));
+                && RelationLayerSupport.TYPE.equals(getModelObject().getType())));
         add(effectiveAttachType);
 
         // Behaviors of layers
@@ -272,7 +271,7 @@ public class LayerDetailForm
         }
 
         // Attach layers are only valid for relation layers.
-        if (!RELATION_TYPE.equals(layer.getType())) {
+        if (!RelationLayerSupport.TYPE.equals(layer.getType())) {
             return emptyList();
         }
 

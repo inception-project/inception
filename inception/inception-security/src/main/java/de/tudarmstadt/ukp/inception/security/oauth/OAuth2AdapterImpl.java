@@ -142,7 +142,8 @@ public class OAuth2AdapterImpl
 
         denyAccessToUsersWithIllegalUsername(username);
 
-        var realm = Realm.REALM_EXTERNAL_PREFIX + userRequest.getClientRegistration().getRegistrationId();
+        var realm = Realm.REALM_EXTERNAL_PREFIX
+                + userRequest.getClientRegistration().getRegistrationId();
 
         User u = userRepository.get(username);
         if (u != null) {

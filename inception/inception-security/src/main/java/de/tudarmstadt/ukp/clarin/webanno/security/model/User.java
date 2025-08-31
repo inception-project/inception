@@ -214,12 +214,7 @@ public class User
 
     public void setPassword(String aPassword)
     {
-        if (aPassword == null) {
-            password = null;
-        }
-        else {
-            password = getPasswordEncoder().encode(aPassword);
-        }
+        password = aPassword != null ? getPasswordEncoder().encode(aPassword) : null;
     }
 
     public void setEncodedPassword(String aPassword)
@@ -347,7 +342,7 @@ public class User
             var digest = DigestUtils.getSha256Digest();
             digest.update(realm.getBytes(UTF_8));
             digest.update((byte) 0x01);
-            digest.update(uiName.getBytes(UTF_8));
+            digest.update(getUiName().getBytes(UTF_8));
             optUniqueKey = Hex.encodeHexString(digest.digest());
         }
         else {
