@@ -17,39 +17,28 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.CONCEPT;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
-import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
-import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.LambdaChoiceRenderer;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
-import de.tudarmstadt.ukp.inception.bootstrap.BootstrapCheckBoxMultipleChoice;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.MultiValueConceptFeatureTraits;
@@ -57,6 +46,8 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.RecommendableFeatureTrait;
+import de.tudarmstadt.ukp.inception.schema.api.feature.RetainSuggestionInfoPanel;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 /**
@@ -64,7 +55,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdati
  * of the project settings.
  */
 public class MultiValueConceptFeatureTraitsEditor
-    extends Panel
+    extends GenericPanel<AnnotationFeature>
 {
     private static final String MID_FORM = "form";
     private static final String MID_KNOWLEDGE_BASE = "knowledgeBase";
@@ -80,7 +71,7 @@ public class MultiValueConceptFeatureTraitsEditor
 
     private String featureSupportId;
     private IModel<AnnotationFeature> feature;
-    private CompoundPropertyModel<Traits> traits;
+    private CompoundPropertyModel<MultiValueConceptFeatureTraits> traits;
 
     public MultiValueConceptFeatureTraitsEditor(String aId, MultiValueConceptFeatureSupport aFS,
             IModel<AnnotationFeature> aFeatureModel)
@@ -92,9 +83,13 @@ public class MultiValueConceptFeatureTraitsEditor
         // when required.
         featureSupportId = aFS.getId();
         feature = aFeatureModel;
-        traits = CompoundPropertyModel.of(readTraits());
 
-        var form = new Form<Traits>(MID_FORM, traits)
+        traits = CompoundPropertyModel.of(getFeatureSupport().readTraits(feature.getObject()));
+        if (traits.getObject().getAllowedValueType() == null) {
+            traits.getObject().setAllowedValueType(ConceptFeatureValueType.ANY_OBJECT);
+        }
+
+        var form = new Form<MultiValueConceptFeatureTraits>(MID_FORM, traits)
         {
             private static final long serialVersionUID = -3109239605783291123L;
 
@@ -102,50 +97,76 @@ public class MultiValueConceptFeatureTraitsEditor
             protected void onSubmit()
             {
                 super.onSubmit();
-                writeTraits();
+                getFeatureSupport().writeTraits(feature.getObject(), traits.getObject());
             }
         };
         add(form);
 
-        form.add(new KnowledgeBaseItemAutoCompleteField(MID_SCOPE,
-                _query -> listSearchResults(_query, CONCEPT)) //
-                        .setOutputMarkupPlaceholderTag(true));
+        var scope = new KnowledgeBaseItemAutoCompleteField(MID_SCOPE);
+        scope.setModel(LambdaModel.of(this::getScope, this::setScope));
+        scope.setChoiceProvider(_query -> listSearchResults(_query, CONCEPT));
+        scope.setOutputMarkupPlaceholderTag(true);
+        form.add(scope);
 
-        form.add(new DropDownChoice<>(MID_KNOWLEDGE_BASE,
-                LoadableDetachableModel.of(this::listKnowledgeBases),
-                new LambdaChoiceRenderer<>(KnowledgeBase::getName)) //
-                        .setNullValid(true)
-                        .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
+        var knowledgeBase = new DropDownChoice<KnowledgeBase>(MID_KNOWLEDGE_BASE);
+        knowledgeBase.setModel(
+                LambdaModel.of(this::getSelectedKnowledgeBase, this::setSelectedKnowledgeBase));
+        knowledgeBase.setChoices(LoadableDetachableModel.of(this::listKnowledgeBases));
+        knowledgeBase.setChoiceRenderer(new LambdaChoiceRenderer<>(KnowledgeBase::getName));
+        knowledgeBase.setNullValid(true);
+        knowledgeBase.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, this::refresh));
+        form.add(knowledgeBase);
+
         form.add(new DropDownChoice<>(MID_ALLOWED_VALUE_TYPE,
-                LoadableDetachableModel.of(this::listAllowedTypes))
-                        .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
+                LoadableDetachableModel.of(this::listAllowedTypes)).add(
+                        new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, this::refresh)));
 
         form.add(new DisabledKBWarning("disabledKBWarning", feature,
-                traits.bind("knowledgeBase.repositoryId")));
+                traits.map(MultiValueConceptFeatureTraits::getRepositoryId)));
 
-        var retainSuggestionInfo = new CheckBox("retainSuggestionInfo");
-        retainSuggestionInfo.setOutputMarkupId(true);
-        retainSuggestionInfo.setModel(PropertyModel.of(traits, "retainSuggestionInfo"));
-        form.add(retainSuggestionInfo);
+        form.add(new RetainSuggestionInfoPanel("retainSuggestionInfo", aFeatureModel,
+                traits.map(RecommendableFeatureTrait.class::cast)));
+    }
 
-        var rolesSeeingSuggestionInfo = new BootstrapCheckBoxMultipleChoice<PermissionLevel>(
-                "rolesSeeingSuggestionInfo");
-        rolesSeeingSuggestionInfo.setOutputMarkupPlaceholderTag(true);
-        rolesSeeingSuggestionInfo.setModel(PropertyModel.of(traits, "rolesSeeingSuggestionInfo"));
-        rolesSeeingSuggestionInfo.setChoices(asList(ANNOTATOR, CURATOR));
-        rolesSeeingSuggestionInfo
-                .setChoiceRenderer(new EnumChoiceRenderer<>(rolesSeeingSuggestionInfo));
-        rolesSeeingSuggestionInfo.add(visibleWhen(retainSuggestionInfo.getModel()));
-        form.add(rolesSeeingSuggestionInfo);
+    private KBHandle getScope()
+    {
+        if (!traits.isPresent().getObject()) {
+            return null;
+        }
 
-        retainSuggestionInfo.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
-                _target -> _target.add(rolesSeeingSuggestionInfo)));
+        var kb = getSelectedKnowledgeBase();
+        var scope = traits.getObject().getScope();
+        return loadConcept(kb, scope);
+    }
+
+    private void setScope(KBHandle aScope)
+    {
+        if (traits.isPresent().getObject()) {
+            traits.getObject().setScope(aScope != null ? aScope.getIdentifier() : null);
+        }
+
+    }
+
+    private KnowledgeBase getSelectedKnowledgeBase()
+    {
+        var project = getModelObject().getProject();
+        return traits.map(MultiValueConceptFeatureTraits::getRepositoryId) //
+                .map(id -> kbService.getKnowledgeBaseById(project, id).orElse(null)) //
+                .orElse(null) //
+                .getObject();
+
+    }
+
+    private void setSelectedKnowledgeBase(KnowledgeBase aKB)
+    {
+        if (traits.isPresent().getObject()) {
+            traits.getObject().setRepositoryId(aKB != null ? aKB.getRepositoryId() : null);
+        }
     }
 
     private void refresh(AjaxRequestTarget aTarget)
     {
-        var t = traits.getObject();
-        t.scope = loadConcept(t.knowledgeBase, t.scope != null ? t.scope.getIdentifier() : null);
+        setScope(getScope()); // Make sure the scope belongs to the selected KB
         aTarget.add(get(MID_FORM).get(MID_SCOPE));
     }
 
@@ -166,62 +187,6 @@ public class MultiValueConceptFeatureTraitsEditor
         }
 
         return scope.orElse(null);
-    }
-
-    /**
-     * Read traits and then transfer the values from the actual traits model
-     * {{@link ConceptFeatureTraits}} to the the UI traits model ({@link Traits}).
-     */
-    private Traits readTraits()
-    {
-        var project = feature.getObject().getProject();
-
-        var result = new Traits();
-
-        var t = getFeatureSupport().readTraits(feature.getObject());
-
-        if (t.getRepositoryId() != null) {
-            kbService.getKnowledgeBaseById(project, t.getRepositoryId())
-                    .ifPresent(kb -> result.knowledgeBase = kb);
-        }
-
-        if (t.getAllowedValueType() != null) {
-            result.allowedValueType = t.getAllowedValueType();
-        }
-        else {
-            // Allow all values as default
-            result.allowedValueType = ConceptFeatureValueType.ANY_OBJECT;
-        }
-
-        result.scope = loadConcept(result.knowledgeBase, t.getScope());
-        result.retainSuggestionInfo = t.isRetainSuggestionInfo();
-        result.rolesSeeingSuggestionInfo = new ArrayList<>(t.getRolesSeeingSuggestionInfo());
-
-        return result;
-    }
-
-    /**
-     * Transfer the values from the UI traits model ({@link Traits}) to the actual traits model
-     * {{@link ConceptFeatureTraits}} and then store them.
-     */
-    private void writeTraits()
-    {
-        var t = new MultiValueConceptFeatureTraits();
-        if (traits.getObject().knowledgeBase != null) {
-            t.setRepositoryId(traits.getObject().knowledgeBase.getRepositoryId());
-
-        }
-
-        if (traits.getObject().scope != null) {
-            t.setScope(traits.getObject().scope.getIdentifier());
-        }
-
-        t.setAllowedValueType(traits.getObject().allowedValueType);
-        t.setRetainSuggestionInfo(traits.getObject().retainSuggestionInfo);
-        t.setRolesSeeingSuggestionInfo(
-                new ArrayList<>(traits.getObject().rolesSeeingSuggestionInfo));
-
-        getFeatureSupport().writeTraits(feature.getObject(), t);
     }
 
     private List<KnowledgeBase> listKnowledgeBases()
@@ -247,30 +212,12 @@ public class MultiValueConceptFeatureTraitsEditor
     private List<KBHandle> listSearchResults(String aTypedString, ConceptFeatureValueType aType)
     {
         if (isBlank(aTypedString)) {
-            return Collections.emptyList();
+            return emptyList();
         }
 
-        var t = traits.getObject();
+        var kb = getSelectedKnowledgeBase();
         return conceptLinkingService.getLinkingInstancesInKBScope(
-                t.knowledgeBase != null ? t.knowledgeBase.getRepositoryId() : null, null, aType,
-                aTypedString, null, -1, null, feature.getObject().getProject());
-    }
-
-    /**
-     * A UI model holding the traits while the user is editing them. They are read/written to the
-     * actual {@link MultiValueConceptFeatureTraits} via
-     * {@link MultiValueConceptFeatureTraitsEditor#readTraits()} and
-     * {@link MultiValueConceptFeatureTraitsEditor#writeTraits()}.
-     */
-    private static class Traits
-        implements Serializable
-    {
-        private static final long serialVersionUID = 5804584375190949088L;
-
-        KnowledgeBase knowledgeBase;
-        KBHandle scope;
-        ConceptFeatureValueType allowedValueType;
-        boolean retainSuggestionInfo = false;
-        List<PermissionLevel> rolesSeeingSuggestionInfo = new ArrayList<>();
+                kb != null ? kb.getRepositoryId() : null, null, aType, aTypedString, null, -1, null,
+                feature.getObject().getProject());
     }
 }

@@ -18,16 +18,22 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <form wicket:id="form">
-    <div class="row form-row" wicket:enclosure="tagset">
-      <label wicket:for="tagset" class="col-sm-4 col-form-label">
-        <wicket:label key="tagset"/>
-      </label>
-      <div class="col-sm-8">
-        <select wicket:id="tagset" class="form-select" data-container="body"/>
+  <span wicket:id="dialog"/>
+  <div wicket:enclosure="retainSuggestionInfo">
+    <div class="col-sm-8 offset-sm-4 mt-2 px-2">
+      <div class="form-check">
+        <input wicket:id="retainSuggestionInfo" class="form-check-input" type="checkbox">
+        <label wicket:for="retainSuggestionInfo" class="form-check-label">
+          <wicket:label key="retainSuggestionInfo"/>
+        </label>
       </div>
     </div>
-    <div wicket:id="retainSuggestionInfo" class="row form-row"/>
-  </form>
+  </div>
+  <div wicket:enclosure="rolesSeeingSuggestionInfo" class="d-flex">
+    <label wicket:for="rolesSeeingSuggestionInfo" class="col-sm-4 col-form-label">
+      Suggestion info visible for
+    </label>
+    <div wicket:id="rolesSeeingSuggestionInfo" class="col-sm-8 mt-2 px-2"/>
+  </div>
 </wicket:panel>
 </html>

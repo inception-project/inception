@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 import java.util.Optional;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 public class DisabledKBWarning
-    extends Panel
+    extends GenericPanel<AnnotationFeature>
 {
     private static final long serialVersionUID = -4673760000245492439L;
 
@@ -50,25 +50,19 @@ public class DisabledKBWarning
         repositoryIdModel = aRepositoryIdModel;
     }
 
-    @SuppressWarnings("unchecked")
-    public IModel<AnnotationFeature> getModel()
-    {
-        return (IModel<AnnotationFeature>) getDefaultModel();
-    }
-
     @Override
     protected void onInitialize()
     {
         super.onInitialize();
 
-        AnnotationFeature feature = getModel().getObject();
+        var feature = getModel().getObject();
 
-        String kbName = repositoryIdModel.map(this::resolveKBName).getObject();
+        var kbName = repositoryIdModel.map(this::resolveKBName).getObject();
 
-        WebMarkupContainer warning = new WebMarkupContainer("warning");
+        var warning = new WebMarkupContainer("warning");
         add(warning);
 
-        TooltipBehavior tip = new TooltipBehavior();
+        var tip = new TooltipBehavior();
         warning.add(tip);
         tip.setOption("content",
                 Options.asString(new StringResourceModel("disabledKbWarning", this)
