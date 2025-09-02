@@ -86,7 +86,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
-@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/pivot")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/explorer")
 public class PivotTablePage
     extends ProjectPageBase
 {
