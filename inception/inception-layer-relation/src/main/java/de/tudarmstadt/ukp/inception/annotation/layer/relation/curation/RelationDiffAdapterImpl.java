@@ -83,7 +83,7 @@ public class RelationDiffAdapterImpl
     }
 
     /**
-     * @see {@code RelationRenderer#selectAnnotationsInWindow}
+     * See {@code RelationRenderer#selectAnnotationsInWindow}
      */
     @Override
     public List<Annotation> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
