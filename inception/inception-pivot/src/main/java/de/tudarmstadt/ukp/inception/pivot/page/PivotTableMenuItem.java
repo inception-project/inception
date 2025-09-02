@@ -44,7 +44,7 @@ public class PivotTableMenuItem
     @Override
     public String getPath()
     {
-        return "/pivot";
+        return "/explorer";
     }
 
     @Override
@@ -56,7 +56,7 @@ public class PivotTableMenuItem
     @Override
     public String getLabel()
     {
-        return "Pivot Table";
+        return "Explorer";
     }
 
     /**
