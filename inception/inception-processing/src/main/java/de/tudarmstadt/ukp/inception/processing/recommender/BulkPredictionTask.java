@@ -103,8 +103,9 @@ public class BulkPredictionTask
     @Override
     public String getTitle()
     {
-        return "Processing documents of user " + dataOwner + " using " + recommender.getName()
-                + "...";
+        var dataOwnerUser = userService.get(dataOwner);
+        return "Processing documents of user " + dataOwnerUser.toLongString() + " using "
+                + recommender.getName() + "...";
     }
 
     @Override
