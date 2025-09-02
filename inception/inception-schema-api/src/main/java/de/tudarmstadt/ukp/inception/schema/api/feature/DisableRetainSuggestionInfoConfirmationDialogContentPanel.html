@@ -17,17 +17,15 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<wicket:panel>
-  <form wicket:id="form">
-    <div class="row form-row" wicket:enclosure="tagset">
-      <label wicket:for="tagset" class="col-sm-4 col-form-label">
-        <wicket:label key="tagset"/>
-      </label>
-      <div class="col-sm-8">
-        <select wicket:id="tagset" class="form-select" data-container="body"/>
-      </div>
-    </div>
-    <div wicket:id="retainSuggestionInfo" class="row form-row"/>
-  </form>
-</wicket:panel>
+<wicket:extend>
+  <p class="text-center rounded border border-danger p-2">
+    <wicket:container wicket:id="message" />
+  </p>
+  <p class="text-muted vw-50">
+    <wicket:message key="explanation" />
+  </p>
+  <p class="vw-50">
+    <wicket:container wicket:id="challenge" />
+  </p>
+</wicket:extend>
 </html>

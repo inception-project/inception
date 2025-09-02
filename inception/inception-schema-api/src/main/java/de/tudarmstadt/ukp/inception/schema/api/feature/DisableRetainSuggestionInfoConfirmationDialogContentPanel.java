@@ -17,19 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.schema.api.feature;
 
-import java.io.Serializable;
-import java.util.List;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.model.ResourceModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
+import de.tudarmstadt.ukp.inception.bootstrap.dialog.ChallengeResponseDialogContentPanel_ImplBase;
 
-public interface RecommendableFeatureTrait
-    extends Serializable
+public class DisableRetainSuggestionInfoConfirmationDialogContentPanel
+    extends ChallengeResponseDialogContentPanel_ImplBase
 {
-    boolean isRetainSuggestionInfo();
+    private static final long serialVersionUID = -943392917974988048L;
 
-    void setRetainSuggestionInfo(boolean aRetainSuggestionInfo);
+    public DisableRetainSuggestionInfoConfirmationDialogContentPanel(String aId)
+    {
+        super(aId, new ResourceModel("title"));
 
-    void setRolesSeeingSuggestionInfo(List<PermissionLevel> aRolesSeeingSuggestionInfo);
-
-    List<PermissionLevel> getRolesSeeingSuggestionInfo();
+        queue(new Label("message", new ResourceModel("message")));
+        queue(new Label("challenge", new ResourceModel("challenge")));
+    }
 }

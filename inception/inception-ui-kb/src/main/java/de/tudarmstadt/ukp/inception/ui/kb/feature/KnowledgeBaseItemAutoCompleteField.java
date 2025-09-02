@@ -42,11 +42,22 @@ public class KnowledgeBaseItemAutoCompleteField
 
     private SerializableFunction<String, List<KBHandle>> choiceProvider;
 
+    public KnowledgeBaseItemAutoCompleteField(String aId)
+    {
+        super(aId, new TextRenderer<KBHandle>("uiLabel"));
+    }
+
     public KnowledgeBaseItemAutoCompleteField(String aId,
             SerializableFunction<String, List<KBHandle>> aChoiceProvider)
     {
         super(aId, new TextRenderer<KBHandle>("uiLabel"));
 
+        Validate.notNull(aChoiceProvider);
+        choiceProvider = aChoiceProvider;
+    }
+
+    public void setChoiceProvider(SerializableFunction<String, List<KBHandle>> aChoiceProvider)
+    {
         Validate.notNull(aChoiceProvider);
         choiceProvider = aChoiceProvider;
     }
