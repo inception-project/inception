@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>37.6</version>
+    <version>37.7-SNAPSHOT</version>
   </parent>
   <artifactId>inception-ui-dashboard-activity</artifactId>
   <name>INCEpTION - Dashboard - Recent activity</name>
