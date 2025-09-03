@@ -30,6 +30,7 @@ import org.springframework.context.annotation.Lazy;
 import com.giffing.wicket.spring.boot.starter.configuration.extensions.core.csrf.CsrfAttacksPreventionProperties;
 
 import de.tudarmstadt.ukp.inception.ui.core.config.DashboardPropertiesImpl;
+import de.tudarmstadt.ukp.inception.ui.core.config.ProjectUiPropertiesImpl;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.AdminDashboardPageMenuBarItemSupport;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet.SystemStatusService;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet.SystemStatusServiceImpl;
@@ -52,7 +53,7 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.users.ProjectUser
 
 @ConditionalOnWebApplication
 @Configuration
-@EnableConfigurationProperties(DashboardPropertiesImpl.class)
+@EnableConfigurationProperties({ DashboardPropertiesImpl.class, ProjectUiPropertiesImpl.class })
 public class DashboardAutoConfiguration
 {
     @Bean

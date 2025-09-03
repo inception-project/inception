@@ -121,10 +121,12 @@
                 </button>
                 <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 220px;">
                   <li>
-                    <button wicket:id="delete" class="btn btn-sm btn-danger col-sm-12 text-nowrap">
-                      <i class="fas fa-trash pe-1"/>
+                    <a wicket:id="delete" class="dropdown-item">
                       <wicket:message key="delete"/>
-                    </button>
+                      <span class="float-end badge badge-pill text-bg-danger">
+                        <i class="fas fa-trash"></i>
+                      </span>
+                    </a>
                   </li>
                 </ul>
               </span>
@@ -255,10 +257,12 @@
                 <div class="dropdown-menu shadow-lg" role="menu" style="min-width: 220px;">
                   <div class="container">
                     <div class="row">
-                      <button wicket:id="delete" class="btn btn-sm btn-danger col-sm-12">
-                        <i class="fas fa-trash"></i>&nbsp;
+                      <a wicket:id="delete" class="dropdown-item">
                         <wicket:message key="delete"/>
-                      </button>
+                        <span class="float-end badge badge-pill text-bg-danger">
+                          <i class="fas fa-trash"></i>
+                        </span>
+                      </a>
                     </div>
                   </div>
                 </div>
