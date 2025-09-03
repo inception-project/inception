@@ -64,6 +64,22 @@
           </div>
         </div>
         <ul wicket:id="pagingNavigator" class="me-3"/>
+        <span class="dropdown me-3" aria-haspopup="true" aria-expanded="false" wicket:enclosure="toggleBulkChange">
+          <span class="btn-group" role="group">
+            <button wicket:id="toggleBulkChange" class="btn btn-action" type="button">
+              Bulk action
+            </button>
+            <button wicket:id="bulkActionDropdownButton" class="btn btn-primary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
+            <div wicket:id="bulkActionDropdown" class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
+              <a wicket:id="bulkDelete" class="dropdown-item">
+                Delete selected
+                <span class="float-end badge badge-pill text-bg-danger">
+                  <i class="fas fa-trash"></i>
+                </span>
+              </a>
+            </div>
+          </span>
+        </span>
       </div>
       <div class="d-flex flex-grow-1 overflow-hidden mx-3 mb-3 card">
         <div class="scrolling flex-content flex-h-container ">
@@ -71,8 +87,16 @@
             <div wicket:id="emptyListLabel"></div>
           </div>
           <div wicket:id="projects" class="flex-content list-group-flush list-group border-0">
+            <div wicket:id="selectionStatePanel" class="list-group-item position-sticky bg-secondary-subtle" style="top: 0px; z-index: 1;">
+              <button wicket:id="selectAll" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-check me-2"></i> All</button>
+              <button wicket:id="selectNone" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-xmark me-2"></i>None</button>
+              <small class="ms-3"> 
+                <span wicket:id="selectCount"/> selected
+              </small>
+            </div>
             <div wicket:id="project" class="list-group-item">
               <div class="d-flex">
+                <input wicket:id="selected" type="checkbox" class="me-3 "/>
                 <span wicket:id="stateIcon" class="text-secondary fs-3 me-3"/>
                 <div class="flex-grow-1 d-flex flex-column">
                   <div>
@@ -91,7 +115,8 @@
                   </div>
                   <div class="text-nowrap mt-auto">
                     <small class="text-muted" wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></small>
-                    <small class="text-muted" wicket:enclosure="id">ID: <wicket:container wicket:id="id"/></small>
+                    <small class="text-muted ms-4" wicket:enclosure="updated">Updated: <wicket:container wicket:id="updated"/></small>
+                    <small class="text-muted ms-4" wicket:enclosure="id">ID: <wicket:container wicket:id="id"/></small>
                   </div>
                 </div>
                 <div wicket:id="actionDropdown" class="d-flex">
