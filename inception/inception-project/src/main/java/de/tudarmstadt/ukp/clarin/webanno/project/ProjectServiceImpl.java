@@ -657,17 +657,35 @@ public class ProjectServiceImpl
     }
 
     @Override
+    public Realm getRealm(Project aProject)
+    {
+        return Realm.forProject(aProject.getId(), aProject.getName());
+    }
+
+    @Override
+    @Transactional
     public Optional<User> getProjectBoundUser(Project aProject, String aUiName)
     {
         var realm = getRealm(aProject);
 
         return Optional.ofNullable(userRepository.getUserByRealmAndUiName(realm, aUiName));
+
     }
 
     @Override
-    public Realm getRealm(Project aProject)
+    @Transactional
+    public User createProjectBoundUser(Project aProject, String aUiName)
     {
-        return Realm.forProject(aProject.getId(), aProject.getName());
+        var realm = getRealm(aProject);
+
+        return userRepository.create(User.builder() //
+                .withUsername(generateRandomUsername()) //
+                .withUiName(aUiName) //
+                .withPassword(EMPTY_PASSWORD) //
+                .withRealm(realm) //
+                .withEnabled(true) //
+                .withRoles(ROLE_USER) //
+                .build());
     }
 
     @Override
@@ -703,6 +721,8 @@ public class ProjectServiceImpl
             throw new IllegalArgumentException(
                     "User " + aUser + " does not exist in project " + aProject);
         }
+
+        revokeAllRoles(aProject, aUser);
 
         userRepository.delete(user);
     }

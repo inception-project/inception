@@ -88,6 +88,7 @@ public abstract class Controller_ImplBase
     public static final String STATE = "state";
     public static final String PERMISSIONS = "permissions";
     public static final String TASKS = "tasks";
+    public static final String USERS = "users";
     public static final String KNOWLEDGE_BASES = "kbs";
 
     public static final String PARAM_FILE = "file";

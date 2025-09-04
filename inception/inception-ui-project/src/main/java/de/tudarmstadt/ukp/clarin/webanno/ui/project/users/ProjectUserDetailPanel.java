@@ -203,7 +203,6 @@ public class ProjectUserDetailPanel
 
     private void actionDeleteConfirmed(AjaxRequestTarget aTarget, User aUser)
     {
-        projectService.revokeAllRoles(project.getObject(), aUser);
         projectService.deleteProjectBoundUser(project.getObject(), aUser);
 
         success("User deleted");
