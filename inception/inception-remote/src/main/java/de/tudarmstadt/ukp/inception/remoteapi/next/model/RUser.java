@@ -15,22 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.project;
+package de.tudarmstadt.ukp.inception.remoteapi.next.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.AccessCheckingBean;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-public interface ProjectAccess
-    extends AccessCheckingBean
+public class RUser
 {
-    boolean canCreateProjects();
+    public String username;
+    public String displayName;
 
-    boolean canManageProject(String aProjectId);
-
-    boolean canAccessProject(String aProjectId);
-
-    void assertCanManageProjectBoundUsers(User aSessionOwner, Project aProject);
-
-    boolean canManageProjectBoundUsers(String aSessionOwner, String aProjectId);
+    public RUser(User aUser)
+    {
+        username = aUser.getUsername();
+        displayName = aUser.getUiName();
+    }
 }

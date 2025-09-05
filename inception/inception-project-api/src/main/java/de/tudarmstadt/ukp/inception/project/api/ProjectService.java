@@ -561,4 +561,6 @@ public interface ProjectService
     List<User> listProjectBoundUsers(Project aProject);
 
     void deleteProjectBoundUser(Project aProject, User aUser);
+
+    User createProjectBoundUser(Project aProject, String aUiName);
 }

@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.inception.remoteapi.next.AnnotationController;
 import de.tudarmstadt.ukp.inception.remoteapi.next.PermissionController;
 import de.tudarmstadt.ukp.inception.remoteapi.next.TaskBulkPredictionController;
 import de.tudarmstadt.ukp.inception.remoteapi.next.TaskController;
+import de.tudarmstadt.ukp.inception.remoteapi.next.UserController;
 import io.swagger.v3.oas.models.info.Info;
 
 @ConditionalOnWebApplication
@@ -127,6 +128,13 @@ public class RemoteApiAutoConfiguration
     public AeroKnowledgeBaseController aeroKnowledgeBaseController()
     {
         return new AeroKnowledgeBaseController();
+    }
+
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    @Bean
+    public UserController userController()
+    {
+        return new UserController();
     }
 
     @ConditionalOnExpression("!(" + REMOTE_API_ENABLED_CONDITION + ")")
