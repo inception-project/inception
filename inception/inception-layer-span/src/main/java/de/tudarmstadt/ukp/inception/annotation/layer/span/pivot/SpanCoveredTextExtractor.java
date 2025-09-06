@@ -37,9 +37,9 @@ public class SpanCoveredTextExtractor
     @Override
     public String getName()
     {
-        if (layer != null) {
-            return layer.getUiName() + " :: <text>";
-        }
+        // if (layer != null) {
+        // return layer.getUiName() + " :: <text>";
+        // }
 
         return "<text>";
     }
