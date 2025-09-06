@@ -207,6 +207,8 @@ public enum OverlapMode
      */
     ANY_OVERLAP("any");
 
+    public static final OverlapMode DEFAULT_OVERLAP_MODE = OverlapMode.NO_OVERLAP;
+
     private final String id;
 
     OverlapMode(String aId)

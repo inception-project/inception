@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.behaviors;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode.DEFAULT_VALIDATION_MODE;
 import static java.util.Arrays.asList;
 
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -39,5 +40,15 @@ public class ValidationModeSelect
         setModel(PropertyModel.of(aLayerModel, "validationMode"));
         setChoiceRenderer(new EnumChoiceRenderer<>(this));
         setChoices(asList(ValidationMode.values()));
+    }
+
+    @Override
+    protected void onConfigure()
+    {
+        super.onConfigure();
+
+        if (getModelObject() == null) {
+            setModelObject(DEFAULT_VALIDATION_MODE);
+        }
     }
 }

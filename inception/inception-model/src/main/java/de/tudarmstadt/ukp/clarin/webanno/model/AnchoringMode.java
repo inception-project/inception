@@ -56,6 +56,8 @@ public enum AnchoringMode
      */
     SENTENCES("sentences", true);
 
+    public static final AnchoringMode DEFAULT_ANCHORING_MODE = AnchoringMode.TOKENS;
+
     private static final PackageResourceReference SYMBOL_CHARACTERS = new PackageResourceReference(
             MethodHandles.lookup().lookupClass(), "AnchoringMode_CHARACTERS.svg");
 
