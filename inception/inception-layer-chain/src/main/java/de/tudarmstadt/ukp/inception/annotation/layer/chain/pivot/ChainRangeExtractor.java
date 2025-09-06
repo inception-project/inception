@@ -43,9 +43,9 @@ public class ChainRangeExtractor<T extends Annotation>
     @Override
     public String getName()
     {
-        if (layer != null) {
-            return layer.getUiName() + " :: <range>";
-        }
+        // if (layer != null) {
+        // return layer.getUiName() + " :: <range>";
+        // }
 
         return "<range>";
     }
