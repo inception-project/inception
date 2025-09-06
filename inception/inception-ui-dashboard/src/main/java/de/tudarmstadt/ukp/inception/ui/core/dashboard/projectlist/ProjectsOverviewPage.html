@@ -17,6 +17,17 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
+<head>
+  <wicket:head>
+    <style>
+      .state-icon {
+        width: 32px;
+        height: 32px;
+        text-align: center;
+      }
+    </style>
+  </wicket:head>
+</head>
 <body>
   <wicket:extend>
     <div class="flex-content flex-v-container">
@@ -97,7 +108,7 @@
             <div wicket:id="project" class="list-group-item">
               <div class="d-flex">
                 <input wicket:id="selected" type="checkbox" class="me-3 "/>
-                <span wicket:id="stateIcon" class="text-secondary fs-3 me-3"/>
+                <span wicket:id="stateIcon" class="state-icon text-secondary fs-3 me-3"/>
                 <div class="flex-grow-1 d-flex flex-column">
                   <div>
                     <a wicket:id="projectLink" class="text-decoration-none">
