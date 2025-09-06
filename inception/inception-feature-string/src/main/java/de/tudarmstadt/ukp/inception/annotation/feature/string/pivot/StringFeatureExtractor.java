@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.string.pivot;
 
+import static org.apache.commons.lang3.StringUtils.trimToNull;
+
 import java.util.Optional;
 
 import org.apache.uima.cas.FeatureStructure;
@@ -66,7 +68,7 @@ public class StringFeatureExtractor
     public String extract(AnnotationFS aAnn)
     {
         var f = aAnn.getType().getFeatureByBaseName(feature.getName());
-        return aAnn.getFeatureValueAsString(f);
+        return trimToNull(aAnn.getFeatureValueAsString(f));
     }
 
     @Override

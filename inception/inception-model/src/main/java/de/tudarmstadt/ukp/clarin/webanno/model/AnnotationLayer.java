@@ -114,15 +114,15 @@ public class AnnotationLayer
 
     @Column(name = "anchoring_mode")
     @Type(AnchoringModeType.class)
-    private AnchoringMode anchoringMode = AnchoringMode.TOKENS;
+    private AnchoringMode anchoringMode = AnchoringMode.DEFAULT_ANCHORING_MODE;
 
     @Column(name = "overlap_mode")
     @Type(OverlapModeType.class)
-    private OverlapMode overlapMode = OverlapMode.NO_OVERLAP;
+    private OverlapMode overlapMode = OverlapMode.DEFAULT_OVERLAP_MODE;
 
     @Column(name = "validation_mode")
     @Type(ValidationModeType.class)
-    private ValidationMode validationMode = ValidationMode.ALWAYS;
+    private ValidationMode validationMode = ValidationMode.DEFAULT_VALIDATION_MODE;
 
     @Column(length = 64000)
     private String traits;
@@ -445,6 +445,11 @@ public class AnnotationLayer
 
     public void setAnchoringMode(AnchoringMode aAnchoringMode)
     {
+        if (aAnchoringMode == null) {
+            anchoringMode = AnchoringMode.DEFAULT_ANCHORING_MODE;
+            return;
+        }
+
         anchoringMode = aAnchoringMode;
     }
 
@@ -471,6 +476,11 @@ public class AnnotationLayer
 
     public void setValidationMode(ValidationMode aValidationMode)
     {
+        if (aValidationMode == null) {
+            validationMode = ValidationMode.DEFAULT_VALIDATION_MODE;
+            return;
+        }
+
         validationMode = aValidationMode;
     }
 
@@ -486,6 +496,11 @@ public class AnnotationLayer
 
     public void setOverlapMode(OverlapMode aOverlapMode)
     {
+        if (aOverlapMode == null) {
+            overlapMode = OverlapMode.DEFAULT_OVERLAP_MODE;
+            return;
+        }
+
         overlapMode = aOverlapMode;
     }
 
@@ -494,9 +509,9 @@ public class AnnotationLayer
         return crossSentence;
     }
 
-    public void setCrossSentence(boolean crossSentence)
+    public void setCrossSentence(boolean aCrossSentence)
     {
-        this.crossSentence = crossSentence;
+        crossSentence = aCrossSentence;
     }
 
     public boolean isShowTextInHover()
@@ -504,9 +519,9 @@ public class AnnotationLayer
         return showTextInHover;
     }
 
-    public void setShowTextInHover(boolean showTextInHover)
+    public void setShowTextInHover(boolean aShowTextInHover)
     {
-        this.showTextInHover = showTextInHover;
+        showTextInHover = aShowTextInHover;
     }
 
     public boolean isLinkedListBehavior()
@@ -543,9 +558,9 @@ public class AnnotationLayer
         return onClickJavascriptAction;
     }
 
-    public void setOnClickJavascriptAction(String onClickAction)
+    public void setOnClickJavascriptAction(String aOnClickAction)
     {
-        this.onClickJavascriptAction = onClickAction;
+        onClickJavascriptAction = aOnClickAction;
     }
 
     public String getTraits()
@@ -587,9 +602,9 @@ public class AnnotationLayer
         private boolean crossSentence;
         private boolean showTextInHover = true;
         private boolean linkedListBehavior;
-        private AnchoringMode anchoringMode = AnchoringMode.TOKENS;
-        private OverlapMode overlapMode = OverlapMode.NO_OVERLAP;
-        private ValidationMode validationMode = ValidationMode.ALWAYS;
+        private AnchoringMode anchoringMode = AnchoringMode.DEFAULT_ANCHORING_MODE;
+        private OverlapMode overlapMode = OverlapMode.DEFAULT_OVERLAP_MODE;
+        private ValidationMode validationMode = ValidationMode.DEFAULT_VALIDATION_MODE;
         private String traits;
 
         private Builder()
@@ -611,45 +626,45 @@ public class AnnotationLayer
             return this;
         }
 
-        public Builder withId(Long id)
+        public Builder withId(Long aId)
         {
-            this.id = id;
+            id = aId;
             return this;
         }
 
-        public Builder withUiName(String uiName)
+        public Builder withUiName(String aUiName)
         {
-            this.uiName = uiName;
+            uiName = aUiName;
             return this;
         }
 
-        public Builder withType(String type)
+        public Builder withType(String aType)
         {
-            this.type = type;
+            type = aType;
             return this;
         }
 
-        public Builder withDescription(String description)
+        public Builder withDescription(String aDescription)
         {
-            this.description = description;
+            description = aDescription;
             return this;
         }
 
-        public Builder withEnabled(boolean enabled)
+        public Builder withEnabled(boolean aEnabled)
         {
-            this.enabled = enabled;
+            enabled = aEnabled;
             return this;
         }
 
-        public Builder withBuiltIn(boolean builtIn)
+        public Builder withBuiltIn(boolean aBuiltIn)
         {
-            this.builtIn = builtIn;
+            builtIn = aBuiltIn;
             return this;
         }
 
-        public Builder withReadonly(boolean readonly)
+        public Builder withReadonly(boolean aReadonly)
         {
-            this.readonly = readonly;
+            readonly = aReadonly;
             return this;
         }
 
@@ -659,70 +674,70 @@ public class AnnotationLayer
             return this;
         }
 
-        public Builder withName(String name)
+        public Builder withName(String aName)
         {
-            this.name = name;
+            name = aName;
             return this;
         }
 
-        public Builder withAttachType(AnnotationLayer attachType)
+        public Builder withAttachType(AnnotationLayer aAttachType)
         {
-            this.attachType = attachType;
+            attachType = aAttachType;
             return this;
         }
 
-        public Builder withAttachFeature(AnnotationFeature attachFeature)
+        public Builder withAttachFeature(AnnotationFeature aAttachFeature)
         {
-            this.attachType = attachFeature.getLayer();
-            this.attachFeature = attachFeature;
+            attachType = aAttachFeature.getLayer();
+            attachFeature = aAttachFeature;
             return this;
         }
 
-        public Builder withProject(Project project)
+        public Builder withProject(Project aProject)
         {
-            this.project = project;
+            project = aProject;
             return this;
         }
 
-        public Builder withCrossSentence(boolean crossSentence)
+        public Builder withCrossSentence(boolean aCrossSentence)
         {
-            this.crossSentence = crossSentence;
+            crossSentence = aCrossSentence;
             return this;
         }
 
-        public Builder withShowTextInHover(boolean showTextInHover)
+        public Builder withShowTextInHover(boolean aShowTextInHover)
         {
-            this.showTextInHover = showTextInHover;
+            showTextInHover = aShowTextInHover;
             return this;
         }
 
-        public Builder withLinkedListBehavior(boolean linkedListBehavior)
+        public Builder withLinkedListBehavior(boolean aLinkedListBehavior)
         {
-            this.linkedListBehavior = linkedListBehavior;
+            linkedListBehavior = aLinkedListBehavior;
             return this;
         }
 
-        public Builder withAnchoringMode(AnchoringMode anchoringMode)
+        public Builder withAnchoringMode(AnchoringMode aAnchoringMode)
         {
-            this.anchoringMode = anchoringMode;
+            anchoringMode = aAnchoringMode;
             return this;
         }
 
-        public Builder withOverlapMode(OverlapMode overlapMode)
+        public Builder withOverlapMode(OverlapMode aOverlapMode)
         {
-            this.overlapMode = overlapMode;
+            overlapMode = aOverlapMode;
             return this;
         }
 
-        public Builder withValidationMode(ValidationMode validationMode)
+        public Builder withValidationMode(ValidationMode áValidationMode)
         {
-            this.validationMode = validationMode;
+            validationMode = áValidationMode;
             return this;
         }
 
-        public Builder withTraits(String traits)
+        public Builder withTraits(String aTraits)
         {
-            this.traits = traits;
+            traits = aTraits;
             return this;
         }
 
