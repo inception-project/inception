@@ -18,17 +18,52 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Webhook
 {
+    private String driver = HttpWebhookDriver.ID;
     private String url;
     private String secret;
     private String authHeader;
     private String authHeaderValue;
     private boolean enabled = true;
     private List<String> topics = new ArrayList<>();
+    private Map<String, String> routes = new HashMap<>();
     private boolean verifyCertificates = true;
+    private Map<String, String> properties = new HashMap<>();
+
+    public void setProperties(Map<String, String> aProperties)
+    {
+        properties = aProperties;
+    }
+
+    public Map<String, String> getProperties()
+    {
+        return properties;
+    }
+
+    public Map<String, String> getRoutes()
+    {
+        return routes;
+    }
+
+    public void setRoutes(Map<String, String> aRoutes)
+    {
+        routes = aRoutes;
+    }
+
+    public void setDriver(String aDriver)
+    {
+        driver = aDriver;
+    }
+
+    public String getDriver()
+    {
+        return driver;
+    }
 
     public String getUrl()
     {
@@ -103,7 +138,7 @@ public class Webhook
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
         builder.append("Webhook [url=");
         builder.append(url);
         builder.append("]");

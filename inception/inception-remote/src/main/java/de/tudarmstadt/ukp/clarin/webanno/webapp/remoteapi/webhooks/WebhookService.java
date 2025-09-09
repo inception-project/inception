@@ -17,45 +17,30 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks;
 
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
+import static java.util.stream.Collectors.toCollection;
+import static org.apache.commons.lang3.ClassUtils.getAbbreviatedName;
 
-import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
-import java.util.Collections;
+import java.lang.invoke.MethodHandles;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
-import org.apache.hc.client5.http.io.HttpClientConnectionManager;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
-import org.apache.hc.core5.ssl.SSLContexts;
-import org.apache.hc.core5.ssl.TrustStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.event.TransactionalEventListener;
-import org.springframework.web.client.RestTemplate;
 
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.AnnotationStateChangeMessage;
@@ -64,7 +49,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectS
 import de.tudarmstadt.ukp.inception.documents.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.inception.documents.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.ProjectStateChangedEvent;
-import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
  * <p>
@@ -75,10 +59,7 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 public class WebhookService
     implements InitializingBean
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
-    public static final String X_AERO_NOTIFICATION = "X-AERO-Notification";
-    public static final String X_AERO_SIGNATURE = "X-AERO-Signature";
+    final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final Map<Class<? extends ApplicationEvent>, String> EVENT_TOPICS;
 
@@ -87,47 +68,24 @@ public class WebhookService
     public static final String PROJECT_STATE = "PROJECT_STATE";
 
     static {
-        Map<Class<? extends ApplicationEvent>, String> names = new HashMap<>();
+        var names = new HashMap<Class<? extends ApplicationEvent>, String>();
         names.put(ProjectStateChangedEvent.class, PROJECT_STATE);
         names.put(DocumentStateChangedEvent.class, DOCUMENT_STATE);
         names.put(AnnotationStateChangeEvent.class, ANNOTATION_STATE);
-        EVENT_TOPICS = Collections.unmodifiableMap(names);
+        EVENT_TOPICS = unmodifiableMap(names);
     }
 
     private final WebhooksConfiguration configuration;
-    private final RestTemplateBuilder restTemplateBuilder;
-
-    private HttpComponentsClientHttpRequestFactory nonValidatingRequestFactory = null;
+    private final List<WebhookDriver> extensionsListProxy;
+    private List<WebhookDriver> extensionsList;
 
     public WebhookService(WebhooksConfiguration aConfiguration,
-            RestTemplateBuilder aRestTemplateBuilder)
-        throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException
+            @Lazy @Autowired(required = false) List<WebhookDriver> aExtensions)
+        throws GeneralSecurityException
+
     {
         configuration = aConfiguration;
-        restTemplateBuilder = aRestTemplateBuilder;
-
-        TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
-        HostnameVerifier verifier = (String aHostname, SSLSession aSession) -> true;
-
-        SSLContext sslContext = SSLContexts.custom() //
-                .loadTrustMaterial(null, acceptingTrustStrategy) //
-                .build();
-
-        SSLConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
-                .setSslContext(sslContext) //
-                .setHostnameVerifier(verifier) //
-                .build();
-
-        HttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
-                .setSSLSocketFactory(sslSocketFactory) //
-                .build();
-
-        CloseableHttpClient httpClient = HttpClients.custom() //
-                .setConnectionManager(cm) //
-                .build();
-
-        nonValidatingRequestFactory = new HttpComponentsClientHttpRequestFactory();
-        nonValidatingRequestFactory.setHttpClient(httpClient);
+        extensionsListProxy = aExtensions;
     }
 
     @Override
@@ -138,10 +96,26 @@ public class WebhookService
 
     public void init()
     {
+        var extensions = new ArrayList<WebhookDriver>();
+
+        if (extensionsListProxy != null) {
+            extensions.addAll(extensionsListProxy);
+            extensions.sort(AnnotationAwareOrderComparator.INSTANCE);
+
+            for (var fs : extensions) {
+                LOG.debug("Found {} extension: {}", getClass().getSimpleName(),
+                        getAbbreviatedName(fs.getClass(), 20));
+            }
+        }
+
+        BOOT_LOG.info("Found [{}] {} extensions", extensions.size(), getClass().getSimpleName());
+
+        extensionsList = unmodifiableList(extensions);
+
         if (!configuration.getGlobalHooks().isEmpty()) {
-            log.info("Global webhooks registered:");
-            for (Webhook hook : configuration.getGlobalHooks()) {
-                log.info("- " + hook);
+            LOG.info("Global webhooks registered:");
+            for (var hook : configuration.getGlobalHooks()) {
+                LOG.info("- " + hook);
             }
         }
     }
@@ -173,13 +147,22 @@ public class WebhookService
         dispatch(topic, message);
     }
 
+    public WebhookDriver getDriver(Webhook aHook)
+    {
+        return extensionsList.stream() //
+                .filter(d -> d.getId().equals(aHook.getDriver())) //
+                .findFirst() //
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No such webhook driver: [" + aHook.getDriver() + "]"));
+    }
+
     private void dispatch(String topic, Object message)
     {
         var relevantHooks = configuration.getGlobalHooks().stream() //
                 .filter(Webhook::isEnabled) //
                 .filter(h -> h.getTopics().contains(topic)) //
                 .map(h -> Pair.of(h, new AtomicInteger(0))) //
-                .collect(toList());
+                .collect(toCollection(ArrayList::new));
 
         while (!relevantHooks.isEmpty()) {
             var i = relevantHooks.iterator();
@@ -188,28 +171,37 @@ public class WebhookService
                 var hookAndCount = i.next();
 
                 try {
-                    sendNotification(topic, message, hookAndCount.getKey());
+                    var hook = hookAndCount.getKey();
+
+                    var effectiveTopic = topic;
+                    if (hook.getRoutes() != null
+                            && hook.getRoutes().containsKey(topic)) {
+                        effectiveTopic = hook.getRoutes().get(topic);
+                    }
+
+                    var driver = getDriver(hookAndCount.getKey());
+                    driver.sendNotification(effectiveTopic, message, hook);
                     i.remove();
                 }
                 catch (Exception e) {
                     if (hookAndCount.getValue().get() < configuration.getRetryCount()) {
-                        if (log.isDebugEnabled()) {
-                            log.error("Unable to send webhook [{}]: {} - retrying in a moment",
+                        if (LOG.isDebugEnabled()) {
+                            LOG.error("Unable to send webhook [{}]: {} - retrying in a moment",
                                     hookAndCount.getKey().getUrl(), e.getMessage(), e);
                         }
                         else {
-                            log.error("Unable to send webhook [{}]: {} - retrying in a moment",
+                            LOG.error("Unable to send webhook [{}]: {} - retrying in a moment",
                                     hookAndCount.getKey().getUrl(), e.getMessage());
                         }
                         hookAndCount.getValue().incrementAndGet();
                     }
                     else {
-                        if (log.isDebugEnabled()) {
-                            log.error("Unable to invoke webhook [{}]: {} - giving up",
+                        if (LOG.isDebugEnabled()) {
+                            LOG.error("Unable to invoke webhook [{}]: {} - giving up",
                                     hookAndCount.getKey().getUrl(), e.getMessage(), e);
                         }
                         else {
-                            log.error("Unable to invoke webhook [{}]: {} - giving up",
+                            LOG.error("Unable to invoke webhook [{}]: {} - giving up",
                                     hookAndCount.getKey().getUrl(), e.getMessage());
                         }
                         i.remove();
@@ -224,44 +216,5 @@ public class WebhookService
                 // Ignore
             }
         }
-    }
-
-    void sendNotification(String topic, Object message, Webhook hook) throws IOException
-    {
-        log.trace("Sending webhook message on topic [{}] to [{}]", topic, hook.getUrl());
-
-        // Configure rest template without SSL certification check if that is disabled.
-        RestTemplate restTemplate;
-        if (hook.isVerifyCertificates()) {
-            restTemplate = restTemplateBuilder.build();
-        }
-        else {
-            restTemplate = restTemplateBuilder.requestFactory(this::getNonValidatingRequestFactory)
-                    .build();
-        }
-
-        HttpHeaders requestHeaders = new HttpHeaders();
-        requestHeaders.setContentType(MediaType.APPLICATION_JSON);
-        requestHeaders.set(X_AERO_NOTIFICATION, topic);
-
-        // If a secret is set, then add a digest header that allows the client to verify
-        // the message integrity
-        String json = JSONUtil.toJsonString(message);
-        if (isNotBlank(hook.getSecret())) {
-            String digest = DigestUtils.shaHex(hook.getSecret() + json);
-            requestHeaders.set(X_AERO_SIGNATURE, digest);
-        }
-
-        if (isNotBlank(hook.getAuthHeader()) && isNotBlank(hook.getAuthHeaderValue())) {
-            requestHeaders.set(hook.getAuthHeader(), hook.getAuthHeaderValue());
-        }
-
-        HttpEntity<?> httpEntity = new HttpEntity<Object>(json, requestHeaders);
-        restTemplate.postForEntity(hook.getUrl(), httpEntity, Void.class);
-    }
-
-    private HttpComponentsClientHttpRequestFactory getNonValidatingRequestFactory()
-    {
-        return nonValidatingRequestFactory;
     }
 }
