@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -174,15 +175,17 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
 
         var annDocs = aAllAnnDocs.get(aDocument);
 
-        if (annDocs.stream().noneMatch(annDoc -> aDataOwner.equals(annDoc.getUser()))) {
-            return Optional.empty();
-        }
+        var effectiveState = annDocs.stream() //
+                .filter(annDoc -> aDataOwner.equals(annDoc.getUser())) //
+                .map(annDoc -> annDoc.getState()) //
+                .findFirst() //
+                .orElse(AnnotationDocumentState.NEW);
 
-        if (!documentService.existsCas(aDocument, aDataOwner)) {
-            return Optional.of(loadInitialCas(aDocument));
-        }
-
-        return loadCas(aDocument, aDataOwner);
+        return switch (effectiveState) {
+        case IGNORE -> Optional.empty();
+        case NEW -> Optional.of(loadInitialCas(aDocument));
+        default -> loadCas(aDocument, aDataOwner);
+        };
     }
 
     private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner) throws IOException

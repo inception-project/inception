@@ -23,15 +23,16 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
 
 public class RelationEndpointRangeExtractor
-    implements AnnotationExtractor<AnnotationFS, String>
+    extends AnnotationExtractor_ImplBase<AnnotationFS, String>
 {
     private final AnnotationFeature feature;
 
     public RelationEndpointRangeExtractor(AnnotationFeature aFeature)
     {
+        super(aFeature.getLayer());
         feature = aFeature;
     }
 
@@ -73,6 +74,6 @@ public class RelationEndpointRangeExtractor
     @Override
     public String getName()
     {
-        return feature.getLayer().getUiName() + " :: " + feature.getUiName() + " <range>";
+        return "<range>";
     }
 }

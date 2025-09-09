@@ -27,18 +27,18 @@ public class TypeExtractorSupport
     @Override
     public String renderName(AnnotationLayer aLayer)
     {
-        return "<type>";
+        return (aLayer != null ? aLayer.getUiName() : "*") + " :: <type>";
     }
 
     @Override
     public boolean accepts(AnnotationLayer aContext)
     {
-        return aContext == null;
+        return true;
     }
 
     @Override
     public Extractor<?, ?> createExtractor(AnnotationLayer aLayer)
     {
-        return new TypeExtractor();
+        return new TypeExtractor(aLayer);
     }
 }

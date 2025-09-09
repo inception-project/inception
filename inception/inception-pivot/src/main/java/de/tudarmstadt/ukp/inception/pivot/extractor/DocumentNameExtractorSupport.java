@@ -27,18 +27,18 @@ public class DocumentNameExtractorSupport
     @Override
     public String renderName(AnnotationLayer aLayer)
     {
-        return "<document name>";
+        return (aLayer != null ? aLayer.getUiName() : "*") + " :: <document name>";
     }
 
     @Override
     public boolean accepts(AnnotationLayer aContext)
     {
-        return aContext == null;
+        return true;
     }
 
     @Override
     public Extractor<?, ?> createExtractor(AnnotationLayer aLayer)
     {
-        return new DocumentNameExtractor();
+        return new DocumentNameExtractor(aLayer);
     }
 }

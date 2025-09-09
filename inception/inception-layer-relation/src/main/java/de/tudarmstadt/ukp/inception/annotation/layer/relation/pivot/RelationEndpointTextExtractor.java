@@ -17,21 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.relation.pivot;
 
-import java.util.Optional;
-
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
 
 public class RelationEndpointTextExtractor
-    implements AnnotationExtractor<AnnotationFS, String>
+    extends AnnotationExtractor_ImplBase<AnnotationFS, String>
 {
-    private final AnnotationFeature feature;
+    private final String feature;
 
-    public RelationEndpointTextExtractor(AnnotationFeature aFeature)
+    public RelationEndpointTextExtractor(AnnotationLayer aLayer, String aFeature)
     {
+        super(aLayer);
         feature = aFeature;
     }
 
@@ -42,30 +40,9 @@ public class RelationEndpointTextExtractor
     }
 
     @Override
-    public Optional<String> getTriggerType()
-    {
-        return Optional.of(feature.getLayer().getName());
-    }
-
-    @Override
-    public boolean accepts(Object aSource)
-    {
-        if (aSource instanceof FeatureStructure fs) {
-            var type = fs.getType();
-            if (!type.getName().equals(feature.getLayer().getName())) {
-                return false;
-            }
-
-            return type.getFeatureByBaseName(feature.getName()) != null;
-        }
-
-        return false;
-    }
-
-    @Override
     public String extract(AnnotationFS aAnn)
     {
-        var f = aAnn.getType().getFeatureByBaseName(feature.getName());
+        var f = aAnn.getType().getFeatureByBaseName(feature);
         var a = (AnnotationFS) aAnn.getFeatureValue(f);
         return a != null ? a.getCoveredText() : null;
     }
@@ -73,6 +50,6 @@ public class RelationEndpointTextExtractor
     @Override
     public String getName()
     {
-        return feature.getLayer().getUiName() + " :: " + feature.getUiName() + " <text>";
+        return "<text>";
     }
 }

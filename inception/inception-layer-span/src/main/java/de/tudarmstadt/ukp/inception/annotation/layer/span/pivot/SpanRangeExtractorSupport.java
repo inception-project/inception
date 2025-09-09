@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span.pivot;
 
+import static de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor.RANGE;
+
 import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -30,7 +32,7 @@ public class SpanRangeExtractorSupport
     @Override
     public String renderName(AnnotationLayer aLayer)
     {
-        return aLayer.getUiName() + " :: <range>";
+        return aLayer.getUiName() + " :: " + RANGE;
     }
 
     @Override

@@ -188,6 +188,10 @@ include::{include-dir}users.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}explorer.adoc[leveloffset=+1]
+
+<<<
+
 include::{include-dir}external-search.adoc[leveloffset=+1]
 
 include::{include-dir}external-search-page.adoc[leveloffset=+2]

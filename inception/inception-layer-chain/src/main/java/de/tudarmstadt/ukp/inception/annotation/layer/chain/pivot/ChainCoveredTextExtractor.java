@@ -17,21 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.chain.pivot;
 
-import java.util.Optional;
-
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
 
 public class ChainCoveredTextExtractor
-    implements AnnotationExtractor<AnnotationFS, String>
+    extends AnnotationExtractor_ImplBase<AnnotationFS, String>
 {
-    private AnnotationLayer layer;
-
     public ChainCoveredTextExtractor(AnnotationLayer aLayer)
     {
-        layer = aLayer;
+        super(aLayer);
     }
 
     @Override
@@ -43,40 +39,12 @@ public class ChainCoveredTextExtractor
     @Override
     public String getName()
     {
-        // if (layer != null) {
-        // return layer.getUiName() + " :: <text>";
-        // }
-
-        return "<text>";
-    }
-
-    @Override
-    public Optional<String> getTriggerType()
-    {
-        if (layer == null) {
-            return Optional.empty();
-        }
-
-        return Optional.of(layer.getName());
-    }
-
-    @Override
-    public boolean isWeak()
-    {
-        return true;
+        return TEXT;
     }
 
     @Override
     public String extract(AnnotationFS aAnn)
     {
-        if (layer == null) {
-            return aAnn.getCoveredText();
-        }
-
-        if (layer.getName().equals(aAnn.getType().getName())) {
-            return aAnn.getCoveredText();
-        }
-
-        return null;
+        return aAnn.getCoveredText();
     }
 }

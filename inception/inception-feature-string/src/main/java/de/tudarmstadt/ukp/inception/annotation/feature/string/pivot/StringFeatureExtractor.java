@@ -19,49 +19,26 @@ package de.tudarmstadt.ukp.inception.annotation.feature.string.pivot;
 
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
-import java.util.Optional;
-
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
 
 public class StringFeatureExtractor
-    implements AnnotationExtractor<AnnotationFS, String>
+    extends AnnotationExtractor_ImplBase<AnnotationFS, String>
 {
     private final AnnotationFeature feature;
 
     public StringFeatureExtractor(AnnotationFeature aFeature)
     {
+        super(aFeature.getLayer());
         feature = aFeature;
-    }
-
-    @Override
-    public Optional<String> getTriggerType()
-    {
-        return Optional.of(feature.getLayer().getName());
     }
 
     @Override
     public Class<String> getResultType()
     {
         return String.class;
-    }
-
-    @Override
-    public boolean accepts(Object aSource)
-    {
-        if (aSource instanceof FeatureStructure fs) {
-            var type = fs.getType();
-            if (!type.getName().equals(feature.getLayer().getName())) {
-                return false;
-            }
-
-            return type.getFeatureByBaseName(feature.getName()) != null;
-        }
-
-        return false;
     }
 
     @Override

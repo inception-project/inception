@@ -17,31 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span.pivot;
 
-import java.util.Optional;
-
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
 
 public class SpanCoveredTextExtractor
-    implements AnnotationExtractor<AnnotationFS, String>
+    extends AnnotationExtractor_ImplBase<AnnotationFS, String>
 {
-    private AnnotationLayer layer;
-
     public SpanCoveredTextExtractor(AnnotationLayer aLayer)
     {
-        layer = aLayer;
+        super(aLayer);
     }
 
     @Override
     public String getName()
     {
-        // if (layer != null) {
-        // return layer.getUiName() + " :: <text>";
-        // }
-
-        return "<text>";
+        return TEXT;
     }
 
     @Override
@@ -51,32 +43,8 @@ public class SpanCoveredTextExtractor
     }
 
     @Override
-    public Optional<String> getTriggerType()
-    {
-        if (layer == null) {
-            return Optional.empty();
-        }
-
-        return Optional.of(layer.getName());
-    }
-
-    @Override
-    public boolean isWeak()
-    {
-        return true;
-    }
-
-    @Override
     public String extract(AnnotationFS aAnn)
     {
-        if (layer == null) {
-            return aAnn.getCoveredText();
-        }
-
-        if (layer.getName().equals(aAnn.getType().getName())) {
-            return aAnn.getCoveredText();
-        }
-
-        return null;
+        return aAnn.getCoveredText();
     }
 }

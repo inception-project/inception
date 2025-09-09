@@ -17,15 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.pivot.extractor;
 
-import java.util.Optional;
-
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
 
 public class TypeExtractor
-    implements AnnotationExtractor<AnnotationFS, String>
+    extends AnnotationExtractor_ImplBase<AnnotationFS, String>
 {
+    public TypeExtractor(AnnotationLayer aLayer)
+    {
+        super(aLayer);
+    }
+
     @Override
     public String getName()
     {
@@ -36,18 +40,6 @@ public class TypeExtractor
     public Class<? extends String> getResultType()
     {
         return String.class;
-    }
-
-    @Override
-    public Optional<String> getTriggerType()
-    {
-        return Optional.empty();
-    }
-
-    @Override
-    public boolean isWeak()
-    {
-        return true;
     }
 
     @Override

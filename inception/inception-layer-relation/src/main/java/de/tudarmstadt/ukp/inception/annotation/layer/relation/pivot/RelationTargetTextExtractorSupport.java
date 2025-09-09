@@ -23,6 +23,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerS
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.Extractor;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerExtractorSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import jakarta.persistence.NoResultException;
 
 public class RelationTargetTextExtractorSupport
     implements LayerExtractorSupport
@@ -44,16 +45,20 @@ public class RelationTargetTextExtractorSupport
     public Extractor<?, ?> createExtractor(AnnotationLayer aLayer)
     {
         var adapter = (RelationAdapter) schemaService.getAdapter(aLayer);
-        var feature = schemaService.getFeature(adapter.getTargetFeatureName(), aLayer);
 
-        return new RelationEndpointTextExtractor(feature);
+        return new RelationEndpointTextExtractor(aLayer, adapter.getTargetFeatureName());
     }
 
     @Override
     public String renderName(AnnotationLayer aLayer)
     {
         var adapter = (RelationAdapter) schemaService.getAdapter(aLayer);
-        var feature = schemaService.getFeature(adapter.getTargetFeatureName(), aLayer);
-        return aLayer.getUiName() + " :: " + feature.getUiName() + " <text>";
+        try {
+            var feature = schemaService.getFeature(adapter.getTargetFeatureName(), aLayer);
+            return aLayer.getUiName() + " :: " + feature.getUiName() + " <text>";
+        }
+        catch (NoResultException e) {
+            return aLayer.getUiName() + " :: " + adapter.getTargetFeatureName() + " <text>";
+        }
     }
 }
