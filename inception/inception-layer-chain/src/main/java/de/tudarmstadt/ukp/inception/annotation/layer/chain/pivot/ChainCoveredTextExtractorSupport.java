@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.chain.pivot;
 
+import static de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor.TEXT;
 import static java.util.Arrays.asList;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -31,10 +32,10 @@ public class ChainCoveredTextExtractorSupport
     public String renderName(AnnotationLayer aLayer)
     {
         if (aLayer == null) {
-            return "<text>";
+            return TEXT;
         }
 
-        return aLayer.getUiName() + " :: <text>";
+        return aLayer.getUiName() + " :: " + TEXT;
     }
 
     @Override

@@ -22,6 +22,8 @@ import static java.util.Arrays.asList;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.Extractor;
 
 public final class CompoundKeySchema
@@ -42,6 +44,7 @@ public final class CompoundKeySchema
     {
         keyNames = asList(aExtractors).stream() //
                 .map(Extractor::getName) //
+                .distinct() //
                 .toArray(String[]::new);
 
         weak = asList(aExtractors).stream() //
@@ -59,6 +62,10 @@ public final class CompoundKeySchema
         return keyNames.length;
     }
 
+    public int getIndex(String aName) {
+        return ArrayUtils.indexOf(keyNames, aName);
+    }
+    
     public String getName(int index)
     {
         return keyNames[index];

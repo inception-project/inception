@@ -23,6 +23,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerS
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.Extractor;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerExtractorSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import jakarta.persistence.NoResultException;
 
 public class RelationSourceRangeExtractorSupport
     implements LayerExtractorSupport
@@ -53,7 +54,12 @@ public class RelationSourceRangeExtractorSupport
     public String renderName(AnnotationLayer aLayer)
     {
         var adapter = (RelationAdapter) schemaService.getAdapter(aLayer);
-        var feature = schemaService.getFeature(adapter.getSourceFeatureName(), aLayer);
-        return aLayer.getUiName() + " :: " + feature.getUiName() + " <range>";
+        try {
+            var feature = schemaService.getFeature(adapter.getSourceFeatureName(), aLayer);
+            return aLayer.getUiName() + " :: " + feature.getUiName() + " <range>";
+        }
+        catch (NoResultException e) {
+            return aLayer.getUiName() + " :: " + adapter.getSourceFeatureName() + " <range>";
+        }
     }
 }

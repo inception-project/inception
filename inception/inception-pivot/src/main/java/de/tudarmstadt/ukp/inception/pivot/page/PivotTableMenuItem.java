@@ -29,9 +29,9 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import wicket.contrib.input.events.key.KeyType;
 
 @Order(300)
@@ -40,6 +40,7 @@ public class PivotTableMenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
+    private @Autowired AnnotationSchemaService schemaService;
 
     @Override
     public String getPath()
@@ -65,8 +66,12 @@ public class PivotTableMenuItem
     @Override
     public boolean applies(Project aProject)
     {
+        if (schemaService.listEnabledLayers(aProject).isEmpty()) {
+            return false;
+        }
+        
         // Visible if the current user is a curator or project admin
-        User user = userRepo.getCurrentUser();
+        var user = userRepo.getCurrentUser();
         return projectService.hasRole(user, aProject, CURATOR, MANAGER);
     }
 

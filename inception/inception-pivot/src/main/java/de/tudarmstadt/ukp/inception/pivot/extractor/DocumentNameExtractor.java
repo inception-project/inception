@@ -17,18 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.pivot.extractor;
 
-import java.util.Optional;
-
 import org.apache.uima.cas.text.AnnotationFS;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
 
 public class DocumentNameExtractor
-    implements AnnotationExtractor<AnnotationFS, String>
+    extends AnnotationExtractor_ImplBase<AnnotationFS, String>
 {
     private Object cacheMarker;
     private String documentName;
+
+    public DocumentNameExtractor(AnnotationLayer aLayer)
+    {
+        super(aLayer);
+    }
 
     @Override
     public String getName()
@@ -40,19 +44,6 @@ public class DocumentNameExtractor
     public Class<? extends String> getResultType()
     {
         return String.class;
-    }
-
-    @Override
-    public boolean isWeak()
-    {
-        return true;
-    }
-
-    @Override
-    public Optional<String> getTriggerType()
-    {
-        // return Optional.of(CAS.TYPE_NAME_DOCUMENT_ANNOTATION);
-        return Optional.empty();
     }
 
     @Override

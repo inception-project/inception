@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.chain.pivot;
 
+import static de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor.RANGE;
+
 import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -31,10 +33,10 @@ public class ChainRangeExtractorSupport
     public String renderName(AnnotationLayer aLayer)
     {
         if (aLayer == null) {
-            return "<range>";
+            return RANGE;
         }
 
-        return aLayer.getUiName() + " :: <range>";
+        return aLayer.getUiName() + " :: " + RANGE;
     }
 
     @Override

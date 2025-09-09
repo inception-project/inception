@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.pivot.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
@@ -138,6 +139,7 @@ public class PivotTablePage
         layerSelector.add(
                 new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, this::actionSelectLayer));
         queue(layerSelector);
+        
 
         extractorSelector = new DropDownChoice<ExtractorDecl>("extractor");
         extractorSelector.setOutputMarkupId(true);
@@ -146,7 +148,7 @@ public class PivotTablePage
         extractorSelector.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                 this::actionSelectExtractor));
         queue(extractorSelector);
-
+        
         aggregatorSelector = new DropDownChoice<AggregatorDecl>("aggregator");
         aggregatorSelector.setOutputMarkupId(true);
         aggregatorSelector.setChoices(LoadableDetachableModel.of(this::listAggregators));
@@ -155,13 +157,20 @@ public class PivotTablePage
                 this::actionSelectAggregator));
         queue(aggregatorSelector);
 
+        if (!layerSelector.getChoices().isEmpty()) {
+            layerSelector.setModelObject(layerSelector.getChoices().get(0));
+        }
+
+        if (!extractorSelector.getChoices().isEmpty()) {
+            extractorSelector.setModelObject(extractorSelector.getChoices().get(0));
+        }
+
         if (!aggregatorSelector.getChoices().isEmpty()) {
             aggregatorSelector.setModelObject(aggregatorSelector.getChoices().get(0));
         }
 
         rowExtractors = new ListView<ExtractorDecl>("rowExtractors")
         {
-
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -365,7 +374,7 @@ public class PivotTablePage
                 .map(User::getUsername).toList();
 
         var sessionOwner = userService.getCurrentUser();
-        var states = state.states.isEmpty() ? asList(IN_PROGRESS, FINISHED) : state.states;
+        var states = state.states.isEmpty() ? asList(IN_PROGRESS, FINISHED, IGNORE) : state.states;
         var allAnnDocs = documentService.listAnnotationDocumentsInState(getProject(), //
                 states.toArray(AnnotationDocumentState[]::new)).stream() //
                 .collect(groupingBy(AnnotationDocument::getDocument));
@@ -388,7 +397,8 @@ public class PivotTablePage
                         (Aggregator) agg.createAggregator()) //
                 .withProject(getProject()) //
                 .withTrigger("Explicit user action") //
-                .withSessionOwner(sessionOwner).withDocuments(allAnnDocs) //
+                .withSessionOwner(sessionOwner) //
+                .withDocuments(allAnnDocs) //
                 .withDataOwners(dataOwners) //
                 .build();
 
@@ -449,6 +459,8 @@ public class PivotTablePage
             }
         }
 
+        extractors.sort(comparing(ExtractorDecl::name));
+        
         return extractors;
     }
 

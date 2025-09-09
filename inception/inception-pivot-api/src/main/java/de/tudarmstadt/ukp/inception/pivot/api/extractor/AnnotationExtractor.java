@@ -24,9 +24,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 public interface AnnotationExtractor<T extends AnnotationFS, R extends Serializable>
     extends Extractor<T, R>
 {
-    @Override
-    default boolean accepts(Object aSource)
-    {
-        return aSource instanceof AnnotationFS;
-    }
+    String RANGE = "<range>";
+    String TEXT = "<text>";
 }

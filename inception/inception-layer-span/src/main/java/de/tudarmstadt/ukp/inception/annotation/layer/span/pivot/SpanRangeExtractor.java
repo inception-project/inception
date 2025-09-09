@@ -17,31 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span.pivot;
 
-import java.util.Optional;
-
 import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
 
 public class SpanRangeExtractor<T extends Annotation>
-    implements AnnotationExtractor<T, String>
+    extends AnnotationExtractor_ImplBase<T, String>
 {
-    private AnnotationLayer layer;
-
     public SpanRangeExtractor(AnnotationLayer aLayer)
     {
-        layer = aLayer;
+        super(aLayer);
     }
 
     @Override
     public String getName()
     {
-        // if (layer != null) {
-        // return layer.getUiName() + " :: <range>";
-        // }
-
-        return "<range>";
+        return RANGE;
     }
 
     @Override
@@ -51,32 +43,8 @@ public class SpanRangeExtractor<T extends Annotation>
     }
 
     @Override
-    public Optional<String> getTriggerType()
-    {
-        if (layer == null) {
-            return Optional.empty();
-        }
-
-        return Optional.of(layer.getName());
-    }
-
-    @Override
-    public boolean isWeak()
-    {
-        return true;
-    }
-
-    @Override
     public String extract(T a)
     {
-        if (layer == null) {
-            return a.getBegin() + "-" + a.getEnd();
-        }
-
-        if (a.getType().getName().equals(layer.getName())) {
-            return a.getBegin() + "-" + a.getEnd();
-        }
-
-        return null;
+        return a.getBegin() + "-" + a.getEnd();
     }
 }

@@ -27,18 +27,18 @@ public class AnnotatorExtractorSupport
     @Override
     public String renderName(AnnotationLayer aLayer)
     {
-        return "<annotator>";
+        return (aLayer != null ? aLayer.getUiName() : "*") + " :: <annotator>";
     }
 
     @Override
     public boolean accepts(AnnotationLayer aContext)
     {
-        return aContext == null;
+        return true;
     }
 
     @Override
     public Extractor<?, ?> createExtractor(AnnotationLayer aLayer)
     {
-        return new AnnotatorExtractor();
+        return new AnnotatorExtractor(aLayer);
     }
 }

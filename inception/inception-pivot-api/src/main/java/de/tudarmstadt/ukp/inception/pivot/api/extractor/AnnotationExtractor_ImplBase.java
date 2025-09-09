@@ -15,48 +15,59 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.pivot.extractor;
+package de.tudarmstadt.ukp.inception.pivot.api.extractor;
+
+import static java.util.Optional.empty;
+
+import java.io.Serializable;
+import java.util.Optional;
 
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
 
-public class AnnotatorExtractor
-    extends AnnotationExtractor_ImplBase<AnnotationFS, String>
+public abstract class AnnotationExtractor_ImplBase<T extends AnnotationFS, R extends Serializable>
+    implements AnnotationExtractor<T, R>
 {
-    private Object cacheMarker;
-    private String annotator;
+    private final AnnotationLayer layer;
 
-    public AnnotatorExtractor(AnnotationLayer aLayer)
+    public AnnotationExtractor_ImplBase(AnnotationLayer aLayer)
     {
-        super(aLayer);
+        layer = aLayer;
+    }
+
+    public AnnotationLayer getLayer()
+    {
+        return layer;
     }
 
     @Override
-    public String getName()
+    public Optional<String> getTriggerType()
     {
-        return "<annotator>";
-    }
-
-    @Override
-    public Class<? extends String> getResultType()
-    {
-        return String.class;
-    }
-
-    @Override
-    public String extract(AnnotationFS aAnn)
-    {
-        // Avoid fetching the DocumentMetaData annotation each time
-        if (cacheMarker == aAnn.getCAS().getDocumentAnnotation()) {
-            return annotator;
+        if (layer == null) {
+            return empty();
         }
 
-        cacheMarker = aAnn.getCAS().getDocumentAnnotation();
+        return Optional.of(layer.getName());
+    }
+    
+    @Override
+    public boolean isWeak()
+    {
+        return layer == null;
+    }
 
-        annotator = CasMetadataUtils.getUsername(aAnn.getCAS()).orElse("UNKNOWN");
-        return annotator;
+    @Override
+    public boolean accepts(Object aSource)
+    {
+        if (aSource instanceof AnnotationFS ann) {
+            if (layer == null) {
+                return true;
+            }
+
+            return layer.getName().equals(ann.getType().getName());
+        }
+
+        return false;
     }
 }

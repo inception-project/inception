@@ -54,20 +54,16 @@ public class CompoundKeyBuilder<T>
             return new CompoundKey(schema, false, new Serializable[] { aAggregator.getName() });
         }
 
-        var values = new Serializable[extractors.size()];
+        var values = new Serializable[schema.size()];
 
-        var weak = false;
         for (var i = 0; i < extractors.size(); i++) {
             var extractor = extractors.get(i);
+            var index = schema.getIndex(extractor.getName());
             if (extractor.accepts(aSource)) {
-                values[i] = extractor.extract(aSource);
-            }
-            else {
-                weak = true;
-                values[i] = null;
+                values[index] = extractor.extract(aSource);
             }
         }
 
-        return new CompoundKey(schema, weak, values);
+        return new CompoundKey(schema, false, values);
     }
 }
