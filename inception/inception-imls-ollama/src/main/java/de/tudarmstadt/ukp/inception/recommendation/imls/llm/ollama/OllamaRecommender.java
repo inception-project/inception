@@ -93,7 +93,7 @@ public class OllamaRecommender
         }
 
         if (aFormat == ResponseFormat.JSON) {
-            return JsonNodeFactory.instance.textNode("json_object");
+            return JsonNodeFactory.instance.textNode("json");
         }
 
         return null;
