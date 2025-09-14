@@ -100,6 +100,16 @@
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-kendo-ui</artifactId>
     </dependency>
+    
+    <!-- Spring -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+    </dependency>
 
     <!-- UIMA -->
     <dependency>

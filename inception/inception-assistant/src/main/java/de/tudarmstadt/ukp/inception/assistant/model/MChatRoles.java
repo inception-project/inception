@@ -22,4 +22,5 @@ public interface MChatRoles
     String ASSISTANT = "assistant";
     String SYSTEM = "system";
     String USER = "user";
+    String TOOL = "tool";
 }

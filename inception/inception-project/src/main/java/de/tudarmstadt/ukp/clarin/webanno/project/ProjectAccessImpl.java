@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.project.api.ProjectAccess;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.persistence.NoResultException;
 

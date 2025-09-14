@@ -69,7 +69,7 @@ public class WatchAnnotationTask
     {
         super(aBuilder.withType(TYPE));
 
-        requireNonNull(getUser().orElse(null), "Session owner must be set");
+        requireNonNull(getSessionOwner().orElse(null), "Session owner must be set");
 
         document = aBuilder.document;
         dataOwner = aBuilder.dataOwner;
@@ -80,8 +80,8 @@ public class WatchAnnotationTask
     public MatchResult matches(Task aTask)
     {
         if (aTask instanceof WatchAnnotationTask) {
-            if (Objects.equals(getProject().getId(), aTask.getProject().getId())
-                    && Objects.equals(getUser().get(), aTask.getUser().orElse(null))) {
+            if (Objects.equals(getProject().getId(), aTask.getProject().getId()) && Objects
+                    .equals(getSessionOwner().get(), aTask.getSessionOwner().orElse(null))) {
                 return QUEUE_THIS;
             }
         }
@@ -120,7 +120,7 @@ public class WatchAnnotationTask
                     .build();
 
             var checkResult = assistantService.processInternalCallSync(
-                    getUser().get().getUsername(), getProject(), BooleanQuestion.class,
+                    getSessionOwner().get().getUsername(), getProject(), BooleanQuestion.class,
                     checkQuestion);
 
             if (checkResult.payload().answer()) {
@@ -141,8 +141,8 @@ public class WatchAnnotationTask
                             "```")) //
                     .build();
 
-            assistantService.processAgentMessage(getUser().get().getUsername(), getProject(),
-                    inquiryContext);
+            assistantService.processAgentMessage(getSessionOwner().get().getUsername(),
+                    getProject(), inquiryContext);
         }
     }
 

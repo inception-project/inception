@@ -139,7 +139,6 @@ public class PivotTablePage
         layerSelector.add(
                 new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, this::actionSelectLayer));
         queue(layerSelector);
-        
 
         extractorSelector = new DropDownChoice<ExtractorDecl>("extractor");
         extractorSelector.setOutputMarkupId(true);
@@ -148,7 +147,7 @@ public class PivotTablePage
         extractorSelector.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                 this::actionSelectExtractor));
         queue(extractorSelector);
-        
+
         aggregatorSelector = new DropDownChoice<AggregatorDecl>("aggregator");
         aggregatorSelector.setOutputMarkupId(true);
         aggregatorSelector.setChoices(LoadableDetachableModel.of(this::listAggregators));
@@ -460,7 +459,7 @@ public class PivotTablePage
         }
 
         extractors.sort(comparing(ExtractorDecl::name));
-        
+
         return extractors;
     }
 

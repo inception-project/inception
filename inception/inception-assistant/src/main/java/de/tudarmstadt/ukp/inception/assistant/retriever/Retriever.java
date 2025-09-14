@@ -17,15 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.retriever;
 
+import static java.util.Collections.emptyList;
+
+import java.util.Collection;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.assistant.ChatContext;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
 public interface Retriever
     extends Extension<Project>
 {
-    List<MTextMessage> retrieve(ChatContext aAssistant, MTextMessage aMessage);
+    List<MTextMessage> retrieve(Project aProject, MTextMessage aMessage);
+
+    default Collection<String> getSystemPrompts()
+    {
+        return emptyList();
+    }
 }

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static java.util.Collections.emptyList;
 
 import java.util.LinkedHashMap;
@@ -27,6 +28,7 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.Validate;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -38,6 +40,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  *            when streaming indicates if the fragment is the last fragment of the message
  * @param message
  *            the message or message fragment
+ * @param thinking
+ *            the thoughts or though fragment
  * @param role
  *            the message role
  * @param actor
@@ -51,21 +55,33 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  *            optional performance metrics
  * @param references
  *            optional list of references
+ * @param context
+ *            ID of a previous message this message relates to. The message should be rendered after
+ *            the context message.
+ * 
  */
 @JsonTypeName(MTextMessage.TYPE_TEXT_MESSAGE)
-public record MTextMessage(UUID id, String role, String actor, String message, boolean done,
-        boolean internal, boolean ephemeral, MPerformanceMetrics performance,
-        List<MReference> references)
+public record MTextMessage( //
+        UUID id, //
+        String role, //
+        String actor, //
+        @JsonInclude(NON_NULL) String message, //
+        @JsonInclude(NON_NULL) String thinking, //
+        boolean done, //
+        boolean internal, //
+        boolean ephemeral, //
+        MPerformanceMetrics performance, //
+        List<MReference> references, //
+        @JsonInclude(NON_NULL) UUID context)//
     implements MChatMessage
 {
-
     static final String TYPE_TEXT_MESSAGE = "textMessage";
 
     private MTextMessage(Builder aBuilder)
     {
-        this(aBuilder.id, aBuilder.role, aBuilder.actor, aBuilder.message, aBuilder.done,
-                aBuilder.internal, aBuilder.ephemeral, aBuilder.performance,
-                aBuilder.references.values().stream().toList());
+        this(aBuilder.id, aBuilder.role, aBuilder.actor, aBuilder.message, aBuilder.thinking,
+                aBuilder.done, aBuilder.internal, aBuilder.ephemeral, aBuilder.performance,
+                aBuilder.references.values().stream().toList(), aBuilder.context);
     }
 
     public MTextMessage append(MTextMessage aMessage)
@@ -76,6 +92,11 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
         Validate.isTrue(Objects.equals(aMessage.internal(), internal()));
         Validate.isTrue(Objects.equals(aMessage.ephemeral(), ephemeral()));
         Validate.isTrue(!done());
+
+        if (context() != null) {
+            Objects.requireNonNull(aMessage.context());
+            Validate.isTrue(Objects.equals(context(), aMessage.context()));
+        }
 
         var perf = performance() != null //
                 ? performance().merge(aMessage.performance()) //
@@ -97,20 +118,51 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
             msg.append(aMessage.message());
         }
 
-        return new MTextMessage(id(), role(), actor(), msg.toString(), aMessage.done(), internal(),
-                ephemeral(), perf, refs.values().stream().toList());
+        var tnk = new StringBuilder();
+        if (thinking() != null) {
+            tnk.append(thinking());
+        }
+        if (aMessage.thinking() != null) {
+            tnk.append(aMessage.thinking());
+        }
+
+        return new MTextMessage(id(), role(), actor(), msg.toString(), tnk.toString(),
+                aMessage.done(), internal(), ephemeral(), perf, refs.values().stream().toList(),
+                context());
+    }
+
+    public MTextMessage appendReferences(List<MReference> aReferences)
+    {
+        if (aReferences == null || aReferences.isEmpty()) {
+            return this;
+        }
+
+        var refs = new LinkedHashMap<String, MReference>();
+        if (references() != null) {
+            references().forEach(r -> refs.put(r.id(), r));
+        }
+        aReferences.forEach(r -> refs.put(r.id(), r));
+
+        return new MTextMessage(id(), role(), actor(), message(), thinking(), done(), internal(),
+                ephemeral(), performance(), refs.values().stream().toList(), context());
     }
 
     public MTextMessage withoutContent()
     {
-        return new MTextMessage(id(), role(), actor(), "", done(), internal(), ephemeral(),
-                performance(), emptyList());
+        return new MTextMessage(id(), role(), actor(), "", "", done(), internal(), ephemeral(),
+                performance(), emptyList(), context());
     }
 
     @JsonProperty(MMessage.TYPE_FIELD)
     public String getType()
     {
         return TYPE_TEXT_MESSAGE;
+    }
+
+    @Override
+    public String textRepresentation()
+    {
+        return message;
     }
 
     public static Builder builder()
@@ -124,11 +176,13 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
         private String actor;
         private String role;
         private String message;
+        private String thinking;
         private boolean done = true;
         private boolean internal = false;
         private boolean ephemeral = false;
         private MPerformanceMetrics performance;
         private Map<String, MReference> references = new LinkedHashMap<>();
+        private UUID context;
 
         private Builder()
         {
@@ -158,6 +212,12 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
             return this;
         }
 
+        public Builder withInternal(boolean aInternal)
+        {
+            internal = aInternal;
+            return this;
+        }
+
         public Builder ephemeral()
         {
             ephemeral = true;
@@ -179,6 +239,12 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
         public Builder withMessage(String aMessage)
         {
             message = aMessage;
+            return this;
+        }
+
+        public Builder withThinking(String aThinking)
+        {
+            thinking = aThinking;
             return this;
         }
 
@@ -205,6 +271,12 @@ public record MTextMessage(UUID id, String role, String actor, String message, b
                     references.put(ref.id(), ref);
                 }
             }
+            return this;
+        }
+
+        public Builder withContext(UUID aContext)
+        {
+            context = aContext;
             return this;
         }
 

@@ -31,6 +31,7 @@ public class OllamaChatResponse
     private @JsonProperty("message") OllamaChatMessage message;
     private @JsonProperty("done") boolean done;
     private @JsonProperty("context") List<Integer> context;
+
     private @JsonProperty("total_duration") long totalDuration;
     private @JsonProperty("load_duration") long loadDuration;
     private @JsonProperty("prompt_eval_duration") long promptEvalDuration;

@@ -18,29 +18,27 @@
 package de.tudarmstadt.ukp.inception.assistant.retriever;
 
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
+import static java.time.ZoneOffset.UTC;
+import static java.time.format.FormatStyle.MEDIUM;
 import static java.util.Arrays.asList;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.List;
 
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.assistant.ChatContext;
-import de.tudarmstadt.ukp.inception.assistant.documents.DocumentContextRetriever;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 
 @Order(10000)
-public class CurrentDateTimeRetriever
+public class CurrentDateRetriever
     implements Retriever
 {
     @Override
     public String getId()
     {
-        return DocumentContextRetriever.class.getSimpleName();
+        return CurrentDateRetriever.class.getSimpleName();
     }
 
     @Override
@@ -50,13 +48,13 @@ public class CurrentDateTimeRetriever
     }
 
     @Override
-    public List<MTextMessage> retrieve(ChatContext aAssistant, MTextMessage aMessage)
+    public List<MTextMessage> retrieve(Project aProject, MTextMessage aMessage)
     {
-        var dtf = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
+        var dtf = DateTimeFormatter.ofLocalizedDate(MEDIUM);
         return asList(MTextMessage.builder() //
-                .withActor("Current time provider") //
+                .withActor("Current date provider") //
                 .withRole(SYSTEM).internal().ephemeral() //
-                .withMessage("The current time is " + LocalDateTime.now(ZoneOffset.UTC).format(dtf)) //
+                .withMessage("The current date is " + LocalDateTime.now(UTC).format(dtf)) //
                 .build());
     }
 }
