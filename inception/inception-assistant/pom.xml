@@ -438,8 +438,7 @@
               <!-- Needed but the dependency plugin doesn't get it -->
               <ignoredDependency>jakarta.persistence:jakarta.persistence-api</ignoredDependency>
               <ignoredDependency>org.springframework.boot:spring-boot</ignoredDependency>
-              <ignoredDependency>
-                org.springframework.boot:spring-boot-test-autoconfigure</ignoredDependency>
+              <ignoredDependency>org.springframework.boot:spring-boot-test-autoconfigure</ignoredDependency>
               <ignoredDependency>org.springframework:spring-core</ignoredDependency>
               <ignoredDependency>org.springframework:spring-websocket</ignoredDependency>
             </ignoredDependencies>
