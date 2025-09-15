@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.project.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.workload.project.ProjectWorkloadMenuItem;
@@ -24,6 +25,7 @@ import de.tudarmstadt.ukp.inception.workload.project.ProjectWorkloadMenuItem;
 @Configuration
 public class WorkloadUiAutoConfiguration
 {
+    @Bean
     public ProjectWorkloadMenuItem projectWorkloadMenuItem()
     {
         return new ProjectWorkloadMenuItem();
