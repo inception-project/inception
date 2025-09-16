@@ -161,7 +161,7 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
                 _target -> applyPreset(form, presetSelect.getModelObject(), _target)));
         promptContainer.add(presetSelect);
 
-        promptContainer.add(new TextArea<String>(MID_PROMPT));
+        promptContainer.add(new TextArea<String>(MID_PROMPT).setOutputMarkupId(true));
 
         var markdownLabel = new MarkdownLabel(MID_PROMPT_HINTS,
                 LoadableDetachableModel.of(this::getPromptHints));
@@ -173,7 +173,7 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
                         _target -> _target.add(markdownLabel))));
 
         promptContainer.add(new ExtractionModeSelect(MID_EXTRACTION_MODE,
-                traits.bind(MID_EXTRACTION_MODE), getModel()));
+                traits.bind(MID_EXTRACTION_MODE), getModel()).setOutputMarkupId(true));
 
         promptContainer.add(new CheckBox(MID_JUSTIFICATION_ENABLED) //
                 .setOutputMarkupId(true));

@@ -309,7 +309,12 @@ public final class MentionsFromJsonExtractor
 
         var dict = new Trie<Pair<String, String>>(WhitespaceNormalizingSanitizer.factory());
         for (var mention : mentions) {
-            dict.put(mention.getKey(), mention);
+            try {
+                dict.put(mention.getKey(), mention);
+            }
+            catch (IllegalArgumentException e) {
+                // Ignore mentions that are not valid after sanitization
+            }
         }
 
         var contextRange = aContext.getRange();
