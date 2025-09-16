@@ -85,7 +85,7 @@
       <dependency>
         <groupId>org.apache.ivy</groupId>
         <artifactId>ivy</artifactId>
-        <version>2.5.2</version>
+        <version>${ivy.version}</version>
       </dependency>
 
       <dependency>
@@ -246,9 +246,26 @@
         <artifactId>nimbus-jose-jwt</artifactId>
         <version>${nimbus-jose-jwt.version}</version>
       </dependency>
+
+      <!-- Awaitility -->
       <dependency>
         <groupId>org.awaitility</groupId>
         <artifactId>awaitility</artifactId>
+        <version>${awaitility.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility-groovy</artifactId>
+        <version>${awaitility.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility-kotlin</artifactId>
+        <version>${awaitility.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility-scala</artifactId>
         <version>${awaitility.version}</version>
       </dependency>
 
@@ -464,7 +481,7 @@
       <dependency>
         <groupId>org.sharegov</groupId>
         <artifactId>mjson</artifactId>
-        <version>1.4.1</version>
+        <version>1.4.2</version>
         <scope>provided</scope>
         <exclusions>
           <exclusion>
@@ -605,7 +622,7 @@
       <dependency>
         <groupId>org.dom4j</groupId>
         <artifactId>dom4j</artifactId>
-        <version>2.1.4</version>
+        <version>${dom4j.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.code.findbugs</groupId>
