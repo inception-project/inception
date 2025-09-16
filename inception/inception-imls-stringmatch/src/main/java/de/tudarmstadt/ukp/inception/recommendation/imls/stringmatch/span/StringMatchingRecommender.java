@@ -443,7 +443,12 @@ public class StringMatchingRecommender
         var entry = aDict.get(text);
         if (entry == null) {
             entry = new DictEntry(text);
-            aDict.put(text, entry);
+            try {
+                aDict.put(text, entry);
+            }
+            catch (IllegalArgumentException e) {
+                // This can happen if the text is empty after sanitization
+            }
         }
 
         entry.put(label);
