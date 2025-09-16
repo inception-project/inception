@@ -256,7 +256,12 @@ public final class MentionsFromStructuredOutputExtractor
 
         var dict = new Trie<Mention>(WhitespaceNormalizingSanitizer.factory());
         for (var mention : result.getMentions()) {
-            dict.put(mention.getCoveredText(), mention);
+            try {
+                dict.put(mention.getCoveredText(), mention);
+            }
+            catch (IllegalArgumentException e) {
+                // Ignore mentions that are not valid after sanitization
+            }
         }
 
         var contextRange = aContext.getRange();
