@@ -78,7 +78,7 @@
     <junit-platform.version>1.13.4</junit-platform.version>
     <mockito.version>5.19.0</mockito.version>
     <assertj.version>3.26.3</assertj.version>
-    <xmlunit.version>2.10.3</xmlunit.version>
+    <xmlunit.version>2.10.4</xmlunit.version>
     <testcontainers.version>1.21.3</testcontainers.version>
 
     <awaitility.version>4.3.0</awaitility.version>
@@ -89,11 +89,11 @@
 
     <pdfbox.version>3.0.5</pdfbox.version>
 
-    <spring.version>6.2.10</spring.version>
+    <spring.version>6.2.11</spring.version>
     <spring.boot.version>3.5.5</spring.boot.version>
-    <spring.data.version>3.5.3</spring.data.version>
-    <spring.security.version>6.5.3</spring.security.version>
-    <springdoc.version>2.8.11</springdoc.version>
+    <spring.data.version>3.5.4</spring.data.version>
+    <spring.security.version>6.5.4</spring.security.version>
+    <springdoc.version>2.8.13</springdoc.version>
     <swagger.version>2.2.36</swagger.version>
     <jjwt.version>0.13.0</jjwt.version>
 
@@ -102,15 +102,15 @@
     <jboss.logging.version>3.6.1.Final</jboss.logging.version>
     <sentry.version>7.22.6</sentry.version>
 
-    <tomcat.version>10.1.44</tomcat.version>
-    <jetty.version>12.0.25</jetty.version>
+    <tomcat.version>10.1.46</tomcat.version>
+    <jetty.version>12.0.27</jetty.version>
     <servlet-api.version>6.0.0</servlet-api.version>
 
     <mariadb.driver.version>3.5.5</mariadb.driver.version>
     <mssql.driver.version>12.10.1.jre11</mssql.driver.version>
     <mysql.driver.version>9.4.0</mysql.driver.version>
     <postgres.driver.version>42.7.7</postgres.driver.version>
-    <hibernate.version>6.6.27.Final</hibernate.version>
+    <hibernate.version>6.6.29.Final</hibernate.version>
     <hibernate.validator.version>8.0.3.Final</hibernate.validator.version>
 
     <wicket.version>10.6.0</wicket.version>
@@ -118,7 +118,7 @@
     <wicket-bootstrap.version>7.0.11</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>4.0.11</wicket-jquery-selectors.version>
     <wicket-webjars.version>4.0.11</wicket-webjars.version>
-    <wicket-spring-boot.version>4.0.0</wicket-spring-boot.version>
+    <wicket-spring-boot.version>4.1.1</wicket-spring-boot.version>
 
     <!--
       - These are all interconnected - because they share the dependency on Lucene.
@@ -128,7 +128,7 @@
     <opensearch.version>2.19.1</opensearch.version>
     <opensearch-runner.version>${opensearch.version}.0</opensearch-runner.version>
     <jena.version>5.5.0</jena.version>
-    <rdf4j.version>5.1.4</rdf4j.version> 
+    <rdf4j.version>5.1.5</rdf4j.version> 
     <owlapi-version>5.5.1</owlapi-version>
 
     <asciidoctor.plugin.version>2.2.3</asciidoctor.plugin.version>
@@ -139,7 +139,7 @@
     <ant-version>1.10.15</ant-version>
     <json.version>20230227</json.version>
     <jackson.version>2.20.0</jackson.version>
-    <snakeyaml.version>2.4</snakeyaml.version>
+    <snakeyaml.version>2.5</snakeyaml.version>
     <okhttp.version>4.12.0</okhttp.version>
     <okio.version>3.16.0</okio.version>
     <byte-buddy.version>1.17.7</byte-buddy.version>
@@ -159,7 +159,9 @@
     <commons-io.version>2.20.0</commons-io.version>
     <commons-logging.version>1.3.5</commons-logging.version>
     <commons-logging-api.version>1.1</commons-logging-api.version>
+    <dom4j.version>2.2.0</dom4j.version>
     <flexmark.version>0.64.8</flexmark.version>
+    <ivy.version>2.5.3</ivy.version>
     <txtmark.version>0.13</txtmark.version>
     <owasp-java-html-sanitizer.version>20220608.1</owasp-java-html-sanitizer.version>
     <jinjava.version>2.8.0</jinjava.version>
@@ -168,7 +170,7 @@
     <picocli.version>4.7.7</picocli.version>
     <woodstox-core.version>6.7.0</woodstox-core.version>
     <nimbus-jose-jwt.version>9.48</nimbus-jose-jwt.version>
-    <json-schema-validator.version>1.5.8</json-schema-validator.version>
+    <json-schema-validator.version>1.5.9</json-schema-validator.version>
     <json-schema-generator.version>4.38.0</json-schema-generator.version>
     <jgit.version>6.10.1.202505221210-r</jgit.version>
     <jaxb.version>4.0.5</jaxb.version>
