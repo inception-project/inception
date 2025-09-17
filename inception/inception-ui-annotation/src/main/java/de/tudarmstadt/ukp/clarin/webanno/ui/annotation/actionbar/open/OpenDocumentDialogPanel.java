@@ -98,7 +98,7 @@ public class OpenDocumentDialogPanel
 
         docListProvider = aDocListProvider;
 
-        queue(userListChoice = createUserListChoice());
+        queue(userListChoice = createUserListChoice(CID_USER));
 
         queue(new LambdaAjaxLink(CID_CLOSE_DIALOG, this::actionCancel)
                 .add(new InputBehavior(new KeyType[] { KeyType.Escape }, click)));
@@ -135,13 +135,13 @@ public class OpenDocumentDialogPanel
                 sessionOwner, project, prefs);
     }
 
-    private DropDownChoice<DecoratedObject<User>> createUserListChoice()
+    private DropDownChoice<DecoratedObject<User>> createUserListChoice(String aId)
     {
         var sessionOwner = userRepository.getCurrentUser();
-        var currentUser = DecoratedObject.of(userRepository.getCurrentUser());
-        var viewUser = DecoratedObject.of(getModelObject().getUser());
+        var decoratedSessionOwner = DecoratedObject.of(sessionOwner);
+        var dataOwner = DecoratedObject.of(getModelObject().getUser());
 
-        var choice = new DropDownChoice<>(CID_USER, Model.of(), listUsers());
+        var choice = new DropDownChoice<>(aId, Model.of(), listUsers());
         choice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<User>>()
         {
             private static final long serialVersionUID = 1L;
@@ -151,7 +151,7 @@ public class OpenDocumentDialogPanel
             {
                 var user = aUser.get();
                 var username = defaultIfEmpty(aUser.getLabel(), user.getUiName());
-                if (user.equals(currentUser.get())) {
+                if (user.equals(sessionOwner)) {
                     username += " (me)";
                 }
                 return username + (user.isEnabled() ? "" : " (deactivated)");
@@ -162,11 +162,11 @@ public class OpenDocumentDialogPanel
                 && projectService.hasRole(sessionOwner, s.getProject(), MANAGER, CURATOR))));
         choice.add(OnChangeAjaxBehavior.onChange(this::actionSelectUser));
 
-        if (choice.getChoices().contains(viewUser)) {
-            choice.setModelObject(viewUser);
+        if (choice.getChoices().contains(dataOwner)) {
+            choice.setModelObject(dataOwner);
         }
-        else if (choice.getChoices().contains(currentUser)) {
-            choice.setModelObject(currentUser);
+        else if (choice.getChoices().contains(decoratedSessionOwner)) {
+            choice.setModelObject(decoratedSessionOwner);
         }
         else if (!choice.getChoices().isEmpty()) {
             choice.setModelObject(choice.getChoices().get(0));

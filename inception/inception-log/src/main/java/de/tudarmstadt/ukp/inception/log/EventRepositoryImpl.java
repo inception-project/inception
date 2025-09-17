@@ -223,7 +223,7 @@ public class EventRepositoryImpl
     }
 
     @Override
-    public List<SummarizedLoggedEvent> summarizeEvents(String aUsername, Project aProject,
+    public List<SummarizedLoggedEvent> summarizeEvents(String aSessionOwner, Project aProject,
             Instant aFrom, Instant aTo)
     {
         var cb = entityManager.getCriteriaBuilder();
@@ -236,7 +236,7 @@ public class EventRepositoryImpl
                         root.get(LoggedEvent_.document), //
                         root.get(LoggedEvent_.event))
                 .where( //
-                        cb.equal(root.get(LoggedEvent_.user), aUsername), //
+                        cb.equal(root.get(LoggedEvent_.user), aSessionOwner), //
                         cb.equal(root.get(LoggedEvent_.project), aProject.getId()), //
                         cb.between(root.get(LoggedEvent_.created), Date.from(aFrom),
                                 Date.from(aTo)));
