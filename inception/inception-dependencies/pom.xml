@@ -467,18 +467,6 @@
         <version>1.2.6</version>
       </dependency>
       <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>jquery.scrollTo</artifactId>
-        <version>2.1.2</version>
-        <exclusions>
-          <!-- Avoid having jquery twice, once via org.webjars and once via org.webjars.bower -->
-          <exclusion>
-            <groupId>org.webjars.bower</groupId>
-            <artifactId>jquery</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
         <groupId>org.sharegov</groupId>
         <artifactId>mjson</artifactId>
         <version>1.4.2</version>
@@ -1451,31 +1439,6 @@
         <groupId>com.flipkart.zjsonpatch</groupId>
         <artifactId>zjsonpatch</artifactId>
         <version>${zjsonpatch.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.webjars.bowergithub.xbsoftware</groupId>
-        <artifactId>enjoyhint</artifactId>
-        <version>3.1.0</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.webjars.bowergithub.flesler</groupId>
-            <artifactId>jquery.scrollto</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.webjars.bowergithub.jquery</groupId>
-            <artifactId>jquery-dist</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.webjars.bowergithub.ericdrowell</groupId>
-            <artifactId>kineticjs</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.npm</groupId>
-        <artifactId>kinetic</artifactId>
-        <version>5.2.0</version>
       </dependency>
 
       <dependency>
