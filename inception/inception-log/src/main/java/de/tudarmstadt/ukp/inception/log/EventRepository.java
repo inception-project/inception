@@ -36,7 +36,7 @@ public interface EventRepository
     /**
      * @param aProject
      *            the project to query the events from
-     * @param aUsername
+     * @param aDataOwner
      *            the user who generated the events
      * @param aEventType
      *            the type of event
@@ -48,7 +48,7 @@ public interface EventRepository
      * @deprecated Not used anymore.
      */
     @Deprecated
-    List<LoggedEvent> listLoggedEventsForRecommender(Project aProject, String aUsername,
+    List<LoggedEvent> listLoggedEventsForRecommender(Project aProject, String aDataOwner,
             String aEventType, int aMaxSize, long aRecommenderId);
 
     <E extends Throwable> void forEachLoggedEvent(Project aProject,
@@ -59,7 +59,7 @@ public interface EventRepository
      *         db.
      * @param aProject
      *            the project to query the events from
-     * @param aUsername
+     * @param aDataOwner
      *            the user who generated the events
      * @param aEventType
      *            the type of event
@@ -68,14 +68,14 @@ public interface EventRepository
      * @deprecated Not used anymore.
      */
     @Deprecated
-    List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
+    List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aDataOwner,
             String[] aEventType, int aMaxSize);
 
     /**
      * @return logged events of the given type, user name, project and detail string from the db.
      * @param aProject
      *            the project to query the events from
-     * @param aUsername
+     * @param aDataOwner
      *            the user who generated the events
      * @param aEventType
      *            the type of event
@@ -87,22 +87,22 @@ public interface EventRepository
      * @deprecated Not used anymore.
      */
     @Deprecated
-    List<LoggedEvent> listLoggedEventsForDetail(Project aProject, String aUsername,
+    List<LoggedEvent> listLoggedEventsForDetail(Project aProject, String aDataOwner,
             String aEventType, int aMaxSize, String aDetail);
 
-    List<LoggedEvent> listRecentActivity(Project aProject, String aUsername,
+    List<LoggedEvent> listRecentActivity(Project aProject, String aDataOwner,
             Collection<String> aEventTypes, int aMaxSize);
 
     /**
      * @return recently logged events.
      * 
-     * @param aUsername
+     * @param aDataOwner
      *            the user to list events for.
      * @param aMaxSize
      *            return this number of recent events or less
      */
-    List<LoggedEvent> listRecentActivity(String aUsername, int aMaxSize);
+    List<LoggedEvent> listRecentActivity(String aDataOwner, int aMaxSize);
 
-    List<SummarizedLoggedEvent> summarizeEvents(String aUsername, Project aProject, Instant aNow,
+    List<SummarizedLoggedEvent> summarizeEvents(String aSessionOwner, Project aProject, Instant aNow,
             Instant aMinus);
 }

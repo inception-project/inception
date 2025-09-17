@@ -54,6 +54,8 @@
 
     export let year: number;
 
+    export let dataOwner: string;
+
     export let overviewDataUrl: string;
     export let overviewData = undefined;
     export let overviewDataLoading = true;
@@ -95,8 +97,11 @@
     }
 
     async function loadSummaryData(date) {
-        console.log(date);
-        const res = await fetch(summaryDataUrl + `?from=${date}`);
+        let url = summaryDataUrl + `?from=${encodeURIComponent(date)}`;
+        if (dataOwner) {
+            url += `&dataOwner=${encodeURIComponent(dataOwner)}`;
+        }
+        const res = await fetch(url);
         summaryData = await res.json();
 
         summaryData.globalItems = translateAndAggregateEvents(
@@ -157,7 +162,11 @@
 
     async function loadOverview() {
         overviewDataLoading = true;
-        const res = await fetch(`${overviewDataUrl}?year=${year}`);
+        let url = `${overviewDataUrl}?year=${encodeURIComponent(year)}`;
+        if (dataOwner) {
+            url += `&dataOwner=${encodeURIComponent(dataOwner)}`;
+        }
+        const res = await fetch(url);
         overviewData = await res.json();
         overviewDataLoading = false;
         return overviewData;
