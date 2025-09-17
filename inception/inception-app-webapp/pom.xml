@@ -296,12 +296,6 @@
       <artifactId>inception-pivot</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <!--
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-tutorial</artifactId>
-    </dependency>
-    -->
 
     <!-- INCEPTION - KNOWLEDGE BASE SUPPORT -->
     <dependency>

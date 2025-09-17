@@ -198,7 +198,6 @@
     <module>inception-export-api</module>
     <module>inception-diag</module>
     <module>inception-diag-api</module>
-    <module>inception-tutorial</module>
     <module>inception-testing</module>
     <module>inception-agreement</module>
     <module>inception-constraints</module>
