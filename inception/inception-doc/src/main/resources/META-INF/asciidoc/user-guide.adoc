@@ -230,10 +230,6 @@ include::{include-dir}pdf-editor.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}pdf-editor-legacy.adoc[leveloffset=+1]
-
-<<<
-
 include::{include-dir}cross-layer-relations.adoc[leveloffset=+1]
 
 <<<
@@ -298,8 +294,6 @@ include::{include-dir}formats-imscwb.adoc[leveloffset=+2]
 include::{include-dir}formats-nif.adoc[leveloffset=+2]
 
 include::{include-dir}formats-pdf.adoc[leveloffset=+2]
-
-// include::{include-dir}formats-pdf-legacy.adoc[leveloffset=+2]
 
 include::{include-dir}formats-perseus.adoc[leveloffset=+2]
 
