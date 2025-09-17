@@ -41,6 +41,7 @@ const defaults = {
   minify: !argv.live,
   target: 'es2019',
   loader: { '.ts': 'ts' },
+  jsx: 'automatic', 
   logLevel: 'info',
   plugins: [
     sassPlugin(),
