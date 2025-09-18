@@ -321,13 +321,6 @@
       </exclusions>
     </dependency>
     
-    <!-- INCEPTION - FACT LINKING FUNCTIONALITY (deprecated) 
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-kb-fact-linking</artifactId>
-    </dependency>
-    -->
-
     <!-- INCEPTION - ANNOTATION RECOMMENDATION FUNCTIONALITY -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
