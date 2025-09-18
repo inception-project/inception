@@ -264,7 +264,6 @@
     <module>inception-external-editor</module>
     <module>inception-html-apache-annotator-editor</module>
     <module>inception-html-recogito-editor</module>
-    <module>inception-pdf-editor</module>
     <module>inception-pdf-editor2</module>
     <module>inception-review-editor</module>
     <!-- Schema extensions -->
