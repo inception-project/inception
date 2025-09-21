@@ -17,9 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.lang.System.currentTimeMillis;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static org.eclipse.rdf4j.query.explanation.Explanation.Level.Timed;
+
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Map;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -29,14 +35,23 @@ import org.apache.wicket.extensions.ajax.markup.html.repeater.data.table.AjaxNav
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.eclipse.rdf4j.query.explanation.Explanation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -46,6 +61,8 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
 public class SparqlPanel
     extends GenericPanel<KnowledgeBase>
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final long serialVersionUID = -8435410869046010021L;
 
     private @SpringBean KnowledgeBaseService knowledgeBaseService;
@@ -57,16 +74,31 @@ public class SparqlPanel
     {
         super(aId, aModel);
 
-        queue(new Form<QueryModel>("form", new CompoundPropertyModel<>(new QueryModel())));
+        var form = new Form<QueryModel>("form", new CompoundPropertyModel<>(new QueryModel()));
+        queue(form);
         queue(new TextArea<>("query"));
         queue(new LambdaAjaxSubmitLink<QueryModel>("runQuery", this::actionQuery));
         queue(new LambdaAjaxLink("closeDialog", this::actionCancel));
+        var level = new DropDownChoice<Explanation.Level>("level");
+        level.setChoices(asList(Explanation.Level.values()));
+        level.setNullValid(true);
+        level.setChoiceRenderer(new EnumChoiceRenderer<>(level));
+        queue(level);
         resultsContainer = new WebMarkupContainer("resultsContainer");
         resultsContainer.setOutputMarkupId(true);
         queue(resultsContainer);
-        results = new DataTable<>("results", Collections.emptyList(),
-                new TupleQueryResultDataProvider(), 10);
+        results = new DataTable<>("results", emptyList(), new TupleQueryResultDataProvider(), 10);
         queue(results);
+        queue(new NumberTextField<Integer>("timeout").setMinimum(1).setRequired(true));
+        queue(new Label("explanation", form.getModel().map(m -> m.explanation)) //
+                .setOutputMarkupPlaceholderTag(true) //
+                .add(visibleWhen(form.getModel().map(m -> m.explanation != null))));
+        queue(new Label("duration", form.getModel().map(m -> m.duration)) //
+                .setOutputMarkupPlaceholderTag(true) //
+                .add(visibleWhen(form.getModel().map(m -> m.duration >= 0))));
+        queue(new Label("explanationDuration", form.getModel().map(m -> m.explanationDuration)) //
+                .setOutputMarkupPlaceholderTag(true) //
+                .add(visibleWhen(form.getModel().map(m -> m.explanationDuration >= 0))));
     }
 
     private void actionQuery(AjaxRequestTarget aTarget, Form<QueryModel> aForm)
@@ -78,13 +110,34 @@ public class SparqlPanel
         var dataProvider = knowledgeBaseService.read(getModelObject(), conn -> {
             var tupleQuery = conn.prepareTupleQuery(model.query);
 
-            var tupleResult = tupleQuery.evaluate();
-
-            for (var bindingName : tupleResult.getBindingNames()) {
-                columns.add(new LambdaColumn<>(Model.of(bindingName), $ -> $.get(bindingName)));
+            if (model.level != null) {
+                var start = currentTimeMillis();
+                model.explanation = tupleQuery.explain(model.level).toString();
+                model.explanationDuration = currentTimeMillis() - start;
+                LOG.info("SPARQL explanation: {}", model.explanation);
+            }
+            else {
+                model.explanationDuration = -1;
+                model.explanation = null;
             }
 
-            return new TupleQueryResultDataProvider(tupleResult);
+            try {
+                tupleQuery.setMaxExecutionTime(model.timeout);
+                var start = currentTimeMillis();
+                var tupleResult = tupleQuery.evaluate();
+                for (var bindingName : tupleResult.getBindingNames()) {
+                    columns.add(new LambdaColumn<>(Model.of(bindingName), $ -> $.get(bindingName)));
+                }
+
+                var data = new TupleQueryResultDataProvider(tupleResult);
+                model.duration = currentTimeMillis() - start;
+                return data;
+            }
+            catch (QueryEvaluationException e) {
+                error("SPARQL query evaluation failed: " + e.getMessage());
+                aTarget.addChildren(getPage(), IFeedback.class);
+                return new TupleQueryResultDataProvider();
+            }
         });
 
         var table = new DataTable<>("results", columns, dataProvider, 10);
@@ -111,5 +164,11 @@ public class SparqlPanel
                   ?s ?p ?o .
                 }
                 """;
+
+        Explanation.Level level = Timed;
+        String explanation;
+        int timeout = 60;
+        long explanationDuration = -1l;
+        long duration = -1l;
     }
 }
