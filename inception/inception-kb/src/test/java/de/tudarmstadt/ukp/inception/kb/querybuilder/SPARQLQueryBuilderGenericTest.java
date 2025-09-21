@@ -26,11 +26,11 @@ import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.buildRepository;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.slf4j.event.Level.INFO;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.rdf4j.repository.RepositoryConnection;
@@ -138,8 +138,7 @@ public class SPARQLQueryBuilderGenericTest
                     .withLabelMatchingExactlyAnyOf(".[]*+{}()lala").limit(3);
 
             LOG.info("Query   :");
-            Arrays.stream(builder.selectQuery().getQueryString().split("\n"))
-                    .forEachOrdered(l -> LOG.info("          {}", l));
+            builder.logQueryString(LOG, INFO, "          ");
 
             builder.asHandles(conn, true);
 
@@ -167,8 +166,7 @@ public class SPARQLQueryBuilderGenericTest
                     .limit(3);
 
             LOG.info("Query   :");
-            Arrays.stream(builder.selectQuery().getQueryString().split("\n"))
-                    .forEachOrdered(l -> LOG.info("          {}", l));
+            builder.logQueryString(LOG, INFO, "          ");
 
             builder.asHandles(conn, true);
 
