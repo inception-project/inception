@@ -288,6 +288,8 @@ public class SPARQLQueryBuilderLocalTestScenarios
                         SPARQLQueryBuilderLocalTestScenarios::thatLabelsAndDescriptionsWithLanguageArePreferred),
                 new Scenario("thatSearchOverMultipleLabelsWorks",
                         SPARQLQueryBuilderLocalTestScenarios::thatSearchOverMultipleLabelsWorks),
+                new Scenario("thatResolveMatchingPropertiesWorks",
+                        SPARQLQueryBuilderLocalTestScenarios::thatResolveMatchingPropertiesWorks),
                 new Scenario("thatMatchingAgainstAdditionalSearchPropertiesWorks",
                         SPARQLQueryBuilderLocalTestScenarios::thatMatchingAgainstAdditionalSearchPropertiesWorks),
                 new Scenario("thatMatchingAgainstAdditionalSearchPropertiesWorks2",
@@ -343,9 +345,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
                 new Scenario("thatItemQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults",
                         SPARQLQueryBuilderLocalTestScenarios::thatItemQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults),
                 new Scenario("testWithLabelStartingWith_OLIA",
-                        SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_OLIA)
-
-        );
+                        SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_OLIA));
     }
 
     static class Scenario
@@ -479,6 +479,24 @@ public class SPARQLQueryBuilderLocalTestScenarios
         }
     }
 
+    static void thatResolveMatchingPropertiesWorks(Repository aRepository, KnowledgeBase aKB)
+        throws Exception
+    {
+        aKB.setLabelIri("http://www.w3.org/2000/01/rdf-schema#prefLabel");
+        aKB.setAdditionalMatchingProperties(asList("http://www.w3.org/2000/01/rdf-schema#label"));
+
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
+                DATA_ADDITIONAL_SEARCH_PROPERTIES);
+
+        try (var conn = aRepository.getConnection()) {
+            var forItems = (SPARQLQueryBuilder) SPARQLQueryBuilder.forItems(aKB);
+            assertThat(forItems.resolvePrefLabelProperties(conn))
+                    .containsExactlyInAnyOrder("http://www.w3.org/2000/01/rdf-schema#prefLabel");
+            assertThat(forItems.resolveAdditionalMatchingProperties(conn))
+                    .containsExactlyInAnyOrder("http://www.w3.org/2000/01/rdf-schema#label");
+        }
+    }
+
     static void thatMatchingAgainstAdditionalSearchPropertiesWorks(Repository aRepository,
             KnowledgeBase aKB)
         throws Exception
@@ -489,7 +507,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_ADDITIONAL_SEARCH_PROPERTIES);
 
-        for (String term : asList("specimen", "sample", "instance", "case")) {
+        for (var term : asList("specimen", "sample", "instance", "case")) {
             var results = asHandles(aRepository, SPARQLQueryBuilder //
                     .forItems(aKB) //
                     .withLabelMatchingAnyOf(term) //

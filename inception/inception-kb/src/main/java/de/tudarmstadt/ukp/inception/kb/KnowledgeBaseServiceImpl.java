@@ -1758,8 +1758,11 @@ public class KnowledgeBaseServiceImpl
             }
 
             QueryKey castOther = (QueryKey) other;
-            return new EqualsBuilder().append(kb, castOther.kb).append(all, castOther.all)
-                    .append(query, castOther.query).isEquals();
+            return new EqualsBuilder() //
+                    .append(kb, castOther.kb) //
+                    .append(all, castOther.all) //
+                    .append(query, castOther.query) //
+                    .isEquals();
         }
 
         @Override
