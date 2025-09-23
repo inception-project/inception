@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response;
 
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage.Role.SYSTEM;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage.Role.USER;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionMode.RESPONSE_AS_LABEL;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
@@ -33,14 +37,27 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecQuery;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
-public final class ResponseAsLabelExtractor
-    implements ResponseExtractor
+public final class LabellingAnnotationTaskCodec
+    implements AnnotationTaskCodec
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    @Override
+    public String getId()
+    {
+        return getClass().getName();
+    }
+
+    @Override
+    public boolean accepts(AnnotationTaskCodecQuery aContext)
+    {
+        return aContext.traits().getExtractionMode() == RESPONSE_AS_LABEL;
+    }
 
     @Override
     public Map<String, MentionResult> generateExamples(RecommendationEngine aEngine, CAS aCas,
@@ -63,7 +80,15 @@ public final class ResponseAsLabelExtractor
     }
 
     @Override
-    public void extractMentions(RecommendationEngine aEngine, CAS aCas, PromptContext aContext,
+    public List<? extends ChatMessage> encode(PromptContext aPromptContext, String aPrompt)
+    {
+        return asList( //
+                new ChatMessage(SYSTEM, "# Context\n\n" + aPromptContext.getText()), //
+                new ChatMessage(USER, aPrompt));
+    }
+
+    @Override
+    public void decode(RecommendationEngine aEngine, CAS aCas, PromptContext aContext,
             String aResponse)
     {
         var predictedType = aEngine.getPredictedType(aCas);

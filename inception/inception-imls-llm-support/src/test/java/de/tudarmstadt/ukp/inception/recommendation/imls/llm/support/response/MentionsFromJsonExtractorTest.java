@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 
 class MentionsFromJsonExtractorTest
 {
-    private MentionsFromJsonExtractor sut = new MentionsFromJsonExtractor();
+    private SpanJsonAnnotationTaskCodec sut = new SpanJsonAnnotationTaskCodec();
 
     @Test
     void testExtractMentionFromJson_categorizedNumbers()

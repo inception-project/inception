@@ -21,6 +21,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.ChatGptRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptClientImpl;
@@ -39,8 +40,10 @@ public class ChatGptRecommenderAutoConfiguration
 
     @Bean
     public ChatGptRecommenderFactory chatGptRecommenderFactory(ChatGptClient aClient,
-            AnnotationSchemaService aSchemaService)
+            AnnotationSchemaService aSchemaService,
+            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint)
     {
-        return new ChatGptRecommenderFactory(aClient, aSchemaService);
+        return new ChatGptRecommenderFactory(aClient, aSchemaService,
+                aResponseExtractorExtensionPoint);
     }
 }

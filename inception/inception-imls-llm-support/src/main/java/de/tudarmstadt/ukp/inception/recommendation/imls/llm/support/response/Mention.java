@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Mention
+class Mention
 {
     public static final String PROP_COVERED_TEXT = "coveredText";
     public static final String PROP_LABEL = "label";

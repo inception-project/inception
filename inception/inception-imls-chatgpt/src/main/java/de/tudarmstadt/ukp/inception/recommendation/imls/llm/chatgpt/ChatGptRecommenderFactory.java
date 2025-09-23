@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatCompletionRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Presets;
@@ -44,11 +45,14 @@ public class ChatGptRecommenderFactory
 
     private final ChatGptClient client;
     private final AnnotationSchemaService schemaService;
+    private final AnnotationTaskCodecExtensionPoint responseExtractorExtensionPoint;
 
-    public ChatGptRecommenderFactory(ChatGptClient aClient, AnnotationSchemaService aSchemaService)
+    public ChatGptRecommenderFactory(ChatGptClient aClient, AnnotationSchemaService aSchemaService,
+            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint)
     {
         client = aClient;
         schemaService = aSchemaService;
+        responseExtractorExtensionPoint = aResponseExtractorExtensionPoint;
     }
 
     @Override
@@ -67,7 +71,8 @@ public class ChatGptRecommenderFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         var traits = readTraits(aRecommender);
-        return new ChatGptRecommender(aRecommender, traits, client, schemaService);
+        return new ChatGptRecommender(aRecommender, traits, client, schemaService,
+                responseExtractorExtensionPoint);
     }
 
     @Override
