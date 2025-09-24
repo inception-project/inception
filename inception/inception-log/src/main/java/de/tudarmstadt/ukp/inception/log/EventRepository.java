@@ -103,6 +103,6 @@ public interface EventRepository
      */
     List<LoggedEvent> listRecentActivity(String aDataOwner, int aMaxSize);
 
-    List<SummarizedLoggedEvent> summarizeEvents(String aSessionOwner, Project aProject, Instant aNow,
-            Instant aMinus);
+    List<SummarizedLoggedEvent> summarizeEvents(String aSessionOwner, Project aProject,
+            Instant aNow, Instant aMinus);
 }

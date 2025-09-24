@@ -15,13 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm;
 
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContextGenerator.VAR_EXAMPLES;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContextGenerator.getPromptContextGenerator;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseExtractor.getResponseExtractor;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage.Role.SYSTEM;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage.Role.USER;
 import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_UNITS;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
@@ -45,6 +42,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCon
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.JinjaPromptRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -58,15 +56,18 @@ public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTr
 
     protected final T traits;
     protected final AnnotationSchemaService schemaService;
+    protected final AnnotationTaskCodecExtensionPoint taskCodecExtensionPoint;
     protected final JinjaPromptRenderer promptRenderer;
 
     public ChatBasedLlmRecommenderImplBase(Recommender aRecommender, T aTraits,
-            AnnotationSchemaService aSchemaService)
+            AnnotationSchemaService aSchemaService,
+            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint)
     {
         super(aRecommender);
 
         traits = aTraits;
         schemaService = aSchemaService;
+        taskCodecExtensionPoint = aResponseExtractorExtensionPoint;
         promptRenderer = new JinjaPromptRenderer();
     }
 
@@ -81,7 +82,7 @@ public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTr
 
     private void provideExamples(Map<String, Object> globalBindings, CAS aCas)
     {
-        var responseExtractor = getResponseExtractor(traits);
+        var responseExtractor = taskCodecExtensionPoint.getExtension(recommender, traits).get();
         var examples = responseExtractor.generateExamples(this, aCas, MAX_FEW_SHOT_EXAMPLES);
         globalBindings.put(VAR_EXAMPLES, examples);
     }
@@ -90,15 +91,14 @@ public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTr
     public Range predict(PredictionContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
-        var responseExtractor = getResponseExtractor(traits);
+        var codec = taskCodecExtensionPoint.getExtension(recommender, traits).get();
 
         var staticMessages = new ArrayList<ChatMessage>();
 
-        staticMessages.addAll(
-                responseExtractor.getFormatDefiningMessages(getRecommender(), schemaService));
+        staticMessages.addAll(codec.getFormatDefiningMessages(getRecommender(), schemaService));
 
-        var responseformat = responseExtractor.getResponseFormat();
-        var jsonSchema = responseExtractor.getJsonSchema(getRecommender(), schemaService, traits);
+        var responseformat = codec.getResponseFormat();
+        var jsonSchema = codec.getJsonSchema(getRecommender(), schemaService, traits);
 
         var globalBindings = prepareGlobalBindings(aCas);
         var contexts = getPromptContextGenerator(traits.getPromptingMode()) //
@@ -119,12 +119,10 @@ public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTr
 
                 try {
                     var messages = new ArrayList<>(staticMessages);
-                    messages.add(
-                            new ChatMessage(SYSTEM, "# Context\n\n" + promptContext.getText()));
-                    messages.add(new ChatMessage(USER, traits.getPrompt()));
+                    messages.addAll(codec.encode(promptContext, traits.getPrompt()));
                     var response = exchange(messages, responseformat.orElse(null),
                             jsonSchema.orElse(null));
-                    responseExtractor.extractMentions(this, aCas, promptContext, response);
+                    codec.decode(this, aCas, promptContext, response);
                 }
                 catch (IOException e) {
                     aContext.log(LogMessage.warn(getRecommender().getName(),

@@ -165,11 +165,10 @@ public class CurationSidebarRenderer
         var generatedCurationVids = new HashSet<VID>();
         var showAll = curationService.isShowAll(sessionOwner, project.getId());
         var showScore = curationService.isShowScore(sessionOwner, project.getId());
-        var curationTarget = aRequest.getAnnotationUser().getUsername();
         for (var cfgSet : diff.getConfigurationSets()) {
             LOG.trace("Processing set: {}", cfgSet);
 
-            if (!showAll && cfgSet.getCasGroupIds().contains(curationTarget)) {
+            if (!showAll && cfgSet.getCasGroupIds().contains(targetUser)) {
                 // Hide configuration sets where the curator has already curated (likely)
                 continue;
             }

@@ -15,29 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Optional;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public record ChatMessage(Role role, String content) {
-    public static enum Role
-    {
-        SYSTEM("system"), //
-        ASSISTANT("assistant"), //
-        USER("user");
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.AnnotationTaskCodec;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
-        private final String name;
+public interface AnnotationTaskCodecExtensionPoint
+    extends ExtensionPoint<AnnotationTaskCodecQuery, AnnotationTaskCodec>
+{
+    Optional<AnnotationTaskCodec> getExtension(AnnotationTaskCodecQuery aTraits);
 
-        private Role(String aName)
-        {
-            name = aName;
-        }
-
-        public String getName()
-        {
-            return name;
-        }
-    }
-
+    Optional<AnnotationTaskCodec> getExtension(Recommender aRecommender,
+            LlmRecommenderTraits aTraits);
 }

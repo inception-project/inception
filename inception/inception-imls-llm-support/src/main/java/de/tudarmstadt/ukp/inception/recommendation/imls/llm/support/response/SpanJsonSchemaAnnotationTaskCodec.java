@@ -19,9 +19,12 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response;
 
 import static com.github.victools.jsonschema.generator.OptionPreset.PLAIN_JSON;
 import static com.github.victools.jsonschema.generator.SchemaVersion.DRAFT_2020_12;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage.Role.SYSTEM;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage.Role.USER;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionMode.MENTIONS_FROM_JSON;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.Mention.PROP_JUSTIFICATION;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.Mention.PROP_LABEL;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage.Role.SYSTEM;
+import static java.util.Arrays.asList;
 import static java.util.Collections.reverse;
 import static java.util.Collections.sort;
 import static java.util.Comparator.comparing;
@@ -62,17 +65,31 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecQuery;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.text.Trie;
 import de.tudarmstadt.ukp.inception.support.text.WhitespaceNormalizingSanitizer;
 
-public final class MentionsFromStructuredOutputExtractor
-    implements ResponseExtractor
+public final class SpanJsonSchemaAnnotationTaskCodec
+    implements AnnotationTaskCodec
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    @Override
+    public String getId()
+    {
+        return getClass().getName();
+    }
+
+    @Override
+    public boolean accepts(AnnotationTaskCodecQuery aContext)
+    {
+        return aContext.traits().getExtractionMode() == MENTIONS_FROM_JSON
+                && aContext.traits().isStructuredOutputSupported();
+    }
 
     @Override
     public Map<String, MentionResult> generateExamples(RecommendationEngine aEngine, CAS aCas,
@@ -223,20 +240,24 @@ public final class MentionsFromStructuredOutputExtractor
     public List<? extends ChatMessage> getFormatDefiningMessages(Recommender aRecommender,
             AnnotationSchemaService aSchemaService)
     {
-        var messages = new ArrayList<ChatMessage>();
-
-        messages.add(new ChatMessage(SYSTEM, """
+        return asList(new ChatMessage(SYSTEM, """
                 Your task is to identify and label mentions in the given document.
                 The user will specify how to identify the mentions how to label them.
                 Assign the text of the mention to the `coveredText` property.
                 Assign the label of the mention to the `label` property.
                 """));
-
-        return messages;
     }
 
     @Override
-    public void extractMentions(RecommendationEngine aEngine, CAS aCas, PromptContext aContext,
+    public List<? extends ChatMessage> encode(PromptContext aPromptContext, String aPrompt)
+    {
+        return asList( //
+                new ChatMessage(SYSTEM, "# Context\n\n" + aPromptContext.getText()), //
+                new ChatMessage(USER, aPrompt));
+    }
+
+    @Override
+    public void decode(RecommendationEngine aEngine, CAS aCas, PromptContext aContext,
             String aResponse)
         throws JsonProcessingException
     {

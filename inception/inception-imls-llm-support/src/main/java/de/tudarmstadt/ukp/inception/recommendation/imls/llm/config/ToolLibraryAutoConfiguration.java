@@ -24,9 +24,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibrary;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibraryExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibraryExtensionPointImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.AnnotationTaskCodec;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.LabellingAnnotationTaskCodec;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.SpanJsonAnnotationTaskCodec;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.SpanJsonSchemaAnnotationTaskCodec;
 
 @Configuration
 public class ToolLibraryAutoConfiguration
@@ -36,5 +42,30 @@ public class ToolLibraryAutoConfiguration
             @Lazy @Autowired(required = false) List<ToolLibrary> aExtensions)
     {
         return new ToolLibraryExtensionPointImpl(aExtensions);
+    }
+
+    @Bean
+    public AnnotationTaskCodecExtensionPoint ResponseExtractorExtensionPointImpl(
+            @Lazy @Autowired(required = false) List<AnnotationTaskCodec> aExtensions)
+    {
+        return new AnnotationTaskCodecExtensionPointImpl(aExtensions);
+    }
+
+    @Bean
+    public SpanJsonAnnotationTaskCodec mentionsFromJsonExtractor()
+    {
+        return new SpanJsonAnnotationTaskCodec();
+    }
+
+    @Bean
+    public SpanJsonSchemaAnnotationTaskCodec mentionsFromStructuredOutputExtractor()
+    {
+        return new SpanJsonSchemaAnnotationTaskCodec();
+    }
+
+    @Bean
+    public LabellingAnnotationTaskCodec responseAsLabelExtractor()
+    {
+        return new LabellingAnnotationTaskCodec();
     }
 }
