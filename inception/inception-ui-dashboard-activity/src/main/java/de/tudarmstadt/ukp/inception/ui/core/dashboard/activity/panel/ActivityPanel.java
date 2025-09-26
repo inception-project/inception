@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,6 +113,9 @@ public class ActivityPanel
 
     private List<User> getUsersForCurrentProject()
     {
-        return projectService.listUsersWithAnyRoleInProject(projectModel.getObject());
+        var users = new ArrayList<User>();
+        users.addAll(projectService.listUsersWithAnyRoleInProject(projectModel.getObject()));
+        users.add(userService.getCurationUser());
+        return users;
     }
 }
