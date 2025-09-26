@@ -423,7 +423,7 @@ export class ApacheAnnotatorVisualizer {
 
   private clearScrollMarkers () {
     if (this.removeScrollMarkersTimeout) {
-      window.cancelIdleCallback(this.removeScrollMarkersTimeout)
+      this.cancelScheduled(this.removeScrollMarkersTimeout)
       this.removeScrollMarkersTimeout = undefined
       this.removeScrollMarkers.forEach(remove => remove())
       this.removeScrollMarkers = []
@@ -446,7 +446,7 @@ export class ApacheAnnotatorVisualizer {
     this.removeSpuriousZeroWidthHighlights()
 
     if (this.removePingMarkers.length > 0) {
-      this.removePingMarkersTimeout = window.setTimeout(() => this.clearPingMarkers(), 2000)
+      this.removePingMarkersTimeout = this.schedule(2000, () => this.clearPingMarkers())
     }
  }
 
@@ -454,7 +454,7 @@ export class ApacheAnnotatorVisualizer {
     console.log('Clearing ping markers');
     
     if (this.removePingMarkersTimeout) {
-      window.clearTimeout(this.removePingMarkersTimeout)
+      this.cancelScheduled(this.removePingMarkersTimeout)
       this.removePingMarkersTimeout = undefined
       this.removePingMarkers.forEach(remove => remove())
       this.removePingMarkers = []
@@ -504,7 +504,7 @@ export class ApacheAnnotatorVisualizer {
       var scrollIntoViewFunc = () => { 
         finalScrollTarget.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' })
         if (this.removeScrollMarkers.length > 0) {
-          window.setTimeout(scrollIntoViewFunc, 100)
+          this.schedule(100, scrollIntoViewFunc)
         }
         
         if (this.root instanceof HTMLElement) {
@@ -520,7 +520,23 @@ export class ApacheAnnotatorVisualizer {
       this.scrolling = true
       this.sectionAnnotationVisualizer.suspend()
       this.sectionAnnotationCreator.suspend()
-      this.removeScrollMarkersTimeout = window.setTimeout(scrollIntoViewFunc, 100)
+      this.removeScrollMarkersTimeout = this.schedule(100, scrollIntoViewFunc)
+    }
+  }
+
+  private schedule(timeout: number, callback: () => void): number{
+    if (typeof window.requestIdleCallback=="undefined") {
+      return window.setTimeout(callback, timeout)
+    } else {
+      return window.requestIdleCallback(callback, { timeout: timeout })
+    }
+  }
+
+  private cancelScheduled(handle: number) {
+    if (typeof window.cancelIdleCallback=="undefined") {
+      window.clearTimeout(handle)
+    } else {
+      window.cancelIdleCallback(handle)
     }
   }
 
