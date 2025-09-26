@@ -28,42 +28,29 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecQuery;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
-public sealed interface ResponseExtractor
-    permits MentionsFromStructuredOutputExtractor, MentionsFromJsonExtractor,
-    ResponseAsLabelExtractor
+public sealed interface AnnotationTaskCodec
+    extends Extension<AnnotationTaskCodecQuery>
+    permits SpanJsonSchemaAnnotationTaskCodec, SpanJsonAnnotationTaskCodec,
+    LabellingAnnotationTaskCodec
 {
-    void extractMentions(RecommendationEngine aEngine, CAS aCas, PromptContext aCandidate,
-            String aResponse)
+    List<? extends ChatMessage> encode(PromptContext aPromptContext, String aPrompt);
+
+    void decode(RecommendationEngine aEngine, CAS aCas, PromptContext aCandidate, String aResponse)
         throws IOException;
 
-    Map<String, MentionResult> generateExamples(RecommendationEngine aEngine, CAS aCas, int aNum);
+    Map<String, ?> generateExamples(RecommendationEngine aEngine, CAS aCas, int aNum);
 
     default Optional<JsonNode> getJsonSchema(Recommender aRecommender,
             AnnotationSchemaService aSchemaService, LlmRecommenderTraits aTraits)
     {
         return Optional.empty();
-    }
-
-    static ResponseExtractor getResponseExtractor(LlmRecommenderTraits aTraits)
-    {
-        switch (aTraits.getExtractionMode()) {
-        case RESPONSE_AS_LABEL:
-            return new ResponseAsLabelExtractor();
-        case MENTIONS_FROM_JSON:
-            if (aTraits.isStructuredOutputSupported()) {
-                return new MentionsFromStructuredOutputExtractor();
-            }
-            else {
-                return new MentionsFromJsonExtractor();
-            }
-        default:
-            throw new IllegalArgumentException("Unsupported extraction mode [" + aTraits + "]");
-        }
     }
 
     List<? extends ChatMessage> getFormatDefiningMessages(Recommender aRecommender,

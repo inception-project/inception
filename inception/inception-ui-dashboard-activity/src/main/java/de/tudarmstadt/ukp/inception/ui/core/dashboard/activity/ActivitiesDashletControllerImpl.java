@@ -70,6 +70,7 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.model.SummarizedLoggedEvent;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel.ActivityOverview;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.activity.panel.ActivityOverviewItem;
@@ -161,8 +162,8 @@ public class ActivitiesDashletControllerImpl
             return new ActivitySummary(begin, end, emptyList(), emptyMap());
         }
 
-        var recentEvents = eventRepository.summarizeEvents(dataOwner.getUsername(), project, begin,
-                end);
+        var recentEvents = summarizeEvents(project, begin, end, dataOwner);
+
         var documentNameCache = new HashMap<Long, String>();
         var globalItems = new ArrayList<ActivitySummaryItem>();
         var itemsByDoc = new HashMap<String, List<ActivitySummaryItem>>();
@@ -250,8 +251,7 @@ public class ActivitiesDashletControllerImpl
             return new ActivityOverview(begin, end, emptyMap());
         }
 
-        var recentEvents = eventRepository.summarizeEvents(dataOwner.getUsername(), project, begin,
-                end);
+        var recentEvents = summarizeEvents(project, begin, end, dataOwner);
 
         var aggregator = new LinkedHashMap<Instant, AtomicLong>();
         recentEvents.forEach(summarizedEvent -> {
@@ -268,12 +268,27 @@ public class ActivitiesDashletControllerImpl
         return new ActivityOverview(begin, end, items);
     }
 
+    private List<SummarizedLoggedEvent> summarizeEvents(Project project, Instant begin, Instant end,
+            User dataOwner)
+    {
+        List<SummarizedLoggedEvent> recentEvents;
+        if (userRepository.getCurationUser().equals(dataOwner)) {
+            recentEvents = eventRepository.summarizeEventsByDataOwner(dataOwner.getUsername(),
+                    project, begin, end);
+        }
+        else {
+            recentEvents = eventRepository.summarizeEventsBySessionOwner(dataOwner.getUsername(),
+                    project, begin, end);
+        }
+        return recentEvents;
+    }
+
     private User getDataOwner(Optional<String> aDataOwner, User aSessionOwner)
     {
         User dataOwner;
 
         if (aDataOwner.isPresent()) {
-            dataOwner = userRepository.get(aDataOwner.get());
+            dataOwner = userRepository.getUserOrCurationUser(aDataOwner.get());
             if (dataOwner == null) {
                 throw new IllegalArgumentException(
                         "User [" + aDataOwner.get() + "] does not exist");

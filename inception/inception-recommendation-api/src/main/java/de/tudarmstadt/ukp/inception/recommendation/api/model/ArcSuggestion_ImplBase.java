@@ -39,7 +39,7 @@ public abstract class ArcSuggestion_ImplBase<P extends ArcPosition_ImplBase<?>>
                 builder.autoAcceptMode, builder.hidingFlags, builder.correction,
                 builder.correctionExplanation);
 
-        this.position = builder.position;
+        position = builder.position;
     }
 
     // Getter and setter

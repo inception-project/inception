@@ -36,7 +36,6 @@ import java.lang.invoke.MethodHandles;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -173,12 +172,21 @@ public class ConceptLinkingServiceImpl
         // specific letter.
         final var threshold = aKB.getType() == LOCAL ? 0 : 3;
 
+        var preResolver = newQueryBuilder(aValueType, aKB);
+        Set<String> prefLabelProperties;
+        Set<String> additionalMatchProperties;
+        try (var conn = kbService.getConnection(aKB)) {
+            prefLabelProperties = preResolver.resolvePrefLabelProperties(conn);
+            additionalMatchProperties = preResolver.resolveAdditionalMatchingProperties(conn);
+        }
+
         var results = new LinkedHashSet<KBHandle>();
 
         var startTime = currentTimeMillis();
         try {
             if (aQuery != null) {
-                var exactMatches = findExactIriMatches(aKB, aConceptScope, aValueType, aQuery);
+                var exactMatches = findExactIriMatches(aKB, aConceptScope, aValueType, aQuery,
+                        prefLabelProperties, additionalMatchProperties);
 
                 // If there was an exact IRI match, there is probably little point in searching for
                 // matching labels... I mean, who would use an IRI as a concept label...?
@@ -193,20 +201,21 @@ public class ConceptLinkingServiceImpl
             // the exact matches separately to ensure we have them.
             // Mind, we use the query and the mention text here - of course we don't only want
             // exact matches of the query but also of the mention :)
-            var exactMatches = supplyAsync(
-                    () -> findExactMatches(aKB, aConceptScope, aValueType, aQuery, aMention));
+            var exactMatches = supplyAsync(() -> findExactMatches(aKB, aConceptScope, aValueType,
+                    aQuery, aMention, prefLabelProperties, additionalMatchProperties));
 
             // Next we also do a "starting with" search - but only if the user's query is longer
             // than the threshold - this is because for short queries, we'd get way too many results
             // which would be slow - and also the results would likely not be very accurate
             var startingWithMatches = supplyAsync(() -> findStartingWithMatches(aKB, aConceptScope,
-                    aValueType, aQuery, threshold));
+                    aValueType, aQuery, threshold, prefLabelProperties, additionalMatchProperties));
 
             // Finally, we use the query and mention also for a "containing" search - but only if
             // they are longer than the threshold. Again, for very short query/mention, we'd
             // otherwise get way too many matches, being slow and not accurate.
-            var containingMatches = supplyAsync(() -> findContainingMatches(aKB, aConceptScope,
-                    aValueType, aQuery, aMention, threshold));
+            var containingMatches = supplyAsync(
+                    () -> findContainingMatches(aKB, aConceptScope, aValueType, aQuery, aMention,
+                            threshold, prefLabelProperties, additionalMatchProperties));
 
             results.addAll(exactMatches.join());
             results.addAll(startingWithMatches.join());
@@ -222,19 +231,22 @@ public class ConceptLinkingServiceImpl
     }
 
     private List<KBHandle> findExactMatches(KnowledgeBase aKB, String aConceptScope,
-            ConceptFeatureValueType aValueType, String aQuery, String aMention)
+            ConceptFeatureValueType aValueType, String aQuery, String aMention,
+            Set<String> aPrefLabelProperties, Set<String> aAdditionalMatchProperties)
     {
         var exactLabels = asList(aQuery, aMention).stream() //
                 .filter(StringUtils::isNotBlank) //
                 .toArray(String[]::new);
 
         if (exactLabels.length == 0) {
-            return Collections.emptyList();
+            return emptyList();
         }
 
         var startTime = currentTimeMillis();
 
         var query = newQueryBuilder(aValueType, aKB);
+        query.withPrefLabelProperties(aPrefLabelProperties);
+        query.withAdditionalMatchingProperties(aAdditionalMatchProperties);
 
         if (aConceptScope != null) {
             // Scope-limiting must always happen before label matching!
@@ -262,7 +274,8 @@ public class ConceptLinkingServiceImpl
     }
 
     private List<KBHandle> findContainingMatches(KnowledgeBase aKB, String aConceptScope,
-            ConceptFeatureValueType aValueType, String aQuery, String aMention, final int threshold)
+            ConceptFeatureValueType aValueType, String aQuery, String aMention, final int threshold,
+            Set<String> aPrefLabelProperties, Set<String> aAdditionalMatchProperties)
     {
         var longLabels = asList(aQuery, aMention).stream() //
                 .filter(Objects::nonNull) //
@@ -280,6 +293,8 @@ public class ConceptLinkingServiceImpl
 
         // Collect containing matches
         var query = newQueryBuilder(aValueType, aKB);
+        query.withPrefLabelProperties(aPrefLabelProperties);
+        query.withAdditionalMatchingProperties(aAdditionalMatchProperties);
 
         if (aConceptScope != null) {
             // Scope-limiting must always happen before label matching!
@@ -312,16 +327,19 @@ public class ConceptLinkingServiceImpl
     }
 
     private List<KBHandle> findStartingWithMatches(KnowledgeBase aKB, String aConceptScope,
-            ConceptFeatureValueType aValueType, String aQuery, final int threshold)
+            ConceptFeatureValueType aValueType, String aQuery, final int threshold,
+            Set<String> aPrefLabelProperties, Set<String> aAdditionalMatchProperties)
     {
         if (aQuery == null || aQuery.trim().length() < threshold) {
             LOG.debug("Not searching for candidates matching query because it is too short");
-            return Collections.emptyList();
+            return emptyList();
         }
 
         var startTime = currentTimeMillis();
 
         var query = newQueryBuilder(aValueType, aKB);
+        query.withPrefLabelProperties(aPrefLabelProperties);
+        query.withAdditionalMatchingProperties(aAdditionalMatchProperties);
 
         if (aConceptScope != null) {
             // Scope-limiting must always happen before label matching!
@@ -351,7 +369,8 @@ public class ConceptLinkingServiceImpl
     }
 
     private Set<KBHandle> findExactIriMatches(KnowledgeBase aKB, String aConceptScope,
-            ConceptFeatureValueType aValueType, String aQuery)
+            ConceptFeatureValueType aValueType, String aQuery, Set<String> aPrefLabelProperties,
+            Set<String> aAdditionalMatchProperties)
     {
         var startTime = currentTimeMillis();
 
@@ -368,6 +387,8 @@ public class ConceptLinkingServiceImpl
         }
 
         var iriMatchBuilder = newQueryBuilder(aValueType, aKB).withIdentifier(aQuery);
+        iriMatchBuilder.withPrefLabelProperties(aPrefLabelProperties);
+        iriMatchBuilder.withAdditionalMatchingProperties(aAdditionalMatchProperties);
 
         if (aConceptScope != null) {
             iriMatchBuilder.descendantsOf(aConceptScope);

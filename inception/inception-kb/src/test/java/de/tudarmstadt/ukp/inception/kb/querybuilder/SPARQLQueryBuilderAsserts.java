@@ -19,18 +19,19 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static java.lang.System.currentTimeMillis;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.slf4j.event.Level.INFO;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
 import org.eclipse.rdf4j.query.MalformedQueryException;
 import org.eclipse.rdf4j.query.parser.sparql.ast.ParseException;
 import org.eclipse.rdf4j.repository.Repository;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,7 +91,7 @@ public class SPARQLQueryBuilderAsserts
     public static List<KBHandle> asHandles(Repository aRepo, SPARQLQuery aBuilder)
     {
         try (var conn = aRepo.getConnection()) {
-            printQuery(aBuilder);
+            printQuery(conn, aBuilder);
 
             var startTime = currentTimeMillis();
 
@@ -117,7 +118,7 @@ public class SPARQLQueryBuilderAsserts
     public static boolean exists(Repository aRepo, SPARQLQuery aBuilder)
     {
         try (var conn = aRepo.getConnection()) {
-            printQuery(aBuilder);
+            printQuery(conn, aBuilder);
 
             var startTime = currentTimeMillis();
 
@@ -132,22 +133,20 @@ public class SPARQLQueryBuilderAsserts
         }
     }
 
-    private static void printQuery(SPARQLQuery aBuilder)
+    private static void printQuery(RepositoryConnection aConn, SPARQLQuery aBuilder)
     {
         LOG.info("Query   :");
-        Arrays.stream(aBuilder.selectQuery().getQueryString().split("\n"))
-                .forEachOrdered(l -> LOG.info("          {}", l));
+        aBuilder.logQueryString(LOG, INFO, "          ");
     }
 
     @SuppressWarnings("unchecked")
     private static <T extends RuntimeException> T handleParseException(SPARQLQuery aBuilder,
             T aException)
     {
-        String[] queryStringLines = aBuilder.selectQuery().getQueryString().split("\n");
-
-        if (aException.getCause() instanceof ParseException) {
-            ParseException cause = (ParseException) aException.getCause();
-            String message = String.format("Error: %s%n" + "Bad query part starting with: %s%n",
+        if (aException.getCause() instanceof ParseException cause
+                && aBuilder instanceof SPARQLQueryBuilder builder) {
+            var queryStringLines = builder.selectQuery().getQueryString().split("\n");
+            var message = String.format("Error: %s%n" + "Bad query part starting with: %s%n",
                     aException.getMessage(), queryStringLines[cause.currentToken.beginLine - 1]
                             .substring(cause.currentToken.beginColumn - 1));
             return (T) new MalformedQueryException(message);

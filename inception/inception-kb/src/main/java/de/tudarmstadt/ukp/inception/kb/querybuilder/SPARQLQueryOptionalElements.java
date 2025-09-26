@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
+import java.util.Collection;
+
 public interface SPARQLQueryOptionalElements
     extends SPARQLQuery
 {
@@ -79,4 +81,8 @@ public interface SPARQLQueryOptionalElements
      */
     @SuppressWarnings("javadoc")
     SPARQLQueryOptionalElements includeInferred(boolean aEnabled);
+
+    SPARQLQueryPrimaryConditions withPrefLabelProperties(Collection<String> aString);
+
+    SPARQLQueryPrimaryConditions withAdditionalMatchingProperties(Collection<String> aString);
 }

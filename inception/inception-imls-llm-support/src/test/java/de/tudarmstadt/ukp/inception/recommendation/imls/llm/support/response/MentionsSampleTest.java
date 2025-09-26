@@ -98,7 +98,7 @@ class MentionsSampleTest
                 .withFeature(NamedEntity._FeatName_value, "PER") //
                 .buildAndAddToIndexes();
 
-        var sut = new MentionsFromJsonExtractor();
+        var sut = new SpanJsonAnnotationTaskCodec();
         var examples = sut.generateExamples(engine, cas, 10);
 
         assertThat(examples).containsKeys(text);

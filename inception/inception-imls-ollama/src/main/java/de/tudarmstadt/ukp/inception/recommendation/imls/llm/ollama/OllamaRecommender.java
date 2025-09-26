@@ -33,12 +33,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatBasedLlmRecommenderImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatBasedLlmRecommenderImplBase;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class OllamaRecommender
@@ -49,9 +50,10 @@ public class OllamaRecommender
     private final OllamaClient client;
 
     public OllamaRecommender(Recommender aRecommender, OllamaRecommenderTraits aTraits,
-            OllamaClient aClient, AnnotationSchemaService aSchemaService)
+            OllamaClient aClient, AnnotationSchemaService aSchemaService,
+            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint)
     {
-        super(aRecommender, aTraits, aSchemaService);
+        super(aRecommender, aTraits, aSchemaService, aResponseExtractorExtensionPoint);
 
         client = aClient;
     }

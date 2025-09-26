@@ -15,31 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
-
-public enum ExtractionMode
-{
-    @JsonProperty("response-as-label")
-    RESPONSE_AS_LABEL, //
-
-    @JsonProperty("mentions-from-json")
-    MENTIONS_FROM_JSON,
-
-    @JsonProperty("relations-from-json")
-    RELATIONS_FROM_JSON;
-
-    public boolean accepts(AnnotationLayer aLayer)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record ChatMessage(Role role, String content) {
+    public static enum Role
     {
-        if (this == MENTIONS_FROM_JSON) {
-            // Mention extraction only makes sense for span layers
-            return SpanLayerSupport.TYPE.equals(aLayer.getType());
+        SYSTEM("system"), //
+        ASSISTANT("assistant"), //
+        USER("user");
+
+        private final String name;
+
+        private Role(String aName)
+        {
+            name = aName;
         }
 
-        return true;
+        public String getName()
+        {
+            return name;
+        }
     }
+
 }
