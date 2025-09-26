@@ -14,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.stream.IntStream;
 
@@ -57,10 +56,9 @@ public class LuceneIndexLocationTest
     /**
      * Set up memory storage located within temporary folder
      *
-     * @throws Exception
      */
     @BeforeEach
-    public void setUp(@TempDir File dataDir) throws Exception
+    public void setUp(@TempDir File dataDir)
     {
         sail = new MemoryStore();
 
@@ -85,7 +83,7 @@ public class LuceneIndexLocationTest
     }
 
     @AfterEach
-    public void tearDown() throws IOException, RepositoryException
+    public void tearDown() throws RepositoryException
     {
         try {
             if (connection != null) {
@@ -102,10 +100,9 @@ public class LuceneIndexLocationTest
     /**
      * Check Lucene index location
      *
-     * @throws Exception
      */
     @Test
-    public void IndexLocationTest() throws Exception
+    public void IndexLocationTest()
     {
         File dataDir = repository.getDataDir();
         Path lucenePath = repository.getDataDir().toPath().resolve(luceneIndexPath);
