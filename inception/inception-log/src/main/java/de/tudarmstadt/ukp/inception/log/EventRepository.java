@@ -33,62 +33,8 @@ public interface EventRepository
 
     void create(LoggedEvent... aEvents);
 
-    /**
-     * @param aProject
-     *            the project to query the events from
-     * @param aDataOwner
-     *            the user who generated the events
-     * @param aEventType
-     *            the type of event
-     * @param aMaxSize
-     *            the maximum number of events to return
-     * @param aRecommenderId
-     *            the recommender to which the events relate
-     * @return logged events of the given type, user name, project and recommender id from the db.
-     * @deprecated Not used anymore.
-     */
-    @Deprecated
-    List<LoggedEvent> listLoggedEventsForRecommender(Project aProject, String aDataOwner,
-            String aEventType, int aMaxSize, long aRecommenderId);
-
     <E extends Throwable> void forEachLoggedEvent(Project aProject,
             FailableConsumer<LoggedEvent, E> aConsumer);
-
-    /**
-     * @return logged events of the given types, user name and project for every document from the
-     *         db.
-     * @param aProject
-     *            the project to query the events from
-     * @param aDataOwner
-     *            the user who generated the events
-     * @param aEventType
-     *            the type of event
-     * @param aMaxSize
-     *            the maximum number of events to return
-     * @deprecated Not used anymore.
-     */
-    @Deprecated
-    List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aDataOwner,
-            String[] aEventType, int aMaxSize);
-
-    /**
-     * @return logged events of the given type, user name, project and detail string from the db.
-     * @param aProject
-     *            the project to query the events from
-     * @param aDataOwner
-     *            the user who generated the events
-     * @param aEventType
-     *            the type of event
-     * @param aMaxSize
-     *            the maximum number of events to return
-     * @param aDetail
-     *            the detail pattern per SQL LIKE operator, e.g. {@code "%recommender%"} finds all
-     *            events containing the string {@code "recommender"} in their detail
-     * @deprecated Not used anymore.
-     */
-    @Deprecated
-    List<LoggedEvent> listLoggedEventsForDetail(Project aProject, String aDataOwner,
-            String aEventType, int aMaxSize, String aDetail);
 
     List<LoggedEvent> listRecentActivity(Project aProject, String aDataOwner,
             Collection<String> aEventTypes, int aMaxSize);
@@ -103,6 +49,9 @@ public interface EventRepository
      */
     List<LoggedEvent> listRecentActivity(String aDataOwner, int aMaxSize);
 
-    List<SummarizedLoggedEvent> summarizeEvents(String aSessionOwner, Project aProject,
-            Instant aNow, Instant aMinus);
+    List<SummarizedLoggedEvent> summarizeEventsBySessionOwner(String aSessionOwner,
+            Project aProject, Instant aNow, Instant aMinus);
+
+    List<SummarizedLoggedEvent> summarizeEventsByDataOwner(String aDataOwner, Project aProject,
+            Instant aFrom, Instant aTo);
 }

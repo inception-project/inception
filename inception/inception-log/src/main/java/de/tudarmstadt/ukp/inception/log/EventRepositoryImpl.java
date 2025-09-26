@@ -23,14 +23,12 @@ import static java.time.temporal.ChronoUnit.DAYS;
 import java.lang.invoke.MethodHandles;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.stream.Streams;
@@ -85,70 +83,6 @@ public class EventRepositoryImpl
         if (aEvents.length > 0 && !LOG.isTraceEnabled()) {
             LOG.debug("... {} events stored ... ({}ms)", aEvents.length, duration);
         }
-    }
-
-    @Override
-    @Transactional
-    public List<LoggedEvent> listLoggedEventsForRecommender(Project aProject, String aUsername,
-            String aEventType, int aMaxSize, long aRecommenderId)
-    {
-        var detailStr = "%\"recommenderId\":" + aRecommenderId + "%";
-
-        return listLoggedEventsForDetail(aProject, aUsername, aEventType, aMaxSize, detailStr);
-    }
-
-    @Override
-    @Transactional
-    public List<LoggedEvent> listLoggedEventsForDetail(Project aProject, String aUsername,
-            String aEventType, int aMaxSize, String aDetail)
-    {
-        String query = String.join("\n", //
-                "FROM LoggedEvent WHERE ", //
-                "user=:user AND ", //
-                "project = :project AND ", //
-                "event = :event AND ", //
-                "details LIKE :details ", //
-                "ORDER BY created DESC");
-
-        return entityManager.createQuery(query, LoggedEvent.class) //
-                .setParameter("user", aUsername) //
-                .setParameter("project", aProject.getId()) //
-                .setParameter("event", aEventType) //
-                .setParameter("details", aDetail) //
-                .setMaxResults(aMaxSize) //
-                .getResultList();
-    }
-
-    @Override
-    @Transactional
-    public List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
-            String[] aEventTypes, int aMaxSize)
-    {
-        var query = String.join("\n", //
-                "FROM LoggedEvent WHERE", //
-                "id IN", //
-                // select one event when time-stamps are the same per document
-                "   (SELECT max(id)", //
-                "   FROM LoggedEvent WHERE", //
-                "   user=:user AND", //
-                "   project=:project AND", //
-                "   event in (:eventTypes)", //
-                "   AND created in", //
-                // select last created events per document
-                "       (SELECT max(created) ", //
-                "       FROM LoggedEvent WHERE", //
-                "       user=:user AND", //
-                "       project=:project AND", //
-                "       event in (:eventTypes)", //
-                "       GROUP BY document)", //
-                "   GROUP BY document)", //
-                "ORDER BY created DESC");
-
-        var typedQuery = entityManager.createQuery(query, LoggedEvent.class) //
-                .setParameter("user", aUsername) //
-                .setParameter("project", aProject.getId()) //
-                .setParameter("eventTypes", Arrays.asList(aEventTypes)); //
-        return typedQuery.setMaxResults(aMaxSize).getResultList();
     }
 
     @Override
@@ -217,13 +151,13 @@ public class EventRepositoryImpl
         var typedQuery = entityManager.createQuery(query, LoggedEvent.class) //
                 .setParameter("project", aProject.getId());
 
-        try (Stream<LoggedEvent> eventStream = typedQuery.getResultStream()) {
+        try (var eventStream = typedQuery.getResultStream()) {
             Streams.failableStream(eventStream).forEach(aConsumer);
         }
     }
 
     @Override
-    public List<SummarizedLoggedEvent> summarizeEvents(String aSessionOwner, Project aProject,
+    public List<SummarizedLoggedEvent> summarizeEventsBySessionOwner(String aSessionOwner, Project aProject,
             Instant aFrom, Instant aTo)
     {
         var cb = entityManager.getCriteriaBuilder();
@@ -237,6 +171,41 @@ public class EventRepositoryImpl
                         root.get(LoggedEvent_.event))
                 .where( //
                         cb.equal(root.get(LoggedEvent_.user), aSessionOwner), //
+                        cb.equal(root.get(LoggedEvent_.project), aProject.getId()), //
+                        cb.between(root.get(LoggedEvent_.created), Date.from(aFrom),
+                                Date.from(aTo)));
+
+        var aggregator = new HashMap<SummarizedLoggedEventKey, AtomicLong>();
+
+        entityManager.createQuery(query).getResultStream().forEach(tuple -> {
+            var truncDate = tuple.get(0, Date.class).toInstant().truncatedTo(DAYS);
+            var document = tuple.get(1, Long.class);
+            var event = tuple.get(2, String.class);
+            var key = new SummarizedLoggedEventKey(event, truncDate, document);
+            aggregator.computeIfAbsent(key, $ -> new AtomicLong()).addAndGet(1);
+        });
+
+        return aggregator.entrySet().stream() //
+                .map(e -> new SummarizedLoggedEvent(e.getKey().event(), e.getKey().document(),
+                        e.getKey().date(), e.getValue().get())) //
+                .toList();
+    }
+
+    @Override
+    public List<SummarizedLoggedEvent> summarizeEventsByDataOwner(String aDataOwner,
+            Project aProject, Instant aFrom, Instant aTo)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(Tuple.class);
+        var root = query.from(LoggedEvent.class);
+
+        query //
+                .multiselect( //
+                        root.get(LoggedEvent_.created), //
+                        root.get(LoggedEvent_.document), //
+                        root.get(LoggedEvent_.event))
+                .where( //
+                        cb.equal(root.get(LoggedEvent_.annotator), aDataOwner), //
                         cb.equal(root.get(LoggedEvent_.project), aProject.getId()), //
                         cb.between(root.get(LoggedEvent_.created), Date.from(aFrom),
                                 Date.from(aTo)));
