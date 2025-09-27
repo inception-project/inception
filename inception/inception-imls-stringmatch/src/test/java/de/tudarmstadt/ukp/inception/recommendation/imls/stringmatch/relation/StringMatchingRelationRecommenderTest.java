@@ -21,11 +21,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
+import static java.nio.file.Files.newInputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
@@ -41,6 +39,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -129,19 +128,19 @@ public class StringMatchingRelationRecommenderTest
 
     private static Recommender buildRecommender()
     {
-        AnnotationLayer baseLayer = new AnnotationLayer();
+        var baseLayer = new AnnotationLayer();
         baseLayer.setName(RELATION_BASE);
 
-        AnnotationLayer relationLayer = new AnnotationLayer();
+        var relationLayer = new AnnotationLayer();
         relationLayer.setName(RELATION_LAYER);
 
-        AnnotationFeature feature = new AnnotationFeature();
+        var feature = new AnnotationFeature();
         feature.setName("value");
 
         relationLayer.setAttachType(baseLayer);
         relationLayer.setAttachFeature(feature);
 
-        Recommender recommender = new Recommender();
+        var recommender = new Recommender();
         recommender.setLayer(relationLayer);
         recommender.setFeature(feature);
         recommender.setMaxRecommendations(3);
@@ -151,13 +150,13 @@ public class StringMatchingRelationRecommenderTest
 
     private CAS loadSimpleCas() throws Exception
     {
-        Path root = Paths.get("src", "test", "resources", "relation", "simple");
+        var root = Paths.get("src", "test", "resources", "relation", "simple");
 
-        CAS cas = CasFactory.createCasFromPath(root.resolve("TypeSystem.xml").toString());
+        var cas = CasFactory.createCasFromPath(root.resolve("TypeSystem.xml").toString());
 
-        try (InputStream is = Files.newInputStream(root.resolve("relation_test.xmi"))) {
+        try (var is = newInputStream(root.resolve("relation_test.xmi"))) {
             XmlCasDeserializer.deserialize(is, cas);
-            casStorageSession.add("testDataCas", EXCLUSIVE_WRITE_ACCESS, cas);
+            casStorageSession.add(CasSet.forTest("testDataCas"), EXCLUSIVE_WRITE_ACCESS, cas);
             RecommenderTestHelper.addPredictionFeatures(cas, RELATION_LAYER, "value");
 
             return cas;

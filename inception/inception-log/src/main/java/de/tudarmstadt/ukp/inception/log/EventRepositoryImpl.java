@@ -157,8 +157,8 @@ public class EventRepositoryImpl
     }
 
     @Override
-    public List<SummarizedLoggedEvent> summarizeEventsBySessionOwner(String aSessionOwner, Project aProject,
-            Instant aFrom, Instant aTo)
+    public List<SummarizedLoggedEvent> summarizeEventsBySessionOwner(String aSessionOwner,
+            Project aProject, Instant aFrom, Instant aTo)
     {
         var cb = entityManager.getCriteriaBuilder();
         var query = cb.createQuery(Tuple.class);

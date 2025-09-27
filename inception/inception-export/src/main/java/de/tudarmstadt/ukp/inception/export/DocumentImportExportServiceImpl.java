@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.export;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
@@ -63,6 +62,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
@@ -103,8 +103,6 @@ public class DocumentImportExportServiceImpl
     static final String FEATURE_BASE_NAME_LAYER = "layer";
     static final String TYPE_NAME_FEATURE_DEFINITION = "de.tudarmstadt.ukp.clarin.webanno.api.type.FeatureDefinition";
     static final String TYPE_NAME_LAYER_DEFINITION = "de.tudarmstadt.ukp.clarin.webanno.api.type.LayerDefinition";
-
-    private static final String EXPORT_CAS = "exportCas";
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -240,14 +238,14 @@ public class DocumentImportExportServiceImpl
                 bulkOperationContext = new HashMap<>();
             }
 
-            String dataOwner;
+            CasSet set;
             switch (aMode) {
             case ANNOTATION:
-                dataOwner = aDataOwner;
+                set = CasSet.forUser(aDataOwner);
                 break;
             case CURATION:
                 // The merge result will be exported
-                dataOwner = CURATION_USER;
+                set = CasSet.CURATION_SET;
                 break;
             default:
                 throw new IllegalArgumentException("Unknown mode [" + aMode + "]");
@@ -258,8 +256,8 @@ public class DocumentImportExportServiceImpl
             try (var session = CasStorageSession.openNested()) {
                 // We do not want to add the CAS to the exclusive access pool here to avoid
                 // potentially running out of memory when exporting a large project
-                var cas = casStorageService.readCas(aDocument, dataOwner, UNMANAGED_ACCESS);
-                exportFile = exportCasToFile(cas, aDocument, dataOwner, aFormat, aStripExtension,
+                var cas = casStorageService.readCas(aDocument, set, UNMANAGED_ACCESS);
+                exportFile = exportCasToFile(cas, aDocument, set.id(), aFormat, aStripExtension,
                         bulkOperationContext);
             }
 
@@ -459,7 +457,7 @@ public class DocumentImportExportServiceImpl
 
             try (var session = CasStorageSession.openNested()) {
                 var exportCas = WebAnnoCasUtil.createCas();
-                session.add(EXPORT_CAS, EXCLUSIVE_WRITE_ACCESS, exportCas);
+                session.add(CasSet.EXPORT_SET, EXCLUSIVE_WRITE_ACCESS, exportCas);
 
                 // Update type system the CAS, compact it (remove all non-reachable feature
                 // structures) and remove all internal feature structures in the process

@@ -49,6 +49,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
@@ -209,7 +210,8 @@ public class ExternalRecommenderIntegrationTest
             for (int i = 0; i < data.size(); i++) {
                 var cas = data.get(i);
                 addCasMetadata(cas.getJCas(), i);
-                casStorageSession.add("testDataCas" + i, EXCLUSIVE_WRITE_ACCESS, cas);
+                casStorageSession.add(CasSet.forTest("testDataCas" + i), EXCLUSIVE_WRITE_ACCESS,
+                        cas);
             }
             return data;
         }
