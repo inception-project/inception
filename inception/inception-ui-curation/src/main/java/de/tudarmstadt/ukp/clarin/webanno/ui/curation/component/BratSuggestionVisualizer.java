@@ -56,6 +56,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.comment.AnnotatorCommentDialogPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
@@ -192,7 +193,7 @@ public abstract class BratSuggestionVisualizer
     {
         var username = getModelObject().getUser().getUsername();
         var doc = getModelObject().getAnnotatorState().getDocument();
-        var annDoc = documentService.getAnnotationDocument(doc, username);
+        var annDoc = documentService.getAnnotationDocument(doc, CasSet.forUser(username));
         var annDocState = annDoc.getState();
 
         switch (annDocState) {
@@ -216,7 +217,7 @@ public abstract class BratSuggestionVisualizer
     {
         var username = getModelObject().getUser().getUsername();
         var doc = getModelObject().getAnnotatorState().getDocument();
-        return documentService.getAnnotationDocument(doc, username);
+        return documentService.getAnnotationDocument(doc, CasSet.forUser(username));
     }
 
     private String maybeAnonymizeUsername(AnnotatorSegmentState aSegment)
@@ -387,7 +388,8 @@ public abstract class BratSuggestionVisualizer
                 AnnotatorSegmentState segment = getModelObject();
                 AnnotatorState state = segment.getAnnotatorState();
                 CasProvider casProvider = () -> documentService.readAnnotationCas(
-                        segment.getAnnotatorState().getDocument(), segment.getUser().getUsername());
+                        segment.getAnnotatorState().getDocument(),
+                        CasSet.forUser(segment.getUser().getUsername()));
                 var result = lazyDetailsLookupService.lookupLazyDetails(request, paramId,
                         casProvider, state.getDocument(), segment.getUser(),
                         state.getWindowBeginOffset(), state.getWindowEndOffset());

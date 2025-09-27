@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.export;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
@@ -134,7 +135,7 @@ public class CuratedDocumentsExporter
                     continue;
                 }
 
-                if (!documentService.existsCas(sourceDocument, CURATION_USER)) {
+                if (!documentService.existsCas(sourceDocument, CURATION_SET)) {
                     aMonitor.addMessage(LogMessage.warn(this,
                             "Curation CAS for document %s could not be found!", sourceDocument));
                     LOG.warn("Curation CAS for document {} could not be found!", sourceDocument);

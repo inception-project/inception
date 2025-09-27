@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
@@ -319,7 +320,7 @@ public class CurationSidebarRenderer
         for (var user : selectedUsers) {
             try {
                 var userCas = documentService.readAnnotationCas(aRequest.getSourceDocument(),
-                        user.getUsername());
+                        CasSet.forUser(user));
                 casses.put(user.getUsername(), userCas);
             }
             catch (IOException e) {

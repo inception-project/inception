@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
@@ -107,8 +108,8 @@ public class BulkCurationTask
                     var users = curationDocumentService.listCuratableUsers(doc);
                     users.removeIf(u -> targetUser.equals(u.getUsername()));
 
-                    var targetCas = documentService.readAnnotationCas(doc, targetUser,
-                            FORCE_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
+                    var targetCas = documentService.readAnnotationCas(doc,
+                            CasSet.forUser(targetUser), FORCE_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
 
                     var annotatorCasses = documentService.readAllCasesSharedNoUpgrade(doc, users);
 

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.project.export.task.curated;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.invoke.MethodHandles.lookup;
@@ -166,7 +167,7 @@ public class CuratedDocumentsProjectExportTask
                         .equals(sourceDocument.getState()))
                         || SourceDocumentState.CURATION_FINISHED
                                 .equals(sourceDocument.getState())) {
-                    if (documentService.existsCas(sourceDocument, CURATION_USER)) {
+                    if (documentService.existsCas(sourceDocument, CURATION_SET)) {
                         // Copy CAS - this is used when importing the project again
                         try (var os = new FileOutputStream(
                                 new File(curationDir, CURATION_USER + ".ser"))) {

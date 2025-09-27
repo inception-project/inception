@@ -30,6 +30,7 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.springframework.http.MediaType;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -60,8 +61,8 @@ public abstract class CrossDocumentExporter_ImplBase
 
     private CAS loadCas(SourceDocument aDocument, String aDataOwner) throws IOException
     {
-        return documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,
-                SHARED_READ_ONLY_ACCESS);
+        return documentService.readAnnotationCas(aDocument, CasSet.forUser(aDataOwner),
+                AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
     }
 
     protected CAS loadCasOrInitialCas(SourceDocument aDocument, String aDataOwner,
@@ -86,7 +87,7 @@ public abstract class CrossDocumentExporter_ImplBase
 
         // If there is no CAS for the data owner, it also implies that the
         // annotation state is NEW - so we load the initial CAS.
-        if (!documentService.existsCas(aDocument, aDataOwner)) {
+        if (!documentService.existsCas(aDocument, CasSet.forUser(aDataOwner))) {
             return loadInitialCas(aDocument);
         }
 

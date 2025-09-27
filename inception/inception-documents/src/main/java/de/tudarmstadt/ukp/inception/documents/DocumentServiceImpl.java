@@ -299,9 +299,9 @@ public class DocumentServiceImpl
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    public boolean existsCas(SourceDocument aDocument, String aUser) throws IOException
+    public boolean existsCas(SourceDocument aDocument, CasSet aSet) throws IOException
     {
-        return casStorageService.existsCas(aDocument, CasSet.forUser(aUser));
+        return casStorageService.existsCas(aDocument, aSet);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -311,7 +311,8 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
 
-        return existsCas(aAnnotationDocument.getDocument(), aAnnotationDocument.getUser());
+        return existsCas(aAnnotationDocument.getDocument(),
+                CasSet.forUser(aAnnotationDocument.getUser()));
     }
 
     @Override
@@ -442,7 +443,7 @@ public class DocumentServiceImpl
             return annotationDocument;
         }
 
-        return getAnnotationDocument(aDocument, aUser);
+        return getAnnotationDocument(aDocument, CasSet.forUser(aUser));
     }
 
     @Override
@@ -451,21 +452,21 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aUser, "User must be specified");
 
-        return getAnnotationDocument(aDocument, aUser.getUsername());
+        return getAnnotationDocument(aDocument, CasSet.forUser(aUser.getUsername()));
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public AnnotationDocument getAnnotationDocument(SourceDocument aDocument, String aUser)
+    public AnnotationDocument getAnnotationDocument(SourceDocument aDocument, CasSet aSet)
     {
         Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notBlank(aUser, "User must be specified");
+        Validate.notNull(aSet, "Set must be specified");
 
         return entityManager
                 .createQuery("FROM AnnotationDocument WHERE document = :document AND "
                         + "user =:user" + " AND project = :project", AnnotationDocument.class)
                 .setParameter("document", aDocument) //
-                .setParameter("user", aUser) //
+                .setParameter("user", aSet.id()) //
                 .setParameter("project", aDocument.getProject()) //
                 .getSingleResult();
     }
@@ -913,9 +914,9 @@ public class DocumentServiceImpl
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    public CAS readAnnotationCas(SourceDocument aDocument, String aUserName) throws IOException
+    public CAS readAnnotationCas(SourceDocument aDocument, CasSet aSet) throws IOException
     {
-        return readAnnotationCas(aDocument, aUserName, NO_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
+        return readAnnotationCas(aDocument, aSet, NO_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -924,7 +925,7 @@ public class DocumentServiceImpl
     public CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasAccessMode aMode)
         throws IOException
     {
-        return readAnnotationCas(aDocument, aUserName, NO_CAS_UPGRADE, aMode);
+        return readAnnotationCas(aDocument, CasSet.forUser(aUserName), NO_CAS_UPGRADE, aMode);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -933,8 +934,8 @@ public class DocumentServiceImpl
     public CAS readAnnotationCas(AnnotationDocument aAnnotationDocument, CasAccessMode aMode)
         throws IOException
     {
-        return readAnnotationCas(aAnnotationDocument.getDocument(), aAnnotationDocument.getUser(),
-                NO_CAS_UPGRADE, aMode);
+        return readAnnotationCas(aAnnotationDocument.getDocument(),
+                CasSet.forUser(aAnnotationDocument.getUser()), NO_CAS_UPGRADE, aMode);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -944,19 +945,30 @@ public class DocumentServiceImpl
             CasUpgradeMode aUpgradeMode)
         throws IOException
     {
-        return readAnnotationCas(aDocument, aUserName, aUpgradeMode, EXCLUSIVE_WRITE_ACCESS);
+        return readAnnotationCas(aDocument, CasSet.forUser(aUserName), aUpgradeMode,
+                EXCLUSIVE_WRITE_ACCESS);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    public CAS readAnnotationCas(SourceDocument aDocument, String aUserName,
-            CasUpgradeMode aUpgradeMode, CasAccessMode aMode)
+    public CAS readAnnotationCas(AnnotationDocument aAnnDoc, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aMode)
+        throws IOException
+    {
+        return readAnnotationCas(aAnnDoc.getDocument(), CasSet.forUser(aAnnDoc.getUser()),
+                aUpgradeMode, aMode);
+    }
+
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
+    @Override
+    public CAS readAnnotationCas(SourceDocument aDocument, CasSet aSet, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aMode)
         throws IOException
     {
         // If there is no CAS yet for the source document, create one.
-        var cas = casStorageService.readOrCreateCas(aDocument, CasSet.forUser(aUserName),
-                aUpgradeMode,
+        var cas = casStorageService.readOrCreateCas(aDocument, aSet, aUpgradeMode,
                 // Convert the source file into an annotation CAS
                 () -> {
                     var initialCas = createOrReadInitialCas(aDocument, NO_CAS_UPGRADE,
@@ -1046,9 +1058,10 @@ public class DocumentServiceImpl
             return new HashMap<>();
         }
 
-        Map<String, CAS> casses = new HashMap<>();
-        for (String username : aUsernames) {
-            CAS cas = readAnnotationCas(aDoc, username, AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+        var casses = new HashMap<String, CAS>();
+        for (var username : aUsernames) {
+            var cas = readAnnotationCas(aDoc, CasSet.forUser(username), AUTO_CAS_UPGRADE,
+                    SHARED_READ_ONLY_ACCESS);
             casses.put(username, cas);
         }
         return casses;
@@ -1111,10 +1124,9 @@ public class DocumentServiceImpl
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    public void deleteAnnotationCas(SourceDocument aSourceDocument, String aUsername)
-        throws IOException
+    public void deleteAnnotationCas(SourceDocument aSourceDocument, CasSet aSet) throws IOException
     {
-        casStorageService.deleteCas(aSourceDocument, CasSet.forUser(aUsername));
+        casStorageService.deleteCas(aSourceDocument, aSet);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -1128,7 +1140,7 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
-    public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, String aUser,
+    public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, CasSet aUser,
             AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException
     {

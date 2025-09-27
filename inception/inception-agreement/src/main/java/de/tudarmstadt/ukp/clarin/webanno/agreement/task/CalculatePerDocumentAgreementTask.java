@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementSummary;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -149,12 +150,12 @@ public class CalculatePerDocumentAgreementTask
             }
         }
 
-        if (!documentService.existsCas(aDocument, aDataOwner)) {
+        if (!documentService.existsCas(aDocument, CasSet.forUser(aDataOwner))) {
             return loadInitialCas(aDocument);
         }
 
-        var cas = documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,
-                SHARED_READ_ONLY_ACCESS);
+        var cas = documentService.readAnnotationCas(aDocument, CasSet.forUser(aDataOwner),
+                AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
 
         // Set the CAS name in the DocumentMetaData so that we can pick it
         // up in the Diff position for the purpose of debugging / transparency.

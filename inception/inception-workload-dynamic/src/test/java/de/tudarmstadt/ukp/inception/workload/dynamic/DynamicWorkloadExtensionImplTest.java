@@ -48,6 +48,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.FileSystemUtils;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -181,7 +182,8 @@ public class DynamicWorkloadExtensionImplTest
                 createSourceDocument("1.txt"));
         Fixtures.importTestSourceDocumentAndAddNamedEntity(documentService, ann);
         ann.setState(AnnotationDocumentState.IN_PROGRESS);
-        ann = documentService.getAnnotationDocument(ann.getDocument(), ann.getUser());
+        ann = documentService.getAnnotationDocument(ann.getDocument(),
+                CasSet.forUser(ann.getUser()));
         ann.setTimestamp(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()));
         documentService.createOrUpdateAnnotationDocument(ann);
 

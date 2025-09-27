@@ -1049,7 +1049,7 @@ public class PredictionTask
         public CAS get() throws IOException
         {
             if (originalCas == null) {
-                originalCas = documentService.readAnnotationCas(document, dataOwner,
+                originalCas = documentService.readAnnotationCas(document, CasSet.forUser(dataOwner),
                         AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
             }
 
