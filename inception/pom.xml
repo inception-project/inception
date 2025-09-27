@@ -292,7 +292,6 @@
     <module>inception-imls-elg</module>
     <module>inception-imls-hf</module>
     <module>inception-imls-external</module>
-    <module>inception-imls-lapps</module>
     <module>inception-imls-ollama</module>
     <module>inception-imls-llm-support</module>
     <module>inception-imls-weblicht</module>
