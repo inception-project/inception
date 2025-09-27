@@ -164,8 +164,6 @@ include::{include-dir}projects_recommendation_conceptlinker.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_external.adoc[leveloffset=+2]
 
-// include::{include-dir}projects_recommendation_lappsgrid.adoc[leveloffset=+2]
-
 include::{include-dir}projects_recommendation_weblicht.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_elg.adoc[leveloffset=+2]
