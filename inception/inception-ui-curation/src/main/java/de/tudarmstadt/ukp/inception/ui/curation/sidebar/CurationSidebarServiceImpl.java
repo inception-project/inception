@@ -53,6 +53,7 @@ import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -306,7 +307,7 @@ public class CurationSidebarServiceImpl
         var doc = aState.getDocument();
         var annoDoc = documentService.createOrGetAnnotationDocument(doc, curator);
         documentService.writeAnnotationCas(aTargetCas, annoDoc, EXPLICIT_ANNOTATOR_USER_ACTION);
-        casStorageService.getCasTimestamp(doc, curator.getUsername())
+        casStorageService.getCasTimestamp(doc, CasSet.forUser(curator.getUsername()))
                 .ifPresent(aState::setAnnotationDocumentTimestamp);
     }
 

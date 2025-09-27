@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.documents;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession.openNested;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
@@ -58,6 +59,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
@@ -161,7 +163,7 @@ public class DocumentServiceImplConcurrencyTest
 
             assertThat(cas).isNotNull();
             assertThat(cas.getDocumentText()).isEqualTo("Test");
-            assertThat(casStorageService.existsCas(doc, INITIAL_CAS_PSEUDO_USER)).isTrue();
+            assertThat(casStorageService.existsCas(doc, INITIAL_SET)).isTrue();
         }
     }
 
@@ -176,7 +178,9 @@ public class DocumentServiceImplConcurrencyTest
 
             assertThat(cas).isNotNull();
             assertThat(cas.getDocumentText()).isEqualTo("Test");
-            assertThat(casStorageService.existsCas(sourceDocument, user.getUsername())).isTrue();
+            assertThat(
+                    casStorageService.existsCas(sourceDocument, CasSet.forUser(user.getUsername())))
+                            .isTrue();
         }
     }
 

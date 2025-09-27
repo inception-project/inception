@@ -24,30 +24,31 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageMetadata;
 
 public interface CasStorageDriver
 {
-    CAS readCas(SourceDocument aDocument, String aUser) throws IOException;
+    CAS readCas(SourceDocument aDocument, CasSet aSet) throws IOException;
 
-    void writeCas(SourceDocument aDocument, String aUser, CAS aCas) throws IOException;
+    void writeCas(SourceDocument aDocument, CasSet aSet, CAS aCas) throws IOException;
 
-    void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream) throws IOException;
+    void exportCas(SourceDocument aDocument, CasSet aSet, OutputStream aStream) throws IOException;
 
-    void importCas(SourceDocument aDocument, String aUser, InputStream aStream) throws IOException;
+    void importCas(SourceDocument aDocument, CasSet aSet, InputStream aStream) throws IOException;
 
-    boolean deleteCas(SourceDocument aDocument, String aUser) throws IOException;
+    boolean deleteCas(SourceDocument aDocument, CasSet aSet) throws IOException;
 
-    boolean existsCas(SourceDocument aDocument, String aUser) throws IOException;
+    boolean existsCas(SourceDocument aDocument, CasSet aSet) throws IOException;
 
-    Optional<CasStorageMetadata> getCasMetadata(SourceDocument aDocument, String aUser)
+    Optional<CasStorageMetadata> getCasMetadata(SourceDocument aDocument, CasSet aSet)
         throws IOException;
 
-    Optional<Long> verifyCasTimestamp(SourceDocument aDocument, String aUser,
+    Optional<Long> verifyCasTimestamp(SourceDocument aDocument, CasSet aSet,
             long aExpectedTimeStamp, String aContextAction)
         throws IOException, ConcurentCasModificationException;
 
-    Optional<Long> getCasFileSize(SourceDocument aDocument, String aUser) throws IOException;
+    Optional<Long> getCasFileSize(SourceDocument aDocument, CasSet aSet) throws IOException;
 }

@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -109,11 +110,11 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public CAS readCas(SourceDocument aDocument, String aUser) throws IOException
+    public CAS readCas(SourceDocument aDocument, CasSet aSet) throws IOException
     {
-        LOG.trace("Reading CAS [{}]@{}", aUser, aDocument);
+        LOG.trace("Reading CAS [{}]@{}", aSet, aDocument);
 
-        var casFile = getCasFile(aDocument.getProject().getId(), aDocument.getId(), aUser);
+        var casFile = getCasFile(aDocument.getProject().getId(), aDocument.getId(), aSet);
         var oldCasFile = new File(casFile.getPath() + OLD_EXTENSION);
 
         if (metadataCache != null) {
@@ -141,7 +142,7 @@ public class FileSystemCasStorageDriver
         }
 
         if (!casFile.exists()) {
-            throw new FileNotFoundException("Annotation document of user [" + aUser
+            throw new FileNotFoundException("Annotation document of [" + aSet
                     + "] for source document " + aDocument + " not found in project ["
                     + aDocument.getProject() + "). " + msgOldExists);
         }
@@ -149,10 +150,11 @@ public class FileSystemCasStorageDriver
         try {
             CasPersistenceUtils.readSerializedCas(cas, casFile);
             // Add/update the CAS metadata
-            CasMetadataUtils.addOrUpdateCasMetadata(cas, casFile.lastModified(), aDocument, aUser);
+            CasMetadataUtils.addOrUpdateCasMetadata(cas, casFile.lastModified(), aDocument,
+                    aSet.id());
         }
         catch (Exception e) {
-            throw new IOException("Annotation document of user [" + aUser + "] for source document "
+            throw new IOException("Annotation document of [" + aSet + "] for source document "
                     + aDocument + " in project [" + aDocument.getProject()
                     + " cannot be read from file [" + casFile + "]. " + msgOldExists, e);
         }
@@ -165,16 +167,16 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public void writeCas(SourceDocument aDocument, String aUserName, CAS aCas) throws IOException
+    public void writeCas(SourceDocument aDocument, CasSet aSet, CAS aCas) throws IOException
     {
         var t0 = currentTimeMillis();
 
-        LOG.debug("Preparing to update annotations for user [{}] on document {} " //
-                + "in project {}", aUserName, aDocument, aDocument.getProject());
+        LOG.debug("Preparing to update annotations for [{}] on document {} " //
+                + "in project {}", aSet, aDocument, aDocument.getProject());
 
         var annotationFolder = getAnnotationFolder(aDocument);
-        var currentVersion = new File(annotationFolder, aUserName + SER_CAS_EXTENSION);
-        var oldVersion = new File(annotationFolder, aUserName + SER_CAS_EXTENSION + OLD_EXTENSION);
+        var currentVersion = new File(annotationFolder, aSet.id() + SER_CAS_EXTENSION);
+        var oldVersion = new File(annotationFolder, aSet.id() + SER_CAS_EXTENSION + OLD_EXTENSION);
 
         if (metadataCache != null) {
             metadataCache.get(currentVersion).writeAttempt();
@@ -182,7 +184,7 @@ public class FileSystemCasStorageDriver
 
         // Check if there was a concurrent change to the file on disk
         if (currentVersion.exists()) {
-            failOnConcurrentModification(aCas, currentVersion, aDocument, aUserName, "writing");
+            failOnConcurrentModification(aCas, currentVersion, aDocument, aSet, "writing");
         }
 
         // Save current version
@@ -193,7 +195,7 @@ public class FileSystemCasStorageDriver
             }
 
             // Now write the new version to "<username>.ser" or CURATION_USER.ser
-            setDocumentId(aCas, aUserName);
+            setDocumentId(aCas, aSet.id());
             if (casStorageProperties.isParanoidCasSerialization()) {
                 CasPersistenceUtils.writeSerializedCasParanoid(aCas, currentVersion);
             }
@@ -215,9 +217,9 @@ public class FileSystemCasStorageDriver
                 throw e;
             }
 
-            LOG.error("Restoring previous annotations for user [{}] on document {} in " //
+            LOG.error("Restoring previous annotations for [{}] on document {} in " //
                     + "project {} due exception when trying to write new " + "annotations: [{}]",
-                    aUserName, aDocument, aDocument.getProject(), oldVersion);
+                    aSet, aDocument, aDocument.getProject(), oldVersion);
             try {
                 move(oldVersion.toPath(), currentVersion.toPath(), REPLACE_EXISTING);
             }
@@ -234,9 +236,9 @@ public class FileSystemCasStorageDriver
             // If compression is enabled, then it is not so uncommon that the file size may also
             // become smaller at times, so we allow a bit of slip
             LOG.debug(
-                    "Annotations shrunk for user [{}] on document {} in project "
+                    "Annotations shrunk for [{}] on document {} in project "
                             + "{}: {} -> {} bytes ({} bytes removed)",
-                    aUserName, aDocument, aDocument.getProject(), oldVersion.length(),
+                    aSet, aDocument, aDocument.getProject(), oldVersion.length(),
                     currentVersion.length(), currentVersion.length() - oldVersion.length());
         }
 
@@ -250,19 +252,19 @@ public class FileSystemCasStorageDriver
         // annotation) which is implemented as a delete/create operation with an intermediate
         // save.
         var lastModified = currentVersion.lastModified();
-        CasMetadataUtils.addOrUpdateCasMetadata(aCas, lastModified, aDocument, aUserName);
+        CasMetadataUtils.addOrUpdateCasMetadata(aCas, lastModified, aDocument, aSet.id());
         if (metadataCache != null) {
             metadataCache.get(currentVersion).writeSuccess(lastModified);
         }
 
-        manageHistory(currentVersion, aDocument, aUserName);
+        manageHistory(currentVersion, aDocument, aSet);
 
         var duration = currentTimeMillis() - t0;
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Updated annotations for user [{}] on document {} in project {} " //
-                    + "{} bytes in {}ms (file timestamp: {}, compression: {})", aUserName,
-                    aDocument, aDocument.getProject(), currentVersion.length(), duration,
+            LOG.debug("Updated annotations for [{}] on document {} in project {} " //
+                    + "{} bytes in {}ms (file timestamp: {}, compression: {})", aSet, aDocument,
+                    aDocument.getProject(), currentVersion.length(), duration,
                     formatTimestamp(lastModified),
                     casStorageProperties.isCompressedCasSerialization());
         }
@@ -292,7 +294,7 @@ public class FileSystemCasStorageDriver
         return annotationFolder;
     }
 
-    private void manageHistory(File aCurrentVersion, SourceDocument aDocument, String aUserName)
+    private void manageHistory(File aCurrentVersion, SourceDocument aDocument, CasSet aSet)
         throws IOException
     {
         if (backupProperties.getInterval() <= 0) {
@@ -307,7 +309,7 @@ public class FileSystemCasStorageDriver
         // Get all history files for the current user
         var history = annotationFolder.listFiles(new FileFilter()
         {
-            private final Matcher matcher = compile(quote(aUserName) + "\\.ser\\.[0-9]+\\.bak")
+            private final Matcher matcher = compile(quote(aSet.id()) + "\\.ser\\.[0-9]+\\.bak")
                     .matcher("");
 
             @Override
@@ -323,7 +325,7 @@ public class FileSystemCasStorageDriver
 
         // Check if we need to make a new history file
         var historyFileCreated = false;
-        var historyFile = new File(annotationFolder, aUserName + ".ser." + now + ".bak");
+        var historyFile = new File(annotationFolder, aSet.id() + ".ser." + now + ".bak");
         if (history.length == 0) {
             // If there is no history yet but we should keep history, then we create a
             // history file in any case.
@@ -364,9 +366,8 @@ public class FileSystemCasStorageDriver
             for (var file : toRemove) {
                 FileUtils.forceDelete(file);
 
-                LOG.debug(
-                        "Removed surplus history file [{}] of user [{}] for document {} in project {}",
-                        file.getName(), aUserName, aDocument, aDocument.getProject());
+                LOG.debug("Removed surplus history file [{}] of [{}] for document {} in project {}",
+                        file.getName(), aSet, aDocument, aDocument.getProject());
             }
         }
 
@@ -377,56 +378,57 @@ public class FileSystemCasStorageDriver
                     FileUtils.forceDelete(file);
 
                     LOG.debug(
-                            "Removed outdated history file [{}] of user [{}] for "
+                            "Removed outdated history file [{}] of [{}] for "
                                     + "document {} in project {}",
-                            file.getName(), aUserName, aDocument, aDocument.getProject());
+                            file.getName(), aSet, aDocument, aDocument.getProject());
                 }
             }
         }
     }
 
     // Public for testing
-    public File getCasFile(SourceDocument aDocument, String aUser) throws IOException
+    public File getCasFile(SourceDocument aDocument, CasSet aSet) throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notBlank(aUser, "User must be specified");
+        Validate.notNull(aSet, "Set must be specified");
 
-        return getCasFile(aDocument.getProject().getId(), aDocument.getId(), aUser);
+        return getCasFile(aDocument.getProject().getId(), aDocument.getId(), aSet);
     }
 
     @Override
-    public void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream)
+    public void exportCas(SourceDocument aDocument, CasSet aSet, OutputStream aStream)
         throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notBlank(aUser, "User must be specified");
+        Validate.notNull(aSet, "Set must be specified");
 
-        try (var is = Files.newInputStream(getCasFile(aDocument, aUser).toPath())) {
+        try (var is = Files.newInputStream(getCasFile(aDocument, aSet).toPath())) {
             IOUtils.copyLarge(is, aStream);
         }
     }
 
     @Override
-    public void importCas(SourceDocument aDocument, String aUser, InputStream aStream)
+    public void importCas(SourceDocument aDocument, CasSet aSet, InputStream aStream)
         throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notBlank(aUser, "User must be specified");
+        Validate.notNull(aSet, "Set must be specified");
 
-        try (var os = Files.newOutputStream(getCasFile(aDocument, aUser).toPath())) {
+        try (var os = Files.newOutputStream(getCasFile(aDocument, aSet).toPath())) {
             IOUtils.copyLarge(aStream, os);
         }
     }
 
-    public File getCasFile(long aProjectId, long aDocumentId, String aUser) throws IOException
+    public File getCasFile(long aProjectId, long aDocumentId, CasSet aSet) throws IOException
     {
-        return new File(getAnnotationFolder(aProjectId, aDocumentId), aUser + SER_CAS_EXTENSION);
+        return new File(getAnnotationFolder(aProjectId, aDocumentId),
+                aSet.id() + SER_CAS_EXTENSION);
     }
 
     @Override
-    public boolean deleteCas(SourceDocument aDocument, String aUser) throws IOException
+    public boolean deleteCas(SourceDocument aDocument, CasSet aSet) throws IOException
     {
-        var casFile = getCasFile(aDocument.getProject().getId(), aDocument.getId(), aUser);
+        var casFile = getCasFile(aDocument.getProject().getId(), aDocument.getId(), aSet);
 
         if (metadataCache != null) {
             metadataCache.invalidate(casFile);
@@ -436,15 +438,15 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public boolean existsCas(SourceDocument aDocument, String aUser) throws IOException
+    public boolean existsCas(SourceDocument aDocument, CasSet aSet) throws IOException
     {
-        return getCasFile(aDocument, aUser).exists();
+        return getCasFile(aDocument, aSet).exists();
     }
 
     @Override
-    public Optional<Long> getCasFileSize(SourceDocument aDocument, String aUser) throws IOException
+    public Optional<Long> getCasFileSize(SourceDocument aDocument, CasSet aSet) throws IOException
     {
-        var file = getCasFile(aDocument, aUser);
+        var file = getCasFile(aDocument, aSet);
         if (file.exists()) {
             return Optional.of(file.length());
         }
@@ -453,10 +455,10 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public Optional<CasStorageMetadata> getCasMetadata(SourceDocument aDocument, String aUser)
+    public Optional<CasStorageMetadata> getCasMetadata(SourceDocument aDocument, CasSet aSet)
         throws IOException
     {
-        var casFile = getCasFile(aDocument, aUser);
+        var casFile = getCasFile(aDocument, aSet);
 
         if (!casFile.exists()) {
             return Optional.empty();
@@ -466,11 +468,11 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public Optional<Long> verifyCasTimestamp(SourceDocument aDocument, String aUser,
+    public Optional<Long> verifyCasTimestamp(SourceDocument aDocument, CasSet aSet,
             long aExpectedTimeStamp, String aContextAction)
         throws IOException, ConcurentCasModificationException
     {
-        var casFile = getCasFile(aDocument, aUser);
+        var casFile = getCasFile(aDocument, aSet);
 
         if (!casFile.exists()) {
             return Optional.empty();
@@ -495,8 +497,8 @@ public class FileSystemCasStorageDriver
                 }
             }
             throw new ConcurentCasModificationException("While [" + aContextAction
-                    + "], the file system CAS storage detected a concurrent modification to the annotation CAS for user ["
-                    + aUser + "] in document " + aDocument + " or project " + aDocument.getProject()
+                    + "], the file system CAS storage detected a concurrent modification to the annotation CAS for ["
+                    + aSet + "] in document " + aDocument + " or project " + aDocument.getProject()
                     + " (expected: " + formatTimestamp(aExpectedTimeStamp) + " actual on storage: "
                     + formatTimestamp(diskLastModified) + ", delta: "
                     + formatDurationHMS(Math.abs(diskLastModified - aExpectedTimeStamp)) + ")"
@@ -509,25 +511,25 @@ public class FileSystemCasStorageDriver
     }
 
     private void failOnConcurrentModification(CAS aCas, File aCasFile, SourceDocument aDocument,
-            String aUsername, String aContextAction)
+            CasSet aSet, String aContextAction)
         throws IOException
     {
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it
         // and wait for the next regular CAS upgrade before we include this data.
         if (aCas.getTypeSystem().getType(CASMetadata._TypeName) == null) {
-            LOG.warn("Annotation file [{}] of user [{}] for document {} in project {} "
+            LOG.warn("Annotation file [{}] of [{}] for document {} in project {} "
                     + "does not support CASMetadata yet - unable to detect concurrent modifications",
-                    aCasFile.getName(), aUsername, aDocument, aDocument.getProject());
+                    aCasFile.getName(), aSet, aDocument, aDocument.getProject());
             return;
         }
 
         var cmds = aCas.select(CASMetadata._TypeName).asList();
         if (cmds.isEmpty()) {
             LOG.warn(
-                    "Annotation file [{}] of user [{}] for document {} in project "
+                    "Annotation file [{}] of [{}] for document {} in project "
                             + "{} does not contain CASMetadata yet - unable to check for "
                             + "concurrent modifications",
-                    aCasFile.getName(), aUsername, aDocument, aDocument.getProject());
+                    aCasFile.getName(), aSet, aDocument, aDocument.getProject());
             return;
         }
 
@@ -537,7 +539,7 @@ public class FileSystemCasStorageDriver
 
         var cmd = cmds.get(0);
         var lastKnownUpdate = FSUtil.getFeature(cmd, "lastChangedOnDisk", Long.class);
-        verifyCasTimestamp(aDocument, aUsername, lastKnownUpdate, aContextAction);
+        verifyCasTimestamp(aDocument, aSet, lastKnownUpdate, aContextAction);
     }
 
     private static String formatTimestamp(long aTime)

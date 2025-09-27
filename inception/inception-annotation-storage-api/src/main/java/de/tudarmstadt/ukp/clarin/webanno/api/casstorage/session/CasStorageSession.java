@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.WriteAccessNotPermittedException;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -52,7 +53,7 @@ public class CasStorageSession
     private boolean closed = false;
     private StackTraceElement[] creatorStack;
 
-    private final Map<Long, Map<String, SessionManagedCas>> managedCases = new LinkedHashMap<>();
+    private final Map<Long, Map<CasSet, SessionManagedCas>> managedCases = new LinkedHashMap<>();
 
     private int maxManagedCases = 0;
 
@@ -71,7 +72,7 @@ public class CasStorageSession
                     + Thread.currentThread().getName() + "] already initialized");
         }
 
-        CasStorageSession session = new CasStorageSession();
+        var session = new CasStorageSession();
         activeSession.set(session);
 
         session.creatorStack = new Exception().getStackTrace();
@@ -112,7 +113,7 @@ public class CasStorageSession
      */
     public static CasStorageSession openNested(boolean aIsolated)
     {
-        CasStorageSession session = new CasStorageSession();
+        var session = new CasStorageSession();
         session.previousSession = activeSession.get();
         session.isolated = aIsolated;
         activeSession.set(session);
@@ -133,7 +134,7 @@ public class CasStorageSession
      */
     public static CasStorageSession get() throws CasSessionException
     {
-        CasStorageSession session = activeSession.get();
+        var session = activeSession.get();
 
         if (session == null) {
             throw new CasSessionException("No CAS storage session available");
@@ -168,7 +169,12 @@ public class CasStorageSession
 
         // For nested sessions, the previous session is set. For root sessions (non-nested), the
         // previous session will be null, this thus clearing the active session.
-        activeSession.set(previousSession);
+        if (previousSession != null) {
+            activeSession.set(previousSession);
+        }
+        else {
+            activeSession.remove();
+        }
 
         LOG.trace("CAS storage session [{}]: closing...", hashCode());
 
@@ -208,17 +214,15 @@ public class CasStorageSession
      *            the CAS itself.
      * @return the managed CAS state.
      */
-    public SessionManagedCas add(String aSpecialPurpose, CasAccessMode aMode, CAS aCas)
+    public SessionManagedCas add(CasSet aSpecialPurpose, CasAccessMode aMode, CAS aCas)
     {
         Validate.notNull(aSpecialPurpose, "The purpose cannot be null");
         Validate.notNull(aMode, "The access mode cannot be null");
         Validate.notNull(aCas, "The CAS cannot be null");
 
-        SessionManagedCas managedCas = new SessionManagedCas(SPECIAL_PURPOSE, aSpecialPurpose,
-                aMode, aCas);
+        var managedCas = new SessionManagedCas(SPECIAL_PURPOSE, aSpecialPurpose, aMode, aCas);
 
-        Map<String, SessionManagedCas> casByUser = managedCases.computeIfAbsent(SPECIAL_PURPOSE,
-                key -> new LinkedHashMap<>());
+        var casByUser = managedCases.computeIfAbsent(SPECIAL_PURPOSE, key -> new LinkedHashMap<>());
         casByUser.put(aSpecialPurpose, managedCas);
 
         maxManagedCases = Math.max(maxManagedCases, managedCases.size());
@@ -243,18 +247,18 @@ public class CasStorageSession
      * 
      * @param aDocumentId
      *            the ID of the document to be removed from the session
-     * @param aUsername
-     *            the annotator username to whom the CAS belongs
+     * @param aSet
+     *            the set to which CAS belongs
      */
-    public void remove(Long aDocumentId, String aUsername)
+    public void remove(Long aDocumentId, CasSet aSet)
     {
-        Map<String, SessionManagedCas> casByUser = managedCases.get(aDocumentId);
+        var casByUser = managedCases.get(aDocumentId);
 
         if (casByUser == null) {
             return;
         }
 
-        casByUser.remove(aUsername);
+        casByUser.remove(aSet);
     }
 
     /**
@@ -262,23 +266,23 @@ public class CasStorageSession
      * 
      * @param aDocumentId
      *            the document ID for which the CAS was retrieved.
-     * @param aUser
-     *            the user owning the CAS.
+     * @param aSet
+     *            the set to which CAS belongs.
      * @param aMode
      *            the access mode.
      * @param aCas
      *            the CAS itself.
      * @return the managed CAS state.
      */
-    public SessionManagedCas add(Long aDocumentId, String aUser, CasAccessMode aMode, CAS aCas)
+    public SessionManagedCas add(Long aDocumentId, CasSet aSet, CasAccessMode aMode, CAS aCas)
     {
         Validate.notNull(aDocumentId, "The document ID cannot be null");
         Validate.isTrue(aDocumentId >= 0, "The document ID cannot be negative");
-        Validate.notNull(aUser, "The username cannot be null");
+        Validate.notNull(aSet, "The set cannot be null");
         Validate.notNull(aMode, "The access mode cannot be null");
         Validate.notNull(aCas, "The CAS cannot be null");
 
-        SessionManagedCas managedCas = new SessionManagedCas(aDocumentId, aUser, aMode, aCas);
+        var managedCas = new SessionManagedCas(aDocumentId, aSet, aMode, aCas);
 
         add(managedCas);
 
@@ -290,24 +294,24 @@ public class CasStorageSession
      * 
      * @param aDocumentId
      *            the document ID for which the CAS was retrieved.
-     * @param aUser
-     *            the user owning the CAS.
+     * @param aSet
+     *            the set to which CAS belongs.
      * @param aMode
      *            the access mode.
      * @param aCasHolder
      *            the CAS holder.
      * @return the managed CAS state.
      */
-    public SessionManagedCas add(Long aDocumentId, String aUser, CasAccessMode aMode,
+    public SessionManagedCas add(Long aDocumentId, CasSet aSet, CasAccessMode aMode,
             CasHolder aCasHolder)
     {
         Validate.notNull(aDocumentId, "The document ID cannot be null");
         Validate.isTrue(aDocumentId >= 0, "The document ID cannot be negative");
-        Validate.notNull(aUser, "The username cannot be null");
+        Validate.notNull(aSet, "The set cannot be null");
         Validate.notNull(aMode, "The access mode cannot be null");
         Validate.notNull(aCasHolder, "The CAS holder cannot be null");
 
-        SessionManagedCas managedCas = new SessionManagedCas(aDocumentId, aUser, aMode, aCasHolder);
+        var managedCas = new SessionManagedCas(aDocumentId, aSet, aMode, aCasHolder);
 
         add(managedCas);
 
@@ -316,9 +320,9 @@ public class CasStorageSession
 
     private void add(SessionManagedCas aMCas)
     {
-        Map<String, SessionManagedCas> casByUser = managedCases
-                .computeIfAbsent(aMCas.getSourceDocumentId(), key -> new LinkedHashMap<>());
-        SessionManagedCas oldMCas = casByUser.put(aMCas.getUserId(), aMCas);
+        var casByUser = managedCases.computeIfAbsent(aMCas.getSourceDocumentId(),
+                key -> new LinkedHashMap<>());
+        var oldMCas = casByUser.put(aMCas.getSet(), aMCas);
 
         if (oldMCas == null) {
             LOG.trace("CAS storage session [{}]: added {}", hashCode(), aMCas);
@@ -349,10 +353,10 @@ public class CasStorageSession
     {
         Validate.notNull(aCas, "The CAS cannot be null");
 
-        Optional<SessionManagedCas> result = managedCases.values().stream()
-                .flatMap(casByUser -> casByUser.values().stream()
-                        .filter(metadata -> metadata.isCasSet())
-                        .filter(metadata -> metadata.getCas() == aCas))
+        var result = managedCases.values().stream() //
+                .flatMap(casByUser -> casByUser.values().stream() //
+                        .filter(metadata -> metadata.isCasSet()) //
+                        .filter(metadata -> metadata.getCas() == aCas)) //
                 .findFirst();
 
         if (!result.isPresent() && !isolated && previousSession != null) {
@@ -367,20 +371,20 @@ public class CasStorageSession
      * 
      * @param aDocumentId
      *            document ID.
-     * @param aUsername
-     *            user name.
+     * @param aSet
+     *            the set to which the CAS belongs.
      * @return the managed CAS state.
      */
-    public Optional<SessionManagedCas> getManagedState(Long aDocumentId, String aUsername)
+    public Optional<SessionManagedCas> getManagedState(Long aDocumentId, CasSet aSet)
     {
         Validate.notNull(aDocumentId, "The document ID cannot be null");
-        Validate.notNull(aUsername, "The username cannot be null");
+        Validate.notNull(aSet, "The set cannot be null");
 
-        Optional<SessionManagedCas> result = Optional.ofNullable(managedCases.get(aDocumentId))
-                .map(casByUser -> casByUser.get(aUsername));
+        var result = Optional.ofNullable(managedCases.get(aDocumentId))
+                .map(casByUser -> casByUser.get(aSet));
 
         if (!result.isPresent() && !isolated && previousSession != null) {
-            return previousSession.getManagedState(aDocumentId, aUsername);
+            return previousSession.getManagedState(aDocumentId, aSet);
         }
 
         return result;
@@ -394,13 +398,14 @@ public class CasStorageSession
      * 
      * @param aDocument
      *            document.
-     * @param aUsername
-     *            user name.
+     * @param aSet
+     *            the set to which the CAS belongs.
      */
-    public boolean hasExclusiveAccess(SourceDocument aDocument, String aUsername)
+    public boolean hasExclusiveAccess(SourceDocument aDocument, CasSet aSet)
     {
-        return getManagedState(aDocument.getId(), aUsername)
-                .map(SessionManagedCas::isWritingPermitted).orElse(false);
+        return getManagedState(aDocument.getId(), aSet) //
+                .map(SessionManagedCas::isWritingPermitted) //
+                .orElse(false);
     }
 
     /**
@@ -414,7 +419,9 @@ public class CasStorageSession
      */
     public boolean isWritingPermitted(CAS aCas)
     {
-        return getManagedState(aCas).map(SessionManagedCas::isWritingPermitted).orElse(false);
+        return getManagedState(aCas) //
+                .map(SessionManagedCas::isWritingPermitted) //
+                .orElse(false);
     }
 
     /**
@@ -428,18 +435,19 @@ public class CasStorageSession
      */
     public void assertWritingPermitted(CAS aCas) throws WriteAccessNotPermittedException
     {
-        Optional<SessionManagedCas> mCas = getManagedState(aCas);
+        var mCas = getManagedState(aCas);
+
         if (!mCas.isPresent()) {
             // CasMetadataUtils.getSourceDocumentName(aCas)
-            String docId = WebAnnoCasUtil.getDocumentId(aCas);
-            String docTitle = WebAnnoCasUtil.getDocumentTitle(aCas);
+            var docId = WebAnnoCasUtil.getDocumentId(aCas);
+            var docTitle = WebAnnoCasUtil.getDocumentTitle(aCas);
             throw new WriteAccessNotPermittedException(
                     "CAS [" + docTitle + "](" + docId + ") not found in current session");
         }
 
         if (!mCas.map(SessionManagedCas::isWritingPermitted).orElse(false)) {
-            throw new WriteAccessNotPermittedException("Write access to CAS for user ["
-                    + mCas.get().getUserId() + "] for document [" + mCas.get().getSourceDocumentId()
+            throw new WriteAccessNotPermittedException("Write access to CAS for set ["
+                    + mCas.get().getSet() + "] for document [" + mCas.get().getSourceDocumentId()
                     + "] is not permitted in the current session");
         }
     }

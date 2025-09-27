@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -37,10 +36,8 @@ import java.util.Map;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
-import org.apache.uima.jcas.JCas;
 import org.assertj.core.api.SoftAssertions;
 import org.dkpro.core.io.conll.ConllUReader;
 import org.dkpro.core.io.xmi.XmiReader;
@@ -54,6 +51,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -130,9 +128,9 @@ public class LappsGridRecommenderConformityTest
 
     private CAS loadData() throws IOException, UIMAException
     {
-        Path path = Paths.get("src", "test", "resources", "testdata", "tnf.xmi");
-        CAS cas = loadData(path.toFile());
-        casStorageSession.add("test", EXCLUSIVE_WRITE_ACCESS, cas);
+        var path = Paths.get("src", "test", "resources", "testdata", "tnf.xmi");
+        var cas = loadData(path.toFile());
+        casStorageSession.add(CasSet.forTest("test"), EXCLUSIVE_WRITE_ACCESS, cas);
 
         RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
@@ -141,11 +139,11 @@ public class LappsGridRecommenderConformityTest
 
     private static CAS loadData(File aFile) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(XmiReader.class, ConllUReader.PARAM_PATTERNS, aFile);
+        var reader = createReader(XmiReader.class, ConllUReader.PARAM_PATTERNS, aFile);
 
         List<CAS> casList = new ArrayList<>();
         while (reader.hasNext()) {
-            JCas cas = JCasFactory.createJCas();
+            var cas = JCasFactory.createJCas();
             reader.getNext(cas.getCas());
             casList.add(cas.getCas());
         }

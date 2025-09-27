@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.service;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 
@@ -75,7 +76,7 @@ public class CurationDocumentServiceImpl
     public void writeCurationCas(CAS aCas, SourceDocument aDocument, boolean aUpdateTimestamp)
         throws IOException
     {
-        casStorageService.writeCas(aDocument, aCas, CURATION_USER);
+        casStorageService.writeCas(aDocument, aCas, CURATION_SET);
         if (aUpdateTimestamp) {
             aDocument.setTimestamp(new Timestamp(new Date().getTime()));
             entityManager.merge(aDocument);
@@ -85,13 +86,13 @@ public class CurationDocumentServiceImpl
     @Override
     public CAS readCurationCas(SourceDocument aDocument) throws IOException
     {
-        return casStorageService.readCas(aDocument, CURATION_USER);
+        return casStorageService.readCas(aDocument, CURATION_SET);
     }
 
     @Override
     public void deleteCurationCas(SourceDocument aDocument) throws IOException
     {
-        casStorageService.deleteCas(aDocument, CURATION_USER);
+        casStorageService.deleteCas(aDocument, CURATION_SET);
     }
 
     @Override
@@ -164,7 +165,7 @@ public class CurationDocumentServiceImpl
     {
         Validate.notNull(aDocument, "Source document must be specified");
 
-        return casStorageService.getCasTimestamp(aDocument, CURATION_USER);
+        return casStorageService.getCasTimestamp(aDocument, CURATION_SET);
     }
 
     @Override
@@ -172,7 +173,7 @@ public class CurationDocumentServiceImpl
             String aContextAction)
         throws IOException, ConcurentCasModificationException
     {
-        return casStorageService.verifyCasTimestamp(aDocument, CURATION_USER, aTimeStamp,
+        return casStorageService.verifyCasTimestamp(aDocument, CURATION_SET, aTimeStamp,
                 aContextAction);
     }
 
@@ -208,6 +209,6 @@ public class CurationDocumentServiceImpl
     @Override
     public boolean existsCurationCas(SourceDocument aDocument) throws IOException
     {
-        return casStorageService.existsCas(aDocument, CURATION_USER);
+        return casStorageService.existsCas(aDocument, CURATION_SET);
     }
 }

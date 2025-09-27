@@ -24,5 +24,5 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 @FunctionalInterface
 public interface CasStorageServiceAction
 {
-    void apply(SourceDocument aDocument, String aDataOwner, CAS aCas) throws Exception;
+    void apply(SourceDocument aDocument, CasSet aSet, CAS aCas) throws Exception;
 }

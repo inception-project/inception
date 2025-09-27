@@ -18,11 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.casdoctor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.CURATION_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static java.util.Arrays.asList;
 
 import java.io.FileNotFoundException;
@@ -35,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
@@ -96,10 +98,10 @@ public class RepairTask
                     var messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
 
                     try {
-                        casStorageService.forceActionOnCas(sd, INITIAL_CAS_PSEUDO_USER,
-                                (doc, user) -> createOrReadInitialCasWithoutSavingOrChecks(doc,
+                        casStorageService.forceActionOnCas(sd, INITIAL_SET,
+                                (doc, set) -> createOrReadInitialCasWithoutSavingOrChecks(doc,
                                         messageSet),
-                                (doc, user, cas) -> casDoctor.repair(doc, user, cas,
+                                (doc, set, cas) -> casDoctor.repair(doc, set.id(), cas,
                                         messageSet.getMessages()), //
                                 true);
                     }
@@ -118,10 +120,10 @@ public class RepairTask
                 {
                     var messageSet = new LogMessageSet(sd.getName() + " [" + CURATION_USER + "]");
                     try {
-                        casStorageService.forceActionOnCas(sd, CURATION_USER,
-                                (doc, user) -> casStorageService.readCas(doc, user,
+                        casStorageService.forceActionOnCas(sd, CURATION_SET,
+                                (doc, set) -> casStorageService.readCas(doc, set,
                                         UNMANAGED_NON_INITIALIZING_ACCESS),
-                                (doc, user, cas) -> casDoctor.repair(doc, user, cas,
+                                (doc, set, cas) -> casDoctor.repair(doc, set.id(), cas,
                                         messageSet.getMessages()), //
                                 true);
                     }
@@ -155,10 +157,10 @@ public class RepairTask
                     var messageSet = new LogMessageSet(sd.getName() + " [" + ad.getUser() + "]");
                     try {
                         if (documentService.existsCas(ad)) {
-                            casStorageService.forceActionOnCas(sd, ad.getUser(),
-                                    (doc, user) -> casStorageService.readCas(doc, user,
+                            casStorageService.forceActionOnCas(sd, CasSet.forUser(ad.getUser()),
+                                    (doc, set) -> casStorageService.readCas(doc, set,
                                             UNMANAGED_NON_INITIALIZING_ACCESS),
-                                    (doc, user, cas) -> casDoctor.repair(doc, user, cas,
+                                    (doc, set, cas) -> casDoctor.repair(doc, set.id(), cas,
                                             messageSet.getMessages()), //
                                     true);
                         }

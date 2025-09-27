@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.casdoctor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -61,8 +61,8 @@ public abstract class CasDoctorTask_ImplBase
             LogMessageSet aMessageSet)
         throws IOException, UIMAException
     {
-        if (casStorageService.existsCas(aDocument, INITIAL_CAS_PSEUDO_USER)) {
-            return casStorageService.readCas(aDocument, INITIAL_CAS_PSEUDO_USER,
+        if (casStorageService.existsCas(aDocument, INITIAL_SET)) {
+            return casStorageService.readCas(aDocument, INITIAL_SET,
                     UNMANAGED_NON_INITIALIZING_ACCESS);
         }
 

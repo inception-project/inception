@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.documents;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.CURATION_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
@@ -36,8 +38,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.FILESYS
 import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.RELAXED_SHELL_SPECIAL_CHARACTERS;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCharacterMatching;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.endsWithMatching;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveDuplicateCharacters;
@@ -91,6 +91,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
@@ -300,7 +301,7 @@ public class DocumentServiceImpl
     @Override
     public boolean existsCas(SourceDocument aDocument, String aUser) throws IOException
     {
-        return casStorageService.existsCas(aDocument, aUser);
+        return casStorageService.existsCas(aDocument, CasSet.forUser(aUser));
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -353,14 +354,14 @@ public class DocumentServiceImpl
     public void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream)
         throws IOException
     {
-        casStorageService.exportCas(aDocument, aUser, aStream);
+        casStorageService.exportCas(aDocument, CasSet.forUser(aUser), aStream);
     }
 
     @Override
     public void importCas(SourceDocument aDocument, String aUser, InputStream aStream)
         throws IOException
     {
-        casStorageService.importCas(aDocument, aUser, aStream);
+        casStorageService.importCas(aDocument, CasSet.forUser(aUser), aStream);
     }
 
     @Override
@@ -774,7 +775,7 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
         casStorageService.deleteCas(aAnnotationDocument.getDocument(),
-                aAnnotationDocument.getUser());
+                CasSet.forUser(aAnnotationDocument.getUser()));
         entityManager.remove(aAnnotationDocument);
     }
 
@@ -876,20 +877,19 @@ public class DocumentServiceImpl
         LOG.debug("Loading initial CAS for source document {} in project {}", aDocument,
                 aDocument.getProject());
 
-        return casStorageService.readOrCreateCas(aDocument, INITIAL_CAS_PSEUDO_USER, aUpgradeMode,
-                () -> {
-                    // Normally, the initial CAS should be created on document import, but after
-                    // adding this feature, the existing projects do not yet have initial CASes, so
-                    // we create them here lazily
-                    try {
-                        return importExportService.importCasFromFileNoChecks(
-                                documentStorageService.getSourceDocumentFile(aDocument), aDocument,
-                                aFullProjectTypeSystem);
-                    }
-                    catch (UIMAException e) {
-                        throw new IOException("Unable to create CAS: " + e.getMessage(), e);
-                    }
-                }, aAccessMode);
+        return casStorageService.readOrCreateCas(aDocument, INITIAL_SET, aUpgradeMode, () -> {
+            // Normally, the initial CAS should be created on document import, but after
+            // adding this feature, the existing projects do not yet have initial CASes, so
+            // we create them here lazily
+            try {
+                return importExportService.importCasFromFileNoChecks(
+                        documentStorageService.getSourceDocumentFile(aDocument), aDocument,
+                        aFullProjectTypeSystem);
+            }
+            catch (UIMAException e) {
+                throw new IOException("Unable to create CAS: " + e.getMessage(), e);
+            }
+        }, aAccessMode);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -899,7 +899,7 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aDocument, "Source document must be specified");
 
-        return casStorageService.existsCas(aDocument, INITIAL_CAS_PSEUDO_USER);
+        return casStorageService.existsCas(aDocument, INITIAL_SET);
     }
 
     @Override
@@ -907,7 +907,7 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aDocument, "Source document must be specified");
 
-        return casStorageService.getCasFileSize(aDocument, INITIAL_CAS_PSEUDO_USER);
+        return casStorageService.getCasFileSize(aDocument, INITIAL_SET);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -955,7 +955,8 @@ public class DocumentServiceImpl
         throws IOException
     {
         // If there is no CAS yet for the source document, create one.
-        CAS cas = casStorageService.readOrCreateCas(aDocument, aUserName, aUpgradeMode,
+        var cas = casStorageService.readOrCreateCas(aDocument, CasSet.forUser(aUserName),
+                aUpgradeMode,
                 // Convert the source file into an annotation CAS
                 () -> {
                     var initialCas = createOrReadInitialCas(aDocument, NO_CAS_UPGRADE,
@@ -1062,7 +1063,7 @@ public class DocumentServiceImpl
         Validate.notNull(aDocument, "Source document must be specified");
         Validate.notNull(aUsername, "Username must be specified");
 
-        return casStorageService.getCasTimestamp(aDocument, aUsername);
+        return casStorageService.getCasTimestamp(aDocument, CasSet.forUser(aUsername));
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -1075,8 +1076,8 @@ public class DocumentServiceImpl
         Validate.notNull(aDocument, "Source document must be specified");
         Validate.notNull(aUsername, "Username must be specified");
 
-        return casStorageService.verifyCasTimestamp(aDocument, aUsername, aExpectedTimeStamp,
-                aContextAction);
+        return casStorageService.verifyCasTimestamp(aDocument, CasSet.forUser(aUsername),
+                aExpectedTimeStamp, aContextAction);
     }
 
     @Override
@@ -1098,7 +1099,7 @@ public class DocumentServiceImpl
         throws IOException
     {
         casStorageService.writeCas(aAnnotationDocument.getDocument(), aCas,
-                aAnnotationDocument.getUser());
+                CasSet.forUser(aAnnotationDocument.getUser()));
 
         if (asList(aFlags).contains(EXPLICIT_ANNOTATOR_USER_ACTION)) {
             aAnnotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
@@ -1113,7 +1114,7 @@ public class DocumentServiceImpl
     public void deleteAnnotationCas(SourceDocument aSourceDocument, String aUsername)
         throws IOException
     {
-        casStorageService.deleteCas(aSourceDocument, aUsername);
+        casStorageService.deleteCas(aSourceDocument, CasSet.forUser(aUsername));
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -1122,7 +1123,7 @@ public class DocumentServiceImpl
     public void deleteAnnotationCas(AnnotationDocument aAnnotationDocument) throws IOException
     {
         casStorageService.deleteCas(aAnnotationDocument.getDocument(),
-                aAnnotationDocument.getUser());
+                CasSet.forUser(aAnnotationDocument.getUser()));
     }
 
     @Override
@@ -1158,7 +1159,8 @@ public class DocumentServiceImpl
         var cas = createOrReadInitialCas(aDocument, FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
 
         // Add/update the CAS metadata
-        var timestamp = casStorageService.getCasTimestamp(aDocument, aUser.getUsername());
+        var timestamp = casStorageService.getCasTimestamp(aDocument,
+                CasSet.forUser(aUser.getUsername()));
         if (timestamp.isPresent()) {
             addOrUpdateCasMetadata(cas, timestamp.get(), aDocument, aUser.getUsername());
         }
@@ -1588,7 +1590,7 @@ public class DocumentServiceImpl
         for (SourceDocument doc : listSourceDocuments(aProject)) {
             for (AnnotationDocument ann : listAllAnnotationDocuments(doc)) {
                 try {
-                    casStorageService.upgradeCas(doc, ann.getUser());
+                    casStorageService.upgradeCas(doc, CasSet.forUser(ann.getUser()));
                 }
                 catch (FileNotFoundException e) {
                     // If there is no CAS file, we do not have to upgrade it. Ignoring.
@@ -1597,7 +1599,7 @@ public class DocumentServiceImpl
 
             // Also upgrade the curation CAS if it exists
             try {
-                casStorageService.upgradeCas(doc, CURATION_USER);
+                casStorageService.upgradeCas(doc, CURATION_SET);
             }
             catch (FileNotFoundException e) {
                 // If there is no CAS file, we do not have to upgrade it. Ignoring.

@@ -18,9 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.casdoctor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.CURATION_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static java.util.Arrays.asList;
 
 import java.io.FileNotFoundException;
@@ -33,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
@@ -95,10 +97,10 @@ public class CheckTask
 
                     try {
                         objectCount++;
-                        casStorageService.forceActionOnCas(sd, INITIAL_CAS_PSEUDO_USER,
-                                (doc, user) -> createOrReadInitialCasWithoutSavingOrChecks(doc,
+                        casStorageService.forceActionOnCas(sd, INITIAL_SET,
+                                (doc, set) -> createOrReadInitialCasWithoutSavingOrChecks(doc,
                                         messageSet),
-                                (doc, user, cas) -> casDoctor.analyze(doc, user, cas,
+                                (doc, set, cas) -> casDoctor.analyze(doc, set.id(), cas,
                                         messageSet.getMessages()), //
                                 false);
                     }
@@ -118,10 +120,10 @@ public class CheckTask
                     var messageSet = new LogMessageSet(sd.getName() + " [" + CURATION_USER + "]");
                     try {
                         objectCount++;
-                        casStorageService.forceActionOnCas(sd, CURATION_USER,
-                                (doc, user) -> casStorageService.readCas(doc, user,
+                        casStorageService.forceActionOnCas(sd, CURATION_SET,
+                                (doc, set) -> casStorageService.readCas(doc, set,
                                         UNMANAGED_NON_INITIALIZING_ACCESS),
-                                (doc, user, cas) -> casDoctor.analyze(doc, user, cas,
+                                (doc, set, cas) -> casDoctor.analyze(doc, set.id(), cas,
                                         messageSet.getMessages()), //
                                 false);
                     }
@@ -150,10 +152,11 @@ public class CheckTask
                     try {
                         if (documentService.existsCas(ad)) {
                             objectCount++;
-                            casStorageService.forceActionOnCas(ad.getDocument(), ad.getUser(),
-                                    (doc, user) -> casStorageService.readCas(doc, user,
+                            casStorageService.forceActionOnCas(ad.getDocument(),
+                                    CasSet.forUser(ad.getUser()),
+                                    (doc, set) -> casStorageService.readCas(doc, set,
                                             UNMANAGED_NON_INITIALIZING_ACCESS),
-                                    (doc, user, cas) -> casDoctor.analyze(doc, user, cas,
+                                    (doc, set, cas) -> casDoctor.analyze(doc, set.id(), cas,
                                             messageSet.getMessages()), //
                                     false);
                         }

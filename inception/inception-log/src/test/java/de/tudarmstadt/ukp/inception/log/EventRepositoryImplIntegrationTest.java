@@ -138,7 +138,8 @@ public class EventRepositoryImplIntegrationTest
         var beginOfDay = today.atTime(LocalTime.MIN).atZone(ZoneId.of("UTC")).toInstant();
         var endOfDay = today.atTime(LocalTime.MAX).atZone(ZoneId.of("UTC")).toInstant();
 
-        var summarizedEvents = sut.summarizeEventsBySessionOwner(USERNAME, project, beginOfDay, endOfDay);
+        var summarizedEvents = sut.summarizeEventsBySessionOwner(USERNAME, project, beginOfDay,
+                endOfDay);
 
         assertThat(summarizedEvents).as("Check that the returned list is not empty").isNotEmpty();
 
