@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.pivot.table;
 
 import static de.tudarmstadt.ukp.inception.pivot.table.CompoundKey.ROW_KEY;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
 
 import java.io.Serializable;
@@ -28,9 +29,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Stream;
 
+import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -41,6 +45,7 @@ import de.tudarmstadt.ukp.inception.pivot.api.extractor.Extractor;
 
 public class PivotTableDataProvider<A extends Serializable, T>
     extends SortableDataProvider<Row<A>, CompoundKey>
+    implements IFilterStateLocator<PivotTableFilterState>
 {
     private static final long serialVersionUID = 758372801344980928L;
 
@@ -52,6 +57,8 @@ public class PivotTableDataProvider<A extends Serializable, T>
     private final Set<CompoundKey> columnKeys;
     private final boolean showCellControls;
 
+    private PivotTableFilterState filterState;
+
     public PivotTableDataProvider(Builder<A, T> aBuilder)
     {
         showCellControls = aBuilder.cellBuilder.getSchema().size() > 1;
@@ -59,6 +66,83 @@ public class PivotTableDataProvider<A extends Serializable, T>
         rowKeys.addAll(aBuilder.rows.keySet());
         columnKeys = aBuilder.columnKeys;
         setSort(ROW_KEY, ASCENDING);
+        filterState = new PivotTableFilterState();
+    }
+    
+    @Override
+    public PivotTableFilterState getFilterState()
+    {
+        return filterState;
+    }
+    
+    @Override
+    public void setFilterState(PivotTableFilterState aState)
+    {
+        filterState = aState;
+    }
+    
+    private Stream<CompoundKey> filter(Map<CompoundKey, Map<CompoundKey, A>> aData)
+    {
+        var rowKeyStream = aData.keySet().stream();
+
+        if (filterState.isHideRowsWithSameValuesInAllColumns() || filterState.isHideRowsWithAnyDifferentValue()) {
+            rowKeyStream = rowKeyStream.filter(row -> {
+                var values = aData.get(row).values();
+                if (isNotEmpty(values)) {
+                    var first = values.iterator().next();
+                    var matchCount = values.stream() //
+                        .filter(v -> Objects.equals(first, v)) //
+                        .count();
+                    
+                    if (filterState.isHideRowsWithSameValuesInAllColumns()) {
+                        // There is at least one column that has a different value than the others
+                        return matchCount != columnKeys.size();
+                    }
+                    else {
+                        // I.e. if filterState.isHideRowsWithAnyDifferentValue()
+                        // All columns have the same value
+                        return matchCount == columnKeys.size();
+                    }
+                }
+                
+                // All columns are empty (have the same value)
+                return !filterState.isHideRowsWithSameValuesInAllColumns();
+            });
+        }
+
+        if (filterState.isHideRowsWithEmptyValues() || filterState.isHideRowsWithoutEmptyValues()) {
+            rowKeyStream = rowKeyStream.filter(row -> {
+                var values = aData.get(row).values();
+                if (isNotEmpty(values)) {
+                    var nonNullCount = values.stream() //
+                        .filter(Objects::nonNull) //
+                        .count();
+                    if (filterState.isHideRowsWithEmptyValues()) {
+                        return nonNullCount == columnKeys.size();
+                    }
+                    else {
+                        // I.e. if filterState.isHideRowsWithoutEmptyValues()
+                        return nonNullCount < columnKeys.size();
+                    }
+                }
+                
+                // All columns are empty
+                return !filterState.isHideRowsWithEmptyValues();
+            });
+        }
+
+        return rowKeyStream;
+    }
+
+    private Stream<CompoundKey> sort(Stream<CompoundKey> aRowKeyStream)
+    {
+        var rowKeyStream = aRowKeyStream;
+        if (getSort() != null && getSort().getProperty() != null) {
+            var ascending = getSort().isAscending();
+            rowKeyStream = rowKeyStream.sorted(ascending ? this::rowComparator : (a, b) -> rowComparator(b, a));
+        }
+        
+        return rowKeyStream;
     }
 
     public Map<CompoundKey, Map<CompoundKey, A>> getRows()
@@ -96,14 +180,11 @@ public class PivotTableDataProvider<A extends Serializable, T>
     @Override
     public Iterator<Row<A>> iterator(long first, long count)
     {
-        if (getSort() != null && getSort().getProperty() != null) {
-            var ascending = getSort().isAscending();
-            rowKeys.sort(ascending ? this::rowComparator : (a, b) -> rowComparator(b, a));
-        }
-
+        var visibleRowKeys = sort(filter(rows)).toList();
+        
         return new Iterator<Row<A>>()
         {
-            private final Iterator<CompoundKey> rowKeyIterator = rowKeys.iterator();
+            private final Iterator<CompoundKey> rowKeyIterator = visibleRowKeys.iterator();
             private long currentIndex = 0;
             private boolean skipped = false;
 
@@ -156,7 +237,7 @@ public class PivotTableDataProvider<A extends Serializable, T>
     @Override
     public long size()
     {
-        return rows.size();
+        return filter(rows).count();
     }
 
     @Override

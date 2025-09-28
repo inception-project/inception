@@ -54,7 +54,9 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -80,6 +82,7 @@ import de.tudarmstadt.ukp.inception.pivot.api.extractor.Extractor;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.FeatureExtractorSupportRegistry;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerExtractorSupportRegistry;
 import de.tudarmstadt.ukp.inception.pivot.table.PivotTable;
+import de.tudarmstadt.ukp.inception.pivot.table.PivotTableFilterState;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -104,17 +107,19 @@ public class PivotTablePage
     private @SpringBean AggregatorSupportRegistry aggregatorSupportRegistry;
     private @SpringBean SchedulingService schedulingService;
 
-    private Form<State> sidebar = new Form<>("sidebar");
-    private DropDownChoice<AnnotationLayer> layerSelector;
-    private DropDownChoice<ExtractorDecl> extractorSelector;
-    private DropDownChoice<AggregatorDecl> aggregatorSelector;
+    private final Form<State> sidebar;
+    private final DropDownChoice<AnnotationLayer> layerSelector;
+    private final DropDownChoice<ExtractorDecl> extractorSelector;
+    private final DropDownChoice<AggregatorDecl> aggregatorSelector;
     private Component pivotTable;
-    private ListView<ExtractorDecl> rowExtractors;
-    private ListView<ExtractorDecl> colExtractors;
-    private LambdaAjaxButton<State> addCell;
+    private final ListView<ExtractorDecl> rowExtractors;
+    private final ListView<ExtractorDecl> colExtractors;
+    private final LambdaAjaxButton<State> addCell;
 
-    private WebMarkupContainer cellExtractorsContainer;
-    private ListView<ExtractorDecl> cellExtractors;
+    private final WebMarkupContainer cellExtractorsContainer;
+    private final ListView<ExtractorDecl> cellExtractors;
+    
+    private final IModel<PivotTableFilterState> filterStateModel;
 
     public PivotTablePage(PageParameters aParameters)
     {
@@ -124,10 +129,13 @@ public class PivotTablePage
 
         requireProjectRole(sessionOwner, MANAGER, CURATOR);
 
+        filterStateModel = Model.of(new PivotTableFilterState()); 
+        
         pivotTable = buildExampleTable();
         queue(pivotTable);
 
-        sidebar = new Form<>("sidebar", CompoundPropertyModel.of(new State()));
+        var state = new State();
+        sidebar = new Form<>("sidebar", CompoundPropertyModel.of(state));
         sidebar.setOutputMarkupId(true);
         queue(sidebar);
 
@@ -403,8 +411,10 @@ public class PivotTablePage
 
         schedulingService.executeSync(task);
 
+        var result = task.getResult();
+        result.setFilterState(filterStateModel.getObject());
         pivotTable = (PivotTable) pivotTable.replaceWith(
-                new PivotTable<>("pivotTable", task.getResult(), agg.createCellRenderer()));
+                new PivotTable<>("pivotTable", result, agg.createCellRenderer()));
         aTarget.add(pivotTable);
     }
 
