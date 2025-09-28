@@ -67,6 +67,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -886,7 +887,7 @@ public class ActiveLearningSidebar
         // access to the document which contains the current suggestion
         try {
             var cas = documentService.readAnnotationCas(sourceDocument,
-                    getModelObject().getUser().getUsername(), AUTO_CAS_UPGRADE,
+                    CasSet.forUser(getModelObject().getUser()), AUTO_CAS_UPGRADE,
                     SHARED_READ_ONLY_ACCESS);
             var text = cas.getDocumentText();
 
@@ -1069,8 +1070,8 @@ public class ActiveLearningSidebar
             // be deleted because deleteAnnotationByHistory will delete the annotation via the
             // methods provided by the AnnotationActionHandler and these operate ONLY on the
             // currently visible/selected document.
-            CAS cas = documentService.readAnnotationCas(aRecord.getSourceDocument(),
-                    aRecord.getUser());
+            var cas = documentService.readAnnotationCas(aRecord.getSourceDocument(),
+                    CasSet.forUser(aRecord.getUser()));
             if (getMatchingAnnotation(cas, aRecord).isPresent()) {
                 setActiveLearningHighlight(aRecord);
                 actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
@@ -1248,7 +1249,7 @@ public class ActiveLearningSidebar
             annotationPage.actionRefreshDocument(aTarget);
 
             // Update visibility in case the that was created/deleted overlaps with any suggestions
-            var cas = documentService.readAnnotationCas(aDocument, dataOwner.getUsername());
+            var cas = documentService.readAnnotationCas(aDocument, CasSet.forUser(dataOwner));
             var group = SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class,
                     predictions.getPredictionsByDocument(aDocument.getId()));
             recommendationService.calculateSuggestionVisibility(sessionOwner, aDocument, cas,

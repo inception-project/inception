@@ -31,6 +31,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.validation.ValidationError;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -263,15 +264,15 @@ public interface DocumentService
      *            the CAS.
      * @param aDocument
      *            the source document.
-     * @param aUser
-     *            The User who perform this operation
+     * @param aSet
+     *            the set the CAS belongs to.
      * @param aFlags
      *            indicate that the CAS is written as the result of an explicit annotator user
      *            action (i.e. not as a result of a third person or implicitly by the system).
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void writeAnnotationCas(CAS aCas, SourceDocument aDocument, String aUser,
+    void writeAnnotationCas(CAS aCas, SourceDocument aDocument, CasSet aSet,
             AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException;
 
@@ -325,13 +326,13 @@ public interface DocumentService
      *
      * @param sourceDocument
      *            the source document.
-     * @param username
-     *            the username.
+     * @param aSet
+     *            the set the CAS belongs to.
      * @return if an annotation document file exists.
      * @throws IOException
      *             if an I/O error occurs.
      */
-    boolean existsCas(SourceDocument sourceDocument, String username) throws IOException;
+    boolean existsCas(SourceDocument sourceDocument, CasSet aSet) throws IOException;
 
     boolean existsCas(AnnotationDocument annotationDocument) throws IOException;
 
@@ -357,13 +358,13 @@ public interface DocumentService
      *
      * @param aDocument
      *            the source document.
-     * @param aUser
-     *            the user.
+     * @param aSet
+     *            the set the CAS belongs to.
      * @return the annotation document.
      * @throws NoResultException
      *             if no annotation document exists for the given source/user.
      */
-    AnnotationDocument getAnnotationDocument(SourceDocument aDocument, String aUser);
+    AnnotationDocument getAnnotationDocument(SourceDocument aDocument, CasSet aSet);
 
     /**
      * Gets the CAS for the given annotation document. Converts it form the source document if
@@ -376,6 +377,10 @@ public interface DocumentService
      *             if there was an I/O error.
      */
     CAS readAnnotationCas(AnnotationDocument annotationDocument) throws IOException;
+
+    CAS readAnnotationCas(AnnotationDocument aAnnDoc, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aMode)
+        throws IOException;
 
     /**
      * Gets the CAS for the given annotation document. Converts it form the source document if
@@ -398,7 +403,7 @@ public interface DocumentService
 
     void deleteAnnotationCas(AnnotationDocument annotationDocument) throws IOException;
 
-    void deleteAnnotationCas(SourceDocument aSourceDocument, String aUsername) throws IOException;
+    void deleteAnnotationCas(SourceDocument aSourceDocument, CasSet aSet) throws IOException;
 
     /**
      * Gets the CAS for the given source document. Converts it form the source document if
@@ -406,13 +411,13 @@ public interface DocumentService
      *
      * @param document
      *            the source document.
-     * @param userName
-     *            the username.
+     * @param aSet
+     *            the set the CAs belongs to.
      * @return the CAS.
      * @throws IOException
      *             if there was an I/O error.
      */
-    CAS readAnnotationCas(SourceDocument document, String userName) throws IOException;
+    CAS readAnnotationCas(SourceDocument document, CasSet aSet) throws IOException;
 
     /**
      * Gets the CAS for the given source document. Converts it form the source document if
@@ -434,7 +439,7 @@ public interface DocumentService
     CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasUpgradeMode aUpgradeMode)
         throws IOException;
 
-    CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasUpgradeMode aUpgradeMode,
+    CAS readAnnotationCas(SourceDocument aDocument, CasSet aSet, CasUpgradeMode aUpgradeMode,
             CasAccessMode aMode)
         throws IOException;
 

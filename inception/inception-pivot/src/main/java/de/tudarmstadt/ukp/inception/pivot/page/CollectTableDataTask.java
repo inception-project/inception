@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -190,7 +191,7 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
 
     private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner) throws IOException
     {
-        var cas = documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,
+        var cas = documentService.readAnnotationCas(aDocument, CasSet.forUser(aDataOwner), AUTO_CAS_UPGRADE,
                 SHARED_READ_ONLY_ACCESS);
 
         // Set the CAS name in the DocumentMetaData so that we can pick it

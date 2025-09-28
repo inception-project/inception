@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -93,8 +94,8 @@ public class WatchAnnotationTask
     public void execute() throws Exception
     {
         try (var session = CasStorageSession.open()) {
-            var cas = documentService.readAnnotationCas(document, dataOwner, AUTO_CAS_UPGRADE,
-                    SHARED_READ_ONLY_ACCESS);
+            var cas = documentService.readAnnotationCas(document, CasSet.forUser(dataOwner),
+                    AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
 
             var ann = selectAnnotationByAddr(cas, annotation.getId());
             if (ann == null) {

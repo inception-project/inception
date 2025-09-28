@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.USED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -58,6 +57,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -180,7 +180,7 @@ public class AgreementServiceImpl
         var casMap = new LinkedHashMap<String, CAS>();
 
         for (var annotator : aAnnotators) {
-            var maybeCas = loadCas(aDocument, annotator, aAnnDocs);
+            var maybeCas = loadCas(aDocument, CasSet.forUser(annotator), aAnnDocs);
             var cas = maybeCas.isPresent() ? maybeCas.get() : loadInitialCas(aDocument);
             casMap.put(annotator, cas);
         }
@@ -188,32 +188,32 @@ public class AgreementServiceImpl
         return casMap;
     }
 
-    private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner,
+    private Optional<CAS> loadCas(SourceDocument aDocument, CasSet aSet,
             List<AnnotationDocument> aAnnDocs)
         throws IOException
     {
-        if (CURATION_USER.equals(aDataOwner)) {
+        if (CasSet.CURATION_SET.equals(aSet)) {
             if (!asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(aDocument.getState())) {
                 return Optional.empty();
             }
 
-            return loadCas(aDocument, aDataOwner);
+            return loadCas(aDocument, aSet);
         }
 
-        if (aAnnDocs.stream().noneMatch(annDoc -> aDataOwner.equals(annDoc.getUser()))) {
+        if (aAnnDocs.stream().noneMatch(annDoc -> aSet.id().equals(annDoc.getUser()))) {
             return Optional.empty();
         }
 
-        if (!documentService.existsCas(aDocument, aDataOwner)) {
+        if (!documentService.existsCas(aDocument, aSet)) {
             return Optional.empty();
         }
 
-        return loadCas(aDocument, aDataOwner);
+        return loadCas(aDocument, aSet);
     }
 
-    private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner) throws IOException
+    private Optional<CAS> loadCas(SourceDocument aDocument, CasSet aSet) throws IOException
     {
-        var cas = documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,
+        var cas = documentService.readAnnotationCas(aDocument, aSet, AUTO_CAS_UPGRADE,
                 SHARED_READ_ONLY_ACCESS);
 
         // Set the CAS name in the DocumentMetaData so that we can pick it

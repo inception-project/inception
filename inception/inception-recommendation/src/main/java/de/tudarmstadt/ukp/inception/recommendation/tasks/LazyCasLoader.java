@@ -37,6 +37,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -136,7 +137,7 @@ public class LazyCasLoader
     private class TrainingDocument
     {
         private final SourceDocument document;
-        private final String user;
+        private final CasSet set;
         private final AnnotationDocumentState state;
 
         private boolean attemptedLoading = false;
@@ -146,7 +147,7 @@ public class LazyCasLoader
                 AnnotationDocumentState aState)
         {
             document = aDocument;
-            user = aAnnotator;
+            set = CasSet.forUser(aAnnotator);
             state = aState;
         }
 
@@ -160,7 +161,7 @@ public class LazyCasLoader
             try {
                 // During training, we should not have to modify the CASes... right? Fingers
                 // crossed.
-                _cas = documentService.readAnnotationCas(document, user, AUTO_CAS_UPGRADE,
+                _cas = documentService.readAnnotationCas(document, set, AUTO_CAS_UPGRADE,
                         SHARED_READ_ONLY_ACCESS);
             }
             catch (IOException e) {
@@ -174,7 +175,7 @@ public class LazyCasLoader
         public String toString()
         {
             return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE)
-                    .append("document", document).append("user", user).append("state", state)
+                    .append("document", document).append("user", set).append("state", state)
                     .toString();
         }
     }

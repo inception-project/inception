@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEU
 
 import org.apache.commons.lang3.Validate;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+
 public record CasSet(String id) {
     public static final CasSet EXPORT_SET = forSpecialPurpose("exportCas");
     public static final CasSet PREDICTION_SET = forSpecialPurpose("predictionCas");
@@ -45,6 +47,11 @@ public record CasSet(String id) {
     public static CasSet forUser(String aUsername)
     {
         return new CasSet(aUsername);
+    }
+
+    public static CasSet forUser(User aUser)
+    {
+        return forUser(aUser.getUsername());
     }
 
     public static CasSet forTest(String aUsername)

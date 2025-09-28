@@ -46,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -158,8 +159,8 @@ public class BulkPredictionTask
 
                     documentService.setAnnotationDocumentState(annDoc, IN_PROGRESS,
                             EXPLICIT_ANNOTATOR_USER_ACTION);
-                    var cas = documentService.readAnnotationCas(doc, dataOwner, AUTO_CAS_UPGRADE,
-                            EXCLUSIVE_WRITE_ACCESS);
+                    var cas = documentService.readAnnotationCas(doc, CasSet.forUser(dataOwner),
+                            AUTO_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
 
                     addProcessingMetadataAnnotation(doc, cas);
 
@@ -167,7 +168,7 @@ public class BulkPredictionTask
                     annotationsCount.addAndGet(autoAcceptedSuggestions);
 
                     if (autoAcceptedSuggestions > 0) {
-                        documentService.writeAnnotationCas(cas, doc, dataOwner,
+                        documentService.writeAnnotationCas(cas, doc, CasSet.forUser(dataOwner),
                                 EXPLICIT_ANNOTATOR_USER_ACTION);
                     }
 

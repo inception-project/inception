@@ -98,7 +98,12 @@
       <artifactId>inception-preferences</artifactId>
       <version>${project.version}</version>
     </dependency>
-        
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-annotation-storage-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
@@ -224,12 +229,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-annotation-storage-api</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-export-api</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
@@ -304,6 +303,9 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
+            <ignoredNonTestScopedDependencies>
+              <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-annotation-storage-api</ignoredDependency>
+            </ignoredNonTestScopedDependencies>
             <ignoredDependencies>
               <!-- Plugin does not properly detect it -->
               <ignoredDependency>org.apache.uima:uimaj-core</ignoredDependency>

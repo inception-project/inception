@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toSet;
 
 import java.io.IOException;
@@ -281,10 +282,10 @@ public class CurationSidebarServiceImpl
     {
         var curationUser = getSession(aSessionOwner, aProjectId).getCurationTarget();
         if (curationUser == null) {
-            return Optional.empty();
+            return empty();
         }
 
-        return Optional.of(documentService.readAnnotationCas(aDoc, curationUser));
+        return Optional.of(documentService.readAnnotationCas(aDoc, CasSet.forUser(curationUser)));
     }
 
     /**

@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -398,7 +399,7 @@ public abstract class AnnotationPageBase2
         }
 
         return documentService.readAnnotationCas(state.getDocument(),
-                state.getUser().getUsername());
+                CasSet.forUser(state.getUser()));
     }
 
     @Override

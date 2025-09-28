@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -111,7 +112,7 @@ public class DocumentAccessImpl
             // Annotators cannot view blocked documents
             var doc = documentService.getSourceDocument(project.getId(), aDocumentId);
             if (documentService.existsAnnotationDocument(doc, aAnnotator)) {
-                var aDoc = documentService.getAnnotationDocument(doc, aAnnotator);
+                var aDoc = documentService.getAnnotationDocument(doc, CasSet.forUser(aAnnotator));
                 if (aDoc.getState() == AnnotationDocumentState.IGNORE) {
                     LOG.trace("Access denied: Document {} is locked (IGNORE) for user {}", aDoc,
                             aAnnotator);
@@ -190,7 +191,8 @@ public class DocumentAccessImpl
 
             // Blocked or finished documents cannot be edited
             if (documentService.existsAnnotationDocument(aDocument, aDataOwner)) {
-                var aDoc = documentService.getAnnotationDocument(aDocument, aDataOwner);
+                var aDoc = documentService.getAnnotationDocument(aDocument,
+                        CasSet.forUser(aDataOwner));
                 if (aDoc.getState() == AnnotationDocumentState.FINISHED) {
                     throw new AccessDeniedException("This document is already closed for user ["
                             + aDataOwner + "]. Please ask your "

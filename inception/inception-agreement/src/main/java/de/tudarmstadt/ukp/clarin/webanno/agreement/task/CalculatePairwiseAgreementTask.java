@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.agreement.task;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementSummary;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -107,7 +109,7 @@ public class CalculatePairwiseAgreementTask
                             break;
                         }
 
-                        var annotator1 = annotators.get(m);
+                        var annotator1 = CasSet.forUser(annotators.get(m));
                         var maybeCas1 = LazyInitializer.<Optional<CAS>> builder()
                                 .setInitializer(() -> loadCas(doc, annotator1, allAnnDocs)).get();
 
@@ -123,14 +125,14 @@ public class CalculatePairwiseAgreementTask
 
                             var annotator2 = annotators.get(n);
 
-                            if ((CURATION_USER.equals(annotator1)
+                            if ((CURATION_SET.equals(annotator1)
                                     || CURATION_USER.equals(annotator2))
                                     && !asList(CURATION_IN_PROGRESS, CURATION_FINISHED)
                                             .contains(doc.getState())) {
                                 LOG.trace(
                                         "Skipping combination {}/{}@{}: {} not in a curation state",
                                         annotator1, annotator2, doc, annotator1);
-                                summary.mergeResult(annotator1, annotator2,
+                                summary.mergeResult(annotator1.id(), annotator2,
                                         AgreementSummary.skipped(layer, feature));
                                 continue;
                             }
@@ -138,28 +140,29 @@ public class CalculatePairwiseAgreementTask
                             if (maybeCas1.get().isEmpty()) {
                                 LOG.trace("Skipping combination {}/{}@{}: {} has no data",
                                         annotator1, annotator2, doc, annotator1);
-                                summary.mergeResult(annotator1, annotator2,
+                                summary.mergeResult(annotator1.id(), annotator2,
                                         AgreementSummary.skipped(layer, feature));
                                 continue;
                             }
 
                             var maybeCas2 = LazyInitializer.<Optional<CAS>> builder()
-                                    .setInitializer(() -> loadCas(doc, annotator2, allAnnDocs))
+                                    .setInitializer(() -> loadCas(doc, CasSet.forUser(annotator2),
+                                            allAnnDocs))
                                     .get();
 
                             if (maybeCas2.get().isEmpty()) {
                                 LOG.trace("Skipping combination {}/{}@{}: {} has no data",
                                         annotator1, annotator2, doc, annotator2);
-                                summary.mergeResult(annotator1, annotator2,
+                                summary.mergeResult(annotator1.id(), annotator2,
                                         AgreementSummary.skipped(layer, feature));
                                 continue;
                             }
 
                             var casMap = new LinkedHashMap<String, CAS>();
-                            casMap.put(annotator1, maybeCas1.get().get());
+                            casMap.put(annotator1.id(), maybeCas1.get().get());
                             casMap.put(annotator2, maybeCas2.get().get());
                             var res = AgreementSummary.of(measure.getAgreement(casMap));
-                            summary.mergeResult(annotator1, annotator2, res);
+                            summary.mergeResult(annotator1.id(), annotator2, res);
                         }
                     }
                 }
@@ -184,34 +187,34 @@ public class CalculatePairwiseAgreementTask
         return cas;
     }
 
-    private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner,
+    private Optional<CAS> loadCas(SourceDocument aDocument, CasSet aSet,
             Map<SourceDocument, List<AnnotationDocument>> aAllAnnDocs)
         throws IOException
     {
-        if (CURATION_USER.equals(aDataOwner)) {
+        if (CURATION_SET.equals(aSet)) {
             if (!asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(aDocument.getState())) {
                 return Optional.empty();
             }
 
-            return loadCas(aDocument, aDataOwner);
+            return loadCas(aDocument, aSet);
         }
 
         var annDocs = aAllAnnDocs.get(aDocument);
 
-        if (annDocs.stream().noneMatch(annDoc -> aDataOwner.equals(annDoc.getUser()))) {
+        if (annDocs.stream().noneMatch(annDoc -> aSet.id().equals(annDoc.getUser()))) {
             return Optional.empty();
         }
 
-        if (!documentService.existsCas(aDocument, aDataOwner)) {
+        if (!documentService.existsCas(aDocument, aSet)) {
             return Optional.of(loadInitialCas(aDocument));
         }
 
-        return loadCas(aDocument, aDataOwner);
+        return loadCas(aDocument, aSet);
     }
 
-    private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner) throws IOException
+    private Optional<CAS> loadCas(SourceDocument aDocument, CasSet aSet) throws IOException
     {
-        var cas = documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,
+        var cas = documentService.readAnnotationCas(aDocument, aSet, AUTO_CAS_UPGRADE,
                 SHARED_READ_ONLY_ACCESS);
 
         // Set the CAS name in the DocumentMetaData so that we can pick it
