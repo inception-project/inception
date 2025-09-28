@@ -129,16 +129,30 @@
     <div class="d-flex flex-row justify-content-between align-items-center p-2">
       <div wicket:id="navigatorLabel"/>
       <ul wicket:id="navigator" class="m-0"/>
-      <div wicket:id="cell-orientation-controls" class="btn-group" role="group">
-        <input wicket:id="valueSetOrientation" type="checkbox" class="btn-check"/>
-        <label class="btn btn-outline-primary" wicket:for="valueSetOrientation">Horiz. cell values</label>
-        
-        <input wicket:id="compoundKeyOrientation" type="checkbox" class="btn-check"/>
-        <label class="btn btn-outline-primary" wicket:for="compoundKeyOrientation">Horiz. cell keys</label>
+      <div wicket:id="filterPanel">
+        <div wicket:id="cell-orientation-controls" class="btn-group" role="group">
+          <input wicket:id="valueSetOrientation" type="checkbox" class="btn-check"/>
+          <label class="btn btn-outline-primary" wicket:for="valueSetOrientation">Horiz. cell values</label>
+          
+          <input wicket:id="compoundKeyOrientation" type="checkbox" class="btn-check"/>
+          <label class="btn btn-outline-primary" wicket:for="compoundKeyOrientation">Horiz. cell keys</label>
+        </div>
+        <div class="btn-group" role="group">
+          <input wicket:id="showRowsWithSameValuesInAllColumns" type="checkbox" class="btn-check"/>
+          <label class="btn btn-outline-primary" wicket:for="showRowsWithSameValuesInAllColumns" title="Show rows where all values are the same"><i class="fa-solid fa-equals"></i></label>
+          <input wicket:id="showRowsWithAnyDifferentValue" type="checkbox" class="btn-check"/>
+          <label class="btn btn-outline-primary" wicket:for="showRowsWithAnyDifferentValue" title="Show rows where not all values are the same"><i class="fa-solid fa-not-equal"></i></label>
+        </div>
+        <div class="btn-group" role="group">
+          <input wicket:id="showRowsWithEmptyValues" type="checkbox" class="btn-check"/>
+          <label class="btn btn-outline-primary" wicket:for="showRowsWithEmptyValues" title="Show rows with empty values"><i class="fa-solid fa-circle"></i></label>
+          <input wicket:id="showRowsWithoutEmptyValues" type="checkbox" class="btn-check"/>
+          <label class="btn btn-outline-primary" wicket:for="showRowsWithoutEmptyValues" title="Show rows without empty values"><i class="fa-solid fa-circle-dot"></i></label>
+        </div>
+        <a wicket:id="download" class="btn btn-primary">
+          <i class="fa-solid fa-download me-2"></i>CSV
+        </a>
       </div>
-      <a wicket:id="download" class="btn btn-primary">
-        <i class="fa-solid fa-download me-2"></i>CSV
-      </a>
     </div>
     <div class="scrolling flex-content">
       <table wicket:id="table" class="pivot-table table table-striped-columns w-auto"/>

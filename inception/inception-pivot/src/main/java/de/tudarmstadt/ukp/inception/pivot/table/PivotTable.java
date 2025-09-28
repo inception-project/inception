@@ -32,7 +32,9 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.export.IExpo
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.util.resource.IResourceStream;
@@ -48,10 +50,11 @@ public class PivotTable<A extends Serializable, T>
 {
     private static final long serialVersionUID = 1L;
 
-    private List<IExportableColumn<Row<A>, CompoundKey>> columns;
-    private PivotTableDataProvider<A, T> dataProvider;
-    private IModel<Boolean> valueSetOrientation = Model.of(false);
-    private IModel<Boolean> compoundKeyOrientation = Model.of(false);
+    private final List<IExportableColumn<Row<A>, CompoundKey>> columns;
+    private final PivotTableDataProvider<A, T> dataProvider;
+    private final IModel<Boolean> valueSetOrientation = Model.of(false);
+    private final IModel<Boolean> compoundKeyOrientation = Model.of(false);
+    private final CompoundPropertyModel<PivotTableFilterState> filterState;
 
     public PivotTable(String aId, PivotTableDataProvider<A, T> aDataProvider,
             CellRenderer aCellRenderer)
@@ -61,6 +64,7 @@ public class PivotTable<A extends Serializable, T>
         setOutputMarkupPlaceholderTag(true);
 
         dataProvider = aDataProvider;
+        filterState = CompoundPropertyModel.of(dataProvider.getFilterState());
         setVisible(dataProvider.size() > 0);
 
         columns = buildColumns(dataProvider, aCellRenderer);
@@ -99,6 +103,7 @@ public class PivotTable<A extends Serializable, T>
         queue(cellOrientationControls);
 
         var valueSetOrientationCheck = new CheckBox("valueSetOrientation", valueSetOrientation);
+        valueSetOrientationCheck.setOutputMarkupId(true);
         valueSetOrientationCheck
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
                     _target.add(table);
@@ -107,11 +112,61 @@ public class PivotTable<A extends Serializable, T>
 
         var compoundKeyOrientationCheck = new CheckBox("compoundKeyOrientation",
                 compoundKeyOrientation);
+        compoundKeyOrientationCheck.setOutputMarkupId(true);
         compoundKeyOrientationCheck
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
                     _target.add(table);
                 }));
         queue(compoundKeyOrientationCheck);
+
+        var filterPanel = new WebMarkupContainer("filterPanel");
+        filterPanel.setOutputMarkupId(true);
+        queue(filterPanel);
+
+        var hideRowsWithSameValuesInAllColumns = new CheckBox("showRowsWithSameValuesInAllColumns",
+                LambdaModel.of(filterState, //
+                        s -> !s.isHideRowsWithSameValuesInAllColumns(),
+                        (s, v) -> s.setHideRowsWithSameValuesInAllColumns(!v)));
+        hideRowsWithSameValuesInAllColumns.setOutputMarkupId(true);
+        hideRowsWithSameValuesInAllColumns
+        .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
+            _target.add(table, navigator, navigatorLabel, filterPanel);
+        }));
+        queue(hideRowsWithSameValuesInAllColumns);
+
+        var hideRowsWithAnyDifferentValue = new CheckBox("showRowsWithAnyDifferentValue",
+                LambdaModel.of(filterState, //
+                        s -> !s.isHideRowsWithAnyDifferentValue(),
+                        (s, v) -> s.setHideRowsWithAnyDifferentValue(!v)));
+        hideRowsWithAnyDifferentValue.setOutputMarkupId(true);
+        hideRowsWithAnyDifferentValue
+        .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
+            _target.add(table, navigator, navigatorLabel, filterPanel);
+        }));
+        queue(hideRowsWithAnyDifferentValue);
+
+
+        var showRowsWithEmptyValues = new CheckBox("showRowsWithEmptyValues",
+                LambdaModel.of(filterState, //
+                        s -> !s.isHideRowsWithEmptyValues(),
+                        (s, v) -> s.setHideRowsWithEmptyValues(!v)));
+        showRowsWithEmptyValues.setOutputMarkupId(true);
+        showRowsWithEmptyValues
+        .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
+            _target.add(table, navigator, navigatorLabel, filterPanel);
+        }));
+        queue(showRowsWithEmptyValues);
+
+        var showRowsWithoutEmptyValues = new CheckBox("showRowsWithoutEmptyValues",
+                LambdaModel.of(filterState, //
+                        s -> !s.isHideRowsWithoutEmptyValues(),
+                        (s, v) -> s.setHideRowsWithoutEmptyValues(!v)));
+        showRowsWithoutEmptyValues.setOutputMarkupId(true);
+        showRowsWithoutEmptyValues
+        .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
+            _target.add(table, navigator, navigatorLabel, filterPanel);
+        }));
+        queue(showRowsWithoutEmptyValues);
     }
 
     public boolean isCompoundKeyHorizontal()
