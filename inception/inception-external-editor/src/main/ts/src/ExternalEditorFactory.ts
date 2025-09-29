@@ -46,7 +46,7 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
         spinner.setAttribute('role', 'status')
 
         const spinnerText = document.createElement('span')
-        spinnerText.classList.add('sr-only')
+        spinnerText.classList.add('visually-hidden')
         spinnerText.innerText = 'Loading...'
         spinner.appendChild(spinnerText)
         loadingIndicator.appendChild(spinner)
