@@ -171,7 +171,7 @@ public class CuratedDocumentsProjectExportTask
                         // Copy CAS - this is used when importing the project again
                         try (var os = new FileOutputStream(
                                 new File(curationDir, CURATION_USER + ".ser"))) {
-                            documentService.exportCas(sourceDocument, CURATION_USER, os);
+                            documentService.exportCas(sourceDocument, CURATION_SET, os);
                         }
 
                         // Copy secondary export format for convenience - not used during import

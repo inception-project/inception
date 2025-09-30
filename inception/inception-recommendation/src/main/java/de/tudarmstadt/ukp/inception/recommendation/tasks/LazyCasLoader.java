@@ -92,7 +92,7 @@ public class LazyCasLoader
     {
         var casses = new ArrayList<TrainingDocument>();
 
-        var allDocuments = documentService.listAllDocuments(project, dataOwner);
+        var allDocuments = documentService.listAllDocuments(project, CasSet.forUser(dataOwner));
         for (var entry : allDocuments.entrySet()) {
             var sourceDocument = entry.getKey();
             var annotationDocument = entry.getValue();
@@ -143,11 +143,11 @@ public class LazyCasLoader
         private boolean attemptedLoading = false;
         private CAS _cas;
 
-        TrainingDocument(SourceDocument aDocument, String aAnnotator,
+        TrainingDocument(SourceDocument aDocument, String aDataOwner,
                 AnnotationDocumentState aState)
         {
             document = aDocument;
-            set = CasSet.forUser(aAnnotator);
+            set = CasSet.forUser(aDataOwner);
             state = aState;
         }
 
