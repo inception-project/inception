@@ -68,7 +68,6 @@ import com.github.benmanes.caffeine.cache.stats.CacheStats;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceAction;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceLoader;
@@ -81,6 +80,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSessio
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.SessionManagedCas;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCacheProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
@@ -205,7 +205,7 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public void writeCas(SourceDocument aDocument, CAS aCas, CasSet aSet)
+    public void writeCas(SourceDocument aDocument, CAS aCas, AnnotationSet aSet)
         throws IOException, CasSessionException
     {
         try (var logCtx = withProjectLogger(aDocument.getProject())) {
@@ -274,14 +274,14 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public CAS readCas(SourceDocument aDocument, CasSet aSet)
+    public CAS readCas(SourceDocument aDocument, AnnotationSet aSet)
         throws IOException, CasSessionException
     {
         return readOrCreateCas(aDocument, aSet, NO_CAS_UPGRADE, null, EXCLUSIVE_WRITE_ACCESS);
     }
 
     @Override
-    public CAS readCas(SourceDocument aDocument, CasSet aSet, CasAccessMode aAccessMode)
+    public CAS readCas(SourceDocument aDocument, AnnotationSet aSet, CasAccessMode aAccessMode)
         throws IOException, CasSessionException
     {
         return readOrCreateCas(aDocument, aSet,
@@ -290,8 +290,8 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public CAS readOrCreateCas(SourceDocument aDocument, CasSet aSet, CasUpgradeMode aUpgradeMode,
-            CasProvider aSupplier, CasAccessMode aAccessMode)
+    public CAS readOrCreateCas(SourceDocument aDocument, AnnotationSet aSet,
+            CasUpgradeMode aUpgradeMode, CasProvider aSupplier, CasAccessMode aAccessMode)
         throws IOException, CasSessionException
     {
 
@@ -518,8 +518,8 @@ public class CasStorageServiceImpl
         }
     }
 
-    private void repairAndUpgradeCasIfRequired(SourceDocument aDocument, CasSet aSet, CAS aCas,
-            CasUpgradeMode aUpgradeMode, RepairAndUpgradeFlags... aFlags)
+    private void repairAndUpgradeCasIfRequired(SourceDocument aDocument, AnnotationSet aSet,
+            CAS aCas, CasUpgradeMode aUpgradeMode, RepairAndUpgradeFlags... aFlags)
         throws IOException
     {
         try (var session = CasStorageSession.openNested(contains(aFlags, ISOLATED_SESSION))) {
@@ -560,7 +560,7 @@ public class CasStorageServiceImpl
      * @throws IOException
      *             if the CAS could not be obtained.
      */
-    private CAS readOrCreateUnmanagedCas(SourceDocument aDocument, CasSet aSet,
+    private CAS readOrCreateUnmanagedCas(SourceDocument aDocument, AnnotationSet aSet,
             CasProvider aSupplier, CasUpgradeMode aUpgradeMode, CasAccessMode aAccessMode)
         throws IOException
     {
@@ -625,7 +625,7 @@ public class CasStorageServiceImpl
         return cas;
     }
 
-    private void addOrUpdateCasMetadata(SourceDocument aDocument, CasSet aSet, CAS cas)
+    private void addOrUpdateCasMetadata(SourceDocument aDocument, AnnotationSet aSet, CAS cas)
         throws IOException
     {
         CasMetadataUtils.addOrUpdateCasMetadata(cas,
@@ -638,7 +638,7 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public boolean deleteCas(SourceDocument aDocument, CasSet aSet)
+    public boolean deleteCas(SourceDocument aDocument, AnnotationSet aSet)
         throws IOException, CasSessionException
     {
         try (var logCtx = withProjectLogger(aDocument.getProject());
@@ -676,7 +676,7 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public void analyzeAndRepair(SourceDocument aDocument, CasSet aSet, CAS aCas)
+    public void analyzeAndRepair(SourceDocument aDocument, AnnotationSet aSet, CAS aCas)
     {
         var project = aDocument.getProject();
 
@@ -718,7 +718,7 @@ public class CasStorageServiceImpl
      * @param aCas
      *            the CAS object
      */
-    private void analyze(SourceDocument aDocument, CasSet aSet, CAS aCas)
+    private void analyze(SourceDocument aDocument, AnnotationSet aSet, CAS aCas)
     {
         if (casDoctor == null) {
             return;
@@ -746,7 +746,7 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public void exportCas(SourceDocument aDocument, CasSet aSet, OutputStream aStream)
+    public void exportCas(SourceDocument aDocument, AnnotationSet aSet, OutputStream aStream)
         throws IOException
     {
         // Ensure that the CAS is not being re-written and temporarily unavailable while we export
@@ -770,7 +770,7 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public void importCas(SourceDocument aDocument, CasSet aSet, InputStream aStream)
+    public void importCas(SourceDocument aDocument, AnnotationSet aSet, InputStream aStream)
         throws IOException
     {
         // Ensure that the CAS is not being re-written and temporarily unavailable while we export
@@ -794,7 +794,7 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public void upgradeCas(SourceDocument aDocument, CasSet aSet) throws IOException
+    public void upgradeCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
         Validate.notNull(aSet, "Set must be specified");
@@ -806,7 +806,7 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public void forceActionOnCas(SourceDocument aDocument, CasSet aSet,
+    public void forceActionOnCas(SourceDocument aDocument, AnnotationSet aSet,
             CasStorageServiceLoader aLoader, CasStorageServiceAction aAction, boolean aSave)
         throws IOException
     {
@@ -838,7 +838,7 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public boolean existsCas(SourceDocument aDocument, CasSet aSet) throws IOException
+    public boolean existsCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
         Validate.notNull(aSet, "Set must be specified");
@@ -857,7 +857,8 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public Optional<Long> getCasFileSize(SourceDocument aDocument, CasSet aSet) throws IOException
+    public Optional<Long> getCasFileSize(SourceDocument aDocument, AnnotationSet aSet)
+        throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
         Validate.notNull(aSet, "Set must be specified");
@@ -882,9 +883,10 @@ public class CasStorageServiceImpl
         private CasHolder holder;
         private String documentName;
         private long documentId;
-        private CasSet set;
+        private AnnotationSet set;
 
-        public WithExclusiveAccess(SourceDocument aDocument, CasSet aSet) throws CasSessionException
+        public WithExclusiveAccess(SourceDocument aDocument, AnnotationSet aSet)
+            throws CasSessionException
         {
             key = new CasKey(aDocument, aSet);
             documentName = aDocument.getName();
@@ -1002,7 +1004,8 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public Optional<Long> getCasTimestamp(SourceDocument aDocument, CasSet aSet) throws IOException
+    public Optional<Long> getCasTimestamp(SourceDocument aDocument, AnnotationSet aSet)
+        throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
         Validate.notNull(aSet, "Set must be specified");
@@ -1021,7 +1024,7 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public Optional<Long> verifyCasTimestamp(SourceDocument aDocument, CasSet aSet,
+    public Optional<Long> verifyCasTimestamp(SourceDocument aDocument, AnnotationSet aSet,
             long aExpectedTimeStamp, String aContextAction)
         throws IOException, ConcurentCasModificationException
     {
@@ -1083,7 +1086,8 @@ public class CasStorageServiceImpl
                 .removeIf(key -> Objects.equals(key.getProjectId(), aEvent.getProject().getId()));
     }
 
-    private void realWriteCas(SourceDocument aDocument, CasSet aSet, CAS aCas) throws IOException
+    private void realWriteCas(SourceDocument aDocument, AnnotationSet aSet, CAS aCas)
+        throws IOException
     {
         analyze(aDocument, aSet, aCas);
 

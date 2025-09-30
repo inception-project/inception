@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.casstorage;
+package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
@@ -24,14 +24,14 @@ import org.apache.commons.lang3.Validate;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-public record CasSet(String id) {
-    public static final CasSet EXPORT_SET = forSpecialPurpose("exportCas");
-    public static final CasSet PREDICTION_SET = forSpecialPurpose("predictionCas");
-    public static final CasSet INITIAL_SET = forSpecialPurpose(INITIAL_CAS_PSEUDO_USER);
-    public static final CasSet CURATION_SET = forSpecialPurpose(CURATION_USER);
+public record AnnotationSet(String id) {
+    public static final AnnotationSet EXPORT_SET = forSpecialPurpose("exportCas");
+    public static final AnnotationSet PREDICTION_SET = forSpecialPurpose("predictionCas");
+    public static final AnnotationSet INITIAL_SET = forSpecialPurpose(INITIAL_CAS_PSEUDO_USER);
+    public static final AnnotationSet CURATION_SET = forSpecialPurpose(CURATION_USER);
 
     @Deprecated
-    public CasSet(String id)
+    public AnnotationSet(String id)
     {
         Validate.notBlank(id, "id must not be blank");
 
@@ -44,23 +44,23 @@ public record CasSet(String id) {
         return id;
     }
 
-    public static CasSet forUser(String aUsername)
+    public static AnnotationSet forUser(String aUsername)
     {
-        return new CasSet(aUsername);
+        return new AnnotationSet(aUsername);
     }
 
-    public static CasSet forUser(User aUser)
+    public static AnnotationSet forUser(User aUser)
     {
         return forUser(aUser.getUsername());
     }
 
-    public static CasSet forTest(String aName)
+    public static AnnotationSet forTest(String aName)
     {
-        return new CasSet(aName);
+        return new AnnotationSet(aName);
     }
 
-    public static CasSet forSpecialPurpose(String aPurpose)
+    public static AnnotationSet forSpecialPurpose(String aPurpose)
     {
-        return new CasSet(aPurpose);
+        return new AnnotationSet(aPurpose);
     }
 }

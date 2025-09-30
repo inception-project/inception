@@ -56,13 +56,13 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.comment.AnnotatorCommentDialogPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
@@ -193,7 +193,7 @@ public abstract class BratSuggestionVisualizer
     {
         var username = getModelObject().getUser().getUsername();
         var doc = getModelObject().getAnnotatorState().getDocument();
-        var annDoc = documentService.getAnnotationDocument(doc, CasSet.forUser(username));
+        var annDoc = documentService.getAnnotationDocument(doc, AnnotationSet.forUser(username));
         var annDocState = annDoc.getState();
 
         switch (annDocState) {
@@ -217,7 +217,7 @@ public abstract class BratSuggestionVisualizer
     {
         var username = getModelObject().getUser().getUsername();
         var doc = getModelObject().getAnnotatorState().getDocument();
-        return documentService.getAnnotationDocument(doc, CasSet.forUser(username));
+        return documentService.getAnnotationDocument(doc, AnnotationSet.forUser(username));
     }
 
     private String maybeAnonymizeUsername(AnnotatorSegmentState aSegment)
@@ -389,7 +389,7 @@ public abstract class BratSuggestionVisualizer
                 AnnotatorState state = segment.getAnnotatorState();
                 CasProvider casProvider = () -> documentService.readAnnotationCas(
                         segment.getAnnotatorState().getDocument(),
-                        CasSet.forUser(segment.getUser().getUsername()));
+                        AnnotationSet.forUser(segment.getUser().getUsername()));
                 var result = lazyDetailsLookupService.lookupLazyDetails(request, paramId,
                         casProvider, state.getDocument(), segment.getUser(),
                         state.getWindowBeginOffset(), state.getWindowEndOffset());

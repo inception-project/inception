@@ -40,10 +40,10 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -132,7 +132,7 @@ public class CurationEditorExtension
         var doc = aState.getDocument();
         var srcUser = curationVid.getUsername();
 
-        if (!documentService.existsAnnotationDocument(doc, CasSet.forUser(srcUser))) {
+        if (!documentService.existsAnnotationDocument(doc, AnnotationSet.forUser(srcUser))) {
             LOG.error("Source CAS of [{}] for curation not found", srcUser);
             return;
         }
@@ -153,7 +153,7 @@ public class CurationEditorExtension
         // get user CAS and annotation (to be merged into curator's)
         var vid = VID.parse(curationVid.getExtensionPayload());
 
-        var srcCas = documentService.readAnnotationCas(doc, CasSet.forUser(srcUser));
+        var srcCas = documentService.readAnnotationCas(doc, AnnotationSet.forUser(srcUser));
         var sourceAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
 
         aActionHandler.actionJump(aTarget, sourceAnnotation.getBegin(), sourceAnnotation.getEnd());
@@ -191,7 +191,7 @@ public class CurationEditorExtension
             return null;
         }
 
-        var srcSet = CasSet.forUser(curationVid.getUsername());
+        var srcSet = AnnotationSet.forUser(curationVid.getUsername());
 
         if (!documentService.existsAnnotationDocument(aDocument, srcSet)) {
             LOG.error("Source CAS of [{}] for curation not found", srcSet);
@@ -220,7 +220,7 @@ public class CurationEditorExtension
 
         var vid = VID.parse(aCurationVid.getExtensionPayload());
 
-        var srcCas = documentService.readAnnotationCas(doc, CasSet.forUser(srcUser));
+        var srcCas = documentService.readAnnotationCas(doc, AnnotationSet.forUser(srcUser));
         var sourceAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
         var layer = annotationService.findLayer(aState.getProject(), sourceAnnotation);
 
@@ -295,7 +295,8 @@ public class CurationEditorExtension
             var curationVid = CurationVID.parse(aVid.getExtensionPayload());
             var vid = VID.parse(curationVid.getExtensionPayload());
             var srcUser = curationVid.getUsername();
-            var srcCas = documentService.readAnnotationCas(aDocument, CasSet.forUser(srcUser));
+            var srcCas = documentService.readAnnotationCas(aDocument,
+                    AnnotationSet.forUser(srcUser));
             var features = annotationService.listEnabledFeatures(aLayer).stream() //
                     .filter(f -> f.isIncludeInHover()) //
                     .filter(f -> NONE == f.getMultiValueMode()) //
@@ -386,7 +387,7 @@ public class CurationEditorExtension
         for (var user : selectedUsers) {
             try {
                 var userCas = documentService.readAnnotationCas(aDocument,
-                        CasSet.forUser(user.getUsername()));
+                        AnnotationSet.forUser(user.getUsername()));
                 casses.put(user.getUsername(), userCas);
             }
             catch (IOException e) {

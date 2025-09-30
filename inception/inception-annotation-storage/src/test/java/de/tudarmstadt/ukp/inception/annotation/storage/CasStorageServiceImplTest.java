@@ -21,11 +21,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession.openNested;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createCas;
 import static java.lang.Thread.sleep;
@@ -63,10 +63,10 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasSessionException;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
@@ -131,9 +131,9 @@ public class CasStorageServiceImplTest
             var doc = makeSourceDocument(1l, 1l, "test");
             var templateCas = createCas(createTypeSystemDescription()).getJCas();
             templateCas.setDocumentText("This is a test");
-            casStorageSession.add(CasSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS,
+            casStorageSession.add(AnnotationSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS,
                     templateCas.getCas());
-            var set = CasSet.forTest("test");
+            var set = AnnotationSet.forTest("test");
 
             sut.writeCas(doc, templateCas.getCas(), set);
             assertThat(sut.existsCas(doc, set)).isTrue();
@@ -157,10 +157,11 @@ public class CasStorageServiceImplTest
             typeSystems.add(CasMetadataUtils.getInternalTypeSystem());
 
             var cas = WebAnnoCasUtil.createCas(mergeTypeSystems(typeSystems)).getJCas();
-            casStorageSession.add(CasSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS, cas.getCas());
+            casStorageSession.add(AnnotationSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS,
+                    cas.getCas());
 
             var doc = makeSourceDocument(2l, 2l, "test");
-            var set = CasSet.forTest("test");
+            var set = AnnotationSet.forTest("test");
 
             sut.writeCas(doc, cas.getCas(), set);
 
@@ -181,7 +182,7 @@ public class CasStorageServiceImplTest
         try (var casStorageSession = openNested(true)) {
             // Setup fixture
             var doc = makeSourceDocument(3l, 3l, "test");
-            var set = CasSet.forTest("test");
+            var set = AnnotationSet.forTest("test");
             var text = "This is a test";
             createCasFile(doc, set, text);
 
@@ -199,7 +200,7 @@ public class CasStorageServiceImplTest
     {
         // Setup fixture
         var doc = makeSourceDocument(4l, 4l, "test");
-        var set = CasSet.forTest("test");
+        var set = AnnotationSet.forTest("test");
         try (var session = openNested(true)) {
             var text = "This is a test";
             createCasFile(doc, set, text);
@@ -240,7 +241,7 @@ public class CasStorageServiceImplTest
     {
         // Setup fixture
         var doc = makeSourceDocument(5l, 5l, "test");
-        var set = CasSet.forTest("test");
+        var set = AnnotationSet.forTest("test");
 
         try (var session = openNested(true)) {
             createCasFile(doc, set, "This is a test");
@@ -270,7 +271,7 @@ public class CasStorageServiceImplTest
         try (CasStorageSession casStorageSession = openNested(true)) {
             // Setup fixture
             var doc = makeSourceDocument(6l, 6l, "test");
-            var set = CasSet.forTest("test");
+            var set = AnnotationSet.forTest("test");
             var casFile = driver.getCasFile(doc, set);
 
             long casFileSize;
@@ -317,7 +318,7 @@ public class CasStorageServiceImplTest
         };
 
         var doc = makeSourceDocument(7l, 7l, "doc");
-        var set = CasSet.forTest("annotator");
+        var set = AnnotationSet.forTest("annotator");
 
         // We interleave all the primary and secondary tasks into the main tasks list
         // Primary tasks run for a certain number of iterations
@@ -396,7 +397,7 @@ public class CasStorageServiceImplTest
         };
 
         var doc = makeSourceDocument(8l, 8l, "doc");
-        var set = CasSet.forTest("annotator");
+        var set = AnnotationSet.forTest("annotator");
         try (var session = openNested()) {
             // Make sure the CAS exists so that the threads should never be forced to call the
             // the initializer
@@ -459,11 +460,11 @@ public class CasStorageServiceImplTest
         extends Thread
     {
         private SourceDocument doc;
-        private CasSet set;
+        private AnnotationSet set;
         private int repeat;
         private CasProvider initializer;
 
-        public ExclusiveReadWriteTask(int n, SourceDocument aDoc, CasSet aUser,
+        public ExclusiveReadWriteTask(int n, SourceDocument aDoc, AnnotationSet aUser,
                 CasProvider aInitializer, int aRepeat)
         {
             super("RW" + n);
@@ -505,10 +506,10 @@ public class CasStorageServiceImplTest
         extends Thread
     {
         private SourceDocument doc;
-        private CasSet set;
+        private AnnotationSet set;
         private CasProvider initializer;
 
-        public SharedReadOnlyTask(int n, SourceDocument aDoc, CasSet aUser,
+        public SharedReadOnlyTask(int n, SourceDocument aDoc, AnnotationSet aUser,
                 CasProvider aInitializer)
         {
             super("RO" + n);
@@ -541,10 +542,10 @@ public class CasStorageServiceImplTest
         extends Thread
     {
         private SourceDocument doc;
-        private CasSet set;
+        private AnnotationSet set;
         private Random rnd;
 
-        public DeleterTask(int n, SourceDocument aDoc, CasSet aUser)
+        public DeleterTask(int n, SourceDocument aDoc, AnnotationSet aUser)
         {
             super("XX" + n);
             doc = aDoc;
@@ -579,10 +580,11 @@ public class CasStorageServiceImplTest
         extends Thread
     {
         private SourceDocument doc;
-        private CasSet set;
+        private AnnotationSet set;
         private CasProvider initializer;
 
-        public UnmanagedTask(int n, SourceDocument aDoc, CasSet aUser, CasProvider aInitializer)
+        public UnmanagedTask(int n, SourceDocument aDoc, AnnotationSet aUser,
+                CasProvider aInitializer)
         {
             super("UN" + n);
             doc = aDoc;
@@ -613,9 +615,9 @@ public class CasStorageServiceImplTest
         extends Thread
     {
         private SourceDocument doc;
-        private CasSet set;
+        private AnnotationSet set;
 
-        public UnmanagedNonInitializingTask(int n, SourceDocument aDoc, CasSet aUser)
+        public UnmanagedNonInitializingTask(int n, SourceDocument aDoc, AnnotationSet aUser)
         {
             super("U_" + n);
             doc = aDoc;
@@ -664,7 +666,7 @@ public class CasStorageServiceImplTest
         return CasCreationUtils.mergeTypeSystems(asList(globalTsd, internalTsd));
     }
 
-    private JCas createCasFile(SourceDocument aDoc, CasSet aSet, String aText)
+    private JCas createCasFile(SourceDocument aDoc, AnnotationSet aSet, String aText)
         throws CASException, CasSessionException, IOException
     {
         var casTemplate = sut.readOrCreateCas(aDoc, aSet, NO_CAS_UPGRADE, () -> makeCas(aText),

@@ -62,7 +62,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
@@ -72,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -238,14 +238,14 @@ public class DocumentImportExportServiceImpl
                 bulkOperationContext = new HashMap<>();
             }
 
-            CasSet set;
+            AnnotationSet set;
             switch (aMode) {
             case ANNOTATION:
-                set = CasSet.forUser(aDataOwner);
+                set = AnnotationSet.forUser(aDataOwner);
                 break;
             case CURATION:
                 // The merge result will be exported
-                set = CasSet.CURATION_SET;
+                set = AnnotationSet.CURATION_SET;
                 break;
             default:
                 throw new IllegalArgumentException("Unknown mode [" + aMode + "]");
@@ -457,7 +457,7 @@ public class DocumentImportExportServiceImpl
 
             try (var session = CasStorageSession.openNested()) {
                 var exportCas = WebAnnoCasUtil.createCas();
-                session.add(CasSet.EXPORT_SET, EXCLUSIVE_WRITE_ACCESS, exportCas);
+                session.add(AnnotationSet.EXPORT_SET, EXCLUSIVE_WRITE_ACCESS, exportCas);
 
                 // Update type system the CAS, compact it (remove all non-reachable feature
                 // structures) and remove all internal feature structures in the process

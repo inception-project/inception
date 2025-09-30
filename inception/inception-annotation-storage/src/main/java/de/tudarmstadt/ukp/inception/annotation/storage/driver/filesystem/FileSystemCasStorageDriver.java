@@ -56,9 +56,9 @@ import org.slf4j.LoggerFactory;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageMetadata;
@@ -110,7 +110,7 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public CAS readCas(SourceDocument aDocument, CasSet aSet) throws IOException
+    public CAS readCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException
     {
         LOG.trace("Reading CAS [{}]@{}", aSet, aDocument);
 
@@ -167,7 +167,7 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public void writeCas(SourceDocument aDocument, CasSet aSet, CAS aCas) throws IOException
+    public void writeCas(SourceDocument aDocument, AnnotationSet aSet, CAS aCas) throws IOException
     {
         var t0 = currentTimeMillis();
 
@@ -294,7 +294,7 @@ public class FileSystemCasStorageDriver
         return annotationFolder;
     }
 
-    private void manageHistory(File aCurrentVersion, SourceDocument aDocument, CasSet aSet)
+    private void manageHistory(File aCurrentVersion, SourceDocument aDocument, AnnotationSet aSet)
         throws IOException
     {
         if (backupProperties.getInterval() <= 0) {
@@ -387,7 +387,7 @@ public class FileSystemCasStorageDriver
     }
 
     // Public for testing
-    public File getCasFile(SourceDocument aDocument, CasSet aSet) throws IOException
+    public File getCasFile(SourceDocument aDocument, AnnotationSet aSet) throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
         Validate.notNull(aSet, "Set must be specified");
@@ -396,7 +396,7 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public void exportCas(SourceDocument aDocument, CasSet aSet, OutputStream aStream)
+    public void exportCas(SourceDocument aDocument, AnnotationSet aSet, OutputStream aStream)
         throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
@@ -408,7 +408,7 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public void importCas(SourceDocument aDocument, CasSet aSet, InputStream aStream)
+    public void importCas(SourceDocument aDocument, AnnotationSet aSet, InputStream aStream)
         throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
@@ -419,14 +419,14 @@ public class FileSystemCasStorageDriver
         }
     }
 
-    public File getCasFile(long aProjectId, long aDocumentId, CasSet aSet) throws IOException
+    public File getCasFile(long aProjectId, long aDocumentId, AnnotationSet aSet) throws IOException
     {
         return new File(getAnnotationFolder(aProjectId, aDocumentId),
                 aSet.id() + SER_CAS_EXTENSION);
     }
 
     @Override
-    public boolean deleteCas(SourceDocument aDocument, CasSet aSet) throws IOException
+    public boolean deleteCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException
     {
         var casFile = getCasFile(aDocument.getProject().getId(), aDocument.getId(), aSet);
 
@@ -438,13 +438,14 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public boolean existsCas(SourceDocument aDocument, CasSet aSet) throws IOException
+    public boolean existsCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException
     {
         return getCasFile(aDocument, aSet).exists();
     }
 
     @Override
-    public Optional<Long> getCasFileSize(SourceDocument aDocument, CasSet aSet) throws IOException
+    public Optional<Long> getCasFileSize(SourceDocument aDocument, AnnotationSet aSet)
+        throws IOException
     {
         var file = getCasFile(aDocument, aSet);
         if (file.exists()) {
@@ -455,7 +456,7 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public Optional<CasStorageMetadata> getCasMetadata(SourceDocument aDocument, CasSet aSet)
+    public Optional<CasStorageMetadata> getCasMetadata(SourceDocument aDocument, AnnotationSet aSet)
         throws IOException
     {
         var casFile = getCasFile(aDocument, aSet);
@@ -468,7 +469,7 @@ public class FileSystemCasStorageDriver
     }
 
     @Override
-    public Optional<Long> verifyCasTimestamp(SourceDocument aDocument, CasSet aSet,
+    public Optional<Long> verifyCasTimestamp(SourceDocument aDocument, AnnotationSet aSet,
             long aExpectedTimeStamp, String aContextAction)
         throws IOException, ConcurentCasModificationException
     {
@@ -511,7 +512,7 @@ public class FileSystemCasStorageDriver
     }
 
     private void failOnConcurrentModification(CAS aCas, File aCasFile, SourceDocument aDocument,
-            CasSet aSet, String aContextAction)
+            AnnotationSet aSet, String aContextAction)
         throws IOException
     {
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it

@@ -27,12 +27,12 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 
 public class SessionManagedCas
 {
     private final long sourceDocumentId;
-    private final CasSet set;
+    private final AnnotationSet set;
     private final CasAccessMode mode;
     private final CAS cas;
     private final CasHolder casHolder;
@@ -41,7 +41,8 @@ public class SessionManagedCas
     private int readCount;
     private int writeCount;
 
-    public SessionManagedCas(long aSourceDocumentId, CasSet aSet, CasAccessMode aMode, CAS aCas)
+    public SessionManagedCas(long aSourceDocumentId, AnnotationSet aSet, CasAccessMode aMode,
+            CAS aCas)
     {
         super();
 
@@ -55,7 +56,7 @@ public class SessionManagedCas
         shouldReleaseOnClose = true;
     }
 
-    public SessionManagedCas(long aSourceDocumentId, CasSet aSet, CasAccessMode aMode,
+    public SessionManagedCas(long aSourceDocumentId, AnnotationSet aSet, CasAccessMode aMode,
             CasHolder aCasHolder)
     {
         super();
@@ -79,7 +80,7 @@ public class SessionManagedCas
         return sourceDocumentId;
     }
 
-    public CasSet getSet()
+    public AnnotationSet getSet()
     {
         return set;
     }

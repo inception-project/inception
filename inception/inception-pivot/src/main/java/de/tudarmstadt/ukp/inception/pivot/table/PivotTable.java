@@ -129,9 +129,9 @@ public class PivotTable<A extends Serializable, T>
                         (s, v) -> s.setHideRowsWithSameValuesInAllColumns(!v)));
         hideRowsWithSameValuesInAllColumns.setOutputMarkupId(true);
         hideRowsWithSameValuesInAllColumns
-        .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
-            _target.add(table, navigator, navigatorLabel, filterPanel);
-        }));
+                .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
+                    _target.add(table, navigator, navigatorLabel, filterPanel);
+                }));
         queue(hideRowsWithSameValuesInAllColumns);
 
         var hideRowsWithAnyDifferentValue = new CheckBox("showRowsWithAnyDifferentValue",
@@ -140,11 +140,10 @@ public class PivotTable<A extends Serializable, T>
                         (s, v) -> s.setHideRowsWithAnyDifferentValue(!v)));
         hideRowsWithAnyDifferentValue.setOutputMarkupId(true);
         hideRowsWithAnyDifferentValue
-        .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
-            _target.add(table, navigator, navigatorLabel, filterPanel);
-        }));
+                .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
+                    _target.add(table, navigator, navigatorLabel, filterPanel);
+                }));
         queue(hideRowsWithAnyDifferentValue);
-
 
         var showRowsWithEmptyValues = new CheckBox("showRowsWithEmptyValues",
                 LambdaModel.of(filterState, //
@@ -152,9 +151,9 @@ public class PivotTable<A extends Serializable, T>
                         (s, v) -> s.setHideRowsWithEmptyValues(!v)));
         showRowsWithEmptyValues.setOutputMarkupId(true);
         showRowsWithEmptyValues
-        .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
-            _target.add(table, navigator, navigatorLabel, filterPanel);
-        }));
+                .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
+                    _target.add(table, navigator, navigatorLabel, filterPanel);
+                }));
         queue(showRowsWithEmptyValues);
 
         var showRowsWithoutEmptyValues = new CheckBox("showRowsWithoutEmptyValues",
@@ -163,9 +162,9 @@ public class PivotTable<A extends Serializable, T>
                         (s, v) -> s.setHideRowsWithoutEmptyValues(!v)));
         showRowsWithoutEmptyValues.setOutputMarkupId(true);
         showRowsWithoutEmptyValues
-        .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
-            _target.add(table, navigator, navigatorLabel, filterPanel);
-        }));
+                .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, _target -> {
+                    _target.add(table, navigator, navigatorLabel, filterPanel);
+                }));
         queue(showRowsWithoutEmptyValues);
     }
 

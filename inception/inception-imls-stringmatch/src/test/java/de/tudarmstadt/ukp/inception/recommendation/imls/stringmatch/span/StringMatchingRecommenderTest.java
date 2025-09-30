@@ -52,10 +52,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -162,7 +162,7 @@ public class StringMatchingRecommenderTest
         var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "John Smith. Peter Johnheim .");
         var cas = jcas.getCas();
-        casStorageSession.add(CasSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS, cas);
+        casStorageSession.add(AnnotationSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS, cas);
 
         RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
@@ -192,7 +192,7 @@ public class StringMatchingRecommenderTest
         var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "John Smith .\nPeter Johnheim .");
         var cas = jcas.getCas();
-        casStorageSession.add(CasSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS, cas);
+        casStorageSession.add(AnnotationSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS, cas);
 
         RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
@@ -477,7 +477,7 @@ public class StringMatchingRecommenderTest
             var cas = JCasFactory.createJCas();
             reader.getNext(cas.getCas());
             casList.add(cas.getCas());
-            casStorageSession.add(CasSet.forTest("testDataCas" + n), EXCLUSIVE_WRITE_ACCESS,
+            casStorageSession.add(AnnotationSet.forTest("testDataCas" + n), EXCLUSIVE_WRITE_ACCESS,
                     cas.getCas());
         }
 

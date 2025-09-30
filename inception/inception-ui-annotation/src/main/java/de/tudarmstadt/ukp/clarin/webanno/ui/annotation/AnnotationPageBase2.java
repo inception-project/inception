@@ -60,11 +60,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -393,13 +393,13 @@ public abstract class AnnotationPageBase2
         if (isEditable() && state.getAnnotationDocumentTimestamp().isPresent()) {
             documentService
                     .verifyAnnotationCasTimestamp(state.getDocument(),
-                            CasSet.forUser(state.getUser()),
+                            AnnotationSet.forUser(state.getUser()),
                             state.getAnnotationDocumentTimestamp().get(), "reading the editor CAS")
                     .ifPresent(state::setAnnotationDocumentTimestamp);
         }
 
         return documentService.readAnnotationCas(state.getDocument(),
-                CasSet.forUser(state.getUser()));
+                AnnotationSet.forUser(state.getUser()));
     }
 
     @Override
@@ -416,7 +416,8 @@ public abstract class AnnotationPageBase2
     public void bumpAnnotationCasTimestamp(AnnotatorState aState) throws IOException
     {
         documentService
-                .getAnnotationCasTimestamp(aState.getDocument(), CasSet.forUser(aState.getUser()))
+                .getAnnotationCasTimestamp(aState.getDocument(),
+                        AnnotationSet.forUser(aState.getUser()))
                 .ifPresent(aState::setAnnotationDocumentTimestamp);
     }
 
@@ -738,7 +739,7 @@ public abstract class AnnotationPageBase2
     public List<AnnotationDocument> listAccessibleDocuments(Project aProject, User aUser)
     {
         var allDocuments = new ArrayList<AnnotationDocument>();
-        var docs = documentService.listAllDocuments(aProject, CasSet.forUser(aUser));
+        var docs = documentService.listAllDocuments(aProject, AnnotationSet.forUser(aUser));
 
         var sessionOwner = userRepository.getCurrentUser();
         for (var e : docs.entrySet()) {

@@ -31,8 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -90,7 +90,8 @@ public class DocumentAccessImpl
 
             // Does the user have the permission to access the project at all?
             if (permissionLevels.isEmpty()) {
-                LOG.trace("Access denied: User {} has no acccess to project {}", sessionOwner, project);
+                LOG.trace("Access denied: User {} has no acccess to project {}", sessionOwner,
+                        project);
                 return false;
             }
 
@@ -111,7 +112,7 @@ public class DocumentAccessImpl
 
             // Annotators cannot view blocked documents
             var doc = documentService.getSourceDocument(project.getId(), aDocumentId);
-            var dataOwnerSet = CasSet.forUser(aDataOwner);
+            var dataOwnerSet = AnnotationSet.forUser(aDataOwner);
             if (documentService.existsAnnotationDocument(doc, dataOwnerSet)) {
                 var aDoc = documentService.getAnnotationDocument(doc, dataOwnerSet);
                 if (aDoc.getState() == AnnotationDocumentState.IGNORE) {
@@ -191,7 +192,7 @@ public class DocumentAccessImpl
             }
 
             // Blocked or finished documents cannot be edited
-            var dataOwnerSet = CasSet.forUser(aDataOwner);
+            var dataOwnerSet = AnnotationSet.forUser(aDataOwner);
             if (documentService.existsAnnotationDocument(aDocument, dataOwnerSet)) {
                 var aDoc = documentService.getAnnotationDocument(aDocument, dataOwnerSet);
                 if (aDoc.getState() == AnnotationDocumentState.FINISHED) {

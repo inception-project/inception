@@ -22,7 +22,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -30,7 +30,7 @@ public class CasKey
 {
     private final long projectId;
     private final long documentId;
-    private final CasSet set;
+    private final AnnotationSet set;
 
     // These are just for information and are not included when checking for equality or building a
     // hash. Mind that the name of a project (possibly the name of a document) might change during
@@ -38,7 +38,7 @@ public class CasKey
     private String projectName;
     private String documentName;
 
-    public CasKey(SourceDocument aDocument, CasSet aSet)
+    public CasKey(SourceDocument aDocument, AnnotationSet aSet)
     {
         projectName = aDocument.getProject().getName();
         projectId = aDocument.getProject().getId();
@@ -47,7 +47,7 @@ public class CasKey
         set = aSet;
     }
 
-    public CasKey(long aProjectId, long aDocumentId, CasSet aSet)
+    public CasKey(long aProjectId, long aDocumentId, AnnotationSet aSet)
     {
         projectId = aProjectId;
         documentId = aDocumentId;
@@ -64,7 +64,7 @@ public class CasKey
         return documentId;
     }
 
-    public CasSet getSet()
+    public AnnotationSet getSet()
     {
         return set;
     }

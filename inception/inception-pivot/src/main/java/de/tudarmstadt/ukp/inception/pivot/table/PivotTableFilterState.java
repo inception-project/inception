@@ -39,7 +39,7 @@ public class PivotTableFilterState
         if (aHideRowsWithSameValuesInAllColumns) {
             hideRowsWithAnyDifferentValue = false;
         }
-        
+
         hideRowsWithSameValuesInAllColumns = aHideRowsWithSameValuesInAllColumns;
     }
 
@@ -66,7 +66,7 @@ public class PivotTableFilterState
         if (aHideRowsWithEmptyValues) {
             hideRowsWithoutEmptyValues = false;
         }
-        
+
         hideRowsWithEmptyValues = aHideRowsWithEmptyValues;
     }
 
@@ -80,7 +80,7 @@ public class PivotTableFilterState
         if (aHideRowsWithoutEmptyValues) {
             hideRowsWithEmptyValues = false;
         }
-        
+
         hideRowsWithoutEmptyValues = aHideRowsWithoutEmptyValues;
     }
 }

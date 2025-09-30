@@ -32,9 +32,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.WriteAccessNotPermittedException;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
@@ -53,7 +53,7 @@ public class CasStorageSession
     private boolean closed = false;
     private StackTraceElement[] creatorStack;
 
-    private final Map<Long, Map<CasSet, SessionManagedCas>> managedCases = new LinkedHashMap<>();
+    private final Map<Long, Map<AnnotationSet, SessionManagedCas>> managedCases = new LinkedHashMap<>();
 
     private int maxManagedCases = 0;
 
@@ -214,7 +214,7 @@ public class CasStorageSession
      *            the CAS itself.
      * @return the managed CAS state.
      */
-    public SessionManagedCas add(CasSet aSpecialPurpose, CasAccessMode aMode, CAS aCas)
+    public SessionManagedCas add(AnnotationSet aSpecialPurpose, CasAccessMode aMode, CAS aCas)
     {
         Validate.notNull(aSpecialPurpose, "The purpose cannot be null");
         Validate.notNull(aMode, "The access mode cannot be null");
@@ -250,7 +250,7 @@ public class CasStorageSession
      * @param aSet
      *            the set to which CAS belongs
      */
-    public void remove(Long aDocumentId, CasSet aSet)
+    public void remove(Long aDocumentId, AnnotationSet aSet)
     {
         var casByUser = managedCases.get(aDocumentId);
 
@@ -274,7 +274,8 @@ public class CasStorageSession
      *            the CAS itself.
      * @return the managed CAS state.
      */
-    public SessionManagedCas add(Long aDocumentId, CasSet aSet, CasAccessMode aMode, CAS aCas)
+    public SessionManagedCas add(Long aDocumentId, AnnotationSet aSet, CasAccessMode aMode,
+            CAS aCas)
     {
         Validate.notNull(aDocumentId, "The document ID cannot be null");
         Validate.isTrue(aDocumentId >= 0, "The document ID cannot be negative");
@@ -302,7 +303,7 @@ public class CasStorageSession
      *            the CAS holder.
      * @return the managed CAS state.
      */
-    public SessionManagedCas add(Long aDocumentId, CasSet aSet, CasAccessMode aMode,
+    public SessionManagedCas add(Long aDocumentId, AnnotationSet aSet, CasAccessMode aMode,
             CasHolder aCasHolder)
     {
         Validate.notNull(aDocumentId, "The document ID cannot be null");
@@ -375,7 +376,7 @@ public class CasStorageSession
      *            the set to which the CAS belongs.
      * @return the managed CAS state.
      */
-    public Optional<SessionManagedCas> getManagedState(Long aDocumentId, CasSet aSet)
+    public Optional<SessionManagedCas> getManagedState(Long aDocumentId, AnnotationSet aSet)
     {
         Validate.notNull(aDocumentId, "The document ID cannot be null");
         Validate.notNull(aSet, "The set cannot be null");
@@ -401,7 +402,7 @@ public class CasStorageSession
      * @param aSet
      *            the set to which the CAS belongs.
      */
-    public boolean hasExclusiveAccess(SourceDocument aDocument, CasSet aSet)
+    public boolean hasExclusiveAccess(SourceDocument aDocument, AnnotationSet aSet)
     {
         return getManagedState(aDocument.getId(), aSet) //
                 .map(SessionManagedCas::isWritingPermitted) //

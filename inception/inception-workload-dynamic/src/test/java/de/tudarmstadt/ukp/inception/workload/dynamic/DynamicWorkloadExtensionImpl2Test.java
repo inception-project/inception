@@ -58,11 +58,11 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.util.FileSystemUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -180,7 +180,7 @@ class DynamicWorkloadExtensionImpl2Test
         dynamicWorkloadExtension.writeTraits(traits, project);
 
         var ann = documentService.getAnnotationDocument(annotationDocument.getDocument(),
-                CasSet.forUser(annotationDocument.getUser()));
+                AnnotationSet.forUser(annotationDocument.getUser()));
         assertThat(ann.getState()) //
                 .as("Effective state is in-progress after the CAS update")
                 .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
@@ -193,7 +193,8 @@ class DynamicWorkloadExtensionImpl2Test
         dynamicWorkloadExtension.freshenStatus(project);
 
         var annAfterRefresh = documentService.getAnnotationDocument(
-                annotationDocument.getDocument(), CasSet.forUser(annotationDocument.getUser()));
+                annotationDocument.getDocument(),
+                AnnotationSet.forUser(annotationDocument.getUser()));
         assertThat(annAfterRefresh.getState())
                 .as("After the abandonation timeout has passed, the effective state has been reset")
                 .isEqualTo(traits.getAbandonationState());
@@ -211,7 +212,7 @@ class DynamicWorkloadExtensionImpl2Test
         dynamicWorkloadExtension.writeTraits(traits, project);
 
         var ann = documentService.getAnnotationDocument(annotationDocument.getDocument(),
-                CasSet.forUser(annotationDocument.getUser()));
+                AnnotationSet.forUser(annotationDocument.getUser()));
         assertThat(ann.getState()) //
                 .as("Effective state is in-progress after the CAS update")
                 .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
@@ -231,7 +232,7 @@ class DynamicWorkloadExtensionImpl2Test
         }
 
         var annAfterRefresh = documentService.getAnnotationDocument(ann.getDocument(),
-                CasSet.forUser(ann.getUser()));
+                AnnotationSet.forUser(ann.getUser()));
 
         assertThat(annAfterRefresh.getUpdated()) //
                 .as("Database record was not updated at all") //
