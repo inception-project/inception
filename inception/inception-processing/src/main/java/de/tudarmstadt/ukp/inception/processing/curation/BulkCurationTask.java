@@ -120,7 +120,7 @@ public class BulkCurationTask
                             mergeStrategy, annotationLayers, true);
 
                     var targetAnnDoc = documentService.createOrGetAnnotationDocument(doc,
-                            targetUser);
+                            CasSet.forUser(targetUser));
                     documentService.writeAnnotationCas(targetCas, targetAnnDoc,
                             EXPLICIT_ANNOTATOR_USER_ACTION);
 

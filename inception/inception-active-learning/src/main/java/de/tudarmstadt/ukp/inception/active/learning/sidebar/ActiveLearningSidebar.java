@@ -729,7 +729,7 @@ public class ActiveLearningSidebar
         // If the currently displayed document is the same one where the annotation was created,
         // then update timestamp in state to avoid concurrent modification errors
         if (Objects.equals(state.getDocument().getId(), document.getId())) {
-            documentService.getAnnotationCasTimestamp(document, state.getUser().getUsername())
+            documentService.getAnnotationCasTimestamp(document, CasSet.forUser(state.getUser()))
                     .ifPresent(state::setAnnotationDocumentTimestamp);
         }
     }

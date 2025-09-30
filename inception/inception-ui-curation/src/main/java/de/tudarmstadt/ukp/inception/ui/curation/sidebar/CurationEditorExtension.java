@@ -132,7 +132,7 @@ public class CurationEditorExtension
         var doc = aState.getDocument();
         var srcUser = curationVid.getUsername();
 
-        if (!documentService.existsAnnotationDocument(doc, srcUser)) {
+        if (!documentService.existsAnnotationDocument(doc, CasSet.forUser(srcUser))) {
             LOG.error("Source CAS of [{}] for curation not found", srcUser);
             return;
         }
@@ -191,15 +191,15 @@ public class CurationEditorExtension
             return null;
         }
 
-        var srcUser = curationVid.getUsername();
+        var srcSet = CasSet.forUser(curationVid.getUsername());
 
-        if (!documentService.existsAnnotationDocument(aDocument, srcUser)) {
-            LOG.error("Source CAS of [{}] for curation not found", srcUser);
+        if (!documentService.existsAnnotationDocument(aDocument, srcSet)) {
+            LOG.error("Source CAS of [{}] for curation not found", srcSet);
             return null;
         }
 
         var vid = VID.parse(curationVid.getExtensionPayload());
-        var cas = documentService.readAnnotationCas(aDocument, CasSet.forUser(srcUser));
+        var cas = documentService.readAnnotationCas(aDocument, srcSet);
         var fs = selectAnnotationByAddr(cas, vid.getId());
         var ext = featureSupportRegistry.findExtension(aFeature).orElseThrow();
         return ext.getFeatureValue(aFeature, fs);

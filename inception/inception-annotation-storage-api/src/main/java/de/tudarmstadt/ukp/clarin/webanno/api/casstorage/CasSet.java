@@ -54,9 +54,9 @@ public record CasSet(String id) {
         return forUser(aUser.getUsername());
     }
 
-    public static CasSet forTest(String aUsername)
+    public static CasSet forTest(String aName)
     {
-        return new CasSet(aUsername);
+        return new CasSet(aName);
     }
 
     public static CasSet forSpecialPurpose(String aPurpose)

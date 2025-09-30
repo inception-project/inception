@@ -393,7 +393,7 @@ public abstract class AnnotationPageBase2
         if (isEditable() && state.getAnnotationDocumentTimestamp().isPresent()) {
             documentService
                     .verifyAnnotationCasTimestamp(state.getDocument(),
-                            state.getUser().getUsername(),
+                            CasSet.forUser(state.getUser()),
                             state.getAnnotationDocumentTimestamp().get(), "reading the editor CAS")
                     .ifPresent(state::setAnnotationDocumentTimestamp);
         }
@@ -413,11 +413,11 @@ public abstract class AnnotationPageBase2
         bumpAnnotationCasTimestamp(state);
     }
 
-    public void bumpAnnotationCasTimestamp(AnnotatorState state) throws IOException
+    public void bumpAnnotationCasTimestamp(AnnotatorState aState) throws IOException
     {
         documentService
-                .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername())
-                .ifPresent(state::setAnnotationDocumentTimestamp);
+                .getAnnotationCasTimestamp(aState.getDocument(), CasSet.forUser(aState.getUser()))
+                .ifPresent(aState::setAnnotationDocumentTimestamp);
     }
 
     @Override
@@ -738,7 +738,7 @@ public abstract class AnnotationPageBase2
     public List<AnnotationDocument> listAccessibleDocuments(Project aProject, User aUser)
     {
         var allDocuments = new ArrayList<AnnotationDocument>();
-        var docs = documentService.listAllDocuments(aProject, aUser.getUsername());
+        var docs = documentService.listAllDocuments(aProject, CasSet.forUser(aUser));
 
         var sessionOwner = userRepository.getCurrentUser();
         for (var e : docs.entrySet()) {

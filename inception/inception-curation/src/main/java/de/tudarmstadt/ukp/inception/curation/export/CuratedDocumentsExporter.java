@@ -47,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
@@ -209,7 +210,7 @@ public class CuratedDocumentsExporter
     {
         ProjectExporter.writeEntry(aStage,
                 CURATION_CAS_FOLDER + sourceDocument.getName() + "/" + CURATION_USER + ".ser",
-                os -> documentService.exportCas(sourceDocument, CURATION_USER, os));
+                os -> documentService.exportCas(sourceDocument, CURATION_SET, os));
     }
 
     /**
@@ -266,7 +267,7 @@ public class CuratedDocumentsExporter
             var sourceDocument = documentService.getSourceDocument(aProject, fileName);
 
             try (var is = aZip.getInputStream(entry)) {
-                documentService.importCas(sourceDocument, username, is);
+                documentService.importCas(sourceDocument, CasSet.forUser(username), is);
             }
 
             LOG.info("Imported curation document content for user [" + username

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.schema.exporters;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl.RESERVED_USERNAMES;
@@ -61,6 +62,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
@@ -220,10 +222,10 @@ public class AnnotationDocumentExporter
                     documentService.createOrReadInitialCas(srcDoc);
                 }
 
-                ProjectExporter.writeEntry(aStage,
-                        ANNOTATION_CAS_FOLDER + srcDoc.getName() + "/" + INITIAL_CAS_PSEUDO_USER
-                                + ".ser",
-                        os -> documentService.exportCas(srcDoc, INITIAL_CAS_PSEUDO_USER, os));
+                ProjectExporter.writeEntry(
+                        aStage, ANNOTATION_CAS_FOLDER + srcDoc.getName() + "/"
+                                + INITIAL_CAS_PSEUDO_USER + ".ser",
+                        os -> documentService.exportCas(srcDoc, INITIAL_SET, os));
 
                 if (format != null) {
                     exportAdditionalFormat(aStage, bulkOperationContext, srcDoc, format,
@@ -249,7 +251,8 @@ public class AnnotationDocumentExporter
 
                         ProjectExporter.writeEntry(aStage, ANNOTATION_CAS_FOLDER + srcDoc.getName()
                                 + "/" + annDoc.getUser() + ".ser", os -> {
-                                    documentService.exportCas(srcDoc, annDoc.getUser(), os);
+                                    documentService.exportCas(srcDoc,
+                                            CasSet.forUser(annDoc.getUser()), os);
                                 });
 
                         if (format != null) {
