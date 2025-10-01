@@ -74,31 +74,31 @@
     <build-ant-version>1.10.15</build-ant-version>
     <build-groovy-version>4.0.28</build-groovy-version>
 
-    <junit-jupiter.version>5.13.4</junit-jupiter.version>
-    <junit-platform.version>1.13.4</junit-platform.version>
-    <mockito.version>5.19.0</mockito.version>
-    <assertj.version>3.26.3</assertj.version>
+    <junit-jupiter.version>5.14.0</junit-jupiter.version>
+    <junit-platform.version>1.14.0</junit-platform.version>
+    <mockito.version>5.20.0</mockito.version>
+    <assertj.version>3.27.6</assertj.version>
     <xmlunit.version>2.10.4</xmlunit.version>
     <testcontainers.version>1.21.3</testcontainers.version>
 
     <awaitility.version>4.3.0</awaitility.version>
 
     <dkpro.version>2.5.0</dkpro.version>
-    <uima.version>3.6.0</uima.version>
+    <uima.version>3.6.1</uima.version>
     <uima-json.version>0.5.0</uima-json.version>
 
     <pdfbox.version>3.0.5</pdfbox.version>
 
     <spring.version>6.2.11</spring.version>
-    <spring.boot.version>3.5.5</spring.boot.version>
+    <spring.boot.version>3.5.6</spring.boot.version>
     <spring.data.version>3.5.4</spring.data.version>
-    <spring.security.version>6.5.4</spring.security.version>
+    <spring.security.version>6.5.5</spring.security.version>
     <springdoc.version>2.8.13</springdoc.version>
-    <swagger.version>2.2.36</swagger.version>
+    <swagger.version>2.2.38</swagger.version>
     <jjwt.version>0.13.0</jjwt.version>
 
     <slf4j.version>2.0.17</slf4j.version>
-    <log4j2.version>2.25.1</log4j2.version>
+    <log4j2.version>2.25.2</log4j2.version>
     <jboss.logging.version>3.6.1.Final</jboss.logging.version>
     <sentry.version>7.22.6</sentry.version>
 
@@ -109,11 +109,11 @@
     <mariadb.driver.version>3.5.5</mariadb.driver.version>
     <mssql.driver.version>12.10.1.jre11</mssql.driver.version>
     <mysql.driver.version>9.4.0</mysql.driver.version>
-    <postgres.driver.version>42.7.7</postgres.driver.version>
-    <hibernate.version>6.6.29.Final</hibernate.version>
+    <postgres.driver.version>42.7.8</postgres.driver.version>
+    <hibernate.version>6.6.30.Final</hibernate.version>
     <hibernate.validator.version>8.0.3.Final</hibernate.validator.version>
 
-    <wicket.version>10.6.0</wicket.version>
+    <wicket.version>10.7.0</wicket.version>
     <wicketstuff.version>10.6.0</wicketstuff.version>
     <wicket-bootstrap.version>7.0.11</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>4.0.11</wicket-jquery-selectors.version>
@@ -123,7 +123,7 @@
     <!--
       - These are all interconnected - because they share the dependency on Lucene.
       -->
-    <lucene.version>9.12.2</lucene.version>
+    <lucene.version>9.12.3</lucene.version>
     <solr.version>9.9.0</solr.version>
     <opensearch.version>2.19.1</opensearch.version>
     <opensearch-runner.version>${opensearch.version}.0</opensearch-runner.version>
@@ -149,7 +149,7 @@
     <commons-csv.version>1.14.1</commons-csv.version>
     <commons-fileupload.version>1.6.0</commons-fileupload.version>
     <commons-pool2.version>2.12.1</commons-pool2.version>
-    <commons-lang3.version>3.18.0</commons-lang3.version>
+    <commons-lang3.version>3.19.0</commons-lang3.version>
     <commons-dbcp2.version>2.13.0</commons-dbcp2.version>
     <commons-codec.version>1.19.0</commons-codec.version>
     <commons-compress.version>1.28.0</commons-compress.version>
@@ -165,7 +165,7 @@
     <txtmark.version>0.13</txtmark.version>
     <owasp-java-html-sanitizer.version>20220608.1</owasp-java-html-sanitizer.version>
     <jinjava.version>2.8.0</jinjava.version>
-    <fastutil.version>8.5.16</fastutil.version>
+    <fastutil.version>8.5.17</fastutil.version>
     <zjsonpatch.version>0.4.16</zjsonpatch.version>
     <picocli.version>4.7.7</picocli.version>
     <woodstox-core.version>6.7.0</woodstox-core.version>
@@ -204,7 +204,7 @@
     <eslint-plugin-svelte.version>3.12.3</eslint-plugin-svelte.version>
     <events.version>3.3.0</events.version>
     <fast-json-patch.version>^3.1.1</fast-json-patch.version>
-    <font-awesome.version>7.0.0</font-awesome.version>
+    <font-awesome.version>7.0.1</font-awesome.version>
     <fs-extra.version>11.2.0</fs-extra.version>
     <jsdom.version>^26.1.0</jsdom.version>
     <jsdom-global.version>^3.0.2</jsdom-global.version>
