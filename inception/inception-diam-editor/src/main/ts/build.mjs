@@ -43,7 +43,8 @@ const defaults = {
     sassPlugin(),
     esbuildSvelte({
       compilerOptions: { 
-        runes: true
+        runes: true,
+        dev: argv.live
       },
       preprocess: sveltePreprocess()
     })
