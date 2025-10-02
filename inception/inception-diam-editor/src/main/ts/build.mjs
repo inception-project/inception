@@ -54,7 +54,12 @@ const defaults = {
   minify: !argv.live,
   target: 'es2019',
   loader: { '.ts': 'ts' },
-  logLevel: 'info'
+  logLevel: 'info',
+  // Ensure Svelte runtime is shared across all components: Whenever you see an 
+  // "import from 'svelte'"", resolve it once and reuse that same resolution everywhere.
+  alias: {
+    'svelte': 'svelte'
+  }
 }
 
 fs.mkdirsSync(`${outbase}`)
