@@ -44,11 +44,11 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementSummary;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
@@ -150,11 +150,11 @@ public class CalculatePerDocumentAgreementTask
             }
         }
 
-        if (!documentService.existsCas(aDocument, CasSet.forUser(aDataOwner))) {
+        if (!documentService.existsCas(aDocument, AnnotationSet.forUser(aDataOwner))) {
             return loadInitialCas(aDocument);
         }
 
-        var cas = documentService.readAnnotationCas(aDocument, CasSet.forUser(aDataOwner),
+        var cas = documentService.readAnnotationCas(aDocument, AnnotationSet.forUser(aDataOwner),
                 AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
 
         // Set the CAS name in the DocumentMetaData so that we can pick it

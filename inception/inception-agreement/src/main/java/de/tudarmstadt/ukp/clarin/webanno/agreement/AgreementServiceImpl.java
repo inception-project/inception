@@ -57,12 +57,12 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -180,7 +180,7 @@ public class AgreementServiceImpl
         var casMap = new LinkedHashMap<String, CAS>();
 
         for (var annotator : aAnnotators) {
-            var maybeCas = loadCas(aDocument, CasSet.forUser(annotator), aAnnDocs);
+            var maybeCas = loadCas(aDocument, AnnotationSet.forUser(annotator), aAnnDocs);
             var cas = maybeCas.isPresent() ? maybeCas.get() : loadInitialCas(aDocument);
             casMap.put(annotator, cas);
         }
@@ -188,11 +188,11 @@ public class AgreementServiceImpl
         return casMap;
     }
 
-    private Optional<CAS> loadCas(SourceDocument aDocument, CasSet aSet,
+    private Optional<CAS> loadCas(SourceDocument aDocument, AnnotationSet aSet,
             List<AnnotationDocument> aAnnDocs)
         throws IOException
     {
-        if (CasSet.CURATION_SET.equals(aSet)) {
+        if (AnnotationSet.CURATION_SET.equals(aSet)) {
             if (!asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(aDocument.getState())) {
                 return Optional.empty();
             }
@@ -211,7 +211,7 @@ public class AgreementServiceImpl
         return loadCas(aDocument, aSet);
     }
 
-    private Optional<CAS> loadCas(SourceDocument aDocument, CasSet aSet) throws IOException
+    private Optional<CAS> loadCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException
     {
         var cas = documentService.readAnnotationCas(aDocument, aSet, AUTO_CAS_UPGRADE,
                 SHARED_READ_ONLY_ACCESS);

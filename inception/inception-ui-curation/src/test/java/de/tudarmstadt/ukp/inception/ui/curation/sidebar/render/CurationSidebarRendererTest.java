@@ -44,12 +44,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -612,9 +612,9 @@ class CurationSidebarRendererTest
         vdoc.setText(aText);
         vdoc.setWindow(0, aText.length());
 
-        when(documentService.readAnnotationCas(doc, CasSet.forUser(anno1.getUsername())))
+        when(documentService.readAnnotationCas(doc, AnnotationSet.forUser(anno1.getUsername())))
                 .thenReturn(anno1Cas);
-        when(documentService.readAnnotationCas(doc, CasSet.forUser(anno2.getUsername())))
+        when(documentService.readAnnotationCas(doc, AnnotationSet.forUser(anno2.getUsername())))
                 .thenReturn(anno2Cas);
 
         return RenderRequest.builder() //

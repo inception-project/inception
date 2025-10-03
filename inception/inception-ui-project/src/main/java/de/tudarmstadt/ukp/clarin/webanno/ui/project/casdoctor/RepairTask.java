@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.casdoctor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.CURATION_SET;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.INITIAL_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
@@ -36,11 +36,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
@@ -157,7 +157,8 @@ public class RepairTask
                     var messageSet = new LogMessageSet(sd.getName() + " [" + ad.getUser() + "]");
                     try {
                         if (documentService.existsCas(ad)) {
-                            casStorageService.forceActionOnCas(sd, CasSet.forUser(ad.getUser()),
+                            casStorageService.forceActionOnCas(sd,
+                                    AnnotationSet.forUser(ad.getUser()),
                                     (doc, set) -> casStorageService.readCas(doc, set,
                                             UNMANAGED_NON_INITIALIZING_ACCESS),
                                     (doc, set, cas) -> casDoctor.repair(doc, set.id(), cas,

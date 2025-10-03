@@ -19,10 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.api.casstorage;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 @FunctionalInterface
 public interface CasStorageServiceAction
 {
-    void apply(SourceDocument aDocument, CasSet aSet, CAS aCas) throws Exception;
+    void apply(SourceDocument aDocument, AnnotationSet aSet, CAS aCas) throws Exception;
 }

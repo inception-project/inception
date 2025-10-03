@@ -54,11 +54,11 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -284,7 +284,7 @@ public class DiamWebsocketController
 
         var constraints = constraintsService.getMergedConstraints(aProject);
 
-        var cas = documentService.readAnnotationCas(doc, CasSet.forUser(aDataOwner));
+        var cas = documentService.readAnnotationCas(doc, AnnotationSet.forUser(aDataOwner));
 
         var prefs = userPreferencesService.loadPreferences(doc.getProject(), sessionOwner,
                 Mode.ANNOTATION);

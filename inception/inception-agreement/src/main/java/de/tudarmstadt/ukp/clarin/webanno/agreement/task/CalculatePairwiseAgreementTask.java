@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.agreement.task;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
@@ -44,11 +44,11 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementSummary;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
@@ -109,7 +109,7 @@ public class CalculatePairwiseAgreementTask
                             break;
                         }
 
-                        var annotator1 = CasSet.forUser(annotators.get(m));
+                        var annotator1 = AnnotationSet.forUser(annotators.get(m));
                         var maybeCas1 = LazyInitializer.<Optional<CAS>> builder()
                                 .setInitializer(() -> loadCas(doc, annotator1, allAnnDocs)).get();
 
@@ -146,8 +146,8 @@ public class CalculatePairwiseAgreementTask
                             }
 
                             var maybeCas2 = LazyInitializer.<Optional<CAS>> builder()
-                                    .setInitializer(() -> loadCas(doc, CasSet.forUser(annotator2),
-                                            allAnnDocs))
+                                    .setInitializer(() -> loadCas(doc,
+                                            AnnotationSet.forUser(annotator2), allAnnDocs))
                                     .get();
 
                             if (maybeCas2.get().isEmpty()) {
@@ -187,7 +187,7 @@ public class CalculatePairwiseAgreementTask
         return cas;
     }
 
-    private Optional<CAS> loadCas(SourceDocument aDocument, CasSet aSet,
+    private Optional<CAS> loadCas(SourceDocument aDocument, AnnotationSet aSet,
             Map<SourceDocument, List<AnnotationDocument>> aAllAnnDocs)
         throws IOException
     {
@@ -212,7 +212,7 @@ public class CalculatePairwiseAgreementTask
         return loadCas(aDocument, aSet);
     }
 
-    private Optional<CAS> loadCas(SourceDocument aDocument, CasSet aSet) throws IOException
+    private Optional<CAS> loadCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException
     {
         var cas = documentService.readAnnotationCas(aDocument, aSet, AUTO_CAS_UPGRADE,
                 SHARED_READ_ONLY_ACCESS);

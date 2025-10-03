@@ -66,13 +66,13 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.MDC;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
@@ -226,7 +226,7 @@ public class DocumentImportExportServiceImplTest
         // Prepare a test CAS with a CASMetadata annotation (DocumentMetaData is added as well
         // because the DKPro Core writers used by the ImportExportService expect it.
         var jcas = createJCas(typesystem);
-        casStorageSession.add(CasSet.forTest("jcas"), EXCLUSIVE_WRITE_ACCESS, jcas.getCas());
+        casStorageSession.add(AnnotationSet.forTest("jcas"), EXCLUSIVE_WRITE_ACCESS, jcas.getCas());
         jcas.setDocumentText("This is a test .");
         DocumentMetaData.create(jcas);
         var cmd = new CASMetadata(jcas);
@@ -243,7 +243,8 @@ public class DocumentImportExportServiceImplTest
         // Read the XMI back from the ZIP that was created by the exporter. This is because XMI
         // files are always serialized as XMI file + type system file.
         var jcas = JCasFactory.createJCas(tsd);
-        casStorageSession.add(CasSet.forTest("jcas2"), EXCLUSIVE_WRITE_ACCESS, jcas.getCas());
+        casStorageSession.add(AnnotationSet.forTest("jcas2"), EXCLUSIVE_WRITE_ACCESS,
+                jcas.getCas());
         try (var zipInput = new ZipArchiveInputStream(new FileInputStream(exportedXmi))) {
             ZipArchiveEntry entry;
             while ((entry = zipInput.getNextEntry()) != null) {

@@ -67,9 +67,9 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -729,7 +729,8 @@ public class ActiveLearningSidebar
         // If the currently displayed document is the same one where the annotation was created,
         // then update timestamp in state to avoid concurrent modification errors
         if (Objects.equals(state.getDocument().getId(), document.getId())) {
-            documentService.getAnnotationCasTimestamp(document, CasSet.forUser(state.getUser()))
+            documentService
+                    .getAnnotationCasTimestamp(document, AnnotationSet.forUser(state.getUser()))
                     .ifPresent(state::setAnnotationDocumentTimestamp);
         }
     }
@@ -887,7 +888,7 @@ public class ActiveLearningSidebar
         // access to the document which contains the current suggestion
         try {
             var cas = documentService.readAnnotationCas(sourceDocument,
-                    CasSet.forUser(getModelObject().getUser()), AUTO_CAS_UPGRADE,
+                    AnnotationSet.forUser(getModelObject().getUser()), AUTO_CAS_UPGRADE,
                     SHARED_READ_ONLY_ACCESS);
             var text = cas.getDocumentText();
 
@@ -1071,7 +1072,7 @@ public class ActiveLearningSidebar
             // methods provided by the AnnotationActionHandler and these operate ONLY on the
             // currently visible/selected document.
             var cas = documentService.readAnnotationCas(aRecord.getSourceDocument(),
-                    CasSet.forUser(aRecord.getUser()));
+                    AnnotationSet.forUser(aRecord.getUser()));
             if (getMatchingAnnotation(cas, aRecord).isPresent()) {
                 setActiveLearningHighlight(aRecord);
                 actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
@@ -1249,7 +1250,8 @@ public class ActiveLearningSidebar
             annotationPage.actionRefreshDocument(aTarget);
 
             // Update visibility in case the that was created/deleted overlaps with any suggestions
-            var cas = documentService.readAnnotationCas(aDocument, CasSet.forUser(dataOwner));
+            var cas = documentService.readAnnotationCas(aDocument,
+                    AnnotationSet.forUser(dataOwner));
             var group = SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class,
                     predictions.getPredictionsByDocument(aDocument.getId()));
             recommendationService.calculateSuggestionVisibility(sessionOwner, aDocument, cas,

@@ -54,7 +54,7 @@ public class AnnotationDocument
     private Long id;
 
     @Deprecated
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @Deprecated
@@ -62,6 +62,7 @@ public class AnnotationDocument
     @JoinColumn(name = "project")
     private Project project;
 
+    @Column(name = "user")
     private String user;
 
     @ManyToOne
@@ -72,7 +73,7 @@ public class AnnotationDocument
      * The effective state of the annotation document. This state may be set by the annotator user
      * or by a third person (e.g. curator/manager) or the system (e.g. workload manager).
      */
-    @Column(nullable = false)
+    @Column(name = "state", nullable = false)
     @Type(AnnotationDocumentStateType.class)
     private AnnotationDocumentState state = AnnotationDocumentState.NEW;
 
@@ -84,7 +85,7 @@ public class AnnotationDocument
      * allow managers to see whether an annotation document as marked as finished by the annotator
      * or if it was marked as finished by the manager or by the system.
      */
-    @Column(nullable = true)
+    @Column(name = "annotatorState", nullable = true)
     @Type(AnnotationDocumentStateType.class)
     private AnnotationDocumentState annotatorState;
 
@@ -92,7 +93,7 @@ public class AnnotationDocument
      * Comment the anntoator can leave when marking a document as finished. Typically used to report
      * problems to the curator.
      */
-    @Column(length = 64000)
+    @Column(name = "annotatorComment", length = 64000)
     private String annotatorComment;
 
     /**
@@ -112,11 +113,11 @@ public class AnnotationDocument
     private int sentenceAccessed = 0;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = true)
+    @Column(name = "created", nullable = true)
     private Date created;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = true)
+    @Column(name = "updated", nullable = true)
     private Date updated;
 
     private AnnotationDocument(Builder builder)
@@ -200,14 +201,32 @@ public class AnnotationDocument
         project = aProject;
     }
 
+    /**
+     * @deprecated Use {@link #getAnnotationSet}
+     */
+    @Deprecated
     public String getUser()
     {
         return user;
     }
 
+    /**
+     * @deprecated Use {@link #setAnnotationSet}
+     */
+    @Deprecated
     public void setUser(String aUser)
     {
         user = aUser;
+    }
+
+    public AnnotationSet getAnnotationSet()
+    {
+        return AnnotationSet.forUser(user);
+    }
+
+    public void setAnnotationSet(AnnotationSet aSet)
+    {
+        user = aSet.id();
     }
 
     public AnnotationDocumentState getState()

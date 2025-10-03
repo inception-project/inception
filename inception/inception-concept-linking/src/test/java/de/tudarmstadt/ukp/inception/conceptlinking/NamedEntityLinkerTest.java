@@ -35,10 +35,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinker;
@@ -125,7 +125,7 @@ public class NamedEntityLinkerTest
                 conceptFeatureTraits);
 
         cas = CasFactory.createCas();
-        casStorageSession.add(CasSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS, cas);
+        casStorageSession.add(AnnotationSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS, cas);
         cas.setDocumentText(
                 "It was Barack Obama who became the 44th President of the United States of America.");
         buildAnnotation(cas, NamedEntity.class).on("Barack Obama").buildAllAndAddToIndexes();

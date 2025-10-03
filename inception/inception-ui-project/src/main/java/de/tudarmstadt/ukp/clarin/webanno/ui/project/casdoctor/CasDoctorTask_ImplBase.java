@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.casdoctor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.INITIAL_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
 
 import java.io.IOException;

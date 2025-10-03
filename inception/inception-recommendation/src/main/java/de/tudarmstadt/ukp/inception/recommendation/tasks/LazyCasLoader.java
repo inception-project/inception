@@ -37,8 +37,8 @@ import org.apache.uima.fit.util.CasUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -92,7 +92,8 @@ public class LazyCasLoader
     {
         var casses = new ArrayList<TrainingDocument>();
 
-        var allDocuments = documentService.listAllDocuments(project, CasSet.forUser(dataOwner));
+        var allDocuments = documentService.listAllDocuments(project,
+                AnnotationSet.forUser(dataOwner));
         for (var entry : allDocuments.entrySet()) {
             var sourceDocument = entry.getKey();
             var annotationDocument = entry.getValue();
@@ -137,7 +138,7 @@ public class LazyCasLoader
     private class TrainingDocument
     {
         private final SourceDocument document;
-        private final CasSet set;
+        private final AnnotationSet set;
         private final AnnotationDocumentState state;
 
         private boolean attemptedLoading = false;
@@ -147,7 +148,7 @@ public class LazyCasLoader
                 AnnotationDocumentState aState)
         {
             document = aDocument;
-            set = CasSet.forUser(aDataOwner);
+            set = AnnotationSet.forUser(aDataOwner);
             state = aState;
         }
 

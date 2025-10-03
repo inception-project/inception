@@ -41,10 +41,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
@@ -98,7 +98,7 @@ public class OpenNlpPosRecommenderTest
 
         CAS cas = casList.get(0);
         try (CasStorageSession session = CasStorageSession.open()) {
-            session.add(CasSet.forTest("testCas"), EXCLUSIVE_WRITE_ACCESS, cas);
+            session.add(AnnotationSet.forTest("testCas"), EXCLUSIVE_WRITE_ACCESS, cas);
             RecommenderTestHelper.addPredictionFeatures(cas, POS.class, "PosValue");
         }
 

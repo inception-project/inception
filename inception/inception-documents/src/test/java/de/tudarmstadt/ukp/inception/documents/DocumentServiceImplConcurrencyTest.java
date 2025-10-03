@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.inception.documents;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession.openNested;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
 import static java.lang.Thread.sleep;
 import static java.util.Arrays.asList;
@@ -58,11 +58,11 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
@@ -141,9 +141,9 @@ public class DocumentServiceImplConcurrencyTest
 
         lenient().doAnswer(_invocation -> {
             var doc = _invocation.getArgument(0, SourceDocument.class);
-            var user = _invocation.getArgument(1, CasSet.class);
+            var user = _invocation.getArgument(1, AnnotationSet.class);
             return new AnnotationDocument(user.id(), doc);
-        }).when(sut).getAnnotationDocument(any(), any(CasSet.class));
+        }).when(sut).getAnnotationDocument(any(), any(AnnotationSet.class));
 
         var cas = createCas(typeSystem);
         cas.setDocumentText("Test");
@@ -170,7 +170,7 @@ public class DocumentServiceImplConcurrencyTest
     {
         try (var session = CasStorageSession.open()) {
             var sourceDocument = makeSourceDocument(1l, 1l, "test");
-            var set = CasSet.forTest("test");
+            var set = AnnotationSet.forTest("test");
 
             var cas = sut.readAnnotationCas(sourceDocument, set).getJCas();
 
@@ -193,7 +193,7 @@ public class DocumentServiceImplConcurrencyTest
                 });
 
         var doc = makeSourceDocument(2l, 2l, "doc");
-        var user = CasSet.forTest("annotator");
+        var user = AnnotationSet.forTest("annotator");
 
         // Primary tasks run for a certain number of iterations
         // Secondary tasks run as long as any primary task is still running
@@ -274,19 +274,20 @@ public class DocumentServiceImplConcurrencyTest
         var userCount = 4;
         for (var u = 0; u < userCount; u++) {
             for (var n = 0; n < threadGroupCount; n++) {
-                var rw = new ExclusiveReadWriteTask(n, doc, CasSet.forTest(user + n), iterations);
+                var rw = new ExclusiveReadWriteTask(n, doc, AnnotationSet.forTest(user + n),
+                        iterations);
                 primaryTasks.add(rw);
                 tasks.add(rw);
 
-                var ro = new SharedReadOnlyTask(n, doc, CasSet.forTest(user + n));
+                var ro = new SharedReadOnlyTask(n, doc, AnnotationSet.forTest(user + n));
                 secondaryTasks.add(ro);
                 tasks.add(ro);
 
-                var un = new UnmanagedTask(n, doc, CasSet.forTest(user + n));
+                var un = new UnmanagedTask(n, doc, AnnotationSet.forTest(user + n));
                 secondaryTasks.add(un);
                 tasks.add(un);
 
-                var xx = new DeleterTask(n, doc, CasSet.forTest(user + n));
+                var xx = new DeleterTask(n, doc, AnnotationSet.forTest(user + n));
                 secondaryTasks.add(xx);
                 tasks.add(xx);
             }
@@ -329,10 +330,10 @@ public class DocumentServiceImplConcurrencyTest
         extends Thread
     {
         private SourceDocument doc;
-        private CasSet user;
+        private AnnotationSet user;
         private int repeat;
 
-        public ExclusiveReadWriteTask(int n, SourceDocument aDoc, CasSet aSet, int aRepeat)
+        public ExclusiveReadWriteTask(int n, SourceDocument aDoc, AnnotationSet aSet, int aRepeat)
         {
             super("RW" + n);
             doc = aDoc;
@@ -368,9 +369,9 @@ public class DocumentServiceImplConcurrencyTest
         extends Thread
     {
         private SourceDocument doc;
-        private CasSet set;
+        private AnnotationSet set;
 
-        public SharedReadOnlyTask(int n, SourceDocument aDoc, CasSet aSet)
+        public SharedReadOnlyTask(int n, SourceDocument aDoc, AnnotationSet aSet)
         {
             super("RO" + n);
             doc = aDoc;
@@ -400,10 +401,10 @@ public class DocumentServiceImplConcurrencyTest
         extends Thread
     {
         private SourceDocument doc;
-        private CasSet set;
+        private AnnotationSet set;
         private Random rnd;
 
-        public DeleterTask(int n, SourceDocument aDoc, CasSet aSet)
+        public DeleterTask(int n, SourceDocument aDoc, AnnotationSet aSet)
         {
             super("XX" + n);
             doc = aDoc;
@@ -420,7 +421,7 @@ public class DocumentServiceImplConcurrencyTest
                 try (var session = openNested()) {
                     Thread.sleep(2500 + rnd.nextInt(2500));
                     if (rnd.nextInt(100) >= 75) {
-                        sut.deleteAnnotationCas(doc, CasSet.INITIAL_SET);
+                        sut.deleteAnnotationCas(doc, AnnotationSet.INITIAL_SET);
                         deleteInitialCounter.incrementAndGet();
                     }
                     sut.deleteAnnotationCas(doc, set);
@@ -438,9 +439,9 @@ public class DocumentServiceImplConcurrencyTest
         extends Thread
     {
         private SourceDocument doc;
-        private CasSet set;
+        private AnnotationSet set;
 
-        public UnmanagedTask(int n, SourceDocument aDoc, CasSet aSet)
+        public UnmanagedTask(int n, SourceDocument aDoc, AnnotationSet aSet)
         {
             super("UN" + n);
             doc = aDoc;

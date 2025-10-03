@@ -44,10 +44,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -120,7 +120,7 @@ class PredictionTaskTest
                 any(TypeSystemDescription.class));
 
         try (var session = CasStorageSession.open()) {
-            session.add(CasSet.forTest("jCas"), EXCLUSIVE_WRITE_ACCESS, jCas.getCas());
+            session.add(AnnotationSet.forTest("jCas"), EXCLUSIVE_WRITE_ACCESS, jCas.getCas());
             sut.cloneAndMonkeyPatchCAS(project, jCas.getCas(), jCas.getCas());
         }
 

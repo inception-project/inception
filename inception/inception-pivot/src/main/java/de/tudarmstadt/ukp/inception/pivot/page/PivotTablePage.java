@@ -118,7 +118,7 @@ public class PivotTablePage
 
     private final WebMarkupContainer cellExtractorsContainer;
     private final ListView<ExtractorDecl> cellExtractors;
-    
+
     private final IModel<PivotTableFilterState> filterStateModel;
 
     public PivotTablePage(PageParameters aParameters)
@@ -129,8 +129,8 @@ public class PivotTablePage
 
         requireProjectRole(sessionOwner, MANAGER, CURATOR);
 
-        filterStateModel = Model.of(new PivotTableFilterState()); 
-        
+        filterStateModel = Model.of(new PivotTableFilterState());
+
         pivotTable = buildExampleTable();
         queue(pivotTable);
 
@@ -413,8 +413,8 @@ public class PivotTablePage
 
         var result = task.getResult();
         result.setFilterState(filterStateModel.getObject());
-        pivotTable = (PivotTable) pivotTable.replaceWith(
-                new PivotTable<>("pivotTable", result, agg.createCellRenderer()));
+        pivotTable = (PivotTable) pivotTable
+                .replaceWith(new PivotTable<>("pivotTable", result, agg.createCellRenderer()));
         aTarget.add(pivotTable);
     }
 

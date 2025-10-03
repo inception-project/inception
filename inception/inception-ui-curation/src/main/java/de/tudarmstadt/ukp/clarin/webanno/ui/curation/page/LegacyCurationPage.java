@@ -69,12 +69,12 @@ import org.wicketstuff.kendo.ui.widget.splitter.SplitterBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratLineOrientedAnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratSentenceOrientedAnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -759,8 +759,8 @@ public class LegacyCurationPage
             // We need a modifiable copy of some annotation document which we can use to initialize
             // the curation CAS. This is an exceptional case where UNMANAGED_ACCESS is the correct
             // choice
-            mergeCas = documentService.readAnnotationCas(aDocument, CasSet.forUser(aTemplateUser),
-                    FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
+            mergeCas = documentService.readAnnotationCas(aDocument,
+                    AnnotationSet.forUser(aTemplateUser), FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
             curationMergeService.mergeCasses(aState.getDocument(), aState.getUser().getUsername(),
                     mergeCas, aCasses, aMergeStrategy, aState.getAnnotationLayers(), true);
             curationDocumentService.deleteCurationCas(aDocument);

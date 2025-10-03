@@ -37,9 +37,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -426,8 +426,9 @@ public class SelectionTask
         for (var document : documentService.listSourceDocuments(aProject)) {
             try {
                 // We should not have to modify the CASes... right? Fingers crossed.
-                CAS cas = documentService.readAnnotationCas(document, CasSet.forUser(aUserName),
-                        AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+                CAS cas = documentService.readAnnotationCas(document,
+                        AnnotationSet.forUser(aUserName), AUTO_CAS_UPGRADE,
+                        SHARED_READ_ONLY_ACCESS);
                 casses.add(cas);
             }
             catch (IOException e) {

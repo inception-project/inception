@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet.CURATION_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 

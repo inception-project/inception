@@ -31,12 +31,12 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.validation.ValidationError;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -272,7 +272,7 @@ public interface DocumentService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void writeAnnotationCas(CAS aCas, SourceDocument aDocument, CasSet aSet,
+    void writeAnnotationCas(CAS aCas, SourceDocument aDocument, AnnotationSet aSet,
             AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException;
 
@@ -316,7 +316,7 @@ public interface DocumentService
      *            the set to which the CAS belongs.
      * @return if an annotation document metadata exists for the user.
      */
-    boolean existsAnnotationDocument(SourceDocument document, CasSet aSet);
+    boolean existsAnnotationDocument(SourceDocument document, AnnotationSet aSet);
 
     /**
      * check if the CAS for the {@link User} and {@link SourceDocument} in this {@link Project}
@@ -332,13 +332,15 @@ public interface DocumentService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    boolean existsCas(SourceDocument sourceDocument, CasSet aSet) throws IOException;
+    boolean existsCas(SourceDocument sourceDocument, AnnotationSet aSet) throws IOException;
 
     boolean existsCas(AnnotationDocument annotationDocument) throws IOException;
 
-    void exportCas(SourceDocument aDocument, CasSet aSet, OutputStream aStream) throws IOException;
+    void exportCas(SourceDocument aDocument, AnnotationSet aSet, OutputStream aStream)
+        throws IOException;
 
-    void importCas(SourceDocument aDocument, CasSet aSet, InputStream aStream) throws IOException;
+    void importCas(SourceDocument aDocument, AnnotationSet aSet, InputStream aStream)
+        throws IOException;
 
     /**
      * Get the annotation document.
@@ -364,7 +366,7 @@ public interface DocumentService
      * @throws NoResultException
      *             if no annotation document exists for the given source/user.
      */
-    AnnotationDocument getAnnotationDocument(SourceDocument aDocument, CasSet aSet);
+    AnnotationDocument getAnnotationDocument(SourceDocument aDocument, AnnotationSet aSet);
 
     /**
      * Gets the CAS for the given annotation document. Converts it form the source document if
@@ -403,7 +405,7 @@ public interface DocumentService
 
     void deleteAnnotationCas(AnnotationDocument annotationDocument) throws IOException;
 
-    void deleteAnnotationCas(SourceDocument aSourceDocument, CasSet aSet) throws IOException;
+    void deleteAnnotationCas(SourceDocument aSourceDocument, AnnotationSet aSet) throws IOException;
 
     /**
      * Gets the CAS for the given source document. Converts it form the source document if
@@ -417,7 +419,7 @@ public interface DocumentService
      * @throws IOException
      *             if there was an I/O error.
      */
-    CAS readAnnotationCas(SourceDocument document, CasSet aSet) throws IOException;
+    CAS readAnnotationCas(SourceDocument document, AnnotationSet aSet) throws IOException;
 
     /**
      * Gets the CAS for the given source document. Converts it form the source document if
@@ -433,7 +435,7 @@ public interface DocumentService
      * @throws IOException
      *             if there was an I/O error.
      */
-    CAS readAnnotationCas(SourceDocument aDocument, CasSet aSet, CasUpgradeMode aUpgradeMode)
+    CAS readAnnotationCas(SourceDocument aDocument, AnnotationSet aSet, CasUpgradeMode aUpgradeMode)
         throws IOException;
 
     /**
@@ -452,7 +454,7 @@ public interface DocumentService
      * @throws IOException
      *             if there was an I/O error.
      */
-    CAS readAnnotationCas(SourceDocument aDocument, CasSet aSet, CasUpgradeMode aUpgradeMode,
+    CAS readAnnotationCas(SourceDocument aDocument, AnnotationSet aSet, CasUpgradeMode aUpgradeMode,
             CasAccessMode aAccessMode)
         throws IOException;
 
@@ -670,7 +672,7 @@ public interface DocumentService
      *            the user.
      * @return if the user has finished annotation.
      */
-    boolean isAnnotationFinished(SourceDocument document, CasSet username);
+    boolean isAnnotationFinished(SourceDocument document, AnnotationSet username);
 
     /**
      * Check if at least one annotation document is finished for this {@link SourceDocument} in the
@@ -701,7 +703,7 @@ public interface DocumentService
 
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser);
 
-    AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, CasSet aSet);
+    AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, AnnotationSet aSet);
 
     List<AnnotationDocument> createOrGetAnnotationDocuments(SourceDocument aDocument,
             Collection<User> aUsers);
@@ -742,7 +744,7 @@ public interface DocumentService
      *            the set to which the CASes belong.
      * @return documents.
      */
-    Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, CasSet aSet);
+    Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, AnnotationSet aSet);
 
     AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
             AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags);
@@ -780,10 +782,10 @@ public interface DocumentService
      * @throws IOException
      *             if there was an I/O-level problem
      */
-    Optional<Long> getAnnotationCasTimestamp(SourceDocument aDocument, CasSet aSet)
+    Optional<Long> getAnnotationCasTimestamp(SourceDocument aDocument, AnnotationSet aSet)
         throws IOException;
 
-    Optional<Long> verifyAnnotationCasTimestamp(SourceDocument aDocument, CasSet aSet,
+    Optional<Long> verifyAnnotationCasTimestamp(SourceDocument aDocument, AnnotationSet aSet,
             long aExpectedTimeStamp, String aContextAction)
         throws IOException, ConcurentCasModificationException;
 

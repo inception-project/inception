@@ -42,9 +42,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -206,7 +206,7 @@ public class ActiveLearningServiceImpl
         // the suggestion has been loaded into the sidebar.
         var sessionOwner = userService.getCurrentUsername();
         var dataOwner = aDataOwner.getUsername();
-        var cas = documentService.readAnnotationCas(aDocument, CasSet.forUser(aDataOwner));
+        var cas = documentService.readAnnotationCas(aDocument, AnnotationSet.forUser(aDataOwner));
 
         // Create AnnotationFeature and FeatureSupport
         var featureSupport = featureSupportRegistry.findExtension(feature).orElseThrow();

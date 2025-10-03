@@ -39,10 +39,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
@@ -156,7 +156,8 @@ public class StringMatchingRelationRecommenderTest
 
         try (var is = newInputStream(root.resolve("relation_test.xmi"))) {
             XmlCasDeserializer.deserialize(is, cas);
-            casStorageSession.add(CasSet.forTest("testDataCas"), EXCLUSIVE_WRITE_ACCESS, cas);
+            casStorageSession.add(AnnotationSet.forTest("testDataCas"), EXCLUSIVE_WRITE_ACCESS,
+                    cas);
             RecommenderTestHelper.addPredictionFeatures(cas, RELATION_LAYER, "value");
 
             return cas;

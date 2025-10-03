@@ -48,10 +48,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
@@ -150,7 +150,7 @@ public class OpenNlpNerRecommenderTest
 
         var cas = casList.get(0);
         try (var session = CasStorageSession.open()) {
-            session.add(CasSet.forTest("testCas"), EXCLUSIVE_WRITE_ACCESS, cas);
+            session.add(AnnotationSet.forTest("testCas"), EXCLUSIVE_WRITE_ACCESS, cas);
             RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
         }
 
@@ -180,7 +180,7 @@ public class OpenNlpNerRecommenderTest
 
         var cas = casList.get(0);
         try (var session = CasStorageSession.open()) {
-            session.add(CasSet.forTest("testCas"), EXCLUSIVE_WRITE_ACCESS, cas);
+            session.add(AnnotationSet.forTest("testCas"), EXCLUSIVE_WRITE_ACCESS, cas);
             RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class,
                     NamedEntity._FeatName_value);
         }
@@ -281,7 +281,7 @@ public class OpenNlpNerRecommenderTest
     {
         var cas = CasFactory.createCas();
         try (var session = CasStorageSession.open()) {
-            session.add(CasSet.forTest("testCas"), EXCLUSIVE_WRITE_ACCESS, cas);
+            session.add(AnnotationSet.forTest("testCas"), EXCLUSIVE_WRITE_ACCESS, cas);
             RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class,
                     NamedEntity._FeatName_value);
         }

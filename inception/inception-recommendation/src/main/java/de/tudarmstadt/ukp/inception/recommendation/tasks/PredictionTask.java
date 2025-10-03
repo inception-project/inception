@@ -50,8 +50,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -1049,8 +1049,9 @@ public class PredictionTask
         public CAS get() throws IOException
         {
             if (originalCas == null) {
-                originalCas = documentService.readAnnotationCas(document, CasSet.forUser(dataOwner),
-                        AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+                originalCas = documentService.readAnnotationCas(document,
+                        AnnotationSet.forUser(dataOwner), AUTO_CAS_UPGRADE,
+                        SHARED_READ_ONLY_ACCESS);
             }
 
             return originalCas;
@@ -1065,7 +1066,7 @@ public class PredictionTask
         public PredictionCasHolder() throws ResourceInitializationException
         {
             cas = WebAnnoCasUtil.createCas();
-            CasStorageSession.get().add(CasSet.PREDICTION_SET, EXCLUSIVE_WRITE_ACCESS, cas);
+            CasStorageSession.get().add(AnnotationSet.PREDICTION_SET, EXCLUSIVE_WRITE_ACCESS, cas);
         }
 
         @Override

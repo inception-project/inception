@@ -60,11 +60,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -381,7 +381,7 @@ public class AnnotatorsPanel
     private CAS readAnnotatorCas(AnnotatorSegmentState aSegment) throws IOException
     {
         return documentService.readAnnotationCas(aSegment.getAnnotatorState().getDocument(),
-                CasSet.forUser(aSegment.getUser()));
+                AnnotationSet.forUser(aSegment.getUser()));
     }
 
     /**
@@ -447,7 +447,7 @@ public class AnnotatorsPanel
         // The source CASes from the annotators are all ready read-only / shared
         for (var user : curationDocumentService.listCuratableUsers(aDocument)) {
             casses.put(user.getUsername(),
-                    documentService.readAnnotationCas(aDocument, CasSet.forUser(user)));
+                    documentService.readAnnotationCas(aDocument, AnnotationSet.forUser(user)));
         }
 
         return casses;

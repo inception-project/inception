@@ -46,12 +46,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerAdapter;
@@ -159,8 +159,9 @@ public class BulkPredictionTask
 
                     documentService.setAnnotationDocumentState(annDoc, IN_PROGRESS,
                             EXPLICIT_ANNOTATOR_USER_ACTION);
-                    var cas = documentService.readAnnotationCas(doc, CasSet.forUser(dataOwner),
-                            AUTO_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
+                    var cas = documentService.readAnnotationCas(doc,
+                            AnnotationSet.forUser(dataOwner), AUTO_CAS_UPGRADE,
+                            EXCLUSIVE_WRITE_ACCESS);
 
                     addProcessingMetadataAnnotation(doc, cas);
 
@@ -168,8 +169,8 @@ public class BulkPredictionTask
                     annotationsCount.addAndGet(autoAcceptedSuggestions);
 
                     if (autoAcceptedSuggestions > 0) {
-                        documentService.writeAnnotationCas(cas, doc, CasSet.forUser(dataOwner),
-                                EXPLICIT_ANNOTATOR_USER_ACTION);
+                        documentService.writeAnnotationCas(cas, doc,
+                                AnnotationSet.forUser(dataOwner), EXPLICIT_ANNOTATOR_USER_ACTION);
                     }
 
                     if (autoAcceptedSuggestions > 0 || finishDocumentsWithoutRecommendations) {

@@ -82,9 +82,9 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.BootstrapPagi
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.ajax.BootstrapAjaxPagingNavigator;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -916,7 +916,7 @@ public class SearchAnnotationSidebar
             return;
         }
 
-        documentService.writeAnnotationCas(aCas, aSourceDoc, CasSet.forUser(state.getUser()),
+        documentService.writeAnnotationCas(aCas, aSourceDoc, AnnotationSet.forUser(state.getUser()),
                 EXPLICIT_ANNOTATOR_USER_ACTION);
     }
 
