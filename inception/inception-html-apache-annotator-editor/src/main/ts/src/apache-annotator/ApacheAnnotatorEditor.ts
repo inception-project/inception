@@ -20,8 +20,7 @@ import { highlights, ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualiz
 import { ApacheAnnotatorSelector } from './ApacheAnnotatorSelector'
 import ApacheAnnotatorToolbar from './ApacheAnnotatorToolbar.svelte'
 import { annotatorState } from './ApacheAnnotatorState.svelte'
-// import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
-import AnnotationDetailPopOver from './AnnotationDetailPopOver.svelte'
+import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
 import { mount, tick, unmount } from 'svelte'
 
 interface SelectionLike {
