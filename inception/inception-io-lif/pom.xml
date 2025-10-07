@@ -28,7 +28,7 @@
   <name>INCEpTION - IO - LIF (deprecated)</name>
 
   <properties>
-    <groovy.version>4.0.7</groovy.version>
+    <groovy.version>4.0.28</groovy.version>
   </properties>  
 
   <dependencies>
