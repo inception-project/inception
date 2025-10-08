@@ -106,18 +106,18 @@
     <jetty.version>12.0.27</jetty.version>
     <servlet-api.version>6.0.0</servlet-api.version>
 
-    <mariadb.driver.version>3.5.5</mariadb.driver.version>
+    <mariadb.driver.version>3.5.6</mariadb.driver.version>
     <mssql.driver.version>12.10.1.jre11</mssql.driver.version>
     <mysql.driver.version>9.4.0</mysql.driver.version>
     <postgres.driver.version>42.7.8</postgres.driver.version>
-    <hibernate.version>6.6.30.Final</hibernate.version>
+    <hibernate.version>6.6.31.Final</hibernate.version>
     <hibernate.validator.version>8.0.3.Final</hibernate.validator.version>
 
     <wicket.version>10.7.0</wicket.version>
-    <wicketstuff.version>10.6.0</wicketstuff.version>
-    <wicket-bootstrap.version>7.0.11</wicket-bootstrap.version>
-    <wicket-jquery-selectors.version>4.0.11</wicket-jquery-selectors.version>
-    <wicket-webjars.version>4.0.11</wicket-webjars.version>
+    <wicketstuff.version>10.7.0</wicketstuff.version>
+    <wicket-bootstrap.version>7.0.12</wicket-bootstrap.version>
+    <wicket-jquery-selectors.version>4.0.13</wicket-jquery-selectors.version>
+    <wicket-webjars.version>4.0.13</wicket-webjars.version>
     <wicket-spring-boot.version>4.1.1</wicket-spring-boot.version>
 
     <!--
@@ -165,7 +165,7 @@
     <txtmark.version>0.13</txtmark.version>
     <owasp-java-html-sanitizer.version>20220608.1</owasp-java-html-sanitizer.version>
     <jinjava.version>2.8.0</jinjava.version>
-    <fastutil.version>8.5.17</fastutil.version>
+    <fastutil.version>8.5.18</fastutil.version>
     <zjsonpatch.version>0.4.16</zjsonpatch.version>
     <picocli.version>4.7.7</picocli.version>
     <woodstox-core.version>6.7.0</woodstox-core.version>
@@ -179,7 +179,7 @@
     <jna.version>5.17.0</jna.version>
     <jsoup.version>1.18.3</jsoup.version>
     <matomo-java-tracker-core-version>3.4.0</matomo-java-tracker-core-version>
-    <mime4j.version>0.8.11</mime4j.version>
+    <mime4j.version>0.8.13</mime4j.version>
     <hsqldb.version>2.7.4</hsqldb.version>
     <opensaml.version>4.3.2</opensaml.version>
     <oauth2-oidc-sdk.version>9.43.6</oauth2-oidc-sdk.version>
