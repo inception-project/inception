@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.uima.cas.CAS;
@@ -97,14 +96,6 @@ public class NamedEntityLinker
 
         var candidates = aCas.<Annotation> select(predictedType).coveredBy(aBegin, aEnd).asList();
 
-        var alreadyLinkedConcepts = new HashSet<String>();
-        for (var candidate : candidates) {
-            var conceptId = candidate.getFeatureValueAsString(predictedFeature);
-            if (conceptId != null) {
-                alreadyLinkedConcepts.add(conceptId);
-            }
-        }
-
         Annotation prevCandidate = null;
         try (var progress = aContext.getMonitor().openScope(SCOPE_UNITS, candidates.size())) {
             for (var candidate : candidates) {
@@ -124,8 +115,7 @@ public class NamedEntityLinker
                     continue;
                 }
 
-                predictSingle(candidate.getCoveredText(), candidate.getBegin(), candidate.getEnd(),
-                        aCas, alreadyLinkedConcepts);
+                predictEntity(candidate);
 
                 prevCandidate = candidate;
             }
@@ -134,52 +124,73 @@ public class NamedEntityLinker
         return rangeCoveringAnnotations(candidates);
     }
 
-    private void predictSingle(String aCoveredText, int aBegin, int aEnd, CAS aCas,
-            Set<String> aAlreadyLinkedConcepts)
+    private void predictEntity(Annotation aEntity)
     {
-        var candidates = findCandidateConcepts(aCoveredText, aBegin, aCas);
-        var predictedType = getPredictedType(aCas);
-        var scoreFeature = getScoreFeature(aCas);
-        var predictedFeature = getPredictedFeature(aCas);
-        var isPredictionFeature = getIsPredictionFeature(aCas);
+        var cas = aEntity.getCAS();
+        var predictedType = getPredictedType(cas);
+        var scoreFeature = getScoreFeature(cas);
+        var predictedFeature = getPredictedFeature(cas);
+        var isPredictionFeature = getIsPredictionFeature(cas);
 
-        var suggestionsCreated = 0;
-        for (var candidate : candidates.stream().toList()) {
-            if (aAlreadyLinkedConcepts.contains(candidate.getIdentifier())) {
+        // If a concept has already been linked to an annotation at the same location as the target
+        // candidate, do not propose that concept again.
+        // We need to select by begin/end because otherwise the window entity will not be included
+        // in the result
+        var alreadyLinkedConcepts = new HashSet<String>();
+        for (var collocatedEntities : cas.<Annotation> select(aEntity.getType())
+                .at(aEntity.getBegin(), aEntity.getEnd())) {
+            var conceptId = collocatedEntities.getFeatureValueAsString(predictedFeature);
+            if (conceptId != null) {
+                alreadyLinkedConcepts.add(conceptId);
+            }
+        }
+
+        var candidateConcepts = findCandidateConcepts(aEntity);
+
+        var candidatesConsidered = 0;
+        for (var candidate : candidateConcepts) {
+            candidatesConsidered++;
+
+            if (alreadyLinkedConcepts.contains(candidate.getIdentifier())) {
                 // If the concept has already been linked to another annotation, do not offer it
                 // again
                 continue;
             }
 
-            var annotation = aCas.createAnnotation(predictedType, aBegin, aEnd);
+            var annotation = cas.createAnnotation(predictedType, aEntity.getBegin(),
+                    aEntity.getEnd());
             annotation.setStringValue(predictedFeature, candidate.getIdentifier());
             annotation.setBooleanValue(isPredictionFeature, true);
             annotation.setDoubleValue(scoreFeature, candidate.getScore());
-            aCas.addFsToIndexes(annotation);
-            suggestionsCreated++;
-            if (suggestionsCreated >= recommender.getMaxRecommendations()) {
+            cas.addFsToIndexes(annotation);
+
+            if (candidatesConsidered >= recommender.getMaxRecommendations()) {
                 break;
             }
         }
     }
 
-    private List<KBHandle> findCandidateConcepts(String aCoveredText, int aBegin, CAS aCas)
+    private List<KBHandle> findCandidateConcepts(Annotation aEntity)
     {
         var conceptFeatureTraits = fsRegistry.readTraits(recommender.getFeature(),
                 ConceptFeatureTraits::new);
+
+        var cas = aEntity.getCAS();
+        var begin = aEntity.getBegin();
+        var coveredText = aEntity.getCoveredText();
 
         var candidates = new ArrayList<KBHandle>();
         if (conceptFeatureTraits.getRepositoryId() != null) {
             var kb = kbService.getKnowledgeBaseById(recommender.getProject(),
                     conceptFeatureTraits.getRepositoryId());
             if (kb.isPresent() && kb.get().isEnabled() && kb.get().isSupportConceptLinking()) {
-                candidates.addAll(readCandidates(kb.get(), aCoveredText, aBegin, aCas));
+                candidates.addAll(readCandidates(kb.get(), coveredText, begin, cas));
             }
         }
         else {
             for (var kb : kbService.getEnabledKnowledgeBases(recommender.getProject())) {
                 if (kb.isSupportConceptLinking()) {
-                    candidates.addAll(readCandidates(kb, aCoveredText, aBegin, aCas));
+                    candidates.addAll(readCandidates(kb, coveredText, begin, cas));
                 }
             }
         }
