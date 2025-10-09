@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringAnnotations;
 import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_UNITS;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
@@ -25,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.uima.cas.CAS;
@@ -96,14 +96,6 @@ public class NamedEntityLinker
 
         var candidates = aCas.<Annotation> select(predictedType).coveredBy(aBegin, aEnd).asList();
 
-        var alreadyLinkedConcepts = new HashSet<String>();
-        for (var candidate : candidates) {
-            var conceptId = candidate.getFeatureValueAsString(predictedFeature);
-            if (conceptId != null) {
-                alreadyLinkedConcepts.add(conceptId);
-            }
-        }
-
         Annotation prevCandidate = null;
         try (var progress = aContext.getMonitor().openScope(SCOPE_UNITS, candidates.size())) {
             for (var candidate : candidates) {
@@ -111,22 +103,19 @@ public class NamedEntityLinker
 
                 if (prevCandidate != null && colocated(candidate, prevCandidate)) {
                     // If we did already do a KB lookup at this position, no need to do one again.
-                    // Mind
-                    // that UIMA provides annotations with the same offsets as a block in iteration
-                    // order
+                    // Mind that UIMA provides annotations with the same offsets as a block in
+                    // iteration order
                     continue;
                 }
 
                 if (candidate.getFeatureValueAsString(predictedFeature) != null
                         && (!stackingAllowed || traits.isEmptyCandidateFeatureRequired())) {
                     // If the candidate feature is already filled, we can skip prediction if
-                    // stacking is
-                    // not allowed or if an empty candidate feature is required
+                    // stacking is not allowed or if an empty candidate feature is required
                     continue;
                 }
 
-                predictSingle(candidate.getCoveredText(), candidate.getBegin(), candidate.getEnd(),
-                        aCas, alreadyLinkedConcepts);
+                predictEntity(candidate);
 
                 prevCandidate = candidate;
             }
@@ -135,52 +124,78 @@ public class NamedEntityLinker
         return rangeCoveringAnnotations(candidates);
     }
 
-    private void predictSingle(String aCoveredText, int aBegin, int aEnd, CAS aCas,
-            Set<String> aAlreadyLinkedConcepts)
+    private void predictEntity(Annotation aEntity)
     {
-        var handles = new ArrayList<KBHandle>();
+        var cas = aEntity.getCAS();
+        var predictedType = getPredictedType(cas);
+        var scoreFeature = getScoreFeature(cas);
+        var predictedFeature = getPredictedFeature(cas);
+        var isPredictionFeature = getIsPredictionFeature(cas);
 
-        var feat = recommender.getFeature();
-        var conceptFeatureTraits = fsRegistry.readTraits(feat, ConceptFeatureTraits::new);
+        // If a concept has already been linked to an annotation at the same location as the target
+        // candidate, do not propose that concept again.
+        // We need to select by begin/end because otherwise the window entity will not be included
+        // in the result
+        var alreadyLinkedConcepts = new HashSet<String>();
+        for (var collocatedEntities : cas.<Annotation> select(aEntity.getType())
+                .at(aEntity.getBegin(), aEntity.getEnd())) {
+            var conceptId = collocatedEntities.getFeatureValueAsString(predictedFeature);
+            if (conceptId != null) {
+                alreadyLinkedConcepts.add(conceptId);
+            }
+        }
 
+        var candidateConcepts = findCandidateConcepts(aEntity);
+
+        var candidatesConsidered = 0;
+        for (var candidate : candidateConcepts) {
+            candidatesConsidered++;
+
+            if (alreadyLinkedConcepts.contains(candidate.getIdentifier())) {
+                // If the concept has already been linked to another annotation, do not offer it
+                // again
+                continue;
+            }
+
+            var annotation = cas.createAnnotation(predictedType, aEntity.getBegin(),
+                    aEntity.getEnd());
+            annotation.setStringValue(predictedFeature, candidate.getIdentifier());
+            annotation.setBooleanValue(isPredictionFeature, true);
+            annotation.setDoubleValue(scoreFeature, candidate.getScore());
+            cas.addFsToIndexes(annotation);
+
+            if (candidatesConsidered >= recommender.getMaxRecommendations()) {
+                break;
+            }
+        }
+    }
+
+    private List<KBHandle> findCandidateConcepts(Annotation aEntity)
+    {
+        var conceptFeatureTraits = fsRegistry.readTraits(recommender.getFeature(),
+                ConceptFeatureTraits::new);
+
+        var cas = aEntity.getCAS();
+        var begin = aEntity.getBegin();
+        var coveredText = aEntity.getCoveredText();
+
+        var candidates = new ArrayList<KBHandle>();
         if (conceptFeatureTraits.getRepositoryId() != null) {
             var kb = kbService.getKnowledgeBaseById(recommender.getProject(),
                     conceptFeatureTraits.getRepositoryId());
             if (kb.isPresent() && kb.get().isEnabled() && kb.get().isSupportConceptLinking()) {
-                handles.addAll(readCandidates(kb.get(), aCoveredText, aBegin, aCas));
+                candidates.addAll(readCandidates(kb.get(), coveredText, begin, cas));
             }
         }
         else {
             for (var kb : kbService.getEnabledKnowledgeBases(recommender.getProject())) {
                 if (kb.isSupportConceptLinking()) {
-                    handles.addAll(readCandidates(kb, aCoveredText, aBegin, aCas));
+                    candidates.addAll(readCandidates(kb, coveredText, begin, cas));
                 }
             }
         }
 
-        var predictedType = getPredictedType(aCas);
-        var scoreFeature = getScoreFeature(aCas);
-        var predictedFeature = getPredictedFeature(aCas);
-        var isPredictionFeature = getIsPredictionFeature(aCas);
-
-        var suggestionsCreated = 0;
-        for (var prediction : handles.stream().toList()) {
-            if (aAlreadyLinkedConcepts.contains(prediction.getIdentifier())) {
-                // If there concept has already been linked to another annotation, do not offer it
-                // again
-                continue;
-            }
-
-            var annotation = aCas.createAnnotation(predictedType, aBegin, aEnd);
-            annotation.setStringValue(predictedFeature, prediction.getIdentifier());
-            annotation.setBooleanValue(isPredictionFeature, true);
-            annotation.setDoubleValue(scoreFeature, prediction.getScore());
-            aCas.addFsToIndexes(annotation);
-            suggestionsCreated++;
-            if (suggestionsCreated >= recommender.getMaxRecommendations()) {
-                break;
-            }
-        }
+        return candidates;
     }
 
     private List<KBHandle> readCandidates(KnowledgeBase kb, String aCoveredText, int aBegin,
@@ -195,7 +210,7 @@ public class NamedEntityLinker
     {
         // We want the predict method to be called repeatedly, so we say training is supported even
         // though we do not react at all to the training process.
-        return TrainingCapability.TRAINING_SUPPORTED;
+        return TRAINING_SUPPORTED;
     }
 
     @Override
