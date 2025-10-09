@@ -175,22 +175,18 @@ public class NamedEntityLinker
         var conceptFeatureTraits = fsRegistry.readTraits(recommender.getFeature(),
                 ConceptFeatureTraits::new);
 
-        var cas = aEntity.getCAS();
-        var begin = aEntity.getBegin();
-        var coveredText = aEntity.getCoveredText();
-
         var candidates = new ArrayList<KBHandle>();
         if (conceptFeatureTraits.getRepositoryId() != null) {
             var kb = kbService.getKnowledgeBaseById(recommender.getProject(),
                     conceptFeatureTraits.getRepositoryId());
             if (kb.isPresent() && kb.get().isEnabled() && kb.get().isSupportConceptLinking()) {
-                candidates.addAll(readCandidates(kb.get(), coveredText, begin, cas));
+                candidates.addAll(readCandidateConcepts(kb.get(), aEntity));
             }
         }
         else {
             for (var kb : kbService.getEnabledKnowledgeBases(recommender.getProject())) {
                 if (kb.isSupportConceptLinking()) {
-                    candidates.addAll(readCandidates(kb, coveredText, begin, cas));
+                    candidates.addAll(readCandidateConcepts(kb, aEntity));
                 }
             }
         }
@@ -198,11 +194,14 @@ public class NamedEntityLinker
         return candidates;
     }
 
-    private List<KBHandle> readCandidates(KnowledgeBase kb, String aCoveredText, int aBegin,
-            CAS aCas)
+    private List<KBHandle> readCandidateConcepts(KnowledgeBase kb, Annotation aEntity)
     {
+        var cas = aEntity.getCAS();
+        var begin = aEntity.getBegin();
+        var coveredText = aEntity.getCoveredText();
+
         return kbService.read(kb, (conn) -> clService.disambiguate(kb, featureTraits.getScope(),
-                featureTraits.getAllowedValueType(), null, aCoveredText, aBegin, aCas));
+                featureTraits.getAllowedValueType(), null, coveredText, begin, cas));
     }
 
     @Override

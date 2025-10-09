@@ -161,7 +161,7 @@ public class ConceptLinkingServiceImpl
         }
     }
 
-    public Set<KBHandle> generateCandidates(KnowledgeBase aKB, String aConceptScope,
+    private Set<KBHandle> generateCandidates(KnowledgeBase aKB, String aConceptScope,
             ConceptFeatureValueType aValueType, String aQuery, String aMention)
     {
         // If the query of the user is smaller or equal to this threshold, then we only use it
@@ -274,13 +274,13 @@ public class ConceptLinkingServiceImpl
     }
 
     private List<KBHandle> findContainingMatches(KnowledgeBase aKB, String aConceptScope,
-            ConceptFeatureValueType aValueType, String aQuery, String aMention, final int threshold,
+            ConceptFeatureValueType aValueType, String aQuery, String aMention, int aThreshold,
             Set<String> aPrefLabelProperties, Set<String> aAdditionalMatchProperties)
     {
         var longLabels = asList(aQuery, aMention).stream() //
                 .filter(Objects::nonNull) //
                 .map(s -> s.trim()) //
-                .filter(s -> s.length() >= threshold) //
+                .filter(s -> s.length() >= aThreshold) //
                 .toArray(String[]::new);
 
         if (longLabels.length == 0) {
@@ -421,12 +421,9 @@ public class ConceptLinkingServiceImpl
         return rankCandidates(aQuery, aMention, candidates, aCas, aMentionBeginOffset);
     }
 
-    private CandidateEntity initCandidate(CandidateEntity candidate, String aQuery, String aMention,
-            CAS aCas, int aBegin)
+    private CandidateEntity fillMentionContext(CandidateEntity candidate, String aMention, CAS aCas,
+            int aBegin)
     {
-        candidate.withMention(aMention);
-        candidate.withQuery(aQuery);
-
         if (aCas != null && aMention != null) {
             var sentence = selectSentenceCovering(aCas, aBegin);
             if (sentence != null) {
@@ -455,8 +452,24 @@ public class ConceptLinkingServiceImpl
         return candidate;
     }
 
-    @Override
-    public List<KBHandle> rankCandidates(String aQuery, String aMention, Set<KBHandle> aCandidates,
+    /**
+     * This method does the actual ranking of the candidate entities. First the candidates from
+     * full-text matching are sorted by frequency cutoff after a threshold because they are more
+     * numerous. Then the candidates from exact matching are added and sorted by multiple keys.
+     * 
+     * @param aQuery
+     *            the input made by the user into the feature editor (can be null)
+     * @param aMention
+     *            the mention
+     * @param aCandidates
+     *            the linking candidate handles
+     * @param aCas
+     *            the CAS containing the mention
+     * @param aBegin
+     *            the begin offset of the mention in the document
+     * @return the ranked handles
+     */
+    private List<KBHandle> rankCandidates(String aQuery, String aMention, Set<KBHandle> aCandidates,
             CAS aCas, int aBegin)
     {
         var startTime = currentTimeMillis();
@@ -464,9 +477,11 @@ public class ConceptLinkingServiceImpl
         // Set the feature values
         var candidates = aCandidates.stream() //
                 .map(CandidateEntity::new) //
-                .map(candidate -> initCandidate(candidate, aQuery, aMention, aCas, aBegin))
+                .map(candidate -> candidate.withQuery(aQuery)) //
+                .map(candidate -> candidate.withMention(aMention)) //
+                .map(candidate -> fillMentionContext(candidate, aMention, aCas, aBegin))
                 .map(candidate -> {
-                    for (EntityRankingFeatureGenerator generator : featureGenerators) {
+                    for (var generator : featureGenerators) {
                         generator.apply(candidate);
                     }
                     return candidate;

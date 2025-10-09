@@ -30,12 +30,9 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.CasingFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.EntityRankingFeatureGenerator;
-import de.tudarmstadt.ukp.inception.conceptlinking.feature.FrequencyFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.FtsScoreFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.LevenshteinFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.MatchingTokenOverlapFeatureGenerator;
-import de.tudarmstadt.ukp.inception.conceptlinking.feature.SemanticSignatureFeatureGenerator;
-import de.tudarmstadt.ukp.inception.conceptlinking.feature.WikidataIdRankFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinkerFactory;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
@@ -89,13 +86,6 @@ public class EntityLinkingServiceAutoConfiguration
     }
 
     @Bean
-    public WikidataIdRankFeatureGenerator wikidataIdRankFeatureGenerator(
-            KnowledgeBaseService aKbService)
-    {
-        return new WikidataIdRankFeatureGenerator(aKbService);
-    }
-
-    @Bean
     public FtsScoreFeatureGenerator ftsScoreFeatureGenerator()
     {
         return new FtsScoreFeatureGenerator();
@@ -107,19 +97,5 @@ public class EntityLinkingServiceAutoConfiguration
             ConceptLinkingService aClService, FeatureSupportRegistry aFsRegistry)
     {
         return new NamedEntityLinkerFactory(aKbService, aClService, aFsRegistry);
-    }
-
-    // @Bean
-    public FrequencyFeatureGenerator frequencyFeatureGenerator(RepositoryProperties aRepoProperties)
-    {
-        return new FrequencyFeatureGenerator(aRepoProperties);
-    }
-
-    // @Bean
-    public SemanticSignatureFeatureGenerator semanticSignatureFeatureGenerator(
-            KnowledgeBaseService aKbService, RepositoryProperties aRepoProperties,
-            EntityLinkingProperties aProperties)
-    {
-        return new SemanticSignatureFeatureGenerator(aKbService, aRepoProperties, aProperties);
     }
 }
