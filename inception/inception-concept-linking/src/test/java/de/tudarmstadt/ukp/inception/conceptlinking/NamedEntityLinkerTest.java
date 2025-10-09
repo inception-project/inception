@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.conceptlinking;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
+import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.addPredictionFeatures;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
@@ -38,7 +40,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinker;
 import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinkerTraits;
@@ -52,7 +53,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -125,15 +125,9 @@ public class NamedEntityLinkerTest
 
         cas = CasFactory.createCas();
         casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
-        cas.setDocumentText(
-                "It was Barack Obama who became the 44th President of the United States of America.");
-        buildAnnotation(cas, NamedEntity.class).on("Barack Obama").buildAllAndAddToIndexes();
-        SegmentationUtils.splitSentences(cas);
-        SegmentationUtils.tokenize(cas);
-        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class,
-                NamedEntity._FeatName_value);
-        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class,
-                NamedEntity._FeatName_identifier);
+
+        addPredictionFeatures(cas, NamedEntity.class, NamedEntity._FeatName_value);
+        addPredictionFeatures(cas, NamedEntity.class, NamedEntity._FeatName_identifier);
     }
 
     @AfterEach
@@ -145,6 +139,12 @@ public class NamedEntityLinkerTest
     @Test
     public void thatPredictionWorks() throws Exception
     {
+        cas.setDocumentText(
+                "It was Barack Obama who became the 44th President of the United States of America.");
+        SegmentationUtils.splitSentences(cas);
+        SegmentationUtils.tokenize(cas);
+        buildAnnotation(cas, NamedEntity.class).on("Barack Obama").buildAllAndAddToIndexes();
+
         sut.predict(new PredictionContext(context), cas);
 
         var predictions = getPredictions(cas, NamedEntity.class);
@@ -160,8 +160,14 @@ public class NamedEntityLinkerTest
     @Test
     public void thatPredictionIsSkippedIfThereIsNoEmptyFeature() throws Exception
     {
-        layer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        layer.setOverlapMode(ANY_OVERLAP);
         traits.setEmptyCandidateFeatureRequired(true);
+
+        cas.setDocumentText(
+                "It was Barack Obama who became the 44th President of the United States of America.");
+        SegmentationUtils.splitSentences(cas);
+        SegmentationUtils.tokenize(cas);
+        buildAnnotation(cas, NamedEntity.class).on("Barack Obama").buildAllAndAddToIndexes();
 
         cas.select(NamedEntity.class).forEach(ne -> ne.setIdentifier("non-empty"));
 
@@ -177,8 +183,14 @@ public class NamedEntityLinkerTest
     @Test
     public void thatAdditionalPredictionsOnStackableLayerAreGenerated() throws Exception
     {
-        layer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        layer.setOverlapMode(ANY_OVERLAP);
         traits.setEmptyCandidateFeatureRequired(false);
+
+        cas.setDocumentText(
+                "It was Barack Obama who became the 44th President of the United States of America.");
+        SegmentationUtils.splitSentences(cas);
+        SegmentationUtils.tokenize(cas);
+        buildAnnotation(cas, NamedEntity.class).on("Barack Obama").buildAllAndAddToIndexes();
 
         cas.select(NamedEntity.class).forEach(ne -> ne.setIdentifier("non-empty"));
 
@@ -189,6 +201,69 @@ public class NamedEntityLinkerTest
         assertThat(predictions) //
                 .extracting(NamedEntity::getCoveredText, NamedEntity::getIdentifier) //
                 .containsExactlyInAnyOrder( //
+                        tuple("Barack Obama", "https://www.wikidata.org/wiki/Q76"), //
+                        tuple("Barack Obama", "https://www.wikidata.org/wiki/Q26446735"), //
+                        tuple("Barack Obama", "https://www.wikidata.org/wiki/Q18355807"));
+    }
+
+    @Test
+    public void thatCandidateNotRedundantlySuggestedOnStackedMentions() throws Exception
+    {
+        layer.setOverlapMode(ANY_OVERLAP);
+        traits.setEmptyCandidateFeatureRequired(false);
+
+        cas.setDocumentText(
+                "It was Barack Obama who became the 44th President of the United States of America.");
+        SegmentationUtils.splitSentences(cas);
+        SegmentationUtils.tokenize(cas);
+        buildAnnotation(cas, NamedEntity.class) //
+                .on("Barack Obama") //
+                .withFeature(NamedEntity._FeatName_identifier, "https://www.wikidata.org/wiki/Q76") //
+                .buildAndAddToIndexes();
+
+        sut.predict(new PredictionContext(context), cas);
+
+        var predictions = getPredictions(cas, NamedEntity.class);
+
+        assertThat(predictions) //
+                .extracting(NamedEntity::getCoveredText, NamedEntity::getIdentifier) //
+                .containsExactlyInAnyOrder( //
+                        tuple("Barack Obama", "https://www.wikidata.org/wiki/Q26446735"), //
+                        tuple("Barack Obama", "https://www.wikidata.org/wiki/Q18355807"));
+    }
+
+    @Test
+    public void thatRedundancyCheckAppliesOnlyToStackedAnnotations() throws Exception
+    {
+        layer.setOverlapMode(ANY_OVERLAP);
+        traits.setEmptyCandidateFeatureRequired(false);
+
+        cas.setDocumentText(
+                "It was Barack Obama who became the 44th President of the United States of America.");
+        SegmentationUtils.splitSentences(cas);
+        SegmentationUtils.tokenize(cas);
+        buildAnnotation(cas, NamedEntity.class) //
+                .on("Barack Obama") //
+                .buildAndAddToIndexes();
+        buildAnnotation(cas, NamedEntity.class) //
+                .on("44th President of the United States of America") //
+                .withFeature(NamedEntity._FeatName_identifier, "https://www.wikidata.org/wiki/Q76") //
+                .buildAndAddToIndexes();
+
+        sut.predict(new PredictionContext(context), cas);
+
+        var predictions = getPredictions(cas, NamedEntity.class);
+
+        // Q76 should be suppressed for the "44th President..." mention because it is already linked
+        // there.
+        // It should appear on the "Obama" mention though
+        assertThat(predictions) //
+                .extracting(NamedEntity::getCoveredText, NamedEntity::getIdentifier) //
+                .containsExactlyInAnyOrder( //
+                        tuple("44th President of the United States of America",
+                                "https://www.wikidata.org/wiki/Q26446735"), //
+                        tuple("44th President of the United States of America",
+                                "https://www.wikidata.org/wiki/Q18355807"), //
                         tuple("Barack Obama", "https://www.wikidata.org/wiki/Q76"), //
                         tuple("Barack Obama", "https://www.wikidata.org/wiki/Q26446735"), //
                         tuple("Barack Obama", "https://www.wikidata.org/wiki/Q18355807"));
