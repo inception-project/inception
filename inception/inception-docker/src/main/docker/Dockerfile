@@ -4,7 +4,7 @@
 #
 ############################################################
 
-FROM eclipse-temurin:21-jre@sha256:bc03ecb547faf36e4ca8a12686f14eb0f7ffcd8b402c45966ad1d051ebb3d3e3
+FROM eclipse-temurin:21-jre-noble@sha256:a29160fa56fad2b32e3e605bd468a7bb280a096b1c2339a70a31752c3463ba20
 
 LABEL maintainer="INCEpTION Team"
 
@@ -37,7 +37,7 @@ COPY launch.sh .
 RUN set -ex \
     && DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
-    && apt-get install -y --no-install-recommends locales \
+    && apt-get install -y --no-install-recommends locales jq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
@@ -55,6 +55,9 @@ RUN set -ex \
 VOLUME /export
 VOLUME /tmp
 VOLUME /var/log
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD curl -sf http://localhost:8080/actuator/health | jq -e '.status=="UP"' || exit 1
 
 # Launch application
 CMD /opt/inception/launch.sh java ${JAVA_MEM_OPTS} ${JAVA_OPTS} -Djava.awt.headless=true -Dinception.home=/export -jar inception-app-standalone.jar ${APP_ARGS}
