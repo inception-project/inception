@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -30,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaForm;
 
 public class NamedEntityLinkerTraitsEditor
     extends AbstractTraitsEditor
@@ -48,26 +50,21 @@ public class NamedEntityLinkerTraitsEditor
 
         traits = toolFactory.readTraits(aRecommender.getObject());
 
-        var form = new Form<>(MID_FORM, CompoundPropertyModel.of(Model.of(traits)))
-        {
-            private static final long serialVersionUID = -3109239605742291123L;
+        var form = new LambdaForm<>(MID_FORM, CompoundPropertyModel.of(Model.of(traits)));
+        form.onSubmit(this::actionSubmit);
+        queue(form);
 
-            @Override
-            protected void onSubmit()
-            {
-                super.onSubmit();
-                toolFactory.writeTraits(aRecommender.getObject(), traits);
-            }
-        };
-
-        form.add(new CheckBox("emptyCandidateFeatureRequired") //
+        queue(new CheckBox("emptyCandidateFeatureRequired") //
                 .add(visibleWhen(aRecommender.map(Recommender::getLayer)
                         .map(AnnotationLayer::isAllowStacking))) //
                 .setOutputMarkupPlaceholderTag(true));
 
-        form.add(new CheckBox("synchronous") //
+        queue(new CheckBox("synchronous") //
                 .setOutputMarkupPlaceholderTag(true));
+    }
 
-        add(form);
+    private void actionSubmit(AjaxRequestTarget aTarget, Form<NamedEntityLinkerTraits> aForm)
+    {
+        toolFactory.writeTraits(getModelObject(), aForm.getModelObject());
     }
 }

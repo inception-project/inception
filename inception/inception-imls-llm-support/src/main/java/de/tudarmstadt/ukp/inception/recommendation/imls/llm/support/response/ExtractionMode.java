@@ -28,10 +28,10 @@ public enum ExtractionMode
     RESPONSE_AS_LABEL, //
 
     @JsonProperty("mentions-from-json")
-    MENTIONS_FROM_JSON,
+    MENTIONS_FROM_JSON;
 
-    @JsonProperty("relations-from-json")
-    RELATIONS_FROM_JSON;
+    // @JsonProperty("relations-from-json")
+    // RELATIONS_FROM_JSON;
 
     public boolean accepts(AnnotationLayer aLayer)
     {

@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.assistant.documents;
 
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
-import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Collections.sort;
 import static java.util.Comparator.comparing;
@@ -146,39 +145,7 @@ public class DocumentContextRetriever
                 .withRole(SYSTEM).internal().ephemeral() //
                 .withReferences(references.values());
 
-        // var instruction = """
-        // The source context retriever automatically provides you with relevant information from
-        // the documents the current project.
-        // Use the following sources from this project to respond.
-        // It is absolutely critital to mention the `{{ref::ref-id}}` after each individual
-        // information from a source.
-        // Here is an example:
-        //
-        // Input:
-        // {
-        // "id": "{{ref::917}}"
-        // "source": "The Eiffel Tower is located in Paris, France.",
-        // }
-        // {
-        // "id": "{{ref::735}}"
-        // "source": "It is one of the most famous landmarks in the world.",
-        // }
-        // {
-        // "id": "{{ref::582}}"
-        // "source": The Eiffel Tower was built from 1887 to 1889.",
-        // }
-        //
-        // Response:
-        // The Eiffel Tower is a famous landmark located in Paris, France {{ref::917}} {{ref::735}}.
-        // It was built from 1887 to 1889 {{ref::582}}.
-        //
-        // Now, use the same pattern to process the following sources:
-        // """;
-
-        msg.withMessage(join("\n", asList( //
-                // instruction, //
-                "", //
-                body.toString())));
+        msg.withMessage(body.toString());
 
         return asList(msg.build());
     }
