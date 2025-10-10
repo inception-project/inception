@@ -23,12 +23,12 @@ import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_NC;
 import static java.util.Arrays.asList;
+import static java.util.Locale.ROOT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
@@ -140,11 +140,11 @@ public class BaselineRankingStrategyTest
         var results = new ArrayList<CandidateEntity>();
         for (var candidate : aCandidates) {
             var cand = new CandidateEntity(candidate) //
-                    .with(KEY_LABEL_NC, candidate.getUiLabel().toLowerCase(Locale.ROOT))
+                    .with(KEY_LABEL_NC, candidate.getUiLabel().toLowerCase(ROOT))
                     .with(KEY_QUERY, aQuery) //
-                    .with(KEY_QUERY_NC, aQuery.toLowerCase(Locale.ROOT)) //
+                    .with(KEY_QUERY_NC, aQuery.toLowerCase(ROOT)) //
                     .with(KEY_MENTION, aMention) //
-                    .with(KEY_MENTION_NC, aMention.toLowerCase(Locale.ROOT));
+                    .with(KEY_MENTION_NC, aMention.toLowerCase(ROOT));
 
             generators.forEach(gen -> gen.apply(cand));
             results.add(cand);

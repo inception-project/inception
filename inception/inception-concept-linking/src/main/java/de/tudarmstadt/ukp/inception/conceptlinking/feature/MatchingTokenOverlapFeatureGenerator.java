@@ -60,12 +60,12 @@ public class MatchingTokenOverlapFeatureGenerator
         var tokensNC = sortedBagOfWords(aTerm.toLowerCase(aCandidate.getLocale()));
 
         aCandidate.get(KEY_MENTION_BOW_NC) //
-                .map(mention -> distance(tokensNC, mention)) //
+                .map(mention -> bagOfWordsDistance(tokensNC, mention)) //
                 .filter(score -> score >= 0) //
                 .ifPresent(score -> aCandidate.mergeMin(SCORE_TOKEN_OVERLAP_MENTION_NC, score));
 
         aCandidate.get(KEY_QUERY_BOW_NC) //
-                .map(query -> distance(tokensNC, query)) //
+                .map(query -> bagOfWordsDistance(tokensNC, query)) //
                 .filter(score -> score >= 0) //
                 .ifPresent(score -> {
                     if (aCandidate.mergeMin(SCORE_TOKEN_OVERLAP_QUERY_NC, score)) {
@@ -74,23 +74,23 @@ public class MatchingTokenOverlapFeatureGenerator
                 });
 
         aCandidate.get(KEY_MENTION_BOW) //
-                .map(mention -> distance(tokens, mention)) //
+                .map(mention -> bagOfWordsDistance(tokens, mention)) //
                 .filter(score -> score >= 0) //
                 .ifPresent(score -> aCandidate.mergeMin(SCORE_TOKEN_OVERLAP_MENTION, score));
 
         aCandidate.get(KEY_QUERY_BOW) //
-                .map(query -> distance(tokens, query)) //
+                .map(query -> bagOfWordsDistance(tokens, query)) //
                 .filter(score -> score >= 0) //
                 .ifPresent(score -> aCandidate.mergeMin(SCORE_TOKEN_OVERLAP_QUERY, score));
 
         aCandidate.get(KEY_MENTION_CONTEXT) //
-                .map(context -> distance(tokens, context.toArray(String[]::new))) //
+                .map(context -> bagOfWordsDistance(tokens, context.toArray(String[]::new))) //
                 .filter(score -> score >= 0) //
                 .ifPresent(
                         score -> aCandidate.mergeMin(SCORE_TOKEN_OVERLAP_MENTION_CONTEXT, score));
     }
 
-    private int distance(String[] aSortedBowCandidate, String[] aSortedBowUser)
+    static int bagOfWordsDistance(String[] aSortedBowCandidate, String[] aSortedBowUser)
     {
         if (aSortedBowCandidate == null || aSortedBowUser == null) {
             return -1;

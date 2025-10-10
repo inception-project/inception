@@ -28,7 +28,6 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
@@ -171,17 +170,19 @@ public abstract class ConceptFeatureEditor_ImplBase
 
         if (labelFilter) {
             choices = choices.stream() //
-                    .filter(kb -> Strings.CI.contains(kb.getUiLabel(), finalInput))
-                    .collect(Collectors.toList());
+                    .filter(kb -> Strings.CI.contains(kb.getUiLabel(), finalInput)) //
+                    .toList();
         }
 
         if (isNotBlank(secondaryFilter)) {
-            choices = choices.stream().filter(kb -> applySecondaryFilter(kb, secondaryFilter))
-                    .collect(Collectors.toList());
+            choices = choices.stream() //
+                    .filter(kb -> applySecondaryFilter(kb, secondaryFilter)) //
+                    .toList();
         }
 
         var result = choices.stream()//
-                .limit(entityLinkingProperties.getCandidateDisplayLimit()).toList();
+                .limit(entityLinkingProperties.getCandidateDisplayLimit()) //
+                .toList();
 
         WicketUtil.serverTiming("getCandidates", currentTimeMillis() - startTime);
 

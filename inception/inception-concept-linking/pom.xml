@@ -33,31 +33,11 @@
      -->
     <dependency>
       <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-repository-sparql</artifactId>
+      <artifactId>rdf4j-common-io</artifactId>
     </dependency>
     <dependency>
       <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-repository-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-model</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-query</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-model-vocabulary</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-model-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-common-io</artifactId>
     </dependency>
     
     <dependency>
@@ -141,10 +121,6 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.github.ben-manes.caffeine</groupId>
-      <artifactId>caffeine</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -188,6 +164,16 @@
 
 
     <!-- Testing -->
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-model-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-model-vocabulary</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>jakarta.persistence</groupId>
       <artifactId>jakarta.persistence-api</artifactId>
@@ -253,6 +239,7 @@
           <configuration>
             <ignoredDependencies>
               <!-- Dependency analysis does not get it... -->
+              <ignoredDependency>org.eclipse.rdf4j:rdf4j-repository-api</ignoredDependency>
               <ignoredDependency>org.danekja:jdk-serializable-functional</ignoredDependency>
               <ignoredDependency>jakarta.persistence:jakarta.persistence-api</ignoredDependency>
             </ignoredDependencies>
