@@ -31,9 +31,11 @@ import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static wicket.contrib.input.events.EventType.click;
 import static wicket.contrib.input.events.key.KeyType.Delete;
+import static wicket.contrib.input.events.key.KeyType.Escape;
 import static wicket.contrib.input.events.key.KeyType.Left;
 import static wicket.contrib.input.events.key.KeyType.Right;
 import static wicket.contrib.input.events.key.KeyType.Shift;
+import static wicket.contrib.input.events.key.KeyType.Space;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -1345,6 +1347,7 @@ public abstract class AnnotationDetailEditorPanel
         link.setOutputMarkupPlaceholderTag(true);
         link.setAlwaysEnabled(true); // Not to be disabled when document is read-only
         link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        link.add(new InputBehavior(new KeyType[] { Shift, Escape }, click));
         return link;
     }
 
@@ -1361,6 +1364,7 @@ public abstract class AnnotationDetailEditorPanel
                                     .equals(state.getSelectedAnnotationLayer().getType())
                             && editorPage.isEditable());
         }));
+        link.add(new InputBehavior(new KeyType[] { Shift, Space }, click));
         return link;
     }
 

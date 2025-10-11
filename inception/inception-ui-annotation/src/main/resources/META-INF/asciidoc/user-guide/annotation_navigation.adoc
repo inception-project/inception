@@ -59,6 +59,12 @@ You can also use the following keyboard assignments in order to navigate only us
 | kbd:[Shift + Delete]
 | delete the currently selected annotation
 
+| kbd:[Shift + Space]
+| reverse the direction of the currently selected relation
+
+| kbd:[Shift + Esc]
+| unselect the currently selected annotation
+
 | kbd:[Ctrl + End]
 | toggle document state (finished / in-progress)
 |====
