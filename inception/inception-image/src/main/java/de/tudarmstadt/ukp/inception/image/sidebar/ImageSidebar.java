@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.image.sidebar;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -51,10 +49,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.image.feature.ImageFeatureSupport;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -167,7 +166,7 @@ public class ImageSidebar
     public void actionJumpTo(AjaxRequestTarget aTarget, ImageHandle aHandle)
     {
         try {
-            AnnotatorState state = getModelObject();
+            var state = getModelObject();
 
             // Get the CAS
             var cas = getCasProvider().get();
@@ -175,11 +174,11 @@ public class ImageSidebar
             var fs = ICasUtil.selectAnnotationByAddr(cas, aHandle.getVid().getId());
 
             var layer = annotationService.findLayer(state.getProject(), fs);
-            if (SPAN_TYPE.equals(layer.getType())) {
+            if (SpanLayerSupport.TYPE.equals(layer.getType())) {
                 state.getSelection().selectSpan(aHandle.getVid(), cas, aHandle.getBegin(),
                         aHandle.getEnd());
             }
-            else if (RELATION_TYPE.equals(layer.getType())) {
+            else if (RelationLayerSupport.TYPE.equals(layer.getType())) {
                 var adapter = (RelationAdapter) annotationService.getAdapter(layer);
                 var originFS = FSUtil.getFeature(fs, adapter.getSourceFeatureName(),
                         AnnotationFS.class);
@@ -191,8 +190,8 @@ public class ImageSidebar
                 return;
             }
 
-            actionShowSelectedDocument(aTarget, aHandle.getDocument(), aHandle.getBegin(),
-                    aHandle.getEnd());
+            getAnnotationPage().actionShowSelectedDocument(aTarget, aHandle.getDocument(),
+                    aHandle.getBegin(), aHandle.getEnd());
             aTarget.add((Component) getActionHandler());
         }
         catch (IOException e) {
