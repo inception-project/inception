@@ -128,8 +128,8 @@ public abstract class AnnotationPageBase
             }
 
             var url = Url.parse(requestCycle.urlFor(this.getClass(), params));
-            url.setFragment("!" + fragmentParams.stream().collect(joining("&")));
-            var finalUrl = requestCycle.getUrlRenderer().renderFullUrl(url);
+            var finalUrl = requestCycle.getUrlRenderer().renderFullUrl(url) + "#!"
+                    + fragmentParams.stream().collect(joining("&"));
             LOG.trace(
                     "Pushing parameter for document [{}] and user [{}] into fragment: {} (URL redirect)",
                     documentParameter, userParameter, finalUrl);
