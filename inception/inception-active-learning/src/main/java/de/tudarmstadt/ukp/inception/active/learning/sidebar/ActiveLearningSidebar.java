@@ -581,7 +581,7 @@ public class ActiveLearningSidebar
         // REC: Potential bug: jumping causes the document to re-renderer and therefore the
         // predictions to switch. If the suggestion is no longer visible in the switched predictions
         // (e.g. because it is no longer predicted), then we jump to nothing?
-        actionShowSelectedDocument(aTarget,
+        getAnnotationPage().actionShowSelectedDocument(aTarget,
                 documentService.getSourceDocument(this.getModelObject().getProject().getId(),
                         suggestion.getDocumentId()),
                 suggestion.getBegin(), suggestion.getEnd());
@@ -861,8 +861,8 @@ public class ActiveLearningSidebar
             state.getSelection().clear();
             aTarget.add((Component) getActionHandler());
 
-            actionShowSelectedDocument(aTarget, sourceDocument, suggestion.getBegin(),
-                    suggestion.getEnd());
+            getAnnotationPage().actionShowSelectedDocument(aTarget, sourceDocument,
+                    suggestion.getBegin(), suggestion.getEnd());
 
             // When the document is opened, the recommendation service defaults to only
             // predicting for the current document. Therefore, while in an AL session,
@@ -972,8 +972,8 @@ public class ActiveLearningSidebar
     private void actionSelectHistoryItem(AjaxRequestTarget aTarget, LearningRecord aRecord)
         throws IOException
     {
-        actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(), aRecord.getOffsetBegin(),
-                aRecord.getOffsetEnd());
+        getAnnotationPage().actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
+                aRecord.getOffsetBegin(), aRecord.getOffsetEnd());
 
         // Since we have switched documents above (if it was necessary), the editor CAS should
         // now point to the correct one
@@ -1075,7 +1075,7 @@ public class ActiveLearningSidebar
                     AnnotationSet.forUser(aRecord.getUser()));
             if (getMatchingAnnotation(cas, aRecord).isPresent()) {
                 setActiveLearningHighlight(aRecord);
-                actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
+                getAnnotationPage().actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
                         aRecord.getOffsetBegin(), aRecord.getOffsetEnd());
 
                 openHistoryItemRemovalConfirmationDialog(aTarget, aRecord);

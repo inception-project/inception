@@ -447,8 +447,7 @@ public abstract class AnnotationPageBase2
             state.refreshProject(projectService);
             state.refreshDocument(documentService);
 
-            LOG.trace("Preparing to open document {}@{} {}", state.getUser(), state.getDocument(),
-                    aFocus);
+            LOG.trace("Preparing to open document {}@{}", state.getUser(), state.getDocument());
 
             // Load constraints
             state.setConstraints(constraintsService.getMergedConstraints(state.getProject()));
@@ -475,7 +474,7 @@ public abstract class AnnotationPageBase2
 
             // Check if there is an annotation document entry in the database. If there is none,
             // create one.
-            LOG.trace("Opening document {}@{} {}", state.getUser(), state.getDocument(), aFocus);
+            LOG.trace("Opening document {}@{}", state.getUser(), state.getDocument());
             var annotationDocument = documentService
                     .createOrGetAnnotationDocument(state.getDocument(), state.getUser());
             var stateBeforeOpening = annotationDocument.getState();
@@ -561,7 +560,7 @@ public abstract class AnnotationPageBase2
                 WicketUtil.refreshPage(aTarget, getPage());
             }
 
-            LOG.trace("Document opened {}@{} {}", state.getUser(), state.getDocument(), aFocus);
+            LOG.trace("Document opened {}@{}", state.getUser(), state.getDocument());
 
             applicationEventPublisherHolder.get()
                     .publishEvent(new DocumentOpenedEvent(this, editorCas,

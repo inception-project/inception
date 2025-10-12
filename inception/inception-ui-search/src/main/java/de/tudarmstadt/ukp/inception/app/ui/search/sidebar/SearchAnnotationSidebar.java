@@ -1079,7 +1079,7 @@ public class SearchAnnotationSidebar
                 {
                     var selectedResult = aItem.getModelObject();
                     searchOptions.getObject().setSelectedResult(selectedResult);
-                    actionShowSelectedDocument(t,
+                    getAnnotationPage().actionShowSelectedDocument(t,
                             documentService.getSourceDocument(currentProject,
                                     selectedResult.getDocumentTitle()),
                             selectedResult.getOffsetStart(), selectedResult.getOffsetEnd());
