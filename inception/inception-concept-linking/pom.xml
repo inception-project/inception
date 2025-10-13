@@ -165,6 +165,11 @@
 
     <!-- Testing -->
     <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-semantics-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-model-api</artifactId>
       <scope>test</scope>
@@ -221,12 +226,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-testing</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-ner-asl</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

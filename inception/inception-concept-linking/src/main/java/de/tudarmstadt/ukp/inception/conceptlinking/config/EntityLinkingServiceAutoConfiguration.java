@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 @Configuration
@@ -94,8 +95,9 @@ public class EntityLinkingServiceAutoConfiguration
     @ConditionalOnBean(RecommendationService.class)
     @Bean
     public NamedEntityLinkerFactory namedEntityLinkerFactory(KnowledgeBaseService aKbService,
-            ConceptLinkingService aClService, FeatureSupportRegistry aFsRegistry)
+            ConceptLinkingService aClService, FeatureSupportRegistry aFsRegistry,
+            AnnotationSchemaService aSchemaService)
     {
-        return new NamedEntityLinkerFactory(aKbService, aClService, aFsRegistry);
+        return new NamedEntityLinkerFactory(aKbService, aClService, aFsRegistry, aSchemaService);
     }
 }
