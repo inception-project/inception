@@ -17,9 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringAnnotations;
 import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_UNITS;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.joining;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 
 import java.util.ArrayList;
@@ -47,7 +51,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 
 public class NamedEntityLinker
     extends RecommendationEngine
@@ -57,13 +63,15 @@ public class NamedEntityLinker
     private final ConceptLinkingService clService;
     private final FeatureSupportRegistry fsRegistry;
     private final ConceptFeatureTraits featureTraits;
+    private final AnnotationSchemaService schemaService;
 
     public static final Key<Collection<ImmutablePair<String, Collection<AnnotationFS>>>> KEY_MODEL = new Key<>(
             "model");
 
     public NamedEntityLinker(Recommender aRecommender, NamedEntityLinkerTraits aTraits,
             KnowledgeBaseService aKbService, ConceptLinkingService aClService,
-            FeatureSupportRegistry aFsRegistry, ConceptFeatureTraits aFeatureTraits)
+            FeatureSupportRegistry aFsRegistry, ConceptFeatureTraits aFeatureTraits,
+            AnnotationSchemaService aSchemaService)
     {
         super(aRecommender);
 
@@ -72,6 +80,7 @@ public class NamedEntityLinker
         clService = aClService;
         fsRegistry = aFsRegistry;
         featureTraits = aFeatureTraits;
+        schemaService = aSchemaService;
     }
 
     @Override
@@ -131,6 +140,7 @@ public class NamedEntityLinker
         var scoreFeature = getScoreFeature(cas);
         var predictedFeature = getPredictedFeature(cas);
         var isPredictionFeature = getIsPredictionFeature(cas);
+        var explanationFeature = getScoreExplanationFeature(cas);
 
         // If a concept has already been linked to an annotation at the same location as the target
         // candidate, do not propose that concept again.
@@ -162,6 +172,7 @@ public class NamedEntityLinker
             annotation.setStringValue(predictedFeature, candidate.getIdentifier());
             annotation.setBooleanValue(isPredictionFeature, true);
             annotation.setDoubleValue(scoreFeature, candidate.getScore());
+            annotation.setStringValue(explanationFeature, candidate.getDebugInfo());
             cas.addFsToIndexes(annotation);
 
             if (candidatesConsidered >= recommender.getMaxRecommendations()) {
@@ -197,11 +208,38 @@ public class NamedEntityLinker
     private List<KBHandle> readCandidateConcepts(KnowledgeBase kb, Annotation aEntity)
     {
         var cas = aEntity.getCAS();
+        var queryComponents = new ArrayList<Annotation>();
+        queryComponents.add(aEntity);
+
+        if (traits.isIncludeLinkTargetsInQuery()) {
+            var adapter = schemaService.getAdapter(getRecommender().getLayer());
+            if (adapter != null) {
+                var linkFeatures = adapter.listFeatures().stream() //
+                        .filter(f -> f.getLinkMode() == WITH_ROLE) //
+                        .toList();
+                for (var f : linkFeatures) {
+                    List<LinkWithRoleModel> links = adapter.getFeatureValue(f, aEntity);
+                    if (links == null) {
+                        continue;
+                    }
+
+                    for (var link : links) {
+                        var target = selectAnnotationByAddr(cas, link.targetAddr);
+                        queryComponents.add(target);
+                    }
+                }
+            }
+        }
+
         var begin = aEntity.getBegin();
         var coveredText = aEntity.getCoveredText();
+        var query = queryComponents.stream() //
+                .sorted(comparing(Annotation::getBegin)) //
+                .map(Annotation::getCoveredText) //
+                .collect(joining(" "));
 
-        return kbService.read(kb, (conn) -> clService.disambiguate(kb, featureTraits.getScope(),
-                featureTraits.getAllowedValueType(), null, coveredText, begin, cas));
+        return clService.disambiguate(kb, featureTraits.getScope(),
+                featureTraits.getAllowedValueType(), query, coveredText, begin, cas);
     }
 
     @Override

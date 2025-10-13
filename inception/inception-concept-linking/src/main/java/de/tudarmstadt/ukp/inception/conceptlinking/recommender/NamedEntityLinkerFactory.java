@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 /**
@@ -57,14 +58,17 @@ public class NamedEntityLinkerFactory
     private final KnowledgeBaseService kbService;
     private final ConceptLinkingService clService;
     private final FeatureSupportRegistry fsRegistry;
+    private final AnnotationSchemaService schemaService;
 
     @Autowired
     public NamedEntityLinkerFactory(KnowledgeBaseService aKbService,
-            ConceptLinkingService aClService, FeatureSupportRegistry aFsRegistry)
+            ConceptLinkingService aClService, FeatureSupportRegistry aFsRegistry,
+            AnnotationSchemaService aSchemaService)
     {
         kbService = aKbService;
         clService = aClService;
         fsRegistry = aFsRegistry;
+        schemaService = aSchemaService;
     }
 
     @Override
@@ -87,7 +91,7 @@ public class NamedEntityLinkerFactory
                 ConceptFeatureTraits::new);
 
         return new NamedEntityLinker(aRecommender, linkerTraits, kbService, clService, fsRegistry,
-                featureTraits);
+                featureTraits, schemaService);
     }
 
     @Override

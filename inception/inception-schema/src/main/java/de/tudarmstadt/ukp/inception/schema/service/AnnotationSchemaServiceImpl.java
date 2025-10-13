@@ -73,7 +73,6 @@ import org.apache.uima.util.CasIOUtils;
 import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -146,7 +145,6 @@ public class AnnotationSchemaServiceImpl
         this(null, null, null, null, null);
     }
 
-    @Autowired
     public AnnotationSchemaServiceImpl(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aApplicationEventPublisher,

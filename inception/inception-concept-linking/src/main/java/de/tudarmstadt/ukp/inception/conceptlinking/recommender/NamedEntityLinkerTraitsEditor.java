@@ -28,9 +28,11 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaForm;
 
 public class NamedEntityLinkerTraitsEditor
@@ -41,6 +43,7 @@ public class NamedEntityLinkerTraitsEditor
     private static final String MID_FORM = "form";
 
     private @SpringBean RecommendationEngineFactory<NamedEntityLinkerTraits> toolFactory;
+    private @SpringBean AnnotationSchemaService schemaService;
 
     private final NamedEntityLinkerTraits traits;
 
@@ -59,6 +62,10 @@ public class NamedEntityLinkerTraitsEditor
                         .map(AnnotationLayer::isAllowStacking))) //
                 .setOutputMarkupPlaceholderTag(true));
 
+        queue(new CheckBox("includeLinkTargetsInQuery") //
+                .add(visibleWhen(this::hasLinkFeatures)) //
+                .setOutputMarkupPlaceholderTag(true));
+
         queue(new CheckBox("synchronous") //
                 .setOutputMarkupPlaceholderTag(true));
     }
@@ -66,5 +73,11 @@ public class NamedEntityLinkerTraitsEditor
     private void actionSubmit(AjaxRequestTarget aTarget, Form<NamedEntityLinkerTraits> aForm)
     {
         toolFactory.writeTraits(getModelObject(), aForm.getModelObject());
+    }
+
+    private boolean hasLinkFeatures()
+    {
+        return schemaService.listAnnotationFeature(getModelObject().getLayer()).stream()
+                .anyMatch(f -> f.getLinkMode() == LinkMode.WITH_ROLE);
     }
 }
