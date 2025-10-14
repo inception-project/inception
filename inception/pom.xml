@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
-    <version>38.2-SNAPSHOT</version>
+    <version>38.2</version>
   </parent>
 
   <artifactId>inception-app</artifactId>
@@ -43,7 +43,7 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-dependencies</artifactId>
-        <version>38.2-SNAPSHOT</version>
+        <version>38.2</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
