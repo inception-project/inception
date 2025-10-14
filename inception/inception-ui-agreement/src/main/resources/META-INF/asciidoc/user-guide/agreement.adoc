@@ -45,6 +45,8 @@ Optionally, you can limit the process to specific *annotators* or *documents*.
 If you do not make any selection here, all annotators and documents are considered. 
 If you select annotators, at least two annotators must be selected. 
 To select multiple annotators or documents, hold, for example, the kbd:[Shift] or kbd:[CTRL]/kbd:[CMD] keys while clicking, depending on your browser and operating system. 
+The option *include original* is useful if you have imported pre-annotated documents as it can be used to compare annotators against the original pre-annotated.
+The option *include curator* is useful if you want to compare the annotator's performance (or even the original) to the final curated version.
 
 The *Pairwise...* button can be used to start the agreement calculation, and the results will be shown in a <<sect_agreement_matrix,Pairwise agreement matrix>>. 
 

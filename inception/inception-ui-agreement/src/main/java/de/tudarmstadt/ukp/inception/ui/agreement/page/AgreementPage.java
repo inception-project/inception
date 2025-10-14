@@ -26,6 +26,7 @@ import static de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExp
 import static de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporter.EXT_JSON;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.LAST_USER_SESSION;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -186,6 +187,8 @@ public class AgreementPage
         queue(measureDropDown = makeMeasuresDropdown("measure"));
 
         queue(new CheckBox("compareWithCurator").setOutputMarkupId(true));
+
+        queue(new CheckBox("compareWithInitialCas").setOutputMarkupId(true));
 
         var annotatorList = new ListMultipleChoice<ProjectUserPermissions>("annotators");
         annotatorList.setChoiceRenderer(new ProjectUserPermissionChoiceRenderer());
@@ -606,6 +609,10 @@ public class AgreementPage
     {
         var annotators = new ArrayList<String>();
 
+        if (model.compareWithInitialCas) {
+            annotators.add(INITIAL_CAS_PSEUDO_USER);
+        }
+
         if (model.compareWithCurator) {
             annotators.add(CURATION_USER);
         }
@@ -737,5 +744,7 @@ public class AgreementPage
         List<SourceDocument> documents = new ArrayList<>();
 
         boolean compareWithCurator;
+
+        boolean compareWithInitialCas;
     }
 }

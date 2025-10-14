@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing;
 
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.lang.String.format;
@@ -102,6 +103,10 @@ public class PairwiseUnitizingAgreementTable
 
                 if (getModelObject().getRaters().contains(CURATION_USER)) {
                     raters.add(userRepository.getCurationUser());
+                }
+
+                if (getModelObject().getRaters().contains(INITIAL_CAS_PSEUDO_USER)) {
+                    raters.add(userRepository.getInitialCasUser());
                 }
             }
             return raters;
