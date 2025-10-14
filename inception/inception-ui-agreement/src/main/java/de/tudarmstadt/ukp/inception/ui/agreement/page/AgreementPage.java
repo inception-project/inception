@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.agreement.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.forUser;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
@@ -25,8 +28,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 import static de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporter.EXT_CSV;
 import static de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporter.EXT_JSON;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.LAST_USER_SESSION;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -82,6 +83,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePairwiseAgreeme
 import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePerDocumentAgreementTask;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -461,7 +463,7 @@ public class AgreementPage
 
     private void performExport(OutputStream aOut, String aExporterId, AnnotationLayer aLayer,
             AnnotationFeature aFeature, List<SourceDocument> aSelectedDocuments,
-            List<String> aAnnotators, DefaultAgreementTraits aTraits)
+            List<AnnotationSet> aDataOwners, DefaultAgreementTraits aTraits)
         throws IOException
     {
         // Exporter is not serializable (and should not be), so we just pass the ID
@@ -475,7 +477,7 @@ public class AgreementPage
         try (var ctx = new DefaultMdcSetup(repositoryProperties, project, sessionOwner)) {
             var allAnnDocs = agreementService.getDocumentsToEvaluate(project, aSelectedDocuments,
                     aTraits);
-            exporter.export(aOut, aLayer, aFeature, allAnnDocs, aAnnotators);
+            exporter.export(aOut, aLayer, aFeature, allAnnDocs, aDataOwners);
         }
         catch (Exception e) {
             aOut.write("Unexpected error during export, see log for details.".getBytes(UTF_8));
@@ -605,26 +607,26 @@ public class AgreementPage
         refreshResults(aTarget, task.getResult());
     }
 
-    private List<String> getAnnotators(AgreementFormModel model)
+    private List<AnnotationSet> getAnnotators(AgreementFormModel model)
     {
-        var annotators = new ArrayList<String>();
+        var annotators = new ArrayList<AnnotationSet>();
 
         if (model.compareWithInitialCas) {
-            annotators.add(INITIAL_CAS_PSEUDO_USER);
+            annotators.add(INITIAL_SET);
         }
 
         if (model.compareWithCurator) {
-            annotators.add(CURATION_USER);
+            annotators.add(CURATION_SET);
         }
 
         if (isEmpty(model.annotators)) {
             listUsersWithPermissions().stream() //
-                    .map(t -> t.getUsername()) //
+                    .map(t -> forUser(t.getUsername())) //
                     .forEach(annotators::add);
         }
         else {
             model.annotators.stream() //
-                    .map(t -> t.getUsername()) //
+                    .map(t -> forUser(t.getUsername())) //
                     .forEach(annotators::add);
         }
 
@@ -693,8 +695,8 @@ public class AgreementPage
     {
         // Copy the relevant information from the event to avoid having to pass the event into the
         // lambda which would cause problems here since the event is not serializable
-        var annotator1 = aEvent.getAnnotator1();
-        var annotator2 = aEvent.getAnnotator2();
+        var annotator1 = forUser(aEvent.getAnnotator1());
+        var annotator2 = forUser(aEvent.getAnnotator2());
 
         var filename = getProject().getSlug() + "-diff.csv";
         downloadBehavior.initiate(aEvent.getTarget(), filename, new PipedStreamResource((os) -> {

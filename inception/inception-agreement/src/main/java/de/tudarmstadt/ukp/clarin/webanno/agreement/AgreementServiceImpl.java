@@ -127,7 +127,7 @@ public class AgreementServiceImpl
     @Override
     public void exportDiff(OutputStream aOut, AnnotationLayer aLayer, AnnotationFeature aFeature,
             DefaultAgreementTraits aTraits, List<SourceDocument> aDocuments,
-            List<String> aAnnotators)
+            List<AnnotationSet> aAnnotators)
     {
         var project = aLayer.getProject();
 
@@ -174,15 +174,15 @@ public class AgreementServiceImpl
     }
 
     private LinkedHashMap<String, CAS> loadCasForAnnotators(SourceDocument aDocument,
-            List<AnnotationDocument> aAnnDocs, List<String> aAnnotators)
+            List<AnnotationDocument> aAnnDocs, List<AnnotationSet> aAnnotators)
         throws IOException
     {
         var casMap = new LinkedHashMap<String, CAS>();
 
         for (var annotator : aAnnotators) {
-            var maybeCas = loadCas(aDocument, AnnotationSet.forUser(annotator), aAnnDocs);
+            var maybeCas = loadCas(aDocument, annotator, aAnnDocs);
             var cas = maybeCas.isPresent() ? maybeCas.get() : loadInitialCas(aDocument);
-            casMap.put(annotator, cas);
+            casMap.put(annotator.id(), cas);
         }
 
         return casMap;

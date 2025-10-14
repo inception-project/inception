@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSessio
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
@@ -68,7 +69,8 @@ public class DocumentLayerToCsvExporter
 
     @Override
     public void export(OutputStream aOut, AnnotationLayer aLayer, AnnotationFeature aFeature,
-            Map<SourceDocument, List<AnnotationDocument>> allAnnDocs, List<String> aAnnotators)
+            Map<SourceDocument, List<AnnotationDocument>> allAnnDocs,
+            List<AnnotationSet> aDataOwners)
         throws IOException
     {
         var docs = allAnnDocs.keySet().stream() //
@@ -94,8 +96,8 @@ public class DocumentLayerToCsvExporter
             for (var doc : docs) {
                 var annDocs = allAnnDocs.get(doc);
                 try (var session = CasStorageSession.openNested()) {
-                    for (var dataOwner : aAnnotators) {
-                        var cas = loadCasOrInitialCas(doc, dataOwner, annDocs);
+                    for (var dataOwner : aDataOwners) {
+                        var cas = loadCasOrInitialCas(doc, dataOwner.id(), annDocs);
                         if (cas.getTypeSystem().getType(adapter.getAnnotationTypeName()) == null) {
                             // If the types are not defined, then we do not need to try and render
                             // them because the CAS does not contain any instances of them

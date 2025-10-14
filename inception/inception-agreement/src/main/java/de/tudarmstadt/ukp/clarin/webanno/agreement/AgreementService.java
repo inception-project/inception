@@ -25,6 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTrai
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -50,5 +51,5 @@ public interface AgreementService
      */
     void exportDiff(OutputStream aOut, AnnotationLayer aLayer, AnnotationFeature aFeature,
             DefaultAgreementTraits aTraits, List<SourceDocument> aDocuments,
-            List<String> aAnnotators);
+            List<AnnotationSet> aAnnotators);
 }

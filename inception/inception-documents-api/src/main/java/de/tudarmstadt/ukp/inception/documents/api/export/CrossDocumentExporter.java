@@ -27,6 +27,7 @@ import org.springframework.http.MediaType;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
 
@@ -44,7 +45,8 @@ public interface CrossDocumentExporter
     boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature);
 
     void export(OutputStream aOut, AnnotationLayer aLayer, AnnotationFeature aFeature,
-            Map<SourceDocument, List<AnnotationDocument>> aAllAnnDocs, List<String> aAnnotators)
+            Map<SourceDocument, List<AnnotationDocument>> aAllAnnDocs,
+            List<AnnotationSet> aDataOwners)
         throws IOException;
 
     String getFileExtension();
