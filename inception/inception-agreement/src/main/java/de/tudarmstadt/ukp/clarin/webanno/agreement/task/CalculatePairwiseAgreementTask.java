@@ -64,7 +64,7 @@ public class CalculatePairwiseAgreementTask
 
     private @Autowired DocumentService documentService;
 
-    private final List<String> annotators;
+    private final List<AnnotationSet> annotators;
     private final DefaultAgreementTraits traits;
     private final AnnotationLayer layer;
     private final AnnotationFeature feature;
@@ -109,7 +109,7 @@ public class CalculatePairwiseAgreementTask
                             break;
                         }
 
-                        var annotator1 = AnnotationSet.forUser(annotators.get(m));
+                        var annotator1 = annotators.get(m);
                         var maybeCas1 = LazyInitializer.<Optional<CAS>> builder()
                                 .setInitializer(() -> loadCas(doc, annotator1, allAnnDocs)).get();
 
@@ -132,7 +132,7 @@ public class CalculatePairwiseAgreementTask
                                 LOG.trace(
                                         "Skipping combination {}/{}@{}: {} not in a curation state",
                                         annotator1, annotator2, doc, annotator1);
-                                summary.mergeResult(annotator1.id(), annotator2,
+                                summary.mergeResult(annotator1.id(), annotator2.id(),
                                         AgreementSummary.skipped(layer, feature));
                                 continue;
                             }
@@ -140,29 +140,28 @@ public class CalculatePairwiseAgreementTask
                             if (maybeCas1.get().isEmpty()) {
                                 LOG.trace("Skipping combination {}/{}@{}: {} has no data",
                                         annotator1, annotator2, doc, annotator1);
-                                summary.mergeResult(annotator1.id(), annotator2,
+                                summary.mergeResult(annotator1.id(), annotator2.id(),
                                         AgreementSummary.skipped(layer, feature));
                                 continue;
                             }
 
                             var maybeCas2 = LazyInitializer.<Optional<CAS>> builder()
-                                    .setInitializer(() -> loadCas(doc,
-                                            AnnotationSet.forUser(annotator2), allAnnDocs))
+                                    .setInitializer(() -> loadCas(doc, annotator2, allAnnDocs))
                                     .get();
 
                             if (maybeCas2.get().isEmpty()) {
                                 LOG.trace("Skipping combination {}/{}@{}: {} has no data",
                                         annotator1, annotator2, doc, annotator2);
-                                summary.mergeResult(annotator1.id(), annotator2,
+                                summary.mergeResult(annotator1.id(), annotator2.id(),
                                         AgreementSummary.skipped(layer, feature));
                                 continue;
                             }
 
                             var casMap = new LinkedHashMap<String, CAS>();
                             casMap.put(annotator1.id(), maybeCas1.get().get());
-                            casMap.put(annotator2, maybeCas2.get().get());
+                            casMap.put(annotator2.id(), maybeCas2.get().get());
                             var res = AgreementSummary.of(measure.getAgreement(casMap));
-                            summary.mergeResult(annotator1.id(), annotator2, res);
+                            summary.mergeResult(annotator1.id(), annotator2.id(), res);
                         }
                     }
                 }
@@ -239,7 +238,7 @@ public class CalculatePairwiseAgreementTask
     public static class Builder<T extends Builder<?>>
         extends Task.Builder<T>
     {
-        private List<String> annotators;
+        private List<AnnotationSet> annotators;
         private DefaultAgreementTraits traits;
         private AnnotationLayer layer;
         private AnnotationFeature feature;
@@ -252,7 +251,7 @@ public class CalculatePairwiseAgreementTask
         }
 
         @SuppressWarnings("unchecked")
-        public T withAnnotators(List<String> aAnnotators)
+        public T withAnnotators(List<AnnotationSet> aAnnotators)
         {
             annotators = aAnnotators;
             return (T) this;
