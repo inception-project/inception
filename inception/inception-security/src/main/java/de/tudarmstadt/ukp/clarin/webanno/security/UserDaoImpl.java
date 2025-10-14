@@ -314,6 +314,14 @@ public class UserDaoImpl
     }
 
     @Override
+    public User getInitialCasUser()
+    {
+        var user = new User(INITIAL_CAS_PSEUDO_USER);
+        user.setUiName("Original");
+        return user;
+    }
+
+    @Override
     @Transactional
     public User getUserOrCurationUser(String aUsername)
     {
