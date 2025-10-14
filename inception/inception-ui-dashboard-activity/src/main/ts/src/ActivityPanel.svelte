@@ -29,12 +29,12 @@
     const EVENTS = {
         RecommendationAcceptedEvent: "recommendations accepted",
         RecommendationRejectedEvent: "recommendations rejected",
-        RelationCreatedEvent: "annotations created",
-        SpanCreatedEvent: "annotations created",
-        RelationDeletedEvent: "annotations created",
-        SpanDeletedEvent: "annotations deleted",
-        FeatureValueUpdatedEvent: "annotation updates",
-        SpanMovedEvent: "annotation updates",
+        RelationCreatedEvent: "relation creations",
+        SpanCreatedEvent: "span creations",
+        RelationDeletedEvent: "relation deletions",
+        SpanDeletedEvent: "span deletions",
+        FeatureValueUpdatedEvent: "feature value updates",
+        SpanMovedEvent: "annotation moves",
     };
 
     interface ActivitySummary {
@@ -80,11 +80,16 @@
     onMount(async () => {
         const savedYear = window.activityYear;
         const savedGranularity = window.activityGranularity;
+        const savedGrouping = window.activityGrouping;
         const savedRange = window.activityRange;
 
         year = savedYear ? parseInt(savedYear, 10) : new Date().getFullYear();
         if (savedGranularity) clickBehavior = savedGranularity as "day" | "week" | "month";
-        if (savedRange) selectedRange = JSON.parse(savedRange);
+        if (savedGrouping) groupingBehavior = savedGrouping as "byDocument" | "overall";
+        if (savedRange) {
+            selectedRange = JSON.parse(savedRange);
+            loadSummaryData(selectedRange.from, selectedRange.to);
+        }
 
         overviewData = loadOverview();
         
@@ -107,6 +112,28 @@
               };
     }
 
+    /**
+     * Calculate cell opacity for a given action count.
+     * - count === 0 -> 0.0 (invisible)
+     * - count > 0 -> baseline opacity (e.g. 0.2) to ensure visibility for small counts
+     * - scales up towards 1.0 using a log curve to compress large values
+     */
+    function getCellOpacity(count?: number) {
+        const c = Number(count || 0);
+        if (c <= 0) return 0.0;
+
+        const baseline = 0.1; // minimum visible opacity for any non-zero count
+
+        // Use a logarithmic-like scaling: normalized = log(1 + c) / log(1 + maxScale)
+        // Choose a maxScale that maps reasonable counts to near-1.0. If counts grow beyond
+        // maxScale they'll still approach 1.0 slowly.
+        const maxScale = 1000; // adjust depending on typical counts in your data
+        const normalized = Math.log(1 + c) / Math.log(1 + maxScale);
+
+        // Interpolate between baseline and 1.0
+        return Math.min(1.0, baseline + (1 - baseline) * normalized);
+    }
+
     function calculateDate(week: number, dayOfWeek: number) {
         const firstDayOfYear = dayjs(`${year}-01-01`);
         const firstDayDayOfWeek = firstDayOfYear.day();
@@ -117,6 +144,41 @@
         return date;
     }
 
+    let processedSummaryData = $derived.by(() => {
+        if (!summaryData) return undefined;
+
+        let processedData = {...summaryData};
+
+        processedData.globalItems = translateAndAggregateEvents(processedData.globalItems);
+
+        if (groupingBehavior === "overall") {
+            const aggregateItems: Record<string, ActivitySummaryItem> = {};
+            for (const items of Object.values(processedData.perDocumentItems || {})) {
+                for (const item of items || []) {
+                    if (!aggregateItems[item.event]) {
+                        aggregateItems[item.event] = {event: item.event, count: 0};
+                    }
+
+                    aggregateItems[item.event].count += item.count;
+                }
+            }
+
+            processedData.perDocumentItems = {
+                "Documents": Object.values(aggregateItems)
+            };
+        }
+
+        const originalPerDoc = processedData.perDocumentItems || {};
+        processedData.perDocumentItems = Object.fromEntries(
+            Object.entries(originalPerDoc).map(([documentName, items]) => [
+                documentName,
+                translateAndAggregateEvents(items)
+            ])
+        );
+
+        return processedData;
+    })
+
     async function loadSummaryData(from: string, to?: string) {
         let url = summaryDataUrl + `?from=${encodeURIComponent(from)}`;
         if (to) {
@@ -125,17 +187,9 @@
         if (dataOwner) {
             url += `&dataOwner=${encodeURIComponent(dataOwner)}`;
         }
-        const res = await fetch(url);
-        summaryData = await res.json();
 
-        summaryData.globalItems = translateAndAggregateEvents(
-            summaryData.globalItems,
-        );
-        const originalPerDoc = summaryData.perDocumentItems || {};
-        for (const [documentName, items] of Object.entries(originalPerDoc)) {
-            summaryData.perDocumentItems[documentName] =
-                translateAndAggregateEvents(items);
-        }
+        const res = await fetch(url);
+        summaryData = await res.json() as ActivitySummary;
     }
 
     function getMonthStartingInWeek(week) {
@@ -209,6 +263,7 @@
 
     // Add a reactive variable to track the selected click behavior
     let clickBehavior: "day" | "week" | "month" = $state("day");
+    let groupingBehavior: "byDocument" | "overall" = $state("byDocument");
 
     // Add a reactive variable to store the selected range
     let selectedRange: { from: string; to: string } = $state({ from: "", to: "" });
@@ -240,6 +295,7 @@
         
         if (year) window.activityYear = year.toString();
         window.activityGranularity = clickBehavior;
+        window.activityGrouping = groupingBehavior;
         if (selectedRange) window.activityRange = JSON.stringify(selectedRange);
     });
 </script>
@@ -330,10 +386,7 @@
                                         style:visibility={item?.outOfRange
                                             ? "hidden"
                                             : "visible"}
-                                        style:--opacity={Math.min(
-                                            100.0,
-                                            item?.count | 1,
-                                        ) / 100.0}
+                                        style:--opacity={getCellOpacity(item?.count)}
                                         title={dayjs(item.date).format("dddd, LL") +
                                             " - " +
                                             item.count +
@@ -388,20 +441,40 @@
         </div>
     </div>
 {:else}
-    {#if summaryData}
+    {#if processedSummaryData}
         <div
             class="d-flex flex-row justify-content-between small text-muted m-2"
         >
-            <div>{dayjs(summaryData.from).format("LL")} - {dayjs(summaryData.to).format("LL")}</div>
+            <div>{dayjs(processedSummaryData.from).format("LL")} - {dayjs(processedSummaryData.to).format("LL")}</div>
+            <div>
+                <div class="btn-group" role="group" aria-label="Grouping">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary"
+                        class:active={groupingBehavior === "byDocument"}
+                        onclick={() => (groupingBehavior = "byDocument")}
+                    >
+                        by document
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary"
+                        class:active={groupingBehavior === "overall"}
+                        onclick={() => (groupingBehavior = "overall")}
+                    >
+                        overall
+                    </button>
+                </div>
+            </div>
         </div>
     {/if}
-    {#if summaryData && (!summaryData.globalItems || summaryData.globalItems.length === 0) && (!summaryData.perDocumentItems || Object.keys(summaryData.perDocumentItems).length === 0)}
+    {#if processedSummaryData && (!processedSummaryData.globalItems || processedSummaryData.globalItems.length === 0) && (!processedSummaryData.perDocumentItems || Object.keys(processedSummaryData.perDocumentItems).length === 0)}
         <div class="flex-content no-data-notice m-0">
             <span>No activity</span>
         </div>
-    {:else if summaryData}
+    {:else if processedSummaryData}
         <div class="list-group m-2">
-            {#each Object.entries(summaryData.perDocumentItems).sort( ([a], [b]) => a.localeCompare(b), ) as [document, items]}
+            {#each Object.entries(processedSummaryData.perDocumentItems).sort( ([a], [b]) => a.localeCompare(b), ) as [document, items]}
                 <div
                     class="list-group-item d-flex justify-content-between align-items-start"
                 >
@@ -424,7 +497,7 @@
                     </div>
                 </div>
             {/each}
-            {#if summaryData.globalItems && summaryData.globalItems.length > 0}
+            {#if processedSummaryData.globalItems && processedSummaryData.globalItems.length > 0}
                 <div
                     class="list-group-item d-flex justify-content-between align-items-start"
                 >
@@ -432,7 +505,7 @@
                         <div class="fw-bold text-break">
                             Project-level activities
                         </div>
-                        {#each summaryData.globalItems || [] as item}
+                        {#each processedSummaryData.globalItems || [] as item}
                             <div
                                 class="ms-3 me-auto small"
                                 title={Array.from(item?.subsumed || []).join(", ")}
