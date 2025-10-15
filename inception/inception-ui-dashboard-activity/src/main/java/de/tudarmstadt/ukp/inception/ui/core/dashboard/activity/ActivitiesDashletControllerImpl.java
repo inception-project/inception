@@ -62,6 +62,8 @@ import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.event.ChainLinkCr
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.event.ChainLinkDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.event.ChainSpanCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.event.ChainSpanDeletedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.event.DocumentMetadataCreatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.event.DocumentMetadataDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.event.RelationCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.event.RelationDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.event.SpanCreatedEvent;
@@ -105,8 +107,8 @@ public class ActivitiesDashletControllerImpl
             ChainSpanCreatedEvent.class.getSimpleName(), //
             ChainSpanDeletedEvent.class.getSimpleName(), //
             FeatureValueUpdatedEvent.class.getSimpleName(), //
-            "DocumentMetadataCreatedEvent", //
-            "DocumentMetadataDeletedEvent");
+            DocumentMetadataCreatedEvent.class.getSimpleName(), //
+            DocumentMetadataDeletedEvent.class.getSimpleName());
 
     @Autowired
     public ActivitiesDashletControllerImpl(EventRepository aEventRepository,
@@ -271,16 +273,13 @@ public class ActivitiesDashletControllerImpl
     private List<SummarizedLoggedEvent> summarizeEvents(Project project, Instant begin, Instant end,
             User dataOwner)
     {
-        List<SummarizedLoggedEvent> recentEvents;
         if (userRepository.getCurationUser().equals(dataOwner)) {
-            recentEvents = eventRepository.summarizeEventsByDataOwner(dataOwner.getUsername(),
-                    project, begin, end);
+            return eventRepository.summarizeEventsByDataOwner(dataOwner.getUsername(), project,
+                    begin, end);
         }
-        else {
-            recentEvents = eventRepository.summarizeEventsBySessionOwner(dataOwner.getUsername(),
-                    project, begin, end);
-        }
-        return recentEvents;
+
+        return eventRepository.summarizeEventsBySessionOwner(dataOwner.getUsername(), project,
+                begin, end);
     }
 
     private User getDataOwner(Optional<String> aDataOwner, User aSessionOwner)
