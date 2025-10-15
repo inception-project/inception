@@ -157,19 +157,22 @@ class UserSelectionPanel
                 }
                 else {
                     // offer all enabled users matching the input
+                    var currentProjectRealm = projectRepository.getRealm(projectModel.getObject());
                     userRepository.listEnabledUsers().stream() //
                             .filter(user -> {
-                                if (user.getRealm() == null) {
+                                var userRealm = user.getRealm();
+
+                                if (userRealm == null) {
                                     return true;
                                 }
 
                                 // Project-bound users from other projects cannot be added
-                                if (user.getRealm().startsWith(Realm.REALM_PROJECT_PREFIX
-                                        + projectModel.getObject().getId())) {
-                                    return true;
+                                if (Realm.isProjectRealm(userRealm)
+                                        && !currentProjectRealm.getId().equals(userRealm)) {
+                                    return false;
                                 }
 
-                                return false;
+                                return true;
                             }).filter(user -> aInput == null || user.getUsername().contains(aInput)
                                     || user.getUiName().contains(aInput))
                             .forEach(result::add);
