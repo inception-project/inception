@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>38.3</version>
+    <version>38.4-SNAPSHOT</version>
   </parent>
   <artifactId>inception-layer-chain</artifactId>
   <name>INCEpTION - Layer Support - Chain</name>
