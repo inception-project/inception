@@ -183,10 +183,6 @@
       <artifactId>wicket-request</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.wicketstuff</groupId>
-      <artifactId>wicketstuff-annotationeventdispatcher</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>

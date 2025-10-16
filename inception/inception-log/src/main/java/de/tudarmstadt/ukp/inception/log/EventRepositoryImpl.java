@@ -19,7 +19,10 @@ package de.tudarmstadt.ukp.inception.log;
 
 import static java.lang.String.join;
 import static java.time.temporal.ChronoUnit.DAYS;
+import static java.util.Arrays.asList;
+import static java.util.Optional.empty;
 
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -28,6 +31,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang3.function.FailableConsumer;
@@ -39,10 +43,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
+import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
+import de.tudarmstadt.ukp.inception.log.model.FeatureChangeDetails;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent_;
 import de.tudarmstadt.ukp.inception.log.model.SummarizedLoggedEvent;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Tuple;
@@ -86,7 +95,65 @@ public class EventRepositoryImpl
     }
 
     @Override
-    @Transactional
+    public Optional<Range> getLastEditRange(SourceDocument aDocument, String aDataOwner)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createQuery(LoggedEvent.class);
+        var root = cq.from(LoggedEvent.class);
+
+        // Predicates for filtering
+        var documentPredicate = cb.equal(root.get(LoggedEvent_.document), aDocument.getId());
+        var dataOwnerPredicate = cb.equal(root.get(LoggedEvent_.annotator), aDataOwner);
+
+        var eventPredicate = cb.or( //
+                root.get(LoggedEvent_.event).in(asList( //
+                        "ChainLinkCreatedEvent", //
+                        "ChainSpanCreatedEvent", //
+                        "DocumentMetadataCreatedEvent", //
+                        "RelationCreatedEvent", //
+                        "SpanCreatedEvent")),
+                cb.equal(root.get(LoggedEvent_.event), "SpanMovedEvent"), //
+                cb.equal(root.get(LoggedEvent_.event), "FeatureValueUpdatedEvent"));
+
+        // Combine all together with AND
+        cq.select(root).where(cb.and(documentPredicate, dataOwnerPredicate, eventPredicate))
+                .orderBy(cb.desc(root.get("created"))); // Most recent first
+
+        // Build query and limit to 1 result
+        var query = entityManager.createQuery(cq).setMaxResults(1);
+
+        var latestEvent = query.getResultStream().findFirst().orElse(null);
+        if (latestEvent == null) {
+            return empty();
+        }
+
+        // Extract range from details
+        var detailsString = latestEvent.getDetails();
+        if ("FeatureValueUpdatedEvent".equals(latestEvent.getEvent())) {
+            try {
+                var details = JSONUtil.fromJsonString(FeatureChangeDetails.class, detailsString);
+                return Optional.of(new Range(details.getAnnotation().getBegin(),
+                        details.getAnnotation().getEnd()));
+            }
+            catch (IOException e) {
+                // Maybe it is not a feature update event after all
+            }
+        }
+
+        try {
+            var details = JSONUtil.fromJsonString(AnnotationDetails.class, detailsString);
+            return Optional.of(new Range(details.getBegin(), details.getEnd()));
+
+        }
+        catch (IOException e) {
+            // Maybe it is not an annotation event after all
+        }
+
+        return empty();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<LoggedEvent> listRecentActivity(Project aProject, String aUsername,
             Collection<String> aEventTypes, int aMaxSize)
     {
@@ -125,6 +192,7 @@ public class EventRepositoryImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<LoggedEvent> listRecentActivity(String aUsername, int aMaxSize)
     {
         var query = join("\n", //
@@ -139,7 +207,7 @@ public class EventRepositoryImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public <E extends Throwable> void forEachLoggedEvent(Project aProject,
             FailableConsumer<LoggedEvent, E> aConsumer)
     {
@@ -157,6 +225,7 @@ public class EventRepositoryImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SummarizedLoggedEvent> summarizeEventsBySessionOwner(String aSessionOwner,
             Project aProject, Instant aFrom, Instant aTo)
     {
@@ -192,6 +261,7 @@ public class EventRepositoryImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SummarizedLoggedEvent> summarizeEventsByDataOwner(String aDataOwner,
             Project aProject, Instant aFrom, Instant aTo)
     {
