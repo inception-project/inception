@@ -63,7 +63,7 @@ public class ExternalAnnotationEditor
                     getUrlForPluginAsset(resPath));
         }
 
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
 
         return documentViewExtensionPoint.getExtension(getDescription().getView()) //
                 .map(ext -> ext.createView(CID_VIS, Model.of(state.getDocument()),

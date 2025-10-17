@@ -42,6 +42,8 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
   private documentStructureNavigator: Element
   private userPreferencesKey: string
   private navigatorContainer: HTMLElement
+  private deferredInitializationSteps: (() => void)[] = []
+  private initializationComplete = false
 
   public constructor (element: Element, ajax: DiamAjax, userPreferencesKey: string, sectionElementLocalNames: Set<string>) {
     this.ajax = ajax
@@ -122,6 +124,13 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
       this.root.addEventListener('mousedown', e => this.cancelRightClick(e), { capture: true })
       this.root.addEventListener('mouseup', e => this.cancelRightClick(e), { capture: true })
       this.root.addEventListener('mouseclick', e => this.cancelRightClick(e), { capture: true })
+    })
+    .then(() => {
+      this.deferredInitializationSteps.forEach(fn => fn());
+      this.deferredInitializationSteps = [];
+    })
+    .then(() => {
+      this.initializationComplete = true
     })
   }
 
@@ -298,6 +307,11 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
   }
 
   scrollTo (args: { offset: number, position?: string, pingRanges?: Offsets[] }): void {
+    if (!this.initializationComplete) {
+      this.deferredInitializationSteps.push(() => this.vis.scrollTo(args))
+      return;
+    }
+
     this.vis?.scrollTo(args)
   }
 

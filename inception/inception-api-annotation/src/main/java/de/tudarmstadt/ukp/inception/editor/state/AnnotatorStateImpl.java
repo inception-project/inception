@@ -356,10 +356,9 @@ public class AnnotatorStateImpl
     @Override
     public void setPageBegin(CAS aCas, int aOffset)
     {
-        PagingStrategy ps = getPagingStrategy();
-
-        setVisibleUnits(ps.unitsStartingAtOffset(aCas, aOffset, getPreferences().getWindowSize()),
-                ps.unitCount(aCas));
+        var ps = getPagingStrategy();
+        var units = ps.unitsStartingAtOffset(aCas, aOffset, getPreferences().getWindowSize());
+        setVisibleUnits(units, ps.unitCount(aCas));
     }
 
     @Override

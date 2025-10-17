@@ -178,6 +178,7 @@ export class ApacheAnnotatorVisualizer {
     }
 
     const endTime = performance.now()
+
     console.log(`Client-side rendering took ${endTime - startTime}ms`)
   }
 
@@ -551,6 +552,14 @@ export class ApacheAnnotatorVisualizer {
     this.sectionAnnotationCreator.resume()
     this.sectionAnnotationVisualizer.resume()
     this.lastScrollTop = undefined
+
+    // Workaround for Firefox somehow scrolling the page body a bit when we scroll
+    // inside the iframe during page loading
+    if (navigator.userAgent.includes("Firefox")) {
+      if (window?.parent?.document?.body?.scrollTop) {
+        window.parent.document.body.scrollTop = 0
+      }
+    }
   }
 
   private clearHighlights (): void {

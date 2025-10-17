@@ -115,7 +115,8 @@ public interface PagingStrategy
     default List<Unit> unitsStartingAtOffset(CAS aCas, int aOffset, int aCount)
     {
         return units(aCas).stream() //
-                .filter(unit -> unit.getBegin() >= aOffset) //
+                .filter(unit -> unit.getBegin() >= aOffset
+                        || unit.getBegin() <= aOffset && aOffset < unit.getEnd()) //
                 .limit(aCount) //
                 .collect(toList());
     }

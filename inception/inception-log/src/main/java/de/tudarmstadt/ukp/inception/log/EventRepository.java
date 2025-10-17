@@ -20,12 +20,15 @@ package de.tudarmstadt.ukp.inception.log;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.function.FailableConsumer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.log.model.SummarizedLoggedEvent;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public interface EventRepository
 {
@@ -35,6 +38,8 @@ public interface EventRepository
 
     <E extends Throwable> void forEachLoggedEvent(Project aProject,
             FailableConsumer<LoggedEvent, E> aConsumer);
+
+    Optional<Range> getLastEditRange(SourceDocument aDocument, String aDataOwner);
 
     List<LoggedEvent> listRecentActivity(Project aProject, String aDataOwner,
             Collection<String> aEventTypes, int aMaxSize);
