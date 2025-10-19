@@ -56,6 +56,8 @@ public class PivotTableDataProvider<A extends Serializable, T>
     private final List<CompoundKey> rowKeys = new ArrayList<>();
     private final Set<CompoundKey> columnKeys;
     private final boolean showCellControls;
+    private int offeredItemCount;
+    private int addedItemCount;
 
     private PivotTableFilterState filterState;
 
@@ -67,6 +69,18 @@ public class PivotTableDataProvider<A extends Serializable, T>
         columnKeys = aBuilder.columnKeys;
         setSort(ROW_KEY, ASCENDING);
         filterState = new PivotTableFilterState();
+        addedItemCount = aBuilder.addedItemCount;
+        offeredItemCount = aBuilder.offeredItemCount;
+    }
+    
+    public int getAddedItemCount()
+    {
+        return addedItemCount;
+    }
+    
+    public int getOfferedItemCount()
+    {
+        return offeredItemCount;
     }
 
     @Override
@@ -275,6 +289,9 @@ public class PivotTableDataProvider<A extends Serializable, T>
 
         private final Map<CompoundKey, Map<CompoundKey, A>> rows = new HashMap<>();
         private final Set<CompoundKey> columnKeys = new TreeSet<>();
+        
+        private int offeredItemCount = 0;
+        private int addedItemCount = 0;
 
         private Builder(CompoundKeyBuilder<T> aRowBuilder, CompoundKeyBuilder<T> aColBuilder,
                 CompoundKeyBuilder<T> aCellBuilder, Aggregator<A, Object> aAggregator)
@@ -285,26 +302,31 @@ public class PivotTableDataProvider<A extends Serializable, T>
             aggregator = aAggregator;
         }
 
-        public void add(T item)
+        public boolean add(T item)
         {
+            offeredItemCount++;
+            
             var rowKey = rowBuilder.buildKey(item, aggregator);
             var colKey = colBuilder.buildKey(item, aggregator);
             var cellValue = cellBuilder.buildKey(item, aggregator);
 
             if (!(rowKey.getSchema().isWeak() && colKey.getSchema().isWeak())) {
                 if (rowKey.isWeak() && colKey.isWeak()) {
-                    return;
+                    return false;
                 }
             }
 
             columnKeys.add(colKey);
 
+            addedItemCount++;
             rows.computeIfAbsent(rowKey, rk -> new HashMap<>()).compute(colKey, (k, v) -> {
                 if (v == null) {
                     v = aggregator.initialValue();
                 }
                 return aggregator.aggregate(v, cellValue);
             });
+            
+            return true;
         }
 
         public PivotTableDataProvider<A, T> build()

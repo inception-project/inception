@@ -22,12 +22,15 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AU
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
+import static java.util.Optional.empty;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +73,7 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
     private final Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
     private final List<? extends Extractor<T, ? extends Serializable>> rowExtractors;
     private final List<? extends Extractor<T, ? extends Serializable>> colExtractors;
+    private final List<LogMessage> logMessages = new ArrayList<>();
 
     private PivotTableDataProvider.Builder<A, T> summary;
 
@@ -93,6 +97,12 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
                 .sorted(comparing(SourceDocument::getName)) //
                 .toList();
 
+        LOG.debug("Collecting data for [{}] documents and [{}] data owners", docs.size(),
+                dataOwners.size());
+
+        var totalCasLoadedCount = 0;
+        var totalFsAddedCount = 0;
+        var totalFsSeenCount = 0;
         try (var progress = getMonitor().openScope("documents", allAnnDocs.size())) {
             for (var doc : docs) {
                 if (getMonitor().isCancelled()) {
@@ -102,6 +112,9 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
                 progress.update(up -> up.increment() //
                         .addMessage(LogMessage.info(this, doc.getName())));
 
+                var fsAddedCount = 0;
+                var fsSeenCount = 0;
+
                 try (var session = CasStorageSession.openNested()) {
                     for (int m = 0; m < dataOwners.size(); m++) {
                         if (getMonitor().isCancelled()) {
@@ -109,13 +122,14 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
                         }
 
                         var dataOwner = dataOwners.get(m);
-                        var maybeCas = loadCas(doc, dataOwner, allAnnDocs);
+                        var maybeCas = loadSharedReadOnlyCas(doc, dataOwner, allAnnDocs);
 
                         if (maybeCas.isEmpty()) {
                             continue;
                         }
 
                         var cas = maybeCas.get();
+                        totalCasLoadedCount++;
 
                         var triggerTypes = new HashSet<String>();
                         rowExtractors.stream() //
@@ -131,20 +145,56 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
 
                         var seen = new IntOpenHashSet();
                         for (var triggerType : triggerTypes) {
-                            for (var fs : cas.select(triggerType)) {
+                            var type = cas.getTypeSystem().getType(triggerType);
+                            if (type == null) {
+                                // Can happen if a CAS has not yet been updated to the latest
+                                // project type system
+                                LOG.debug("Type [{}] not found in CAS - skipping", triggerType);
+                                continue;
+                            }
+
+                            for (var fs : cas.select(type)) {
                                 var addr = ICasUtil.getAddr(fs);
                                 if (!seen.contains(addr)) {
-                                    summary.add((T) fs);
+                                    @SuppressWarnings("unchecked")
+                                    var added = summary.add((T) fs);
+                                    if (added) {
+                                        totalFsAddedCount++;
+                                        fsAddedCount++;
+                                    }
                                     seen.add(addr);
+                                    totalFsSeenCount++;
+                                    fsSeenCount++;
                                 }
                             }
+                        }
+
+                        if (LOG.isDebugEnabled()) {
+                            var detail = "";
+                            if (totalFsSeenCount - totalFsAddedCount > 0) {
+                                detail = format(" (%d FSes skipped)",
+                                        totalFsSeenCount - totalFsAddedCount);
+                            }
+                            LOG.debug("[{}]@{} Added [{}/{}] FSes{}. Trigger types: {}",
+                                    dataOwner, doc, fsAddedCount, fsSeenCount, detail, triggerTypes);
                         }
                     }
                 }
                 catch (Exception e) {
                     LOG.error("Unable to load data", e);
+                    logMessages
+                            .add(LogMessage.error(this, "Unable to load data: %s", e.getMessage()));
                 }
             }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            var detail = "";
+            if (totalFsSeenCount - totalFsAddedCount > 0) {
+                detail = format(" (%d FSes skipped)", totalFsSeenCount - totalFsAddedCount);
+            }
+            LOG.debug("Seen [{}] CASes. Added [{}/{}] FSes overall{}", totalCasLoadedCount,
+                    totalFsAddedCount, totalFsSeenCount, detail);
         }
     }
 
@@ -162,34 +212,35 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
         return cas;
     }
 
-    private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner,
+    private Optional<CAS> loadSharedReadOnlyCas(SourceDocument aDocument, String aDataOwner,
             Map<SourceDocument, List<AnnotationDocument>> aAllAnnDocs)
         throws IOException
     {
         if (CURATION_USER.equals(aDataOwner)) {
             if (!asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(aDocument.getState())) {
-                return Optional.empty();
+                return empty();
             }
 
-            return loadCas(aDocument, aDataOwner);
+            return loadSharedReadOnlyCas(aDocument, aDataOwner);
         }
 
         var annDocs = aAllAnnDocs.get(aDocument);
 
         var effectiveState = annDocs.stream() //
-                .filter(annDoc -> aDataOwner.equals(annDoc.getUser())) //
+                .filter(annDoc -> aDataOwner.equals(annDoc.getAnnotationSet().id())) //
                 .map(annDoc -> annDoc.getState()) //
                 .findFirst() //
                 .orElse(AnnotationDocumentState.NEW);
 
         return switch (effectiveState) {
-        case IGNORE -> Optional.empty();
+        case IGNORE -> empty();
         case NEW -> Optional.of(loadInitialCas(aDocument));
-        default -> loadCas(aDocument, aDataOwner);
+        default -> loadSharedReadOnlyCas(aDocument, aDataOwner);
         };
     }
 
-    private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner) throws IOException
+    private Optional<CAS> loadSharedReadOnlyCas(SourceDocument aDocument, String aDataOwner)
+        throws IOException
     {
         var cas = documentService.readAnnotationCas(aDocument, AnnotationSet.forUser(aDataOwner),
                 AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
