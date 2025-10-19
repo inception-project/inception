@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.inception.pivot.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
@@ -52,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.pivot.api.aggregator.Aggregator;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.Extractor;
 import de.tudarmstadt.ukp.inception.pivot.table.PivotTableDataProvider;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
@@ -71,11 +72,11 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
 
     private final List<String> dataOwners;
     private final Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
-    private final List<? extends Extractor<T, ? extends Serializable>> rowExtractors;
-    private final List<? extends Extractor<T, ? extends Serializable>> colExtractors;
+    private final List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> rowExtractors;
+    private final List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> colExtractors;
     private final List<LogMessage> logMessages = new ArrayList<>();
 
-    private PivotTableDataProvider.Builder<A, T> summary;
+    private PivotTableDataProvider.Builder<A, ContextualizedFS<T>> summary;
 
     public CollectTableDataTask(Builder<? extends Builder<?, ?, ?>, A, T> aBuilder)
     {
@@ -121,7 +122,7 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
                             break;
                         }
 
-                        var dataOwner = dataOwners.get(m);
+                        var dataOwner = AnnotationSet.forUser(dataOwners.get(m));
                         var maybeCas = loadSharedReadOnlyCas(doc, dataOwner, allAnnDocs);
 
                         if (maybeCas.isEmpty()) {
@@ -157,7 +158,8 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
                                 var addr = ICasUtil.getAddr(fs);
                                 if (!seen.contains(addr)) {
                                     @SuppressWarnings("unchecked")
-                                    var added = summary.add((T) fs);
+                                    var contextualizedFS = new ContextualizedFS<T>(dataOwner, (T) fs);
+                                    var added = summary.add(contextualizedFS);
                                     if (added) {
                                         totalFsAddedCount++;
                                         fsAddedCount++;
@@ -212,11 +214,11 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
         return cas;
     }
 
-    private Optional<CAS> loadSharedReadOnlyCas(SourceDocument aDocument, String aDataOwner,
+    private Optional<CAS> loadSharedReadOnlyCas(SourceDocument aDocument, AnnotationSet aDataOwner,
             Map<SourceDocument, List<AnnotationDocument>> aAllAnnDocs)
         throws IOException
     {
-        if (CURATION_USER.equals(aDataOwner)) {
+        if (CURATION_SET.equals(aDataOwner)) {
             if (!asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(aDocument.getState())) {
                 return empty();
             }
@@ -227,7 +229,7 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
         var annDocs = aAllAnnDocs.get(aDocument);
 
         var effectiveState = annDocs.stream() //
-                .filter(annDoc -> aDataOwner.equals(annDoc.getAnnotationSet().id())) //
+                .filter(annDoc -> aDataOwner.equals(annDoc.getAnnotationSet())) //
                 .map(annDoc -> annDoc.getState()) //
                 .findFirst() //
                 .orElse(AnnotationDocumentState.NEW);
@@ -239,10 +241,10 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
         };
     }
 
-    private Optional<CAS> loadSharedReadOnlyCas(SourceDocument aDocument, String aDataOwner)
+    private Optional<CAS> loadSharedReadOnlyCas(SourceDocument aDocument, AnnotationSet aDataOwner)
         throws IOException
     {
-        var cas = documentService.readAnnotationCas(aDocument, AnnotationSet.forUser(aDataOwner),
+        var cas = documentService.readAnnotationCas(aDocument, aDataOwner,
                 AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
 
         // Set the CAS name in the DocumentMetaData so that we can pick it
@@ -260,9 +262,9 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
     }
 
     public static <T extends FeatureStructure, R extends Serializable> Builder<Builder<?, R, T>, R, T> builder(
-            List<? extends Extractor<T, ? extends Serializable>> rowExtractors,
-            List<? extends Extractor<T, ? extends Serializable>> colExtractors,
-            List<? extends Extractor<T, ? extends Serializable>> cellExtractors,
+            List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> rowExtractors,
+            List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> colExtractors,
+            List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> cellExtractors,
             Aggregator<R, Object> aAggregator)
     {
         return new Builder<>(rowExtractors, colExtractors, cellExtractors, aAggregator);
@@ -271,17 +273,17 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
     public static class Builder<B extends Builder<?, A, T>, A extends Serializable, T extends FeatureStructure>
         extends Task.Builder<B>
     {
-        private final List<? extends Extractor<T, ? extends Serializable>> rowExtractors;
-        private final List<? extends Extractor<T, ? extends Serializable>> colExtractors;
-        private final List<? extends Extractor<T, ? extends Serializable>> cellExtractors;
+        private final List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> rowExtractors;
+        private final List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> colExtractors;
+        private final List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> cellExtractors;
         private final Aggregator<A, Object> aggregator;
 
         private List<String> dataOwners;
         private Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
 
-        protected Builder(List<? extends Extractor<T, ? extends Serializable>> aRowExtractors,
-                List<? extends Extractor<T, ? extends Serializable>> aColExtractors,
-                List<? extends Extractor<T, ? extends Serializable>> aCellExtractors,
+        protected Builder(List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> aRowExtractors,
+                List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> aColExtractors,
+                List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> aCellExtractors,
                 Aggregator<A, Object> aAggregator)
         {
             rowExtractors = aRowExtractors;

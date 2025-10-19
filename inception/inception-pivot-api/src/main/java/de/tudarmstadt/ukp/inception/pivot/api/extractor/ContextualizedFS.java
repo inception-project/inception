@@ -17,13 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.pivot.api.extractor;
 
-import java.io.Serializable;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 
-import org.apache.uima.cas.text.AnnotationFS;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 
-public interface AnnotationExtractor<T extends AnnotationFS, R extends Serializable>
-    extends Extractor<ContextualizedFS<T>, R>
-{
-    String RANGE = "<range>";
-    String TEXT = "<text>";
+public record ContextualizedFS<T extends FeatureStructure>(AnnotationSet dataOwner, T fs) {
+
+    public CAS getCAS() {
+        return fs.getCAS();
+    }
 }

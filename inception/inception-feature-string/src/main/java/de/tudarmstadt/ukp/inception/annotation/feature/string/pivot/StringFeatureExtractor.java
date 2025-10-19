@@ -23,6 +23,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
 
 public class StringFeatureExtractor
     extends AnnotationExtractor_ImplBase<AnnotationFS, String>
@@ -42,10 +43,11 @@ public class StringFeatureExtractor
     }
 
     @Override
-    public String extract(AnnotationFS aAnn)
+    public String extract(ContextualizedFS<AnnotationFS> aAnn)
     {
-        var f = aAnn.getType().getFeatureByBaseName(feature.getName());
-        return trimToNull(aAnn.getFeatureValueAsString(f));
+        var ann = aAnn.fs();
+        var f = ann.getType().getFeatureByBaseName(feature.getName());
+        return trimToNull(ann.getFeatureValueAsString(f));
     }
 
     @Override

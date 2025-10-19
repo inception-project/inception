@@ -22,6 +22,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
 
 public class DocumentNameExtractor
     extends AnnotationExtractor_ImplBase<AnnotationFS, String>
@@ -47,17 +48,21 @@ public class DocumentNameExtractor
     }
 
     @Override
-    public String extract(AnnotationFS aAnn)
+    public String extract(ContextualizedFS<AnnotationFS> aAnn)
     {
+        var ann = aAnn.fs();
+        var cas = ann.getCAS();
+        var docAnn = cas.getDocumentAnnotation();
+        
         // Avoid fetching the DocumentMetaData annotation each time
-        if (cacheMarker == aAnn.getCAS().getDocumentAnnotation()) {
+        if (cacheMarker == docAnn) {
             return documentName;
         }
 
-        cacheMarker = aAnn.getCAS().getDocumentAnnotation();
+        cacheMarker = docAnn;
         documentName = null;
 
-        var dmd = DocumentMetaData.get(aAnn.getCAS());
+        var dmd = DocumentMetaData.get(cas);
         if (dmd != null) {
             documentName = dmd.getDocumentTitle();
         }
