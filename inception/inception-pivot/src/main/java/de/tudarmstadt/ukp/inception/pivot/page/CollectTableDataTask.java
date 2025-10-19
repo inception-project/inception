@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.pivot.api.aggregator.Aggregator;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.Extractor;
 import de.tudarmstadt.ukp.inception.pivot.table.PivotTableDataProvider;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
@@ -70,11 +71,11 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
 
     private final List<String> dataOwners;
     private final Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
-    private final List<? extends Extractor<T, ? extends Serializable>> rowExtractors;
-    private final List<? extends Extractor<T, ? extends Serializable>> colExtractors;
+    private final List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> rowExtractors;
+    private final List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> colExtractors;
     private final List<LogMessage> logMessages = new ArrayList<>();
 
-    private PivotTableDataProvider.Builder<A, T> summary;
+    private PivotTableDataProvider.Builder<A, ContextualizedFS<T>> summary;
 
     public CollectTableDataTask(Builder<? extends Builder<?, ?, ?>, A, T> aBuilder)
     {
@@ -156,7 +157,8 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
                                 var addr = ICasUtil.getAddr(fs);
                                 if (!seen.contains(addr)) {
                                     @SuppressWarnings("unchecked")
-                                    var added = summary.add((T) fs);
+                                    var contextualizedFS = new ContextualizedFS<T>(dataOwner, (T) fs);
+                                    var added = summary.add(contextualizedFS);
                                     if (added) {
                                         totalFsAddedCount++;
                                         fsAddedCount++;
@@ -259,9 +261,9 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
     }
 
     public static <T extends FeatureStructure, R extends Serializable> Builder<Builder<?, R, T>, R, T> builder(
-            List<? extends Extractor<T, ? extends Serializable>> rowExtractors,
-            List<? extends Extractor<T, ? extends Serializable>> colExtractors,
-            List<? extends Extractor<T, ? extends Serializable>> cellExtractors,
+            List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> rowExtractors,
+            List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> colExtractors,
+            List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> cellExtractors,
             Aggregator<R, Object> aAggregator)
     {
         return new Builder<>(rowExtractors, colExtractors, cellExtractors, aAggregator);
@@ -270,17 +272,17 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
     public static class Builder<B extends Builder<?, A, T>, A extends Serializable, T extends FeatureStructure>
         extends Task.Builder<B>
     {
-        private final List<? extends Extractor<T, ? extends Serializable>> rowExtractors;
-        private final List<? extends Extractor<T, ? extends Serializable>> colExtractors;
-        private final List<? extends Extractor<T, ? extends Serializable>> cellExtractors;
+        private final List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> rowExtractors;
+        private final List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> colExtractors;
+        private final List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> cellExtractors;
         private final Aggregator<A, Object> aggregator;
 
         private List<String> dataOwners;
         private Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
 
-        protected Builder(List<? extends Extractor<T, ? extends Serializable>> aRowExtractors,
-                List<? extends Extractor<T, ? extends Serializable>> aColExtractors,
-                List<? extends Extractor<T, ? extends Serializable>> aCellExtractors,
+        protected Builder(List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> aRowExtractors,
+                List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> aColExtractors,
+                List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> aCellExtractors,
                 Aggregator<A, Object> aAggregator)
         {
             rowExtractors = aRowExtractors;

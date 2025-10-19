@@ -60,12 +60,12 @@ public abstract class AnnotationExtractor_ImplBase<T extends AnnotationFS, R ext
     @Override
     public boolean accepts(Object aSource)
     {
-        if (aSource instanceof AnnotationFS ann) {
+        if (aSource instanceof ContextualizedFS ann) {
             if (layer == null) {
                 return true;
             }
 
-            return layer.getName().equals(ann.getType().getName());
+            return layer.getName().equals(ann.fs().getType().getName());
         }
 
         return false;

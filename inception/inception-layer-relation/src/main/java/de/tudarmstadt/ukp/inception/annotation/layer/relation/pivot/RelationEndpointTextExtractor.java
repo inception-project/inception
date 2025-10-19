@@ -21,6 +21,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
 
 public class RelationEndpointTextExtractor
     extends AnnotationExtractor_ImplBase<AnnotationFS, String>
@@ -40,10 +41,11 @@ public class RelationEndpointTextExtractor
     }
 
     @Override
-    public String extract(AnnotationFS aAnn)
+    public String extract(ContextualizedFS<AnnotationFS> aAnn)
     {
-        var f = aAnn.getType().getFeatureByBaseName(feature);
-        var a = (AnnotationFS) aAnn.getFeatureValue(f);
+        var ann = aAnn.fs();
+        var f = ann.getType().getFeatureByBaseName(feature);
+        var a = (AnnotationFS) ann.getFeatureValue(f);
         return a != null ? a.getCoveredText() : null;
     }
 

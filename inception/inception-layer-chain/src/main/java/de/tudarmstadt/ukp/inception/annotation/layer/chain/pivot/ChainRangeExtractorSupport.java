@@ -23,6 +23,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.Extractor;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerExtractorSupport;
 
@@ -50,7 +51,7 @@ public class ChainRangeExtractorSupport
     }
 
     @Override
-    public Extractor<Annotation, String> createExtractor(AnnotationLayer aLayer)
+    public Extractor<ContextualizedFS<Annotation>, String> createExtractor(AnnotationLayer aLayer)
     {
         return new ChainRangeExtractor<>(aLayer);
     }

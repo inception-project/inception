@@ -20,15 +20,12 @@ package de.tudarmstadt.ukp.inception.pivot.extractor;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
 
 public class AnnotatorExtractor
     extends AnnotationExtractor_ImplBase<AnnotationFS, String>
 {
-    private Object cacheMarker;
-    private String annotator;
-
     public AnnotatorExtractor(AnnotationLayer aLayer)
     {
         super(aLayer);
@@ -47,16 +44,8 @@ public class AnnotatorExtractor
     }
 
     @Override
-    public String extract(AnnotationFS aAnn)
+    public String extract(ContextualizedFS<AnnotationFS> aAnn)
     {
-        // Avoid fetching the DocumentMetaData annotation each time
-        if (cacheMarker == aAnn.getCAS().getDocumentAnnotation()) {
-            return annotator;
-        }
-
-        cacheMarker = aAnn.getCAS().getDocumentAnnotation();
-
-        annotator = CasMetadataUtils.getUsername(aAnn.getCAS()).orElse("UNKNOWN");
-        return annotator;
+        return aAnn.dataOwner();
     }
 }
