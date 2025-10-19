@@ -33,6 +33,7 @@ import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.containsAny;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
@@ -41,11 +42,14 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
@@ -83,6 +87,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameApp
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.ajax.BootstrapAjaxPagingNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -571,8 +576,9 @@ public class ProjectsOverviewPage
                 aItem.add(projectLink);
                 aItem.add(createRoleBadges(aItem.getModelObject()));
 
-                var seeStats = projectService.hasRole(currentUser.getObject(), project, MANAGER,
-                        CURATOR) || userRepository.isAdministrator(currentUser.getObject());
+                var isAdmin = userRepository.isAdministrator(currentUser.getObject());
+                var seeStats = isAdmin || projectService.hasRole(currentUser.getObject(), project,
+                        MANAGER, CURATOR);
                 if (seeStats) {
                     var stats = documentService.getSourceDocumentStats(project);
                     aItem.add(new ProjectDocumentStatsPanel("stats", Model.of(stats)));
@@ -581,6 +587,51 @@ public class ProjectsOverviewPage
                 else {
                     aItem.add(new EmptyPanel("stats"));
                     aItem.add(new EmptyPanel("stateIcon"));
+                }
+
+                var seeManagers = isAdmin
+                        || projectService.hasRole(currentUser.getObject(), project, MANAGER);
+                if (seeManagers) {
+                    var sessionOwner = userRepository.getCurrentUsername();
+                    var permissions = projectService.listProjectUserPermissions(project);
+                    var comparator = Comparator
+                            .comparing((ProjectUserPermissions p) -> p.getUser()
+                                    .map(User::isEnabled).orElse(false))
+                            .reversed() //
+                            .thenComparing(p -> p.render(), String.CASE_INSENSITIVE_ORDER);
+                    var managers = permissions.stream() //
+                            .filter(p -> p.getRoles().contains(MANAGER)) //
+                            .sorted(comparator) //
+                            .collect(toCollection(ArrayList::new));
+
+                    String primeManager;
+                    var managedByYou = managers.removeIf(p -> p.getUsername().equals(sessionOwner));
+                    if (managedByYou) {
+                        primeManager = "You";
+                    }
+                    else if (!managers.isEmpty()) {
+                        primeManager = managers.get(0).render();
+                        managers.remove(0);
+                    }
+                    else {
+                        primeManager = "-";
+                    }
+
+                    var otherManagersNames = managers.stream().map(u -> u.render()).toList();
+                    var otherManagersCount = otherManagersNames.isEmpty() ? ""
+                            : "+" + otherManagersNames.size();
+
+                    aItem.add(new Label("primeManager", primeManager));
+
+                    var otherManagers = new Label("otherManagers", otherManagersCount);
+                    otherManagers.setVisible(!otherManagersNames.isEmpty());
+                    otherManagers.add(
+                            AttributeModifier.replace("title", join(", ", otherManagersNames)));
+                    aItem.add(otherManagers);
+                }
+                else {
+                    aItem.add(new EmptyPanel("primeManager"));
+                    aItem.add(new EmptyPanel("otherManagers"));
                 }
 
                 var createdLabel = new Label(MID_CREATED,
