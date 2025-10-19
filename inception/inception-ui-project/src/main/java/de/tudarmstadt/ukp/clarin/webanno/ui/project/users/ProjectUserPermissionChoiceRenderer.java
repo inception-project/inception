@@ -17,15 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.users;
 
-import static java.util.stream.Collectors.joining;
-import static org.apache.commons.lang3.Strings.CS;
+import java.util.HashSet;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
-import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions.RenderOptions;
 
 public class ProjectUserPermissionChoiceRenderer
     extends ChoiceRenderer<ProjectUserPermissions>
@@ -61,43 +58,13 @@ public class ProjectUserPermissionChoiceRenderer
     @Override
     public Object getDisplayValue(ProjectUserPermissions aPermissions)
     {
-        var username = aPermissions.getUsername();
-
-        var builder = new StringBuilder();
-
-        aPermissions.getUser().ifPresentOrElse( //
-                user -> {
-                    builder.append(user.getUiName());
-                    if (!aPermissions.getUsername().equals(user.getUiName())) {
-                        builder.append(" (");
-                        builder.append(aPermissions.getUsername());
-                        builder.append(")");
-                    }
-                }, //
-                () -> builder.append(username));
-
-        if (showRoles && !CollectionUtils.isEmpty(aPermissions.getRoles())) {
-            builder.append(" ");
-            builder.append(aPermissions.getRoles().stream() //
-                    .map(PermissionLevel::getName) //
-                    .collect(joining(", ", "[", "]")));
+        var options = new HashSet<RenderOptions>();
+        if (showRoles) {
+            options.add(RenderOptions.SHOW_ROLES);
         }
-
-        aPermissions.getUser().ifPresentOrElse( //
-                user -> { //
-                    if (!user.isEnabled()) {
-                        builder.append(" (deactivated)");
-                    }
-                }, //
-                () -> builder.append(" (missing!)"));
-
-        if (markProjectBoundUsers && aPermissions.getUser().isPresent()) {
-            var user = aPermissions.getUser().get();
-            if (CS.startsWith(user.getRealm(), Realm.REALM_PROJECT_PREFIX)) {
-                builder.append(" (project user)");
-            }
+        if (markProjectBoundUsers) {
+            options.add(RenderOptions.MARK_PROJECT_BOUND_USERS);
         }
-
-        return builder.toString();
+        return aPermissions.render(options.toArray(RenderOptions[]::new));
     }
 }

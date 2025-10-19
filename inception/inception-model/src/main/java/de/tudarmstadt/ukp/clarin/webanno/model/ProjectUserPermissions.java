@@ -17,6 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions.RenderOptions.MARK_PROJECT_BOUND_USERS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions.RenderOptions.SHOW_ROLES;
+import static java.util.stream.Collectors.joining;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import static org.apache.commons.lang3.ArrayUtils.contains;
+import static org.apache.commons.lang3.Strings.CS;
+
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.Set;
@@ -24,12 +31,18 @@ import java.util.Set;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public class ProjectUserPermissions
     implements Serializable
 {
     private static final long serialVersionUID = -5379506885078207627L;
+
+    public enum RenderOptions
+    {
+        SHOW_ROLES, MARK_PROJECT_BOUND_USERS
+    }
 
     private final Project project;
     private final String username;
@@ -63,6 +76,52 @@ public class ProjectUserPermissions
     public String getUsername()
     {
         return username;
+    }
+
+    @Override
+    public String toString()
+    {
+        return render(SHOW_ROLES, MARK_PROJECT_BOUND_USERS);
+    }
+
+    public String render(RenderOptions... aOptions)
+    {
+        var builder = new StringBuilder();
+
+        getUser().ifPresentOrElse( //
+                u -> {
+                    builder.append(u.getUiName());
+                    if (!getUsername().equals(u.getUiName())) {
+                        builder.append(" (");
+                        builder.append(getUsername());
+                        builder.append(")");
+                    }
+                }, //
+                () -> builder.append(username));
+
+        if (contains(aOptions, SHOW_ROLES) && !isEmpty(getRoles())) {
+            builder.append(" ");
+            builder.append(getRoles().stream() //
+                    .map(PermissionLevel::getName) //
+                    .collect(joining(", ", "[", "]")));
+        }
+
+        getUser().ifPresentOrElse( //
+                u -> { //
+                    if (!u.isEnabled()) {
+                        builder.append(" (deactivated)");
+                    }
+                }, //
+                () -> builder.append(" (missing!)"));
+
+        if (contains(aOptions, MARK_PROJECT_BOUND_USERS) && getUser().isPresent()) {
+            var u = getUser().get();
+            if (CS.startsWith(u.getRealm(), Realm.REALM_PROJECT_PREFIX)) {
+                builder.append(" (project user)");
+            }
+        }
+
+        return builder.toString();
     }
 
     @Override
