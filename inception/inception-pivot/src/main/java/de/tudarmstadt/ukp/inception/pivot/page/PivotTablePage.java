@@ -272,6 +272,10 @@ public class PivotTablePage
         dataOwners.add(new ProjectUserPermissions(getProject(), curationUser.getUsername(),
                 curationUser, emptySet()));
 
+        var initialCasUser = userService.getInitialCasUser();
+        dataOwners.add(new ProjectUserPermissions(getProject(), initialCasUser.getUsername(),
+                initialCasUser, emptySet()));
+
         return dataOwners;
     }
 
