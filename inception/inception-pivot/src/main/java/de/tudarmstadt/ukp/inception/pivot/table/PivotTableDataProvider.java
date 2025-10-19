@@ -202,7 +202,7 @@ public class PivotTableDataProvider<A extends Serializable, T>
             aggregator = aAggregator;
         }
 
-        public void add(T item)
+        public boolean add(T item)
         {
             var rowKey = rowBuilder.buildKey(item, aggregator);
             var colKey = colBuilder.buildKey(item, aggregator);
@@ -210,7 +210,7 @@ public class PivotTableDataProvider<A extends Serializable, T>
 
             if (!(rowKey.getSchema().isWeak() && colKey.getSchema().isWeak())) {
                 if (rowKey.isWeak() && colKey.isWeak()) {
-                    return;
+                    return false;
                 }
             }
 
@@ -222,6 +222,8 @@ public class PivotTableDataProvider<A extends Serializable, T>
                 }
                 return aggregator.aggregate(v, cellValue);
             });
+            
+            return true;
         }
 
         public PivotTableDataProvider<A, T> build()

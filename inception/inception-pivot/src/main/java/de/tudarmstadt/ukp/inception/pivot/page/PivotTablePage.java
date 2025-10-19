@@ -389,6 +389,12 @@ public class PivotTablePage
                 allAnnDocs.computeIfAbsent(doc, $ -> emptyList());
             }
         }
+        
+        if (allAnnDocs.isEmpty()) {
+            info("No annotation documents found for the selected criteria.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
 
         @SuppressWarnings("rawtypes")
         var task = CollectTableDataTask
