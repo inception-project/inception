@@ -19,11 +19,11 @@ package de.tudarmstadt.ukp.inception.annotation.layer.relation.pivot;
 
 import java.util.Optional;
 
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
 
 public class RelationEndpointRangeExtractor
     extends AnnotationExtractor_ImplBase<AnnotationFS, String>
@@ -51,8 +51,8 @@ public class RelationEndpointRangeExtractor
     @Override
     public boolean accepts(Object aSource)
     {
-        if (aSource instanceof FeatureStructure fs) {
-            var type = fs.getType();
+        if (aSource instanceof ContextualizedFS fs) {
+            var type = fs.fs().getType();
             if (!type.getName().equals(feature.getLayer().getName())) {
                 return false;
             }
@@ -64,10 +64,11 @@ public class RelationEndpointRangeExtractor
     }
 
     @Override
-    public String extract(AnnotationFS aAnn)
+    public String extract(ContextualizedFS<AnnotationFS> aAnn)
     {
-        var f = aAnn.getType().getFeatureByBaseName(feature.getName());
-        var a = (AnnotationFS) aAnn.getFeatureValue(f);
+        var ann = aAnn.fs();
+        var f = ann.getType().getFeatureByBaseName(feature.getName());
+        var a = (AnnotationFS) ann.getFeatureValue(f);
         return a != null ? a.getBegin() + "-" + a.getEnd() : null;
     }
 

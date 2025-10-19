@@ -21,6 +21,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
 
 public class TypeExtractor
     extends AnnotationExtractor_ImplBase<AnnotationFS, String>
@@ -43,8 +44,8 @@ public class TypeExtractor
     }
 
     @Override
-    public String extract(AnnotationFS aAnn)
+    public String extract(ContextualizedFS<AnnotationFS> aAnn)
     {
-        return aAnn.getType().getName();
+        return aAnn.fs().getType().getName();
     }
 }

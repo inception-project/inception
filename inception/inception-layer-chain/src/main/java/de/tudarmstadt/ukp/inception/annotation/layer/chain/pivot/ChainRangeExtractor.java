@@ -21,6 +21,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
 
 public class ChainRangeExtractor<T extends Annotation>
     extends AnnotationExtractor_ImplBase<T, String>
@@ -43,8 +44,8 @@ public class ChainRangeExtractor<T extends Annotation>
     }
 
     @Override
-    public String extract(T a)
+    public String extract(ContextualizedFS<T> a)
     {
-        return a.getBegin() + "-" + a.getEnd();
+        return a.fs().getBegin() + "-" + a.fs().getEnd();
     }
 }
