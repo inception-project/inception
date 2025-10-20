@@ -66,6 +66,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.config.SpanRecommender
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionRenderer;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportQuery;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
@@ -73,7 +74,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChang
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
@@ -108,13 +108,13 @@ public class SpanSuggestionSupport
     }
 
     @Override
-    public boolean accepts(Recommender aContext)
+    public boolean accepts(SuggestionSupportQuery aContext)
     {
-        if (!SpanLayerSupport.TYPE.equals(aContext.getLayer().getType())) {
+        if (!SpanLayerSupport.TYPE.equals(aContext.layer().getType())) {
             return false;
         }
 
-        var feature = aContext.getFeature();
+        var feature = aContext.feature();
         if (asList(CAS.TYPE_NAME_STRING, CAS.TYPE_NAME_BOOLEAN).contains(feature.getType())
                 // || not all supported yet - ICasUtil.isPrimitive(feature.getType())
                 || CAS.TYPE_NAME_STRING_ARRAY.equals(feature.getType())
@@ -126,15 +126,21 @@ public class SpanSuggestionSupport
     }
 
     @Override
-    public AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
-            Predictions aPredictions, AnnotationSuggestion aSuggestion,
+    public Optional<AnnotationBaseFS> acceptSuggestion(String aSessionOwner,
+            SourceDocument aDocument, String aDataOwner, CAS aCas, TypeAdapter aAdapter,
+            AnnotationFeature aFeature, Predictions aPredictions, AnnotationSuggestion aSuggestion,
             LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException
     {
-        return acceptOrCorrectSuggestion(aSessionOwner, aDocument, aDataOwner, aCas,
-                (SpanAdapter) aAdapter, aFeature, aPredictions, (SpanSuggestion) aSuggestion,
-                aLocation, aAction);
+
+        if (aSuggestion instanceof SpanSuggestion suggestion
+                && aAdapter instanceof SpanAdapter adapter) {
+            return Optional.of(acceptOrCorrectSuggestion(aSessionOwner, aDocument, aDataOwner, aCas,
+                    adapter, aFeature, aPredictions, suggestion, aLocation, aAction));
+        }
+
+        return Optional.empty();
+
     }
 
     public AnnotationFS acceptOrCorrectSuggestion(String aSessionOwner, SourceDocument aDocument,
@@ -458,53 +464,53 @@ public class SpanSuggestionSupport
     @Override
     public List<AnnotationSuggestion> extractSuggestions(ExtractionContext ctx)
     {
-        var result = new ArrayList<AnnotationSuggestion>();
+        var suggestions = new ArrayList<AnnotationSuggestion>();
         for (var predictedFS : ctx.getPredictionCas().<Annotation> select(ctx.getPredictedType())) {
-            extractSuggestion(ctx, result, predictedFS);
+            extractSuggestions(ctx, suggestions, predictedFS);
         }
-        return result;
+        return suggestions;
     }
 
-    private void extractSuggestion(ExtractionContext ctx, ArrayList<AnnotationSuggestion> result,
-            Annotation predictedFS)
+    private void extractSuggestions(ExtractionContext aCtx, List<AnnotationSuggestion> aSuggestions,
+            Annotation aPredictedFS)
     {
-        if (!predictedFS.getBooleanValue(ctx.getPredictionFeature())) {
+        if (!aPredictedFS.getBooleanValue(aCtx.getPredictionFeature())) {
             return;
         }
 
-        var anchoringMode = ctx.getLayer().getAnchoringMode();
-        var targetOffsets = getOffsets(anchoringMode, ctx.getOriginalCas(), predictedFS);
+        var anchoringMode = aCtx.getLayer().getAnchoringMode();
+        var targetOffsets = getOffsets(anchoringMode, aCtx.getOriginalCas(), aPredictedFS);
         if (targetOffsets.isEmpty()) {
-            LOG.debug("Prediction cannot be anchored to [{}]: {}", anchoringMode, predictedFS);
+            LOG.debug("Prediction cannot be anchored to [{}]: {}", anchoringMode, aPredictedFS);
             return;
         }
 
-        var labels = getPredictedLabels(predictedFS, ctx.getLabelFeature(), ctx.isMultiLabels());
+        var labels = getPredictedLabels(aPredictedFS, aCtx.getLabelFeature(), aCtx.isMultiLabels());
         if (isEmpty(labels)) {
             return;
         }
 
         var offsets = targetOffsets.get();
-        var coveredText = ctx.getDocumentText().substring(offsets.getBegin(), offsets.getEnd());
+        var coveredText = aCtx.getDocumentText().substring(offsets.getBegin(), offsets.getEnd());
 
-        if (!coveredText.equals(predictedFS.getCoveredText())) {
-            LOG.trace("Offsets were adjusted [{}] -> [{}]", predictedFS.getCoveredText(),
+        if (!coveredText.equals(aPredictedFS.getCoveredText())) {
+            LOG.trace("Offsets were adjusted [{}] -> [{}]", aPredictedFS.getCoveredText(),
                     coveredText);
         }
 
-        var autoAcceptMode = getAutoAcceptMode(predictedFS, ctx.getModeFeature());
-        var correction = predictedFS.getBooleanValue(ctx.getCorrectionFeature());
-        var correctionExplanation = predictedFS
-                .getStringValue(ctx.getCorrectionExplanationFeature());
-        var score = predictedFS.getDoubleValue(ctx.getScoreFeature());
-        var scoreExplanation = predictedFS.getStringValue(ctx.getScoreExplanationFeature());
+        var autoAcceptMode = getAutoAcceptMode(aPredictedFS, aCtx.getModeFeature());
+        var correction = aPredictedFS.getBooleanValue(aCtx.getCorrectionFeature());
+        var correctionExplanation = aPredictedFS
+                .getStringValue(aCtx.getCorrectionExplanationFeature());
+        var score = aPredictedFS.getDoubleValue(aCtx.getScoreFeature());
+        var scoreExplanation = aPredictedFS.getStringValue(aCtx.getScoreExplanationFeature());
 
         for (var label : labels) {
-            var suggestion = SpanSuggestion.builder() //
+            aSuggestions.add(SpanSuggestion.builder() //
                     .withId(SpanSuggestion.NEW_ID) //
-                    .withGeneration(ctx.getGeneration()) //
-                    .withRecommender(ctx.getRecommender()) //
-                    .withDocument(ctx.getDocument()) //
+                    .withGeneration(aCtx.getGeneration()) //
+                    .withRecommender(aCtx.getRecommender()) //
+                    .withDocument(aCtx.getDocument()) //
                     .withPosition(offsets) //
                     .withCoveredText(coveredText) //
                     .withLabel(label) //
@@ -514,8 +520,7 @@ public class SpanSuggestionSupport
                     .withScore(score) //
                     .withScoreExplanation(scoreExplanation) //
                     .withAutoAcceptMode(autoAcceptMode) //
-                    .build();
-            result.add(suggestion);
+                    .build());
         }
     }
 

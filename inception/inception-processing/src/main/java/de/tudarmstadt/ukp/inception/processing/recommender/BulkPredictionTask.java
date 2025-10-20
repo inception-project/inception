@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetada
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportQuery;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -252,14 +253,15 @@ public class BulkPredictionTask
     private int autoAccept(SourceDocument aDocument, Predictions aPredictions, CAS aCas)
     {
         var accepted = 0;
-        var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
+        var suggestionSupportCache = new HashMap<SuggestionSupportQuery, Optional<SuggestionSupport>>();
 
         for (var prediction : aPredictions.getPredictionsByDocument(aDocument.getId())) {
             if (!Objects.equals(prediction.getRecommenderId(), recommender.getId())) {
                 continue;
             }
 
-            var suggestionSupport = suggestionSupportCache.computeIfAbsent(recommender,
+            var suggestionSupport = suggestionSupportCache.computeIfAbsent(
+                    SuggestionSupportQuery.of(recommender),
                     suggestionSupportRegistry::findGenericExtension);
             if (suggestionSupport.isEmpty()) {
                 continue;

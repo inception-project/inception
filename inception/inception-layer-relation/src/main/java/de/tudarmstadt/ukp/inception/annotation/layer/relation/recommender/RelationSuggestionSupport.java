@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.relation.recommender;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
@@ -32,6 +32,7 @@ import java.util.Optional;
 import org.apache.commons.collections4.MultiMapUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
+import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -48,12 +49,12 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerS
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionRenderer;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportQuery;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
@@ -90,13 +91,13 @@ public class RelationSuggestionSupport
     }
 
     @Override
-    public boolean accepts(Recommender aContext)
+    public boolean accepts(SuggestionSupportQuery aContext)
     {
-        if (!RelationLayerSupport.TYPE.equals(aContext.getLayer().getType())) {
+        if (!RelationLayerSupport.TYPE.equals(aContext.layer().getType())) {
             return false;
         }
 
-        var feature = aContext.getFeature();
+        var feature = aContext.feature();
         if (CAS.TYPE_NAME_STRING.equals(feature.getType())
                 || CAS.TYPE_NAME_STRING_ARRAY.equals(feature.getType())
                 || feature.isVirtualFeature()) {
@@ -131,27 +132,39 @@ public class RelationSuggestionSupport
      *             if there was an annotation-level problem
      */
     @Override
-    public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
-            Predictions aPredictions, AnnotationSuggestion aSuggestion,
+    public Optional<AnnotationBaseFS> acceptSuggestion(String aSessionOwner,
+            SourceDocument aDocument, String aDataOwner, CAS aCas, TypeAdapter aAdapter,
+            AnnotationFeature aFeature, Predictions aPredictions, AnnotationSuggestion aSuggestion,
             LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException
     {
-        var suggestion = (RelationSuggestion) aSuggestion;
-        var adapter = (RelationAdapter) aAdapter;
+        if (aSuggestion instanceof RelationSuggestion suggestion
+                && aAdapter instanceof RelationAdapter adapter) {
+            return Optional.of(acceptSuggestion(aSessionOwner, aDocument, aDataOwner, aCas,
+                    aFeature, aPredictions, aLocation, aAction, suggestion, adapter));
+        }
 
+        return Optional.empty();
+    }
+
+    private AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, CAS aCas, AnnotationFeature aFeature, Predictions aPredictions,
+            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction,
+            RelationSuggestion suggestion, RelationAdapter aAdapter)
+        throws AnnotationException
+    {
         var sourceBegin = suggestion.getPosition().getSourceBegin();
         var sourceEnd = suggestion.getPosition().getSourceEnd();
         var targetBegin = suggestion.getPosition().getTargetBegin();
         var targetEnd = suggestion.getPosition().getTargetEnd();
 
         // Check if there is already a relation for the given source and target
-        var type = adapter.getAnnotationType(aCas).orElseThrow(() -> new IllegalStateException(
-                "Type [" + adapter.getAnnotationTypeName() + "] not found in target CAS"));
-        var attachType = CasUtil.getType(aCas, adapter.getAttachTypeName());
+        var type = aAdapter.getAnnotationType(aCas).orElseThrow(() -> new IllegalStateException(
+                "Type [" + aAdapter.getAnnotationTypeName() + "] not found in target CAS"));
+        var attachType = CasUtil.getType(aCas, aAdapter.getAttachTypeName());
 
-        var sourceFeature = type.getFeatureByBaseName(adapter.getSourceFeatureName());
-        var targetFeature = type.getFeatureByBaseName(adapter.getTargetFeatureName());
+        var sourceFeature = type.getFeatureByBaseName(aAdapter.getSourceFeatureName());
+        var targetFeature = type.getFeatureByBaseName(aAdapter.getTargetFeatureName());
 
         // The begin and end feature of a relation in the CAS are of the dependent/target
         // annotation. See also RelationAdapter::createRelationAnnotation.
@@ -171,7 +184,7 @@ public class RelationSuggestionSupport
             }
         }
 
-        try (var eventBatch = adapter.batchEvents()) {
+        try (var eventBatch = aAdapter.batchEvents()) {
             var annotationCreated = false;
             AnnotationFS annotation = null;
             if (candidates.size() == 1) {
@@ -202,13 +215,13 @@ public class RelationSuggestionSupport
                     throw new IllegalStateException(msg);
                 }
 
-                annotation = adapter.add(aDocument, aDataOwner, source, target, aCas);
+                annotation = aAdapter.add(aDocument, aDataOwner, source, target, aCas);
                 annotationCreated = true;
             }
 
             try {
                 commitLabel(aDocument, aDataOwner, aAdapter, annotation, aFeature, aPredictions,
-                        aSuggestion);
+                        suggestion);
             }
             catch (Exception e) {
                 if (annotationCreated) {
@@ -217,9 +230,9 @@ public class RelationSuggestionSupport
                 throw e;
             }
 
-            hideSuggestion(aSuggestion, aAction);
+            hideSuggestion(suggestion, aAction);
             recordAndPublishAcceptance(aSessionOwner, aDocument, aDataOwner, aAdapter, aFeature,
-                    aSuggestion, annotation, aLocation, aAction);
+                    suggestion, annotation, aLocation, aAction);
 
             eventBatch.commit();
             return annotation;

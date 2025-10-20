@@ -17,10 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api;
 
-import de.tudarmstadt.ukp.inception.support.extensionpoint.ContextLookupExtensionPoint;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-public interface SuggestionSupportRegistry
-    extends ContextLookupExtensionPoint<SuggestionSupportQuery, SuggestionSupport>
-{
-
+public record SuggestionSupportQuery(AnnotationLayer layer, AnnotationFeature feature) {
+    public static SuggestionSupportQuery of(Recommender aRecommender)
+    {
+        return new SuggestionSupportQuery(aRecommender.getLayer(), aRecommender.getFeature());
+    }
 }
