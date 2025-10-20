@@ -63,7 +63,7 @@ public class RecommenderEvaluationResultEventAdapter
     @Override
     public String getDetails(RecommenderEvaluationResultEvent aEvent) throws IOException
     {
-        Details details = new Details();
+        var details = new Details();
 
         details.recommenderId = aEvent.getRecommender().getId();
 

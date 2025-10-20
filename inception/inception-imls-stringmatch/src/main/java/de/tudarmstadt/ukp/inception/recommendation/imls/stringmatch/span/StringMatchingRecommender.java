@@ -189,12 +189,9 @@ public class StringMatchingRecommender
                 catch (IOException e) {
                     aContext.log(LogMessage.error(getRecommender().getName(),
                             "Unable to load gazeteer [%s]: %s", gaz.getName(), e.getMessage()));
-                    LOG.error(
-                            "Unable to load gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
-                            gaz.getName(), gaz.getRecommender().getName(),
-                            gaz.getRecommender().getId(),
-                            gaz.getRecommender().getProject().getName(),
-                            gaz.getRecommender().getProject().getId(), e);
+                    LOG.error("Unable to load gazeteer [{}] for recommender {} in project {}",
+                            gaz.getName(), gaz.getRecommender(), gaz.getRecommender().getProject(),
+                            e);
                 }
             }
         }

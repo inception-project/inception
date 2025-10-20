@@ -27,15 +27,11 @@ import static org.apache.uima.fit.util.CasUtil.select;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
@@ -46,8 +42,6 @@ import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
@@ -61,7 +55,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapab
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.chains.WeblichtChainService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.converter.DKPro2Tcf;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.converter.Tcf2DKPro;
-import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.model.WeblichtChain;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits.WeblichtRecommenderTraits;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import eu.clarin.weblicht.wlfxb.io.WLDObjector;
@@ -116,11 +109,11 @@ public class WeblichtRecommender
         }
 
         try {
-            String documentText = aCas.getDocumentText();
-            String documentLanguage = aCas.getDocumentLanguage();
+            var documentText = aCas.getDocumentText();
+            var documentLanguage = aCas.getDocumentLanguage();
 
             // Build http request and assign multipart upload data
-            MultipartEntityBuilder builder = MultipartEntityBuilder.create() //
+            var builder = MultipartEntityBuilder.create() //
                     .setMode(HttpMultipartMode.BROWSER_COMPATIBLE) //
                     .addTextBody("apikey", traits.getApiKey(), MULTIPART_FORM_DATA) //
                     .addBinaryBody("chains", getChainFile(), XML, "chains.xml");
@@ -147,14 +140,13 @@ public class WeblichtRecommender
                 // Create text annotation layer and add the string of the text into the layer
                 textCorpus.createTextLayer().addText(aCas.getDocumentText());
                 // Convert tokens and sentences and leave the rest to the chain
-                DKPro2Tcf dkpro2tcf = new DKPro2Tcf();
-                Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> tokensBeginPositionMap;
-                tokensBeginPositionMap = dkpro2tcf.writeTokens(aCas.getJCas(), textCorpus);
+                var dkpro2tcf = new DKPro2Tcf();
+                var tokensBeginPositionMap = dkpro2tcf.writeTokens(aCas.getJCas(), textCorpus);
                 dkpro2tcf.writeSentence(aCas.getJCas(), textCorpus, tokensBeginPositionMap);
                 // write the annotated data object into the output stream
                 byte[] bodyData;
-                try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
-                    WLData wldata = new WLData(textCorpus);
+                try (var os = new ByteArrayOutputStream()) {
+                    var wldata = new WLData(textCorpus);
                     WLDObjector.write(wldata, os);
                     bodyData = os.toByteArray();
                 }
@@ -165,12 +157,12 @@ public class WeblichtRecommender
                         "Unknown format [" + traits.getChainInputFormat() + "]");
             }
 
-            HttpUriRequest request = RequestBuilder.post(traits.getUrl())//
+            var request = RequestBuilder.post(traits.getUrl())//
                     .addHeader("Accept", "*/*") //
                     .setEntity(builder.build()) //
                     .build();
 
-            HttpResponse response = sendRequest(request);
+            var response = sendRequest(request);
 
             // If the response indicates that the request was not successful,
             // then it does not make sense to go on and try to decode the XMI
@@ -185,7 +177,7 @@ public class WeblichtRecommender
             aCas.setDocumentText(documentText);
             aCas.setDocumentLanguage(documentLanguage);
 
-            WLData wldata = deserializePredictionResponse(response);
+            var wldata = deserializePredictionResponse(response);
             new Tcf2DKPro().convert(wldata.getTextCorpus(), aCas.getJCas());
 
             // Drop the tokens we got from the remote service since their boundaries might not
@@ -195,8 +187,8 @@ public class WeblichtRecommender
             new Tcf2DKPro().convertTokens(aCas.getJCas(), textCorpus);
 
             // Mark predicted results
-            Feature isPredictionFeature = getIsPredictionFeature(aCas);
-            for (AnnotationFS predictedAnnotation : select(aCas, getPredictedType(aCas))) {
+            var isPredictionFeature = getIsPredictionFeature(aCas);
+            for (var predictedAnnotation : select(aCas, getPredictedType(aCas))) {
                 predictedAnnotation.setBooleanValue(isPredictionFeature, true);
             }
         }
@@ -209,7 +201,7 @@ public class WeblichtRecommender
 
     private File getChainFile() throws IOException
     {
-        Optional<WeblichtChain> optChain = chainService.getChain(recommender);
+        var optChain = chainService.getChain(recommender);
         if (optChain.isPresent()) {
             return chainService.getChainFile(optChain.get());
         }
@@ -221,7 +213,7 @@ public class WeblichtRecommender
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
-        EvaluationResult result = new EvaluationResult();
+        var result = new EvaluationResult();
         result.setErrorMsg("Evaluation not supported (yet)");
         return result;
     }
@@ -258,8 +250,8 @@ public class WeblichtRecommender
     {
         try {
             if (response.getEntity() != null) {
-                try (InputStream is = response.getEntity().getContent()) {
-                    Header encoding = response.getEntity().getContentEncoding();
+                try (var is = response.getEntity().getContent()) {
+                    var encoding = response.getEntity().getContentEncoding();
                     return IOUtils.toString(is,
                             encoding != null ? Charset.forName(encoding.getValue()) : UTF_8);
                 }
@@ -276,7 +268,7 @@ public class WeblichtRecommender
     private WLData deserializePredictionResponse(HttpResponse response)
         throws RecommendationException
     {
-        try (InputStream is = response.getEntity().getContent()) {
+        try (var is = response.getEntity().getContent()) {
             return WLDObjector.read(is);
         }
         catch (IOException e) {
