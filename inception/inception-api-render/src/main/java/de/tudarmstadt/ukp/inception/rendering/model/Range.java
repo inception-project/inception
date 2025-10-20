@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Range
-    implements Serializable
+    implements Serializable, Comparable<Range>
 {
     private static final long serialVersionUID = -6261188569647696831L;
 
@@ -144,6 +144,23 @@ public class Range
     public String toString()
     {
         return "[" + begin + "-" + end + "]";
+    }
+
+    @Override
+    public int compareTo(Range aOther)
+    {
+        if (this == aOther) {
+            return 0;
+        }
+
+        // Sort by begin ascending
+        int cmp = Integer.compare(begin, aOther.begin);
+        if (cmp != 0) {
+            return cmp;
+        }
+
+        // Sort by end descending
+        return Integer.compare(aOther.end, end);
     }
 
     @Override

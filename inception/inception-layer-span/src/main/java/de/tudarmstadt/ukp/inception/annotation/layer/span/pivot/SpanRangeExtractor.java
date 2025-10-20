@@ -22,9 +22,10 @@ import org.apache.uima.jcas.tcas.Annotation;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public class SpanRangeExtractor<T extends Annotation>
-    extends AnnotationExtractor_ImplBase<T, String>
+    extends AnnotationExtractor_ImplBase<T, Range>
 {
     public SpanRangeExtractor(AnnotationLayer aLayer)
     {
@@ -38,15 +39,15 @@ public class SpanRangeExtractor<T extends Annotation>
     }
 
     @Override
-    public Class<String> getResultType()
+    public Class<Range> getResultType()
     {
-        return String.class;
+        return Range.class;
     }
 
     @Override
-    public String extract(ContextualizedFS<T> aAnn)
+    public Range extract(ContextualizedFS<T> aAnn)
     {
         var ann = aAnn.fs();
-        return ann.getBegin() + "-" + ann.getEnd();
+        return new Range(ann.getBegin(), ann.getEnd());
     }
 }
