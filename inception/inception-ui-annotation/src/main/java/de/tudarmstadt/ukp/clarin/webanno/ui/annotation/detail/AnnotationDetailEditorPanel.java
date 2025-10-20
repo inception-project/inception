@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs.KEY_ANNOTATION_EDITOR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs.KEY_ANCHORING_MODE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
@@ -741,11 +742,17 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         if (adapter instanceof SpanAdapter && attachStatus.attachCount > 0) {
-            var dialogContent = new DeleteAnnotationConfirmationDialogPanel(
-                    BootstrapModalDialog.CONTENT_ID, Model.of(layer), Model.of(attachStatus));
-            dialogContent.setConfirmAction(_target -> doDelete(_target, layer, vid));
-            confirmationDialog.open(dialogContent, aTarget);
-            return;
+            var sessionOwner = userService.getCurrentUser();
+            var confirmationPrefs = preferencesService.loadTraitsForUserAndProject(
+                    KEY_ANNOTATION_EDITOR_MANAGER_PREFS, sessionOwner, state.getProject());
+
+            if (confirmationPrefs.isShowDeleteAnnotationConfirmation()) {
+                var dialogContent = new DeleteAnnotationConfirmationDialogPanel(
+                        BootstrapModalDialog.CONTENT_ID, Model.of(layer), Model.of(attachStatus));
+                dialogContent.setConfirmAction(_target -> doDelete(_target, layer, vid));
+                confirmationDialog.open(dialogContent, aTarget);
+                return;
+            }
         }
 
         doDelete(aTarget, layer, vid);

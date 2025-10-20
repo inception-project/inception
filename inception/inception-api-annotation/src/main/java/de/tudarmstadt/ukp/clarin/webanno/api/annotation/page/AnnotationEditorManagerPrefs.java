@@ -35,6 +35,18 @@ public class AnnotationEditorManagerPrefs
 
     private boolean preferencesAccessAllowed = true;
 
+    private boolean showDeleteAnnotationConfirmation = true;
+
+    public boolean isShowDeleteAnnotationConfirmation()
+    {
+        return showDeleteAnnotationConfirmation;
+    }
+
+    public void setShowDeleteAnnotationConfirmation(boolean aShowDeleteAnnotationConfirmation)
+    {
+        showDeleteAnnotationConfirmation = aShowDeleteAnnotationConfirmation;
+    }
+
     public String getDefaultEditor()
     {
         return defaultEditor;

@@ -72,6 +72,8 @@ public class AnnotationEditorManagerPrefsPanel
 
         form.add(new CheckBox("preferencesAccessAllowed").setOutputMarkupId(true));
 
+        form.add(new CheckBox("showDeleteAnnotationConfirmation").setOutputMarkupId(true));
+
         form.onSubmit(this::actionSave);
 
         add(form);
