@@ -24,12 +24,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportQuery;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
 
 public class SuggestionSupportRegistryImpl
-    extends ExtensionPoint_ImplBase<Recommender, SuggestionSupport>
+    extends ExtensionPoint_ImplBase<SuggestionSupportQuery, SuggestionSupport>
     implements SuggestionSupportRegistry
 {
     @Autowired
@@ -41,7 +41,8 @@ public class SuggestionSupportRegistryImpl
 
     @SuppressWarnings("unchecked")
     @Override
-    public <X extends SuggestionSupport> Optional<X> findGenericExtension(Recommender aKey)
+    public <X extends SuggestionSupport> Optional<X> findGenericExtension(
+            SuggestionSupportQuery aKey)
     {
         return getExtensions().stream() //
                 .filter(e -> e.accepts(aKey)) //

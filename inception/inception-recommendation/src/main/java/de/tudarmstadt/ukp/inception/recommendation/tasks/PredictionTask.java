@@ -59,6 +59,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportQuery;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -549,7 +550,8 @@ public class PredictionTask
         // We need this only for the extraction, but there is no point in investing the time for
         // the prediction if we cannot extract the data afterwards - hence we obtain it now and
         // skip the prediction if it is not available
-        var maybeSuggestionSupport = suggestionSupportRegistry.findGenericExtension(rec);
+        var maybeSuggestionSupport = suggestionSupportRegistry
+                .findGenericExtension(SuggestionSupportQuery.of(rec));
         if (maybeSuggestionSupport.isEmpty()) {
             logNoSuggestionSupportAvailable(aIncomingPredictions, rec);
             return;
@@ -682,7 +684,7 @@ public class PredictionTask
     }
 
     static ReconciliationResult reconcile(Predictions aActivePredictions, SourceDocument aDocument,
-            Recommender recommender, Range predictedRange,
+            Recommender aRecommender, Range aPredictedRange,
             List<AnnotationSuggestion> aNewProtoSuggestions, ReconciliationOption... aOptions)
     {
         if (aActivePredictions == null) {
@@ -695,10 +697,10 @@ public class PredictionTask
         var agedSuggestionsCount = 0;
 
         var predictionsByRecommenderAndDocument = aActivePredictions
-                .getSuggestionsByRecommenderAndDocument(recommender, aDocument);
+                .getSuggestionsByRecommenderAndDocument(aRecommender, aDocument);
 
         var existingSuggestionsByPosition = predictionsByRecommenderAndDocument.stream() //
-                .filter(s -> s.coveredBy(predictedRange)) //
+                .filter(s -> s.coveredBy(aPredictedRange)) //
                 .collect(groupingBy(AnnotationSuggestion::getPosition));
 
         for (var newSuggestion : aNewProtoSuggestions) {
@@ -727,7 +729,7 @@ public class PredictionTask
         }
 
         var removedSuggestions = predictionsByRecommenderAndDocument.stream() //
-                .filter(s -> s.coveredBy(predictedRange)) //
+                .filter(s -> s.coveredBy(aPredictedRange)) //
                 .filter(s -> !reconciledSuggestions.contains(s)) //
                 .toList();
 

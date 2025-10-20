@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportQuery;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -129,7 +130,7 @@ public class RecommendationRenderer
 
         var recommenderCache = recommendationService.listEnabledRecommenders(aRequest.getProject())
                 .stream().collect(toMap(Recommender::getId, identity()));
-        var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
+        var suggestionSupportCache = new HashMap<SuggestionSupportQuery, Optional<SuggestionSupport>>();
 
         for (var layer : aRequest.getVisibleLayers()) {
             if (!layer.isEnabled() || layer.isReadonly()) {
@@ -149,7 +150,8 @@ public class RecommendationRenderer
                     continue;
                 }
 
-                var suggestionSupport = suggestionSupportCache.computeIfAbsent(recommender,
+                var suggestionSupport = suggestionSupportCache.computeIfAbsent(
+                        SuggestionSupportQuery.of(recommender),
                         suggestionSupportRegistry::findGenericExtension);
                 if (suggestionSupport.isEmpty()) {
                     continue;

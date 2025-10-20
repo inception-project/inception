@@ -28,6 +28,7 @@ import java.util.Optional;
 
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
+import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -46,6 +47,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionRenderer;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportQuery;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
@@ -53,7 +55,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LinkPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LinkSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -69,7 +70,6 @@ public class LinkSuggestionSupport
     public static final String TYPE = "LINK";
 
     private final FeatureSupportRegistry featureSupportRegistry;
-    protected final AnnotationSchemaService schemaService;
 
     public LinkSuggestionSupport(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
@@ -79,7 +79,6 @@ public class LinkSuggestionSupport
         super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher,
                 aSchemaService);
 
-        schemaService = aSchemaService;
         featureSupportRegistry = aFeatureSupportRegistry;
     }
 
@@ -90,13 +89,13 @@ public class LinkSuggestionSupport
     }
 
     @Override
-    public boolean accepts(Recommender aContext)
+    public boolean accepts(SuggestionSupportQuery aContext)
     {
-        if (!SpanLayerSupport.TYPE.equals(aContext.getLayer().getType())) {
+        if (!SpanLayerSupport.TYPE.equals(aContext.layer().getType())) {
             return false;
         }
 
-        var feature = aContext.getFeature();
+        var feature = aContext.feature();
         if (feature.getLinkMode() == LinkMode.WITH_ROLE) {
             return true;
         }
@@ -105,20 +104,32 @@ public class LinkSuggestionSupport
     }
 
     @Override
-    public AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
-            Predictions aPredictions, AnnotationSuggestion aSuggestion,
+    public Optional<AnnotationBaseFS> acceptSuggestion(String aSessionOwner,
+            SourceDocument aDocument, String aDataOwner, CAS aCas, TypeAdapter aAdapter,
+            AnnotationFeature aFeature, Predictions aPredictions, AnnotationSuggestion aSuggestion,
             LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException
     {
-        var suggestion = (LinkSuggestion) aSuggestion;
-        var adapter = (SpanAdapter) aAdapter;
+        if (aSuggestion instanceof LinkSuggestion suggestion
+                && aAdapter instanceof SpanAdapter adapter) {
+            return Optional.of(acceptSuggestion(aSessionOwner, aDocument, aDataOwner, aCas,
+                    aFeature, aLocation, aAction, suggestion, adapter));
+        }
 
+        return Optional.empty();
+    }
+
+    private AnnotationFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, CAS aCas, AnnotationFeature aFeature,
+            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction,
+            LinkSuggestion suggestion, SpanAdapter aAdapter)
+        throws AnnotationException
+    {
         var sourceBegin = suggestion.getPosition().getSourceBegin();
         var sourceEnd = suggestion.getPosition().getSourceEnd();
-        var linkHostType = adapter.getAnnotationType(aCas)
+        var linkHostType = aAdapter.getAnnotationType(aCas)
                 .orElseThrow(() -> new IllegalStateException(
-                        "Type [" + adapter.getAnnotationTypeName() + "] not found in target CAS"));
+                        "Type [" + aAdapter.getAnnotationTypeName() + "] not found in target CAS"));
 
         // Check if there is already a link host
         var linkHostCandidates = aCas.<Annotation> select(linkHostType).at(sourceBegin, sourceEnd)
@@ -147,7 +158,7 @@ public class LinkSuggestionSupport
             slotFiller = slotFillerCandidates.get(0);
         }
 
-        try (var eventBatch = adapter.batchEvents()) {
+        try (var eventBatch = aAdapter.batchEvents()) {
             if (linkHost == null || slotFiller == null) {
                 var msg = "Cannot find link host or slot filler to establish link between";
                 LOG.error(msg);
@@ -156,7 +167,7 @@ public class LinkSuggestionSupport
 
             var annotationCreated = false;
 
-            List<LinkWithRoleModel> oldLinks = adapter.getFeatureValue(aFeature, linkHost);
+            List<LinkWithRoleModel> oldLinks = aAdapter.getFeatureValue(aFeature, linkHost);
             try {
                 var newLinks = new ArrayList<>(oldLinks);
                 newLinks.add(LinkWithRoleModel.builder() //
@@ -164,22 +175,22 @@ public class LinkSuggestionSupport
                         .withRole(suggestion.getLabel()) //
                         .withTarget(slotFiller) //
                         .build());
-                adapter.setFeatureValue(aDocument, aDataOwner, aCas, linkHost.getAddress(),
+                aAdapter.setFeatureValue(aDocument, aDataOwner, aCas, linkHost.getAddress(),
                         aFeature, newLinks);
 
                 annotationCreated = true;
             }
             catch (Exception e) {
                 if (annotationCreated) {
-                    adapter.setFeatureValue(aDocument, aDataOwner, aCas, linkHost.getAddress(),
+                    aAdapter.setFeatureValue(aDocument, aDataOwner, aCas, linkHost.getAddress(),
                             aFeature, oldLinks);
                 }
                 throw e;
             }
 
-            hideSuggestion(aSuggestion, aAction);
+            hideSuggestion(suggestion, aAction);
             recordAndPublishAcceptance(aSessionOwner, aDocument, aDataOwner, aAdapter, aFeature,
-                    aSuggestion, linkHost, aLocation, aAction);
+                    suggestion, linkHost, aLocation, aAction);
 
             eventBatch.commit();
             return linkHost;

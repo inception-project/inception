@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetada
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionRenderer;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportQuery;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
@@ -52,7 +53,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChang
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -78,13 +78,13 @@ public class MetadataSuggestionSupport
     }
 
     @Override
-    public boolean accepts(Recommender aContext)
+    public boolean accepts(SuggestionSupportQuery aContext)
     {
-        if (!DocumentMetadataLayerSupport.TYPE.equals(aContext.getLayer().getType())) {
+        if (!DocumentMetadataLayerSupport.TYPE.equals(aContext.layer().getType())) {
             return false;
         }
 
-        var feature = aContext.getFeature();
+        var feature = aContext.feature();
         if (TYPE_NAME_STRING.equals(feature.getType()) || feature.isVirtualFeature()) {
             return true;
         }
@@ -93,14 +93,27 @@ public class MetadataSuggestionSupport
     }
 
     @Override
-    public AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
-            Predictions aPredictions, AnnotationSuggestion aSuggestion,
+    public Optional<AnnotationBaseFS> acceptSuggestion(String aSessionOwner,
+            SourceDocument aDocument, String aDataOwner, CAS aCas, TypeAdapter aAdapter,
+            AnnotationFeature aFeature, Predictions aPredictions, AnnotationSuggestion aSuggestion,
             LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException
     {
-        var adapter = (DocumentMetadataLayerAdapter) aAdapter;
+        if (aSuggestion instanceof MetadataSuggestion suggestion
+                && aAdapter instanceof DocumentMetadataLayerAdapter adapter) {
+            return Optional.of(acceptSuggestion(aSessionOwner, aDocument, aDataOwner, aCas,
+                    aFeature, aPredictions, suggestion, aLocation, aAction, adapter));
+        }
 
+        return Optional.empty();
+    }
+
+    private AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
+            String aDataOwner, CAS aCas, AnnotationFeature aFeature, Predictions aPredictions,
+            MetadataSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
+            LearningRecordUserAction aAction, DocumentMetadataLayerAdapter aAdapter)
+        throws AnnotationException
+    {
         var candidates = aCas.<AnnotationBase> select(aAdapter.getAnnotationTypeName()) //
                 .asList();
 
@@ -108,7 +121,7 @@ public class MetadataSuggestionSupport
                 .filter(c -> aAdapter.getFeatureValue(aFeature, c) == null) //
                 .findFirst();
 
-        try (var eventBatch = adapter.batchEvents()) {
+        try (var eventBatch = aAdapter.batchEvents()) {
             var annotationCreated = false;
             AnnotationBaseFS annotation;
             if (candidateWithEmptyLabel.isPresent()) {
@@ -119,7 +132,7 @@ public class MetadataSuggestionSupport
                     .map(DocumentMetadataLayerTraits::isSingleton).orElse(false)) {
                 // ... if not or if stacking is allowed, then we create a new annotation - this also
                 // takes care of attaching to an annotation if necessary
-                var newAnnotation = adapter.add(aDocument, aDataOwner, aCas);
+                var newAnnotation = aAdapter.add(aDocument, aDataOwner, aCas);
                 annotation = newAnnotation;
             }
             else {
