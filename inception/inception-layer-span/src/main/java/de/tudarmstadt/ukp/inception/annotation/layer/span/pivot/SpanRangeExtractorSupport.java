@@ -26,6 +26,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.Extractor;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerExtractorSupport;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public class SpanRangeExtractorSupport
     implements LayerExtractorSupport
@@ -47,7 +48,7 @@ public class SpanRangeExtractorSupport
     }
 
     @Override
-    public Extractor<ContextualizedFS<Annotation>, String> createExtractor(AnnotationLayer aLayer)
+    public Extractor<ContextualizedFS<Annotation>, Range> createExtractor(AnnotationLayer aLayer)
     {
         return new SpanRangeExtractor<>(aLayer);
     }
