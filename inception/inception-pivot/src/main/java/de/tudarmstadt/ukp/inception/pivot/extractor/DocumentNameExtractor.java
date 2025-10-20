@@ -53,7 +53,7 @@ public class DocumentNameExtractor
         var ann = aAnn.fs();
         var cas = ann.getCAS();
         var docAnn = cas.getDocumentAnnotation();
-        
+
         // Avoid fetching the DocumentMetaData annotation each time
         if (cacheMarker == docAnn) {
             return documentName;

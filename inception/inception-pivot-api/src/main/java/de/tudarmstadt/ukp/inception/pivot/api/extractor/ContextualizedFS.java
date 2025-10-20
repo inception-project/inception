@@ -24,7 +24,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 
 public record ContextualizedFS<T extends FeatureStructure>(AnnotationSet dataOwner, T fs) {
 
-    public CAS getCAS() {
+    public CAS getCAS()
+    {
         return fs.getCAS();
     }
 }

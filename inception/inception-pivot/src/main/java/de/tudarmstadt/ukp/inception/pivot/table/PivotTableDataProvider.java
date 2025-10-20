@@ -72,12 +72,12 @@ public class PivotTableDataProvider<A extends Serializable, T>
         addedItemCount = aBuilder.addedItemCount;
         offeredItemCount = aBuilder.offeredItemCount;
     }
-    
+
     public int getAddedItemCount()
     {
         return addedItemCount;
     }
-    
+
     public int getOfferedItemCount()
     {
         return offeredItemCount;
@@ -289,7 +289,7 @@ public class PivotTableDataProvider<A extends Serializable, T>
 
         private final Map<CompoundKey, Map<CompoundKey, A>> rows = new HashMap<>();
         private final Set<CompoundKey> columnKeys = new TreeSet<>();
-        
+
         private int offeredItemCount = 0;
         private int addedItemCount = 0;
 
@@ -305,7 +305,7 @@ public class PivotTableDataProvider<A extends Serializable, T>
         public boolean add(T item)
         {
             offeredItemCount++;
-            
+
             var rowKey = rowBuilder.buildKey(item, aggregator);
             var colKey = colBuilder.buildKey(item, aggregator);
             var cellValue = cellBuilder.buildKey(item, aggregator);
@@ -325,7 +325,7 @@ public class PivotTableDataProvider<A extends Serializable, T>
                 }
                 return aggregator.aggregate(v, cellValue);
             });
-            
+
             return true;
         }
 

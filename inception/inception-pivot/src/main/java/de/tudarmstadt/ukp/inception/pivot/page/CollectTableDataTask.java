@@ -158,7 +158,8 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
                                 var addr = ICasUtil.getAddr(fs);
                                 if (!seen.contains(addr)) {
                                     @SuppressWarnings("unchecked")
-                                    var contextualizedFS = new ContextualizedFS<T>(dataOwner, (T) fs);
+                                    var contextualizedFS = new ContextualizedFS<T>(dataOwner,
+                                            (T) fs);
                                     var added = summary.add(contextualizedFS);
                                     if (added) {
                                         totalFsAddedCount++;
@@ -177,8 +178,8 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
                                 detail = format(" (%d FSes skipped)",
                                         totalFsSeenCount - totalFsAddedCount);
                             }
-                            LOG.debug("[{}]@{} Added [{}/{}] FSes{}. Trigger types: {}",
-                                    dataOwner, doc, fsAddedCount, fsSeenCount, detail, triggerTypes);
+                            LOG.debug("[{}]@{} Added [{}/{}] FSes{}. Trigger types: {}", dataOwner,
+                                    doc, fsAddedCount, fsSeenCount, detail, triggerTypes);
                         }
                     }
                 }
@@ -244,8 +245,8 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
     private Optional<CAS> loadSharedReadOnlyCas(SourceDocument aDocument, AnnotationSet aDataOwner)
         throws IOException
     {
-        var cas = documentService.readAnnotationCas(aDocument, aDataOwner,
-                AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+        var cas = documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,
+                SHARED_READ_ONLY_ACCESS);
 
         // Set the CAS name in the DocumentMetaData so that we can pick it
         // up in the Diff position for the purpose of debugging / transparency.
@@ -281,7 +282,8 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
         private List<String> dataOwners;
         private Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
 
-        protected Builder(List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> aRowExtractors,
+        protected Builder(
+                List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> aRowExtractors,
                 List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> aColExtractors,
                 List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> aCellExtractors,
                 Aggregator<A, Object> aAggregator)
