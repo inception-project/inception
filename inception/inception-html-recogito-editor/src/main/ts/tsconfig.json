@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
-    "allowArbitraryExtensions": true,
+    "allowArbitraryExtensions": true, // so we can import svelte files
     "verbatimModuleSyntax": true,
-    "target": "esnext",
-    "module": "esnext",
-    "moduleResolution": "bundler",
+    "target": "esnext", // Use latest type features (optional chaining, etc.)
+    "module": "esnext", // Avoid legacy module resolution stuff
+    "moduleResolution": "bundler",  // Match how esbuild resolves modules
     "lib": [
       "DOM",
       "DOM.Iterable",
