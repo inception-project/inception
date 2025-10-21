@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.startsWith;
+import static org.apache.commons.lang3.Strings.CS;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -160,7 +160,8 @@ public class ManageUsersPage
 
         userService.listRealms().stream() //
                 .map(_id -> {
-                    if (startsWith(_id, REALM_PROJECT_PREFIX)) {
+                    final CharSequence str = _id;
+                    if (CS.startsWith(str, REALM_PROJECT_PREFIX)) {
                         return projectService.getRealm(_id);
                     }
                     else {
@@ -188,11 +189,12 @@ public class ManageUsersPage
                 .collect(toList());
     }
 
-    private List<User> listUsers()
+    private List<UserTableRow> listUsers()
     {
         return userService.list().stream() //
                 .filter(u -> Objects.equals(u.getRealm(), realm.getModelObject().getId())) //
-                .collect(toList());
+                .map(UserTableRow::new) //
+                .toList();
     }
 
     @OnEvent
