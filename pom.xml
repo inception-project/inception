@@ -184,26 +184,26 @@
     <javassist.version>3.30.2-GA</javassist.version>
     <openjson.version>1.0.13</openjson.version>
 
-    <node.version>20.12.2</node.version>
+    <node.version>22.19.0</node.version>
     <apache-annotator.version>0.2.0</apache-annotator.version>
     <bootstrap.version>5.3.8</bootstrap.version>
     <cross-env.version>^7.0.3</cross-env.version>
     <color-convert.version>^2.0.1</color-convert.version>
-    <dayjs.version>^1.11.13</dayjs.version>
-    <dompurify.version>^3.2.3</dompurify.version>
-    <esbuild.version>^0.25.0</esbuild.version>
-    <esbuild-sass-plugin.version>^3.3.1</esbuild-sass-plugin.version>
-    <esbuild-svelte.version>^0.9.2</esbuild-svelte.version>
-    <eslint.version>^9.24.0</eslint.version>
-    <neostandard.version>^0.12.1</neostandard.version>
-    <eslint-plugin-import.version>^2.31.0</eslint-plugin-import.version>
-    <eslint-plugin-n.version>^17.17.0</eslint-plugin-n.version>
+    <dayjs.version>1.11.18</dayjs.version>
+    <dompurify.version>3.2.7</dompurify.version>
+    <esbuild.version>0.25.11</esbuild.version>
+    <esbuild-sass-plugin.version>3.3.1</esbuild-sass-plugin.version>
+    <esbuild-svelte.version>0.9.3</esbuild-svelte.version>
+    <eslint.version>9.38.0</eslint.version>
+    <neostandard.version>0.12.2</neostandard.version>
+    <eslint-plugin-import.version>2.32.0</eslint-plugin-import.version>
+    <eslint-plugin-n.version>17.23.1</eslint-plugin-n.version>
     <eslint-plugin-promise.version>^7.2.1</eslint-plugin-promise.version>
-    <eslint-plugin-svelte.version>^3.5.1</eslint-plugin-svelte.version>
-    <events.version>^3.3.0</events.version>
+    <eslint-plugin-svelte.version>3.12.4</eslint-plugin-svelte.version>
+    <events.version>3.3.0</events.version>
     <fast-json-patch.version>^3.1.1</fast-json-patch.version>
     <font-awesome.version>6.7.2</font-awesome.version>
-    <fs-extra.version>^11.2.0</fs-extra.version>
+    <fs-extra.version>11.3.2</fs-extra.version>
     <jsdom.version>^26.1.0</jsdom.version>
     <jsdom-global.version>^3.0.2</jsdom-global.version>
     <jquery.version>3.7.1</jquery.version>
@@ -217,7 +217,7 @@
     <rollup.version>^4.40.0</rollup.version>
     <sass.version>^1.75.0</sass.version>
     <stomp-stompjs.version>^6.1.2</stomp-stompjs.version>
-    <svelte.version>^5.33.3</svelte.version>
+    <svelte.version>5.38.10</svelte.version>
     <svelte-preprocess.version>^6.0.3</svelte-preprocess.version>
     <sveltejs-vite-plugin-svelte.version>^5.0.3</sveltejs-vite-plugin-svelte.version>
     <svgdotjs-svg-js.version>^3.2.4</svgdotjs-svg-js.version>
@@ -233,7 +233,7 @@
     <types-urijs.version>^1.19.20</types-urijs.version>
     <uuid.version>^9.0.1</uuid.version>
     <urijs.version>^1.19.11</urijs.version>
-    <vite.version>^6.3.6</vite.version>
+    <vite.version>6.4.1</vite.version>
     <vitest.version>^3.1.2</vitest.version>
     <yargs.version>^17.7.2</yargs.version>
   </properties>
