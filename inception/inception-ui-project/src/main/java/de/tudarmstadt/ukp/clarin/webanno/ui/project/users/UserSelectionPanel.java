@@ -24,7 +24,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,7 +95,7 @@ class UserSelectionPanel
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
 
-        IModel<Collection<User>> usersToAddModel = new CollectionModel<>(new ArrayList<>());
+        var usersToAddModel = new CollectionModel<>(new ArrayList<User>());
         var form = new Form<>("form", usersToAddModel);
         add(form);
 

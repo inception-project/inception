@@ -99,11 +99,11 @@ public class SourceDocumentTable
     private SourceDocumentTableDataProvider dataProvider;
     private DataTable<SourceDocumentTableRow, SourceDocumentTableSortKeys> table;
     private TextField<String> nameFilter;
-    private LambdaAjaxLink toggleBulkChange;
     private ModalDialog confirmationDialog;
+
+    private LambdaAjaxLink toggleBulkChange;
     private WebMarkupContainer bulkActionDropdown;
     private WebMarkupContainer bulkActionDropdownButton;
-
     private boolean bulkChangeMode = false;
     private SourceDocumentSelectColumn selectColumn;
 
@@ -293,13 +293,13 @@ public class SourceDocumentTable
         boolean targetValue = aEvent.isSelectAll();
 
         for (var row : dataProvider) {
-            if (row.isSelected()) {
-                selected++;
-            }
-
             if (row.isSelected() != targetValue) {
                 changed++;
                 row.setSelected(targetValue);
+            }
+
+            if (row.isSelected()) {
+                selected++;
             }
         }
 
