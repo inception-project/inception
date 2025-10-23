@@ -34,8 +34,8 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.IOUtils.copyLarge;
-import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
+import static org.apache.commons.lang3.Strings.CS;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 import static org.hibernate.annotations.QueryHints.CACHEABLE;
 
@@ -1255,17 +1255,18 @@ public class ProjectServiceImpl
     @Override
     public Realm getRealm(String aRealmId)
     {
-        if (!startsWith(aRealmId, Realm.REALM_PROJECT_PREFIX)) {
+        if (!CS.startsWith(aRealmId, Realm.REALM_PROJECT_PREFIX)) {
             throw new IllegalArgumentException(
                     "Project realm must start with [" + Realm.REALM_PROJECT_PREFIX + "]");
         }
 
         var projectId = Long.valueOf(substringAfter(aRealmId, Realm.REALM_PROJECT_PREFIX));
-        var project = getProject(projectId);
-        if (project != null) {
+        try {
+            var project = getProject(projectId);
             return new Realm(aRealmId, "<Project> " + project.getName());
         }
-        else {
+        catch (NoResultException e) {
+
             return new Realm(aRealmId, "<Project (deleted)>: " + projectId + ">");
         }
     }
