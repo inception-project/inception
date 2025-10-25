@@ -23,6 +23,7 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
 import static org.apache.commons.lang3.StringUtils.appendIfMissing;
+import static org.apache.commons.lang3.Strings.CS;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.io.IOException;
@@ -191,9 +192,11 @@ public class ExternalRecommender
             documents.add(buildDocument(cas));
         }
         trainingRequest.setDocuments(documents);
+        CharSequence[] suffixes = {};
 
         var request = HttpRequest.newBuilder() //
-                .uri(URI.create(appendIfMissing(traits.getRemoteUrl(), "/")).resolve("train")) //
+                .uri(URI.create(CS.appendIfMissing(traits.getRemoteUrl(), "/", suffixes))
+                        .resolve("train")) //
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //
                 .timeout(properties.getReadTimeout())
                 .POST(BodyPublishers.ofString(toJson(trainingRequest), UTF_8)).build();
@@ -206,13 +209,19 @@ public class ExternalRecommender
         // If the response indicates that the request was not successful,
         // then it does not make sense to go on and try to decode the XMI
         else if (response.statusCode() >= HTTP_BAD_REQUEST) {
-            var responseBody = getResponseBody(response);
-            var msg = format("Request was not successful: [%d] - [%s]", response.statusCode(),
-                    responseBody);
-            throw new RecommendationException(msg);
+            throw communicationFailedException(response);
         }
 
         aContext.put(KEY_TRAINING_COMPLETE, true);
+    }
+
+    private RecommendationException communicationFailedException(HttpResponse<String> response)
+    {
+        var responseBody = getResponseBody(response);
+        var msg = format("Request to external recommender failed: [%d] - [%s]",
+                response.statusCode(), responseBody);
+        var ex = new RecommendationException(msg);
+        return ex;
     }
 
     @Override
@@ -241,10 +250,7 @@ public class ExternalRecommender
         // If the response indicates that the request was not successful,
         // then it does not make sense to go on and try to decode the XMI
         if (response.statusCode() >= HTTP_BAD_REQUEST) {
-            var responseBody = getResponseBody(response);
-            var msg = format("Request was not successful: [%d] - [%s]", response.statusCode(),
-                    responseBody);
-            throw new RecommendationException(msg);
+            throw communicationFailedException(response);
         }
 
         var predictionResponse = deserializePredictionResponse(response);
