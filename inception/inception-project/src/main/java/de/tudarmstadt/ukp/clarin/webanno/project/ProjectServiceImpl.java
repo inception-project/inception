@@ -1266,7 +1266,6 @@ public class ProjectServiceImpl
             return new Realm(aRealmId, "<Project> " + project.getName());
         }
         catch (NoResultException e) {
-
             return new Realm(aRealmId, "<Project (deleted)>: " + projectId + ">");
         }
     }
