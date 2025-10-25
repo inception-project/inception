@@ -272,4 +272,13 @@ public abstract class RecommendationEngine
     {
         // Nothing do to
     }
+
+    /**
+     * @return whether to extract all layers and features or just the one configured in the
+     *         recommender settings.
+     */
+    public boolean isUniveralExtraction()
+    {
+        return false;
+    }
 }

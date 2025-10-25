@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span.recommender;
 
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -110,7 +111,7 @@ public class SpanSuggestionRenderer
 
                 Map<String, String> featureAnnotation = annotation != null
                         ? Map.of(suggestion.getFeature(), annotation)
-                        : Map.of();
+                        : emptyMap();
 
                 var isRanker = rankerCache.computeIfAbsent(suggestion.getRecommenderId(), id -> {
                     var recommender = recommendationService.getRecommender(id);

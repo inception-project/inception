@@ -24,6 +24,7 @@ package de.tudarmstadt.ukp.inception.recommendation;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.wicket.event.Broadcast.BREADTH;
@@ -353,10 +354,10 @@ public class RecommendationEditorExtension
 
             for (var ao : sortedByScore) {
                 var detailGroup = new VLazyDetailGroup(ao.getRecommenderName());
+                detailGroup.addDetail(new VLazyDetail("Feature", aFeature.getUiName()));
                 // detailGroup.addDetail(new VLazyDetail("Age", String.valueOf(ao.getAge())));
                 if (ao.getScore() > 0.0d) {
-                    detailGroup.addDetail(
-                            new VLazyDetail("Score", String.format("%.2f", ao.getScore())));
+                    detailGroup.addDetail(new VLazyDetail("Score", format("%.2f", ao.getScore())));
                 }
                 if (ao.getScoreExplanation().isPresent()) {
                     detailGroup.addDetail(

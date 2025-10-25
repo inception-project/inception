@@ -51,7 +51,8 @@ public class PredictionGroupTest
     @Test
     public void thatAddingElementsToGroupWorks()
     {
-        var builder = SpanSuggestion.builder().withDocument(doc).withPosition(0, 1);
+        var builder = SpanSuggestion.builder().withDocument(doc).withPosition(0, 1)
+                .withFeature("value");
 
         builder.withRecommender(rec1);
         var rec1Sug1 = builder.withId(1).withCoveredText("a").withLabel("A").withUiLabel("#A")

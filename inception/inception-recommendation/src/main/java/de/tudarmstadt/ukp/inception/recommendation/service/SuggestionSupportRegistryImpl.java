@@ -23,6 +23,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportQuery;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
@@ -48,5 +49,11 @@ public class SuggestionSupportRegistryImpl
                 .filter(e -> e.accepts(aKey)) //
                 .map(e -> (X) e) //
                 .findFirst();
+    }
+
+    @Override
+    public Optional<SuggestionSupport> findExtension(AnnotationFeature aFeature)
+    {
+        return findGenericExtension(SuggestionSupportQuery.of(aFeature));
     }
 }

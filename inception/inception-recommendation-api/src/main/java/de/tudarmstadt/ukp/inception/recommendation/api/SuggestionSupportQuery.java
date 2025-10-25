@@ -22,6 +22,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 public record SuggestionSupportQuery(AnnotationLayer layer, AnnotationFeature feature) {
+    public static SuggestionSupportQuery of(AnnotationFeature aFeature)
+    {
+        return new SuggestionSupportQuery(aFeature.getLayer(), aFeature);
+    }
+
     public static SuggestionSupportQuery of(Recommender aRecommender)
     {
         return new SuggestionSupportQuery(aRecommender.getLayer(), aRecommender.getFeature());

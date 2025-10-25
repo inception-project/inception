@@ -30,7 +30,9 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.fit.util.CasUtil;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
@@ -44,10 +46,8 @@ public final class ExtractionContext
     private final String documentText;
 
     private final Recommender recommender;
-
     private final AnnotationLayer layer;
-    private final String typeName;
-    private final String featureName;
+    private final AnnotationFeature feature;
 
     private final Type predictedType;
 
@@ -61,10 +61,13 @@ public final class ExtractionContext
 
     private final boolean isMultiLabels;
 
-    public ExtractionContext(int aGeneration, Recommender aRecommender, SourceDocument aDocument,
-            CAS aOriginalCas, CAS aPredictionCas)
+    public ExtractionContext(int aGeneration, Recommender aRecommender, AnnotationLayer aLayer,
+            AnnotationFeature aFeature, SourceDocument aDocument, CAS aOriginalCas,
+            CAS aPredictionCas)
     {
         recommender = aRecommender;
+        layer = aLayer;
+        feature = aFeature;
 
         document = aDocument;
         originalCas = aOriginalCas;
@@ -72,11 +75,9 @@ public final class ExtractionContext
         predictionCas = aPredictionCas;
 
         generation = aGeneration;
-        layer = aRecommender.getLayer();
-        featureName = aRecommender.getFeature().getName();
-        typeName = layer.getName();
 
-        predictedType = CasUtil.getType(aPredictionCas, typeName);
+        var featureName = feature.getName();
+        predictedType = CasUtil.getType(aPredictionCas, layer.getName());
         labelFeature = predictedType.getFeatureByBaseName(featureName);
         scoreFeature = predictedType.getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_SUFFIX);
         scoreExplanationFeature = predictedType
@@ -116,6 +117,11 @@ public final class ExtractionContext
         return documentText;
     }
 
+    public Project getProject()
+    {
+        return document.getProject();
+    }
+
     public Recommender getRecommender()
     {
         return recommender;
@@ -126,14 +132,9 @@ public final class ExtractionContext
         return layer;
     }
 
-    public String getTypeName()
+    public AnnotationFeature getFeature()
     {
-        return typeName;
-    }
-
-    public String getFeatureName()
-    {
-        return featureName;
+        return feature;
     }
 
     public Type getPredictedType()

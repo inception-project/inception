@@ -34,6 +34,7 @@ public class ExternalRecommenderTraits
     private boolean verifyCertificates = true;
     private boolean ranker;
     private TrainingCapability trainingCapability;
+    private boolean universalExtraction;
 
     @Deprecated
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
@@ -100,5 +101,15 @@ public class ExternalRecommenderTraits
     public void setTrainingCapability(TrainingCapability aTrainingCapability)
     {
         trainingCapability = aTrainingCapability;
+    }
+
+    public boolean isUniversalExtraction()
+    {
+        return universalExtraction;
+    }
+
+    public void setUniversalExtraction(boolean aUniversalExtraction)
+    {
+        universalExtraction = aUniversalExtraction;
     }
 }

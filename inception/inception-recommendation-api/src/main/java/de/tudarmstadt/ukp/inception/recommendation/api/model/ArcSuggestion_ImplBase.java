@@ -21,8 +21,6 @@ import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-
 public abstract class ArcSuggestion_ImplBase<P extends ArcPosition_ImplBase<?>>
     extends AnnotationSuggestion
     implements Serializable
@@ -33,11 +31,7 @@ public abstract class ArcSuggestion_ImplBase<P extends ArcPosition_ImplBase<?>>
 
     protected ArcSuggestion_ImplBase(Builder<?, P> builder)
     {
-        super(builder.id, builder.generation, builder.age, builder.recommenderId,
-                builder.recommenderName, builder.layerId, builder.feature, builder.documentId,
-                builder.label, builder.uiLabel, builder.score, builder.scoreExplanation,
-                builder.autoAcceptMode, builder.hidingFlags, builder.correction,
-                builder.correctionExplanation);
+        super(builder);
 
         position = builder.position;
     }
@@ -96,151 +90,20 @@ public abstract class ArcSuggestion_ImplBase<P extends ArcPosition_ImplBase<?>>
         return toBuilder().withId(aId).build();
     }
 
-    public abstract Builder toBuilder();
+    public abstract Builder<? extends Builder, ?> toBuilder();
 
     public static abstract class Builder<T extends Builder<?, ?>, P extends ArcPosition_ImplBase<?>>
+        extends AnnotationSuggestion.Builder<T>
     {
-        protected int generation;
-        protected int age;
-        protected int id;
-        protected long recommenderId;
-        protected String recommenderName;
-        protected long layerId;
-        protected String feature;
-        protected long documentId;
-        protected String label;
-        protected String uiLabel;
-        protected double score;
-        protected String scoreExplanation;
         protected P position;
-        protected AutoAcceptMode autoAcceptMode;
-        protected int hidingFlags;
-        private boolean correction;
-        protected String correctionExplanation;
 
         protected Builder()
         {
         }
 
-        public T withId(int aId)
-        {
-            this.id = aId;
-            return (T) this;
-        }
-
-        public T withGeneration(int aGeneration)
-        {
-            this.generation = aGeneration;
-            return (T) this;
-        }
-
-        public T withAge(int aAge)
-        {
-            this.age = aAge;
-            return (T) this;
-        }
-
-        public T withRecommender(Recommender aRecommender)
-        {
-            this.recommenderId = aRecommender.getId();
-            this.recommenderName = aRecommender.getName();
-            this.feature = aRecommender.getFeature().getName();
-            this.layerId = aRecommender.getLayer().getId();
-            return (T) this;
-        }
-
-        @Deprecated
-        T withRecommenderId(long aRecommenderId)
-        {
-            this.recommenderId = aRecommenderId;
-            return (T) this;
-        }
-
-        @Deprecated
-        T withRecommenderName(String aRecommenderName)
-        {
-            this.recommenderName = aRecommenderName;
-            return (T) this;
-        }
-
-        @Deprecated
-        T withLayerId(long aLayerId)
-        {
-            this.layerId = aLayerId;
-            return (T) this;
-        }
-
-        @Deprecated
-        T withFeature(String aFeature)
-        {
-            this.feature = aFeature;
-            return (T) this;
-        }
-
-        public T withDocument(SourceDocument aDocument)
-        {
-            this.documentId = aDocument.getId();
-            return (T) this;
-        }
-
-        @Deprecated
-        public T withDocument(long aDocumentId)
-        {
-            this.documentId = aDocumentId;
-            return (T) this;
-        }
-
-        public T withLabel(String aLabel)
-        {
-            this.label = aLabel;
-            return (T) this;
-        }
-
-        public T withUiLabel(String aUiLabel)
-        {
-            this.uiLabel = aUiLabel;
-            return (T) this;
-        }
-
-        public T withScore(double aScore)
-        {
-            this.score = aScore;
-            return (T) this;
-        }
-
-        public T withScoreExplanation(String aScoreExplanation)
-        {
-            this.scoreExplanation = aScoreExplanation;
-            return (T) this;
-        }
-
         public T withPosition(P aPosition)
         {
-            this.position = aPosition;
-            return (T) this;
-        }
-
-        public T withAutoAcceptMode(AutoAcceptMode aAutoAcceptMode)
-        {
-            this.autoAcceptMode = aAutoAcceptMode;
-            return (T) this;
-        }
-
-        public T withHidingFlags(int aFlags)
-        {
-            this.hidingFlags = aFlags;
-            return (T) this;
-        }
-
-        public T withCorrection(boolean aCorrection)
-        {
-            this.correction = aCorrection;
-            return (T) this;
-        }
-
-        public T withCorrectionExplanation(String aCorrectionExplanation)
-        {
-            this.correctionExplanation = aCorrectionExplanation;
+            position = aPosition;
             return (T) this;
         }
 

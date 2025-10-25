@@ -675,6 +675,25 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public Optional<AnnotationFeature> getFeature(long aLayerId, String aName)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(AnnotationFeature.class);
+        var feature = query.from(AnnotationFeature.class);
+
+        var namePredicate = cb.equal(feature.get(AnnotationFeature_.name), aName);
+        var layerPredicate = cb
+                .equal(feature.get(AnnotationFeature_.layer).get(AnnotationLayer_.id), aLayerId);
+
+        query.select(feature).where(cb.and(namePredicate, layerPredicate));
+
+        return entityManager.createQuery(query) //
+                .getResultStream() //
+                .findFirst();
+    }
+
+    @Override
     @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public boolean existsType(String aName, String aType)
     {

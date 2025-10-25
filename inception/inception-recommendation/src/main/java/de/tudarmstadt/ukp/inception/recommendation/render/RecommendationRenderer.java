@@ -28,8 +28,11 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -42,6 +45,7 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * <p>
@@ -59,15 +63,18 @@ public class RecommendationRenderer
     private final SuggestionSupportRegistry suggestionSupportRegistry;
     private final PreferencesService preferencesService;
     private final UserDao userService;
+    private final AnnotationSchemaService schemaService;
 
     public RecommendationRenderer(RecommendationService aRecommendationService,
             SuggestionSupportRegistry aSuggestionSupportRegistry,
-            PreferencesService aPreferencesService, UserDao aUserService)
+            PreferencesService aPreferencesService, UserDao aUserService,
+            AnnotationSchemaService aSchemaService)
     {
         recommendationService = aRecommendationService;
         suggestionSupportRegistry = aSuggestionSupportRegistry;
         preferencesService = aPreferencesService;
         userService = aUserService;
+        schemaService = aSchemaService;
     }
 
     @Override
@@ -131,6 +138,7 @@ public class RecommendationRenderer
         var recommenderCache = recommendationService.listEnabledRecommenders(aRequest.getProject())
                 .stream().collect(toMap(Recommender::getId, identity()));
         var suggestionSupportCache = new HashMap<SuggestionSupportQuery, Optional<SuggestionSupport>>();
+        var featureCache = new HashMap<Pair<AnnotationLayer, String>, AnnotationFeature>();
 
         for (var layer : aRequest.getVisibleLayers()) {
             if (!layer.isEnabled() || layer.isReadonly()) {
@@ -150,8 +158,11 @@ public class RecommendationRenderer
                     continue;
                 }
 
+                var feature = featureCache.computeIfAbsent(Pair.of(layer, suggestion.getFeature()),
+                        k -> schemaService.getFeature(k.getRight(), k.getLeft()));
+
                 var suggestionSupport = suggestionSupportCache.computeIfAbsent(
-                        SuggestionSupportQuery.of(recommender),
+                        SuggestionSupportQuery.of(feature),
                         suggestionSupportRegistry::findGenericExtension);
                 if (suggestionSupport.isEmpty()) {
                     continue;

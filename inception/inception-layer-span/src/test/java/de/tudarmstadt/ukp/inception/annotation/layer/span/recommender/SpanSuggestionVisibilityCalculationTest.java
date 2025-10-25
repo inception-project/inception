@@ -284,9 +284,12 @@ public class SpanSuggestionVisibilityCalculationTest
     @Test
     void thatRejectedSuggestionIsHidden()
     {
-        var rec1 = Recommender.builder().withId(1l).withLayer(layer).withFeature(feature).build();
-        var rec2 = Recommender.builder().withId(2l).withLayer(layer2).withFeature(feature).build();
-        var rec3 = Recommender.builder().withId(3l).withLayer(layer).withFeature(feature2).build();
+        var rec1 = Recommender.builder().withId(1l).withName("Rec1").withLayer(layer)
+                .withFeature(feature).build();
+        var rec2 = Recommender.builder().withId(2l).withName("Rec2").withLayer(layer2)
+                .withFeature(feature).build();
+        var rec3 = Recommender.builder().withId(3l).withName("Rec3").withLayer(layer)
+                .withFeature(feature2).build();
         var label = "x";
 
         var records = asList(LearningRecord.builder() //
@@ -299,8 +302,12 @@ public class SpanSuggestionVisibilityCalculationTest
                 .withUserAction(REJECTED) //
                 .build());
 
-        var docSuggestion = SpanSuggestion.builder().withRecommender(rec1).withDocument(doc)
-                .withLabel(label).withPosition(0, 10).build();
+        var docSuggestion = SpanSuggestion.builder() //
+                .withRecommender(rec1) //
+                .withDocument(doc) //
+                .withLabel(label) //
+                .withPosition(0, 10) //
+                .build();
         assertThat(docSuggestion.isVisible()).isTrue();
         hideSuggestionsRejectedOrSkipped(docSuggestion, records);
         assertThat(docSuggestion.isVisible()) //
@@ -308,8 +315,12 @@ public class SpanSuggestionVisibilityCalculationTest
                 .isFalse();
         assertThat(docSuggestion.getReasonForHiding().trim()).isEqualTo("rejected");
 
-        var doc2Suggestion = SpanSuggestion.builder().withRecommender(rec1).withDocument(doc2)
-                .withLabel(label).withPosition(0, 10).build();
+        var doc2Suggestion = SpanSuggestion.builder() //
+                .withRecommender(rec1) //
+                .withDocument(doc2) //
+                .withLabel(label) //
+                .withPosition(0, 10) //
+                .build();
         assertThat(doc2Suggestion.isVisible()).isTrue();
         hideSuggestionsRejectedOrSkipped(doc2Suggestion, records);
         assertThat(doc2Suggestion.isVisible()) //
@@ -336,9 +347,12 @@ public class SpanSuggestionVisibilityCalculationTest
     @Test
     void thatSkippedSuggestionIsHidden()
     {
-        var rec1 = Recommender.builder().withId(1l).withLayer(layer).withFeature(feature).build();
-        var rec2 = Recommender.builder().withId(2l).withLayer(layer2).withFeature(feature).build();
-        var rec3 = Recommender.builder().withId(3l).withLayer(layer).withFeature(feature2).build();
+        var rec1 = Recommender.builder().withId(1l).withName("Rec1").withLayer(layer)
+                .withFeature(feature).build();
+        var rec2 = Recommender.builder().withId(2l).withName("Rec2").withLayer(layer2)
+                .withFeature(feature).build();
+        var rec3 = Recommender.builder().withId(3l).withName("Rec3").withLayer(layer)
+                .withFeature(feature2).build();
         var label = "x";
 
         var records = asList(LearningRecord.builder() //
@@ -351,8 +365,14 @@ public class SpanSuggestionVisibilityCalculationTest
                 .withUserAction(SKIPPED) //
                 .build());
 
-        var docSuggestion = SpanSuggestion.builder().withRecommender(rec1).withDocument(doc)
-                .withLabel(label).withPosition(0, 10).build();
+        var docSuggestion = SpanSuggestion.builder() //
+                .withRecommender(rec1) //
+                .withLayer(rec1.getLayer()) //
+                .withFeature(rec1.getFeature()) //
+                .withDocument(doc) //
+                .withLabel(label) //
+                .withPosition(0, 10) //
+                .build();
         assertThat(docSuggestion.isVisible()).isTrue();
         hideSuggestionsRejectedOrSkipped(docSuggestion, records);
         assertThat(docSuggestion.isVisible()) //
@@ -360,8 +380,14 @@ public class SpanSuggestionVisibilityCalculationTest
                 .isFalse();
         assertThat(docSuggestion.getReasonForHiding().trim()).isEqualTo("skipped");
 
-        var doc2Suggestion = SpanSuggestion.builder().withRecommender(rec1).withDocument(doc2)
-                .withLabel(label).withPosition(0, 10).build();
+        var doc2Suggestion = SpanSuggestion.builder() //
+                .withRecommender(rec1) //
+                .withLayer(rec1.getLayer()) //
+                .withFeature(rec1.getFeature()) //
+                .withDocument(doc2) //
+                .withLabel(label) //
+                .withPosition(0, 10) //
+                .build();
         assertThat(doc2Suggestion.isVisible()).isTrue();
         hideSuggestionsRejectedOrSkipped(doc2Suggestion, records);
         assertThat(doc2Suggestion.isVisible()) //

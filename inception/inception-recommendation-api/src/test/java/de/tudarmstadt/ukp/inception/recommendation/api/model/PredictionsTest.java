@@ -122,6 +122,10 @@ class PredictionsTest
                 SpanSuggestion.builder() //
                         .withId(AnnotationSuggestion.NEW_ID) //
                         .withDocument(doc) //
+                        .withRecommenderId(1l) //
+                        .withRecommenderName("Recommender") //
+                        .withLayerId(1l) //
+                        .withFeature("feature") //
                         .build()));
 
         assertThat(sut.getSuggestionsByDocument(doc)) //
@@ -134,6 +138,10 @@ class PredictionsTest
                 SpanSuggestion.builder() //
                         .withId(AnnotationSuggestion.NEW_ID) //
                         .withDocument(doc) //
+                        .withRecommenderId(1l) //
+                        .withRecommenderName("Recommender") //
+                        .withLayerId(1l) //
+                        .withFeature("feature") //
                         .build()));
         sut.inheritSuggestions(inheritedPredictions);
 
@@ -152,13 +160,20 @@ class PredictionsTest
         var tokens = cas.select(Token.class).asList();
 
         var result = new ArrayList<AnnotationSuggestion>();
-        for (var docId = 0l; docId < aDocs; docId++) {
-            var doc = SourceDocument.builder().withId(docId).withName("doc" + docId).build();
-            for (var recId = 0l; recId < aRecommenders; recId++) {
+        for (var docId = 1l; docId <= aDocs; docId++) {
+            var doc = SourceDocument.builder() //
+                    .withId(docId) //
+                    .withName("doc" + docId) //
+                    .build();
+            for (var recId = 1l; recId <= aRecommenders; recId++) {
                 var feature = AnnotationFeature.builder().withId(recId).withName("feat" + recId)
                         .build();
-                var rec = Recommender.builder().withId(recId).withName("rec" + recId)
-                        .withLayer(layer).withFeature(feature).build();
+                var rec = Recommender.builder() //
+                        .withId(recId) //
+                        .withName("rec" + recId) //
+                        .withLayer(layer) //
+                        .withFeature(feature) //
+                        .build();
                 for (int annId = 0; annId < aSuggestions; annId++) {
                     var label = labels.get(rng.nextInt(labels.size()));
                     var token = tokens.get(rng.nextInt(tokens.size()));

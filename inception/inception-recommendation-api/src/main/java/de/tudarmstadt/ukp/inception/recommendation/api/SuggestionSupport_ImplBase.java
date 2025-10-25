@@ -190,14 +190,13 @@ public abstract class SuggestionSupport_ImplBase
             AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
-        var suggestion = aSuggestion;
-
         // Hide the suggestion. This is faster than having to recalculate the visibility status
         // for the entire document or even for the part visible on screen.
-        suggestion.hide(FLAG_TRANSIENT_REJECTED);
+        aSuggestion.hide(FLAG_TRANSIENT_REJECTED);
 
-        var recommender = recommendationService.getRecommender(suggestion);
-        var feature = recommender.getFeature();
+        var layer = schemaService.getLayer(aSuggestion.getLayerId());
+        var feature = schemaService.getFeature(aSuggestion.getFeature(), layer);
+
         // Log the action to the learning record
         var record = toLearningRecord(aDocument, aDataOwner, aSuggestion, feature, REJECTED,
                 aLocation);
@@ -205,7 +204,7 @@ public abstract class SuggestionSupport_ImplBase
 
         // Send an application event that the suggestion has been rejected
         applicationEventPublisher.publishEvent(
-                new RecommendationRejectedEvent(this, aDocument, aDataOwner, feature, suggestion));
+                new RecommendationRejectedEvent(this, aDocument, aDataOwner, feature, aSuggestion));
     }
 
     @Override

@@ -59,14 +59,24 @@ public class Fixtures
     public static SuggestionDocumentGroup<SpanSuggestion> makeSpanSuggestionGroup(
             SourceDocument doc, AnnotationFeature aFeat, int[][] vals)
     {
-        var rec = Recommender.builder().withId(RECOMMENDER_ID).withName(RECOMMENDER_NAME)
-                .withLayer(aFeat.getLayer()).withFeature(aFeat).build();
+        var rec = Recommender.builder() //
+                .withId(RECOMMENDER_ID) //
+                .withName(RECOMMENDER_NAME) //
+                .withLayer(aFeat.getLayer()) //
+                .withFeature(aFeat) //
+                .build();
 
         List<SpanSuggestion> suggestions = new ArrayList<>();
         for (int[] val : vals) {
-            var suggestion = SpanSuggestion.builder().withId(val[0]).withRecommender(rec)
-                    .withDocument(doc).withPosition(val[1], val[2]).withCoveredText(COVERED_TEXT)
-                    .withScore(CONFIDENCE).withScoreExplanation(CONFIDENCE_EXPLANATION).build();
+            var suggestion = SpanSuggestion.builder() //
+                    .withId(val[0]) //
+                    .withRecommender(rec) //
+                    .withDocument(doc) //
+                    .withPosition(val[1], val[2]) //
+                    .withCoveredText(COVERED_TEXT) //
+                    .withScore(CONFIDENCE) //
+                    .withScoreExplanation(CONFIDENCE_EXPLANATION) //
+                    .build();
             suggestions.add(suggestion);
         }
 
