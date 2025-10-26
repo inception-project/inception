@@ -414,7 +414,8 @@ public class TrainingTask
 
         appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
                 .builder(this, getProject(), getMandatorySessionOwner().getUsername()) //
-                .withMessage(LogMessage.error(this, "Training failed with %s", e.getMessage()))
+                .withMessage(LogMessage.error(this, "Training [%s] failed: %s",
+                        recommender.getName(), e.getMessage()))
                 .build());
     }
 

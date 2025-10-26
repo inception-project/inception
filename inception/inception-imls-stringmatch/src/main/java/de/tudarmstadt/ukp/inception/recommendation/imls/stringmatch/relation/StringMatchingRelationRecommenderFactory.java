@@ -71,6 +71,12 @@ public class StringMatchingRelationRecommenderFactory
             return false;
         }
 
+        if (aLayer.getAttachType() == null) {
+            // We need to know the attach type in order to find candidates between which to propose
+            // a relation. This recommender is not suitable for cross-layer relations.
+            return false;
+        }
+
         return RelationLayerSupport.TYPE.equals(aLayer.getType()) && !aLayer.isAllowStacking();
     }
 

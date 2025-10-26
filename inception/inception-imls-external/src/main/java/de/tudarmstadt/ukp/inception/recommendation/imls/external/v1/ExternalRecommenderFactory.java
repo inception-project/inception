@@ -58,14 +58,14 @@ public class ExternalRecommenderFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        ExternalRecommenderTraits traits = readTraits(aRecommender);
+        var traits = readTraits(aRecommender);
         return new ExternalRecommender(properties, aRecommender, traits);
     }
 
     @Override
     public String getName()
     {
-        return "Remote classifier";
+        return "External recommender";
     }
 
     @Override
