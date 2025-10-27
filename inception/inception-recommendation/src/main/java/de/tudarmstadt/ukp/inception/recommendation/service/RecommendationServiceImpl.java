@@ -1747,9 +1747,11 @@ public class RecommendationServiceImpl
         // All suggestions in the group must be of the same type. Even if they come from different
         // recommenders, the recommenders must all be producing the same type of suggestion, so we
         // can happily just take one of them in order to locate the suggestion support.
-        var recommender = getRecommender(maybeSuggestion.get());
-        var rls = suggestionSupportRegistry
-                .findGenericExtension(SuggestionSupportQuery.of(recommender));
+        var suggestion = maybeSuggestion.get();
+        var maybeFeature = schemaService.getFeature(suggestion.getLayerId(),
+                maybeSuggestion.get().getFeature());
+
+        var rls = maybeFeature.flatMap(suggestionSupportRegistry::findExtension);
 
         if (rls.isPresent()) {
             rls.get().calculateSuggestionVisibility(aSessionOwner, aDocument, aCas, aDataOwner,

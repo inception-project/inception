@@ -292,6 +292,8 @@ public interface AnnotationSchemaService
      */
     AnnotationFeature getFeature(String aFeature, AnnotationLayer aLayer);
 
+    Optional<AnnotationFeature> getFeature(long aLayerId, String aName);
+
     /**
      * Check if an {@link AnnotationLayer} already exists.
      * 

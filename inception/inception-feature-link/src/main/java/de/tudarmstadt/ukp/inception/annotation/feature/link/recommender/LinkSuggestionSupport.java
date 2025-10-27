@@ -250,7 +250,7 @@ public class LinkSuggestionSupport
                 continue;
             }
 
-            var feature = ctx.getRecommender().getFeature();
+            var feature = ctx.getFeature();
             List<LinkWithRoleModel> links = adapter.getFeatureValue(feature, predictedFS);
             if (links.isEmpty()) {
                 continue;
@@ -260,7 +260,7 @@ public class LinkSuggestionSupport
             var link = links.get(0);
             var target = selectAnnotationByAddr(ctx.getPredictionCas(), link.targetAddr);
             var targetAdapter = adapterCache.computeIfAbsent(target.getType().getName(),
-                    $ -> schemaService.findAdapter(ctx.getRecommender().getProject(), target));
+                    $ -> schemaService.findAdapter(ctx.getProject(), target));
 
             var originalSource = findEquivalentSpan(adapter, ctx.getOriginalCas(), source);
             var originalTarget = findEquivalentSpan(targetAdapter, ctx.getOriginalCas(), target);
@@ -280,9 +280,7 @@ public class LinkSuggestionSupport
 
             var suggestion = LinkSuggestion.builder() //
                     .withId(LinkSuggestion.NEW_ID) //
-                    .withGeneration(ctx.getGeneration()) //
-                    .withRecommender(ctx.getRecommender()) //
-                    .withDocument(ctx.getDocument()) //
+                    .withContext(ctx) //
                     .withPosition(position) //
                     .withLabel(link.role) //
                     .withUiLabel(link.role) //

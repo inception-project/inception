@@ -508,9 +508,7 @@ public class SpanSuggestionSupport
         for (var label : labels) {
             aSuggestions.add(SpanSuggestion.builder() //
                     .withId(SpanSuggestion.NEW_ID) //
-                    .withGeneration(aCtx.getGeneration()) //
-                    .withRecommender(aCtx.getRecommender()) //
-                    .withDocument(aCtx.getDocument()) //
+                    .withContext(aCtx) //
                     .withPosition(offsets) //
                     .withCoveredText(coveredText) //
                     .withLabel(label) //

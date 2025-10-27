@@ -21,8 +21,6 @@ import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-
 public class SpanSuggestion
     extends AnnotationSuggestion
     implements Serializable
@@ -34,11 +32,7 @@ public class SpanSuggestion
 
     private SpanSuggestion(Builder builder)
     {
-        super(builder.id, builder.generation, builder.age, builder.recommenderId,
-                builder.recommenderName, builder.layerId, builder.feature, builder.documentId,
-                builder.label, builder.uiLabel, builder.score, builder.scoreExplanation,
-                builder.autoAcceptMode, builder.hidingFlags, builder.correction,
-                builder.correctionExplanation);
+        super(builder);
 
         position = builder.position;
         coveredText = builder.coveredText;
@@ -138,160 +132,30 @@ public class SpanSuggestion
     }
 
     public static final class Builder
+        extends AnnotationSuggestion.Builder<Builder>
     {
-        private int id;
-        private int generation;
-        private int age;
-        private long recommenderId;
-        private String recommenderName;
-        private long layerId;
-        private String feature;
-        private long documentId;
-        private String label;
-        private String uiLabel;
-        private double score;
-        private String scoreExplanation;
         private Offset position;
         private String coveredText;
-        private AutoAcceptMode autoAcceptMode = AutoAcceptMode.NEVER;
-        private int hidingFlags;
-        private boolean correction;
-        private String correctionExplanation;
 
         private Builder()
         {
         }
 
-        public Builder withId(int aId)
-        {
-            this.id = aId;
-            return this;
-        }
-
-        public Builder withAge(int aAge)
-        {
-            this.age = aAge;
-            return this;
-        }
-
-        public Builder withGeneration(int aGeneration)
-        {
-            this.generation = aGeneration;
-            return this;
-        }
-
-        public Builder withRecommender(Recommender aRecommender)
-        {
-            this.recommenderId = aRecommender.getId();
-            this.recommenderName = aRecommender.getName();
-            this.feature = aRecommender.getFeature().getName();
-            this.layerId = aRecommender.getLayer().getId();
-            return this;
-        }
-
-        @Deprecated
-        Builder withRecommenderId(long aRecommenderId)
-        {
-            this.recommenderId = aRecommenderId;
-            return this;
-        }
-
-        @Deprecated
-        Builder withRecommenderName(String aRecommenderName)
-        {
-            this.recommenderName = aRecommenderName;
-            return this;
-        }
-
-        @Deprecated
-        Builder withLayerId(long aLayerId)
-        {
-            this.layerId = aLayerId;
-            return this;
-        }
-
-        @Deprecated
-        Builder withFeature(String aFeature)
-        {
-            this.feature = aFeature;
-            return this;
-        }
-
-        public Builder withDocument(SourceDocument aDocument)
-        {
-            this.documentId = aDocument.getId();
-            return this;
-        }
-
-        public Builder withDocument(long aDocumentId)
-        {
-            this.documentId = aDocumentId;
-            return this;
-        }
-
-        public Builder withLabel(String aLabel)
-        {
-            this.label = aLabel;
-            return this;
-        }
-
-        public Builder withUiLabel(String aUiLabel)
-        {
-            this.uiLabel = aUiLabel;
-            return this;
-        }
-
-        public Builder withScore(double aScore)
-        {
-            this.score = aScore;
-            return this;
-        }
-
-        public Builder withScoreExplanation(String aScoreExplanation)
-        {
-            this.scoreExplanation = aScoreExplanation;
-            return this;
-        }
-
         public Builder withPosition(int aBegin, int aEnd)
         {
-            this.position = new Offset(aBegin, aEnd);
+            position = new Offset(aBegin, aEnd);
             return this;
         }
 
         public Builder withPosition(Offset aPosition)
         {
-            this.position = aPosition;
+            position = aPosition;
             return this;
         }
 
         public Builder withCoveredText(String aCoveredText)
         {
-            this.coveredText = aCoveredText;
-            return this;
-        }
-
-        public Builder withAutoAcceptMode(AutoAcceptMode aAutoAcceptMode)
-        {
-            this.autoAcceptMode = aAutoAcceptMode;
-            return this;
-        }
-
-        public Builder withHidingFlags(int aFlags)
-        {
-            this.hidingFlags = aFlags;
-            return this;
-        }
-
-        public Builder withCorrection(boolean aCorrection)
-        {
-            this.correction = aCorrection;
-            return this;
-        }
-
-        public Builder withCorrectionExplanation(String aCorrectionExplanation)
-        {
-            this.correctionExplanation = aCorrectionExplanation;
+            coveredText = aCoveredText;
             return this;
         }
 

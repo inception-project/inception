@@ -28,7 +28,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -213,10 +212,12 @@ public class RelationSuggestionVisibilityCalculationTest
         var rec = Recommender.builder().withId(RECOMMENDER_ID).withName(RECOMMENDER_NAME)
                 .withLayer(aFeat.getLayer()).withFeature(aFeat).build();
 
-        List<RelationSuggestion> suggestions = new ArrayList<>();
+        var suggestions = new ArrayList<RelationSuggestion>();
         for (int[] val : vals) {
-            var suggestion = RelationSuggestion.builder().withId(val[0]).withRecommender(rec)
-                    .withDocument(doc)
+            var suggestion = RelationSuggestion.builder() //
+                    .withId(val[0]) //
+                    .withRecommender(rec) //
+                    .withDocument(doc) //
                     .withPosition(new RelationPosition(val[1], val[2], val[3], val[4]))
                     .withScore(CONFIDENCE).withScoreExplanation(CONFIDENCE_EXPLANATION).build();
             suggestions.add(suggestion);

@@ -394,4 +394,10 @@ public class ExternalRecommender
     {
         return traits.getTrainingCapability();
     }
+
+    @Override
+    public boolean isUniveralExtraction()
+    {
+        return traits.isUniversalExtraction();
+    }
 }

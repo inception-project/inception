@@ -179,7 +179,8 @@ class LinkSuggestionExtractionTest
         linkFeatureSupport.setFeatureValue(predictionCas, linkFeature, prediction.getAddress(),
                 asList(new LinkWithRoleModel("role", "label", preSlotFiller.getAddress())));
 
-        var ctx = new ExtractionContext(0, recommender, document, originalCas, predictionCas);
+        var ctx = new ExtractionContext(0, recommender, recommender.getLayer(),
+                recommender.getFeature(), document, originalCas, predictionCas);
         var suggestions = sut.extractSuggestions(ctx);
 
         assertThat(suggestions) //

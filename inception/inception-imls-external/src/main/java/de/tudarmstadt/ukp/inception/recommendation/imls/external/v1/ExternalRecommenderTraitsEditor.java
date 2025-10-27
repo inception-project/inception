@@ -93,6 +93,10 @@ public class ExternalRecommenderTraitsEditor
         ranker.setOutputMarkupId(true);
         form.add(ranker);
 
+        var universalExtraction = new CheckBox("universalExtraction");
+        universalExtraction.setOutputMarkupId(true);
+        form.add(universalExtraction);
+
         add(form);
     }
 }

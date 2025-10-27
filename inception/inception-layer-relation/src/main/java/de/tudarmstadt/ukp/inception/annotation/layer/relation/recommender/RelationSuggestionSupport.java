@@ -301,9 +301,9 @@ public class RelationSuggestionSupport
             }
 
             var sourceAdapter = adapterCache.computeIfAbsent(source.getType().getName(),
-                    $ -> schemaService.findAdapter(ctx.getRecommender().getProject(), source));
+                    $ -> schemaService.findAdapter(ctx.getProject(), source));
             var targetAdapter = adapterCache.computeIfAbsent(target.getType().getName(),
-                    $ -> schemaService.findAdapter(ctx.getRecommender().getProject(), target));
+                    $ -> schemaService.findAdapter(ctx.getProject(), target));
 
             var originalSource = findEquivalentSpan(sourceAdapter, ctx.getOriginalCas(), source);
             var originalTarget = findEquivalentSpan(targetAdapter, ctx.getOriginalCas(), target);
@@ -325,9 +325,7 @@ public class RelationSuggestionSupport
             for (var label : labels) {
                 var suggestion = RelationSuggestion.builder() //
                         .withId(RelationSuggestion.NEW_ID) //
-                        .withGeneration(ctx.getGeneration()) //
-                        .withRecommender(ctx.getRecommender()) //
-                        .withDocument(ctx.getDocument()) //
+                        .withContext(ctx) //
                         .withPosition(position) //
                         .withLabel(label) //
                         .withUiLabel(label) //

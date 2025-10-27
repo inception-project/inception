@@ -132,7 +132,8 @@ class SpanSuggestionExtractionTest
                 .withFeature(FEATURE_NAME_IS_PREDICTION, true) //
                 .buildAndAddToIndexes();
 
-        var ctx = new ExtractionContext(0, recommender, document, originalCas, predictionCas);
+        var ctx = new ExtractionContext(0, recommender, recommender.getLayer(),
+                recommender.getFeature(), document, originalCas, predictionCas);
         var suggestions = sut.extractSuggestions(ctx);
 
         assertThat(suggestions) //

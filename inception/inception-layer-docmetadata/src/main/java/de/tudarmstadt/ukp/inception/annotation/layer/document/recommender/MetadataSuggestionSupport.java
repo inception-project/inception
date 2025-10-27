@@ -311,9 +311,7 @@ public class MetadataSuggestionSupport
             for (var label : labels) {
                 var suggestion = MetadataSuggestion.builder() //
                         .withId(MetadataSuggestion.NEW_ID) //
-                        .withGeneration(ctx.getGeneration()) //
-                        .withRecommender(ctx.getRecommender()) //
-                        .withDocument(ctx.getDocument()) //
+                        .withContext(ctx) //
                         .withLabel(label) //
                         .withUiLabel(label) //
                         .withCorrection(correction) //

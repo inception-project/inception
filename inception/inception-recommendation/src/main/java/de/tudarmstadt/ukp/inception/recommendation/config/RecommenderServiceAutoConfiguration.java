@@ -196,10 +196,11 @@ public class RecommenderServiceAutoConfiguration
     public RecommendationRenderer recommendationRenderer(
             RecommendationService aRecommendationService,
             SuggestionSupportRegistry aSuggestionSupportRegistry,
-            PreferencesService aPreferencesService, UserDao aUserService)
+            PreferencesService aPreferencesService, UserDao aUserService,
+            AnnotationSchemaService aSchemaService)
     {
         return new RecommendationRenderer(aRecommendationService, aSuggestionSupportRegistry,
-                aPreferencesService, aUserService);
+                aPreferencesService, aUserService, aSchemaService);
     }
 
     @Bean

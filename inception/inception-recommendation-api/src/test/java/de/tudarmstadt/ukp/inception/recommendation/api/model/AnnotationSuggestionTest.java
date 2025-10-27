@@ -43,6 +43,8 @@ public class AnnotationSuggestionTest
         var rec2 = Recommender.builder().withId(2l).withLayer(layer).withFeature(feature).build();
 
         var builder = SpanSuggestion.builder() //
+                .withRecommenderId(1) //
+                .withRecommenderName("Recommender") //
                 .withLayerId(1) //
                 .withFeature("value") //
                 .withDocument(doc) //
