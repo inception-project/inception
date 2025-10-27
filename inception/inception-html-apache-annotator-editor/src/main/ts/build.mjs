@@ -52,8 +52,6 @@ const defaults = {
     esbuildSvelte({
       compilerOptions: { 
         dev: argv.live,
-        // See: https://github.com/sveltejs/svelte/issues/15799
-        // templatingMode: "functional"
       },
       preprocess: sveltePreprocess(),
       filterWarnings: (warning) => {
