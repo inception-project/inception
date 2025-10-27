@@ -243,7 +243,7 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
               console.log(`width: ${width} / totalWidth: ${totalWidth}`)
               this.navigatorContainer.style.width = `${width}px`
               this.navigatorContainer.style.minWidth = `${width}px`
-              this.navigatorContainer.style.maxWidth = `${width}px`  
+              this.navigatorContainer.style.maxWidth = `${width}px`
             })
           }
         },

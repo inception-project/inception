@@ -178,7 +178,6 @@ export class ApacheAnnotatorVisualizer {
     }
 
     const endTime = performance.now()
-
     console.log(`Client-side rendering took ${endTime - startTime}ms`)
   }
 
