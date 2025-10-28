@@ -43,40 +43,40 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 @ExtendWith(MockitoExtension.class)
 class ProjectSettingsExporterTest
 {
-  private @Mock UserDao userService;
-  private @Mock ApplicationEventPublisher applicationEventPublisher;
-  private @TempDir File tempDir;
-  private ProjectService projectService;
-  private ProjectSettingsExporter sut;
-  private Project sourceProject;
+    private @Mock UserDao userService;
+    private @Mock ApplicationEventPublisher applicationEventPublisher;
+    private @TempDir File tempDir;
+    private ProjectService projectService;
+    private ProjectSettingsExporter sut;
+    private Project sourceProject;
 
-  @BeforeEach
-  void setup()
-  {
-    sourceProject = Project.builder() //
-        .withId(1l) //
-        .withName("Test Project") //
-        .build();
-    var repositoryProperties = new RepositoryPropertiesImpl();
-    repositoryProperties.setPath(tempDir);
-    projectService = new ProjectServiceImpl(userService, applicationEventPublisher,
-        repositoryProperties, emptyList(), emptyList(), null);
-    sut = new ProjectSettingsExporter(projectService);
-  }
-
-  @Test
-  void thatExportingAndImportingSettingsWorks() throws Exception
-  {
-    var exportFile = new File(tempDir, "settings-export.zip");
-    var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
-    var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test",
-        exportRequest.getFilenamePrefix());
-    var exportedProject = new ExportedProject();
-    try (var zos = new ZipOutputStream(new java.io.FileOutputStream(exportFile))) {
-      sut.exportData(exportRequest, monitor, exportedProject, zos);
+    @BeforeEach
+    void setup()
+    {
+        sourceProject = Project.builder() //
+                .withId(1l) //
+                .withName("Test Project") //
+                .build();
+        var repositoryProperties = new RepositoryPropertiesImpl();
+        repositoryProperties.setPath(tempDir);
+        projectService = new ProjectServiceImpl(userService, applicationEventPublisher,
+                repositoryProperties, emptyList(), emptyList(), null);
+        sut = new ProjectSettingsExporter(projectService);
     }
 
-    assertThat(exportedProject.getApplicationName()).isEqualTo("INCEpTION");
-    assertThat(exportedProject.getApplicationVersion()).isEqualTo("unknown");
-  }
+    @Test
+    void thatExportingAndImportingSettingsWorks() throws Exception
+    {
+        var exportFile = new File(tempDir, "settings-export.zip");
+        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test",
+                exportRequest.getFilenamePrefix());
+        var exportedProject = new ExportedProject();
+        try (var zos = new ZipOutputStream(new java.io.FileOutputStream(exportFile))) {
+            sut.exportData(exportRequest, monitor, exportedProject, zos);
+        }
+
+        assertThat(exportedProject.getApplicationName()).isEqualTo("INCEpTION");
+        assertThat(exportedProject.getApplicationVersion()).isEqualTo("unknown");
+    }
 }

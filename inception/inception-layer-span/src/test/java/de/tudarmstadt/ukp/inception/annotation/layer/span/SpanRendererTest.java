@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -50,6 +49,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 @ExtendWith(MockitoExtension.class)
 public class SpanRendererTest
@@ -75,8 +75,8 @@ public class SpanRendererTest
         project = new Project();
         project.setId(1l);
 
-        neLayer = new AnnotationLayer(NamedEntity.class.getName(), "NE", SPAN_TYPE, project, true,
-                TOKENS, ANY_OVERLAP);
+        neLayer = new AnnotationLayer(NamedEntity.class.getName(), "NE", WebAnnoConst.SPAN_TYPE,
+                project, true, TOKENS, ANY_OVERLAP);
         neLayer.setId(1l);
 
         featureSupportRegistry = mock(FeatureSupportRegistry.class);

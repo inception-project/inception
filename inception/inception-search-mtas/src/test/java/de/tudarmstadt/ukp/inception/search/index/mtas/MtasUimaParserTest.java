@@ -18,9 +18,8 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
@@ -58,6 +57,7 @@ import de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureSuppo
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportPropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapterImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
@@ -157,7 +157,7 @@ public class MtasUimaParserTest
 
         depLayer = AnnotationLayer.builder() //
                 .forJCasClass(Dependency.class) //
-                .withType(RELATION_TYPE) //
+                .withType(RelationLayerSupport.TYPE) //
                 .withProject(project) //
                 .withAnchoringMode(SINGLE_TOKEN) //
                 .withAttachFeature(tokenLayerPos) //

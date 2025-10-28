@@ -142,7 +142,6 @@ public class SettingsUtil
         return versionInfo;
     }
 
-
     public static String getVersion()
     {
         var props = getVersionProperties();
@@ -193,8 +192,7 @@ public class SettingsUtil
 
         var userHome = getProperty(PROP_USER_HOME);
         if (userHome != null) {
-            var yamlFile = new File(userHome + "/" + applicationUserHomeSubdir,
-                    SETTINGS_YAML_FILE);
+            var yamlFile = new File(userHome + "/" + applicationUserHomeSubdir, SETTINGS_YAML_FILE);
             if (yamlFile.exists()) {
                 return yamlFile;
             }

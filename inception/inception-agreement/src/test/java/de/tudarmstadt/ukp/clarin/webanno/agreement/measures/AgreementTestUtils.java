@@ -21,6 +21,8 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.CodingStudyUtils.dumpCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.CodingStudyUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.ConcreteAgreementMeasure.COHEN_KAPPA_AGREEMENT;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
@@ -59,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XReader;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class AgreementTestUtils
 {
@@ -226,8 +227,8 @@ public class AgreementTestUtils
         else if (aType.equals(RelationLayerSupport.TYPE)) {
             TypeDescription td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
 
-            td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", aAttacheType);
-            td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", aAttacheType);
+            td.addFeature(FEAT_REL_TARGET, "", aAttacheType);
+            td.addFeature(FEAT_REL_SOURCE, "", aAttacheType);
 
             for (String feature : aFeatures) {
                 td.addFeature(feature, "", "uima.cas.String");

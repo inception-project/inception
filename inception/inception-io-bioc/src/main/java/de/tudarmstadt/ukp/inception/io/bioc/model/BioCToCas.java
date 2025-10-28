@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.io.bioc.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer.isRelationLayer;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.E_ID;
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.I_TYPE;
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.R_SOURCE;
@@ -26,8 +28,6 @@ import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.addCollectionMe
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.guessBestRelationType;
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.guessBestSpanType;
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.transferFeatures;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;

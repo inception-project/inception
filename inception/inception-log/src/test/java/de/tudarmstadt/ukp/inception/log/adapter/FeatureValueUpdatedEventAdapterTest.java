@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonString;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
@@ -44,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.log.exporter.ExportedLoggedEvent;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class FeatureValueUpdatedEventAdapterTest
 {
@@ -59,7 +59,7 @@ public class FeatureValueUpdatedEventAdapterTest
         SourceDocument doc = new SourceDocument("document name", project, "format");
         doc.setId(2l);
         AnnotationLayer layer = new AnnotationLayer(typeDesc.getName(), typeDesc.getDescription(),
-                SPAN_TYPE, project, false, TOKENS, STACKING_ONLY);
+                WebAnnoConst.SPAN_TYPE, project, false, TOKENS, STACKING_ONLY);
         AnnotationFeature feat = new AnnotationFeature(project, layer, featDesc.getName(),
                 featDesc.getDescription(), TYPE_NAME_STRING);
 

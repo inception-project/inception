@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.lang.Character.isJavaIdentifierStart;
@@ -61,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.Fe
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
@@ -279,7 +279,8 @@ public class LayerDetailForm
         var allLayers = annotationService.listAnnotationLayer(project);
 
         // Candidates for attach-layers are only span layers, so lets filter these
-        var candidateLayers = allLayers.stream().filter(l -> SPAN_TYPE.equals(l.getType()))
+        var candidateLayers = allLayers.stream()
+                .filter(l -> SpanLayerSupport.TYPE.equals(l.getType()))
                 .filter(l -> !Token._TypeName.equals(l.getName())
                         && !Sentence._TypeName.equals(l.getName()))
                 .collect(toCollection(ArrayList::new));
