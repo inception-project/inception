@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSuppo
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.behavior.RelationCrossSentenceBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.behavior.RelationOverlapBehavior;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.curation.RelationDiffSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.export.RelationLayerToCsvExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.export.RelationLayerToJsonExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.pivot.RelationSourceRangeExtractorSupport;
@@ -55,6 +56,12 @@ public class RelationLayerAutoConfiguration
     {
         return new RelationLayerSupportImpl(aFeatureSupportRegistry, aEventPublisher,
                 aLayerBehaviorsRegistry, aConstraintsService);
+    }
+
+    @Bean
+    public RelationDiffSupport relationDiffSupport(AnnotationSchemaService aSchemaService)
+    {
+        return new RelationDiffSupport(aSchemaService);
     }
 
     @Bean
