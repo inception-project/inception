@@ -91,6 +91,12 @@ public class ExportedProject
     @JsonProperty("anonymous_curation")
     private boolean anonymousCuration;
 
+    @JsonProperty("application_name")
+    private String applicationName;
+
+    @JsonProperty("application_version")
+    private String applicationVersion;
+
     private Map<String, Object> properties = new HashMap<>();
 
     public String getName()
@@ -241,6 +247,26 @@ public class ExportedProject
     public void setAnonymousCuration(boolean aAnonymousCuration)
     {
         anonymousCuration = aAnonymousCuration;
+    }
+
+    public void setApplicationName(String aApplicationName)
+    {
+        applicationName = aApplicationName;
+    }
+
+    public String getApplicationName()
+    {
+        return applicationName;
+    }
+
+    public void setApplicationVersion(String aApplicationVersion)
+    {
+        applicationVersion = aApplicationVersion;
+    }
+
+    public String getApplicationVersion()
+    {
+        return applicationVersion;
     }
 
     @JsonAnySetter
