@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.support;
 
+import static java.lang.System.getProperty;
+import static java.lang.System.setProperty;
 import static org.apache.commons.lang3.StringUtils.substring;
 
 import java.io.File;
@@ -105,12 +107,12 @@ public class SettingsUtil
 
     public static void setGlobalLogFolder(Path aPath)
     {
-        System.setProperty("GLOBAL_LOG_FOLDER", aPath.toString());
+        setProperty("GLOBAL_LOG_FOLDER", aPath.toString());
     }
 
     public static Optional<Path> getGlobalLogFolder()
     {
-        String prop = System.getProperty("GLOBAL_LOG_FOLDER");
+        var prop = getProperty("GLOBAL_LOG_FOLDER");
         if (prop == null) {
             return Optional.empty();
         }
@@ -140,9 +142,16 @@ public class SettingsUtil
         return versionInfo;
     }
 
+
+    public static String getVersion()
+    {
+        var props = getVersionProperties();
+        return props.getProperty(PROP_VERSION);
+    }
+
     public static String getVersionString()
     {
-        Properties props = getVersionProperties();
+        var props = getVersionProperties();
         if ("unknown".equals(props.getProperty(PROP_VERSION))) {
             return "Version information not available";
         }
@@ -154,13 +163,13 @@ public class SettingsUtil
 
     public static File getApplicationHome()
     {
-        String appHome = System.getProperty(propApplicationHome);
+        var appHome = getProperty(propApplicationHome);
 
         if (appHome != null) {
             return new File(appHome);
         }
 
-        String userHome = System.getProperty(PROP_USER_HOME);
+        var userHome = getProperty(PROP_USER_HOME);
         return new File(userHome + "/" + applicationUserHomeSubdir);
     }
 
@@ -172,9 +181,9 @@ public class SettingsUtil
     public static File getSettingsFileLocation()
     {
         // Locate settings, first in application, then in user home
-        String appHome = System.getProperty(propApplicationHome);
+        var appHome = getProperty(propApplicationHome);
         if (appHome != null) {
-            File yamlFile = new File(appHome, SETTINGS_YAML_FILE);
+            var yamlFile = new File(appHome, SETTINGS_YAML_FILE);
             if (yamlFile.exists()) {
                 return yamlFile;
             }
@@ -182,9 +191,9 @@ public class SettingsUtil
             return new File(appHome, SETTINGS_FILE);
         }
 
-        String userHome = System.getProperty(PROP_USER_HOME);
+        var userHome = getProperty(PROP_USER_HOME);
         if (userHome != null) {
-            File yamlFile = new File(userHome + "/" + applicationUserHomeSubdir,
+            var yamlFile = new File(userHome + "/" + applicationUserHomeSubdir,
                     SETTINGS_YAML_FILE);
             if (yamlFile.exists()) {
                 return yamlFile;
@@ -203,7 +212,7 @@ public class SettingsUtil
      */
     public static File getSettingsFile()
     {
-        File settingsFile = getSettingsFileLocation();
+        var settingsFile = getSettingsFileLocation();
 
         if (settingsFile != null && settingsFile.exists()) {
             return settingsFile;
@@ -224,7 +233,7 @@ public class SettingsUtil
     {
         if (settings == null) {
             var props = new Properties(System.getProperties());
-            File settingsFile = getSettingsFile();
+            var settingsFile = getSettingsFile();
             if (settingsFile != null) {
                 try (InputStream in = new FileInputStream(settingsFile)) {
                     props.load(in);
@@ -242,14 +251,14 @@ public class SettingsUtil
 
     public static List<ImageLinkDecl> getLinks()
     {
-        Properties props = getSettings();
+        var props = getSettings();
         Map<String, ImageLinkDecl> linkMap = new HashMap<>();
-        for (String key : props.stringPropertyNames()) {
+        for (var key : props.stringPropertyNames()) {
             if (key.startsWith(CFG_LINK_PREFIX)) {
-                String id = StringUtils.substringBetween(key, CFG_LINK_PREFIX, ".");
+                var id = StringUtils.substringBetween(key, CFG_LINK_PREFIX, ".");
 
                 // Create new declaration for current ID if there is none so far
-                ImageLinkDecl e = linkMap.get(id);
+                var e = linkMap.get(id);
                 if (e == null) {
                     e = new ImageLinkDecl(id);
                     linkMap.put(id, e);

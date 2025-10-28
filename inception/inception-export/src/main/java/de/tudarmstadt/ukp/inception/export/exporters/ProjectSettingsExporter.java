@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 
 /**
  * <p>
@@ -65,6 +66,8 @@ public class ProjectSettingsExporter
         aExProject.setCreated(project.getCreated());
         aExProject.setUpdated(project.getUpdated());
         aExProject.setAnonymousCuration(project.isAnonymousCuration());
+        aExProject.setApplicationName("INCEpTION");
+        aExProject.setApplicationVersion(SettingsUtil.getVersion());
     }
 
     /**

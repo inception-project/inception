@@ -307,6 +307,8 @@ public class CasMerge
             PerCasMergeContext localContext, Map<String, AnnotationLayer> type2layer,
             List<String> layerNames)
     {
+        LOG.debug("Processing {} relation layers", layerNames.size());
+
         for (var layerName : layerNames) {
             var relationPositions = aDiff.getPositions().stream()
                     .filter(pos -> layerName.equals(pos.getType()))
@@ -315,10 +317,11 @@ public class CasMerge
                     .toList();
 
             if (relationPositions.isEmpty()) {
+                LOG.debug("No relation positions on layer [{}]", layerName);
                 continue;
             }
 
-            LOG.debug("Processing {} relation positions on layer [{}]", relationPositions.size(),
+            LOG.debug("Processing {} relation positions on layer [{}]", relationPositions.size(),
                     layerName);
 
             for (var relationPosition : relationPositions) {
