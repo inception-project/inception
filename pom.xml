@@ -26,7 +26,7 @@
 
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception</artifactId>
-  <version>38.4</version>
+  <version>38.5-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>INCEpTION</name>
