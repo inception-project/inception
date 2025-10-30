@@ -18,7 +18,8 @@
 
 package de.tudarmstadt.ukp.inception.curation.merge;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static de.tudarmstadt.ukp.inception.support.uima.FeatureStructureBuilder.buildFS;
 import static java.util.Arrays.asList;
@@ -49,8 +50,8 @@ import org.dkpro.core.io.xmi.XmiReader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XReader;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class CurationTestUtils
 {
@@ -237,11 +238,11 @@ public class CurationTestUtils
             }
 
         }
-        else if (aType.equals(RELATION_TYPE)) {
+        else if (aType.equals(RelationLayerSupport.TYPE)) {
             var td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
 
-            td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", aAttacheType);
-            td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", aAttacheType);
+            td.addFeature(FEAT_REL_TARGET, "", aAttacheType);
+            td.addFeature(FEAT_REL_SOURCE, "", aAttacheType);
 
             for (var feature : aFeatures) {
                 td.addFeature(feature, "", "uima.cas.String");

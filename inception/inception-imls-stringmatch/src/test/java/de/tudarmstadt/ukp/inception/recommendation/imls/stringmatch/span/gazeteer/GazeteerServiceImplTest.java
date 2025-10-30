@@ -23,7 +23,6 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazete
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
@@ -60,6 +59,7 @@ import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.Gazeteer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.GazeteerEntry;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
 import jakarta.persistence.EntityManager;
 
@@ -100,8 +100,8 @@ public class GazeteerServiceImplTest
         project.setName("test");
         em.persist(project);
 
-        spanLayer = new AnnotationLayer("span", "span", SPAN_TYPE, project, false, TOKENS,
-                NO_OVERLAP);
+        spanLayer = new AnnotationLayer("span", "span", WebAnnoConst.SPAN_TYPE, project, false,
+                TOKENS, NO_OVERLAP);
         em.persist(spanLayer);
 
         spanFeat1 = new AnnotationFeature(project, spanLayer, "feat1", "feat1", TYPE_NAME_STRING);

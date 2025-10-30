@@ -23,8 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 
 import java.io.IOException;
 import java.util.List;
@@ -43,7 +41,9 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class LegacyProjectInitializer
 {
@@ -215,8 +215,8 @@ public class LegacyProjectInitializer
                 "lemma", Lemma.class.getName());
         annotationSchemaService.createFeature(tokenLemmaFeature);
 
-        AnnotationLayer lemmaLayer = new AnnotationLayer(Lemma.class.getName(), "Lemma", SPAN_TYPE,
-                aProject, true, SINGLE_TOKEN, NO_OVERLAP);
+        AnnotationLayer lemmaLayer = new AnnotationLayer(Lemma.class.getName(), "Lemma",
+                WebAnnoConst.SPAN_TYPE, aProject, true, SINGLE_TOKEN, NO_OVERLAP);
         lemmaLayer.setAttachType(tokenLayer);
         lemmaLayer.setAttachFeature(tokenLemmaFeature);
         annotationSchemaService.createOrUpdateLayer(lemmaLayer);
@@ -253,7 +253,7 @@ public class LegacyProjectInitializer
     private void createNeLayer(Project aProject, TagSet aTagSet) throws IOException
     {
         AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named entity",
-                SPAN_TYPE, aProject, true, TOKENS, ANY_OVERLAP);
+                WebAnnoConst.SPAN_TYPE, aProject, true, TOKENS, ANY_OVERLAP);
         annotationSchemaService.createOrUpdateLayer(neLayer);
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "value",
@@ -262,8 +262,8 @@ public class LegacyProjectInitializer
 
     private void createChunkLayer(Project aProject) throws IOException
     {
-        AnnotationLayer chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk", SPAN_TYPE,
-                aProject, true, TOKENS, NO_OVERLAP);
+        AnnotationLayer chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk",
+                WebAnnoConst.SPAN_TYPE, aProject, true, TOKENS, NO_OVERLAP);
         annotationSchemaService.createOrUpdateLayer(chunkLayer);
 
         AnnotationFeature chunkValueFeature = new AnnotationFeature();
@@ -280,7 +280,7 @@ public class LegacyProjectInitializer
     {
         // Dependency Layer
         AnnotationLayer depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
-                RELATION_TYPE, aProject, true, SINGLE_TOKEN, OVERLAP_ONLY);
+                RelationLayerSupport.TYPE, aProject, true, SINGLE_TOKEN, OVERLAP_ONLY);
         AnnotationLayer tokenLayer = annotationSchemaService.findLayer(aProject,
                 Token.class.getName());
         List<AnnotationFeature> tokenFeatures = annotationSchemaService
@@ -314,8 +314,8 @@ public class LegacyProjectInitializer
         AnnotationLayer tokenLayer = annotationSchemaService.findLayer(aProject,
                 Token.class.getName());
 
-        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE,
-                aProject, true, SINGLE_TOKEN, NO_OVERLAP);
+        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS",
+                WebAnnoConst.SPAN_TYPE, aProject, true, SINGLE_TOKEN, NO_OVERLAP);
 
         AnnotationFeature tokenPosFeature = new AnnotationFeature(aProject, tokenLayer, "pos",
                 "pos", POS.class.getName());
@@ -331,8 +331,8 @@ public class LegacyProjectInitializer
 
     private AnnotationLayer createTokenLayer(Project aProject) throws IOException
     {
-        AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
-                aProject, true, SINGLE_TOKEN, NO_OVERLAP);
+        AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token",
+                WebAnnoConst.SPAN_TYPE, aProject, true, SINGLE_TOKEN, NO_OVERLAP);
 
         annotationSchemaService.createOrUpdateLayer(tokenLayer);
         return tokenLayer;
