@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_SUPPORTED;
+
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -30,11 +34,12 @@ public class ExternalRecommenderTraits
 {
     private static final long serialVersionUID = -3109239605741337123L;
 
-    private String remoteUrl;
+    private String remoteUrl = "http://localhost:5000/<INSERT RECOMMENDER ENDPOINT>";
     private boolean verifyCertificates = true;
-    private boolean ranker;
-    private TrainingCapability trainingCapability;
-    private boolean universalExtraction;
+    private boolean ranker = false;
+    private TrainingCapability trainingCapability = TRAINING_SUPPORTED;
+    private boolean universalExtraction = false;
+    private boolean includeXmlStructure = false;
 
     @Deprecated
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
@@ -66,10 +71,10 @@ public class ExternalRecommenderTraits
     {
         trainable = aTrainable;
         if (aTrainable) {
-            trainingCapability = TrainingCapability.TRAINING_REQUIRED;
+            trainingCapability = TRAINING_REQUIRED;
         }
         else {
-            trainingCapability = TrainingCapability.TRAINING_NOT_SUPPORTED;
+            trainingCapability = TRAINING_NOT_SUPPORTED;
         }
     }
 
@@ -111,5 +116,15 @@ public class ExternalRecommenderTraits
     public void setUniversalExtraction(boolean aUniversalExtraction)
     {
         universalExtraction = aUniversalExtraction;
+    }
+
+    public void setIncludeXmlStructure(boolean aIncludeXmlStructure)
+    {
+        includeXmlStructure = aIncludeXmlStructure;
+    }
+
+    public boolean isIncludeXmlStructure()
+    {
+        return includeXmlStructure;
     }
 }

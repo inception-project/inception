@@ -97,6 +97,10 @@ public class ExternalRecommenderTraitsEditor
         universalExtraction.setOutputMarkupId(true);
         form.add(universalExtraction);
 
+        var includeXmlStructure = new CheckBox("includeXmlStructure");
+        includeXmlStructure.setOutputMarkupId(true);
+        form.add(includeXmlStructure);
+
         add(form);
     }
 }

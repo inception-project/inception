@@ -20,6 +20,9 @@ package de.tudarmstadt.ukp.inception.recommendation.tasks;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.containsXmlDocumentStructure;
+import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.removeXmlDocumentStructure;
+import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.transferXmlDocumentStructure;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCapability.PREDICTION_USES_TEXT_ONLY;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask.ReconciliationOption.KEEP_EXISTING;
@@ -69,6 +72,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentG
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
@@ -389,7 +393,7 @@ public class PredictionTask
     }
 
     private void applySingleRecomenderToDocument(LazyCas aOriginalCas, Recommender aRecommender,
-            Predictions activePredictions, Predictions aPredictions, CAS predictionCas,
+            Predictions aActivePredictions, Predictions aPredictions, CAS aPredictionCas,
             SourceDocument aDocument, int aPredictionBegin, int aPredictionEnd)
         throws IOException
     {
@@ -427,8 +431,8 @@ public class PredictionTask
         if (!recommenders.isEmpty() && !recommenders.contains(aRecommender)) {
             logSkippingNotRequestedRecommender(aPredictions, aRecommender);
 
-            if (activePredictions != null) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+            if (aActivePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, aActivePredictions,
                         aDocument);
             }
 
@@ -438,8 +442,8 @@ public class PredictionTask
         if (recommenders.isEmpty() && factory.isInteractive(aRecommender)) {
             logSkippingInteractiveRecommenderNotExplicitlyRequested(aPredictions, aRecommender);
 
-            if (activePredictions != null) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+            if (aActivePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, aActivePredictions,
                         aDocument);
             }
 
@@ -454,8 +458,8 @@ public class PredictionTask
 
             // If possible, we inherit recommendations from a previous run while the recommender is
             // still busy
-            if (activePredictions != null) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+            if (aActivePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, aActivePredictions,
                         aDocument);
             }
 
@@ -467,8 +471,8 @@ public class PredictionTask
 
             // If possible, we inherit recommendations from a previous run while the recommender is
             // still busy
-            if (activePredictions != null) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+            if (aActivePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, aActivePredictions,
                         aDocument);
             }
 
@@ -480,8 +484,8 @@ public class PredictionTask
 
             // If possible, we inherit recommendations from a previous run while the recommender is
             // still busy
-            if (activePredictions != null) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+            if (aActivePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, aActivePredictions,
                         aDocument);
             }
 
@@ -494,10 +498,10 @@ public class PredictionTask
         if (!factory.isInteractive(aRecommender)
                 && TRAINING_NOT_SUPPORTED == engine.getTrainingCapability()
                 && PREDICTION_USES_TEXT_ONLY == engine.getPredictionCapability()
-                && activePredictions != null
-                && activePredictions.hasRunPredictionOnDocument(aDocument)) {
+                && aActivePredictions != null
+                && aActivePredictions.hasRunPredictionOnDocument(aDocument)) {
             inheritSuggestionsAtRecommenderLevel(aPredictions, engine.getRecommender(),
-                    activePredictions, aDocument);
+                    aActivePredictions, aDocument);
             return;
         }
 
@@ -508,11 +512,11 @@ public class PredictionTask
             var originalCas = aOriginalCas.get();
 
             var ctx = new PredictionContext(context.get(), getMonitor());
-            cloneAndMonkeyPatchCAS(getProject(), originalCas, predictionCas);
+            preparePredictionCas(aPredictionCas, aOriginalCas, factory, aRecommender);
             var predictionRange = new Range(aPredictionBegin < 0 ? 0 : aPredictionBegin,
                     aPredictionEnd < 0 ? originalCas.getDocumentText().length() : aPredictionEnd);
-            invokeRecommender(aPredictions, ctx, engine, activePredictions, aDocument, originalCas,
-                    predictionCas, predictionRange);
+            invokeRecommender(aPredictions, ctx, engine, aActivePredictions, aDocument, originalCas,
+                    aPredictionCas, predictionRange);
             ctx.getMessages().forEach(aPredictions::log);
         }
         // Catching Throwable is intentional here as we want to continue the execution even if a
@@ -528,12 +532,30 @@ public class PredictionTask
 
             // If there was a previous successful run of the recommender, inherit its suggestions to
             // avoid that all the suggestions of the recommender simply disappear.
-            if (activePredictions != null) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+            if (aActivePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, aActivePredictions,
                         aDocument);
             }
 
             return;
+        }
+    }
+
+    private void preparePredictionCas(CAS aPredictionCas, LazyCas aOriginalCas,
+            RecommendationEngineFactory<Object> aFactory, Recommender aRecommender)
+        throws UIMAException, IOException
+    {
+        cloneAndMonkeyPatchCAS(getProject(), aOriginalCas.get(), aPredictionCas);
+
+        if (aFactory.isIncludeXmlStructure(aRecommender)) {
+            if (!containsXmlDocumentStructure(aPredictionCas)) {
+                var initialCas = documentService.createOrReadInitialCas(aOriginalCas.getDocument(),
+                        AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+                transferXmlDocumentStructure(aPredictionCas, initialCas);
+            }
+        }
+        else if (containsXmlDocumentStructure(aPredictionCas)) {
+            removeXmlDocumentStructure(aPredictionCas);
         }
     }
 
@@ -1071,6 +1093,11 @@ public class PredictionTask
         public LazyCas(SourceDocument aDocument)
         {
             document = aDocument;
+        }
+
+        public SourceDocument getDocument()
+        {
+            return document;
         }
 
         public CAS get() throws IOException
