@@ -114,4 +114,11 @@ public class ExternalRecommenderFactory
         var traits = readTraits(aRecommender);
         return traits.isRanker();
     }
+
+    @Override
+    public boolean isIncludeXmlStructure(Recommender aRecommender)
+    {
+        var traits = readTraits(aRecommender);
+        return traits.isIncludeXmlStructure();
+    }
 }

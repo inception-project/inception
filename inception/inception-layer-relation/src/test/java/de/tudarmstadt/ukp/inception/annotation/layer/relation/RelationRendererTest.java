@@ -107,8 +107,8 @@ public class RelationRendererTest
         tokenLayer.setId(1l);
         var tokenLayerPos = new AnnotationFeature(1l, tokenLayer, "pos", POS.class.getName());
 
-        var posLayer = new AnnotationLayer(POS.class.getName(), "POS", WebAnnoConst.SPAN_TYPE, project, true,
-                SINGLE_TOKEN, NO_OVERLAP);
+        var posLayer = new AnnotationLayer(POS.class.getName(), "POS", WebAnnoConst.SPAN_TYPE,
+                project, true, SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setId(2l);
 
         depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
