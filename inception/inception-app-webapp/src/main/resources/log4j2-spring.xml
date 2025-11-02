@@ -75,6 +75,7 @@
   </Appenders>
 
   <Loggers>
+    <Logger name="INCEpTION" level="INFO" />
     <Logger name="de.tudarmstadt" level="INFO"/>
     <Logger name="de.tudarmstadt.ukp.inception" level="INFO"/>
     <Logger name="org.springframework.boot.web.embedded.tomcat.TomcatWebServer" level="INFO"/>
@@ -95,6 +96,7 @@
       <Logger name="inception.boot" level="INFO"/>
     </SpringProfile>
     <SpringProfile name="cli">
+      <Logger name="inception.cli" level="INFO"/>
       <Logger name="inception.boot" level="WARN"/>
       <Logger name="de.tudarmstadt.ukp.inception.support.spring.DatabaseInfoService" level="WARN"/>
       <Logger name="de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer" level="WARN"/>
