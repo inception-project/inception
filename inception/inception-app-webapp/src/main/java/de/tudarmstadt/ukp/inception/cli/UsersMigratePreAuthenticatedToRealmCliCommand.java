@@ -24,7 +24,6 @@ import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getPropApplicati
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
 import static org.apache.commons.lang3.ArrayUtils.contains;
 
-import java.lang.invoke.MethodHandles;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
@@ -52,7 +51,7 @@ import picocli.CommandLine.Option;
 public class UsersMigratePreAuthenticatedToRealmCliCommand
     implements Callable<Integer>
 {
-    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private final static Logger LOG = LoggerFactory.getLogger("inception.cli");
 
     private final UserDao userService;
     private final PasswordEncoder passwordEncoder;

@@ -76,7 +76,7 @@ public class INCEpTION
     @Override
     protected SpringApplicationBuilder createSpringApplicationBuilder()
     {
-        SpringApplicationBuilder builder = super.createSpringApplicationBuilder();
+        var builder = super.createSpringApplicationBuilder();
         builder.properties("running.from.commandline=false");
         builder.profiles(DeploymentModeService.PROFILE_EXTERNAL_SERVER);
         builder.profiles(DeploymentModeService.PROFILE_APPLICATION_MODE);
@@ -151,7 +151,7 @@ public class INCEpTION
      */
     protected static ConfigurableApplicationContext start(String[] args, Class<?>... aSources)
     {
-        SpringApplicationBuilder builder = new SpringApplicationBuilder();
+        var builder = new SpringApplicationBuilder();
 
         // Add the main application as the root Spring context
         builder.sources(aSources);
