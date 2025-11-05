@@ -38,6 +38,8 @@ import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvid
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
+import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
+
 public class DocumentMatrixDataProvider
     extends SortableDataProvider<DocumentMatrixRow, DocumentMatrixSortKey>
     implements IFilterStateLocator<DocumentMatrixFilterState>, Serializable
@@ -54,12 +56,47 @@ public class DocumentMatrixDataProvider
         setSort(DOCUMENT_NAME, ASCENDING);
     }
 
+    public SourceDocumentStateStats getStats()
+    {
+        long annotationsNew = 0;
+        long annotationsInProgress = 0;
+        long annotationsFinished = 0;
+        long curationsInProgress = 0;
+        long curationsFinished = 0;
+
+        for (var row : matrixData) {
+            switch (row.getCurationState()) {
+            case NEW:
+                annotationsNew++;
+                break;
+            case ANNOTATION_IN_PROGRESS:
+                annotationsInProgress++;
+                break;
+            case ANNOTATION_FINISHED:
+                annotationsFinished++;
+                break;
+            case CURATION_IN_PROGRESS:
+                curationsInProgress++;
+                break;
+            case CURATION_FINISHED:
+                curationsFinished++;
+                break;
+            }
+        }
+
+        long total = annotationsNew + annotationsInProgress + annotationsFinished
+                + curationsInProgress + curationsFinished;
+
+        return new SourceDocumentStateStats(total, annotationsNew, annotationsInProgress,
+                annotationsFinished, curationsInProgress, curationsFinished);
+    }
+
     public void setMatrixData(List<DocumentMatrixRow> aMatrixData)
     {
         matrixData = aMatrixData;
     }
 
-    public List<DocumentMatrixRow> getMatrixData()
+    public List<DocumentMatrixRow> getFilteredMatrixData()
     {
         return filter(matrixData);
     }
@@ -68,7 +105,7 @@ public class DocumentMatrixDataProvider
     public Iterator<? extends DocumentMatrixRow> iterator(long aFirst, long aCount)
     {
         // Apply Filter
-        var newList = getMatrixData();
+        var newList = getFilteredMatrixData();
 
         // Apply sorting
         newList.sort((o1, o2) -> {
@@ -86,7 +123,7 @@ public class DocumentMatrixDataProvider
     @Override
     public long size()
     {
-        return getMatrixData().size();
+        return getFilteredMatrixData().size();
     }
 
     private List<DocumentMatrixRow> filter(List<DocumentMatrixRow> aData)
