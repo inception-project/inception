@@ -70,6 +70,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.ZipEntry;
@@ -99,8 +100,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument_;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission_;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
@@ -294,6 +299,20 @@ public class DocumentServiceImpl
         }
 
         return entityManager.merge(aAnnotationDocument);
+    }
+
+    @Transactional
+    @Override
+    public void updateAnnotationDocumentStateUpdatedDirectly(long aId, Date aDate)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var update = cb.createCriteriaUpdate(AnnotationDocument.class);
+        var root = update.from(AnnotationDocument.class);
+
+        update.set(AnnotationDocument_.stateUpdated, aDate);
+        update.where(cb.equal(root.get(AnnotationDocument_.id), aId));
+
+        entityManager.createQuery(update).executeUpdate();
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -504,7 +523,7 @@ public class DocumentServiceImpl
     public SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
             SourceDocumentState aState)
     {
-        var oldState = setSourceDocumentStateNoEvent(aDocument, aState);
+        var oldState = updateSourceDocumentStateNoEvent(aDocument, aState);
 
         // Notify about change in document state
         if (!Objects.equals(oldState, aDocument.getState())) {
@@ -515,7 +534,7 @@ public class DocumentServiceImpl
         return oldState;
     }
 
-    private SourceDocumentState setSourceDocumentStateNoEvent(SourceDocument aDocument,
+    private SourceDocumentState updateSourceDocumentStateNoEvent(SourceDocument aDocument,
             SourceDocumentState aState)
     {
         Validate.notNull(aDocument, "Source document must be specified");
@@ -523,10 +542,24 @@ public class DocumentServiceImpl
 
         var oldState = aDocument.getState();
 
-        aDocument.setState(aState);
+        aDocument.updateState(aState);
 
         createSourceDocument(aDocument);
         return oldState;
+    }
+
+    @Transactional
+    @Override
+    public void updateSourceDocumentStateUpdatedDirectly(long aId, Date aDate)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var update = cb.createCriteriaUpdate(SourceDocument.class);
+        var root = update.from(SourceDocument.class);
+
+        update.set(SourceDocument_.stateUpdated, aDate);
+        update.where(cb.equal(root.get(SourceDocument_.id), aId));
+
+        entityManager.createQuery(update).executeUpdate();
     }
 
     @Override
@@ -535,7 +568,7 @@ public class DocumentServiceImpl
             SourceDocumentState aState)
     {
         for (var doc : aDocuments) {
-            setSourceDocumentStateNoEvent(doc, aState);
+            updateSourceDocumentStateNoEvent(doc, aState);
         }
     }
 
@@ -1476,7 +1509,7 @@ public class DocumentServiceImpl
     {
         var oldState = aDocument.getState();
 
-        aDocument.setState(aState);
+        aDocument.updateState(aState);
 
         if (aState == AnnotationDocumentState.NEW) {
             // If a document is reset, the annotator state is cleared
@@ -1659,4 +1692,69 @@ public class DocumentServiceImpl
 
         return errors;
     }
+
+    @Override
+    @Transactional
+    public List<SourceDocument> listSourceDocumentsWithState(String aSessionOwner,
+            Set<PermissionLevel> aAllowedRoles, Set<SourceDocumentState> aStates, Date aFromDate,
+            Date aToDate)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createQuery(SourceDocument.class);
+
+        var sdRoot = cq.from(SourceDocument.class);
+        var ppRoot = cq.from(ProjectPermission.class);
+
+        var projectJoin = ppRoot.join(ProjectPermission_.project);
+
+        var userPredicate = cb.equal(ppRoot.get(ProjectPermission_.user), aSessionOwner);
+        var rolePredicate = ppRoot.get(ProjectPermission_.level).in(aAllowedRoles);
+        var statePredicate = sdRoot.get(SourceDocument_.state).in(aStates);
+        var timePredicate = cb.and( //
+                cb.greaterThanOrEqualTo(sdRoot.get(SourceDocument_.stateUpdated), aFromDate), //
+                cb.lessThan(sdRoot.get(SourceDocument_.stateUpdated), aToDate));
+
+        var projectMatch = cb.equal(sdRoot.get(SourceDocument_.project), projectJoin);
+
+        cq.select(sdRoot) //
+                // avoid duplicates if multiple permissions match
+                .distinct(true) //
+                .where(cb.and(userPredicate, rolePredicate, statePredicate, timePredicate,
+                        projectMatch));
+
+        return entityManager.createQuery(cq).getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationDocument> listAnnotationDocumentsWithState(String aSessionOwner,
+            Set<PermissionLevel> aAllowedRoles, Set<AnnotationDocumentState> aStates,
+            Date aFromDate, Date aToDate)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createQuery(AnnotationDocument.class);
+
+        var sdRoot = cq.from(AnnotationDocument.class);
+        var ppRoot = cq.from(ProjectPermission.class);
+
+        var projectJoin = ppRoot.join(ProjectPermission_.project);
+
+        var userPredicate = cb.equal(ppRoot.get(ProjectPermission_.user), aSessionOwner);
+        var rolePredicate = ppRoot.get(ProjectPermission_.level).in(aAllowedRoles);
+        var statePredicate = sdRoot.get(AnnotationDocument_.state).in(aStates);
+        var timePredicate = cb.and( //
+                cb.greaterThanOrEqualTo(sdRoot.get(AnnotationDocument_.stateUpdated), aFromDate), //
+                cb.lessThan(sdRoot.get(AnnotationDocument_.stateUpdated), aToDate));
+
+        var projectMatch = cb.equal(sdRoot.get(AnnotationDocument_.project), projectJoin);
+
+        cq.select(sdRoot) //
+                // avoid duplicates if multiple permissions match
+                .distinct(true) //
+                .where(cb.and(userPredicate, rolePredicate, statePredicate, timePredicate,
+                        projectMatch));
+
+        return entityManager.createQuery(cq).getResultList();
+    }
+
 }

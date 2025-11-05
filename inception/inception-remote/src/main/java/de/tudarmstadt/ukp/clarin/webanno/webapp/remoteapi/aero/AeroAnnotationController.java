@@ -169,7 +169,7 @@ public class AeroAnnotationController
 
         // Set state if one was provided
         if (aState.isPresent()) {
-            anno.setState(parseAnnotationDocumentState(aState.get()));
+            anno.updateState(parseAnnotationDocumentState(aState.get()));
             documentService.createOrUpdateAnnotationDocument(anno);
         }
 

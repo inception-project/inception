@@ -32,6 +32,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import jakarta.persistence.Temporal;
@@ -87,6 +88,12 @@ public class ExportedProject
     @JsonProperty("updated")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updated;
+
+    @JsonProperty("state")
+    private ProjectState state;
+
+    @JsonProperty("state_updated")
+    private Date stateUpdated;
 
     @JsonProperty("anonymous_curation")
     private boolean anonymousCuration;
@@ -267,6 +274,26 @@ public class ExportedProject
     public String getApplicationVersion()
     {
         return applicationVersion;
+    }
+
+    public ProjectState getState()
+    {
+        return state;
+    }
+
+    public void setState(ProjectState aState)
+    {
+        state = aState;
+    }
+
+    public Date getStateUpdated()
+    {
+        return stateUpdated;
+    }
+
+    public void setStateUpdated(Date aStateUpdated)
+    {
+        stateUpdated = aStateUpdated;
     }
 
     @JsonAnySetter

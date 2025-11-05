@@ -43,6 +43,9 @@ public class ExportedAnnotationDocument
     @JsonProperty("state")
     private AnnotationDocumentState state;
 
+    @JsonProperty("state_updated")
+    private Date stateUpdated;
+
     @JsonProperty("annotatorState")
     private AnnotationDocumentState annotatorState;
 
@@ -102,6 +105,16 @@ public class ExportedAnnotationDocument
     public void setState(AnnotationDocumentState state)
     {
         this.state = state;
+    }
+
+    public void setStateUpdated(Date aStateUpdated)
+    {
+        stateUpdated = aStateUpdated;
+    }
+
+    public Date getStateUpdated()
+    {
+        return stateUpdated;
     }
 
     public AnnotationDocumentState getAnnotatorState()

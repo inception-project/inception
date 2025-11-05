@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.sharing;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.ANNOTATION_IN_PROGRESS;
 import static java.util.Calendar.YEAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,6 +40,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
@@ -67,8 +67,12 @@ public class InviteServiceImplTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        testProject = new Project("test-project");
-        testProject.setState(ANNOTATION_IN_PROGRESS);
+        testProject = Project.builder() //
+                .withName("test-project") //
+                .withSlug("test-project") //
+                .withState(ProjectState.ANNOTATION_IN_PROGRESS) //
+                .build();
+
         testEntityManager.persist(testProject);
 
         projectService = mock(ProjectService.class);

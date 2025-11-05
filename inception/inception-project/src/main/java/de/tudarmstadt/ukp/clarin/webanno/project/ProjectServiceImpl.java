@@ -1133,18 +1133,6 @@ public class ProjectServiceImpl
                 permission.get(ProjectPermission_.level).in(roles)));
         cq.orderBy(cb.asc(project.get(Project_.name)));
         return entityManager.createQuery(cq).getResultList();
-
-        // String query = String.join("\n", //
-        // "SELECT DISTINCT p FROM Project p, ProjectPermission pp ", //
-        // "WHERE pp.project = p.id ", //
-        // "AND pp.user = :username ", //
-        // "AND pp.level IN (:roles) ", //
-        // "ORDER BY p.name ASC");
-        // List<Project> projects = entityManager.createQuery(query, Project.class)
-        // .setParameter("username", aUser.getUsername()) //
-        // .setParameter("roles", roles) //
-        // .getResultList();
-        // return projects;
     }
 
     @Override
@@ -1163,17 +1151,58 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
+    public List<Project> listProjectsWithState(String aSessionOwner,
+            Set<PermissionLevel> aAllowedRoles, Set<ProjectState> aStates, Date aFromDate,
+            Date aToDate)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createQuery(Project.class);
+        var ppRoot = cq.from(ProjectPermission.class);
+
+        var projectJoin = ppRoot.join(ProjectPermission_.project);
+
+        var userPredicate = cb.equal(ppRoot.get(ProjectPermission_.user), aSessionOwner);
+        var rolePredicate = ppRoot.get(ProjectPermission_.level).in(aAllowedRoles);
+        var statePredicate = projectJoin.get(Project_.state).in(aStates);
+        var timePredicate = cb.and( //
+                cb.greaterThanOrEqualTo(projectJoin.get(Project_.stateUpdated), aFromDate), //
+                cb.lessThan(projectJoin.get(Project_.stateUpdated), aToDate));
+
+        cq.select(projectJoin) //
+                // Avoid duplicates if there are multiple matching permissions
+                .distinct(true) //
+                .where(cb.and(userPredicate, rolePredicate, statePredicate, timePredicate));
+
+        return entityManager.createQuery(cq).getResultList();
+    }
+
+    @Override
+    @Transactional
     public void setProjectState(Project aProject, ProjectState aState)
     {
         var oldState = aProject.getState();
 
-        aProject.setState(aState);
+        aProject.updateState(aState);
         updateProject(aProject);
 
         if (!Objects.equals(oldState, aProject.getState())) {
             applicationEventPublisher
                     .publishEvent(new ProjectStateChangedEvent(this, aProject, oldState));
         }
+    }
+
+    @Transactional
+    @Override
+    public void updateProjectStateUpdatedDirectly(long aId, Date aStateUpdate)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var update = cb.createCriteriaUpdate(Project.class);
+        var root = update.from(Project.class);
+
+        update.set(Project_.stateUpdated, aStateUpdate);
+        update.where(cb.equal(root.get(Project_.id), aId));
+
+        entityManager.createQuery(update).executeUpdate();
     }
 
     @Override

@@ -145,6 +145,7 @@ public enum AnnotationDocumentState
         return terminal;
     }
 
+    @Override
     public String symbol()
     {
         return symbol;
@@ -222,5 +223,24 @@ public enum AnnotationDocumentState
         default:
             return aDoc.getState();
         }
+    }
+
+    public static AnnotationDocumentState fromString(String aString)
+    {
+        try {
+            return valueOf(aString);
+        }
+        catch (IllegalArgumentException e) {
+            // Ignore
+        }
+
+        for (var v : values()) {
+            if (v.id.equals(aString)) {
+                return v;
+            }
+        }
+
+        throw new IllegalArgumentException(
+                "No enum constant or enum valid with id [" + aString + "]");
     }
 }

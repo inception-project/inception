@@ -146,6 +146,7 @@ public class AnnotationDocumentExporter
             var exAnnotationDocument = new ExportedAnnotationDocument();
             exAnnotationDocument.setName(annotationDocument.getDocument().getName());
             exAnnotationDocument.setState(annotationDocument.getState());
+            exAnnotationDocument.setStateUpdated(annotationDocument.getStateUpdated());
             exAnnotationDocument.setAnnotatorState(annotationDocument.getAnnotatorState());
             exAnnotationDocument.setAnnotatorComment(annotationDocument.getAnnotatorComment());
             exAnnotationDocument.setUser(annotationDocument.getUser());
@@ -357,6 +358,7 @@ public class AnnotationDocumentExporter
             annotationDocument.setProject(aProject);
             annotationDocument.setName(sourceDocumentName);
             annotationDocument.setState(exAnnotationDocument.getState());
+            annotationDocument.setStateUpdated(exAnnotationDocument.getStateUpdated());
             annotationDocument.setAnnotatorState(exAnnotationDocument.getAnnotatorState());
             annotationDocument.setAnnotatorComment(exAnnotationDocument.getAnnotatorComment());
             annotationDocument.setUser(exAnnotationDocument.getUser());

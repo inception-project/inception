@@ -125,25 +125,30 @@ public class WebhookServiceTest
 
         webhooksConfiguration.setGlobalHooks(asList(hook));
 
-        project = new Project("test");
-        project.setState(ProjectState.NEW);
-        project.setId(1l);
+        project = Project.builder() //
+                .withName("test") //
+                .withSlug("test") //
+                .withState(ProjectState.NEW) //
+                .withId(1l) //
+                .build();
 
-        doc = new SourceDocument();
-        doc.setProject(project);
-        doc.setName("testDoc");
-        doc.setId(2l);
-        doc.setState(SourceDocumentState.ANNOTATION_IN_PROGRESS);
+        doc = SourceDocument.builder() //
+                .withProject(project) //
+                .withName("testDoc") //
+                .withId(2l) //
+                .withState(SourceDocumentState.ANNOTATION_IN_PROGRESS) //
+                .build();
 
-        ann = new AnnotationDocument();
-        ann.setName("testDoc");
-        ann.setProject(project);
-        ann.setUser("user");
-        ann.setId(3l);
-        ann.setDocument(doc);
-        ann.setState(AnnotationDocumentState.FINISHED);
-        ann.setAnnotatorState(AnnotationDocumentState.IN_PROGRESS);
-        ann.setAnnotatorComment("Test comment");
+        ann = AnnotationDocument.builder() //
+                .withName("testDoc") //
+                .withProject(project) //
+                .withUser("user") //
+                .withId(3l) //
+                .withDocument(doc) //
+                .withState(AnnotationDocumentState.FINISHED) //
+                .withAnnotatorState(AnnotationDocumentState.IN_PROGRESS) //
+                .withAnnotatorComment("Test comment") //
+                .build();
     }
 
     @Test

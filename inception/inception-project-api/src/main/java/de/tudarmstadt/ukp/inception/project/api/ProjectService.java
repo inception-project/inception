@@ -237,6 +237,9 @@ public interface ProjectService
      */
     List<Project> listProjectsWithUserHavingAnyRole(User aUser);
 
+    List<Project> listProjectsWithState(String aSessionOwner, Set<PermissionLevel> aAllowedRoles,
+            Set<ProjectState> aStates, Date aFromDate, Date aToDate);
+
     // --------------------------------------------------------------------------------------------
     // Methods related to Projects
     // --------------------------------------------------------------------------------------------
@@ -563,4 +566,6 @@ public interface ProjectService
     void deleteProjectBoundUser(Project aProject, User aUser);
 
     User createProjectBoundUser(Project aProject, String aUiName);
+
+    void updateProjectStateUpdatedDirectly(long aId, Date aStateUpdate);
 }

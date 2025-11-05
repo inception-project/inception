@@ -84,13 +84,15 @@ public class LearningRecordExporterTest
     @Test
     public void thatExportingWorks()
     {
+        var records = records(sourceProject);
+
         when(annotationService.findLayer(any(Project.class), any(String.class)))
                 .then(call -> layer(call.getArgument(0), call.getArgument(1)));
         when(annotationService.getFeature(any(String.class), any(AnnotationLayer.class)))
                 .then(call -> feature(call.getArgument(0), call.getArgument(1)));
         when(documentService.getSourceDocument(any(), any()))
                 .then(call -> document(call.getArgument(0), call.getArgument(1)));
-        when(learningRecordService.listLearningRecords(any())).thenReturn(records(sourceProject));
+        when(learningRecordService.listLearningRecords(any())).thenReturn(records);
 
         // Export the project
         var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
@@ -124,8 +126,10 @@ public class LearningRecordExporterTest
         // Export the project and import it again
         // Check that after re-importing the exported data is identical to the original
         assertThat(captor.getAllValues().stream().flatMap(Stream::of)) //
-                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id", "actionDate")
-                .containsExactlyInAnyOrderElementsOf(records(targetProject));
+                .usingRecursiveComparison() //
+                .ignoringFields("id", "actionDate", "annotationFeature.project.id",
+                        "sourceDocument.stateUpdated") //
+                .isEqualTo(records);
     }
 
     private AnnotationFeature feature(String aFeature, AnnotationLayer aAnnotationLayer)
