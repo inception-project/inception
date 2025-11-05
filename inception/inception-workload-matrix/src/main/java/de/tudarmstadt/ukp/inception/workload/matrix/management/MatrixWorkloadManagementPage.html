@@ -124,74 +124,97 @@
                 <span class="dropdown" aria-haspopup="true" aria-expanded="false">
                   <span class="btn-group" role="group">
                     <button wicket:id="toggleBulkChange" class="btn btn-action" type="button">
-                      Bulk change
+                      Bulk action
                     </button>
                     <button wicket:id="bulkActionDropdownButton" class="btn btn-primary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
-                    <div wicket:id="bulkActionDropdown" class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
-                      <a wicket:id="bulkOpen" class="dropdown-item">
+                    <div wicket:id="bulkActionDropdown" class="dropdown-menu shadow-lg" role="menu" style="min-width: 25em;">
+                      <a wicket:id="bulkExport" class="dropdown-item d-flex justify-content-between">
+                        Export
+                        <i class="fa-solid fa-download text-body-secondary"></i>
+                      </a>
+                      <hr class="dropdown-divider"/>
+                      <a wicket:id="bulkOpen" class="dropdown-item d-flex justify-content-between">
                         Open annotation
-                        <span class="float-end text-muted">
-                          <i class="far fa-check-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
-                          &nbsp;&nbsp;
-                          <i class="fas fa-lock"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-circle"></i>
+                        <span class="text-body-secondary">
+                          <i class="far fa-check-circle"></i>
+                          <i class="fa-solid fa-arrow-right small"></i>
+                          <i class="far fa-play-circle me-2"></i>
+                          <i class="fas fa-lock"></i>
+                          <i class="fa-solid fa-arrow-right small"></i>
+                          <i class="far fa-circle"></i>
                         </span>
                       </a>
-                      <a wicket:id="bulkClose" class="dropdown-item">
+                      <a wicket:id="bulkClose" class="dropdown-item d-flex justify-content-between">
                         Close annotation
-                        <span class="float-end text-muted">
-                          <i class="far fa-play-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-check-circle"></i>
-                          &nbsp;&nbsp;
-                          <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-lock"></i>
+                        <span class="text-body-secondary">
+                          <i class="far fa-play-circle"></i>
+                          <i class="fa-solid fa-arrow-right small"></i>
+                          <i class="far fa-check-circle me-2"></i>
+                          <i class="far fa-circle"></i>
+                          <i class="fa-solid fa-arrow-right small"></i>
+                          <i class="fas fa-lock"></i>
                         </span>
                       </a>
                       <hr class="dropdown-divider"/>
-                      <a wicket:id="bulkStartProgress" class="dropdown-item">
+                      <a wicket:id="bulkStartProgress" class="dropdown-item d-flex justify-content-between">
                         Start annotation (dev-only) 
-                        <span class="float-end text-muted">
-                          <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
+                        <span class="text-body-secondary">
+                          <i class="far fa-circle"></i>
+                          <i class="fa-solid fa-arrow-right small"></i>
+                          <i class="far fa-play-circle"></i>
                         </span>
                       </a>
-                      <a wicket:id="bulkLock" class="dropdown-item">
+                      <a wicket:id="bulkLock" class="dropdown-item d-flex justify-content-between">
                         Lock annotation 
-                        <span class="float-end text-muted">
-                          <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-lock"></i>
+                        <span class="text-body-secondary">
+                          <i class="far fa-circle"></i>
+                          <i class="fa-solid fa-arrow-right small"></i>
+                          <i class="fas fa-lock"></i>
                         </span>
                       </a>
-                      <a wicket:id="bulkUnlock" class="dropdown-item">
+                      <a wicket:id="bulkUnlock" class="dropdown-item d-flex justify-content-between">
                         Unlock annotation
-                        <span class="float-end text-muted">
-                          <i class="fas fa-lock"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-circle"></i>
+                        <span class="float-end text-body-secondary">
+                          <i class="fas fa-lock"></i>
+                          <i class="fa-solid fa-arrow-right small"></i>
+                          <i class="far fa-circle"></i>
                         </span>
                       </a>
                       <hr class="dropdown-divider"/>
-                      <a wicket:id="bulkFinish" class="dropdown-item">
+                      <a wicket:id="bulkFinish" class="dropdown-item d-flex justify-content-between">
                         Finish annotation
-                        <span class="float-end text-muted">
-                          <i class="far fa-play-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-check-circle"></i>
+                        <span class="text-body-secondary">
+                          <i class="far fa-play-circle"></i>
+                          <i class="fa-solid fa-arrow-right small"></i>
+                          <i class="far fa-check-circle"></i>
                         </span>
                       </a>
-                      <a wicket:id="bulkResume" class="dropdown-item">
+                      <a wicket:id="bulkResume" class="dropdown-item d-flex justify-content-between">
                         Resume annotation
-                        <span class="float-end text-muted">
-                          <i class="far fa-check-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
+                        <span class="text-body-secondary">
+                          <i class="far fa-check-circle"></i>
+                          <i class="fa-solid fa-arrow-right small"></i>
+                          <i class="far fa-play-circle"></i>
                         </span>
                       </a>
-                      <a wicket:id="bulkResumeCuration" class="dropdown-item">
+                      <a wicket:id="bulkResumeCuration" class="dropdown-item d-flex justify-content-between">
                         Resume curation
-                        <span class="float-end text-muted">
-                          <i class="fas fa-clipboard-check"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-clipboard"></i>
+                        <span class="text-body-secondary">
+                          <i class="fas fa-clipboard-check"></i>
+                          <i class="fa-solid fa-arrow-right small"></i>
+                          <i class="fas fa-clipboard"></i>
                         </span>
                       </a>
                       <hr class="dropdown-divider"/>
-                      <a wicket:id="bulkReset" class="dropdown-item">
+                      <a wicket:id="bulkReset" class="dropdown-item d-flex justify-content-between">
                         Reset annotation
-                        <span class="float-end badge badge-pill bg-danger">
+                        <span class="badge badge-pill bg-danger">
                           <i class="fas fa-trash"></i>
                         </span>
                       </a>
-                      <a wicket:id="bulkResetCuration" class="dropdown-item">
+                      <a wicket:id="bulkResetCuration" class="dropdown-item d-flex justify-content-between">
                         Reset curation
-                        <span class="float-end badge badge-pill bg-danger">
+                        <span class="badge badge-pill bg-danger">
                           <i class="fas fa-trash"></i>
                         </span>
                       </a>
