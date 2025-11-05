@@ -73,6 +73,31 @@ public final class SourceDocumentStateStats
         return curationsFinished;
     }
 
+    public double getNewAnnotationsPerc()
+    {
+        return total > 0 ? (double) annotationsNew / total * 100 : 0;
+    }
+
+    public double getAnnotationsInProgressPerc()
+    {
+        return total > 0 ? (double) annotationsInProgress / total * 100 : 0;
+    }
+
+    public double getFinishedAnnotationsPerc()
+    {
+        return total > 0 ? (double) annotationsFinished / total * 100 : 0;
+    }
+
+    public double getCurationsInProgressPerc()
+    {
+        return total > 0 ? (double) curationsInProgress / total * 100 : 0;
+    }
+
+    public double getCurationsFinishedPerc()
+    {
+        return total > 0 ? (double) curationsFinished / total * 100 : 0;
+    }
+
     public ProjectState getProjectState()
     {
         if (total == 0) {

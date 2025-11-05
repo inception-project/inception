@@ -37,58 +37,65 @@
     <div class="flex-content flex-h-container flex-gutter overflow-hidden">
       <div class="flex-content flex-v-container flex-gutter">
         <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-          <h1><wicket:container wicket:id="name"/></h1>
+          <h1>
+            <span wicket:id="stateIcon"/>
+            <wicket:container wicket:id="name"/>
+          </h1>
           <div wicket:id="modalDialog"/>
           <div wicket:id="contextMenu" style="width: 250px;"></div>
-          
-          <div class="flex-h-container flex-gutter flex-only-internal-gutter">
-            <span class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
-              <button class="btn btn-action btn-secondary dropdown-toggle flex-content"
-                type="button" data-bs-toggle="dropdown">
-                <i class="fas fa-cog"></i>
-                <span class="d-none d-lg-inline">
-                  &nbsp;<wicket:message key="settings" />
-                </span>
-              </button>
-              <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 600px;">
-                <form wicket:id="settingsForm" class="card border-0">
-                  <div class="card-header">
-                    <wicket:message key="settings" />
-                  </div>
-                  <div class="card-body">
-                    <div class="row form-row">
-                      <label class="col-form-label col-sm-7">
-                        <wicket:message key="reopenableByAnnotator" />
-                      </label>
-                      <div class="col-sm-5">
-                        <div class="form-check">
-                          <input class="form-check-input" type="checkbox" wicket:id="reopenableByAnnotator">
+
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="me-4">
+              <span class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
+                <button class="btn btn-action btn-secondary dropdown-toggle me-2"
+                  type="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-cog"></i>
+                  <span class="d-none d-lg-inline ms-2">
+                  <wicket:message key="settings" />
+                  </span>
+                </button>
+                <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 600px;">
+                  <form wicket:id="settingsForm" class="card border-0">
+                    <div class="card-header">
+                      <wicket:message key="settings" />
+                    </div>
+                    <div class="card-body">
+                      <div class="row form-row">
+                        <label class="col-form-label col-sm-7">
+                          <wicket:message key="reopenableByAnnotator" />
+                        </label>
+                        <div class="col-sm-5">
+                          <div class="form-check">
+                            <input class="form-check-input" type="checkbox" wicket:id="reopenableByAnnotator">
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div class="card-footer text-end">
-                    <button class="btn btn-primary" wicket:id="save">
-                      <wicket:message key="save" />
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </span>
-            <button wicket:id="assignWork" class="btn btn-action btn-secondary">
-              <i class="fas fa-users me-2"></i>
-              <span class="d-none d-lg-inline"><wicket:message key="assignWork" /></span>
-            </button>
-            <button wicket:id="refresh" class="btn btn-action btn-secondary">
-              <i class="fas fa-redo me-2"></i>
-              <span class="d-none d-lg-inline"><wicket:message key="refresh" /></span>
-            </button>
-            <button wicket:id="export" class="btn btn-action btn-secondary">
-              <i class="fas fa-download me-2"></i>
-              <span class="d-none d-lg-inline"><wicket:message key="export" /></span>
-            </button>
+                    <div class="card-footer text-end">
+                      <button class="btn btn-primary" wicket:id="save">
+                        <wicket:message key="save" />
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </span>
+              <button wicket:id="assignWork" class="btn btn-action btn-secondary me-2">
+                <i class="fas fa-users me-2"></i>
+                <span class="d-none d-lg-inline"><wicket:message key="assignWork" /></span>
+              </button>
+              <button wicket:id="refresh" class="btn btn-action btn-secondary me-2">
+                <i class="fas fa-redo me-2"></i>
+                <span class="d-none d-lg-inline"><wicket:message key="refresh" /></span>
+              </button>
+              <button wicket:id="export" class="btn btn-action btn-secondary me-2">
+                <i class="fas fa-download me-2"></i>
+                <span class="d-none d-lg-inline"><wicket:message key="export" /></span>
+              </button>
+            </div>
+            
+            <div wicket:id="stats" />
           </div>
-          
+
           <div class="flex-h-container flex-gutter flex-only-internal-gutter">
             <div class="flex-h-container flex-gutter flex-only-internal-gutter flex-content">
               <div class="input-group mb-3" wicket:enclosure="documentNameFilter">
@@ -112,7 +119,7 @@
             </div>
             <div wicket:id="stateFilters" />
           </div>
-                    
+
           <div class="flex-content card" style="min-height: 220px;">
             <div class="card-header">
               <wicket:message key="document_status" />

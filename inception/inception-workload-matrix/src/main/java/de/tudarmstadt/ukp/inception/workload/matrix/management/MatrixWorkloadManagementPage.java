@@ -47,6 +47,7 @@ import static org.apache.commons.csv.CSVFormat.EXCEL;
 import static org.apache.commons.io.FilenameUtils.getExtension;
 import static org.apache.commons.io.FilenameUtils.removeExtension;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.io.File;
@@ -68,7 +69,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.csv.CSVPrinter;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -123,6 +123,7 @@ import de.tudarmstadt.ukp.inception.bootstrap.PopoverBehavior;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
@@ -134,6 +135,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadBehavior;
 import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.inception.support.wicket.PipedStreamResource;
+import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
 import de.tudarmstadt.ukp.inception.ui.core.config.DefaultMdcSetup;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellClickEvent;
@@ -199,6 +201,12 @@ public class MatrixWorkloadManagementPage
 
     private AjaxDownloadBehavior downloadBehavior;
 
+    private ProjectDocumentStatsPanel projectDocumentStatsPanel;
+
+    private SymbolLabel stateIcon;
+
+    private LoadableDetachableModel<SourceDocumentStateStats> stats;
+
     public MatrixWorkloadManagementPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
@@ -209,12 +217,10 @@ public class MatrixWorkloadManagementPage
     {
         super.onInitialize();
 
-        var user = userRepository.getCurrentUser();
+        var sessionOwner = userRepository.getCurrentUser();
+        requireProjectRole(sessionOwner, CURATOR, MANAGER);
 
         var project = getProject();
-
-        requireProjectRole(user, CURATOR, MANAGER);
-
         if (!pageMenuItem.applies(project)) {
             getSession().error("The project is not configured for static workload management");
             backToProjectPage();
@@ -309,6 +315,15 @@ public class MatrixWorkloadManagementPage
                 this::exportWorkload);
         exportButton.add(visibleWhen(() -> documentMatrix.getItemCount() > 0));
         queue(exportButton);
+
+        stats = LoadableDetachableModel.of(() -> dataProvider.getStats());
+        projectDocumentStatsPanel = new ProjectDocumentStatsPanel("stats", stats);
+        projectDocumentStatsPanel.setOutputMarkupId(true);
+        add(projectDocumentStatsPanel);
+        stateIcon = new SymbolLabel("stateIcon",
+                stats.map(SourceDocumentStateStats::getProjectState));
+        stateIcon.setOutputMarkupId(true);
+        add(stateIcon);
     }
 
     private IResourceStream exportWorkload()
@@ -418,7 +433,7 @@ public class MatrixWorkloadManagementPage
 
         var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR);
 
-        if (StringUtils.isNotBlank(filter.getObject().getUserName())) {
+        if (isNotBlank(filter.getObject().getUserName())) {
             if (filter.getObject().isMatchUserNameAsRegex()) {
                 var p = Pattern
                         .compile(".*(" + filter.getObject().getUserName() + ").*", CASE_INSENSITIVE)
@@ -492,7 +507,7 @@ public class MatrixWorkloadManagementPage
             matrixWorkloadExtension.recalculate(getProject());
 
             reloadMatrixData();
-            _target.add(documentMatrix);
+            _target.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
         });
 
         modalDialog.open(dialogContent, aTarget);
@@ -538,7 +553,7 @@ public class MatrixWorkloadManagementPage
             matrixWorkloadExtension.recalculate(getProject());
 
             reloadMatrixData();
-            _target.add(documentMatrix);
+            _target.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
         });
 
         modalDialog.open(dialogContent, aTarget);
@@ -632,7 +647,7 @@ public class MatrixWorkloadManagementPage
             _target.addChildren(getPage(), IFeedback.class);
 
             reloadMatrixData();
-            _target.add(documentMatrix);
+            _target.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
         });
 
         modalDialog.open(dialogContent, aTarget);
@@ -654,7 +669,7 @@ public class MatrixWorkloadManagementPage
             _target.addChildren(getPage(), IFeedback.class);
 
             reloadMatrixData();
-            _target.add(documentMatrix);
+            _target.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
         });
 
         modalDialog.open(dialogContent, aTarget);
@@ -683,7 +698,7 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private void actionBulkClose(AjaxRequestTarget aTarget)
@@ -708,7 +723,7 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private void actionBulkStart(AjaxRequestTarget aTarget)
@@ -726,7 +741,7 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private void actionBulkLock(AjaxRequestTarget aTarget)
@@ -744,7 +759,7 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private void actionBulkUnlock(AjaxRequestTarget aTarget)
@@ -762,7 +777,7 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private void actionBulkFinish(AjaxRequestTarget aTarget)
@@ -780,7 +795,7 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private void actionBulkResume(AjaxRequestTarget aTarget)
@@ -798,7 +813,7 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private void actionBulkResumeCuration(AjaxRequestTarget aTarget)
@@ -816,7 +831,7 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private void actionBulkExportDocument(AjaxRequestTarget aTarget)
@@ -926,7 +941,7 @@ public class MatrixWorkloadManagementPage
         modalDialog.close(aTarget);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private Collection<AnnotationDocument> selectedAnnotationDocuments()
@@ -954,7 +969,8 @@ public class MatrixWorkloadManagementPage
 
         var annotationDocumentsToChange = new HashSet<AnnotationDocument>();
 
-        var rows = ((DocumentMatrixDataProvider) documentMatrix.getDataProvider()).getMatrixData();
+        var rows = ((DocumentMatrixDataProvider) documentMatrix.getDataProvider())
+                .getFilteredMatrixData();
 
         // Collect annotation documents by row
         for (var row : rows) {
@@ -1001,7 +1017,8 @@ public class MatrixWorkloadManagementPage
     {
         var sourceDocumentsToChange = new HashSet<SourceDocument>();
 
-        var rows = ((DocumentMatrixDataProvider) documentMatrix.getDataProvider()).getMatrixData();
+        var rows = ((DocumentMatrixDataProvider) documentMatrix.getDataProvider())
+                .getFilteredMatrixData();
 
         // Collect annotation documents by row
         for (var row : rows) {
@@ -1066,7 +1083,7 @@ public class MatrixWorkloadManagementPage
         aEvent.getTarget().addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aEvent.getTarget().add(documentMatrix);
+        aEvent.getTarget().add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     @OnEvent
@@ -1092,7 +1109,7 @@ public class MatrixWorkloadManagementPage
         aEvent.getTarget().addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aEvent.getTarget().add(documentMatrix);
+        aEvent.getTarget().add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     @OnEvent
@@ -1148,6 +1165,7 @@ public class MatrixWorkloadManagementPage
 
     private void reloadMatrixData()
     {
+        stats.detach();
         ((DocumentMatrixDataProvider) documentMatrix.getDataProvider())
                 .setMatrixData(getMatrixData());
     }
