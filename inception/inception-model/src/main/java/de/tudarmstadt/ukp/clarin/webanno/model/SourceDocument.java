@@ -54,7 +54,7 @@ public class SourceDocument
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @ManyToOne
@@ -63,19 +63,23 @@ public class SourceDocument
 
     private String format;
 
-    @Column(nullable = false)
+    @Column(name = "state", nullable = false)
     @Type(SourceDocumentStateType.class)
     private SourceDocumentState state = SourceDocumentState.NEW;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "state_updated", nullable = true)
+    private Date stateUpdated = new Date();
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = true)
+    @Column(name = "created", nullable = true)
     private Date created;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = true)
+    @Column(name = "updated", nullable = true)
     private Date updated;
 
     public SourceDocument()
@@ -149,9 +153,46 @@ public class SourceDocument
         return state;
     }
 
+    /**
+     * @param aState
+     *            the new state.
+     * @deprecated Use this only when you need to import the state from an external source and call
+     *             {@link #setStateUpdated(Date)} as well. Otherwise use
+     *             {@link #updateState(SourceDocumentState)} which implicitly sets
+     *             {@link #stateUpdated} when required.
+     */
+    @Deprecated
     public void setState(SourceDocumentState aState)
     {
         state = aState;
+    }
+
+    public void updateState(SourceDocumentState aState)
+    {
+        if (aState != state) {
+            stateUpdated = new Date();
+        }
+
+        state = aState;
+    }
+
+    /**
+     * @param aStateUpdated
+     *            the new state updated time.
+     * @deprecated Use this only when you need to import the state from an external source and call
+     *             {@link #setStateUpdated(Date)} as well. Otherwise use
+     *             {@link #updateState(SourceDocumentState)} which implicitly sets
+     *             {@link #stateUpdated} when required.
+     */
+    @Deprecated
+    public void setStateUpdated(Date aStateUpdated)
+    {
+        stateUpdated = aStateUpdated;
+    }
+
+    public Date getStateUpdated()
+    {
+        return stateUpdated;
     }
 
     public Date getTimestamp()

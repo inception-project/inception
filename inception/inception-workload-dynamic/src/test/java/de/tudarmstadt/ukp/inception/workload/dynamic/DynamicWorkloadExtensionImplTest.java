@@ -181,7 +181,7 @@ public class DynamicWorkloadExtensionImplTest
         var ann = new AnnotationDocument(otherAnnotator.getUsername(),
                 createSourceDocument("1.txt"));
         Fixtures.importTestSourceDocumentAndAddNamedEntity(documentService, ann);
-        ann.setState(AnnotationDocumentState.IN_PROGRESS);
+        ann.updateState(AnnotationDocumentState.IN_PROGRESS);
         ann = documentService.getAnnotationDocument(ann.getDocument(),
                 AnnotationSet.forUser(ann.getUser()));
         ann.setTimestamp(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()));
@@ -221,8 +221,11 @@ public class DynamicWorkloadExtensionImplTest
             AnnotationDocumentState aState)
     {
         var doc = createSourceDocument(aName);
-        var ann = new AnnotationDocument(annotator.getUsername(), doc);
-        ann.setState(aState);
+        var ann = AnnotationDocument.builder() //
+                .withUser(annotator.getUsername()) //
+                .forDocument(doc) //
+                .withState(aState) //
+                .build();
         return documentService.createOrUpdateAnnotationDocument(ann);
     }
 

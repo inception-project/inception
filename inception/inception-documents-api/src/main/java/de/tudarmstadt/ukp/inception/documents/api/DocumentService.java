@@ -21,9 +21,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -37,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -119,6 +122,10 @@ public interface DocumentService
 
     List<SourceDocument> listSourceDocumentsInState(Project aProject,
             SourceDocumentState... aStates);
+
+    List<SourceDocument> listSourceDocumentsWithState(String aSessionOwner,
+            Set<PermissionLevel> aAllowedRoles, Set<SourceDocumentState> aStates, Date aFromDate,
+            Date aToDate);
 
     List<SourceDocument> listSupportedSourceDocuments(Project aProject);
 
@@ -580,6 +587,10 @@ public interface DocumentService
     List<AnnotationDocument> listAnnotationDocumentsInState(Project aProject,
             AnnotationDocumentState... aStates);
 
+    List<AnnotationDocument> listAnnotationDocumentsWithState(String aSessionOwner,
+            Set<PermissionLevel> aAllowedRoles, Set<AnnotationDocumentState> aStates,
+            Date aFromDate, Date aToDate);
+
     List<AnnotationDocument> listAnnotationDocumentsWithStateForUser(Project aProject, User aUser,
             AnnotationDocumentState aState);
 
@@ -818,4 +829,8 @@ public interface DocumentService
     List<ValidationError> validateDocumentName(String aName);
 
     void renameSourceDocument(SourceDocument aDocument, String aNewName);
+
+    void updateSourceDocumentStateUpdatedDirectly(long aId, Date aDate);
+
+    void updateAnnotationDocumentStateUpdatedDirectly(long aId, Date aDate);
 }

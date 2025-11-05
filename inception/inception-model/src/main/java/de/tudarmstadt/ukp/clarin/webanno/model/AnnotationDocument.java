@@ -77,6 +77,10 @@ public class AnnotationDocument
     @Type(AnnotationDocumentStateType.class)
     private AnnotationDocumentState state = AnnotationDocumentState.NEW;
 
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "state_updated", nullable = true)
+    private Date stateUpdated = new Date();
+
     /**
      * State manually set by the annotator user. If a third person (e.g. curator/manager) or the
      * system (e.g. workload manager) wants to change the state, they only change {@link #state} and
@@ -234,9 +238,46 @@ public class AnnotationDocument
         return state;
     }
 
+    /**
+     * @param aState
+     *            the new state.
+     * @deprecated Use this only when you need to import the state from an external source and call
+     *             {@link #setStateUpdated(Date)} as well. Otherwise use
+     *             {@link #updateState(AnnotationDocumentState)} which implicitly sets
+     *             {@link #stateUpdated} when required.
+     */
+    @Deprecated
     public void setState(AnnotationDocumentState aState)
     {
         state = aState;
+    }
+
+    public void updateState(AnnotationDocumentState aState)
+    {
+        if (aState != state) {
+            stateUpdated = new Date();
+        }
+
+        state = aState;
+    }
+
+    /**
+     * @param aStateUpdated
+     *            the new state updated time.
+     * @deprecated Use this only when you need to import the state from an external source and call
+     *             {@link #setStateUpdated(Date)} as well. Otherwise use
+     *             {@link #updateState(AnnotationDocumentState)} which implicitly sets
+     *             {@link #stateUpdated} when required.
+     */
+    @Deprecated
+    public void setStateUpdated(Date aStateUpdated)
+    {
+        stateUpdated = aStateUpdated;
+    }
+
+    public Date getStateUpdated()
+    {
+        return stateUpdated;
     }
 
     public AnnotationDocumentState getAnnotatorState()
@@ -344,7 +385,7 @@ public class AnnotationDocument
         if (!(other instanceof AnnotationDocument)) {
             return false;
         }
-        AnnotationDocument castOther = (AnnotationDocument) other;
+        var castOther = (AnnotationDocument) other;
         return Objects.equals(name, castOther.name) && Objects.equals(project, castOther.project)
                 && Objects.equals(user, castOther.user)
                 && Objects.equals(document, castOther.document);

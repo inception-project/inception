@@ -142,13 +142,17 @@ public class CurationDocumentServiceImplTest
     public void listCuratableUsers_ShouldReturnFinishedUsers()
     {
         // create finished annotation documents
-        var annoDoc1 = new AnnotationDocument("beate", testDocument);
-        annoDoc1.setState(AnnotationDocumentState.FINISHED);
-        testEntityManager.persist(annoDoc1);
+        testEntityManager.persist(AnnotationDocument.builder() //
+                .withUser("beate") //
+                .forDocument(testDocument) //
+                .withState(AnnotationDocumentState.FINISHED) //
+                .build());
 
-        var annoDoc2 = new AnnotationDocument("kevin", testDocument);
-        annoDoc2.setAnnotatorState(AnnotationDocumentState.IGNORE);
-        testEntityManager.persist(annoDoc2);
+        testEntityManager.persist(AnnotationDocument.builder() //
+                .withUser("kevin") //
+                .forDocument(testDocument) //
+                .withAnnotatorState(AnnotationDocumentState.IGNORE) //
+                .build());
 
         var finishedUsers = sut.listCuratableUsers(testDocument);
 
@@ -159,13 +163,17 @@ public class CurationDocumentServiceImplTest
     public void listFinishedUsers_ShouldReturnFinishedUsers()
     {
         // create finished annotation documents
-        var annoDoc1 = new AnnotationDocument("beate", testDocument);
-        annoDoc1.setState(AnnotationDocumentState.FINISHED);
-        testEntityManager.persist(annoDoc1);
+        testEntityManager.persist(AnnotationDocument.builder() //
+                .withUser("beate") //
+                .forDocument(testDocument) //
+                .withState(AnnotationDocumentState.FINISHED) //
+                .build());
 
-        var annoDoc2 = new AnnotationDocument("kevin", testDocument);
-        annoDoc2.setState(AnnotationDocumentState.FINISHED);
-        testEntityManager.persist(annoDoc2);
+        testEntityManager.persist(AnnotationDocument.builder() //
+                .withUser("kevin") //
+                .forDocument(testDocument) //
+                .withState(AnnotationDocumentState.FINISHED) //
+                .build());
 
         var finishedUsers = sut.listCuratableUsers(testDocument);
 

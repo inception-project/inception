@@ -93,7 +93,11 @@ public class Project
 
     @Column(nullable = true)
     @Type(ProjectStateType.class)
-    private ProjectState state;
+    private ProjectState state = ProjectState.NEW;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "state_updated", nullable = true)
+    private Date stateUpdated = new Date();
 
     @Column(nullable = false)
     private boolean anonymousCuration;
@@ -269,12 +273,53 @@ public class Project
 
     public ProjectState getState()
     {
+        if (state == null) {
+            return ProjectState.NEW;
+        }
+
         return state;
     }
 
+    /**
+     * @param aState
+     *            the new state.
+     * @deprecated Use this only when you need to import the state from an external source and call
+     *             {@link #setStateUpdated(Date)} as well. Otherwise use
+     *             {@link #updateState(ProjectState)} which implicitly sets {@link #stateUpdated}
+     *             when required.
+     */
+    @Deprecated
     public void setState(ProjectState aState)
     {
         state = aState;
+    }
+
+    public void updateState(ProjectState aState)
+    {
+        if (aState != state) {
+            stateUpdated = new Date();
+        }
+
+        state = aState;
+    }
+
+    /**
+     * @param aStateUpdated
+     *            the new state updated time.
+     * @deprecated Use this only when you need to import the state from an external source and call
+     *             {@link #setStateUpdated(Date)} as well. Otherwise use
+     *             {@link #updateState(ProjectState)} which implicitly sets {@link #stateUpdated}
+     *             when required.
+     */
+    @Deprecated
+    public void setStateUpdated(Date aStateUpdated)
+    {
+        stateUpdated = aStateUpdated;
+    }
+
+    public Date getStateUpdated()
+    {
+        return stateUpdated;
     }
 
     public boolean isAnonymousCuration()

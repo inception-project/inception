@@ -183,7 +183,7 @@ public class AeroDocumentController
             case NEW: // fallthrough
             case ANNOTATION_IN_PROGRESS: // fallthrough
             case ANNOTATION_FINISHED: // fallthrough
-                document.setState(state);
+                document.updateState(state);
                 documentService.createSourceDocument(document);
                 break;
             case CURATION_IN_PROGRESS: // fallthrough

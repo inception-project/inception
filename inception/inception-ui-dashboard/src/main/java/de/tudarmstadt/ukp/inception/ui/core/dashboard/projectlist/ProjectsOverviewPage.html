@@ -30,130 +30,129 @@
 </head>
 <body>
   <wicket:extend>
-    <div class="flex-content flex-v-container">
-      <div class="flex-h-container flex-gutter mt-3 mb-3">
-        <div>
-          <span wicket:id="projectCreationGroup" class="dropdown" aria-haspopup="true" aria-expanded="false">
+    <div class="flex-content flex-h-container overflow-hidden">
+      <div class="dashboard-content flex-content d-flex flex-column">
+        <div class="flex-h-container flex-gutter mt-3 mb-3">
+          <div>
+            <span wicket:id="projectCreationGroup" class="dropdown" aria-haspopup="true" aria-expanded="false">
+              <span class="btn-group" role="group">
+                <button wicket:id="newProject" class="btn btn-primary">
+                  <i class="fas fa-plus me-1"/><wicket:message key="newProject"/>
+                </button> 
+              </span>
+            </span>
+            <span wicket:id="projectImportGroup" class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
+              <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" name="projectImport">
+                <i class="fas fa-upload me-1"/> <wicket:message key="importProject"/>
+              </button>
+              <div class="border-0 dropdown-menu shadow-lg pt-0 pb-0" role="menu">
+                <wicket:container wicket:id="importProjectPanel" />
+              </div>
+            </span>
+          </div>
+          <div class="flex-content"/>
+          <div>
+            <div class="input-group">
+              <div class="input-group-text">
+                <i class="fas fa-sort"/>
+              </div>
+              <select wicket:id="sortOrder" class="form-select"/>
+            </div>
+          </div>
+          <div wicket:id="stateFilter"/>
+          <div wicket:id="roleFilter"/>
+        </div>
+        <div class="flex-h-container">
+          <div class="flex-content mx-3" wicket:enclosure="query">
+            <div class="input-group mb-3">
+              <span class="input-group-text">
+                <i class="fas fa-search"></i>
+              </span>
+              <input wicket:id="query" class="form-control" wicket:message="placeholder:query.placeholder"/>
+            </div>
+          </div>
+          <ul wicket:id="pagingNavigator" class="me-3"/>
+          <span class="dropdown me-3" aria-haspopup="true" aria-expanded="false" wicket:enclosure="toggleBulkChange">
             <span class="btn-group" role="group">
-              <button wicket:id="newProject" class="btn btn-primary">
-                <i class="fas fa-plus me-1"/><wicket:message key="newProject"/>
-              </button> 
+              <button wicket:id="toggleBulkChange" class="btn btn-action" type="button">
+                Bulk action
+              </button>
+              <button wicket:id="bulkActionDropdownButton" class="btn btn-primary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
+              <div wicket:id="bulkActionDropdown" class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
+                <a wicket:id="bulkDelete" class="dropdown-item">
+                  Delete selected
+                  <span class="float-end badge badge-pill text-bg-danger">
+                    <i class="fas fa-trash"></i>
+                  </span>
+                </a>
+              </div>
             </span>
           </span>
-          <span wicket:id="projectImportGroup" class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
-            <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" name="projectImport">
-              <i class="fas fa-upload me-1"/> <wicket:message key="importProject"/>
-            </button>
-            <div class="border-0 dropdown-menu shadow-lg pt-0 pb-0" role="menu">
-              <wicket:container wicket:id="importProjectPanel" />
-            </div>
-          </span>
-          <button wicket:id="startTutorial" class="btn btn-outline-primary">
-            <i class="fa fa-lightbulb"></i>&nbsp;
-            Start Tutorial
-          </button>
         </div>
-        <div class="flex-content"/>
-        <div>
-          <div class="input-group">
-            <div class="input-group-text">
-              <i class="fas fa-sort"/>
+        <div class="d-flex flex-grow-1 overflow-hidden mx-3 mb-3 card">
+          <div class="scrolling flex-content flex-h-container ">
+            <div class="no-data-notice flex-content" wicket:enclosure="emptyListLabel">
+              <div wicket:id="emptyListLabel"></div>
             </div>
-            <select wicket:id="sortOrder" class="form-select"/>
-          </div>
-        </div>
-        <div wicket:id="stateFilter"/>
-        <div wicket:id="roleFilter"/>
-      </div>
-      <div class="flex-h-container">
-        <div class="flex-content mx-3" wicket:enclosure="query">
-          <div class="input-group mb-3">
-            <span class="input-group-text">
-              <i class="fas fa-search"></i>
-            </span>
-            <input wicket:id="query" class="form-control" wicket:message="placeholder:query.placeholder"/>
-          </div>
-        </div>
-        <ul wicket:id="pagingNavigator" class="me-3"/>
-        <span class="dropdown me-3" aria-haspopup="true" aria-expanded="false" wicket:enclosure="toggleBulkChange">
-          <span class="btn-group" role="group">
-            <button wicket:id="toggleBulkChange" class="btn btn-action" type="button">
-              Bulk action
-            </button>
-            <button wicket:id="bulkActionDropdownButton" class="btn btn-primary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
-            <div wicket:id="bulkActionDropdown" class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
-              <a wicket:id="bulkDelete" class="dropdown-item">
-                Delete selected
-                <span class="float-end badge badge-pill text-bg-danger">
-                  <i class="fas fa-trash"></i>
-                </span>
-              </a>
+            <div wicket:id="projects" class="flex-content list-group-flush list-group border-0">
+              <div wicket:id="selectionStatePanel" class="list-group-item position-sticky bg-secondary-subtle" style="top: 0px; z-index: 1;">
+                <button wicket:id="selectAll" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-check me-2"></i> All</button>
+                <button wicket:id="selectNone" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-xmark me-2"></i>None</button>
+                <small class="ms-3"> 
+                  <span wicket:id="selectCount"/> selected
+                </small>
+              </div>
+              <div wicket:id="project" class="list-group-item">
+                <div class="d-flex">
+                  <input wicket:id="selected" type="checkbox" class="me-3 "/>
+                  <span wicket:id="stateIcon" class="state-icon text-secondary fs-3 me-3"/>
+                  <div class="flex-grow-1 d-flex flex-column">
+                    <div>
+                      <a wicket:id="projectLink" class="text-decoration-none">
+                        <wicket:container wicket:id="name"/>
+                      </a>
+                    </div>
+                    <div class="list-group-item-text text-muted">
+                      <small><wicket:container wicket:id="description"/></small>
+                    </div>
+                  </div>
+                  <div class="d-flex flex-column text-end">
+                    <div wicket:id="stats"/>
+                    <div class="d-flex flex-nowrap flex-row-reverse">
+                      <span wicket:id="role" class="badge bg-secondary ms-1"><wicket:container wicket:id="label"/></span>
+                    </div>
+                    <div class="text-nowrap mt-auto">
+                      <small class="text-muted" wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></small>
+                      <small class="text-muted ms-4" wicket:enclosure="updated">Updated: <wicket:container wicket:id="updated"/></small>
+                      <small class="text-muted ms-4" >Manager: 
+                        <wicket:container wicket:id="primeManager"/>
+                        <span wicket:id="otherManagers"/>
+                      </small>
+                      <small class="text-muted ms-4" wicket:enclosure="id">ID: <wicket:container wicket:id="id"/></small>
+                    </div>
+                  </div>
+                  <div wicket:id="actionDropdown" class="d-flex">
+                    <div class="dropdown flex-content flex-h-container">
+                      <button class="btn dropdown-toggle flex-content" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-v"></i>
+                      </button>
+                      <ul class="dropdown-menu float-end" role="menu">
+                        <li>
+                          <button class="dropdown-item" tabindex="-1" wicket:id="leaveProject" type="button">
+                            <wicket:message key="leaveProject"/>
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+      	        </div>
+              </div>
             </div>
-          </span>
-        </span>
-      </div>
-      <div class="d-flex flex-grow-1 overflow-hidden mx-3 mb-3 card">
-        <div class="scrolling flex-content flex-h-container ">
-          <div class="no-data-notice flex-content" wicket:enclosure="emptyListLabel">
-            <div wicket:id="emptyListLabel"></div>
+            <div wicket:id="dialog"></div>
           </div>
-          <div wicket:id="projects" class="flex-content list-group-flush list-group border-0">
-            <div wicket:id="selectionStatePanel" class="list-group-item position-sticky bg-secondary-subtle" style="top: 0px; z-index: 1;">
-              <button wicket:id="selectAll" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-check me-2"></i> All</button>
-              <button wicket:id="selectNone" class="btn btn-sm btn-outline-secondary"><i class="fa-solid fa-xmark me-2"></i>None</button>
-              <small class="ms-3"> 
-                <span wicket:id="selectCount"/> selected
-              </small>
-            </div>
-            <div wicket:id="project" class="list-group-item">
-              <div class="d-flex">
-                <input wicket:id="selected" type="checkbox" class="me-3 "/>
-                <span wicket:id="stateIcon" class="state-icon text-secondary fs-3 me-3"/>
-                <div class="flex-grow-1 d-flex flex-column">
-                  <div>
-                    <a wicket:id="projectLink" class="text-decoration-none">
-                      <wicket:container wicket:id="name"/>
-                    </a>
-                  </div>
-                  <div class="list-group-item-text text-muted">
-                    <small><wicket:container wicket:id="description"/></small>
-                  </div>
-                </div>
-                <div class="d-flex flex-column text-end">
-                  <div wicket:id="stats"/>
-                  <div class="d-flex flex-nowrap flex-row-reverse">
-                    <span wicket:id="role" class="badge bg-secondary ms-1"><wicket:container wicket:id="label"/></span>
-                  </div>
-                  <div class="text-nowrap mt-auto">
-                    <small class="text-muted" wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></small>
-                    <small class="text-muted ms-4" wicket:enclosure="updated">Updated: <wicket:container wicket:id="updated"/></small>
-                    <small class="text-muted ms-4" >Manager: 
-                      <wicket:container wicket:id="primeManager"/>
-                      <span wicket:id="otherManagers"/>
-                    </small>
-                    <small class="text-muted ms-4" wicket:enclosure="id">ID: <wicket:container wicket:id="id"/></small>
-                  </div>
-                </div>
-                <div wicket:id="actionDropdown" class="d-flex">
-                  <div class="dropdown flex-content flex-h-container">
-                    <button class="btn dropdown-toggle flex-content" type="button" data-bs-toggle="dropdown">
-                      <i class="fas fa-ellipsis-v"></i>
-                    </button>
-                    <ul class="dropdown-menu float-end" role="menu">
-                      <li>
-                        <button class="dropdown-item" tabindex="-1" wicket:id="leaveProject" type="button">
-                          <wicket:message key="leaveProject"/>
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-    	        </div>
-            </div>
-          </div>
-          <div wicket:id="dialog"></div>
         </div>
       </div>
+      <wicket:container wicket:id="feed"/>
     </div>
   </wicket:extend>
 </body>

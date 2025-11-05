@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.KEYD
 import static de.tudarmstadt.ukp.inception.support.lambda.KeyCodes.ENTER;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenModelIsNotNull;
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.lang.String.join;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.Duration.ofMillis;
@@ -143,7 +144,6 @@ public class ProjectsOverviewPage
     private static final String MID_LEAVE_PROJECT = "leaveProject";
     private static final String MID_DIALOG = "dialog";
     private static final String MID_EMPTY_LIST_LABEL = "emptyListLabel";
-    private static final String MID_START_TUTORIAL = "startTutorial";
     private static final String MID_PAGING_NAVIGATOR = "pagingNavigator";
     private static final String MID_TOGGLE_BULK_CHANGE = "toggleBulkChange";
     private static final String MID_BULK_ACTION_DROPDOWN_BUTTON = "bulkActionDropdownButton";
@@ -215,7 +215,6 @@ public class ProjectsOverviewPage
         noProjectsNotice.setOutputMarkupPlaceholderTag(true);
         queue(noProjectsNotice);
 
-        add(createStartTutorialLink()); // Must be add instead of queue otherwise there is an error
         queue(createProjectCreationGroup());
         queue(createProjectImportGroup());
         queue(new ProjectRoleFilterPanel(MID_ROLE_FILTER,
@@ -291,6 +290,9 @@ public class ProjectsOverviewPage
 
         queue(new LambdaAjaxLink("bulkDelete", this::actionBulkDeleteProjects).setVisibilityAllowed(
                 projectUiProperties.getBulkActions().getDelete().isAccessible(sessionOwner)));
+
+        queue(new ProjectOverviewFeedPanel("feed").add(visibleWhen(
+                () -> projectService.hasRoleInAnyProject(sessionOwner, MANAGER, CURATOR))));
     }
 
     private void actionSelectAll(AjaxRequestTarget aTarget)
@@ -514,36 +516,6 @@ public class ProjectsOverviewPage
         return newProjectLink;
     }
 
-    private LambdaAjaxLink createStartTutorialLink()
-    {
-        var startTutorialLink = new LambdaAjaxLink(MID_START_TUTORIAL, this::startTutorial);
-        startTutorialLink.setVisibilityAllowed(isTutorialAvailable());
-        startTutorialLink.add(visibleWhen(() -> {
-            return userRepository.isAdministrator(currentUser.getObject())
-                    || userRepository.isProjectCreator(currentUser.getObject());
-        }));
-
-        add(startTutorialLink);
-
-        return startTutorialLink;
-    }
-
-    private boolean isTutorialAvailable()
-    {
-        try {
-            Class.forName("de.tudarmstadt.ukp.inception.tutorial.TutorialFooterItem");
-            return true;
-        }
-        catch (Exception e) {
-            return false;
-        }
-    }
-
-    private void startTutorial(AjaxRequestTarget aTarget)
-    {
-        aTarget.appendJavaScript(" startTutorial(); ");
-    }
-
     private DataView<ProjectEntry> createProjectList(String aId,
             ProjectListDataProvider aDataProvider)
     {
@@ -598,7 +570,7 @@ public class ProjectsOverviewPage
                             .comparing((ProjectUserPermissions p) -> p.getUser()
                                     .map(User::isEnabled).orElse(false))
                             .reversed() //
-                            .thenComparing(p -> p.render(), String.CASE_INSENSITIVE_ORDER);
+                            .thenComparing(p -> p.render(), CASE_INSENSITIVE_ORDER);
                     var managers = permissions.stream() //
                             .filter(p -> p.getRoles().contains(MANAGER)) //
                             .sorted(comparator) //
@@ -713,15 +685,14 @@ public class ProjectsOverviewPage
 
     private ListView<PermissionLevel> createRoleBadges(ProjectEntry aProjectEntry)
     {
-        var levels = aProjectEntry.getLevels();
-        return new ListView<PermissionLevel>(MID_ROLE, levels)
+        return new ListView<>(MID_ROLE, aProjectEntry.getLevels())
         {
             private static final long serialVersionUID = -96472758076828409L;
 
             @Override
             protected void populateItem(ListItem<PermissionLevel> aItem)
             {
-                PermissionLevel level = aItem.getModelObject();
+                var level = aItem.getModelObject();
                 aItem.add(new Label(MID_LABEL, getString(
                         Classes.simpleName(level.getDeclaringClass()) + '.' + level.toString())));
             }
@@ -738,10 +709,11 @@ public class ProjectsOverviewPage
     @OnEvent
     public void onProjectImported(AjaxProjectImportedEvent aEvent)
     {
-        List<Project> projects = aEvent.getProjects();
+        var projects = aEvent.getProjects();
 
         if (projects.size() > 1) {
-            allAccessibleProjects.detach(); // Ensure that the subsequent refresh gets fresh data
+            // Detach to ensure that the subsequent refresh gets fresh data
+            allAccessibleProjects.detach();
             dataProvider.refresh();
             aEvent.getTarget().add(projectListContainer);
             highlightedProjects.clear();

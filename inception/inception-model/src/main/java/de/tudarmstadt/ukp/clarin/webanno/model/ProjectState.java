@@ -125,4 +125,23 @@ public enum ProjectState
     {
         return symbol;
     }
+
+    public static ProjectState fromString(String aString)
+    {
+        try {
+            return valueOf(aString);
+        }
+        catch (IllegalArgumentException e) {
+            // Ignore
+        }
+
+        for (var v : values()) {
+            if (v.id.equals(aString)) {
+                return v;
+            }
+        }
+
+        throw new IllegalArgumentException(
+                "No enum constant or enum valid with id [" + aString + "]");
+    }
 }

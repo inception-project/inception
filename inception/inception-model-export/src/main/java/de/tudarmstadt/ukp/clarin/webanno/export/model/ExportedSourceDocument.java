@@ -24,8 +24,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
 /**
  * Source document information to be exported/imported
@@ -43,16 +41,16 @@ public class ExportedSourceDocument
     @JsonProperty("state")
     private SourceDocumentState state;
 
+    @JsonProperty("state_updated")
+    private Date stateUpdated;
+
     @JsonProperty("timestamp")
-    @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
     @JsonProperty("created")
-    @Temporal(TemporalType.TIMESTAMP)
     private Date created;
 
     @JsonProperty("updated")
-    @Temporal(TemporalType.TIMESTAMP)
     private Date updated;
 
     public String getName()
@@ -83,6 +81,16 @@ public class ExportedSourceDocument
     public void setState(SourceDocumentState state)
     {
         this.state = state;
+    }
+
+    public void setStateUpdated(Date aStateUpdated)
+    {
+        stateUpdated = aStateUpdated;
+    }
+
+    public Date getStateUpdated()
+    {
+        return stateUpdated;
     }
 
     public Date getTimestamp()
