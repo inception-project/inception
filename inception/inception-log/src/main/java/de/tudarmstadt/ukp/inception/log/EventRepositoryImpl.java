@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 import static java.lang.String.join;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.util.Arrays.asList;
@@ -24,6 +25,7 @@ import static java.util.Optional.empty;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,14 +46,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.log.api.EventRepository;
+import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.api.model.SummarizedLoggedEvent;
+import de.tudarmstadt.ukp.inception.log.api.model.UserSessionStats;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
 import de.tudarmstadt.ukp.inception.log.model.FeatureChangeDetails;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent_;
-import de.tudarmstadt.ukp.inception.log.model.SummarizedLoggedEvent;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
-import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.log.model.LoggedEventEntity;
+import de.tudarmstadt.ukp.inception.log.model.LoggedEventEntity_;
+import de.tudarmstadt.ukp.inception.log.model.SessionDetails;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Tuple;
@@ -77,7 +82,6 @@ public class EventRepositoryImpl
         entityManager = aEntityManager;
     }
 
-    @Override
     @Transactional
     public void create(LoggedEvent... aEvents)
     {
@@ -95,25 +99,58 @@ public class EventRepositoryImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public UserSessionStats getAggregateSessionDuration(String aSessionOwner)
+    {
+        var query = join("\n", //
+                "FROM LoggedEventEntity", //
+                "WHERE user = :sessionOwner", //
+                "  AND project = :project", //
+                "  AND event = :eventType");
+
+        // We query for project here so we can use the (project, user, event) index.
+        // If there is no project, the project is -1
+        var results = entityManager.createQuery(query, LoggedEventEntity.class) //
+                .setParameter("sessionOwner", aSessionOwner) //
+                .setParameter("project", -1) //
+                .setParameter("eventType", "UserSessionEndedEvent") //
+                .setMaxResults(RECENT_ACTIVITY_HORIZON) //
+                .getResultList();
+
+        var accuDuration = new AtomicLong();
+        for (var result : results) {
+            try {
+                var details = fromJsonString(SessionDetails.class, result.getDetails());
+                accuDuration.addAndGet(details.getDuration());
+            }
+            catch (Exception e) {
+                // Skip if we cannot parse
+            }
+        }
+
+        return new UserSessionStats(aSessionOwner, Duration.ofMillis(accuDuration.get()));
+    }
+
+    @Override
     public Optional<Range> getLastEditRange(SourceDocument aDocument, String aDataOwner)
     {
         var cb = entityManager.getCriteriaBuilder();
-        var cq = cb.createQuery(LoggedEvent.class);
-        var root = cq.from(LoggedEvent.class);
+        var cq = cb.createQuery(LoggedEventEntity.class);
+        var root = cq.from(LoggedEventEntity.class);
 
         // Predicates for filtering
-        var documentPredicate = cb.equal(root.get(LoggedEvent_.document), aDocument.getId());
-        var dataOwnerPredicate = cb.equal(root.get(LoggedEvent_.annotator), aDataOwner);
+        var documentPredicate = cb.equal(root.get(LoggedEventEntity_.document), aDocument.getId());
+        var dataOwnerPredicate = cb.equal(root.get(LoggedEventEntity_.annotator), aDataOwner);
 
         var eventPredicate = cb.or( //
-                root.get(LoggedEvent_.event).in(asList( //
+                root.get(LoggedEventEntity_.event).in(asList( //
                         "ChainLinkCreatedEvent", //
                         "ChainSpanCreatedEvent", //
                         "DocumentMetadataCreatedEvent", //
                         "RelationCreatedEvent", //
                         "SpanCreatedEvent")),
-                cb.equal(root.get(LoggedEvent_.event), "SpanMovedEvent"), //
-                cb.equal(root.get(LoggedEvent_.event), "FeatureValueUpdatedEvent"));
+                cb.equal(root.get(LoggedEventEntity_.event), "SpanMovedEvent"), //
+                cb.equal(root.get(LoggedEventEntity_.event), "FeatureValueUpdatedEvent"));
 
         // Combine all together with AND
         cq.select(root).where(cb.and(documentPredicate, dataOwnerPredicate, eventPredicate))
@@ -131,7 +168,7 @@ public class EventRepositoryImpl
         var detailsString = latestEvent.getDetails();
         if ("FeatureValueUpdatedEvent".equals(latestEvent.getEvent())) {
             try {
-                var details = JSONUtil.fromJsonString(FeatureChangeDetails.class, detailsString);
+                var details = fromJsonString(FeatureChangeDetails.class, detailsString);
                 return Optional.of(new Range(details.getAnnotation().getBegin(),
                         details.getAnnotation().getEnd()));
             }
@@ -141,7 +178,7 @@ public class EventRepositoryImpl
         }
 
         try {
-            var details = JSONUtil.fromJsonString(AnnotationDetails.class, detailsString);
+            var details = fromJsonString(AnnotationDetails.class, detailsString);
             return Optional.of(new Range(details.getBegin(), details.getEnd()));
 
         }
@@ -158,13 +195,13 @@ public class EventRepositoryImpl
             Collection<String> aEventTypes, int aMaxSize)
     {
         var query = join("\n", //
-                "FROM  LoggedEvent", //
+                "FROM  LoggedEventEntity", //
                 "WHERE user = :user", //
                 "  AND project = :project", //
                 "  AND event in (:eventTypes)", //
                 "ORDER BY created DESC");
 
-        var result = entityManager.createQuery(query, LoggedEvent.class) //
+        var result = entityManager.createQuery(query, LoggedEventEntity.class) //
                 .setParameter("user", aUsername) //
                 .setParameter("project", aProject.getId()) //
                 .setParameter("eventTypes", aEventTypes) //
@@ -195,15 +232,19 @@ public class EventRepositoryImpl
     @Transactional(readOnly = true)
     public List<LoggedEvent> listRecentActivity(String aUsername, int aMaxSize)
     {
-        var query = join("\n", //
-                "FROM  LoggedEvent", //
-                "WHERE user = :user", //
-                "ORDER BY created DESC");
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createQuery(LoggedEventEntity.class);
+        var root = cq.from(LoggedEventEntity.class);
 
-        return entityManager.createQuery(query, LoggedEvent.class) //
-                .setParameter("user", aUsername) //
-                .setMaxResults(aMaxSize) //
-                .getResultList();
+        cq.select(root)//
+                .where(cb.equal(root.get(LoggedEventEntity_.user), aUsername))//
+                .orderBy(cb.desc(root.get(LoggedEventEntity_.created)));
+
+        return entityManager.createQuery(cq)//
+                .setMaxResults(aMaxSize)//
+                .getResultStream() //
+                .map(e -> (LoggedEvent) e) //
+                .toList();
     }
 
     @Override
@@ -213,14 +254,14 @@ public class EventRepositoryImpl
     {
         // Set up data source
         var query = String.join("\n", //
-                "FROM LoggedEvent WHERE ", //
+                "FROM LoggedEventEntity WHERE ", //
                 "project = :project ", //
                 "ORDER BY id");
-        var typedQuery = entityManager.createQuery(query, LoggedEvent.class) //
+        var typedQuery = entityManager.createQuery(query, LoggedEventEntity.class) //
                 .setParameter("project", aProject.getId());
 
         try (var eventStream = typedQuery.getResultStream()) {
-            Streams.failableStream(eventStream).forEach(aConsumer);
+            Streams.failableStream(eventStream).forEach(e -> aConsumer.accept(e));
         }
     }
 
@@ -231,17 +272,17 @@ public class EventRepositoryImpl
     {
         var cb = entityManager.getCriteriaBuilder();
         var query = cb.createQuery(Tuple.class);
-        var root = query.from(LoggedEvent.class);
+        var root = query.from(LoggedEventEntity.class);
 
         query //
                 .multiselect( //
-                        root.get(LoggedEvent_.created), //
-                        root.get(LoggedEvent_.document), //
-                        root.get(LoggedEvent_.event))
+                        root.get(LoggedEventEntity_.created), //
+                        root.get(LoggedEventEntity_.document), //
+                        root.get(LoggedEventEntity_.event))
                 .where( //
-                        cb.equal(root.get(LoggedEvent_.user), aSessionOwner), //
-                        cb.equal(root.get(LoggedEvent_.project), aProject.getId()), //
-                        cb.between(root.get(LoggedEvent_.created), Date.from(aFrom),
+                        cb.equal(root.get(LoggedEventEntity_.user), aSessionOwner), //
+                        cb.equal(root.get(LoggedEventEntity_.project), aProject.getId()), //
+                        cb.between(root.get(LoggedEventEntity_.created), Date.from(aFrom),
                                 Date.from(aTo)));
 
         var aggregator = new HashMap<SummarizedLoggedEventKey, AtomicLong>();
@@ -267,17 +308,17 @@ public class EventRepositoryImpl
     {
         var cb = entityManager.getCriteriaBuilder();
         var query = cb.createQuery(Tuple.class);
-        var root = query.from(LoggedEvent.class);
+        var root = query.from(LoggedEventEntity.class);
 
         query //
                 .multiselect( //
-                        root.get(LoggedEvent_.created), //
-                        root.get(LoggedEvent_.document), //
-                        root.get(LoggedEvent_.event))
+                        root.get(LoggedEventEntity_.created), //
+                        root.get(LoggedEventEntity_.document), //
+                        root.get(LoggedEventEntity_.event))
                 .where( //
-                        cb.equal(root.get(LoggedEvent_.annotator), aDataOwner), //
-                        cb.equal(root.get(LoggedEvent_.project), aProject.getId()), //
-                        cb.between(root.get(LoggedEvent_.created), Date.from(aFrom),
+                        cb.equal(root.get(LoggedEventEntity_.annotator), aDataOwner), //
+                        cb.equal(root.get(LoggedEventEntity_.project), aProject.getId()), //
+                        cb.between(root.get(LoggedEventEntity_.created), Date.from(aFrom),
                                 Date.from(aTo)));
 
         var aggregator = new HashMap<SummarizedLoggedEventKey, AtomicLong>();

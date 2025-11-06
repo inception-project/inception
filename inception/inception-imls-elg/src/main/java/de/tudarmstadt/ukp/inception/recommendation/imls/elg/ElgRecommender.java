@@ -39,8 +39,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResp
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgSession;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgTextsResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.service.ElgService;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public class ElgRecommender
     extends NonTrainableRecommenderEngineImplBase

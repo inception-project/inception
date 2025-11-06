@@ -48,9 +48,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.exporters.SourceDocumentExporter;
-import de.tudarmstadt.ukp.inception.log.EventRepository;
+import de.tudarmstadt.ukp.inception.log.EventRepositoryImpl;
+import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.model.LoggedEventEntity;
 
 /**
  * <p>
@@ -65,11 +66,12 @@ public class LoggedEventExporter
 
     private static final String EVENT_LOG = "event.log";
 
-    private final EventRepository eventRepository;
+    private final EventRepositoryImpl eventRepository;
     private final DocumentService documentService;
 
     @Autowired
-    public LoggedEventExporter(EventRepository aEventRepository, DocumentService aDocumentService)
+    public LoggedEventExporter(EventRepositoryImpl aEventRepository,
+            DocumentService aDocumentService)
     {
         eventRepository = aEventRepository;
         documentService = aDocumentService;
@@ -172,7 +174,7 @@ public class LoggedEventExporter
                 .createParser(aZip.getInputStream(entry))) {
 
             // Persist events in batches to speed up import process
-            var batch = new ArrayList<LoggedEvent>();
+            var batch = new ArrayList<LoggedEventEntity>();
 
             var i = jParser.readValuesAs(ExportedLoggedEvent.class);
             while (i.hasNext()) {
@@ -185,7 +187,7 @@ public class LoggedEventExporter
 
                 var exportedEvent = i.next();
 
-                var event = new LoggedEvent();
+                var event = new LoggedEventEntity();
                 event.setProject(aProject.getId());
                 event.setUser(exportedEvent.getUser());
                 event.setEvent(exportedEvent.getEvent());

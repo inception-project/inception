@@ -24,9 +24,9 @@ import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHAN
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -63,6 +63,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.log.api.EventRepository;
+import de.tudarmstadt.ukp.inception.log.api.model.UserSessionStats;
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 import de.tudarmstadt.ukp.inception.security.saml.Saml2Adapter;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
@@ -82,6 +84,7 @@ public class UserDetailPanel
     private @SpringBean AuthenticationProvider authenticationProvider;
     private @SpringBean OAuth2Adapter oAuth2Adapter;
     private @SpringBean Saml2Adapter saml2Adapter;
+    private @SpringBean EventRepository eventRepository;
 
     private boolean isCreate = false;
     private PasswordTextField oldPasswordField;
@@ -177,6 +180,28 @@ public class UserDetailPanel
             _target.add(oldPasswordField, passwordField, repeatPasswordField, passwordUnsetNotice);
         }));
         queue(realm);
+
+        queue(new Label("sessionTime",
+                aModel.map(u -> eventRepository.getAggregateSessionDuration(u.getUsername()))
+                        .map(UserSessionStats::duration).map(this::renderSessionTime)));
+    }
+
+    private CharSequence renderSessionTime(Duration aDuration)
+    {
+        var buf = new StringBuilder();
+
+        if (aDuration.toHours() > 0) {
+            buf.append("~");
+            buf.append(aDuration.toHours()).append(" hours");
+        }
+        else if (aDuration.toSeconds() > 0) {
+            buf.append("less than one hour");
+        }
+        else {
+            buf.append("none");
+        }
+
+        return buf;
     }
 
     private List<Realm> listRealms()
@@ -185,7 +210,7 @@ public class UserDetailPanel
 
         userService.listRealms().stream() //
                 // Do not permit to move users to project realms
-                .filter(_id -> !startsWith(_id, Realm.REALM_PROJECT_PREFIX)) //
+                .filter(_id -> !Realm.isProjectRealm(_id)) //
                 .map(Realm::new) //
                 .forEach(realms::add);
 

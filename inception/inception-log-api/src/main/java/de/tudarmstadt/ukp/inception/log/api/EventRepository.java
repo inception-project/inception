@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.log;
+package de.tudarmstadt.ukp.inception.log.api;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -26,15 +26,14 @@ import org.apache.commons.lang3.function.FailableConsumer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
-import de.tudarmstadt.ukp.inception.log.model.SummarizedLoggedEvent;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.api.model.SummarizedLoggedEvent;
+import de.tudarmstadt.ukp.inception.log.api.model.UserSessionStats;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public interface EventRepository
 {
     static final String SERVICE_NAME = "eventRepository";
-
-    void create(LoggedEvent... aEvents);
 
     <E extends Throwable> void forEachLoggedEvent(Project aProject,
             FailableConsumer<LoggedEvent, E> aConsumer);
@@ -59,4 +58,6 @@ public interface EventRepository
 
     List<SummarizedLoggedEvent> summarizeEventsByDataOwner(String aDataOwner, Project aProject,
             Instant aFrom, Instant aTo);
+
+    UserSessionStats getAggregateSessionDuration(String aSessionOwner);
 }

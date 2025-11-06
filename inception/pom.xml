@@ -182,6 +182,7 @@
     <module>inception-ui-core</module>
     <module>inception-undo</module>
     <module>inception-log</module>
+    <module>inception-log-api</module>
     <module>inception-scheduling</module>
     <module>inception-js-api</module>
     <module>inception-annotation-storage</module>

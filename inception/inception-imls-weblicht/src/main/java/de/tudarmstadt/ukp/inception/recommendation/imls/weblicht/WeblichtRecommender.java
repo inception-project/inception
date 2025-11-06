@@ -56,7 +56,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.chains.Weblicht
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.converter.DKPro2Tcf;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.converter.Tcf2DKPro;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits.WeblichtRecommenderTraits;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 import eu.clarin.weblicht.wlfxb.io.WLDObjector;
 import eu.clarin.weblicht.wlfxb.tc.xb.TextCorpusStored;
 import eu.clarin.weblicht.wlfxb.xb.WLData;

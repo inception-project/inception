@@ -167,7 +167,8 @@ public class ManageUsersPage
                     else {
                         return new Realm(_id);
                     }
-                }).forEach(realms::add);
+                }) //
+                .forEach(realms::add);
 
         // Add the realms from the external authentication providers. Note that multiple providers
         // might use the same registration. E.g. the SAML IdP might be registered as an OAuth and
@@ -220,7 +221,7 @@ public class ManageUsersPage
 
     private void actionCreate(AjaxRequestTarget aTarget)
     {
-        User user = new User();
+        var user = new User();
         user.setEnabled(true);
         user.setRoles(Set.of(ROLE_USER));
         selectedUser.setObject(user);
