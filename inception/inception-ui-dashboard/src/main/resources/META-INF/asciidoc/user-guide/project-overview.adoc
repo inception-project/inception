@@ -31,7 +31,9 @@ You can also sort the project list using the sort menu, choosing between:
 - *Created (newest first)*: Shows the most recently created projects first.
 - *Recently updated*: Shows the projects that were updated most recently at the top.
 
-Additionally, you can use the query field to filter projects by name. If you enter a search term containing `::`, the text before the `::` is used to filter by project name, and the text after is used to filter by project description. If only a single project remains after filtering, pressing Enter in the query field will directly open that project.
+Additionally, you can use the query field to filter projects by name.
+If you enter a search term containing `::`, the text before the `::` is used to filter by project name, and the text after is used to filter by project description.
+If only a single project remains after filtering, pressing Enter in the query field will directly open that project.
 
 .Creating and importing projects
 Users with the role *project creator* can conveniently *create new projects* or *import project archives* on this page.
@@ -40,15 +42,23 @@ Users with the role *project creator* can conveniently *create new projects* or 
 Users without a *manager* role can leave a project by clicking on the *Leave Project* button accessible via the dots menu on the right end of a project line.
 
 .Advanced import options for administrators
-When uploading projects via this page, user roles for the project are typically not fully imported! 
+
+NOTE: When uploading projects via this page, user roles for the project are typically not fully imported!
+
 If the importing user has the role *project creator*, then the *manager* role is added for the importing user.
 Otherwise, only the roles of the importing user are retained.
 For users with the *admin* role, additional options to *create missing users* and *import all permissions* are available.
 
-If the current instance has users with the same name as those who originally worked on the
-import project, the manager can add these users to the project and they can access their annotations.
-Otherwise, only the imported source documents are accessible. 
+If users with the same name as those who originally worked on the imported project exist in the current instance, the manager can add them to the project, allowing them to access their annotations.
+Otherwise, only the imported source documents are accessible.
 
-Users with the role *admin* who wish to import projects with all permissions and optionally 
-create missing users have to do this through the <<sect_projects>> which can be accessed through
-the *Administration* link in the menu bar.
+Users with the role *admin* who wish to import projects with all permissions and optionally create missing users must do this through the <<sect_projects>>, which can be accessed through the *Administration* link in the menu bar.
+
+== Project udpates sidebar
+
+Project *managers* and *curators* have access to the project updates sidebar, which provides information about recent activities in the project.
+By default, it shows updates from the last seven days, but this can be adjusted using the date filter at the top of the sidebar.
+The sidebar displays various types of updates, including:
+
+- by document: which documents have been started or completed annotating or curating
+- by user: how many documents a given user has started with or finished annotating,
