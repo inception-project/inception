@@ -18,9 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode.NEVER;
-import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeClippedToDocument;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.uima.Range.rangeClippedToDocument;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 

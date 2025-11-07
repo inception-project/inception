@@ -26,7 +26,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.Extractor;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerExtractorSupport;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public class SpanRangeExtractorSupport
     implements LayerExtractorSupport

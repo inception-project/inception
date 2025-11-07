@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.log.model;
 
 import java.util.Date;
 
+import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -30,7 +31,8 @@ import jakarta.persistence.TemporalType;
 
 @Entity
 @Table(name = "logged_event")
-public class LoggedEvent
+public class LoggedEventEntity
+    implements LoggedEvent
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -71,7 +73,7 @@ public class LoggedEvent
     @Column(length = 64000)
     private String details;
 
-    public LoggedEvent()
+    public LoggedEventEntity()
     {
         // Needed by JPA
     }
@@ -80,11 +82,12 @@ public class LoggedEvent
      * For testing only.
      */
     @SuppressWarnings("javadoc")
-    public LoggedEvent(long aId)
+    public LoggedEventEntity(long aId)
     {
         id = aId;
     }
 
+    @Override
     public Date getCreated()
     {
         return created;
@@ -95,6 +98,7 @@ public class LoggedEvent
         created = aCreated;
     }
 
+    @Override
     public long getProject()
     {
         return project;
@@ -105,6 +109,7 @@ public class LoggedEvent
         project = aProject;
     }
 
+    @Override
     public String getAnnotator()
     {
         return annotator;
@@ -115,6 +120,7 @@ public class LoggedEvent
         annotator = aAnnotator;
     }
 
+    @Override
     public String getUser()
     {
         return user;
@@ -125,6 +131,7 @@ public class LoggedEvent
         user = aUser;
     }
 
+    @Override
     public String getEvent()
     {
         return event;
@@ -135,6 +142,7 @@ public class LoggedEvent
         event = aEvent;
     }
 
+    @Override
     public String getDetails()
     {
         return details;
@@ -145,6 +153,7 @@ public class LoggedEvent
         details = aDetails;
     }
 
+    @Override
     public long getDocument()
     {
         return document;
@@ -164,6 +173,7 @@ public class LoggedEvent
         id = aId;
     }
 
+    @Override
     public long getId()
     {
         return id;

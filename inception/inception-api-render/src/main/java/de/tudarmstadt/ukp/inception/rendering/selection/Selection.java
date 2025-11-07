@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.selection;
 
-import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeClippedToDocument;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.getAddr;
+import static de.tudarmstadt.ukp.inception.support.uima.Range.rangeClippedToDocument;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.Serializable;
@@ -35,9 +35,9 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public class Selection
     implements Serializable

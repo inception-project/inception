@@ -58,8 +58,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 @ExtendWith(MockitoExtension.class)
 class PredictionTaskTest

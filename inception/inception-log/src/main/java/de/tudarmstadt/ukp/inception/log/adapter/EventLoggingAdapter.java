@@ -23,7 +23,8 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.model.LoggedEventEntity;
 
 public interface EventLoggingAdapter<T>
 {
@@ -84,7 +85,7 @@ public interface EventLoggingAdapter<T>
 
     default LoggedEvent toLoggedEvent(T aEvent) throws Exception
     {
-        var e = new LoggedEvent();
+        var e = new LoggedEventEntity();
         e.setCreated(getCreated(aEvent));
         e.setEvent(getEvent(aEvent));
         e.setUser(getUser(aEvent));

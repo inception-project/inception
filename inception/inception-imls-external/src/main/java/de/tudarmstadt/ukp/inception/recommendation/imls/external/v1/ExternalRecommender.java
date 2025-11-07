@@ -76,8 +76,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.Pre
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.TrainingRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Document;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Metadata;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.IllegalXmlCharacterSanitizingContentHandler;
 

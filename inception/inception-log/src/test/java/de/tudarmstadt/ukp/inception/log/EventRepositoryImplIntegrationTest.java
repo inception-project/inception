@@ -53,8 +53,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
-import de.tudarmstadt.ukp.inception.log.model.SummarizedLoggedEvent;
+import de.tudarmstadt.ukp.inception.log.api.model.SummarizedLoggedEvent;
+import de.tudarmstadt.ukp.inception.log.model.LoggedEventEntity;
 
 @EnableAutoConfiguration
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
@@ -84,7 +84,7 @@ public class EventRepositoryImplIntegrationTest
     private EventRepositoryImpl sut;
     private Project project;
     private User user;
-    private LoggedEvent le;
+    private LoggedEventEntity le;
 
     @BeforeEach
     public void setUp() throws Exception
@@ -156,10 +156,10 @@ public class EventRepositoryImplIntegrationTest
         return testEntityManager.persist(p);
     }
 
-    private LoggedEvent buildLoggedEvent(Project aProject, String aUsername, String aEventType,
-            Date aDate, long aDocId, String aDetails)
+    private LoggedEventEntity buildLoggedEvent(Project aProject, String aUsername,
+            String aEventType, Date aDate, long aDocId, String aDetails)
     {
-        var loggedEvent = new LoggedEvent();
+        var loggedEvent = new LoggedEventEntity();
         loggedEvent.setUser(aUsername);
         loggedEvent.setProject(aProject.getId());
         loggedEvent.setDetails(aDetails);

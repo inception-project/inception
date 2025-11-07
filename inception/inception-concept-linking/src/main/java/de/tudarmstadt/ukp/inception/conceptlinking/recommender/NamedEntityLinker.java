@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_SUPPORTED;
-import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringAnnotations;
 import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_UNITS;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.inception.support.uima.Range.rangeCoveringAnnotations;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
@@ -50,10 +50,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public class NamedEntityLinker
     extends RecommendationEngine

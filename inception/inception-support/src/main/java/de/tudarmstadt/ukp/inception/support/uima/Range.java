@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.rendering.model;
+package de.tudarmstadt.ukp.inception.support.uima;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;

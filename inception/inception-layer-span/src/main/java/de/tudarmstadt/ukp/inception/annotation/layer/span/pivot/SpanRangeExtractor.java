@@ -22,7 +22,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public class SpanRangeExtractor<T extends Annotation>
     extends AnnotationExtractor_ImplBase<T, Range>

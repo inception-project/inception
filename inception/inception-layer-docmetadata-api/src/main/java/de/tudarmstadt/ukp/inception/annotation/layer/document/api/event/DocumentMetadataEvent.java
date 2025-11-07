@@ -22,7 +22,7 @@ import org.apache.uima.cas.AnnotationBaseFS;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public class DocumentMetadataEvent
     extends AnnotationEvent

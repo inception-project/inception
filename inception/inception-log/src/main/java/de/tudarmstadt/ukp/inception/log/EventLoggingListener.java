@@ -39,9 +39,9 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.EventListener;
 
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
+import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingProperties;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.support.spring.StartupProgressInfoEvent;
 
 /**
@@ -55,7 +55,7 @@ public class EventLoggingListener
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private final EventRepository repo;
+    private final EventRepositoryImpl repo;
     private final ScheduledExecutorService scheduler;
     private final Deque<LoggedEvent> queue;
     private final EventLoggingProperties properties;
@@ -66,7 +66,7 @@ public class EventLoggingListener
     private volatile boolean flushing = false;
 
     @Autowired
-    public EventLoggingListener(EventRepository aRepo, EventLoggingProperties aProperties,
+    public EventLoggingListener(EventRepositoryImpl aRepo, EventLoggingProperties aProperties,
             EventLoggingAdapterRegistry aAdapterRegistry)
     {
         repo = aRepo;

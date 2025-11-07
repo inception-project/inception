@@ -15,42 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.log.model;
+package de.tudarmstadt.ukp.inception.log.api.model;
 
-import java.time.Instant;
+import java.time.Duration;
 
-public class SummarizedLoggedEvent
-{
-    private final long document;
-    private final String event;
-    private final Instant date;
-    private final long count;
+public record UserSessionStats(String username, Duration duration) {
 
-    public SummarizedLoggedEvent(String aEvent, long aDocument, Instant aDate, long aCount)
-    {
-        document = aDocument;
-        event = aEvent;
-        date = aDate;
-        count = aCount;
-    }
-
-    public Instant getDate()
-    {
-        return date;
-    }
-
-    public long getCount()
-    {
-        return count;
-    }
-
-    public String getEvent()
-    {
-        return event;
-    }
-
-    public long getDocument()
-    {
-        return document;
-    }
 }
