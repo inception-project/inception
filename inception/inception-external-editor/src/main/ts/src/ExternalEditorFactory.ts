@@ -105,23 +105,30 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
       console.debug('Installing key event forwarding...')
 
       if (source !== target) {
-        source.addEventListener('keydown', event => {
-          console.debug(`Forwarding keydown event: ${event.key}`)
-          const delegate = target.document.body || target.document
-          delegate.dispatchEvent(new KeyboardEvent('keydown', event))
-        })
+        const shouldForward = (event: Event): boolean => {
+          const targetElement = event.target as HTMLElement | null
+          if (!targetElement) return true
 
-        source.addEventListener('keyup', event => {
-          console.debug(`Forwarding keyup event: ${event.key}`)
-          const delegate = target.document.body || target.document
-          delegate.dispatchEvent(new KeyboardEvent('keyup', event))
-        })
+          const tagName = targetElement.tagName?.toLowerCase()
+          const isEditable =
+            tagName === 'input' ||
+            tagName === 'textarea' ||
+            targetElement.isContentEditable
 
-        source.addEventListener('keypress', event => {
-          console.debug(`Forwarding keypress event: ${event.key}`)
+          return !isEditable
+        }
+
+        const forwardEvent = (type: string, event: KeyboardEvent) => {
+          if (!shouldForward(event)) return
+
+          console.debug(`Forwarding ${type} event: ${event.key}`)
           const delegate = target.document.body || target.document
-          delegate.dispatchEvent(new KeyboardEvent('kekeypressyup', event))
-        })
+          delegate.dispatchEvent(new KeyboardEvent(type, event))
+        }
+
+        source.addEventListener('keydown', e => forwardEvent('keydown', e))
+        source.addEventListener('keyup', e => forwardEvent('keyup', e))
+        source.addEventListener('keypress', e => forwardEvent('keypress', e))
       }
 
       resolve(source)
