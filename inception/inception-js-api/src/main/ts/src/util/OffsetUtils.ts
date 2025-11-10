@@ -80,8 +80,8 @@ export function offsetToRange (root: Element, begin: number, end: number): Range
   const ni = document.createNodeIterator(root, NodeFilter.SHOW_TEXT)
   let n = ni.nextNode()
 
-  // Seek start node
-  while (n != null && base + n.textContent.length <= begin) {
+  // Seek start node - find the text node that contains the begin offset
+  while (n != null && base + n.textContent.length < begin) {
     base += n.textContent.length
     n = ni.nextNode()
   }
@@ -94,7 +94,8 @@ export function offsetToRange (root: Element, begin: number, end: number): Range
   const startNode = n
   const startOffset = begin - base
 
-  while (n != null && base + n.textContent.length <= end) {
+  // Seek end node - find the text node that contains the end offset
+  while (n != null && base + n.textContent.length < end) {
     base += n.textContent.length
     n = ni.nextNode()
   }
