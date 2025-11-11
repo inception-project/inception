@@ -22,7 +22,7 @@
   <parent>
     <artifactId>inception-app</artifactId>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    <version>38.5-SNAPSHOT</version>
+    <version>38.5</version>
   </parent>
 
   <artifactId>inception-diam-compactv2</artifactId>
