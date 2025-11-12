@@ -146,7 +146,6 @@ public class EventRepositoryImpl
                 root.get(LoggedEventEntity_.event).in(asList( //
                         "ChainLinkCreatedEvent", //
                         "ChainSpanCreatedEvent", //
-                        "DocumentMetadataCreatedEvent", //
                         "RelationCreatedEvent", //
                         "SpanCreatedEvent")),
                 cb.equal(root.get(LoggedEventEntity_.event), "SpanMovedEvent"), //
@@ -169,6 +168,11 @@ public class EventRepositoryImpl
         if ("FeatureValueUpdatedEvent".equals(latestEvent.getEvent())) {
             try {
                 var details = fromJsonString(FeatureChangeDetails.class, detailsString);
+                if (details.getAnnotation().getBegin() < 0
+                        || details.getAnnotation().getEnd() < 0) {
+                    return empty();
+                }
+
                 return Optional.of(new Range(details.getAnnotation().getBegin(),
                         details.getAnnotation().getEnd()));
             }
@@ -179,6 +183,9 @@ public class EventRepositoryImpl
 
         try {
             var details = fromJsonString(AnnotationDetails.class, detailsString);
+            if (details.getBegin() < 0 || details.getEnd() < 0) {
+                return empty();
+            }
             return Optional.of(new Range(details.getBegin(), details.getEnd()));
 
         }
