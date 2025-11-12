@@ -28,6 +28,8 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparingInt;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.stream.Collectors.toCollection;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
@@ -374,19 +376,26 @@ public class ConceptLinkingServiceImpl
     {
         var startTime = currentTimeMillis();
 
-        ParsedIRI iri = null;
-        try {
-            iri = new ParsedIRI(aQuery);
-        }
-        catch (URISyntaxException | NullPointerException e) {
-            // Skip match by IRI.
+        if (isBlank(aQuery)) {
+            return emptySet();
         }
 
+        // Check if user has entered an IRI
+        var iri = parseIRI(aQuery);
+
+        // Check if user has entered an IRI suffix
+        var suffixSearch = false;
+        if (iri == null || !iri.isAbsolute()) {
+            suffixSearch = true;
+            iri = parseIRI(aKB.getBasePrefix() + aQuery);
+        }
+
+        // If we did not get a valid IRI, we can stop here
         if (iri == null || !iri.isAbsolute()) {
             return emptySet();
         }
 
-        var iriMatchBuilder = newQueryBuilder(aValueType, aKB).withIdentifier(aQuery);
+        var iriMatchBuilder = newQueryBuilder(aValueType, aKB).withIdentifier(iri.toString());
         iriMatchBuilder.withPrefLabelProperties(aPrefLabelProperties);
         iriMatchBuilder.withAdditionalMatchingProperties(aAdditionalMatchProperties);
 
@@ -397,11 +406,25 @@ public class ConceptLinkingServiceImpl
         iriMatchBuilder.retrieveLabel().retrieveDescription().retrieveDeprecation();
 
         var iriMatches = new LinkedHashSet<KBHandle>();
-        if (aKB.isReadOnly()) {
+        if (aKB.isReadOnly() && !suffixSearch) {
+            // We do not want to cache all kinds of almost empty results while the user is typing,
+            // so
+            // we do not enter this branch if we are in suffixSearch mode.
             iriMatches.addAll(kbService.listHandlesCaching(aKB, iriMatchBuilder, true));
         }
         else {
-            iriMatches.addAll(kbService.read(aKB, conn -> iriMatchBuilder.asHandles(conn, true)));
+            var matches = kbService.read(aKB, conn -> iriMatchBuilder.asHandles(conn, true));
+            if (suffixSearch) {
+                // If we are in suffixSearch mode, we ignore any results that do not have a label
+                // That is because if we enter a valid IRI, that IRI is always returned to support
+                // directly entering IRIs that do not exist in the KB. But if we just want to use
+                // suffixMode to search faster, it would be annoying if everything we enter would
+                // be treated as a potentially full IRI
+                matches = matches.stream() //
+                        .filter(kbh -> isNotBlank(kbh.getName())) //
+                        .toList();
+            }
+            iriMatches.addAll(matches);
         }
 
         var duration = currentTimeMillis() - startTime;
@@ -410,6 +433,17 @@ public class ConceptLinkingServiceImpl
         WicketUtil.serverTiming("findExactIriMatches", duration);
 
         return iriMatches;
+    }
+
+    private ParsedIRI parseIRI(String aQuery)
+    {
+        try {
+            return new ParsedIRI(aQuery);
+        }
+        catch (URISyntaxException | NullPointerException e) {
+            // Skip match by IRI.
+            return null;
+        }
     }
 
     @Override
