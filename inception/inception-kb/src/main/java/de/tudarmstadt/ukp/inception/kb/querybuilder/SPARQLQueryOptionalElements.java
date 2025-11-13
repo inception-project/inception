@@ -53,7 +53,7 @@ public interface SPARQLQueryOptionalElements
      * 
      * This setting is only effective for methods which actually return results (e.g.
      * {@link SPARQLQuery#asHandles} or {@link SPARQLQuery#exists}) but not for methods which just
-     * construct the query (e.g. {@link SPARQLQuery#selectQuery}.
+     * construct the query.
      * 
      * @return the builder (fluent API)
      */
@@ -64,7 +64,7 @@ public interface SPARQLQueryOptionalElements
      * 
      * This setting is only effective for methods which actually return results (e.g.
      * {@link SPARQLQuery#asHandles} or {@link SPARQLQuery#exists}) but not for methods which just
-     * construct the query (e.g. {@link SPARQLQuery#selectQuery}.
+     * construct the query.
      * 
      * @return the builder (fluent API)
      */
@@ -75,7 +75,7 @@ public interface SPARQLQueryOptionalElements
      * 
      * This setting is only effective for methods which actually return results (e.g.
      * {@link SPARQLQuery#asHandles} or {@link SPARQLQuery#exists}) but not for methods which just
-     * construct the query (e.g. {@link SPARQLQuery#selectQuery}.
+     * construct the query.
      * 
      * @return the builder (fluent API)
      */
