@@ -65,7 +65,7 @@ public class DocumentMatrixDataProvider
         long curationsFinished = 0;
 
         for (var row : matrixData) {
-            switch (row.getCurationState()) {
+            switch (row.getState()) {
             case NEW:
                 annotationsNew++;
                 break;
