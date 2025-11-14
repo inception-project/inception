@@ -20,10 +20,24 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OllamaFunctionCall
 {
+    private int index;
     private String name;
     private final Map<String, Object> arguments = new LinkedHashMap<>();
+
+    public void setIndex(int aIndex)
+    {
+        index = aIndex;
+    }
+
+    public int getIndex()
+    {
+        return index;
+    }
 
     public String getName()
     {
