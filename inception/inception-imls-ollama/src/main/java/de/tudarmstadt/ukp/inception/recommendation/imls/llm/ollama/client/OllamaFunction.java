@@ -22,9 +22,11 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import java.lang.reflect.Method;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_EMPTY)
 public class OllamaFunction
 {
