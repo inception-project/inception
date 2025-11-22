@@ -17,11 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 
-public record OllamaShowRequest(String model) {
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+public record OllamaShowRequest(String model, @JsonIgnore String apiKey) {
 
     private OllamaShowRequest(Builder builder)
     {
-        this(builder.model);
+        this(builder.model, builder.apiKey);
     }
 
     public static Builder builder()
@@ -31,10 +33,17 @@ public record OllamaShowRequest(String model) {
 
     public static final class Builder
     {
+        private String apiKey;
         private String model;
 
         private Builder()
         {
+        }
+
+        public Builder withApiKey(String aApiKey)
+        {
+            apiKey = aApiKey;
+            return this;
         }
 
         public Builder withModel(String aModel)

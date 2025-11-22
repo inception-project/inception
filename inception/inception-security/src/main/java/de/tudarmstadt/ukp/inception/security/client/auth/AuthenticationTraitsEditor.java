@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.security.client.auth;
 
+import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 
@@ -38,4 +39,11 @@ public abstract class AuthenticationTraitsEditor<T extends AuthenticationTraits>
     public abstract void setEditMode(boolean aMode);
 
     public abstract void commit();
+
+    // Just to placate some compilers...
+    @Override
+    public MarkupContainer setDefaultModel(IModel<?> model)
+    {
+        return super.setDefaultModel(model);
+    }
 }

@@ -30,17 +30,28 @@ public class AssistantPropertiesImpl
 {
     private String url = "http://localhost:11434";
     private String nickname = "INCEpTION";
+    private String apiKey = null;
 
-    private final AssistantChatProperties chat = new AssistantChatPropertiesImpl();
-    private final AssistantEmbeddingProperties embedding = new AssistantEmbeddingPropertiesImpl();
+    private final AssistantChatPropertiesImpl chat = new AssistantChatPropertiesImpl();
+    private final AssistantEmbeddingPropertiesImpl embedding = new AssistantEmbeddingPropertiesImpl();
     private final AssitantUserGuidePropertiesImpl userGuide = new AssitantUserGuidePropertiesImpl();
-    private final AssistantToolPropertiesImpl tool = new AssistantToolPropertiesImpl();
     private final AssistantDocumentIndexProperties documentIndex;
 
     @Autowired
     public AssistantPropertiesImpl(AssistantDocumentIndexProperties aDocumentIndex)
     {
         documentIndex = aDocumentIndex;
+    }
+
+    public void setApiKey(String aApiKey)
+    {
+        apiKey = aApiKey;
+    }
+
+    @Override
+    public String getApiKey()
+    {
+        return apiKey;
     }
 
     @Override
@@ -66,26 +77,21 @@ public class AssistantPropertiesImpl
     }
 
     @Override
-    public AssistantChatProperties getChat()
+    public AssistantChatPropertiesImpl getChat()
     {
         return chat;
     }
 
     @Override
-    public AssistantEmbeddingProperties getEmbedding()
+    public AssistantEmbeddingPropertiesImpl getEmbedding()
     {
         return embedding;
     }
 
     @Override
-    public AssitantUserGuideProperties getUserGuide()
+    public AssitantUserGuidePropertiesImpl getUserGuide()
     {
         return userGuide;
-    }
-
-    public AssistantToolPropertiesImpl getTool()
-    {
-        return tool;
     }
 
     @Override
@@ -319,23 +325,6 @@ public class AssistantPropertiesImpl
         public void setDimension(int aDimension)
         {
             dimension = aDimension;
-        }
-    }
-
-    public static class AssistantToolPropertiesImpl
-        implements AssistantToolProperties
-    {
-        private String model = "granite3-dense";
-
-        @Override
-        public String getModel()
-        {
-            return model;
-        }
-
-        public void setModel(String aModel)
-        {
-            model = aModel;
         }
     }
 }

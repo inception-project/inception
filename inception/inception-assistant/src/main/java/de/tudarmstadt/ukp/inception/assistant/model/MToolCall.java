@@ -55,6 +55,7 @@ public record MToolCall(String actor, Object instance, Method method, boolean st
                         .withDataOwner(aDataOwner) //
                         .withProject(aProject) //
                         .withDocument(aDocument) //
+                        .withSessionOwner(aSessionOwner) //
                         .build());
             }
             else if (param.getType().isAssignableFrom(Project.class)) {

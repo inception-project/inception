@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.Ollama
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaFunctionParameters;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaGenerateRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaGenerateResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaShowRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaTag;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaTool;
 import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
@@ -144,7 +145,8 @@ class OllamaClientImplTest
     @Test
     void testShowModel() throws Exception
     {
-        var response = sut.getModelInfo(DEFAULT_OLLAMA_URL, "gemma3");
+        var response = sut.getModelInfo(DEFAULT_OLLAMA_URL,
+                OllamaShowRequest.builder().withModel("gemma3").build());
         LOG.info("Response: [{}]", response);
     }
 

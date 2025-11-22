@@ -31,13 +31,11 @@ public interface AssistantService
 {
     List<MChatMessage> getUserChatHistory(String aSessionOwner, Project aProject);
 
-    List<MChatMessage> getInternalChatHistory(String aSessionOwner, Project aProject);
-
     void processUserMessage(String aSessionOwner, Project aProject, SourceDocument aDocument,
-            String aDataOwner, MTextMessage aMessage, MTextMessage... aTransientMessage);
+            String aDataOwner, MTextMessage aMessage);
 
-    void processAgentMessage(String aSessionOwner, Project aProject, MTextMessage aMessage,
-            MTextMessage... aContextMessages);
+    void processInternalMessage(String aSessionOwner, Project aProject, SourceDocument aDocument,
+            String aDataOwner, MTextMessage aMessage, MTextMessage... aContextMessages);
 
     MTextMessage processInternalMessageSync(String aSessionOwner, Project aProject,
             MTextMessage aMessage)
