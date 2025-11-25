@@ -14,7 +14,6 @@ TS_MODULES="
 ./inception-external-editor/src/main/ts
 ./inception-html-apache-annotator-editor/src/main/ts
 ./inception-html-recogito-editor/src/main/ts
-./inception-pdf-editor/src/main/ts
 ./inception-pdf-editor2/src/main/ts
 ./inception-project-export/src/main/ts
 ./inception-recommendation/src/main/ts

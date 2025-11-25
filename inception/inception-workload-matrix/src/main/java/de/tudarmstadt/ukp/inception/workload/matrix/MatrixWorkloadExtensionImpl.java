@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
@@ -40,7 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
@@ -160,23 +160,22 @@ public class MatrixWorkloadExtensionImpl
     @Transactional
     public ProjectState recalculate(Project aProject)
     {
-        var projectUsers = projectService.listProjectUsersWithPermissions(aProject);
-        int annotatorCount = projectUsers.size();
+        var annotators = projectService.listUsersWithRoleInProject(aProject, ANNOTATOR);
         var annDocs = documentService.listAnnotationDocuments(aProject);
 
-        for (SourceDocument doc : documentService.listSourceDocuments(aProject)) {
+        for (var doc : documentService.listSourceDocuments(aProject)) {
             if (isInCuration(doc)) {
                 continue;
             }
 
-            var stats = documentService.getAnnotationDocumentStats(doc, annDocs, projectUsers);
+            var stats = documentService.getAnnotationDocumentStats(doc, annDocs, annotators);
 
-            setSourceDocumentStateBasedOnStats(doc, annotatorCount, stats);
+            setSourceDocumentStateBasedOnStats(doc, annotators.size(), stats);
         }
 
         // Refresh the project stats and recalculate them
-        Project project = projectService.getProject(aProject.getId());
-        SourceDocumentStateStats stats = documentService.getSourceDocumentStats(project);
+        var project = projectService.getProject(aProject.getId());
+        var stats = documentService.getSourceDocumentStats(project);
         projectService.setProjectState(aProject, stats.getProjectState());
 
         return project.getState();
@@ -186,8 +185,7 @@ public class MatrixWorkloadExtensionImpl
     @Transactional
     public ProjectState freshenStatus(Project aProject)
     {
-        var projectUsers = projectService.listProjectUsersWithPermissions(aProject);
-        int annotatorCount = projectUsers.size();
+        var annotators = projectService.listUsersWithRoleInProject(aProject, ANNOTATOR);
         var annDocs = documentService.listAnnotationDocuments(aProject);
 
         // Update the annotation document and source document states for the abandoned documents
@@ -197,14 +195,14 @@ public class MatrixWorkloadExtensionImpl
                 continue;
             }
 
-            var stats = documentService.getAnnotationDocumentStats(doc, annDocs, projectUsers);
+            var stats = documentService.getAnnotationDocumentStats(doc, annDocs, annotators);
 
-            setSourceDocumentStateBasedOnStats(doc, annotatorCount, stats);
+            setSourceDocumentStateBasedOnStats(doc, annotators.size(), stats);
         }
 
         // Refresh the project stats and recalculate them
-        Project project = projectService.getProject(aProject.getId());
-        SourceDocumentStateStats stats = documentService.getSourceDocumentStats(project);
+        var project = projectService.getProject(aProject.getId());
+        var stats = documentService.getSourceDocumentStats(project);
         projectService.setProjectState(aProject, stats.getProjectState());
 
         return project.getState();
@@ -235,9 +233,9 @@ public class MatrixWorkloadExtensionImpl
     private void setSourceDocumentStateBasedOnStats(SourceDocument aDocument, int aAnnotatorCount,
             Map<AnnotationDocumentState, Long> stats)
     {
-        long ignoreCount = stats.get(AnnotationDocumentState.IGNORE);
-        long finishedCount = stats.get(AnnotationDocumentState.FINISHED);
-        long newCount = stats.get(AnnotationDocumentState.NEW);
+        var ignoreCount = stats.get(AnnotationDocumentState.IGNORE);
+        var finishedCount = stats.get(AnnotationDocumentState.FINISHED);
+        var newCount = stats.get(AnnotationDocumentState.NEW);
 
         // If all documents are ignored or finished, we set the source document to finished
         if ((finishedCount + ignoreCount) == aAnnotatorCount) {

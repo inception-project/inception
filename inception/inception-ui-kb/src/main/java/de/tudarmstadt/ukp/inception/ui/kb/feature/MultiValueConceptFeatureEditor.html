@@ -29,8 +29,11 @@
         <span wicket:id="disabledKBWarning"/>
       </span>
     </label>
-    <div class="feature-editor-value d-flex flex-row">
-      <select wicket:id="value" type="text"/>
+    <div class="feature-editor-value">
+      <div class="d-flex flex-row">
+        <select wicket:id="value" type="text"/>
+      </div>
+      <div wicket:id="suggestionInfo" class="d-flex"/>
     </div>
   </div>
 </wicket:panel>

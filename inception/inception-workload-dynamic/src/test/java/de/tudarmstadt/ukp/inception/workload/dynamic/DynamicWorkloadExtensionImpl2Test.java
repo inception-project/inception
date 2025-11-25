@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.workload.dynamic;
 
 import static java.lang.Thread.sleep;
 import static java.time.temporal.ChronoUnit.SECONDS;
-import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -32,8 +32,8 @@ import java.time.Duration;
 
 import javax.sql.DataSource;
 
+import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.util.CasCreationUtils;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -71,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfigurati
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
@@ -155,12 +157,6 @@ class DynamicWorkloadExtensionImpl2Test
         workloadManager.setType(DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID);
     }
 
-    @AfterEach
-    void tearDown() throws Exception
-    {
-        projectService.removeProject(project);
-    }
-
     @Test
     @Disabled
     void thatRecalculatingStateDoesNotFallBacKBehindCuration() throws Exception
@@ -184,7 +180,7 @@ class DynamicWorkloadExtensionImpl2Test
         dynamicWorkloadExtension.writeTraits(traits, project);
 
         var ann = documentService.getAnnotationDocument(annotationDocument.getDocument(),
-                annotationDocument.getUser());
+                AnnotationSet.forUser(annotationDocument.getUser()));
         assertThat(ann.getState()) //
                 .as("Effective state is in-progress after the CAS update")
                 .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
@@ -197,7 +193,8 @@ class DynamicWorkloadExtensionImpl2Test
         dynamicWorkloadExtension.freshenStatus(project);
 
         var annAfterRefresh = documentService.getAnnotationDocument(
-                annotationDocument.getDocument(), annotationDocument.getUser());
+                annotationDocument.getDocument(),
+                AnnotationSet.forUser(annotationDocument.getUser()));
         assertThat(annAfterRefresh.getState())
                 .as("After the abandonation timeout has passed, the effective state has been reset")
                 .isEqualTo(traits.getAbandonationState());
@@ -215,7 +212,7 @@ class DynamicWorkloadExtensionImpl2Test
         dynamicWorkloadExtension.writeTraits(traits, project);
 
         var ann = documentService.getAnnotationDocument(annotationDocument.getDocument(),
-                annotationDocument.getUser());
+                AnnotationSet.forUser(annotationDocument.getUser()));
         assertThat(ann.getState()) //
                 .as("Effective state is in-progress after the CAS update")
                 .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
@@ -235,7 +232,7 @@ class DynamicWorkloadExtensionImpl2Test
         }
 
         var annAfterRefresh = documentService.getAnnotationDocument(ann.getDocument(),
-                ann.getUser());
+                AnnotationSet.forUser(ann.getUser()));
 
         assertThat(annAfterRefresh.getUpdated()) //
                 .as("Database record was not updated at all") //
@@ -269,7 +266,9 @@ class DynamicWorkloadExtensionImpl2Test
                 AnnotationSchemaService aSchemaService)
             throws Exception
         {
-            var tsd = createTypeSystemDescription();
+            var internalTsd = CasMetadataUtils.getInternalTypeSystem();
+            var globalTsd = TypeSystemDescriptionFactory.createTypeSystemDescription();
+            var tsd = CasCreationUtils.mergeTypeSystems(asList(globalTsd, internalTsd));
             var importService = mock(DocumentImportExportService.class);
             when(importService.importCasFromFileNoChecks(any(), any(), any()))
                     .thenReturn(CasCreationUtils.createCas(tsd, null, null, null));

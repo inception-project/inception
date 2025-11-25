@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSessio
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -283,7 +284,7 @@ public class DiamWebsocketController
 
         var constraints = constraintsService.getMergedConstraints(aProject);
 
-        var cas = documentService.readAnnotationCas(doc, aDataOwner);
+        var cas = documentService.readAnnotationCas(doc, AnnotationSet.forUser(aDataOwner));
 
         var prefs = userPreferencesService.loadPreferences(doc.getProject(), sessionOwner,
                 Mode.ANNOTATION);

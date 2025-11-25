@@ -21,9 +21,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -36,6 +38,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModification
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -118,6 +122,12 @@ public interface DocumentService
 
     List<SourceDocument> listSourceDocumentsInState(Project aProject,
             SourceDocumentState... aStates);
+
+    List<SourceDocument> listSourceDocumentsWithState(String aSessionOwner,
+            Set<PermissionLevel> aAllowedRoles, Set<SourceDocumentState> aStates, Date aFromDate,
+            Date aToDate);
+
+    List<SourceDocument> listSupportedSourceDocuments(Project aProject);
 
     /**
      * ROLE_ADMINs or project admins can remove source documents from a project. removing a a source
@@ -261,15 +271,15 @@ public interface DocumentService
      *            the CAS.
      * @param aDocument
      *            the source document.
-     * @param aUser
-     *            The User who perform this operation
+     * @param aSet
+     *            the set the CAS belongs to.
      * @param aFlags
      *            indicate that the CAS is written as the result of an explicit annotator user
      *            action (i.e. not as a result of a third person or implicitly by the system).
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void writeAnnotationCas(CAS aCas, SourceDocument aDocument, String aUser,
+    void writeAnnotationCas(CAS aCas, SourceDocument aDocument, AnnotationSet aSet,
             AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException;
 
@@ -309,11 +319,11 @@ public interface DocumentService
      *
      * @param document
      *            the source document.
-     * @param aUsername
-     *            the user.
+     * @param aSet
+     *            the set to which the CAS belongs.
      * @return if an annotation document metadata exists for the user.
      */
-    boolean existsAnnotationDocument(SourceDocument document, String aUsername);
+    boolean existsAnnotationDocument(SourceDocument document, AnnotationSet aSet);
 
     /**
      * check if the CAS for the {@link User} and {@link SourceDocument} in this {@link Project}
@@ -323,19 +333,21 @@ public interface DocumentService
      *
      * @param sourceDocument
      *            the source document.
-     * @param username
-     *            the username.
+     * @param aSet
+     *            the set the CAS belongs to.
      * @return if an annotation document file exists.
      * @throws IOException
      *             if an I/O error occurs.
      */
-    boolean existsCas(SourceDocument sourceDocument, String username) throws IOException;
+    boolean existsCas(SourceDocument sourceDocument, AnnotationSet aSet) throws IOException;
 
     boolean existsCas(AnnotationDocument annotationDocument) throws IOException;
 
-    void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream) throws IOException;
+    void exportCas(SourceDocument aDocument, AnnotationSet aSet, OutputStream aStream)
+        throws IOException;
 
-    void importCas(SourceDocument aDocument, String aUser, InputStream aStream) throws IOException;
+    void importCas(SourceDocument aDocument, AnnotationSet aSet, InputStream aStream)
+        throws IOException;
 
     /**
      * Get the annotation document.
@@ -355,13 +367,13 @@ public interface DocumentService
      *
      * @param aDocument
      *            the source document.
-     * @param aUser
-     *            the user.
+     * @param aSet
+     *            the set the CAS belongs to.
      * @return the annotation document.
      * @throws NoResultException
      *             if no annotation document exists for the given source/user.
      */
-    AnnotationDocument getAnnotationDocument(SourceDocument aDocument, String aUser);
+    AnnotationDocument getAnnotationDocument(SourceDocument aDocument, AnnotationSet aSet);
 
     /**
      * Gets the CAS for the given annotation document. Converts it form the source document if
@@ -374,6 +386,10 @@ public interface DocumentService
      *             if there was an I/O error.
      */
     CAS readAnnotationCas(AnnotationDocument annotationDocument) throws IOException;
+
+    CAS readAnnotationCas(AnnotationDocument aAnnDoc, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aMode)
+        throws IOException;
 
     /**
      * Gets the CAS for the given annotation document. Converts it form the source document if
@@ -396,7 +412,7 @@ public interface DocumentService
 
     void deleteAnnotationCas(AnnotationDocument annotationDocument) throws IOException;
 
-    void deleteAnnotationCas(SourceDocument aSourceDocument, String aUsername) throws IOException;
+    void deleteAnnotationCas(SourceDocument aSourceDocument, AnnotationSet aSet) throws IOException;
 
     /**
      * Gets the CAS for the given source document. Converts it form the source document if
@@ -404,36 +420,49 @@ public interface DocumentService
      *
      * @param document
      *            the source document.
-     * @param userName
-     *            the username.
+     * @param aSet
+     *            the set the CAs belongs to.
      * @return the CAS.
      * @throws IOException
      *             if there was an I/O error.
      */
-    CAS readAnnotationCas(SourceDocument document, String userName) throws IOException;
+    CAS readAnnotationCas(SourceDocument document, AnnotationSet aSet) throws IOException;
 
     /**
      * Gets the CAS for the given source document. Converts it form the source document if
      * necessary. The state of the source document is not changed.
      *
-     * @param document
+     * @param aDocument
      *            the source document.
-     * @param userName
-     *            the username.
-     * @param aMode
+     * @param aSet
+     *            the set to which the CAS belongs.
+     * @param aUpgradeMode
+     *            the upgrade mode.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was an I/O error.
+     */
+    CAS readAnnotationCas(SourceDocument aDocument, AnnotationSet aSet, CasUpgradeMode aUpgradeMode)
+        throws IOException;
+
+    /**
+     * Gets the CAS for the given source document. Converts it form the source document if
+     * necessary. The state of the source document is not changed.
+     *
+     * @param aDocument
+     *            the source document.
+     * @param aSet
+     *            the set to which the CAS belongs.
+     * @param aUpgradeMode
+     *            the upgrade mode.
+     * @param aAccessMode
      *            the access mode.
      * @return the CAS.
      * @throws IOException
      *             if there was an I/O error.
      */
-    CAS readAnnotationCas(SourceDocument document, String userName, CasAccessMode aMode)
-        throws IOException;
-
-    CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasUpgradeMode aUpgradeMode)
-        throws IOException;
-
-    CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasUpgradeMode aUpgradeMode,
-            CasAccessMode aMode)
+    CAS readAnnotationCas(SourceDocument aDocument, AnnotationSet aSet, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aAccessMode)
         throws IOException;
 
     Map<String, CAS> readAllCasesSharedNoUpgrade(List<AnnotationDocument> aDocuments)
@@ -558,6 +587,10 @@ public interface DocumentService
     List<AnnotationDocument> listAnnotationDocumentsInState(Project aProject,
             AnnotationDocumentState... aStates);
 
+    List<AnnotationDocument> listAnnotationDocumentsWithState(String aSessionOwner,
+            Set<PermissionLevel> aAllowedRoles, Set<AnnotationDocumentState> aStates,
+            Date aFromDate, Date aToDate);
+
     List<AnnotationDocument> listAnnotationDocumentsWithStateForUser(Project aProject, User aUser,
             AnnotationDocumentState aState);
 
@@ -650,7 +683,7 @@ public interface DocumentService
      *            the user.
      * @return if the user has finished annotation.
      */
-    boolean isAnnotationFinished(SourceDocument document, String username);
+    boolean isAnnotationFinished(SourceDocument document, AnnotationSet username);
 
     /**
      * Check if at least one annotation document is finished for this {@link SourceDocument} in the
@@ -681,7 +714,7 @@ public interface DocumentService
 
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser);
 
-    AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, String aUser);
+    AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, AnnotationSet aSet);
 
     List<AnnotationDocument> createOrGetAnnotationDocuments(SourceDocument aDocument,
             Collection<User> aUsers);
@@ -718,16 +751,13 @@ public interface DocumentService
      * 
      * @param aProject
      *            the project for which documents should be returned.
-     * @param aUser
-     *            the user for whom documents should be returned.
+     * @param aSet
+     *            the set to which the CASes belong.
      * @return documents.
      */
-    Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, String aUser);
+    Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, AnnotationSet aSet);
 
     AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
-            AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags);
-
-    AnnotationDocumentState setAnnotationDocumentState(SourceDocument aDocument, String aUser,
             AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags);
 
     /**
@@ -758,15 +788,15 @@ public interface DocumentService
      *         empty optional is returned.
      * @param aDocument
      *            the document for which to retrieve the timestamp
-     * @param aUsername
-     *            the annotator user owning the annotations for which to retrieve the timestamp
+     * @param aSet
+     *            the set the CAS belongs to
      * @throws IOException
      *             if there was an I/O-level problem
      */
-    Optional<Long> getAnnotationCasTimestamp(SourceDocument aDocument, String aUsername)
+    Optional<Long> getAnnotationCasTimestamp(SourceDocument aDocument, AnnotationSet aSet)
         throws IOException;
 
-    Optional<Long> verifyAnnotationCasTimestamp(SourceDocument aDocument, String aUsername,
+    Optional<Long> verifyAnnotationCasTimestamp(SourceDocument aDocument, AnnotationSet aSet,
             long aExpectedTimeStamp, String aContextAction)
         throws IOException, ConcurentCasModificationException;
 
@@ -787,8 +817,7 @@ public interface DocumentService
     Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument);
 
     Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument,
-            List<AnnotationDocument> aAllAnnotationDocumentsInProject,
-            List<User> aUsersWithPermission);
+            List<AnnotationDocument> aAllAnnotationDocumentsInProject, List<User> aRelevantUsers);
 
     SourceDocumentStateStats getSourceDocumentStats(Project aProject);
 
@@ -798,4 +827,10 @@ public interface DocumentService
     boolean isValidDocumentName(String aDocumentName);
 
     List<ValidationError> validateDocumentName(String aName);
+
+    void renameSourceDocument(SourceDocument aDocument, String aNewName);
+
+    void updateSourceDocumentStateUpdatedDirectly(long aId, Date aDate);
+
+    void updateAnnotationDocumentStateUpdatedDirectly(long aId, Date aDate);
 }

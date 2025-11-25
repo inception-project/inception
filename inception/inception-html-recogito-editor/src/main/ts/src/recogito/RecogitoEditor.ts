@@ -28,8 +28,7 @@ import { type CompactAnnotatedText } from '@inception-project/inception-js-api/s
 import { annotatorState } from './RecogitoEditorState.svelte'
 import { mount, unmount } from 'svelte'
 import RecogitoEditorToolbar from './RecogitoEditorToolbar.svelte'
-// import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
-import AnnotationDetailPopOver from './AnnotationDetailPopOver.svelte'
+import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
 
 export const NO_LABEL = '◌'
 

@@ -15,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -66,7 +66,8 @@ public class MultiParamTest
     private static final IRI p2 = iri("p2");
     private static final IRI p3 = iri("p3");
 
-    public @TempDir File tmpFolder;
+    @TempDir
+    Path tmpFolder;
 
     LuceneSail luceneSail;
     SailRepository repository;
@@ -81,7 +82,7 @@ public class MultiParamTest
         luceneSail.setParameter(LuceneSail.INDEX_CLASS_KEY, LuceneSail.DEFAULT_INDEX_CLASS);
         luceneSail.setEvaluationMode(TupleFunctionEvaluationMode.NATIVE);
         luceneSail.setBaseSail(memoryStore);
-        luceneSail.setDataDir(tmpFolder);
+        luceneSail.setDataDir(tmpFolder.toFile());
         repository = new SailRepository(luceneSail);
         repository.init();
 

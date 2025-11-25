@@ -94,10 +94,6 @@ data in a particular format. The **feature flag** column shows which flags you c
 | `imscwb`
 | `format.imscwb.enabled`
 
-// | <<sect_formats_lif>>
-// | `lif`
-// | `format.lif.enabled`
-
 | <<sect_formats_nif>>
 | `nif`
 | `format.nif.enabled`
@@ -106,9 +102,13 @@ data in a particular format. The **feature flag** column shows which flags you c
 | `pdf2`
 | `format.pdf.enabled`
 
-// | <<sect_formats_pdf_legacy>>
-// | `pdf`
-// | `format.pdf-legacy.enabled`
+| <<sect_formats_pdf>>
+| `pdf2JsonCas`
+| `format.pdf-json-cas.enabled`
+
+| <<sect_formats_pdf>>
+| `pdf2XmiCas`
+| `format.pdf-xmi-cas.enabled`
 
 | <<sect_formats_text>>
 | `text`

@@ -101,6 +101,12 @@ public class Gazeteer
     }
 
     @Override
+    public String toString()
+    {
+        return "[" + name + "](" + id + ")";
+    }
+
+    @Override
     public boolean equals(final Object other)
     {
         if (!(other instanceof Gazeteer)) {

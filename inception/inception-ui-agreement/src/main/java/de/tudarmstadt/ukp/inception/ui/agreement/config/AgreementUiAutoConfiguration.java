@@ -17,9 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.ui.agreement.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import de.tudarmstadt.ukp.inception.ui.agreement.page.AgreementPageMenuItem;
 
 @Configuration
 public class AgreementUiAutoConfiguration
 {
+    @Bean
+    public AgreementPageMenuItem agreementPageMenuItem()
+    {
+        return new AgreementPageMenuItem();
+    }
 }

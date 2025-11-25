@@ -17,14 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.inception.annotation.type.StringSuggestionUtil.setStringSuggestions;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.uima.cas.CAS.TYPE_NAME_FS_ARRAY;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
@@ -39,11 +44,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.annotation.type.StringSuggestion;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.SuggestionState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
@@ -152,6 +160,20 @@ public class ConceptFeatureSupport
     }
 
     @Override
+    public String renderWrappedFeatureValue(Object aValue)
+    {
+        if (aValue == null) {
+            return null;
+        }
+
+        if (aValue instanceof KBHandle handle) {
+            return handle.getUiLabel();
+        }
+
+        throw new IllegalArgumentException("Expected KBHandle but was [" + aValue.getClass() + "]");
+    }
+
+    @Override
     public <V> V getNullFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         return null;
@@ -165,7 +187,7 @@ public class ConceptFeatureSupport
 
     @SuppressWarnings("unchecked")
     @Override
-    public String unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    public String unwrapFeatureValue(AnnotationFeature aFeature, Object aValue)
     {
         // When used in a recommendation context, we might get the concept identifier as a string
         // value.
@@ -234,7 +256,9 @@ public class ConceptFeatureSupport
     @Override
     public ConceptFeatureTraits createDefaultTraits()
     {
-        return new ConceptFeatureTraits();
+        var traits = new ConceptFeatureTraits();
+        traits.setRolesSeeingSuggestionInfo(asList(CURATOR));
+        return traits;
     }
 
     @Override
@@ -275,6 +299,21 @@ public class ConceptFeatureSupport
             AnnotationFeature aFeature)
     {
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
+
+        var traits = readTraits(aFeature);
+        if (traits.isRetainSuggestionInfo()) {
+            aTD.addFeature(aFeature.getName() + SUFFIX_SUGGESTION_INFO, "", TYPE_NAME_FS_ARRAY,
+                    StringSuggestion._TypeName, false);
+        }
+    }
+
+    @Override
+    public void pushSuggestions(SourceDocument aDocument, String aDataOwner,
+            AnnotationBaseFS aAnnotation, AnnotationFeature aFeature,
+            List<SuggestionState> aSuggestions)
+    {
+        setStringSuggestions(aAnnotation, aFeature.getName() + SUFFIX_SUGGESTION_INFO,
+                aSuggestions);
     }
 
     @Override
@@ -299,5 +338,34 @@ public class ConceptFeatureSupport
     {
         var traits = readTraits(aFeature);
         return !traits.getKeyBindings().isEmpty();
+    }
+
+    @Override
+    public List<SuggestionState> getSuggestions(FeatureStructure aAnnotation,
+            AnnotationFeature aFeature)
+    {
+        var cas = aAnnotation.getCAS();
+        var suggestionInfoFeature = aAnnotation.getType()
+                .getFeatureByBaseName(aFeature.getName() + SUFFIX_SUGGESTION_INFO);
+
+        if (suggestionInfoFeature == null) {
+            // If the feature does not exist, there is no info to return.
+            // Checking for the feature is faster than parsing the traits of the feature
+            // to check if it has suggestion info enabled.
+            return emptyList();
+        }
+
+        var suggestions = FSUtil.getFeature(aAnnotation, suggestionInfoFeature,
+                StringSuggestion[].class);
+        var suggestionStates = new ArrayList<SuggestionState>();
+        if (suggestions != null) {
+            for (var suggestion : suggestions) {
+                var state = new SuggestionState(suggestion.getRecommender().getName(),
+                        suggestion.getScore(),
+                        wrapFeatureValue(aFeature, cas, suggestion.getLabel()));
+                suggestionStates.add(state);
+            }
+        }
+        return suggestionStates;
     }
 }

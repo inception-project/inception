@@ -36,12 +36,13 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.AssistantServiceImpl;
 import de.tudarmstadt.ukp.inception.assistant.contextmenu.CheckAnnotationContextMenuItem;
+import de.tudarmstadt.ukp.inception.assistant.documents.AssistantIndexFootprintProvider;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentContextRetriever;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryServiceImpl;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingService;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingServiceImpl;
-import de.tudarmstadt.ukp.inception.assistant.retriever.CurrentDateTimeRetriever;
+import de.tudarmstadt.ukp.inception.assistant.retriever.CurrentDateRetriever;
 import de.tudarmstadt.ukp.inception.assistant.retriever.Retriever;
 import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPoint;
 import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPointImpl;
@@ -51,6 +52,7 @@ import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideQueryServiceImp
 import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideRetriever;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibraryExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -66,10 +68,11 @@ public class AssistantAutoConfiguration
     public AssistantService assistantService(SessionRegistry aSessionRegistry,
             SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
             AssistantProperties aProperties, EncodingRegistry aEncodingRegistry,
-            RetrieverExtensionPoint aRetrieverExtensionPoint)
+            RetrieverExtensionPoint aRetrieverExtensionPoint,
+            ToolLibraryExtensionPoint aToolLibraryExtensionPoint)
     {
         return new AssistantServiceImpl(aSessionRegistry, aMsgTemplate, aOllamaClient, aProperties,
-                aEncodingRegistry, aRetrieverExtensionPoint);
+                aEncodingRegistry, aRetrieverExtensionPoint, aToolLibraryExtensionPoint);
     }
 
     @Bean
@@ -116,9 +119,9 @@ public class AssistantAutoConfiguration
     }
 
     @Bean
-    public CurrentDateTimeRetriever currentDateTimeRetriever()
+    public CurrentDateRetriever currentDateRetriever()
     {
-        return new CurrentDateTimeRetriever();
+        return new CurrentDateRetriever();
     }
 
     @Bean
@@ -142,5 +145,12 @@ public class AssistantAutoConfiguration
     {
         return new CheckAnnotationContextMenuItem(aSchedulingService, aAssistantSidebarFactory,
                 aSchemaService, aUserService);
+    }
+
+    @Bean
+    public AssistantIndexFootprintProvider assistantIndexFootprintProvider(
+            RepositoryProperties aRepositoryProperties)
+    {
+        return new AssistantIndexFootprintProvider(aRepositoryProperties);
     }
 }

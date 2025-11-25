@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
+import java.util.Collection;
+
 public interface SPARQLQueryOptionalElements
     extends SPARQLQuery
 {
@@ -51,7 +53,7 @@ public interface SPARQLQueryOptionalElements
      * 
      * This setting is only effective for methods which actually return results (e.g.
      * {@link SPARQLQuery#asHandles} or {@link SPARQLQuery#exists}) but not for methods which just
-     * construct the query (e.g. {@link SPARQLQuery#selectQuery}.
+     * construct the query.
      * 
      * @return the builder (fluent API)
      */
@@ -62,7 +64,7 @@ public interface SPARQLQueryOptionalElements
      * 
      * This setting is only effective for methods which actually return results (e.g.
      * {@link SPARQLQuery#asHandles} or {@link SPARQLQuery#exists}) but not for methods which just
-     * construct the query (e.g. {@link SPARQLQuery#selectQuery}.
+     * construct the query.
      * 
      * @return the builder (fluent API)
      */
@@ -73,10 +75,14 @@ public interface SPARQLQueryOptionalElements
      * 
      * This setting is only effective for methods which actually return results (e.g.
      * {@link SPARQLQuery#asHandles} or {@link SPARQLQuery#exists}) but not for methods which just
-     * construct the query (e.g. {@link SPARQLQuery#selectQuery}.
+     * construct the query.
      * 
      * @return the builder (fluent API)
      */
     @SuppressWarnings("javadoc")
     SPARQLQueryOptionalElements includeInferred(boolean aEnabled);
+
+    SPARQLQueryPrimaryConditions withPrefLabelProperties(Collection<String> aString);
+
+    SPARQLQueryPrimaryConditions withAdditionalMatchingProperties(Collection<String> aString);
 }

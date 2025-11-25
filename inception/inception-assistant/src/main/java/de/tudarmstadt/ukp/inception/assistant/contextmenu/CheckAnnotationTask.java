@@ -40,6 +40,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
@@ -72,7 +73,7 @@ public class CheckAnnotationTask
     {
         super(aBuilder.withType(TYPE));
 
-        requireNonNull(getUser().orElse(null), "Session owner must be set");
+        requireNonNull(getSessionOwner().orElse(null), "Session owner must be set");
 
         document = aBuilder.document;
         dataOwner = aBuilder.dataOwner;
@@ -83,8 +84,8 @@ public class CheckAnnotationTask
     public MatchResult matches(Task aTask)
     {
         if (aTask instanceof WatchAnnotationTask) {
-            if (Objects.equals(getProject().getId(), aTask.getProject().getId())
-                    && Objects.equals(getUser().get(), aTask.getUser().orElse(null))) {
+            if (Objects.equals(getProject().getId(), aTask.getProject().getId()) && Objects
+                    .equals(getSessionOwner().get(), aTask.getSessionOwner().orElse(null))) {
                 return QUEUE_THIS;
             }
         }
@@ -96,8 +97,8 @@ public class CheckAnnotationTask
     public void execute() throws Exception
     {
         try (var session = CasStorageSession.open()) {
-            var cas = documentService.readAnnotationCas(document, dataOwner, AUTO_CAS_UPGRADE,
-                    SHARED_READ_ONLY_ACCESS);
+            var cas = documentService.readAnnotationCas(document, AnnotationSet.forUser(dataOwner),
+                    AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
 
             var ann = selectAnnotationByAddr(cas, annotation.getId());
             if (ann == null) {
@@ -110,10 +111,10 @@ public class CheckAnnotationTask
             }
 
             var inquiryMsgId = UUID.randomUUID();
-            var sessionOwner = getUser().get().getUsername();
+            var sessionOwner = getSessionOwner().get().getUsername();
             assistantService.dispatchMessage(sessionOwner, getProject(), MTextMessage.builder() //
                     .withId(inquiryMsgId) //
-                    .withActor(getUser().get().getUiName()) //
+                    .withActor(getSessionOwner().get().getUiName()) //
                     .withRole(USER) //
                     .notDone() //
                     .build());
@@ -153,13 +154,13 @@ public class CheckAnnotationTask
 
             var inquiryTask = MTextMessage.builder() //
                     .withId(inquiryMsgId) //
-                    .withActor(getUser().get().getUiName()) //
+                    .withActor(getSessionOwner().get().getUiName()) //
                     .withRole(USER) //
                     .withMessage(rewrittenQuestion.message()) //
                     .build();
 
-            assistantService.processUserMessage(sessionOwner, getProject(), inquiryTask,
-                    inquiryContext);
+            assistantService.processUserMessage(sessionOwner, getProject(), document, dataOwner,
+                    inquiryTask, inquiryContext);
         }
     }
 

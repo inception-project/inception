@@ -17,17 +17,82 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style>
+    .visibility-sidebar .showOnHover {
+      transition: opacity 0.3s ease-in-out;
+    }
+  
+    .visibility-sidebar .showOnHoverTrigger .showOnHover {
+      opacity: 0.1;
+    }
+    
+    .visibility-sidebar .showOnHoverTrigger:hover .showOnHover {
+      opacity: 1;
+    }
+    
+    /* Highlight which layers are hidden - note this is linked to which icon is set in Java! */
+    .visibility-sidebar .showOnHover:has(.fa-eye-slash),.showOnHover:has(.fa-low-vision) {
+      opacity: 1.0 !important;
+    }
+    
+    .visibility-sidebar .group-collapsed {
+      transform: rotate(-90deg);
+    }
+    
+    .visibility-sidebar .collapse-layer-btn {
+      min-width: 0.75em;
+    }
+  </style>
+</wicket:head>
 <wicket:panel>
-  <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
+  <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter visibility-sidebar">
     <div class="flex-content card">
       <div class="card-header">
         <wicket:message key="layers"/>
       </div>
       <div class="scrolling card-body p-0">
         <ul class="list-group list-group-flush">
-          <li wicket:id="annotationLayers" class="list-group-item">
-            <span wicket:id="visibleToggle"/>
-            <wicket:container wicket:id="name"/>
+          <li wicket:id="layer" class="list-group-item p-0">
+            <div class="bg-body sticky-top border-bottom">
+              <div class="bg-light-subtle px-2 py-1 showOnHoverTrigger">
+                <span class="collapse-layer-btn d-inline-block">
+                  <button wicket:id="collapseLayer" class="btn btn-link p-0 text-reset">
+                    <i class="fas fa-caret-down d-inline-block"></i>
+                  </button>
+                </span>
+                <span>
+                  <i class="fas fa-layer-group m-1 text-body-secondary"/>
+                  <span wicket:id="layerName" class="fw-bold"/>
+                </span>
+                <small class="float-end">
+                  <span wicket:id="visibleLayerToggle" class="showOnHover border-0"/>
+                </small>
+              </div>
+            </div>
+            <ul class="list-group list-group-flush">
+              <li wicket:id="feature" class="list-group-item p-0 px-2">
+                <div class="bg-body sticky-top" style="top: 33px; z-index: 1000">
+                  <div class="d-flex justify-content-between py-1 border-0 showOnHoverTrigger">
+                    <span wicket:id="featureName"/>
+                    <small>
+                      <span wicket:id="visibleFeatureToggle" class="showOnHover border-0"/>
+                    </small>
+                  </div>
+                </div>
+                <ul class="list-group list-group-flush ms-2">
+                  <li wicket:id="tag" class="list-group-item border-0 p-0">
+                    <div class="d-flex justify-content-between ps-2 py-1 p-0 border-0 showOnHoverTrigger">
+                      <small wicket:id="tagName"/>
+                      <small>
+                        <a wicket:id="focusTag" tabindex="1000" class="showOnHover text-reset text-decoration-none"><small style="margin: 1px;"><i class="fa-solid fa-arrows-to-eye"/></small></a>
+                        <span wicket:id="visibleTagToggle" class="showOnHover border-0"/>
+                      </small>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+            </ul>
           </li>
         </ul>
       </div>

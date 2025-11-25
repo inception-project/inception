@@ -72,10 +72,11 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePropertiesImpl;
@@ -225,7 +226,7 @@ public class DocumentImportExportServiceImplTest
         // Prepare a test CAS with a CASMetadata annotation (DocumentMetaData is added as well
         // because the DKPro Core writers used by the ImportExportService expect it.
         var jcas = createJCas(typesystem);
-        casStorageSession.add("jcas", EXCLUSIVE_WRITE_ACCESS, jcas.getCas());
+        casStorageSession.add(AnnotationSet.forTest("jcas"), EXCLUSIVE_WRITE_ACCESS, jcas.getCas());
         jcas.setDocumentText("This is a test .");
         DocumentMetaData.create(jcas);
         var cmd = new CASMetadata(jcas);
@@ -242,7 +243,8 @@ public class DocumentImportExportServiceImplTest
         // Read the XMI back from the ZIP that was created by the exporter. This is because XMI
         // files are always serialized as XMI file + type system file.
         var jcas = JCasFactory.createJCas(tsd);
-        casStorageSession.add("jcas2", EXCLUSIVE_WRITE_ACCESS, jcas.getCas());
+        casStorageSession.add(AnnotationSet.forTest("jcas2"), EXCLUSIVE_WRITE_ACCESS,
+                jcas.getCas());
         try (var zipInput = new ZipArchiveInputStream(new FileInputStream(exportedXmi))) {
             ZipArchiveEntry entry;
             while ((entry = zipInput.getNextEntry()) != null) {

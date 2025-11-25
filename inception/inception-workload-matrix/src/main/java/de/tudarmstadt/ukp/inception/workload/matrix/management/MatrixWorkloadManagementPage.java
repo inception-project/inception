@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IG
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.oneClickTransition;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
@@ -36,24 +37,40 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.INPUT_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.csv.CSVFormat.EXCEL;
+import static org.apache.commons.io.FilenameUtils.getExtension;
+import static org.apache.commons.io.FilenameUtils.removeExtension;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
@@ -75,6 +92,10 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.SetModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.resource.IResourceStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -82,7 +103,12 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameApp
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.comment.AnnotatorCommentDialogPanel;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -96,6 +122,8 @@ import de.tudarmstadt.ukp.inception.bootstrap.IconToggleBox.IconToggleBoxChanged
 import de.tudarmstadt.ukp.inception.bootstrap.PopoverBehavior;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
@@ -103,7 +131,12 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdati
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
+import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
+import de.tudarmstadt.ukp.inception.support.wicket.PipedStreamResource;
+import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
+import de.tudarmstadt.ukp.inception.ui.core.config.DefaultMdcSetup;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellClickEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellOpenContextMenuEvent;
@@ -135,6 +168,8 @@ public class MatrixWorkloadManagementPage
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     public static final String CSS_CLASS_STATE_TOGGLE = "state-toggle";
     public static final String CSS_CLASS_SELECTED = "s";
 
@@ -146,6 +181,8 @@ public class MatrixWorkloadManagementPage
     private @SpringBean MatrixWorkloadExtension matrixWorkloadExtension;
     private @SpringBean(name = "matrixWorkloadManagementPageMenuItem") ProjectMenuItem pageMenuItem;
     private @SpringBean MatrixWorkloadService matrixWorkloadService;
+    private @SpringBean DocumentImportExportService documentImportExportService;
+    private @SpringBean RepositoryProperties repositoryProperties;
 
     private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> documentMatrix;
     private LambdaAjaxLink toggleBulkChange;
@@ -162,6 +199,14 @@ public class MatrixWorkloadManagementPage
     private IModel<Set<String>> selectedUsers = new SetModel<>(new HashSet<>());
     private IModel<DocumentMatrixFilterState> filter;
 
+    private AjaxDownloadBehavior downloadBehavior;
+
+    private ProjectDocumentStatsPanel projectDocumentStatsPanel;
+
+    private SymbolLabel stateIcon;
+
+    private LoadableDetachableModel<SourceDocumentStateStats> stats;
+
     public MatrixWorkloadManagementPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
@@ -172,16 +217,17 @@ public class MatrixWorkloadManagementPage
     {
         super.onInitialize();
 
-        var user = userRepository.getCurrentUser();
+        var sessionOwner = userRepository.getCurrentUser();
+        requireProjectRole(sessionOwner, CURATOR, MANAGER);
 
         var project = getProject();
-
-        requireProjectRole(user, CURATOR, MANAGER);
-
         if (!pageMenuItem.applies(project)) {
             getSession().error("The project is not configured for static workload management");
             backToProjectPage();
         }
+
+        downloadBehavior = new AjaxDownloadBehavior();
+        add(downloadBehavior);
 
         modalDialog = new BootstrapModalDialog("modalDialog");
         add(modalDialog);
@@ -248,6 +294,7 @@ public class MatrixWorkloadManagementPage
         bulkActionDropdown.add(new LambdaAjaxLink("bulkOpen", this::actionBulkOpen));
         bulkActionDropdown.add(new LambdaAjaxLink("bulkClose", this::actionBulkClose));
         bulkActionDropdown.add(new LambdaAjaxLink("bulkReset", this::actionBulkResetDocument));
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkExport", this::actionBulkExportDocument));
         bulkActionDropdown
                 .add(new LambdaAjaxLink("bulkResetCuration", this::actionBulkResetCuration));
         actionContainer.add(bulkActionDropdown);
@@ -263,6 +310,60 @@ public class MatrixWorkloadManagementPage
         actionContainer.add(toggleBulkChange);
 
         add(contextMenu = new ContextMenu("contextMenu"));
+
+        var exportButton = new AjaxDownloadLink("export", () -> "workload.csv",
+                this::exportWorkload);
+        exportButton.add(visibleWhen(() -> documentMatrix.getItemCount() > 0));
+        queue(exportButton);
+
+        stats = LoadableDetachableModel.of(() -> dataProvider.getStats());
+        projectDocumentStatsPanel = new ProjectDocumentStatsPanel("stats", stats);
+        projectDocumentStatsPanel.setOutputMarkupId(true);
+        add(projectDocumentStatsPanel);
+        stateIcon = new SymbolLabel("stateIcon",
+                stats.map(SourceDocumentStateStats::getProjectState));
+        stateIcon.setOutputMarkupId(true);
+        add(stateIcon);
+    }
+
+    private IResourceStream exportWorkload()
+    {
+        var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR).stream() //
+                .map(User::getUsername) //
+                .sorted() //
+                .toList();
+
+        return new PipedStreamResource(os -> {
+            try (var aOut = new CSVPrinter(new OutputStreamWriter(os, UTF_8), EXCEL)) {
+                var headers = new ArrayList<String>();
+                headers.add("document name");
+                headers.add("document state");
+                headers.add("curation state");
+                headers.addAll(annotators);
+
+                aOut.printRecord(headers);
+
+                var provider = documentMatrix.getDataProvider();
+                var i = provider.iterator(0, provider.size());
+                while (i.hasNext()) {
+                    var rowIn = i.next();
+                    var rowOut = new ArrayList<String>(headers.size());
+                    rowOut.add(rowIn.getSourceDocument().getName());
+                    rowOut.add(rowIn.getState().getId());
+                    rowOut.add(rowIn.getCurationState().getId());
+                    for (var annotator : annotators) {
+                        var annDoc = rowIn.getAnnotationDocument(annotator);
+                        if (annDoc != null) {
+                            rowOut.add(annDoc.getState().getId());
+                        }
+                        else {
+                            rowOut.add(AnnotationDocumentState.NEW.getId());
+                        }
+                    }
+                    aOut.printRecord(rowOut);
+                }
+            }
+        }, MediaType.valueOf("text/csv"));
     }
 
     @OnEvent
@@ -330,9 +431,9 @@ public class MatrixWorkloadManagementPage
         columns.add(new DocumentMatrixNameColumn());
         columns.add(new DocumentMatrixCuratorColumn());
 
-        var annotators = projectService.listProjectUsersWithPermissions(getProject(), ANNOTATOR);
+        var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR);
 
-        if (StringUtils.isNotBlank(filter.getObject().getUserName())) {
+        if (isNotBlank(filter.getObject().getUserName())) {
             if (filter.getObject().isMatchUserNameAsRegex()) {
                 var p = Pattern
                         .compile(".*(" + filter.getObject().getUserName() + ").*", CASE_INSENSITIVE)
@@ -406,7 +507,7 @@ public class MatrixWorkloadManagementPage
             matrixWorkloadExtension.recalculate(getProject());
 
             reloadMatrixData();
-            _target.add(documentMatrix);
+            _target.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
         });
 
         modalDialog.open(dialogContent, aTarget);
@@ -452,10 +553,82 @@ public class MatrixWorkloadManagementPage
             matrixWorkloadExtension.recalculate(getProject());
 
             reloadMatrixData();
-            _target.add(documentMatrix);
+            _target.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
         });
 
         modalDialog.open(dialogContent, aTarget);
+    }
+
+    private void actionExportAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            User aDataOwner)
+        throws IOException
+    {
+        var dialogPanel = new FormatSelectionDialogContentPanel(ModalDialog.CONTENT_ID,
+                (target, format) -> confirmedExportAnnotationDocument(target, format, aDocument,
+                        aDataOwner));
+
+        modalDialog.open(dialogPanel, aTarget);
+
+    }
+
+    private void confirmedExportAnnotationDocument(AjaxRequestTarget aTarget, String aFormat,
+            SourceDocument aDocument, User aDataOwner)
+        throws IOException
+    {
+        var formatSupport = documentImportExportService.getFormatById(aFormat).get();
+
+        try {
+            var dataOwner = aDataOwner.getUsername();
+
+            File file;
+            var annDoc = documentService.getAnnotationDocument(aDocument,
+                    AnnotationSet.forUser(aDataOwner));
+            file = exportAnnotationDocument(aDocument, AnnotationSet.forUser(aDataOwner),
+                    formatSupport, dataOwner, annDoc, null);
+
+            var docName = aDocument.getName();
+            var baseName = removeExtension(docName);
+            var fileExt = getExtension(file.getName());
+            var filename = dataOwner + "/" + baseName + "." + fileExt;
+
+            var exportResource = new PipedStreamResource(
+                    os -> performExportAnnotationDocument(os, file));
+
+            downloadBehavior.initiate(aTarget, filename, exportResource);
+        }
+        catch (UIMAException e) {
+            throw new IOException(e);
+        }
+    }
+
+    private File exportAnnotationDocument(SourceDocument aDocument, AnnotationSet aDataOwner,
+            FormatSupport formatSupport, String dataOwner, AnnotationDocument annDoc,
+            Map<Pair<Project, String>, Object> aBulkOperationContext)
+        throws UIMAException, IOException
+    {
+        File file;
+        if (annDoc == null || annDoc.getState() == AnnotationDocumentState.NEW) {
+            file = documentImportExportService.exportAnnotationDocument(aDocument, dataOwner,
+                    formatSupport, AnnotationSet.INITIAL_SET.id(), ANNOTATION, false,
+                    aBulkOperationContext);
+        }
+        else {
+            file = documentImportExportService.exportAnnotationDocument(aDocument, dataOwner,
+                    formatSupport, aDataOwner.id(), ANNOTATION, false, aBulkOperationContext);
+        }
+        return file;
+    }
+
+    private void performExportAnnotationDocument(OutputStream aOS, File aFile) throws IOException
+    {
+        try (var in = new FileInputStream(aFile)) {
+            in.transferTo(aOS);
+        }
+        finally {
+            if (aFile.exists() && !aFile.delete()) {
+                aFile.deleteOnExit();
+            }
+        }
     }
 
     private void actionResetAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
@@ -474,7 +647,7 @@ public class MatrixWorkloadManagementPage
             _target.addChildren(getPage(), IFeedback.class);
 
             reloadMatrixData();
-            _target.add(documentMatrix);
+            _target.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
         });
 
         modalDialog.open(dialogContent, aTarget);
@@ -496,7 +669,7 @@ public class MatrixWorkloadManagementPage
             _target.addChildren(getPage(), IFeedback.class);
 
             reloadMatrixData();
-            _target.add(documentMatrix);
+            _target.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
         });
 
         modalDialog.open(dialogContent, aTarget);
@@ -525,7 +698,7 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private void actionBulkClose(AjaxRequestTarget aTarget)
@@ -550,7 +723,7 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private void actionBulkStart(AjaxRequestTarget aTarget)
@@ -568,7 +741,7 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private void actionBulkLock(AjaxRequestTarget aTarget)
@@ -586,7 +759,7 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private void actionBulkUnlock(AjaxRequestTarget aTarget)
@@ -604,7 +777,7 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private void actionBulkFinish(AjaxRequestTarget aTarget)
@@ -622,7 +795,7 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private void actionBulkResume(AjaxRequestTarget aTarget)
@@ -640,7 +813,7 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private void actionBulkResumeCuration(AjaxRequestTarget aTarget)
@@ -658,7 +831,81 @@ public class MatrixWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
+    }
+
+    private void actionBulkExportDocument(AjaxRequestTarget aTarget)
+    {
+        var sessionOwner = userRepository.getCurrentUser();
+        var selectedDocuments = selectedAnnotationDocuments();
+
+        if (selectedDocuments.isEmpty()) {
+            info("No documents have been selected.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        var dialogPanel = new FormatSelectionDialogContentPanel(ModalDialog.CONTENT_ID,
+                (target, format) -> confirmedBulkExportDocument(target, format, sessionOwner,
+                        selectedDocuments));
+
+        modalDialog.open(dialogPanel, aTarget);
+
+    }
+
+    private void confirmedBulkExportDocument(AjaxRequestTarget aTarget, String aFormat,
+            User aSessionOwner, Collection<AnnotationDocument> aSelectedDocuments)
+        throws IOException
+    {
+        var filename = "export.zip";
+        var mediaType = new MediaType("application", "zip");
+        var exportResource = new PipedStreamResource(os -> performBulkExportDocument(os, aFormat,
+                aSessionOwner, getProject(), aSelectedDocuments), mediaType);
+
+        downloadBehavior.initiate(aTarget, filename, exportResource);
+    }
+
+    private void performBulkExportDocument(OutputStream aOs, String aFormat, User aSessionOwner,
+            Project aProject, Collection<AnnotationDocument> aSelectedDocuments)
+        throws IOException
+    {
+        var bulkOperationContext = new HashMap<Pair<Project, String>, Object>();
+
+        var formatSupport = documentImportExportService.getFormatById(aFormat).get();
+
+        try (var ctx = new DefaultMdcSetup(repositoryProperties, aProject, aSessionOwner)) {
+            try (var zipOS = new ZipOutputStream(aOs)) {
+                for (var annDoc : aSelectedDocuments) {
+                    var dataOwner = annDoc.getUser();
+                    File file = null;
+
+                    try {
+                        file = exportAnnotationDocument(annDoc.getDocument(),
+                                annDoc.getAnnotationSet(), formatSupport, dataOwner, annDoc,
+                                bulkOperationContext);
+
+                        var docName = annDoc.getDocument().getName();
+                        var baseName = removeExtension(docName);
+                        var fileExt = getExtension(file.getName());
+
+                        zipOS.putNextEntry(
+                                new ZipEntry(dataOwner + "/" + baseName + "." + fileExt));
+                        try (var in = new FileInputStream(file)) {
+                            in.transferTo(zipOS);
+                        }
+                        zipOS.closeEntry();
+                    }
+                    catch (UIMAException e) {
+                        throw new IOException(e);
+                    }
+                    finally {
+                        if (file != null && file.exists() && !file.delete()) {
+                            file.deleteOnExit();
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void actionApplyFilter(AjaxRequestTarget aTarget)
@@ -694,7 +941,7 @@ public class MatrixWorkloadManagementPage
         modalDialog.close(aTarget);
 
         reloadMatrixData();
-        aTarget.add(documentMatrix);
+        aTarget.add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     private Collection<AnnotationDocument> selectedAnnotationDocuments()
@@ -722,7 +969,8 @@ public class MatrixWorkloadManagementPage
 
         var annotationDocumentsToChange = new HashSet<AnnotationDocument>();
 
-        var rows = ((DocumentMatrixDataProvider) documentMatrix.getDataProvider()).getMatrixData();
+        var rows = ((DocumentMatrixDataProvider) documentMatrix.getDataProvider())
+                .getFilteredMatrixData();
 
         // Collect annotation documents by row
         for (var row : rows) {
@@ -769,7 +1017,8 @@ public class MatrixWorkloadManagementPage
     {
         var sourceDocumentsToChange = new HashSet<SourceDocument>();
 
-        var rows = ((DocumentMatrixDataProvider) documentMatrix.getDataProvider()).getMatrixData();
+        var rows = ((DocumentMatrixDataProvider) documentMatrix.getDataProvider())
+                .getFilteredMatrixData();
 
         // Collect annotation documents by row
         for (var row : rows) {
@@ -834,7 +1083,7 @@ public class MatrixWorkloadManagementPage
         aEvent.getTarget().addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aEvent.getTarget().add(documentMatrix);
+        aEvent.getTarget().add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     @OnEvent
@@ -860,7 +1109,7 @@ public class MatrixWorkloadManagementPage
         aEvent.getTarget().addChildren(getPage(), IFeedback.class);
 
         reloadMatrixData();
-        aEvent.getTarget().add(documentMatrix);
+        aEvent.getTarget().add(documentMatrix, stateIcon, projectDocumentStatsPanel);
     }
 
     @OnEvent
@@ -880,6 +1129,8 @@ public class MatrixWorkloadManagementPage
         // the information we need in the menu item here
         var document = aEvent.getSourceDocument();
         var user = aEvent.getUser();
+        items.add(new LambdaMenuItem("Export",
+                _target -> actionExportAnnotationDocument(_target, document, user)));
         items.add(new LambdaMenuItem("Reset",
                 _target -> actionResetAnnotationDocument(_target, document, user)));
 
@@ -904,6 +1155,8 @@ public class MatrixWorkloadManagementPage
         // The CuratorColumnCellOpenContextMenuEvent is not serializable, so we need to extract
         // the information we need in the menu item here
         var document = aEvent.getSourceDocument();
+        items.add(new LambdaMenuItem("Export", _target -> actionExportAnnotationDocument(_target,
+                document, userRepository.getCurationUser())));
         items.add(new LambdaMenuItem("Reset",
                 _target -> actionResetCurationDocument(_target, document)));
 
@@ -912,14 +1165,15 @@ public class MatrixWorkloadManagementPage
 
     private void reloadMatrixData()
     {
+        stats.detach();
         ((DocumentMatrixDataProvider) documentMatrix.getDataProvider())
                 .setMatrixData(getMatrixData());
     }
 
     private List<DocumentMatrixRow> getMatrixData()
     {
-        var annotators = projectService.listProjectUsersWithPermissions(getProject(), ANNOTATOR)
-                .stream().map(User::getUsername) //
+        var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR).stream()
+                .map(User::getUsername) //
                 .collect(toSet());
 
         var documentMatrixRows = new LinkedHashMap<SourceDocument, DocumentMatrixRow>();

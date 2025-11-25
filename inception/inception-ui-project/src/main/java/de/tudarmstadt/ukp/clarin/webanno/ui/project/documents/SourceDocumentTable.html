@@ -33,16 +33,16 @@
           <button wicket:id="bulkActionDropdownButton" class="btn btn-primary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
           <div wicket:id="bulkActionDropdown" class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
             <a wicket:id="bulkExport" class="dropdown-item">
-              <span class="badge text-reset">
+              Export selected
+              <span class="badge text-reset float-end">
                 <i class="fas fa-file-download"></i>
               </span>
-              Export selected
             </a>
             <a wicket:id="bulkDelete" class="dropdown-item">
-              <span class="badge badge-pill text-bg-danger">
+              Delete selected
+              <span class="badge badge-pill text-bg-danger float-end">
                 <i class="fas fa-trash"></i>
               </span>
-              Delete selected
             </a>
           </div>
         </span>
@@ -66,6 +66,12 @@
   <button wicket:id="delete" type="button" class="btn btn-inline btn-outline-danger btn-inline text-nowrap">
     <i class="fas fa-trash"></i>
     <wicket:message key="delete"/>
+  </button>
+</wicket:fragment>
+<wicket:fragment wicket:id="renameDocumentColumn">
+  <button wicket:id="rename" type="button" class="btn btn-inline btn-outline-secondary btn-inline text-nowrap">
+    <i class="fas fa-file-pen"></i>
+    <wicket:message key="rename"/>
   </button>
 </wicket:fragment>
 <wicket:fragment wicket:id="exportDocumentColumn">

@@ -25,9 +25,11 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.VersionFooterItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.WarningsFooterItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPageMenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.about.AboutFooterItem;
 import de.tudarmstadt.ukp.inception.ui.core.darkmode.DarkModeMenuBarItemSupport;
 import de.tudarmstadt.ukp.inception.ui.core.darkmode.DarkModePropertiesImpl;
+import de.tudarmstadt.ukp.inception.ui.core.log.LogPageMenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.menubar.HelpMenuBarItemSupport;
 
 @Configuration
@@ -64,5 +66,17 @@ public class CoreUiAutoConfiguration
     public DarkModeMenuBarItemSupport darkModeMenuBarItemSupport()
     {
         return new DarkModeMenuBarItemSupport();
+    }
+
+    @Bean
+    public LogPageMenuItem logPageMenuItem()
+    {
+        return new LogPageMenuItem();
+    }
+
+    @Bean
+    public ManageUsersPageMenuItem manageUsersPageMenuItem()
+    {
+        return new ManageUsersPageMenuItem();
     }
 }

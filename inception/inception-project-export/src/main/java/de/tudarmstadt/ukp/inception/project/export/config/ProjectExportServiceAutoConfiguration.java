@@ -24,6 +24,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -51,10 +52,11 @@ public class ProjectExportServiceAutoConfiguration
     @Bean
     public ProjectExportService projectExportService(ApplicationContext aApplicationContext,
             @Lazy @Autowired(required = false) List<ProjectExporter> aExporters,
-            ProjectService aProjectService, SchedulingService aSchedulingService)
+            ProjectService aProjectService, SchedulingService aSchedulingService,
+            ApplicationEventPublisher aApplicationEventPublisher)
     {
         return new ProjectExportServiceImpl(aApplicationContext, aExporters, aProjectService,
-                aSchedulingService);
+                aSchedulingService, aApplicationEventPublisher);
     }
 
     @ConditionalOnProperty(name = "dashboard.legacy-export", havingValue = "false", matchIfMissing = true)

@@ -94,6 +94,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportQuery;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -224,6 +225,13 @@ public class RecommendationServiceImpl
     public boolean isCurationSidebarEnabled()
     {
         return curationSidebarEnabled;
+    }
+
+    @Override
+    public Predictions getPredictions(String aSessionOwner, Project aProject)
+    {
+        var state = getState(aSessionOwner, aProject);
+        return state.getActivePredictions();
     }
 
     @Override
@@ -375,7 +383,7 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsRecommender(Project aProject, String aRecommender)
     {
         var cb = entityManager.getCriteriaBuilder();
@@ -478,7 +486,7 @@ public class RecommendationServiceImpl
     @Transactional
     public List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "FROM Recommender WHERE ", //
                 "project = :project AND", //
                 "layer = :layer AND", //
@@ -679,9 +687,9 @@ public class RecommendationServiceImpl
         var accepted = 0;
         var recommenderCache = listEnabledRecommenders(aDocument.getProject()).stream()
                 .collect(toMap(Recommender::getId, identity()));
-        var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
+        var suggestionSupportCache = new HashMap<SuggestionSupportQuery, Optional<SuggestionSupport>>();
 
-        for (var prediction : predictions.getPredictionsByDocument(aDocument.getName())) {
+        for (var prediction : predictions.getPredictionsByDocument(aDocument.getId())) {
             if (prediction.getAutoAcceptMode() != aAutoAcceptMode) {
                 continue;
             }
@@ -698,7 +706,8 @@ public class RecommendationServiceImpl
                 continue;
             }
 
-            var suggestionSupport = suggestionSupportCache.computeIfAbsent(recommender,
+            var suggestionSupport = suggestionSupportCache.computeIfAbsent(
+                    SuggestionSupportQuery.of(recommender),
                     suggestionSupportRegistry::findGenericExtension);
             if (suggestionSupport.isEmpty()) {
                 continue;
@@ -710,8 +719,8 @@ public class RecommendationServiceImpl
 
             try {
                 suggestionSupport.get().acceptSuggestion(null, aDocument,
-                        aSessionOwner.getUsername(), cas, adapter, feature, prediction, AUTO_ACCEPT,
-                        ACCEPTED);
+                        aSessionOwner.getUsername(), cas, adapter, feature, predictions, prediction,
+                        AUTO_ACCEPT, ACCEPTED);
                 accepted++;
             }
             catch (AnnotationException e) {
@@ -1337,15 +1346,16 @@ public class RecommendationServiceImpl
     @Override
     @Transactional
     public AnnotationFS correctSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, SpanSuggestion aOriginalSuggestion,
-            SpanSuggestion aCorrectedSuggestion, LearningRecordChangeLocation aLocation)
+            String aDataOwner, CAS aCas, Predictions aPredictions,
+            SpanSuggestion aOriginalSuggestion, SpanSuggestion aCorrectedSuggestion,
+            LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
         var layer = schemaService.getLayer(aOriginalSuggestion.getLayerId());
         var feature = schemaService.getFeature(aOriginalSuggestion.getFeature(), layer);
 
-        var originalSuggestionSupport = suggestionSupportRegistry
-                .findGenericExtension(getRecommender(aOriginalSuggestion));
+        var originalSuggestionSupport = suggestionSupportRegistry.findGenericExtension(
+                SuggestionSupportQuery.of(getRecommender(aOriginalSuggestion)));
         if (originalSuggestionSupport.isPresent()) {
             // If the action was a correction (i.e. suggestion label != annotation value) then
             // generate a rejection for the original value - we do not want the original value to
@@ -1355,14 +1365,15 @@ public class RecommendationServiceImpl
             logRecord(aSessionOwner, record);
         }
 
-        var correctedSuggestionSupport = suggestionSupportRegistry
-                .findGenericExtension(getRecommender(aCorrectedSuggestion));
+        var correctedSuggestionSupport = suggestionSupportRegistry.findGenericExtension(
+                SuggestionSupportQuery.of(getRecommender(aCorrectedSuggestion)));
         if (correctedSuggestionSupport.isPresent()) {
             var adapter = schemaService.getAdapter(layer);
 
-            return (AnnotationFS) originalSuggestionSupport.get().acceptSuggestion(aSessionOwner,
-                    aDocument, aDataOwner, aCas, adapter, feature, aCorrectedSuggestion, aLocation,
-                    CORRECTED);
+            return (AnnotationFS) correctedSuggestionSupport
+                    .get().acceptSuggestion(aSessionOwner, aDocument, aDataOwner, aCas, adapter,
+                            feature, aPredictions, aCorrectedSuggestion, aLocation, CORRECTED)
+                    .orElse(null);
         }
 
         return null;
@@ -1371,7 +1382,7 @@ public class RecommendationServiceImpl
     @Override
     @Transactional
     public AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, AnnotationSuggestion aSuggestion,
+            String aDataOwner, CAS aCas, Predictions aPredictions, AnnotationSuggestion aSuggestion,
             LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
@@ -1380,11 +1391,12 @@ public class RecommendationServiceImpl
         var adapter = schemaService.getAdapter(layer);
         var recommender = getRecommender(aSuggestion);
 
-        var rls = suggestionSupportRegistry.findGenericExtension(recommender);
+        var rls = suggestionSupportRegistry
+                .findGenericExtension(SuggestionSupportQuery.of(recommender));
 
         if (rls.isPresent()) {
             return rls.get().acceptSuggestion(aSessionOwner, aDocument, aDataOwner, aCas, adapter,
-                    feature, aSuggestion, aLocation, ACCEPTED);
+                    feature, aPredictions, aSuggestion, aLocation, ACCEPTED).orElse(null);
         }
 
         return null;
@@ -1735,8 +1747,11 @@ public class RecommendationServiceImpl
         // All suggestions in the group must be of the same type. Even if they come from different
         // recommenders, the recommenders must all be producing the same type of suggestion, so we
         // can happily just take one of them in order to locate the suggestion support.
-        var recommender = getRecommender(maybeSuggestion.get());
-        var rls = suggestionSupportRegistry.findGenericExtension(recommender);
+        var suggestion = maybeSuggestion.get();
+        var maybeFeature = schemaService.getFeature(suggestion.getLayerId(),
+                maybeSuggestion.get().getFeature());
+
+        var rls = maybeFeature.flatMap(suggestionSupportRegistry::findExtension);
 
         if (rls.isPresent()) {
             rls.get().calculateSuggestionVisibility(aSessionOwner, aDocument, aCas, aDataOwner,
@@ -1799,7 +1814,7 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsEnabledRecommender(Project aProject)
     {
         var criteriaBuilder = entityManager.getCriteriaBuilder();
@@ -1819,14 +1834,14 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public long countEnabledRecommenders()
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "FROM Recommender WHERE", //
                 "enabled = :enabled");
 
-        List<Recommender> recommenders = entityManager.createQuery(query, Recommender.class) //
+        var recommenders = entityManager.createQuery(query, Recommender.class) //
                 .setParameter("enabled", true) //
                 .getResultList();
 
@@ -1851,7 +1866,8 @@ public class RecommendationServiceImpl
             AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException
     {
-        var rls = suggestionSupportRegistry.findGenericExtension(getRecommender(suggestion));
+        var rls = suggestionSupportRegistry
+                .findGenericExtension(SuggestionSupportQuery.of(getRecommender(suggestion)));
 
         if (rls.isPresent()) {
             rls.get().rejectSuggestion(aSessionOwner, aDocument, aDataOwner, suggestion, aAction);
@@ -1864,7 +1880,8 @@ public class RecommendationServiceImpl
             AnnotationSuggestion suggestion, LearningRecordChangeLocation aAction)
         throws AnnotationException
     {
-        var rls = suggestionSupportRegistry.findGenericExtension(getRecommender(suggestion));
+        var rls = suggestionSupportRegistry
+                .findGenericExtension(SuggestionSupportQuery.of(getRecommender(suggestion)));
 
         if (rls.isPresent()) {
             rls.get().skipSuggestion(aSessionOwner, aDocument, aDataOwner, suggestion, aAction);
@@ -1880,7 +1897,8 @@ public class RecommendationServiceImpl
     {
         LearningRecord record = null;
 
-        var rls = suggestionSupportRegistry.findGenericExtension(getRecommender(aSuggestion));
+        var rls = suggestionSupportRegistry
+                .findGenericExtension(SuggestionSupportQuery.of(getRecommender(aSuggestion)));
 
         if (rls.isPresent()) {
             record = rls.get().toLearningRecord(aDocument, aDataOwner, aSuggestion, aFeature,
@@ -2086,16 +2104,16 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean hasSkippedSuggestions(String aSessionOwner, User aDataOwner,
             AnnotationLayer aLayer)
     {
-        String sql = String.join("\n", //
+        var sql = String.join("\n", //
                 "SELECT COUNT(*) FROM LearningRecord WHERE", //
                 "user = :user AND", //
                 "layer = :layer AND", //
                 "userAction = :action");
-        long count = entityManager.createQuery(sql, Long.class) //
+        var count = entityManager.createQuery(sql, Long.class) //
                 .setParameter("user", aDataOwner.getUsername()) //
                 .setParameter("layer", aLayer) //
                 .setParameter("action", SKIPPED) //

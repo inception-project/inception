@@ -32,12 +32,12 @@ import picocli.CommandLine.Command;
 public class InceptionCliCommand
     implements Callable<Integer>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger("inception.cli");
 
     @Override
     public Integer call() throws Exception
     {
-        log.error(
+        LOG.error(
                 "When you start the application with no parameters, the server should be started. No idea how you got here...");
 
         return 0;

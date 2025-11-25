@@ -61,7 +61,9 @@ CAUTION: Experimental feature.
 | `assistant.chat.context-length`
 | The context length supported by the model. 
 This controls how much chat history will be preserved.
-| `4096`
+If set to `0`, the system will query the LLM service during startup to determine the capabilities of the model.
+By specifying this value manually, you can avoid unnecessary queries to the LLM service during startup.
+| `0` (_detect automatically_)
 | `16000`
 
 | `assistant.chat.top-p`
@@ -95,6 +97,16 @@ Tune the balance between more randomness (high >= 1.0) and less randomness (low,
   If in doubt, leave the default setting.  
 | `cl100k_base`
 | `r50k_base`, `p50k_base`, `p50k_edit`, `cl100k_base` or `o200k_base`
+
+| `assistant.chat.capabilities`
+| The capabilities of the model. 
+  Relevant values are `auto`, `completion`, and `tools`. 
+  If set to `auto`, the system will query the LLM service during startup to determine the capabilities of the model.
+  You can use this setting to override the detected capabilities.
+  E.g. if the model is reluctant to use tools and you prefer {product-name} to proactively provide context from the documents in the project, just provide `completion` here.
+  It is also useful to avoid unnecessary queries to the LLM service during startup if you know the capabilities of the model already.
+| `auto`
+| `completion`, `tools`
 |===
 
 .Settings related to the assistant search functionality

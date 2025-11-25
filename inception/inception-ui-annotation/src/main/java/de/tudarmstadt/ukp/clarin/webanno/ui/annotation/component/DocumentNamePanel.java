@@ -35,7 +35,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 
 /**
  * A {@link Panel} which contains a {@link Label} to display document name as concatenations of
@@ -52,7 +51,7 @@ public class DocumentNamePanel
     {
         super(id, aModel);
         setOutputMarkupId(true);
-        queue(new WebMarkupContainer("read-only").add(LambdaBehavior.visibleWhen(() -> {
+        queue(new WebMarkupContainer("read-only").add(visibleWhen(() -> {
             var page = findParent(AnnotationPageBase.class);
             return page != null ? !page.isEditable() : false;
         })));

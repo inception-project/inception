@@ -25,6 +25,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FO
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
@@ -36,8 +38,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.FILESYS
 import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.RELAXED_SHELL_SPECIAL_CHARACTERS;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCharacterMatching;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.endsWithMatching;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveDuplicateCharacters;
@@ -73,7 +73,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -101,7 +100,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument_;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission_;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
@@ -196,6 +200,39 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
+    public void renameSourceDocument(SourceDocument aDocument, String aNewName)
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notBlank(aNewName, "New name must be specified");
+
+        var nameValidationResult = validateDocumentName(aNewName);
+        if (!nameValidationResult.isEmpty()) {
+            throw new IllegalArgumentException(nameValidationResult.get(0).getMessage());
+        }
+
+        // Rename the source document file on disk
+        try {
+            documentStorageService.renameSourceDocumentFile(aDocument, aNewName);
+        }
+        catch (IOException e) {
+            throw new IllegalStateException("Error renaming file for document " + aDocument, e);
+        }
+
+        // Update the name
+        aDocument.setName(aNewName);
+
+        // Persist the change
+        createSourceDocument(aDocument);
+
+        // Update all the annotation documents for this source document
+        for (var annDoc : listAnnotationDocuments(aDocument)) {
+            annDoc.setName(aNewName);
+            createOrUpdateAnnotationDocument(annDoc);
+        }
+    }
+
+    @Override
+    @Transactional
     public SourceDocument createSourceDocument(SourceDocument aDocument)
     {
         Validate.notNull(aDocument, "Source document must be specified");
@@ -211,20 +248,20 @@ public class DocumentServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsAnnotationDocument(SourceDocument aDocument, User aUser)
     {
         Validate.notNull(aUser, "User must be specified");
 
-        return existsAnnotationDocument(aDocument, aUser.getUsername());
+        return existsAnnotationDocument(aDocument, AnnotationSet.forUser(aUser));
     }
 
     @Override
-    @Transactional
-    public boolean existsAnnotationDocument(SourceDocument aDocument, String aUsername)
+    @Transactional(readOnly = true)
+    public boolean existsAnnotationDocument(SourceDocument aDocument, AnnotationSet aSet)
     {
         Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notNull(aUsername, "Username must be specified");
+        Validate.notNull(aSet, "Set must be specified");
 
         try {
             entityManager
@@ -234,7 +271,7 @@ public class DocumentServiceImpl
                             AnnotationDocument.class)
                     .setParameter("project", aDocument.getProject()) //
                     .setParameter("document", aDocument) //
-                    .setParameter("user", aUsername) //
+                    .setParameter("user", aSet.id()) //
                     .getSingleResult();
             return true;
         }
@@ -264,12 +301,26 @@ public class DocumentServiceImpl
         return entityManager.merge(aAnnotationDocument);
     }
 
+    @Transactional
+    @Override
+    public void updateAnnotationDocumentStateUpdatedDirectly(long aId, Date aDate)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var update = cb.createCriteriaUpdate(AnnotationDocument.class);
+        var root = update.from(AnnotationDocument.class);
+
+        update.set(AnnotationDocument_.stateUpdated, aDate);
+        update.where(cb.equal(root.get(AnnotationDocument_.id), aId));
+
+        entityManager.createQuery(update).executeUpdate();
+    }
+
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    public boolean existsCas(SourceDocument aDocument, String aUser) throws IOException
+    public boolean existsCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException
     {
-        return casStorageService.existsCas(aDocument, aUser);
+        return casStorageService.existsCas(aDocument, aSet);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -279,11 +330,12 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
 
-        return existsCas(aAnnotationDocument.getDocument(), aAnnotationDocument.getUser());
+        return existsCas(aAnnotationDocument.getDocument(),
+                AnnotationSet.forUser(aAnnotationDocument.getUser()));
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsSourceDocument(Project aProject)
     {
         Validate.notNull(aProject, "Project must be specified");
@@ -299,7 +351,7 @@ public class DocumentServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsSourceDocument(Project aProject, String aFileName)
     {
         Validate.notNull(aProject, "Project must be specified");
@@ -319,17 +371,17 @@ public class DocumentServiceImpl
     }
 
     @Override
-    public void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream)
+    public void exportCas(SourceDocument aDocument, AnnotationSet aSet, OutputStream aStream)
         throws IOException
     {
-        casStorageService.exportCas(aDocument, aUser, aStream);
+        casStorageService.exportCas(aDocument, aSet, aStream);
     }
 
     @Override
-    public void importCas(SourceDocument aDocument, String aUser, InputStream aStream)
+    public void importCas(SourceDocument aDocument, AnnotationSet aSet, InputStream aStream)
         throws IOException
     {
-        casStorageService.importCas(aDocument, aUser, aStream);
+        casStorageService.importCas(aDocument, aSet, aStream);
     }
 
     @Override
@@ -392,25 +444,26 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
     {
-        return createOrGetAnnotationDocument(aDocument, aUser.getUsername());
+        return createOrGetAnnotationDocument(aDocument, AnnotationSet.forUser(aUser));
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, String aUser)
+    public AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument,
+            AnnotationSet aSet)
     {
         Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notNull(aUser, "User must be specified");
+        Validate.notNull(aSet, "Set must be specified");
 
         // Check if there is an annotation document entry in the database. If there is none,
         // create one.
-        if (!existsAnnotationDocument(aDocument, aUser)) {
-            var annotationDocument = new AnnotationDocument(aUser, aDocument);
+        if (!existsAnnotationDocument(aDocument, aSet)) {
+            var annotationDocument = new AnnotationDocument(aSet.id(), aDocument);
             createOrUpdateAnnotationDocument(annotationDocument);
             return annotationDocument;
         }
 
-        return getAnnotationDocument(aDocument, aUser);
+        return getAnnotationDocument(aDocument, aSet);
     }
 
     @Override
@@ -419,21 +472,21 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aUser, "User must be specified");
 
-        return getAnnotationDocument(aDocument, aUser.getUsername());
+        return getAnnotationDocument(aDocument, AnnotationSet.forUser(aUser.getUsername()));
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public AnnotationDocument getAnnotationDocument(SourceDocument aDocument, String aUser)
+    public AnnotationDocument getAnnotationDocument(SourceDocument aDocument, AnnotationSet aSet)
     {
         Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notBlank(aUser, "User must be specified");
+        Validate.notNull(aSet, "Set must be specified");
 
         return entityManager
                 .createQuery("FROM AnnotationDocument WHERE document = :document AND "
                         + "user =:user" + " AND project = :project", AnnotationDocument.class)
                 .setParameter("document", aDocument) //
-                .setParameter("user", aUser) //
+                .setParameter("user", aSet.id()) //
                 .setParameter("project", aDocument.getProject()) //
                 .getSingleResult();
     }
@@ -470,7 +523,7 @@ public class DocumentServiceImpl
     public SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
             SourceDocumentState aState)
     {
-        var oldState = setSourceDocumentStateNoEvent(aDocument, aState);
+        var oldState = updateSourceDocumentStateNoEvent(aDocument, aState);
 
         // Notify about change in document state
         if (!Objects.equals(oldState, aDocument.getState())) {
@@ -481,7 +534,7 @@ public class DocumentServiceImpl
         return oldState;
     }
 
-    private SourceDocumentState setSourceDocumentStateNoEvent(SourceDocument aDocument,
+    private SourceDocumentState updateSourceDocumentStateNoEvent(SourceDocument aDocument,
             SourceDocumentState aState)
     {
         Validate.notNull(aDocument, "Source document must be specified");
@@ -489,10 +542,24 @@ public class DocumentServiceImpl
 
         var oldState = aDocument.getState();
 
-        aDocument.setState(aState);
+        aDocument.updateState(aState);
 
         createSourceDocument(aDocument);
         return oldState;
+    }
+
+    @Transactional
+    @Override
+    public void updateSourceDocumentStateUpdatedDirectly(long aId, Date aDate)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var update = cb.createCriteriaUpdate(SourceDocument.class);
+        var root = update.from(SourceDocument.class);
+
+        update.set(SourceDocument_.stateUpdated, aDate);
+        update.where(cb.equal(root.get(SourceDocument_.id), aId));
+
+        entityManager.createQuery(update).executeUpdate();
     }
 
     @Override
@@ -501,7 +568,7 @@ public class DocumentServiceImpl
             SourceDocumentState aState)
     {
         for (var doc : aDocuments) {
-            setSourceDocumentStateNoEvent(doc, aState);
+            updateSourceDocumentStateNoEvent(doc, aState);
         }
     }
 
@@ -518,7 +585,7 @@ public class DocumentServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public boolean existsFinishedAnnotation(SourceDocument aDocument)
     {
         Validate.notNull(aDocument, "Source document must be specified");
@@ -537,7 +604,7 @@ public class DocumentServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public boolean existsFinishedAnnotation(Project aProject)
     {
         Validate.notNull(aProject, "Project must be specified");
@@ -622,6 +689,22 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
+    public List<SourceDocument> listSupportedSourceDocuments(Project aProject)
+    {
+        var allDocuments = listSourceDocuments(aProject);
+
+        if (allDocuments.isEmpty()) {
+            return allDocuments;
+        }
+
+        // Filter out documents that do not have a supported format
+        return allDocuments.stream()
+                .filter(doc -> importExportService.getFormatById(doc.getFormat()).isPresent())
+                .toList();
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public List<SourceDocument> listSourceDocumentsInState(Project aProject,
             SourceDocumentState... aStates)
     {
@@ -652,7 +735,7 @@ public class DocumentServiceImpl
 
         if (ArrayUtils.contains(aStates, AnnotationDocumentState.NEW)) {
             throw new IllegalArgumentException(
-                    "Querying for annotation documents in state NEW because if the state is NEW, "
+                    "Querying for annotation documents in state NEW is not allowed because if the state is NEW, "
                             + "the annotation document entity might not even have been created yet.");
         }
 
@@ -727,7 +810,7 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
         casStorageService.deleteCas(aAnnotationDocument.getDocument(),
-                aAnnotationDocument.getUser());
+                AnnotationSet.forUser(aAnnotationDocument.getUser()));
         entityManager.remove(aAnnotationDocument);
     }
 
@@ -829,20 +912,19 @@ public class DocumentServiceImpl
         LOG.debug("Loading initial CAS for source document {} in project {}", aDocument,
                 aDocument.getProject());
 
-        return casStorageService.readOrCreateCas(aDocument, INITIAL_CAS_PSEUDO_USER, aUpgradeMode,
-                () -> {
-                    // Normally, the initial CAS should be created on document import, but after
-                    // adding this feature, the existing projects do not yet have initial CASes, so
-                    // we create them here lazily
-                    try {
-                        return importExportService.importCasFromFileNoChecks(
-                                documentStorageService.getSourceDocumentFile(aDocument), aDocument,
-                                aFullProjectTypeSystem);
-                    }
-                    catch (UIMAException e) {
-                        throw new IOException("Unable to create CAS: " + e.getMessage(), e);
-                    }
-                }, aAccessMode);
+        return casStorageService.readOrCreateCas(aDocument, INITIAL_SET, aUpgradeMode, () -> {
+            // Normally, the initial CAS should be created on document import, but after
+            // adding this feature, the existing projects do not yet have initial CASes, so
+            // we create them here lazily
+            try {
+                return importExportService.importCasFromFileNoChecks(
+                        documentStorageService.getSourceDocumentFile(aDocument), aDocument,
+                        aFullProjectTypeSystem);
+            }
+            catch (UIMAException e) {
+                throw new IOException("Unable to create CAS: " + e.getMessage(), e);
+            }
+        }, aAccessMode);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -852,7 +934,7 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aDocument, "Source document must be specified");
 
-        return casStorageService.existsCas(aDocument, INITIAL_CAS_PSEUDO_USER);
+        return casStorageService.existsCas(aDocument, INITIAL_SET);
     }
 
     @Override
@@ -860,24 +942,15 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aDocument, "Source document must be specified");
 
-        return casStorageService.getCasFileSize(aDocument, INITIAL_CAS_PSEUDO_USER);
+        return casStorageService.getCasFileSize(aDocument, INITIAL_SET);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    public CAS readAnnotationCas(SourceDocument aDocument, String aUserName) throws IOException
+    public CAS readAnnotationCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException
     {
-        return readAnnotationCas(aDocument, aUserName, NO_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
-    }
-
-    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
-    // need to be in a transaction here. Avoiding the transaction speeds up the call.
-    @Override
-    public CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasAccessMode aMode)
-        throws IOException
-    {
-        return readAnnotationCas(aDocument, aUserName, NO_CAS_UPGRADE, aMode);
+        return readAnnotationCas(aDocument, aSet, NO_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -886,32 +959,52 @@ public class DocumentServiceImpl
     public CAS readAnnotationCas(AnnotationDocument aAnnotationDocument, CasAccessMode aMode)
         throws IOException
     {
-        return readAnnotationCas(aAnnotationDocument.getDocument(), aAnnotationDocument.getUser(),
-                NO_CAS_UPGRADE, aMode);
+        return readAnnotationCas(aAnnotationDocument.getDocument(),
+                AnnotationSet.forUser(aAnnotationDocument.getUser()), NO_CAS_UPGRADE, aMode);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    public CAS readAnnotationCas(SourceDocument aDocument, String aUserName,
+    public CAS readAnnotationCas(SourceDocument aDocument, AnnotationSet aSet,
             CasUpgradeMode aUpgradeMode)
         throws IOException
     {
-        return readAnnotationCas(aDocument, aUserName, aUpgradeMode, EXCLUSIVE_WRITE_ACCESS);
+        return readAnnotationCas(aDocument, aSet, aUpgradeMode, EXCLUSIVE_WRITE_ACCESS);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    public CAS readAnnotationCas(SourceDocument aDocument, String aUserName,
+    public CAS readAnnotationCas(AnnotationDocument aAnnDoc, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aMode)
+        throws IOException
+    {
+        return readAnnotationCas(aAnnDoc.getDocument(), AnnotationSet.forUser(aAnnDoc.getUser()),
+                aUpgradeMode, aMode);
+    }
+
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
+    @Override
+    public CAS readAnnotationCas(SourceDocument aDocument, AnnotationSet aSet,
             CasUpgradeMode aUpgradeMode, CasAccessMode aMode)
         throws IOException
     {
         // If there is no CAS yet for the source document, create one.
-        CAS cas = casStorageService.readOrCreateCas(aDocument, aUserName, aUpgradeMode,
+        var cas = casStorageService.readOrCreateCas(aDocument, aSet, aUpgradeMode,
                 // Convert the source file into an annotation CAS
-                () -> createOrReadInitialCas(aDocument, NO_CAS_UPGRADE, UNMANAGED_ACCESS, null),
-                aMode);
+                () -> {
+                    var initialCas = createOrReadInitialCas(aDocument, NO_CAS_UPGRADE,
+                            UNMANAGED_ACCESS, null);
+
+                    var maybeFormatSupport = importExportService
+                            .getFormatById(aDocument.getFormat());
+                    maybeFormatSupport
+                            .ifPresent(fmt -> fmt.prepareAnnotationCas(initialCas, aDocument));
+
+                    return initialCas;
+                }, aMode);
 
         // We intentionally do not upgrade the CAS here because in general the IDs
         // must remain stable. If an upgrade is required the caller should do it
@@ -935,10 +1028,10 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
 
-        SourceDocument aDocument = aAnnotationDocument.getDocument();
-        String userName = aAnnotationDocument.getUser();
+        var doc = aAnnotationDocument.getDocument();
+        var set = AnnotationSet.forUser(aAnnotationDocument.getUser());
 
-        return readAnnotationCas(aDocument, userName, aUpgradeMode);
+        return readAnnotationCas(doc, set, aUpgradeMode);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -989,9 +1082,10 @@ public class DocumentServiceImpl
             return new HashMap<>();
         }
 
-        Map<String, CAS> casses = new HashMap<>();
-        for (String username : aUsernames) {
-            CAS cas = readAnnotationCas(aDoc, username, AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+        var casses = new HashMap<String, CAS>();
+        for (var username : aUsernames) {
+            var cas = readAnnotationCas(aDoc, AnnotationSet.forUser(username), AUTO_CAS_UPGRADE,
+                    SHARED_READ_ONLY_ACCESS);
             casses.put(username, cas);
         }
         return casses;
@@ -1000,26 +1094,26 @@ public class DocumentServiceImpl
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    public Optional<Long> getAnnotationCasTimestamp(SourceDocument aDocument, String aUsername)
+    public Optional<Long> getAnnotationCasTimestamp(SourceDocument aDocument, AnnotationSet aSet)
         throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notNull(aUsername, "Username must be specified");
+        Validate.notNull(aSet, "Set must be specified");
 
-        return casStorageService.getCasTimestamp(aDocument, aUsername);
+        return casStorageService.getCasTimestamp(aDocument, aSet);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    public Optional<Long> verifyAnnotationCasTimestamp(SourceDocument aDocument, String aUsername,
+    public Optional<Long> verifyAnnotationCasTimestamp(SourceDocument aDocument, AnnotationSet aSet,
             long aExpectedTimeStamp, String aContextAction)
         throws IOException, ConcurentCasModificationException
     {
         Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notNull(aUsername, "Username must be specified");
+        Validate.notNull(aSet, "Set must be specified");
 
-        return casStorageService.verifyCasTimestamp(aDocument, aUsername, aExpectedTimeStamp,
+        return casStorageService.verifyCasTimestamp(aDocument, aSet, aExpectedTimeStamp,
                 aContextAction);
     }
 
@@ -1042,7 +1136,7 @@ public class DocumentServiceImpl
         throws IOException
     {
         casStorageService.writeCas(aAnnotationDocument.getDocument(), aCas,
-                aAnnotationDocument.getUser());
+                AnnotationSet.forUser(aAnnotationDocument.getUser()));
 
         if (asList(aFlags).contains(EXPLICIT_ANNOTATOR_USER_ACTION)) {
             aAnnotationDocument.setTimestamp(new Timestamp(new Date().getTime()));
@@ -1054,10 +1148,10 @@ public class DocumentServiceImpl
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    public void deleteAnnotationCas(SourceDocument aSourceDocument, String aUsername)
+    public void deleteAnnotationCas(SourceDocument aSourceDocument, AnnotationSet aSet)
         throws IOException
     {
-        casStorageService.deleteCas(aSourceDocument, aUsername);
+        casStorageService.deleteCas(aSourceDocument, aSet);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -1066,12 +1160,12 @@ public class DocumentServiceImpl
     public void deleteAnnotationCas(AnnotationDocument aAnnotationDocument) throws IOException
     {
         casStorageService.deleteCas(aAnnotationDocument.getDocument(),
-                aAnnotationDocument.getUser());
+                AnnotationSet.forUser(aAnnotationDocument.getUser()));
     }
 
     @Override
     @Transactional
-    public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, String aUser,
+    public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, AnnotationSet aUser,
             AnnotationDocumentStateChangeFlag... aFlags)
         throws IOException
     {
@@ -1099,11 +1193,11 @@ public class DocumentServiceImpl
 
         // We read the initial CAS and then use it to override the CAS for the given document/user.
         // In order to do that, we must read the initial CAS unmanaged.
-        CAS cas = createOrReadInitialCas(aDocument, FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
+        var cas = createOrReadInitialCas(aDocument, FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
 
         // Add/update the CAS metadata
-        Optional<Long> timestamp = casStorageService.getCasTimestamp(aDocument,
-                aUser.getUsername());
+        var timestamp = casStorageService.getCasTimestamp(aDocument,
+                AnnotationSet.forUser(aUser.getUsername()));
         if (timestamp.isPresent()) {
             addOrUpdateCasMetadata(cas, timestamp.get(), aDocument, aUser.getUsername());
         }
@@ -1118,17 +1212,17 @@ public class DocumentServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean isAnnotationFinished(SourceDocument aDocument, User aUser)
     {
-        return isAnnotationFinished(aDocument, aUser.getUsername());
+        return isAnnotationFinished(aDocument, AnnotationSet.forUser(aUser));
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
-    public boolean isAnnotationFinished(SourceDocument aDocument, String aUsername)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
+    public boolean isAnnotationFinished(SourceDocument aDocument, AnnotationSet aSet)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "SELECT COUNT(*) FROM AnnotationDocument", //
                 "WHERE document = :document", //
                 "  AND user     = :user", //
@@ -1136,7 +1230,7 @@ public class DocumentServiceImpl
 
         return entityManager.createQuery(query, Long.class) //
                 .setParameter("document", aDocument) //
-                .setParameter("user", aUsername) //
+                .setParameter("user", aSet.id()) //
                 .setParameter("state", AnnotationDocumentState.FINISHED) //
                 .getSingleResult() > 0;
     }
@@ -1145,7 +1239,7 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public List<AnnotationDocument> listAnnotationDocuments(Project aProject)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "SELECT doc", //
                 " FROM AnnotationDocument AS doc", //
                 " JOIN ProjectPermission AS perm", //
@@ -1165,7 +1259,7 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public List<AnnotationDocument> listAnnotationDocuments(SourceDocument aDocument)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "SELECT doc", //
                 " FROM AnnotationDocument AS doc", //
                 " JOIN ProjectPermission AS perm", //
@@ -1215,11 +1309,11 @@ public class DocumentServiceImpl
     public Map<SourceDocument, AnnotationDocument> listAnnotatableDocuments(Project aProject,
             User aUser)
     {
-        var map = listAllDocuments(aProject, aUser.getUsername());
+        var map = listAllDocuments(aProject, AnnotationSet.forUser(aUser));
 
         var i = map.entrySet().iterator();
         while (i.hasNext()) {
-            Entry<SourceDocument, AnnotationDocument> e = i.next();
+            var e = i.next();
             if (e.getValue() != null && IGNORE == e.getValue().getState()) {
                 i.remove();
             }
@@ -1230,33 +1324,32 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, String aUser)
+    public Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject,
+            AnnotationSet aSet)
     {
         // First get the source documents
         var sourceDocsQuery = "FROM SourceDocument WHERE project = (:project)";
-        List<SourceDocument> sourceDocuments = entityManager
-                .createQuery(sourceDocsQuery, SourceDocument.class) //
+        var sourceDocuments = entityManager.createQuery(sourceDocsQuery, SourceDocument.class) //
                 .setParameter("project", aProject) //
                 .getResultList();
 
         // Next we get all the annotation document records. We can use these to filter out
         // documents which are IGNOREed for given users.
         var annDocsQuery = "FROM AnnotationDocument WHERE user = (:username) AND project = (:project)";
-        List<AnnotationDocument> annotationDocuments = entityManager
-                .createQuery(annDocsQuery, AnnotationDocument.class) //
-                .setParameter("username", aUser) //
+        var annotationDocuments = entityManager.createQuery(annDocsQuery, AnnotationDocument.class) //
+                .setParameter("username", aSet.id()) //
                 .setParameter("project", aProject) //
                 .getResultList();
 
         // First we add all the source documents
-        Map<SourceDocument, AnnotationDocument> map = new TreeMap<>(SourceDocument.NAME_COMPARATOR);
-        for (SourceDocument doc : sourceDocuments) {
+        var map = new TreeMap<SourceDocument, AnnotationDocument>(SourceDocument.NAME_COMPARATOR);
+        for (var doc : sourceDocuments) {
             map.put(doc, null);
         }
 
         // Now we link the source documents to the annotation documents and remove IGNOREed
         // documents
-        for (AnnotationDocument adoc : annotationDocuments) {
+        for (var adoc : annotationDocuments) {
             map.put(adoc.getDocument(), adoc);
         }
 
@@ -1267,56 +1360,43 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument)
     {
-        Set<String> users = projectService.listProjectUsersWithPermissions(aDocument.getProject())
-                .stream().map(User::getUsername).collect(Collectors.toSet());
+        var users = projectService.listUsersWithRoleInProject(aDocument.getProject(), ANNOTATOR)
+                .stream().toList();
 
-        Map<AnnotationDocumentState, AtomicLong> counts = new LinkedHashMap<>();
-        for (AnnotationDocument aDoc : listAnnotationDocuments(aDocument)) {
-            AtomicLong count = counts.computeIfAbsent(aDoc.getState(), _key -> new AtomicLong(0));
-            count.incrementAndGet();
-            users.remove(aDoc.getUser());
-        }
+        var annDocs = listAnnotationDocuments(aDocument);
 
-        counts.computeIfAbsent(AnnotationDocumentState.NEW, _key -> new AtomicLong(0))
-                .addAndGet(users.size());
-
-        Map<AnnotationDocumentState, Long> finalCounts = new LinkedHashMap<>();
-        for (AnnotationDocumentState state : AnnotationDocumentState.values()) {
-            finalCounts.put(state, 0l);
-        }
-        for (Entry<AnnotationDocumentState, AtomicLong> e : counts.entrySet()) {
-            finalCounts.put(e.getKey(), e.getValue().get());
-        }
-
-        return finalCounts;
+        return getAnnotationDocumentStats(aDocument, annDocs, users);
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument,
-            List<AnnotationDocument> aRelevantAnnotationDocuments, List<User> aUsersWithPermission)
+            List<AnnotationDocument> aRelevantAnnotationDocuments, List<User> aRelevantUsers)
     {
-        Set<String> users = aUsersWithPermission.stream() //
+        var users = aRelevantUsers.stream() //
                 .map(User::getUsername) //
                 .collect(toSet());
 
-        Map<AnnotationDocumentState, AtomicLong> counts = new LinkedHashMap<>();
+        // For each AnnotationDocumentState count the users having that for the given document
+        var counts = new LinkedHashMap<AnnotationDocumentState, AtomicLong>();
         aRelevantAnnotationDocuments.stream()
                 .filter(annDoc -> annDoc.getDocument().equals(aDocument)) //
+                .filter(anndoc -> users.contains(anndoc.getUser())) //
                 .forEach(aDoc -> {
-                    AtomicLong count = counts.computeIfAbsent(aDoc.getState(),
-                            _key -> new AtomicLong(0));
+                    var count = counts.computeIfAbsent(aDoc.getState(), _key -> new AtomicLong(0));
                     count.incrementAndGet();
                     users.remove(aDoc.getUser());
                 });
 
+        // If we do not have an AnnotationDocumentState for users, we count them as NEW
         counts.computeIfAbsent(AnnotationDocumentState.NEW, _key -> new AtomicLong(0))
                 .addAndGet(users.size());
 
-        Map<AnnotationDocumentState, Long> finalCounts = new LinkedHashMap<>();
-        for (AnnotationDocumentState state : AnnotationDocumentState.values()) {
+        var finalCounts = new LinkedHashMap<AnnotationDocumentState, Long>();
+        for (var state : AnnotationDocumentState.values()) {
             finalCounts.put(state, 0l);
         }
+
         for (Entry<AnnotationDocumentState, AtomicLong> e : counts.entrySet()) {
             finalCounts.put(e.getKey(), e.getValue().get());
         }
@@ -1374,7 +1454,7 @@ public class DocumentServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsCurationDocument(Project aProject)
     {
         Validate.notNull(aProject, "Project must be specified");
@@ -1411,16 +1491,6 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
-    public AnnotationDocumentState setAnnotationDocumentState(SourceDocument aDocument,
-            String aUser, AnnotationDocumentState aState,
-            AnnotationDocumentStateChangeFlag... aFlags)
-    {
-        var annDoc = createOrGetAnnotationDocument(aDocument, aUser);
-        return setAnnotationDocumentState(annDoc, aState, aFlags);
-    }
-
-    @Override
-    @Transactional
     public AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
             AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags)
     {
@@ -1439,7 +1509,7 @@ public class DocumentServiceImpl
     {
         var oldState = aDocument.getState();
 
-        aDocument.setState(aState);
+        aDocument.updateState(aState);
 
         if (aState == AnnotationDocumentState.NEW) {
             // If a document is reset, the annotator state is cleared
@@ -1518,18 +1588,18 @@ public class DocumentServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public long countSourceDocuments()
     {
-        String query = "SELECT COUNT(*) FROM SourceDocument";
+        var query = "SELECT COUNT(*) FROM SourceDocument";
         return entityManager.createQuery(query, Long.class).getSingleResult();
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public long countAnnotationDocuments()
     {
-        String query = "SELECT COUNT(*) FROM AnnotationDocument";
+        var query = "SELECT COUNT(*) FROM AnnotationDocument";
         return entityManager.createQuery(query, Long.class).getSingleResult();
     }
 
@@ -1546,7 +1616,7 @@ public class DocumentServiceImpl
         for (SourceDocument doc : listSourceDocuments(aProject)) {
             for (AnnotationDocument ann : listAllAnnotationDocuments(doc)) {
                 try {
-                    casStorageService.upgradeCas(doc, ann.getUser());
+                    casStorageService.upgradeCas(doc, AnnotationSet.forUser(ann.getUser()));
                 }
                 catch (FileNotFoundException e) {
                     // If there is no CAS file, we do not have to upgrade it. Ignoring.
@@ -1555,7 +1625,7 @@ public class DocumentServiceImpl
 
             // Also upgrade the curation CAS if it exists
             try {
-                casStorageService.upgradeCas(doc, CURATION_USER);
+                casStorageService.upgradeCas(doc, CURATION_SET);
             }
             catch (FileNotFoundException e) {
                 // If there is no CAS file, we do not have to upgrade it. Ignoring.
@@ -1622,4 +1692,69 @@ public class DocumentServiceImpl
 
         return errors;
     }
+
+    @Override
+    @Transactional
+    public List<SourceDocument> listSourceDocumentsWithState(String aSessionOwner,
+            Set<PermissionLevel> aAllowedRoles, Set<SourceDocumentState> aStates, Date aFromDate,
+            Date aToDate)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createQuery(SourceDocument.class);
+
+        var sdRoot = cq.from(SourceDocument.class);
+        var ppRoot = cq.from(ProjectPermission.class);
+
+        var projectJoin = ppRoot.join(ProjectPermission_.project);
+
+        var userPredicate = cb.equal(ppRoot.get(ProjectPermission_.user), aSessionOwner);
+        var rolePredicate = ppRoot.get(ProjectPermission_.level).in(aAllowedRoles);
+        var statePredicate = sdRoot.get(SourceDocument_.state).in(aStates);
+        var timePredicate = cb.and( //
+                cb.greaterThanOrEqualTo(sdRoot.get(SourceDocument_.stateUpdated), aFromDate), //
+                cb.lessThan(sdRoot.get(SourceDocument_.stateUpdated), aToDate));
+
+        var projectMatch = cb.equal(sdRoot.get(SourceDocument_.project), projectJoin);
+
+        cq.select(sdRoot) //
+                // avoid duplicates if multiple permissions match
+                .distinct(true) //
+                .where(cb.and(userPredicate, rolePredicate, statePredicate, timePredicate,
+                        projectMatch));
+
+        return entityManager.createQuery(cq).getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationDocument> listAnnotationDocumentsWithState(String aSessionOwner,
+            Set<PermissionLevel> aAllowedRoles, Set<AnnotationDocumentState> aStates,
+            Date aFromDate, Date aToDate)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createQuery(AnnotationDocument.class);
+
+        var sdRoot = cq.from(AnnotationDocument.class);
+        var ppRoot = cq.from(ProjectPermission.class);
+
+        var projectJoin = ppRoot.join(ProjectPermission_.project);
+
+        var userPredicate = cb.equal(ppRoot.get(ProjectPermission_.user), aSessionOwner);
+        var rolePredicate = ppRoot.get(ProjectPermission_.level).in(aAllowedRoles);
+        var statePredicate = sdRoot.get(AnnotationDocument_.state).in(aStates);
+        var timePredicate = cb.and( //
+                cb.greaterThanOrEqualTo(sdRoot.get(AnnotationDocument_.stateUpdated), aFromDate), //
+                cb.lessThan(sdRoot.get(AnnotationDocument_.stateUpdated), aToDate));
+
+        var projectMatch = cb.equal(sdRoot.get(AnnotationDocument_.project), projectJoin);
+
+        cq.select(sdRoot) //
+                // avoid duplicates if multiple permissions match
+                .distinct(true) //
+                .where(cb.and(userPredicate, rolePredicate, statePredicate, timePredicate,
+                        projectMatch));
+
+        return entityManager.createQuery(cq).getResultList();
+    }
+
 }

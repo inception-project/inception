@@ -28,7 +28,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -46,8 +45,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupportImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.recommender.RelationSuggestionSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -90,9 +91,9 @@ public class RelationSuggestionVisibilityCalculationTest
     public void setUp() throws Exception
     {
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new SpanLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService),
-                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new RelationLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService)));
         layerSupportRegistry.init();
 
@@ -211,10 +212,12 @@ public class RelationSuggestionVisibilityCalculationTest
         var rec = Recommender.builder().withId(RECOMMENDER_ID).withName(RECOMMENDER_NAME)
                 .withLayer(aFeat.getLayer()).withFeature(aFeat).build();
 
-        List<RelationSuggestion> suggestions = new ArrayList<>();
+        var suggestions = new ArrayList<RelationSuggestion>();
         for (int[] val : vals) {
-            var suggestion = RelationSuggestion.builder().withId(val[0]).withRecommender(rec)
-                    .withDocument(doc)
+            var suggestion = RelationSuggestion.builder() //
+                    .withId(val[0]) //
+                    .withRecommender(rec) //
+                    .withDocument(doc) //
                     .withPosition(new RelationPosition(val[1], val[2], val[3], val[4]))
                     .withScore(CONFIDENCE).withScoreExplanation(CONFIDENCE_EXPLANATION).build();
             suggestions.add(suggestion);

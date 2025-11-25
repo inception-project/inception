@@ -53,11 +53,6 @@ provides.
 | `ui.pdf.enabled`
 | yes
 | yes
-
-| <<sect_editors_pdf_legacy>>
-| `ui.pdf-legacy.enabled`
-| yes
-| yes
 |====
 
 [[sect_editors_brat_sentence_oriented]]
@@ -93,15 +88,6 @@ This editor renders documents imported using a XML/HTML-based format such as <<s
 == PDF
 
 This editor allows annotating PDF documents. It is based on link:https://mozilla.github.io/pdf.js/[PDF.js] (version 2.x) and on the {product-name} PDF format support. The editor supports rendering span annotations, relations and link features. The editor uses a heavily improved version of the rendering engine of link:https://github.com/paperai/pdfanno[PDFAnno].
-
-[[sect_editors_pdf_legacy]]
-== 🪦 PDF (old)
-
-====
-CAUTION: Legacy feature. To use this functionality, you need to enable it first by adding `ui.pdf-legacy.enabled` to the `settings.properties` file.
-====
-
-This editor allows annotating PDF documents. It is based on link:https://mozilla.github.io/pdf.js/[PDF.js] (version 1.x) and on the legacy {product-name} PDF format support. The editor supports rendering span annotations, relations and link features. It is only kept for compatibility to allow users to view old annotation projects. The editor uses an improved version of the rendering engine of link:https://github.com/paperai/pdfanno[PDFAnno].
 
 [[sect_editors_plugins]]
 == 🧪 Editor plugins

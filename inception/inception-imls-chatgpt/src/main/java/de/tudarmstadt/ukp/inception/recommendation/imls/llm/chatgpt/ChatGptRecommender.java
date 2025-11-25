@@ -32,14 +32,15 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatBasedLlmRecommenderImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatCompletionMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatCompletionRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptResponseFormat;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptResponseFormatType;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatBasedLlmRecommenderImplBase;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.ChatMessage;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
 
@@ -51,9 +52,10 @@ public class ChatGptRecommender
     private final ChatGptClient client;
 
     public ChatGptRecommender(Recommender aRecommender, ChatGptRecommenderTraits aTraits,
-            ChatGptClient aClient, AnnotationSchemaService aSchemaService)
+            ChatGptClient aClient, AnnotationSchemaService aSchemaService,
+            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint)
     {
-        super(aRecommender, aTraits, aSchemaService);
+        super(aRecommender, aTraits, aSchemaService, aResponseExtractorExtensionPoint);
 
         client = aClient;
     }

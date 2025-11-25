@@ -40,11 +40,6 @@ public interface UserDao
 
     static final String EMPTY_PASSWORD = "";
 
-    static final String REALM_GLOBAL = null;
-    static final String REALM_PROJECT_PREFIX = "project:";
-    static final String REALM_EXTERNAL_PREFIX = "external:";
-    static final String REALM_PREAUTH = "preauth";
-
     User getCurrentUser();
 
     /**
@@ -102,6 +97,8 @@ public interface UserDao
 
     List<User> listAllUsersFromRealm(String aString);
 
+    List<User> listAllUsersFromRealm(Realm aRealm);
+
     /**
      * get a {@link User} using a username
      * 
@@ -114,6 +111,10 @@ public interface UserDao
     User getUserOrCurationUser(String aUsername);
 
     User getCurationUser();
+
+    User getInitialCasUser();
+
+    User getUserByRealmAndUiName(Realm aRealm, String aUiName);
 
     User getUserByRealmAndUiName(String aRealm, String aUiName);
 

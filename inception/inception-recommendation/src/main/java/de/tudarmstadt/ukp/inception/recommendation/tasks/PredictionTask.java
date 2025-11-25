@@ -20,11 +20,14 @@ package de.tudarmstadt.ukp.inception.recommendation.tasks;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.containsXmlDocumentStructure;
+import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.removeXmlDocumentStructure;
+import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.transferXmlDocumentStructure;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCapability.PREDICTION_USES_TEXT_ONLY;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask.ReconciliationOption.KEEP_EXISTING;
-import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
 import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_DOCUMENTS;
+import static de.tudarmstadt.ukp.inception.support.uima.Range.rangeCoveringDocument;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -40,8 +43,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -51,13 +56,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtils;
-import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportQuery;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -66,15 +72,16 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentG
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskNotificationEvent;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.StopWatch;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 import jakarta.persistence.NoResultException;
 
@@ -84,8 +91,6 @@ public class PredictionTask
     public static final String TYPE = "PredictionTask";
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
-    private static final String PREDICTION_CAS = "predictionCas";
 
     private @Autowired AnnotationSchemaService schemaService;
     private @Autowired RecommendationService recommendationService;
@@ -388,7 +393,7 @@ public class PredictionTask
     }
 
     private void applySingleRecomenderToDocument(LazyCas aOriginalCas, Recommender aRecommender,
-            Predictions activePredictions, Predictions aPredictions, CAS predictionCas,
+            Predictions aActivePredictions, Predictions aPredictions, CAS aPredictionCas,
             SourceDocument aDocument, int aPredictionBegin, int aPredictionEnd)
         throws IOException
     {
@@ -426,8 +431,8 @@ public class PredictionTask
         if (!recommenders.isEmpty() && !recommenders.contains(aRecommender)) {
             logSkippingNotRequestedRecommender(aPredictions, aRecommender);
 
-            if (activePredictions != null) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+            if (aActivePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, aActivePredictions,
                         aDocument);
             }
 
@@ -437,8 +442,8 @@ public class PredictionTask
         if (recommenders.isEmpty() && factory.isInteractive(aRecommender)) {
             logSkippingInteractiveRecommenderNotExplicitlyRequested(aPredictions, aRecommender);
 
-            if (activePredictions != null) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+            if (aActivePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, aActivePredictions,
                         aDocument);
             }
 
@@ -453,8 +458,8 @@ public class PredictionTask
 
             // If possible, we inherit recommendations from a previous run while the recommender is
             // still busy
-            if (activePredictions != null) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+            if (aActivePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, aActivePredictions,
                         aDocument);
             }
 
@@ -466,8 +471,8 @@ public class PredictionTask
 
             // If possible, we inherit recommendations from a previous run while the recommender is
             // still busy
-            if (activePredictions != null) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+            if (aActivePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, aActivePredictions,
                         aDocument);
             }
 
@@ -479,8 +484,8 @@ public class PredictionTask
 
             // If possible, we inherit recommendations from a previous run while the recommender is
             // still busy
-            if (activePredictions != null) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+            if (aActivePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, aActivePredictions,
                         aDocument);
             }
 
@@ -493,10 +498,10 @@ public class PredictionTask
         if (!factory.isInteractive(aRecommender)
                 && TRAINING_NOT_SUPPORTED == engine.getTrainingCapability()
                 && PREDICTION_USES_TEXT_ONLY == engine.getPredictionCapability()
-                && activePredictions != null
-                && activePredictions.hasRunPredictionOnDocument(aDocument)) {
+                && aActivePredictions != null
+                && aActivePredictions.hasRunPredictionOnDocument(aDocument)) {
             inheritSuggestionsAtRecommenderLevel(aPredictions, engine.getRecommender(),
-                    activePredictions, aDocument);
+                    aActivePredictions, aDocument);
             return;
         }
 
@@ -507,11 +512,11 @@ public class PredictionTask
             var originalCas = aOriginalCas.get();
 
             var ctx = new PredictionContext(context.get(), getMonitor());
-            cloneAndMonkeyPatchCAS(getProject(), originalCas, predictionCas);
+            preparePredictionCas(aPredictionCas, aOriginalCas, factory, aRecommender);
             var predictionRange = new Range(aPredictionBegin < 0 ? 0 : aPredictionBegin,
                     aPredictionEnd < 0 ? originalCas.getDocumentText().length() : aPredictionEnd);
-            invokeRecommender(aPredictions, ctx, engine, activePredictions, aDocument, originalCas,
-                    predictionCas, predictionRange);
+            invokeRecommender(aPredictions, ctx, engine, aActivePredictions, aDocument, originalCas,
+                    aPredictionCas, predictionRange);
             ctx.getMessages().forEach(aPredictions::log);
         }
         // Catching Throwable is intentional here as we want to continue the execution even if a
@@ -527,12 +532,30 @@ public class PredictionTask
 
             // If there was a previous successful run of the recommender, inherit its suggestions to
             // avoid that all the suggestions of the recommender simply disappear.
-            if (activePredictions != null) {
-                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, activePredictions,
+            if (aActivePredictions != null) {
+                inheritSuggestionsAtRecommenderLevel(aPredictions, aRecommender, aActivePredictions,
                         aDocument);
             }
 
             return;
+        }
+    }
+
+    private void preparePredictionCas(CAS aPredictionCas, LazyCas aOriginalCas,
+            RecommendationEngineFactory<Object> aFactory, Recommender aRecommender)
+        throws UIMAException, IOException
+    {
+        cloneAndMonkeyPatchCAS(getProject(), aOriginalCas.get(), aPredictionCas);
+
+        if (aFactory.isIncludeXmlStructure(aRecommender)) {
+            if (!containsXmlDocumentStructure(aPredictionCas)) {
+                var initialCas = documentService.createOrReadInitialCas(aOriginalCas.getDocument(),
+                        AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+                transferXmlDocumentStructure(aPredictionCas, initialCas);
+            }
+        }
+        else if (containsXmlDocumentStructure(aPredictionCas)) {
+            removeXmlDocumentStructure(aPredictionCas);
         }
     }
 
@@ -546,14 +569,16 @@ public class PredictionTask
     {
         var rec = aEngine.getRecommender();
 
-        // Extract the suggestions from the data which the recommender has written into the CAS
-        // We need this only for the extraction, but there is no point in investing the time for
-        // the prediction if we cannot extract the data afterwards - hence we obtain it now and
-        // skip the prediction if it is not available
-        var maybeSuggestionSupport = suggestionSupportRegistry.findGenericExtension(rec);
-        if (maybeSuggestionSupport.isEmpty()) {
-            logNoSuggestionSupportAvailable(aIncomingPredictions, rec);
-            return;
+        // If the recommender is bound to a specific layer/feature, then we can already look up the
+        // suggestion support for that - and if we do not find it, we can skip the entire prediction
+        // because we would not be able to process the results afterwards.
+        if (rec.getLayer() != null && rec.getFeature() != null) {
+            var maybeSuggestionSupport = suggestionSupportRegistry
+                    .findGenericExtension(SuggestionSupportQuery.of(rec));
+            if (maybeSuggestionSupport.isEmpty()) {
+                logNoSuggestionSupportAvailable(aIncomingPredictions, rec);
+                return;
+            }
         }
 
         // Perform the actual prediction
@@ -563,7 +588,7 @@ public class PredictionTask
 
         // Extract suggestions from the prediction CAS
         var generatedSuggestions = extractSuggestions(aIncomingPredictions, aDocument, aOriginalCas,
-                aPredictionCas, rec, maybeSuggestionSupport.get());
+                aPredictionCas, aEngine, rec);
 
         // Reconcile new suggestions with suggestions from previous run
         var reconciliationResult = reconcile(aActivePredictions, aDocument, rec, predictedRange,
@@ -591,6 +616,38 @@ public class PredictionTask
                 reconciliationResult.removed, aged, suggestions);
     }
 
+    private List<AnnotationSuggestion> extractSuggestions(Predictions aIncomingPredictions,
+            SourceDocument aDocument, CAS aOriginalCas, CAS aPredictionCas,
+            RecommendationEngine aEngine, Recommender rec)
+    {
+        List<SuggestionSupportQuery> suggestionSupportQueries;
+
+        if (aEngine.isUniveralExtraction()) {
+            suggestionSupportQueries = schemaService.listEnabledFeatures(getProject()).stream() //
+                    .map(SuggestionSupportQuery::of) //
+                    .toList();
+        }
+        else {
+            suggestionSupportQueries = List.of(SuggestionSupportQuery.of(rec));
+        }
+
+        var suggestionSupports = suggestionSupportQueries.stream()
+                .flatMap(sq -> suggestionSupportRegistry.findGenericExtension(sq)
+                        .map(ext -> Stream.of(new ImmutablePair<>(sq, ext)))
+                        .orElseGet(Stream::empty))
+                .toList();
+
+        var generatedSuggestions = new ArrayList<AnnotationSuggestion>();
+        for (var sqs : suggestionSupports) {
+            var query = sqs.getKey();
+            var support = sqs.getValue();
+            var extractionContext = new ExtractionContext(aIncomingPredictions.getGeneration(), rec,
+                    query.layer(), query.feature(), aDocument, aOriginalCas, aPredictionCas);
+            generatedSuggestions.addAll(support.extractSuggestions(extractionContext));
+        }
+        return generatedSuggestions;
+    }
+
     /**
      * Extracts existing predictions from the last prediction run so we do not have to recalculate
      * them. This is useful when the engine is not trainable.
@@ -598,8 +655,8 @@ public class PredictionTask
     private void inheritSuggestionsAtRecommenderLevel(Predictions aPredictions,
             Recommender aRecommender, Predictions activePredictions, SourceDocument document)
     {
-        var suggestions = activePredictions.getPredictionsByRecommenderAndDocument(aRecommender,
-                document.getName());
+        var suggestions = activePredictions.getSuggestionsByRecommenderAndDocument(aRecommender,
+                document);
 
         if (suggestions.isEmpty()) {
             logNoInheritablePredictions(aPredictions, aRecommender, document);
@@ -622,7 +679,7 @@ public class PredictionTask
             return;
         }
 
-        var suggestions = aOldPredictions.getPredictionsByDocument(aDocument.getName());
+        var suggestions = aOldPredictions.getPredictionsByDocument(aDocument.getId());
 
         logPredictionsInherited(aProject, aDocument, suggestions);
 
@@ -635,7 +692,7 @@ public class PredictionTask
             Range predictedRange, List<AnnotationSuggestion> suggestions, int aged)
     {
         var inheritableSuggestions = aActivePredictions
-                .getPredictionsByRecommenderAndDocument(aRecommender, aDocument.getName()).stream() //
+                .getSuggestionsByRecommenderAndDocument(aRecommender, aDocument).stream() //
                 .filter(s -> !s.coveredBy(predictedRange)) //
                 .collect(toList());
 
@@ -649,15 +706,6 @@ public class PredictionTask
 
         suggestions.addAll(inheritableSuggestions);
         return aged;
-    }
-
-    private List<AnnotationSuggestion> extractSuggestions(Predictions aIncomingPredictions,
-            SourceDocument aDocument, CAS aOriginalCas, CAS aPredictionCas,
-            Recommender aRecommender, SuggestionSupport aSuggestionSupport)
-    {
-        var extractionContext = new ExtractionContext(aIncomingPredictions.getGeneration(),
-                aRecommender, aDocument, aOriginalCas, aPredictionCas);
-        return aSuggestionSupport.extractSuggestions(extractionContext);
     }
 
     private Range predict(Predictions aIncomingPredictions, PredictionContext aCtx,
@@ -683,7 +731,7 @@ public class PredictionTask
     }
 
     static ReconciliationResult reconcile(Predictions aActivePredictions, SourceDocument aDocument,
-            Recommender recommender, Range predictedRange,
+            Recommender aRecommender, Range aPredictedRange,
             List<AnnotationSuggestion> aNewProtoSuggestions, ReconciliationOption... aOptions)
     {
         if (aActivePredictions == null) {
@@ -696,10 +744,10 @@ public class PredictionTask
         var agedSuggestionsCount = 0;
 
         var predictionsByRecommenderAndDocument = aActivePredictions
-                .getPredictionsByRecommenderAndDocument(recommender, aDocument.getName());
+                .getSuggestionsByRecommenderAndDocument(aRecommender, aDocument);
 
         var existingSuggestionsByPosition = predictionsByRecommenderAndDocument.stream() //
-                .filter(s -> s.coveredBy(predictedRange)) //
+                .filter(s -> s.coveredBy(aPredictedRange)) //
                 .collect(groupingBy(AnnotationSuggestion::getPosition));
 
         for (var newSuggestion : aNewProtoSuggestions) {
@@ -721,14 +769,14 @@ public class PredictionTask
 
             var existingSuggestion = existingSuggestions.get(0);
             if (!reconciledSuggestions.contains(existingSuggestion)) {
-                existingSuggestion.incrementAge();
+                existingSuggestion.reconcileWith(newSuggestion);
                 agedSuggestionsCount++;
                 reconciledSuggestions.add(existingSuggestion);
             }
         }
 
         var removedSuggestions = predictionsByRecommenderAndDocument.stream() //
-                .filter(s -> s.coveredBy(predictedRange)) //
+                .filter(s -> s.coveredBy(aPredictedRange)) //
                 .filter(s -> !reconciledSuggestions.contains(s)) //
                 .toList();
 
@@ -1047,11 +1095,17 @@ public class PredictionTask
             document = aDocument;
         }
 
+        public SourceDocument getDocument()
+        {
+            return document;
+        }
+
         public CAS get() throws IOException
         {
             if (originalCas == null) {
-                originalCas = documentService.readAnnotationCas(document, dataOwner,
-                        AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+                originalCas = documentService.readAnnotationCas(document,
+                        AnnotationSet.forUser(dataOwner), AUTO_CAS_UPGRADE,
+                        SHARED_READ_ONLY_ACCESS);
             }
 
             return originalCas;
@@ -1066,7 +1120,7 @@ public class PredictionTask
         public PredictionCasHolder() throws ResourceInitializationException
         {
             cas = WebAnnoCasUtil.createCas();
-            CasStorageSession.get().add(PREDICTION_CAS, EXCLUSIVE_WRITE_ACCESS, cas);
+            CasStorageSession.get().add(AnnotationSet.PREDICTION_SET, EXCLUSIVE_WRITE_ACCESS, cas);
         }
 
         @Override

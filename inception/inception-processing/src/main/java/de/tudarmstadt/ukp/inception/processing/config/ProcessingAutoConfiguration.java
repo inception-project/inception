@@ -17,18 +17,28 @@
  */
 package de.tudarmstadt.ukp.inception.processing.config;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.processing.BulkProcessingPageMenuItem;
+import de.tudarmstadt.ukp.inception.processing.BulkProcessor;
+import de.tudarmstadt.ukp.inception.processing.BulkProcessorRegistry;
+import de.tudarmstadt.ukp.inception.processing.BulkProcessorRegistryImpl;
+import de.tudarmstadt.ukp.inception.processing.curation.BulkCurationProcessor;
+import de.tudarmstadt.ukp.inception.processing.recommender.BulkRecommenderProcessor;
+import de.tudarmstadt.ukp.inception.processing.tagset.TagSetExtractionProcessor;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.servlet.ServletContext;
 
-@ConditionalOnProperty(prefix = "bulk-processing", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "bulk-processing", name = "enabled", havingValue = "true", matchIfMissing = true)
 @Configuration
 public class ProcessingAutoConfiguration
 {
@@ -39,5 +49,36 @@ public class ProcessingAutoConfiguration
             ProjectService aProjectService, ServletContext aServletContext)
     {
         return new BulkProcessingPageMenuItem(aUserRepo, aProjectService, aServletContext);
+    }
+
+    @Bean
+    public BulkProcessorRegistry bulkProcessorRegistry(
+            @Lazy @Autowired(required = false) List<BulkProcessor> aExtensions)
+    {
+        return new BulkProcessorRegistryImpl(aExtensions);
+    }
+
+    @ConditionalOnProperty(prefix = "bulk-processing.process.auto-curation", //
+            name = "enabled", havingValue = "true", matchIfMissing = false)
+    @Bean
+    public BulkCurationProcessor bulkCurationProcessor()
+    {
+        return new BulkCurationProcessor();
+    }
+
+    @ConditionalOnProperty(prefix = "bulk-processing.process.apply-recommender", //
+            name = "enabled", havingValue = "true", matchIfMissing = false)
+    @Bean
+    public BulkRecommenderProcessor bulkRecommenderProcessor()
+    {
+        return new BulkRecommenderProcessor();
+    }
+
+    @ConditionalOnProperty(prefix = "bulk-processing.process.extract-tagset", //
+            name = "enabled", havingValue = "true", matchIfMissing = true)
+    @Bean
+    public TagSetExtractionProcessor tagSetExtractionProcessor()
+    {
+        return new TagSetExtractionProcessor();
     }
 }

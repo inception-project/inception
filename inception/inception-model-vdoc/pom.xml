@@ -20,18 +20,22 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>37.0-SNAPSHOT</version>
+    <version>39.0-SNAPSHOT</version>
   </parent>
+
   <artifactId>inception-model-vdoc</artifactId>
   <name>INCEpTION - Core - VDoc Model</name>
+
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-model</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
+      <version>${project.version}</version>
     </dependency>
     
     <dependency>

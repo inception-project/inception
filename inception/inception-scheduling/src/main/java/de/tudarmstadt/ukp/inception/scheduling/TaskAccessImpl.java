@@ -58,7 +58,7 @@ public class TaskAccessImpl
 
             assertCanManageTasks(user, project);
 
-            LOG.trace("Access granted: canViewAnnotationDocument [sessionOwner: {}] [project: {}]",
+            LOG.trace("Access granted: canManageTasks [sessionOwner: {}] [project: {}]",
                     aSessionOwner, aProjectId);
             return true;
         }

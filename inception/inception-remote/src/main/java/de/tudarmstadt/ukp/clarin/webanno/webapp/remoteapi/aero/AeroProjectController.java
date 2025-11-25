@@ -181,7 +181,7 @@ public class AeroProjectController
         project.setSlug(aSlug);
         project.setName(projectName);
         project.setScriptDirection(ScriptDirection.LTR);
-        project.setState(ProjectState.NEW);
+        project.updateState(ProjectState.NEW);
         projectService.createProject(project);
         projectService.initializeProject(project);
 

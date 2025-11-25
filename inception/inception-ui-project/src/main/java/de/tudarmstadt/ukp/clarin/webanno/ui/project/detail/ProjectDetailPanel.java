@@ -40,7 +40,7 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -61,7 +61,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 public class ProjectDetailPanel
-    extends Panel
+    extends GenericPanel<Project>
 {
     private static final long serialVersionUID = 1118880151557285316L;
 
@@ -71,37 +71,36 @@ public class ProjectDetailPanel
     private @SpringBean UserDao userRepository;
     private @SpringBean AnnotationSchemaService annotationService;
 
-    private IModel<Project> projectModel;
     private IModel<String> slugSuggestionModel;
     private boolean slugChanged = false;
 
     private Label idLabel;
+    private FootprintPanel footprintPanel;
 
     public ProjectDetailPanel(String id, IModel<Project> aModel)
     {
         super(id, aModel);
 
-        projectModel = aModel;
         slugSuggestionModel = Model.of();
 
-        if (projectModel.isPresent().getObject()) {
-            deriveSlugFromName(projectModel.getObject()).ifPresent(slugSuggestionModel::setObject);
+        if (getModel().isPresent().getObject()) {
+            deriveSlugFromName(getModelObject()).ifPresent(slugSuggestionModel::setObject);
 
-            if (isBlank(projectModel.getObject().getSlug())) {
+            if (isBlank(getModelObject().getSlug())) {
                 // Ok, so by just opening a project in the detail panel, a slug will be generated
                 // and since this typically happens in the request where the project was loaded
                 // from the DB, changing a field in the project will propagate back to the DB via
                 // Hibernate magic. It may actually not be a bad thing because it means that the
                 // slugs get populate over time just as part of regular usage.
-                Project project = projectModel.getObject();
+                Project project = getModelObject();
                 deriveSlugFromName(project).ifPresent(project::setSlug);
             }
         }
 
-        Form<Project> form = new Form<>("form", CompoundPropertyModel.of(aModel));
+        var form = new Form<>("form", CompoundPropertyModel.of(aModel));
         add(form);
 
-        TextField<String> projectSlugTextField = new TextField<>("slug");
+        var projectSlugTextField = new TextField<String>("slug");
         projectSlugTextField.setOutputMarkupId(true);
         projectSlugTextField.add(new ProjectWithSlugAlreadyExistsValidator());
         projectSlugTextField.add(new ProjectSlugIsValidValidator());
@@ -110,12 +109,12 @@ public class ProjectDetailPanel
                 _target -> slugChanged = true));
         form.add(projectSlugTextField);
 
-        TextField<String> projectNameTextField = new TextField<>("name");
+        var projectNameTextField = new TextField<String>("name");
         projectNameTextField.setOutputMarkupId(true);
         projectNameTextField.setRequired(true);
         projectNameTextField.add(new ProjectNameIsValidValidator());
         projectNameTextField.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
-            deriveSlugFromName(projectModel.getObject()).ifPresent(slugSuggestionModel::setObject);
+            deriveSlugFromName(getModelObject()).ifPresent(slugSuggestionModel::setObject);
             _target.add(projectSlugTextField);
         }));
         form.add(projectNameTextField);
@@ -129,11 +128,21 @@ public class ProjectDetailPanel
         form.add(new CheckBox("disableExport").setOutputMarkupPlaceholderTag(true));
 
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
+
+        footprintPanel = new FootprintPanel("footprint", getModel());
+        form.add(footprintPanel);
+    }
+
+    @Override
+    protected void onModelChanged()
+    {
+        super.onModelChanged();
+        footprintPanel.modelChanged();
     }
 
     private Optional<String> deriveSlugFromName(Project aProject)
     {
-        String slug = projectService.deriveSlugFromName(aProject.getName());
+        var slug = projectService.deriveSlugFromName(aProject.getName());
         slug = projectService.deriveUniqueSlug(slug);
         // Just a safe-guard in case we would generate an invalid slug which we would not want
         // to get written back to the database
@@ -153,10 +162,10 @@ public class ProjectDetailPanel
     {
         aTarget.add(getPage());
 
-        Project project = aForm.getModelObject();
+        var project = aForm.getModelObject();
 
         if (isBlank(project.getSlug())) {
-            String slugSuggestion = slugSuggestionModel.getObject();
+            var slugSuggestion = slugSuggestionModel.getObject();
             if (isBlank(slugSuggestion) || !isValidProjectSlug(slugSuggestion)) {
                 error("A valid URL slug must be specified.");
                 return;
@@ -164,7 +173,7 @@ public class ProjectDetailPanel
             project.setSlug(slugSuggestion);
         }
 
-        boolean isNewProject = isNull(project.getId());
+        var isNewProject = isNull(project.getId());
         if (isNewProject) {
             try {
                 var user = userRepository.getCurrentUser();
@@ -186,7 +195,7 @@ public class ProjectDetailPanel
 
         if (isNewProject || slugChanged) {
             // After saving a new project we want the URL to reflect the slug
-            PageParameters pageParameters = new PageParameters();
+            var pageParameters = new PageParameters();
             ProjectPageBase.setProjectPageParameter(pageParameters, project);
             setResponsePage(getPage().getClass(), pageParameters);
         }
@@ -200,7 +209,7 @@ public class ProjectDetailPanel
         @Override
         public void validate(IValidatable<String> aValidatable)
         {
-            String newSlug = aValidatable.getValue();
+            var newSlug = aValidatable.getValue();
             if (isNotBlank(newSlug) && !isValidProjectSlug(newSlug)) {
                 aValidatable.error(new ValidationError(
                         "Project URL slug can consist only of lower-case letters [a-z], "
@@ -217,7 +226,7 @@ public class ProjectDetailPanel
         @Override
         public void validate(IValidatable<String> aValidatable)
         {
-            String newName = aValidatable.getValue();
+            var newName = aValidatable.getValue();
             if (isNotBlank(newName) && !isValidProjectName(newName)) {
                 aValidatable.error(new ValidationError(
                         "Project name shouldn't contain characters such as /\\*?&!$+[^]"));
@@ -233,8 +242,8 @@ public class ProjectDetailPanel
         @Override
         public void validate(IValidatable<String> aValidatable)
         {
-            String newSlug = aValidatable.getValue();
-            String oldSlug = aValidatable.getModel().getObject();
+            var newSlug = aValidatable.getValue();
+            var oldSlug = aValidatable.getModel().getObject();
             if (!StringUtils.equals(newSlug, oldSlug) && isNotBlank(newSlug)
                     && projectService.existsProjectWithSlug(newSlug)) {
                 aValidatable.error(new ValidationError(

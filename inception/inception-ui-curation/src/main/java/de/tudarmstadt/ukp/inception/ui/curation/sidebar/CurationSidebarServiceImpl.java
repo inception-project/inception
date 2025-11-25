@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toSet;
 
 import java.io.IOException;
@@ -54,6 +55,7 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -174,12 +176,11 @@ public class CurationSidebarServiceImpl
         else {
             var setting = settings.get(0);
             var project = projectService.getProject(aProjectId);
-            List<User> users = new ArrayList<>();
+            var users = new ArrayList<User>();
             if (!setting.getSelectedUserNames().isEmpty()) {
-                users = setting.getSelectedUserNames().stream()
-                        .map(username -> userRegistry.get(username))
+                setting.getSelectedUserNames().stream().map(username -> userRegistry.get(username))
                         .filter(user -> projectService.hasAnyRole(user, project)) //
-                        .toList();
+                        .forEach(users::add);
             }
             state = new CurationSession(setting.getCurationUserName(), users);
         }
@@ -281,10 +282,11 @@ public class CurationSidebarServiceImpl
     {
         var curationUser = getSession(aSessionOwner, aProjectId).getCurationTarget();
         if (curationUser == null) {
-            return Optional.empty();
+            return empty();
         }
 
-        return Optional.of(documentService.readAnnotationCas(aDoc, curationUser));
+        return Optional
+                .of(documentService.readAnnotationCas(aDoc, AnnotationSet.forUser(curationUser)));
     }
 
     /**
@@ -307,7 +309,7 @@ public class CurationSidebarServiceImpl
         var doc = aState.getDocument();
         var annoDoc = documentService.createOrGetAnnotationDocument(doc, curator);
         documentService.writeAnnotationCas(aTargetCas, annoDoc, EXPLICIT_ANNOTATOR_USER_ACTION);
-        casStorageService.getCasTimestamp(doc, curator.getUsername())
+        casStorageService.getCasTimestamp(doc, AnnotationSet.forUser(curator.getUsername()))
                 .ifPresent(aState::setAnnotationDocumentTimestamp);
     }
 

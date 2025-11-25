@@ -36,6 +36,9 @@ public interface SearchService
     List<SearchResult> query(User aUser, Project aProject, String aQuery)
         throws IOException, ExecutionException;
 
+    Map<String, List<SearchResult>> query(SearchQueryRequest aRequest)
+        throws ExecutionException, IOException;
+
     /**
      * @param aUser
      *            the current user

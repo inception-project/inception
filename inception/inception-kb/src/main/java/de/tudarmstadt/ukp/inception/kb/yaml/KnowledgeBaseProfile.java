@@ -33,6 +33,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
@@ -78,6 +79,9 @@ public class KnowledgeBaseProfile
     @JsonProperty("default-dataset")
     private String defaultDataset;
 
+    @JsonProperty("base-prefix")
+    private String basePrefix = IriConstants.INCEPTION_NAMESPACE;
+
     public KnowledgeBaseProfile()
     {
     }
@@ -92,7 +96,8 @@ public class KnowledgeBaseProfile
             @JsonProperty("info") KnowledgeBaseInfo aInfo, //
             @JsonProperty("reification") Reification aReification, //
             @JsonProperty("default-language") String aDefaultLanguage, //
-            @JsonProperty("default-dataset") String aDefaultDataset)
+            @JsonProperty("default-dataset") String aDefaultDataset, //
+            @JsonProperty("base-prefix") String aBasePrefix)
     {
         name = aName;
         disabled = aDisabled;
@@ -102,13 +107,14 @@ public class KnowledgeBaseProfile
         rootConcepts = aRootConcepts;
         info = aInfo;
         defaultLanguage = aDefaultLanguage;
+        defaultDataset = aDefaultDataset;
 
         if (aReification != null) {
             reification = aReification;
         }
 
-        if (aDefaultDataset != null) {
-            defaultDataset = aDefaultDataset;
+        if (aBasePrefix != null) {
+            basePrefix = aBasePrefix;
         }
     }
 
@@ -236,6 +242,16 @@ public class KnowledgeBaseProfile
         defaultDataset = aDefaultDataset;
     }
 
+    public void setBasePrefix(String aBasePrefix)
+    {
+        basePrefix = aBasePrefix;
+    }
+
+    public String getBasePrefix()
+    {
+        return basePrefix;
+    }
+
     /**
      * Reads knowledge base profiles from a YAML file and stores them in a HashMap with the key that
      * is defined in the file and a corresponding {@link KnowledgeBaseProfile} object as value
@@ -277,14 +293,16 @@ public class KnowledgeBaseProfile
                 && Objects.equals(defaultLanguage, that.defaultLanguage) //
                 && Objects.equals(defaultDataset, that.defaultDataset) //
                 && Objects.equals(additionalMatchingProperties, that.additionalMatchingProperties) //
-                && Objects.equals(additionalLanguages, that.additionalLanguages);
+                && Objects.equals(additionalLanguages, that.additionalLanguages) //
+                && Objects.equals(basePrefix, that.basePrefix);
     }
 
     @Override
     public int hashCode()
     {
         return Objects.hash(name, disabled, type, access, mapping, rootConcepts, info, reification,
-                defaultLanguage, defaultDataset, additionalMatchingProperties, additionalLanguages);
+                defaultLanguage, defaultDataset, additionalMatchingProperties, additionalLanguages,
+                basePrefix);
     }
 
     @Override

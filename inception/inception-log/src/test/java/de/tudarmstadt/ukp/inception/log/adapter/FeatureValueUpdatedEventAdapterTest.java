@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonString;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
@@ -28,12 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Instant;
 import java.util.Date;
 
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
-import org.apache.uima.resource.metadata.FeatureDescription;
-import org.apache.uima.resource.metadata.TypeDescription;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.junit.jupiter.api.Test;
 
@@ -43,37 +37,37 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.log.exporter.ExportedLoggedEvent;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.model.LoggedEventEntity;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 public class FeatureValueUpdatedEventAdapterTest
 {
     @Test
     public void thatJsonRepresentationIsComplete() throws Exception
     {
-        TypeSystemDescription tsd = new TypeSystemDescription_impl();
-        TypeDescription typeDesc = tsd.addType("customType", "desc", TYPE_NAME_ANNOTATION);
-        FeatureDescription featDesc = typeDesc.addFeature("value", "desc", TYPE_NAME_STRING);
+        var tsd = new TypeSystemDescription_impl();
+        var typeDesc = tsd.addType("customType", "desc", TYPE_NAME_ANNOTATION);
+        var featDesc = typeDesc.addFeature("value", "desc", TYPE_NAME_STRING);
 
-        Project project = new Project("test-project");
+        var project = new Project("test-project");
         project.setId(1l);
-        SourceDocument doc = new SourceDocument("document name", project, "format");
+        var doc = new SourceDocument("document name", project, "format");
         doc.setId(2l);
-        AnnotationLayer layer = new AnnotationLayer(typeDesc.getName(), typeDesc.getDescription(),
-                SPAN_TYPE, project, false, TOKENS, STACKING_ONLY);
-        AnnotationFeature feat = new AnnotationFeature(project, layer, featDesc.getName(),
+        var layer = new AnnotationLayer(typeDesc.getName(), typeDesc.getDescription(),
+                WebAnnoConst.SPAN_TYPE, project, false, TOKENS, STACKING_ONLY);
+        var feat = new AnnotationFeature(project, layer, featDesc.getName(),
                 featDesc.getDescription(), TYPE_NAME_STRING);
 
-        CAS cas = CasFactory.createCas(tsd);
-        AnnotationFS fs = cas.createAnnotation(cas.getTypeSystem().getType(typeDesc.getName()), 0,
-                10);
+        var cas = CasFactory.createCas(tsd);
+        var fs = cas.createAnnotation(cas.getTypeSystem().getType(typeDesc.getName()), 0, 10);
         cas.addFsToIndexes(fs);
 
-        FeatureValueUpdatedEvent event = new FeatureValueUpdatedEvent(getClass(), doc, "user",
-                layer, fs, feat, "new-value", "old-value");
+        var event = new FeatureValueUpdatedEvent(getClass(), doc, "user", layer, fs, feat,
+                "new-value", "old-value");
 
-        FeatureValueUpdatedEventAdapter sut = new FeatureValueUpdatedEventAdapter();
+        var sut = new FeatureValueUpdatedEventAdapter();
 
-        LoggedEvent loggedEvent = sut.toLoggedEvent(event);
+        var loggedEvent = (LoggedEventEntity) sut.toLoggedEvent(event);
         loggedEvent.setId(1l);
         loggedEvent.setCreated(Date.from(Instant.ofEpochMilli(1234567l)));
 

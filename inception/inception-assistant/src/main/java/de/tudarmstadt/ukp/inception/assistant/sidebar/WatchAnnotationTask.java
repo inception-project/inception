@@ -39,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
@@ -69,7 +70,7 @@ public class WatchAnnotationTask
     {
         super(aBuilder.withType(TYPE));
 
-        requireNonNull(getUser().orElse(null), "Session owner must be set");
+        requireNonNull(getSessionOwner().orElse(null), "Session owner must be set");
 
         document = aBuilder.document;
         dataOwner = aBuilder.dataOwner;
@@ -80,8 +81,8 @@ public class WatchAnnotationTask
     public MatchResult matches(Task aTask)
     {
         if (aTask instanceof WatchAnnotationTask) {
-            if (Objects.equals(getProject().getId(), aTask.getProject().getId())
-                    && Objects.equals(getUser().get(), aTask.getUser().orElse(null))) {
+            if (Objects.equals(getProject().getId(), aTask.getProject().getId()) && Objects
+                    .equals(getSessionOwner().get(), aTask.getSessionOwner().orElse(null))) {
                 return QUEUE_THIS;
             }
         }
@@ -93,8 +94,8 @@ public class WatchAnnotationTask
     public void execute() throws Exception
     {
         try (var session = CasStorageSession.open()) {
-            var cas = documentService.readAnnotationCas(document, dataOwner, AUTO_CAS_UPGRADE,
-                    SHARED_READ_ONLY_ACCESS);
+            var cas = documentService.readAnnotationCas(document, AnnotationSet.forUser(dataOwner),
+                    AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
 
             var ann = selectAnnotationByAddr(cas, annotation.getId());
             if (ann == null) {
@@ -120,7 +121,7 @@ public class WatchAnnotationTask
                     .build();
 
             var checkResult = assistantService.processInternalCallSync(
-                    getUser().get().getUsername(), getProject(), BooleanQuestion.class,
+                    getSessionOwner().get().getUsername(), getProject(), BooleanQuestion.class,
                     checkQuestion);
 
             if (checkResult.payload().answer()) {
@@ -141,8 +142,8 @@ public class WatchAnnotationTask
                             "```")) //
                     .build();
 
-            assistantService.processAgentMessage(getUser().get().getUsername(), getProject(),
-                    inquiryContext);
+            assistantService.processAgentMessage(getSessionOwner().get().getUsername(),
+                    getProject(), inquiryContext);
         }
     }
 

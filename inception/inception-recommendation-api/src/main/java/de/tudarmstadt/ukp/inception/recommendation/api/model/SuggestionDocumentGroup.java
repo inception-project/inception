@@ -41,7 +41,7 @@ public class SuggestionDocumentGroup<T extends AnnotationSuggestion>
     extends AbstractCollection<SuggestionGroup<T>>
 {
     private Collection<SuggestionGroup<T>> groups;
-    private String documentName;
+    private long documentId;
 
     /**
      * Use {@ink #groupByType(List)} or {@link #groupsOfType(Class, List)} instead to ensure that
@@ -105,14 +105,14 @@ public class SuggestionDocumentGroup<T extends AnnotationSuggestion>
         boolean empty = isEmpty();
 
         if (!empty) {
-            Validate.isTrue(documentName.equals(aGroup.getDocumentName()),
+            Validate.isTrue(documentId == aGroup.getDocumentId(),
                     "All suggestions in a group must come from the same document: expected [%s] but got [%s]",
-                    documentName, aGroup.getDocumentName());
+                    documentId, aGroup.getDocumentId());
         }
 
         // Cache information that must be consistent in the group when the first item is added
         if (empty) {
-            documentName = aGroup.getDocumentName();
+            documentId = aGroup.getDocumentId();
         }
 
         return groups.add(aGroup);
@@ -130,9 +130,9 @@ public class SuggestionDocumentGroup<T extends AnnotationSuggestion>
         return groups.size();
     }
 
-    public String getDocumentName()
+    public long getDocumentId()
     {
-        return documentName;
+        return documentId;
     }
 
     @Override

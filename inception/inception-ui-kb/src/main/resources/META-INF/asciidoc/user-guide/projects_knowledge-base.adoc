@@ -74,6 +74,11 @@ NOTE: **Changing the URL of a remote KB currently only takes affect after {produ
       take effect until you restart. It is usually easier to delete the remote KB configuration and create it from scratch
       with the new URL.
 
+=== General settings
+
+* **Base prefix:** A base IRI that is used as a prefix when creating new concepts.
+  Also, when users search for concepts, the system will try to construct a full IRI by prepending this base IRI to the search term and perform an exact IRI match.
+  This is useful for knowledge bases such as Wikidata where concepts are usually identified by short suffixes (e.g. "Q42") rather than full IRIs.
 
 === Query settings
 

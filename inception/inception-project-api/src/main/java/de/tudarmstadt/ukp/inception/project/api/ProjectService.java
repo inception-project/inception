@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
@@ -125,6 +126,8 @@ public interface ProjectService
 
     List<ProjectUserPermissions> listProjectUserPermissions(Project aProject);
 
+    ProjectUserPermissions getProjectUserPermissions(Project aProject, User aUser);
+
     /**
      * Get list of permissions a user have in a given project
      *
@@ -182,7 +185,7 @@ public interface ProjectService
      *            the project.
      * @return the users.
      */
-    List<User> listProjectUsersWithPermissions(Project aProject);
+    List<User> listUsersWithAnyRoleInProject(Project aProject);
 
     /**
      * List of users with the a given {@link PermissionLevel}
@@ -193,7 +196,7 @@ public interface ProjectService
      *            The {@link PermissionLevel}
      * @return the users.
      */
-    List<User> listProjectUsersWithPermissions(Project aProject, PermissionLevel aPermissionLevel);
+    List<User> listUsersWithRoleInProject(Project aProject, PermissionLevel aPermissionLevel);
 
     /**
      * Removes all permissions for the given user to the given project.
@@ -233,6 +236,9 @@ public interface ProjectService
      *            the user.
      */
     List<Project> listProjectsWithUserHavingAnyRole(User aUser);
+
+    List<Project> listProjectsWithState(String aSessionOwner, Set<PermissionLevel> aAllowedRoles,
+            Set<ProjectState> aStates, Date aFromDate, Date aToDate);
 
     // --------------------------------------------------------------------------------------------
     // Methods related to Projects
@@ -548,4 +554,18 @@ public interface ProjectService
     String deriveUniqueSlug(String aSlug);
 
     Realm getRealm(String aRealmId);
+
+    Realm getRealm(Project aProject);
+
+    Optional<User> getProjectBoundUser(Project aProject, String aUsername);
+
+    User getOrCreateProjectBoundUser(Project aProject, String aUsername);
+
+    List<User> listProjectBoundUsers(Project aProject);
+
+    void deleteProjectBoundUser(Project aProject, User aUser);
+
+    User createProjectBoundUser(Project aProject, String aUiName);
+
+    void updateProjectStateUpdatedDirectly(long aId, Date aStateUpdate);
 }

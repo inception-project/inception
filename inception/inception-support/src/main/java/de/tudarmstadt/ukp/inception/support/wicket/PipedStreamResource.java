@@ -29,10 +29,12 @@ import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.wicket.ThreadContext;
 import org.apache.wicket.util.resource.AbstractResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 
 public class PipedStreamResource
     extends AbstractResourceStream
@@ -47,11 +49,28 @@ public class PipedStreamResource
     private PipedInputStream is;
     private OutputStream os;
     private List<Filter> filters;
+    private MediaType contentType;
 
     public PipedStreamResource(DataSupplier aSupplier, Filter... aFilters)
     {
+        this(aSupplier, null, aFilters);
+    }
+
+    public PipedStreamResource(DataSupplier aSupplier, MediaType aContentType, Filter... aFilters)
+    {
         supplier = aSupplier;
         filters = asList(aFilters);
+        contentType = aContentType;
+    }
+
+    @Override
+    public String getContentType()
+    {
+        if (contentType == null) {
+            return null;
+        }
+
+        return contentType.toString();
     }
 
     @Override
@@ -69,7 +88,13 @@ public class PipedStreamResource
             throw new ResourceStreamNotFoundException(e);
         }
 
+        var wicketApp = ThreadContext.getApplication();
+        var requestCycle = ThreadContext.getRequestCycle();
+        var session = ThreadContext.getSession();
         var supplierThread = new Thread(() -> {
+            ThreadContext.setApplication(wicketApp);
+            ThreadContext.setRequestCycle(requestCycle);
+            ThreadContext.setSession(session);
             try {
                 supplier.write(os);
             }
@@ -77,6 +102,7 @@ public class PipedStreamResource
                 LOG.error("Error producing resource", e);
             }
             finally {
+                ThreadContext.detach();
                 if (os != null) {
                     try {
                         os.close();

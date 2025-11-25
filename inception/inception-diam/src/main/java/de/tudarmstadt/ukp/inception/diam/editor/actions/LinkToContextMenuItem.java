@@ -27,8 +27,8 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemContext;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemExtension;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;

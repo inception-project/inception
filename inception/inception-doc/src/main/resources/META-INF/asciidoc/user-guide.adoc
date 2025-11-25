@@ -164,8 +164,6 @@ include::{include-dir}projects_recommendation_conceptlinker.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_external.adoc[leveloffset=+2]
 
-// include::{include-dir}projects_recommendation_lappsgrid.adoc[leveloffset=+2]
-
 include::{include-dir}projects_recommendation_weblicht.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_elg.adoc[leveloffset=+2]
@@ -188,6 +186,10 @@ include::{include-dir}users.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}explorer.adoc[leveloffset=+1]
+
+<<<
+
 include::{include-dir}external-search.adoc[leveloffset=+1]
 
 include::{include-dir}external-search-page.adoc[leveloffset=+2]
@@ -206,6 +208,10 @@ include::{include-dir}external-search-repos-pmc.adoc[leveloffset=+3]
 
 <<<
 
+include::{include-dir}bulk-processing.adoc[leveloffset=+1]
+
+<<<
+
 include::{include-dir}constraints.adoc[leveloffset=+1]
 
 <<<
@@ -219,10 +225,6 @@ include::{include-dir}guidelines.adoc[leveloffset=+1]
 <<<
 
 include::{include-dir}pdf-editor.adoc[leveloffset=+1]
-
-<<<
-
-include::{include-dir}pdf-editor-legacy.adoc[leveloffset=+1]
 
 <<<
 
@@ -290,8 +292,6 @@ include::{include-dir}formats-imscwb.adoc[leveloffset=+2]
 include::{include-dir}formats-nif.adoc[leveloffset=+2]
 
 include::{include-dir}formats-pdf.adoc[leveloffset=+2]
-
-// include::{include-dir}formats-pdf-legacy.adoc[leveloffset=+2]
 
 include::{include-dir}formats-perseus.adoc[leveloffset=+2]
 

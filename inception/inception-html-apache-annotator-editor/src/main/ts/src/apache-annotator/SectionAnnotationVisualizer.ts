@@ -130,16 +130,23 @@ export class SectionAnnotationVisualizer {
 
         const sectionLeavingViewport = sectionRect.bottom - spacerRect.height < rootTop
         // console.log(`Leaving viewport = ${sectionLeavingViewport}`)
+
+        panel.style.margin = '0px'
+        panel.style.padding = '0px'
+        // panel.style.width = `${spacerRect.width}px`
+
         if (sectionLeavingViewport) {
           const hiddenUnderHigherLevelPanel = lastSectionPanelBottom && (sectionRect.bottom + rootTop - spacerRect.height) < lastSectionPanelBottom
           if (hiddenUnderHigherLevelPanel) {
             // If there is already a higher-level panel stacked then we snap the panel back to its
             // spacer immediately
+            panel.setAttribute('data-iaa-state', 'leaving-stacking')
             panel.style.position = 'fixed'
             panel.style.top = `${spacerRect.top}px`
           }
           else {
             // Otherwise, we move the panel along with the bottom of the section
+            panel.setAttribute('data-iaa-state', 'leaving')
             panel.style.position = 'fixed'
             panel.style.top = `${sectionRect.bottom - spacerRect.height}px`
           }
@@ -150,6 +157,7 @@ export class SectionAnnotationVisualizer {
         if (shouldKeepPanelVisibleAtTop) {
           // Keep the panel at the top of the viewport if the spacer is above the viewport
           // and the section is still visible
+          panel.setAttribute('data-iaa-state', 'sticking-top')
           panel.style.position = 'fixed'
           panel.style.top = `${lastSectionPanelBottom}px`
           lastSectionPanelBottom += spacerRect.height
@@ -157,6 +165,7 @@ export class SectionAnnotationVisualizer {
         }
 
         // Otherwise, keep the panel at the same position as the spacer
+        panel.setAttribute('data-iaa-state', 'tracking-spacer')
         panel.style.position = 'absolute'
         panel.style.top = `${spacerRect.top + scrollY}px`
       }
@@ -310,6 +319,9 @@ export class SectionAnnotationVisualizer {
       e.classList.add('iaa-focussed')
     }
     e.textContent = ann.label || `[${ann.layer.name}]` || "No label"
+    if (ann.score && !ann.hideScore) {
+      e.textContent += ` [${ann.score.toFixed(2)}]`
+    }
     e.style.color = bgToFgColor(ann.color || '#000000')
     e.style.backgroundColor = `${ann.color}`
     e.addEventListener('click', event => this.selectAnnotation(event))

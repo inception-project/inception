@@ -17,36 +17,54 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolUtils;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+
+@JsonTypeName(MCallResponse.TYPE_CALL_RESPONSE)
 public record MCallResponse<T>(UUID id, String role, String actor, boolean internal,
-        boolean ephemeral, MPerformanceMetrics performance, List<MReference> references, T payload)
+        boolean ephemeral, MPerformanceMetrics performance, List<MReference> references,
+        String toolName, UUID context, Map<String, Object> arguments, T payload)
     implements MChatMessage
 {
 
-    static final String TYPE_TEXT_MESSAGE = "callResponse";
+    static final String TYPE_CALL_RESPONSE = "callResponse";
 
     private MCallResponse(Builder<T> aBuilder)
     {
         this(aBuilder.id, aBuilder.role, aBuilder.actor, aBuilder.internal, aBuilder.ephemeral,
                 aBuilder.performance, aBuilder.references.values().stream().toList(),
-                aBuilder.payload);
+                aBuilder.toolName, aBuilder.context, aBuilder.arguments, aBuilder.payload);
     }
 
     @JsonProperty(MMessage.TYPE_FIELD)
     public String getType()
     {
-        return TYPE_TEXT_MESSAGE;
+        return TYPE_CALL_RESPONSE;
     }
 
     public static <T> Builder<T> builder(Class<T> aType)
     {
         return new Builder<>();
+    }
+
+    @Override
+    public String textRepresentation()
+    {
+        try {
+            return JSONUtil.toJsonString(payload);
+        }
+        catch (IOException e) {
+            return "ERROR";
+        }
     }
 
     public static final class Builder<T>
@@ -57,8 +75,11 @@ public record MCallResponse<T>(UUID id, String role, String actor, boolean inter
         private boolean internal = false;
         private boolean ephemeral = false;
         private MPerformanceMetrics performance;
-        private Map<String, MReference> references = new LinkedHashMap<>();
+        private final Map<String, MReference> references = new LinkedHashMap<>();
+        private final Map<String, Object> arguments = new LinkedHashMap<>();
+        private String toolName;
         private T payload;
+        private UUID context;
 
         private Builder()
         {
@@ -106,6 +127,12 @@ public record MCallResponse<T>(UUID id, String role, String actor, boolean inter
             return this;
         }
 
+        public Builder<T> withContext(UUID aContext)
+        {
+            context = aContext;
+            return this;
+        }
+
         public Builder<T> withReferences(MReference... aReferences)
         {
             if (aReferences != null) {
@@ -126,6 +153,24 @@ public record MCallResponse<T>(UUID id, String role, String actor, boolean inter
             return this;
         }
 
+        public Builder<T> withToolCall(MToolCall aToolCall)
+        {
+            arguments.clear();
+
+            if (aToolCall == null) {
+                toolName = null;
+                return this;
+            }
+
+            toolName = ToolUtils.getFunctionName(aToolCall.method());
+            for (var arg : aToolCall.arguments().entrySet()) {
+                arguments.put(arg.getKey(),
+                        arg.getValue() != null ? arg.getValue().toString() : null);
+            }
+
+            return this;
+        }
+
         public MCallResponse<T> build()
         {
             if (id == null) {
@@ -135,5 +180,4 @@ public record MCallResponse<T>(UUID id, String role, String actor, boolean inter
             return new MCallResponse<>(this);
         }
     }
-
 }

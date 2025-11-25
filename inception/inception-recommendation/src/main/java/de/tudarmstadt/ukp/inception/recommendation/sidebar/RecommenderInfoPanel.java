@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.KEY_RECOMMENDER_GENERAL_SETTINGS;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.REC_SIDEBAR;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getDocumentTitle;
 import static java.util.stream.Collectors.groupingBy;
 
 import java.io.IOException;
@@ -52,7 +52,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
@@ -269,13 +268,11 @@ public class RecommenderInfoPanel
 
         var pref = recommendationService.getPreferences(sessionOwner, state.getProject());
 
-        // TODO #176 use the document Id once it it available in the CAS
-        String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(cas)
-                .orElse(getDocumentTitle(cas));
+        var sourceDocumentId = CasMetadataUtils.getSourceDocumentId(cas).orElseThrow();
 
         // Extract all predictions for the current document / recommender
         var suggestionGroups = predictions
-                .getPredictionsByRecommenderAndDocument(aRecommender, sourceDocumentName).stream() //
+                .getSuggestionsByRecommenderAndDocument(aRecommender, sourceDocumentId).stream() //
                 .filter(f -> f instanceof SpanSuggestion) //
                 .map(f -> (SpanSuggestion) f) //
                 .filter(s -> s.isVisible() && s.getScore() >= pref.getScoreThreshold()) //
@@ -300,8 +297,8 @@ public class RecommenderInfoPanel
                 // Upsert an annotation based on the suggestion
                 // int address =
                 recommendationService.acceptSuggestion(sessionOwner.getUsername(),
-                        state.getDocument(), state.getUser().getUsername(), cas, suggestion,
-                        LearningRecordChangeLocation.REC_SIDEBAR);
+                        state.getDocument(), state.getUser().getUsername(), cas, predictions,
+                        suggestion, REC_SIDEBAR);
 
                 // // Log the action to the learning record
                 // learningRecordService.logRecord(document, aState.getUser().getUsername(),

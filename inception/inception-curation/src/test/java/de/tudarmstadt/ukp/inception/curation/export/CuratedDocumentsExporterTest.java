@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
@@ -118,7 +119,7 @@ public class CuratedDocumentsExporterTest
         var zipFile = new ZipFile(
                 "src/test/resources/exports/Export+Test+-+Curated+annotation+project_3_6_1.zip");
         var sourceDocCaptor = ArgumentCaptor.forClass(SourceDocument.class);
-        var usernameCaptor = ArgumentCaptor.forClass(String.class);
+        var setCaptor = ArgumentCaptor.forClass(AnnotationSet.class);
 
         // Import the project again
         var exProject = ProjectExportServiceImpl.loadExportedProject(zipFile);
@@ -129,13 +130,13 @@ public class CuratedDocumentsExporterTest
         sut.importData(importRequest, targetProject, exProject, zipFile);
 
         verify(documentService, atLeastOnce()).importCas(sourceDocCaptor.capture(),
-                usernameCaptor.capture(), any());
+                setCaptor.capture(), any());
 
         var importedCases = new ArrayList<Pair<SourceDocument, String>>();
         var docs = sourceDocCaptor.getAllValues();
-        var users = usernameCaptor.getAllValues();
+        var users = setCaptor.getAllValues();
         for (var i = 0; i < docs.size(); i++) {
-            importedCases.add(Pair.of(docs.get(i), users.get(i)));
+            importedCases.add(Pair.of(docs.get(i), users.get(i).id()));
         }
         var imported = importedCases;
 

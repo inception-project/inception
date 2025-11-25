@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<head>
+  <wicket:head>
+    <style>
+      .pivot-table {
+        border-collapse: separate;
+        border-spacing: 0px;
+      }
+      
+      .value-set-horizontal .value-set {
+          flex-direction: row;
+      }
+
+      .compound-key-horizontal .compound-key {
+          flex-direction: row;
+      }
+      
+      .pivot-table thead { 
+        background: var(--bs-body-bg); 
+        position: sticky; 
+        top: 0; 
+        z-index: 3;
+      }
+
+      .pivot-table th, .pivot-table td {
+        border-width: 1px;
+        border-color: inherit;
+      }
+
+      .pivot-table tr:hover td {
+        border-top-color: var(--bs-secondary) !important;
+        border-bottom-color: var(--bs-secondary) !important;
+      }
+
+      .pivot-table tr:hover td:first-of-type {
+        border-left-color: var(--bs-secondary) !important;
+      }
+
+      .pivot-table tr:hover td:last-of-type {
+        border-right-color: var(--bs-secondary) !important;
+      }
+
+      .pivot-table td.headers, .pivot-table th {
+        white-space: nowrap;
+        background-color: var(--bs-table-bg) !important;
+        padding: 0px !important;
+      }
+
+      .pivot-table .headers > a:link, .pivot-table th > a:link {
+        background-color: unset !important;
+      }
+            
+      .pivot-table tr.headers th.wicket_orderNone > a::after {
+        content: "-";
+        padding-left: 3px;
+        padding-right: 3px;
+        border-left: 1px solid white;
+        border-top: 1px solid white;
+        border-bottom: 1px solid white;
+        border-radius: 5px 0px 0px 5px;
+      }
+
+      .pivot-table th > a, pivot-table td.headers > a {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: white !important;
+      }
+
+      .pivot-table th > a span {
+        flex-grow: 1;
+      }
+
+      .pivot-table th > a::after {
+        padding-left: 3px;
+        padding-right: 3px;
+        border-left: 1px solid white;
+        border-top: 1px solid white;
+        border-bottom: 1px solid white;
+        border-radius: 5px 0px 0px 5px;
+      }
+
+      .pivot-table .headers .list-group-item {
+        color: unset;
+        background-color: unset;
+        padding: 2px 16px;
+      }
+
+      .pivot-table td.headers .list-group-item:first-child {
+        padding-top: 4px;
+      }
+
+      .pivot-table td.headers .list-group-item:last-child {
+        padding-bottom: 4px;
+      }
+
+      .pivot-table tr > td:first-child, .pivot-table tr > th:first-child {
+        z-index: 2;
+        position: sticky;
+        left: 0;
+      }
+      
+      .pivot-table tr > td:not(:first-child) {
+        text-align: center;
+      }
+    </style>
+  </wicket:head>
+</head>
+<body>
+  <wicket:panel>
+    <div class="d-flex flex-row justify-content-between align-items-center p-2">
+      <div wicket:id="navigatorLabel"/>
+      <ul wicket:id="navigator" class="m-0"/>
+      <div wicket:id="filterPanel">
+        <div wicket:id="cell-orientation-controls" class="btn-group" role="group">
+          <input wicket:id="valueSetOrientation" type="checkbox" class="btn-check"/>
+          <label class="btn btn-outline-primary" wicket:for="valueSetOrientation">Horiz. cell values</label>
+          
+          <input wicket:id="compoundKeyOrientation" type="checkbox" class="btn-check"/>
+          <label class="btn btn-outline-primary" wicket:for="compoundKeyOrientation">Horiz. cell keys</label>
+        </div>
+        <div class="btn-group" role="group">
+          <input wicket:id="showRowsWithSameValuesInAllColumns" type="checkbox" class="btn-check"/>
+          <label class="btn btn-outline-primary" wicket:for="showRowsWithSameValuesInAllColumns" title="Show rows where all values are the same"><i class="fa-solid fa-equals"></i></label>
+          <input wicket:id="showRowsWithAnyDifferentValue" type="checkbox" class="btn-check"/>
+          <label class="btn btn-outline-primary" wicket:for="showRowsWithAnyDifferentValue" title="Show rows where not all values are the same"><i class="fa-solid fa-not-equal"></i></label>
+        </div>
+        <div class="btn-group" role="group">
+          <input wicket:id="showRowsWithEmptyValues" type="checkbox" class="btn-check"/>
+          <label class="btn btn-outline-primary" wicket:for="showRowsWithEmptyValues" title="Show rows with empty values"><i class="fa-solid fa-circle"></i></label>
+          <input wicket:id="showRowsWithoutEmptyValues" type="checkbox" class="btn-check"/>
+          <label class="btn btn-outline-primary" wicket:for="showRowsWithoutEmptyValues" title="Show rows without empty values"><i class="fa-solid fa-circle-dot"></i></label>
+        </div>
+        <a wicket:id="download" class="btn btn-primary">
+          <i class="fa-solid fa-download me-2"></i>CSV
+        </a>
+      </div>
+    </div>
+    <div class="scrolling flex-content">
+      <table wicket:id="table" class="pivot-table table table-striped-columns w-auto"/>
+    </div>
+  </wicket:panel>
+</body>
+</html>

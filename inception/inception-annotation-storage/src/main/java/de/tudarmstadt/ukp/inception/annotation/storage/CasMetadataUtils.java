@@ -67,12 +67,9 @@ public class CasMetadataUtils
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it
         // and wait for the next regular CAS upgrade before we include this data.
         if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
-            LOG.info(
-                    "Annotation file of user [{}] for document [{}]({}) in project [{}]({}) "
-                            + "does not support CASMetadata yet - not adding",
-                    aUsername, aDocument.getName(), aDocument.getId(),
-                    aDocument.getProject().getName(), aDocument.getProject().getId());
-            return;
+            throw new IllegalStateException("Annotation file of user [" + aUsername
+                    + "] for document " + aDocument + " in project " + aDocument.getProject() + " "
+                    + "does not support CASMetadata yet");
         }
 
         var casMetadataType = getType(aCas, CASMetadata.class);
@@ -111,8 +108,8 @@ public class CasMetadataUtils
 
         if (cmd.getType().getFeatureByBaseName(CASMetadata._FeatName_lastChangedOnDisk) != null) {
             setFeature(cmd, CASMetadata._FeatName_lastChangedOnDisk, aTimeStamp);
-            LOG.trace("CAS [{}] for [{}]@[{}]({}): set lastChangedOnDisk: {}", aCas.hashCode(),
-                    aUsername, aDocument.getName(), aDocument.getId(), aTimeStamp);
+            LOG.trace("CAS [{}] for [{}]@{}: set lastChangedOnDisk: {}", aCas.hashCode(), aUsername,
+                    aDocument, aTimeStamp);
         }
 
         aCas.addFsToIndexes(cmd);

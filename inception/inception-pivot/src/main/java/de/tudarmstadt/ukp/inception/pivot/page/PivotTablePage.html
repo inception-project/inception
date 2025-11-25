@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:extend>
+    <div class="flex-content flex-h-container overflow-hidden">
+      <div class="flex-sidebar flex-v-container p-2">
+        <form wicket:id="sidebar" class="flex-content flex-v-container">
+          <div class="flex-content scrolling pe-2">
+            <div class="mb-2">
+              <i class="fa-solid fa-database me-2"></i>Sources
+            </div>
+            <div class="form-row form-floating" wicket:enclosure="layer">
+              <select wicket:id="layer" class="form-select" />
+              <label wicket:for="layer">
+                <wicket:label key="layer" />
+              </label>
+            </div>
+            <div class="form-row form-floating" wicket:enclosure="extractor">
+              <select wicket:id="extractor" class="form-select" />
+              <label wicket:for="extractor">
+                <wicket:label key="extractor" />
+              </label>
+            </div>
+            <div class="mb-3 d-flex flex-row">
+              <button wicket:id="addRow" class="btn btn-primary me-2 flex-fill">
+                <i class="fa-solid fa-arrows-up-down me-2"></i>Row
+              </button>
+              <button wicket:id="addCol" class="btn btn-primary flex-fill">
+                <i class="fa-solid fa-arrows-left-right me-2"></i>Column
+              </button>
+              <button wicket:id="addCell" class="btn btn-primary ms-2 flex-fill">
+                <i class="fa-solid fa-square me-2"></i>Cell
+              </button>
+            </div>
+            <div class="mb-2 mt-2">
+              <i class="fa-solid fa-table me-2"></i>Structure
+            </div>
+            <div class="form-row form-floating mb-3" wicket:enclosure="aggregator">
+              <select wicket:id="aggregator" class="form-select" />
+              <label wicket:for="aggregator">
+                <wicket:label key="aggregator" />
+              </label>
+            </div>
+            <div class="card overflow-hidden mb-2">
+              <div class="card-header" style="font-size: 85%">Rows</div>
+              <ol class="card-body list-group list-group-flush p-0">
+                <li wicket:id="noRowExtractors" class="list-group-item text-muted">
+                  <small>Use the <span class="border rounded p-1"><i class="fa-solid fa-arrows-up-down"/> row</span> button to add one or more row extractors</small>
+                </li>
+                <li wicket:id="rowExtractors" class="list-group-item">
+                  <span wicket:id="name" />
+                  <a wicket:id="remove" class="float-end">
+                   <i class="fa-solid fa-xmark"></i>
+                  </a>
+                </li>
+              </ol>
+            </div>
+            <div class="position-relative">
+              <button wicket:id="switchRowsCols" class="btn btn-sm btn-outline-secondary float-end py-0 position-absolute bg-body" style="z-index: 1; right: -0.25rem; top: -1rem;">
+                <i class="fa-solid fa-arrows-rotate me-2"></i>Flip
+              </button>
+              <div class="card overflow-hidden mb-2">
+                <div class="card-header" style="font-size: 85%">Columns</div>
+                <ol class="card-body list-group list-group-flush p-0">
+                  <li wicket:id="noColExtractors" class="list-group-item text-muted">
+                    <small>Use the <span class="border rounded p-1"><i class="fa-solid fa-arrows-left-right"/> column</span> button to add one or more column extractors</small>
+                  </li>
+                  <li wicket:id="colExtractors" class="list-group-item">
+                    <span wicket:id="name" />
+                    <a wicket:id="remove" class="float-end">
+                      <i class="fa-solid fa-xmark"></i>
+                    </a>
+                  </li>
+                </ol>
+              </div>
+            </div>
+            <div wicket:id="cellExtractorsContainer" class="position-relative">
+              <button wicket:id="switchColsCells" class="btn btn-sm btn-outline-secondary float-end py-0 position-absolute bg-body" style="z-index: 1; right: -0.25rem; top: -1rem;">
+                <i class="fa-solid fa-arrows-rotate me-2"></i>Flip
+              </button>
+              <div class="card overflow-hidden mb-2">
+                <div class="card-header" style="font-size: 85%">Cells</div>
+                <ol class="card-body list-group list-group-flush p-0">
+                  <li wicket:id="noCellExtractors" class="list-group-item text-muted">
+                    <small>Use the <span class="border rounded p-1"><i class="fa-solid fa-square"/> cell</span> button to add one or more cell extractors</small>
+                  </li>
+                  <li wicket:id="cellExtractors" class="list-group-item">
+                    <span wicket:id="name" />
+                    <a wicket:id="remove" class="float-end">
+                      <i class="fa-solid fa-xmark"></i>
+                    </a>
+                  </li>
+                </ol>
+              </div>
+            </div>
+            <div class="mb-2">
+              <i class="fa-solid fa-filter me-2"></i>Filters
+            </div>
+            <div class="flex-fill d-flex flex-column">
+              <div class="d-flex flex-column flex-grow-1 form-row form-floating overflow-hidden rounded border">
+                <select wicket:id="annotators" class="form-select flex-grow-1 border-0" style="min-height: 10em;"/>
+                <label wicket:for="annotators"><wicket:label key="annotators"/></label>
+              </div>
+              <div class="d-flex flex-column flex-grow-1 form-row form-floating overflow-hidden rounded border">
+                <select wicket:id="documents" class="form-select flex-grow-1 border-0" style="min-height: 10em;"/>
+                <label wicket:for="documents"><wicket:label key="documents"/></label>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex flex-column mt-2">
+            <button wicket:id="run" class="btn btn-primary">
+              <i class="fa-solid fa-person-running me-2"></i>Run
+            </button>
+          </div>
+        </form>
+      </div>
+      <div wicket:id="pivotTable" class="flex-content flex-v-container overflow-hidden"/>
+     </div>
+  </wicket:extend>
+</body>
+
+</html>

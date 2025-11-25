@@ -32,6 +32,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import jakarta.persistence.Temporal;
@@ -88,8 +89,20 @@ public class ExportedProject
     @Temporal(TemporalType.TIMESTAMP)
     private Date updated;
 
+    @JsonProperty("state")
+    private ProjectState state;
+
+    @JsonProperty("state_updated")
+    private Date stateUpdated;
+
     @JsonProperty("anonymous_curation")
     private boolean anonymousCuration;
+
+    @JsonProperty("application_name")
+    private String applicationName;
+
+    @JsonProperty("application_version")
+    private String applicationVersion;
 
     private Map<String, Object> properties = new HashMap<>();
 
@@ -241,6 +254,46 @@ public class ExportedProject
     public void setAnonymousCuration(boolean aAnonymousCuration)
     {
         anonymousCuration = aAnonymousCuration;
+    }
+
+    public void setApplicationName(String aApplicationName)
+    {
+        applicationName = aApplicationName;
+    }
+
+    public String getApplicationName()
+    {
+        return applicationName;
+    }
+
+    public void setApplicationVersion(String aApplicationVersion)
+    {
+        applicationVersion = aApplicationVersion;
+    }
+
+    public String getApplicationVersion()
+    {
+        return applicationVersion;
+    }
+
+    public ProjectState getState()
+    {
+        return state;
+    }
+
+    public void setState(ProjectState aState)
+    {
+        state = aState;
+    }
+
+    public Date getStateUpdated()
+    {
+        return stateUpdated;
+    }
+
+    public void setStateUpdated(Date aStateUpdated)
+    {
+        stateUpdated = aStateUpdated;
     }
 
     @JsonAnySetter

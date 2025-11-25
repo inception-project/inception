@@ -1,0 +1,1 @@
+classpath*:de/tudarmstadt/ukp/inception/annotation/type/inception-static.xml

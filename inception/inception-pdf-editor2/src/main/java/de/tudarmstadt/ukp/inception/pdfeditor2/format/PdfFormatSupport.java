@@ -17,14 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor2.format;
 
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
+import java.util.ArrayList;
+
+import org.apache.uima.analysis_engine.AnalysisEngineDescription;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.dkpro.core.api.pdf.type.PdfChunk;
+import org.dkpro.core.api.pdf.type.PdfPage;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor2.config.PdfAnnotationEditor2SupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.pdfeditor2.config.PdfFormatProperties;
 
@@ -67,6 +76,12 @@ public class PdfFormatSupport
     }
 
     @Override
+    public boolean isWritable()
+    {
+        return true;
+    }
+
+    @Override
     public CollectionReaderDescription getReaderDescription(Project aProject,
             TypeSystemDescription aTSD)
         throws ResourceInitializationException
@@ -83,5 +98,30 @@ public class PdfFormatSupport
                 VisualPdfReader.PARAM_SPACING_TOLERANCE, properties.getSpacingTolerance(), //
                 VisualPdfReader.PARAM_SUPPRESS_DUPLICATE_OVERLAPPING_TEXT,
                 properties.isSuppressDuplicateOverlappingText());
+    }
+
+    @Override
+    public AnalysisEngineDescription getWriterDescription(Project aProject,
+            TypeSystemDescription aTSD, CAS aCAS)
+        throws ResourceInitializationException
+    {
+        return createEngineDescription( //
+                VisualPdfWriter.class, aTSD, //
+                VisualPdfWriter.PARAM_PROJECT_ID, aProject.getId());
+    }
+
+    @Override
+    public void prepareAnnotationCas(CAS aCas, SourceDocument aDocument)
+    {
+        removePdfLayout(aCas);
+    }
+
+    public static int removePdfLayout(CAS aCas)
+    {
+        var toDelete = new ArrayList<FeatureStructure>();
+        aCas.select(PdfChunk.class).forEach(toDelete::add);
+        aCas.select(PdfPage.class).forEach(toDelete::add);
+        toDelete.forEach(aCas::removeFsFromIndexes);
+        return toDelete.size();
     }
 }

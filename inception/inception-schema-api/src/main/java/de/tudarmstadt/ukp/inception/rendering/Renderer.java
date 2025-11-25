@@ -20,13 +20,19 @@ package de.tudarmstadt.ukp.inception.rendering;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType.ERROR;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
+import static java.lang.String.join;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
@@ -50,6 +56,19 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
  */
 public interface Renderer
 {
+    final String REL_EXTENSION_ID = "rel";
+    final VID VID_BEFORE = VID.builder() //
+            .withExtensionId(REL_EXTENSION_ID) //
+            .withAnnotationId(0) //
+            .withExtensionPayload("before") //
+            .build();
+
+    final VID VID_AFTER = VID.builder() //
+            .withExtensionId(REL_EXTENSION_ID) //
+            .withAnnotationId(1) //
+            .withExtensionPayload("after") //
+            .build();
+
     TypeAdapter getTypeAdapter();
 
     /**
@@ -82,15 +101,22 @@ public interface Renderer
     default Map<String, String> renderLabelFeatureValues(TypeAdapter aAdapter, FeatureStructure aFs,
             List<AnnotationFeature> aFeatures)
     {
-        var fsr = getFeatureSupportRegistry();
+        return renderLabelFeatureValues(aAdapter, aFs, aFeatures, emptyMap()).get();
+    }
+
+    default Optional<Map<String, String>> renderLabelFeatureValues(TypeAdapter aAdapter,
+            FeatureStructure aFs, List<AnnotationFeature> aFeatures,
+            Map<Long, Set<String>> aHiddenFeatureValues)
+    {
         var features = new LinkedHashMap<String, String>();
 
+        var hiddenFeatures = new HashSet<AnnotationFeature>();
         for (var feature : aFeatures) {
             if (!feature.isEnabled() || !feature.isVisible()) {
                 continue;
             }
 
-            var maybeFeatureSupport = fsr.findExtension(feature);
+            var maybeFeatureSupport = aAdapter.getFeatureSupport(feature.getName());
             if (maybeFeatureSupport.isEmpty()) {
                 continue;
             }
@@ -100,12 +126,35 @@ public interface Renderer
                 continue;
             }
 
-            var label = defaultString(featureSupport.renderFeatureValue(feature, aFs));
+            var values = featureSupport.renderFeatureValues(feature, aFs);
 
-            features.put(feature.getName(), label);
+            var hiddenValues = aHiddenFeatureValues.getOrDefault(feature.getId(), emptySet());
+            var shownValues = new ArrayList<String>();
+
+            for (var value : values) {
+                var v = defaultString(value);
+                if (hiddenValues.contains(v)) {
+                    hiddenFeatures.add(feature);
+                }
+                else {
+                    shownValues.add(v);
+                }
+            }
+
+            if (shownValues.isEmpty() && hiddenValues.contains("")) {
+                hiddenFeatures.add(feature);
+                continue;
+            }
+
+            features.put(feature.getName(), join(", ", shownValues));
         }
 
-        return features;
+        if (!hiddenFeatures.isEmpty() && features.isEmpty()) {
+            // If all features are empty or hidden, then we do not return any features
+            return Optional.empty();
+        }
+
+        return Optional.of(features);
     }
 
     default void renderRequiredFeatureErrors(RenderRequest aRequest,
@@ -133,18 +182,18 @@ public interface Renderer
 
     default List<VLazyDetailGroup> lookupLazyDetails(CAS aCas, VID aVid)
     {
-        var fsr = getFeatureSupportRegistry();
-
         var aFs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
 
         var details = new ArrayList<VLazyDetailGroup>();
-        generateLazyDetailsForFeaturesIncludedInHover(fsr, details, aFs);
+        generateLazyDetailsForFeaturesIncludedInHover(details, aFs);
         return details;
     }
 
-    default void generateLazyDetailsForFeaturesIncludedInHover(FeatureSupportRegistry fsr,
-            List<VLazyDetailGroup> details, AnnotationFS aFs)
+    default void generateLazyDetailsForFeaturesIncludedInHover(List<VLazyDetailGroup> aDetails,
+            AnnotationFS aFs)
     {
+        var fsr = getFeatureSupportRegistry();
+
         for (var feature : getTypeAdapter().listFeatures()) {
             if (!feature.isEnabled() || !feature.isIncludeInHover()
                     || feature.getMultiValueMode() != NONE) {
@@ -156,7 +205,7 @@ public interface Renderer
             if (isNotBlank(label)) {
                 var group = new VLazyDetailGroup();
                 group.addDetail(new VLazyDetail(feature.getName(), label));
-                details.add(group);
+                aDetails.add(group);
             }
         }
     }

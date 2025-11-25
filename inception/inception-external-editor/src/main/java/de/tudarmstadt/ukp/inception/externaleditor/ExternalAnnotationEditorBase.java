@@ -33,13 +33,13 @@ import java.util.Optional;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.event.IEvent;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
-import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -172,17 +172,22 @@ public abstract class ExternalAnnotationEditorBase
         super.onRemove();
     }
 
-    @OnEvent
-    public void onScrollTo(ScrollToEvent aEvent)
+    @Override
+    public void onEvent(IEvent<?> aEvent)
     {
-        var command = new ScrollToCommand(aEvent.getOffset(), aEvent.getPosition());
-        command.setPingRange(aEvent.getPingRange());
-        QueuedEditorCommandsMetaDataKey.get().add(command);
+        // We cannot use a @OnEvent annotation for this because it will not handle
+        // events for non-visible components - and the editor may not be visible in the
+        // hierarchy a this time
+        if (aEvent.getPayload() instanceof ScrollToEvent event) {
+            var command = new ScrollToCommand(event.getOffset(), event.getPosition());
+            command.setPingRange(event.getPingRange());
+            QueuedEditorCommandsMetaDataKey.get().add(command);
 
-        // Do not call our requestRender because we do not want to unnecessarily add the
-        // LoadAnnotationsCommand
-        if (aEvent.getRequestHandler() != null) {
-            super.requestRender(aEvent.getRequestHandler());
+            // Do not call our requestRender because we do not want to unnecessarily add the
+            // LoadAnnotationsCommand
+            if (event.getRequestHandler() != null) {
+                super.requestRender(event.getRequestHandler());
+            }
         }
     }
 

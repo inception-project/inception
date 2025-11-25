@@ -51,6 +51,7 @@ spring:
 
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.xml
+    analytics-enabled: false
 
 server:
   # Use the forward-header handling of the embedded Tomcat - usually works best

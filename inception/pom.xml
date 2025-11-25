@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
-    <version>37.0-SNAPSHOT</version>
+    <version>39.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>inception-app</artifactId>
@@ -43,14 +43,7 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-dependencies</artifactId>
-        <version>37.0-SNAPSHOT</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-bom</artifactId>
-        <version>37.0-SNAPSHOT</version>
+        <version>39.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -187,8 +180,9 @@
     <module>inception-security</module>
     <module>inception-telemetry</module>
     <module>inception-ui-core</module>
+    <module>inception-undo</module>
     <module>inception-log</module>
-    <module>inception-log-ui</module>
+    <module>inception-log-api</module>
     <module>inception-scheduling</module>
     <module>inception-js-api</module>
     <module>inception-annotation-storage</module>
@@ -200,10 +194,11 @@
     <module>inception-api-editor</module>
     <module>inception-api-render</module>
     <module>inception-schema-api</module>
+    <module>inception-schema-analyzer</module>
     <module>inception-export</module>
     <module>inception-export-api</module>
     <module>inception-diag</module>
-    <module>inception-tutorial</module>
+    <module>inception-diag-api</module>
     <module>inception-testing</module>
     <module>inception-agreement</module>
     <module>inception-constraints</module>
@@ -239,6 +234,7 @@
     <module>inception-io-xmi</module>
     <module>inception-io-xml</module>
     <!-- Curation -->
+    <module>inception-curation-api</module>
     <module>inception-curation</module>
     <module>inception-curation-legacy</module>
     <module>inception-ui-curation</module>
@@ -256,7 +252,6 @@
     <module>inception-ui-external-search</module>
     <!-- Knowledge base -->
     <module>inception-kb</module>
-    <module>inception-kb-fact-linking</module>
     <module>inception-kb-lucene-sail</module>
     <module>inception-ui-kb</module>
     <module>inception-concept-linking</module>
@@ -269,12 +264,23 @@
     <module>inception-external-editor</module>
     <module>inception-html-apache-annotator-editor</module>
     <module>inception-html-recogito-editor</module>
-    <module>inception-pdf-editor</module>
     <module>inception-pdf-editor2</module>
     <module>inception-review-editor</module>
     <!-- Schema extensions -->
+    <module>inception-layer-behavior</module>
+    <module>inception-layer-chain</module>
+    <module>inception-layer-chain-api</module>
     <module>inception-layer-docmetadata</module>
+    <module>inception-layer-docmetadata-api</module>
+    <module>inception-layer-relation</module>
+    <module>inception-layer-relation-api</module>
+    <module>inception-layer-span</module>
+    <module>inception-layer-span-api</module>
+    <module>inception-feature-bool</module>
+    <module>inception-feature-link</module>
     <module>inception-feature-lookup</module>
+    <module>inception-feature-number</module>
+    <module>inception-feature-string</module>
     <module>inception-image</module>
     <!-- Recommender system -->
     <module>inception-recommendation-api</module>
@@ -287,7 +293,6 @@
     <module>inception-imls-elg</module>
     <module>inception-imls-hf</module>
     <module>inception-imls-external</module>
-    <module>inception-imls-lapps</module>
     <module>inception-imls-ollama</module>
     <module>inception-imls-llm-support</module>
     <module>inception-imls-weblicht</module>
@@ -298,6 +303,9 @@
     <module>inception-workload-dynamic</module>
     <module>inception-workload-matrix</module>
     <module>inception-workload-ui</module>
+    <!-- Analytics and reporting -->
+    <module>inception-pivot</module>
+    <module>inception-pivot-api</module>
     <!-- Application -->
     <module>inception-app-webapp</module>
     <!-- Examples -->
@@ -313,6 +321,38 @@
   </modules>
 
   <build>
+    <resources>
+      <!-- 
+        - We keep HTML and properies files etc. next to the Java code in src/main/java
+        - and not in src/main/resources - so we copy all resources from src/main/java
+        - as well
+        -->
+      <resource>
+        <filtering>false</filtering>
+        <directory>src/main/resources</directory>
+        <excludes>
+          <exclude>META-INF/version.properties</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <filtering>true</filtering>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>META-INF/version.properties</include>
+        </includes>
+      </resource>
+      <resource>
+        <filtering>false</filtering>
+        <directory>src/main/java</directory>
+        <includes>
+          <include>**</include>
+        </includes>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+    </resources>
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -633,42 +673,6 @@
 
   <profiles>
     <profile>
-      <id>wicket-module</id>
-      <activation>
-        <file>
-          <exists>marker-wicket-module</exists>
-        </file>
-      </activation>
-      <build>
-        <resources>
-          <resource>
-            <filtering>false</filtering>
-            <directory>src/main/resources</directory>
-            <excludes>
-              <exclude>META-INF/version.properties</exclude>
-            </excludes>
-          </resource>
-          <resource>
-            <filtering>true</filtering>
-            <directory>src/main/resources</directory>
-            <includes>
-              <include>META-INF/version.properties</include>
-            </includes>
-          </resource>
-          <resource>
-            <filtering>false</filtering>
-            <directory>src/main/java</directory>
-            <includes>
-              <include>**</include>
-            </includes>
-            <excludes>
-              <exclude>**/*.java</exclude>
-            </excludes>
-          </resource>
-        </resources>
-      </build>
-    </profile>
-    <profile>
       <id>m2e</id>
       <activation>
         <property>
@@ -808,10 +812,12 @@
               <typeSystemIncludes>
                 <include>src/main/resources/desc/type/**/*.xml</include>
                 <include>src/main/resources/de/tudarmstadt/ukp/clarin/webanno/**/type/**/*.xml</include>
+                <include>src/main/resources/de/tudarmstadt/ukp/inception/**/type/**/*.xml</include>
               </typeSystemIncludes>
               <typeSystemExcludes>
                 <exclude>src/main/resources/desc/type/**/*_customized.xml</exclude>
                 <exclude>src/main/resources/de/tudarmstadt/ukp/clarin/webanno/**/type/**/*_customized.xml</exclude>
+                <exclude>src/main/resources/de/tudarmstadt/ukp/inception/**/type/**/*_customized.xml</exclude>
               </typeSystemExcludes>
             </configuration>
             <executions>

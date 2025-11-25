@@ -18,12 +18,14 @@
 package de.tudarmstadt.ukp.inception.app;
 
 import org.apache.wicket.Page;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.WicketApplicationBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.ProjectsOverviewPage;
 import de.tudarmstadt.ukp.inception.ui.core.menubar.MenuBar;
 
+@ConditionalOnWebApplication
 @org.springframework.stereotype.Component("wicketApplication")
 public class WicketApplication
     extends WicketApplicationBase

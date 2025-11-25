@@ -39,6 +39,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -160,7 +161,7 @@ public class CurationSidebarBehavior
                 // currently see a good way to avoid this duplication. At least we only do it twice
                 // if an initial merge is required.
                 documentService.readAnnotationCas(state.getDocument(),
-                        state.getUser().getUsername(), FORCE_CAS_UPGRADE);
+                        AnnotationSet.forUser(state.getUser()), FORCE_CAS_UPGRADE);
                 var selectedUsers = curationSidebarService.getSelectedUsers(sessionOwner,
                         project.getId());
 

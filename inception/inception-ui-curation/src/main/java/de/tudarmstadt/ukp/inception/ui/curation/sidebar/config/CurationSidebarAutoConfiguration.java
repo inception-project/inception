@@ -25,6 +25,7 @@ import org.springframework.security.core.session.SessionRegistry;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
@@ -68,11 +69,12 @@ public class CurationSidebarAutoConfiguration
             ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserRepository,
             CurationSidebarService aCurationSidebarService,
             FeatureSupportRegistry aFeatureSupportRegistry,
-            LazyDetailsLookupService aDetailsLookupService)
+            LazyDetailsLookupService aDetailsLookupService,
+            DiffAdapterRegistry aDiffAdapterRegistry)
     {
         return new CurationEditorExtension(aAnnotationService, aDocumentService,
                 aApplicationEventPublisher, aUserRepository, aCurationSidebarService,
-                aFeatureSupportRegistry, aDetailsLookupService);
+                aFeatureSupportRegistry, aDetailsLookupService, aDiffAdapterRegistry);
     }
 
     @Bean("curationSidebar")
@@ -86,10 +88,11 @@ public class CurationSidebarAutoConfiguration
     @Bean
     public CurationSidebarRenderer curationSidebarRenderer(CurationSidebarService aCurationService,
             LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
-            UserDao aUserRepository, AnnotationSchemaService aAnnotationService)
+            UserDao aUserRepository, AnnotationSchemaService aAnnotationService,
+            DiffAdapterRegistry aDiffAdapterRegistry)
     {
         return new CurationSidebarRenderer(aCurationService, aLayerSupportRegistry,
-                aDocumentService, aUserRepository, aAnnotationService);
+                aDocumentService, aUserRepository, aAnnotationService, aDiffAdapterRegistry);
     }
 
     @Deprecated

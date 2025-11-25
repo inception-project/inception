@@ -281,7 +281,7 @@ public class BratSerializerImpl
                 while (tokenIterator.hasNext()) {
                     var token = tokenIterator.next();
                     if (prevToken.getEnd() == token.getBegin()) {
-                        extraSplits.add(token.getBegin());
+                        extraSplits.add(token.getBegin() - aVDoc.getWindowBegin());
                     }
                     prevToken = token;
                 }

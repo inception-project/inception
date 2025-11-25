@@ -521,7 +521,7 @@ public class LearningRecord
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE).append("id", id)
+        return new ToStringBuilder(this, ToStringStyle.JSON_STYLE).append("id", id)
                 .append("sourceDocument", sourceDocument).append("layer", layer)
                 .append("annotationFeature", annotationFeature).append("offsetBegin", offsetBegin)
                 .append("offsetEnd", offsetEnd).append("offsetBegin2", offsetBegin2)

@@ -46,7 +46,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableR
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 class MentionsSampleTest
 {
@@ -98,7 +98,7 @@ class MentionsSampleTest
                 .withFeature(NamedEntity._FeatName_value, "PER") //
                 .buildAndAddToIndexes();
 
-        var sut = new MentionsFromJsonExtractor();
+        var sut = new SpanJsonAnnotationTaskCodec();
         var examples = sut.generateExamples(engine, cas, 10);
 
         assertThat(examples).containsKeys(text);

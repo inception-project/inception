@@ -108,9 +108,9 @@ public class TextUtils
     {
         // NBSP is recognized by Firefox as a proper addressable character in
         // SVGText.getNumberOfChars()
-        char whiteplaceReplacementChar = NBSP; // NBSP
+        char whitespaceReplacementChar = NBSP; // NBSP
         if (aReplacementCharacter > 0) {
-            whiteplaceReplacementChar = aReplacementCharacter;
+            whitespaceReplacementChar = aReplacementCharacter;
         }
 
         for (int i = aStart; i < aLength; i++) {
@@ -169,7 +169,7 @@ public class TextUtils
             case '\u206D': // ACTIVATE ARABIC FORM SHAPING
             case '\u206E': // NATIONAL DIGIT SHAPES
             case '\u206F': // NOMINAL DIGIT SHAPES
-                aText[i] = whiteplaceReplacementChar;
+                aText[i] = whitespaceReplacementChar;
                 break;
             default:
                 // Nothing to do

@@ -17,16 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.search.index;
 
+import java.io.File;
+import java.io.IOException;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface PhysicalIndexFactory
 {
-    /**
-     * @return get the bean name.
-     */
     String getBeanName();
 
     String getDisplayName();
 
     PhysicalIndex getPhysicalIndex(Project aProject);
+
+    File getIndexDir(Project aProject);
+
+    long getIndexSize(Project aProject) throws IOException;
 }

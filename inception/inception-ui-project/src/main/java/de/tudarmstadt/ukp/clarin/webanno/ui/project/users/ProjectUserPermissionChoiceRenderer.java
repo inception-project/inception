@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.users;
 
-import static java.util.stream.Collectors.joining;
+import java.util.HashSet;
 
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions.RenderOptions;
 
 public class ProjectUserPermissionChoiceRenderer
     extends ChoiceRenderer<ProjectUserPermissions>
@@ -30,6 +30,7 @@ public class ProjectUserPermissionChoiceRenderer
     private static final long serialVersionUID = -5097198610598977245L;
 
     private boolean showRoles = false;
+    private boolean markProjectBoundUsers = false;
 
     public ProjectUserPermissionChoiceRenderer setShowRoles(boolean aShowRoles)
     {
@@ -42,39 +43,28 @@ public class ProjectUserPermissionChoiceRenderer
         return showRoles;
     }
 
+    public ProjectUserPermissionChoiceRenderer setMarkProjectBoundUsers(
+            boolean aMarkProjectBoundUsers)
+    {
+        markProjectBoundUsers = aMarkProjectBoundUsers;
+        return this;
+    }
+
+    public boolean isMarkProjectBoundUsers()
+    {
+        return markProjectBoundUsers;
+    }
+
     @Override
     public Object getDisplayValue(ProjectUserPermissions aPermissions)
     {
-        var username = aPermissions.getUsername();
-
-        var builder = new StringBuilder();
-
-        aPermissions.getUser().ifPresentOrElse( //
-                user -> {
-                    builder.append(user.getUiName());
-                    if (!aPermissions.getUsername().equals(user.getUiName())) {
-                        builder.append(" (");
-                        builder.append(aPermissions.getUsername());
-                        builder.append(")");
-                    }
-                }, //
-                () -> builder.append(username));
-
+        var options = new HashSet<RenderOptions>();
         if (showRoles) {
-            builder.append(" ");
-            builder.append(aPermissions.getRoles().stream() //
-                    .map(PermissionLevel::getName) //
-                    .collect(joining(", ", "[", "]")));
+            options.add(RenderOptions.SHOW_ROLES);
         }
-
-        aPermissions.getUser().ifPresentOrElse( //
-                user -> { //
-                    if (!user.isEnabled()) {
-                        builder.append(" (deactivated)");
-                    }
-                }, //
-                () -> builder.append(" (missing!)"));
-
-        return builder.toString();
+        if (markProjectBoundUsers) {
+            options.add(RenderOptions.MARK_PROJECT_BOUND_USERS);
+        }
+        return aPermissions.render(options.toArray(RenderOptions[]::new));
     }
 }

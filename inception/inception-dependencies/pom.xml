@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
-    <version>37.0-SNAPSHOT</version>
+    <version>39.0-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -85,7 +85,18 @@
       <dependency>
         <groupId>org.apache.ivy</groupId>
         <artifactId>ivy</artifactId>
-        <version>2.5.2</version>
+        <version>${ivy.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.piwik.java.tracking</groupId>
+        <artifactId>matomo-java-tracker-core</artifactId>
+        <version>${matomo-java-tracker-core-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.piwik.java.tracking</groupId>
+        <artifactId>matomo-java-tracker</artifactId>
+        <version>${matomo-java-tracker-core-version}</version>
       </dependency>
 
       <!-- JAXB DEPENDENCIES -->
@@ -99,22 +110,22 @@
       <dependency>
         <groupId>jakarta.xml.bind</groupId>
         <artifactId>jakarta.xml.bind-api</artifactId>
-        <version>4.0.2</version>
+        <version>${jakarta.xml.bind-api-version}</version>
       </dependency>
       <dependency>
         <groupId>javax.xml.bind</groupId>
         <artifactId>jaxb-api</artifactId>
-        <version>2.3.1</version>
+        <version>${jaxb-api-version}</version>
       </dependency>
       <dependency>
         <groupId>com.sun.xml.bind</groupId>
         <artifactId>jaxb-core</artifactId>
-        <version>2.3.0.1</version>
+        <version>${jaxb-core-version}</version>
       </dependency>
       <dependency>
         <groupId>com.sun.xml.bind</groupId>
         <artifactId>jaxb-impl</artifactId>
-        <version>2.3.9</version>
+        <version>${jaxb-impl-version}</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jaxb</groupId>
@@ -124,12 +135,12 @@
       <dependency>
         <groupId>javax.activation</groupId>
         <artifactId>javax.activation-api</artifactId>
-        <version>1.2.0</version>
+        <version>${javax.activation-api-version}</version>
       </dependency>
       <dependency>
         <groupId>jaxen</groupId>
         <artifactId>jaxen</artifactId>
-        <version>1.2.0</version>
+        <version>${javax.activation-api-version}</version>
         <exclusions>
           <exclusion>
             <artifactId>dom4j</artifactId>
@@ -200,23 +211,17 @@
       </dependency>
       <dependency>
         <groupId>org.assertj</groupId>
-        <artifactId>assertj-core</artifactId>
+        <artifactId>assertj-bom</artifactId>
         <version>${assertj.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>org.xmlunit</groupId>
-        <artifactId>xmlunit-core</artifactId>
+        <artifactId>xmlunit-bom</artifactId>
         <version>${xmlunit.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xmlunit</groupId>
-        <artifactId>xmlunit-assertj3</artifactId>
-        <version>${xmlunit.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xmlunit</groupId>
-        <artifactId>xmlunit-matchers</artifactId>
-        <version>${xmlunit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>no.nav.security</groupId>
@@ -235,9 +240,26 @@
         <artifactId>nimbus-jose-jwt</artifactId>
         <version>${nimbus-jose-jwt.version}</version>
       </dependency>
+
+      <!-- Awaitility -->
       <dependency>
         <groupId>org.awaitility</groupId>
         <artifactId>awaitility</artifactId>
+        <version>${awaitility.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility-groovy</artifactId>
+        <version>${awaitility.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility-kotlin</artifactId>
+        <version>${awaitility.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility-scala</artifactId>
         <version>${awaitility.version}</version>
       </dependency>
 
@@ -439,21 +461,9 @@
         <version>1.2.6</version>
       </dependency>
       <dependency>
-        <groupId>org.webjars.bower</groupId>
-        <artifactId>jquery.scrollTo</artifactId>
-        <version>2.1.2</version>
-        <exclusions>
-          <!-- Avoid having jquery twice, once via org.webjars and once via org.webjars.bower -->
-          <exclusion>
-            <groupId>org.webjars.bower</groupId>
-            <artifactId>jquery</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
         <groupId>org.sharegov</groupId>
         <artifactId>mjson</artifactId>
-        <version>1.4.1</version>
+        <version>1.4.2</version>
         <scope>provided</scope>
         <exclusions>
           <exclusion>
@@ -594,7 +604,7 @@
       <dependency>
         <groupId>org.dom4j</groupId>
         <artifactId>dom4j</artifactId>
-        <version>2.1.4</version>
+        <version>${dom4j.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.code.findbugs</groupId>
@@ -860,16 +870,6 @@
 
       <!-- Springdoc -->
       <dependency>
-        <groupId>org.springdoc</groupId>
-        <artifactId>springdoc-openapi-starter-common</artifactId>
-        <version>${springdoc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springdoc</groupId>
-        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-        <version>${springdoc.version}</version>
-      </dependency>
-      <dependency>
         <groupId>io.swagger.core.v3</groupId>
         <artifactId>swagger-annotations-jakarta</artifactId>
         <version>${swagger.version}</version>
@@ -878,6 +878,16 @@
         <groupId>io.swagger.core.v3</groupId>
         <artifactId>swagger-models-jakarta</artifactId>
         <version>${swagger.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-starter-common</artifactId>
+        <version>${springdoc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        <version>${springdoc.version}</version>
       </dependency>
 
       <!-- Tomcat -->
@@ -1423,31 +1433,6 @@
         <groupId>com.flipkart.zjsonpatch</groupId>
         <artifactId>zjsonpatch</artifactId>
         <version>${zjsonpatch.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.webjars.bowergithub.xbsoftware</groupId>
-        <artifactId>enjoyhint</artifactId>
-        <version>3.1.0</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.webjars.bowergithub.flesler</groupId>
-            <artifactId>jquery.scrollto</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.webjars.bowergithub.jquery</groupId>
-            <artifactId>jquery-dist</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.webjars.bowergithub.ericdrowell</groupId>
-            <artifactId>kineticjs</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars.npm</groupId>
-        <artifactId>kinetic</artifactId>
-        <version>5.2.0</version>
       </dependency>
 
       <dependency>

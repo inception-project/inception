@@ -17,27 +17,26 @@
 [[sect_formats_pdf]]
 = PDF Format
 
-This allows the import of PDF files.
-A PDF file can be viewed and annotated in its original form.
-It is also possible to switch to another editor like the "brat" editor to annotate directly on the text extracted from the PDF.
-The annotations made on PDF files can be exported again in other formats (e.g. UIMA CAS XMI or UIMA CAS JSON), but not as PDF files.
+You can import PDF files into {product-name} for annotation.
+PDF files can be viewed and annotated in their original form, or you can switch e.g. to the **brat editor** or **HTML editor** to annotate the text extracted from the PDF.
 
-When importing PDF files, {product-name} will automatically detect token and sentence boundaries.
-It is presently not possible override these boundaries externally. 
+When importing PDF files, {product-name} will automatically detect token and sentence boundaries. Currently, it is not possible to override these boundaries externally.
 
-NOTE: When importing a PDF file, you may get a message that the file cannot be imported because it
-     is _empty_.
-     You may be confused because you can see contents in the PDF if you open the file in your
-     PDF viewer of choice.
-     It may be that your PDF contains only an image of the text, but not actual text data.
-     For {product-name} to be able to work with a PDF, it must be _searchable_ - i.e. the text must not only be included as an image but as actual Unicode character information.
-     You may try using an OCR tool to process your PDF into a searchable PDF before importing it.
+[NOTE]
+====
+When importing a PDF file, you may get a message that the file cannot be imported because it is _empty_.
+You may be confused because you can see contents in the PDF if you open the file in your PDF viewer of choice.
+It may be that your PDF contains only an image of the text, but not actual text data.
+For {product-name} to be able to work with a PDF, it must be _searchable_—i.e., the text must not only be included as an image but as actual Unicode character information.
+You may try using an OCR tool to process your PDF into a searchable PDF before importing it.
+====
 
-NOTE: There is a feature of PDF files called "annotations" which you may create in tools like
-      Acrobat Reader.
-      These means annotations like notes, comments or highlights that are embedded in the PDF file itself.
-      You may be able to see those in the annotation editor, but do not confuse them with {product-name} annotations.
-      There is currently no way for {product-name} to interact with these "PDF annotations".
+[NOTE]
+====
+PDF files support a feature called **"annotations"** (such as notes, comments, or highlights) that you may create in tools like Acrobat Reader. These are embedded in the PDF file itself. You may be able to see those in the annotation editor, but do not confuse them with {product-name} annotations. There is currently no way for {product-name} to interact with these **"annotations."**
+====
+
+The following table summarizes the supported PDF formats for import and export:
 
 [cols="2,1,1,3"]
 |====
@@ -45,9 +44,26 @@ NOTE: There is a feature of PDF files called "annotations" which you may create 
 
 | PDF (`pdf2`)
 | yes
+| yes
+| None on import, span layers as PDF annotations on export.
+
+| 🧪 PDF (with embedded JSON CAS) (`pdf2JsonCas`)
 | no
-| None
+| yes
+| Span layers as PDF annotations on export, full annotations in embedded CAS.
+
+| 🧪 PDF (with embedded XMI CAS) (`pdf2XmiCas`)
+| no
+| yes
+| Span layers as PDF annotations on export, full annotations in embedded CAS.
 |====
+
+[CAUTION]
+====
+PDF export formats with embedded CAS are experimental.
+To use this functionality, you need to enable it first by adding `format.pdf-json-cas.enabled=true` and/or `format.pdf-xmi-cas.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+====
+
 
 .PDF import settings
 [cols="4*", options="header"]

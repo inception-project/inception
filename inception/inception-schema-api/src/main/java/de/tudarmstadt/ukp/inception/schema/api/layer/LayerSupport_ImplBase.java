@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toJsonString;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -36,7 +37,7 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 public abstract class LayerSupport_ImplBase<A extends TypeAdapter, T>
     implements LayerSupport<A, T>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private LayerSupportRegistry layerSupportRegistry;
 
@@ -85,7 +86,7 @@ public abstract class LayerSupport_ImplBase<A extends TypeAdapter, T>
             traits = fromJsonString((Class<T>) createTraits().getClass(), aLayer.getTraits());
         }
         catch (IOException e) {
-            log.error("Unable to read traits", e);
+            LOG.error("Unable to read traits", e);
         }
 
         if (traits == null) {
@@ -102,7 +103,7 @@ public abstract class LayerSupport_ImplBase<A extends TypeAdapter, T>
             aLayer.setTraits(toJsonString(aTraits));
         }
         catch (IOException e) {
-            log.error("Unable to write traits", e);
+            LOG.error("Unable to write traits", e);
         }
     }
 }

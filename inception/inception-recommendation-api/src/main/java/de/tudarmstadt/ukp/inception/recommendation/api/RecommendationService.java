@@ -125,6 +125,8 @@ public interface RecommendationService
 
     Predictions getPredictions(User aSessionOwner, Project aProject);
 
+    Predictions getPredictions(String aSessionOwner, Project aProject);
+
     Predictions getIncomingPredictions(User aSessionOwner, Project aProject);
 
     void putIncomingPredictions(User aSessionOwner, Project aProject, Predictions aPredictions);
@@ -190,8 +192,9 @@ public interface RecommendationService
      *             if there was an annotation-level problem
      */
     AnnotationFS correctSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, SpanSuggestion aOriginalSuggestion,
-            SpanSuggestion aCorrectedSuggestion, LearningRecordChangeLocation aLocation)
+            String aDataOwner, CAS aCas, Predictions aPredictions,
+            SpanSuggestion aOriginalSuggestion, SpanSuggestion aCorrectedSuggestion,
+            LearningRecordChangeLocation aLocation)
         throws AnnotationException;
 
     /**
@@ -216,7 +219,7 @@ public interface RecommendationService
      *             if there was an annotation-level problem
      */
     AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
-            String aDataOwner, CAS aCas, AnnotationSuggestion aSuggestion,
+            String aDataOwner, CAS aCas, Predictions aPredictions, AnnotationSuggestion aSuggestion,
             LearningRecordChangeLocation aLocation)
         throws AnnotationException;
 

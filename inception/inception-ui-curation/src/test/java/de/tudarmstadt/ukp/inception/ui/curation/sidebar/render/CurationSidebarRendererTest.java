@@ -45,8 +45,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -59,10 +62,14 @@ import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureTraits;
 import de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistryImpl;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupportImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.curation.RelationDiffSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupportImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffSupport;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
@@ -108,7 +115,8 @@ class CurationSidebarRendererTest
     private AnnotationLayer relationLayer;
     private AnnotationFeature spanLayerLinkFeature;
     private SpanAdapter spanLayerAdapter;
-    private RelationAdapter relationLayerAdapter;
+    private DiffSupportRegistryImpl diffSupportRegistry;
+    private DiffAdapterRegistry diffAdapterRegistry;
 
     @BeforeEach
     void setup() throws Exception
@@ -124,14 +132,21 @@ class CurationSidebarRendererTest
         layerBehaviorRegistry.init();
 
         layerSupportRegistry = new LayerSupportRegistryImpl(asList( //
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new SpanLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService), //
-                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new RelationLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService)));
         layerSupportRegistry.init();
 
+        diffSupportRegistry = new DiffSupportRegistryImpl(asList( //
+                new SpanDiffSupport(), //
+                new RelationDiffSupport(schemaService)));
+        diffSupportRegistry.init();
+
+        diffAdapterRegistry = new DiffAdapterRegistryImpl(schemaService, diffSupportRegistry);
+
         sut = new CurationSidebarRenderer(curationService, layerSupportRegistry, documentService,
-                userRepository, schemaService);
+                userRepository, schemaService, diffAdapterRegistry);
 
         curator = User.builder() //
                 .withUsername(CURATION_USER) //
@@ -579,7 +594,6 @@ class CurationSidebarRendererTest
     private RenderRequest renderRequest(String aText) throws Exception
     {
         spanLayerAdapter = (SpanAdapter) schemaService.getAdapter(spanLayer);
-        relationLayerAdapter = (RelationAdapter) schemaService.getAdapter(relationLayer);
 
         var tsd = new TypeSystemDescription_impl();
         for (var layer : asList(spanLayer, relationLayer)) {
@@ -598,8 +612,10 @@ class CurationSidebarRendererTest
         vdoc.setText(aText);
         vdoc.setWindow(0, aText.length());
 
-        when(documentService.readAnnotationCas(doc, anno1.getUsername())).thenReturn(anno1Cas);
-        when(documentService.readAnnotationCas(doc, anno2.getUsername())).thenReturn(anno2Cas);
+        when(documentService.readAnnotationCas(doc, AnnotationSet.forUser(anno1.getUsername())))
+                .thenReturn(anno1Cas);
+        when(documentService.readAnnotationCas(doc, AnnotationSet.forUser(anno2.getUsername())))
+                .thenReturn(anno2Cas);
 
         return RenderRequest.builder() //
                 .withDocument(doc, curator) //

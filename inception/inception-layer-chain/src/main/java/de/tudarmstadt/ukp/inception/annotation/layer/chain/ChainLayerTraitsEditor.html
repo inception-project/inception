@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:extend>
+  <div class="form-row form-floating" wicket:enclosure="renderMode">
+    <select wicket:id="renderMode" class="form-select" wicket:message="placeholder:renderMode"/>
+    <label wicket:for="renderMode">
+      <wicket:label key="renderMode" />
+    </label>
+  </div>
+  <div class="form-row form-floating" wicket:enclosure="validationMode">
+    <select wicket:id="validationMode" class="form-select" wicket:message="placeholder:validationMode"/>
+    <label wicket:for="validationMode">
+      <wicket:label key="validationMode" />
+    </label>
+  </div>
+  <div class="form-row form-floating" wicket:enclosure="anchoringMode">
+    <select wicket:id="anchoringMode" class="form-select" wicket:message="placeholder:anchoringMode"/>
+    <label wicket:for="anchoringMode">
+      <wicket:label key="anchoringMode" />
+    </label>
+  </div>
+  <div class="form-row form-floating" wicket:enclosure="overlapMode">
+    <select wicket:id="overlapMode" class="form-select" wicket:message="placeholder:overlapMode"/>
+    <label wicket:for="overlapMode">
+      <wicket:label key="overlapMode" />
+    </label>
+  </div>
+  <div class="form-row" wicket:enclosure="crossSentence">
+    <div class="form-check form-switch">
+      <input wicket:id="crossSentence" class="form-check-input" type="checkbox"> 
+      <label wicket:for="crossSentence" class="form-check-label">
+        <wicket:label key="allowCrossSentence"/>
+      </label>
+    </div>
+  </div>
+  <div class="form-row" wicket:enclosure="linkedListBehavior">
+    <div class="form-check form-switch">
+      <input wicket:id="linkedListBehavior" class="form-check-input" type="checkbox"/>
+      <label wicket:for="linkedListBehavior" class="form-check-label">
+        <wicket:label key="linkedListBehavior"/>
+      </label>
+    </div>
+  </div>
+</wicket:extend>
+</html>

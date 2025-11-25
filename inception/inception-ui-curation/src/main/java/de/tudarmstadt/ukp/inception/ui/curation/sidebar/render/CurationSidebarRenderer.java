@@ -18,9 +18,8 @@
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
-import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationRenderer.REL_EXTENSION_ID;
+import static de.tudarmstadt.ukp.inception.rendering.Renderer.REL_EXTENSION_ID;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
@@ -42,10 +41,12 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanPosition;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
@@ -82,16 +83,19 @@ public class CurationSidebarRenderer
     private final DocumentService documentService;
     private final UserDao userRepository;
     private final AnnotationSchemaService annotationService;
+    private final DiffAdapterRegistry diffAdapterRegistry;
 
     public CurationSidebarRenderer(CurationSidebarService aCurationService,
             LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
-            UserDao aUserRepository, AnnotationSchemaService aAnnotationService)
+            UserDao aUserRepository, AnnotationSchemaService aAnnotationService,
+            DiffAdapterRegistry aDiffAdapterRegistry)
     {
         curationService = aCurationService;
         layerSupportRegistry = aLayerSupportRegistry;
         documentService = aDocumentService;
         userRepository = aUserRepository;
         annotationService = aAnnotationService;
+        diffAdapterRegistry = aDiffAdapterRegistry;
     }
 
     @Override
@@ -162,11 +166,10 @@ public class CurationSidebarRenderer
         var generatedCurationVids = new HashSet<VID>();
         var showAll = curationService.isShowAll(sessionOwner, project.getId());
         var showScore = curationService.isShowScore(sessionOwner, project.getId());
-        var curationTarget = aRequest.getAnnotationUser().getUsername();
         for (var cfgSet : diff.getConfigurationSets()) {
             LOG.trace("Processing set: {}", cfgSet);
 
-            if (!showAll && cfgSet.getCasGroupIds().contains(curationTarget)) {
+            if (!showAll && cfgSet.getCasGroupIds().contains(targetUser)) {
                 // Hide configuration sets where the curator has already curated (likely)
                 continue;
             }
@@ -317,7 +320,7 @@ public class CurationSidebarRenderer
         for (var user : selectedUsers) {
             try {
                 var userCas = documentService.readAnnotationCas(aRequest.getSourceDocument(),
-                        user.getUsername());
+                        AnnotationSet.forUser(user));
                 casses.put(user.getUsername(), userCas);
             }
             catch (IOException e) {
@@ -326,7 +329,7 @@ public class CurationSidebarRenderer
             }
         }
 
-        var adapters = getDiffAdapters(annotationService, aRequest.getVisibleLayers());
+        var adapters = diffAdapterRegistry.getDiffAdapters(aRequest.getVisibleLayers());
         return doDiff(adapters, casses, aRequest.getWindowBeginOffset(),
                 aRequest.getWindowEndOffset());
     }

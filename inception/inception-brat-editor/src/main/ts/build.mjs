@@ -39,6 +39,11 @@ const defaults = {
   target: 'es2019',
   loader: { '.ts': 'ts' },
   logLevel: 'info',
+  // Ensure Svelte runtime is shared across all components: Whenever you see an 
+  // "import from 'svelte'"", resolve it once and reuse that same resolution everywhere.
+  alias: {
+    'svelte': 'svelte'
+  },
   plugins: [
     sassPlugin(),
     esbuildSvelte({

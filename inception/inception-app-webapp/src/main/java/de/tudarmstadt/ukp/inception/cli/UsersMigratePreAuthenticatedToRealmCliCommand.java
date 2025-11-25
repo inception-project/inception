@@ -19,13 +19,11 @@ package de.tudarmstadt.ukp.inception.cli;
 
 import static com.nimbusds.oauth2.sdk.util.CollectionUtils.contains;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PREAUTH;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getPropApplicationHome;
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
 import static org.apache.commons.lang3.ArrayUtils.contains;
 
-import java.lang.invoke.MethodHandles;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
@@ -35,6 +33,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import picocli.CommandLine.Command;
@@ -52,7 +51,7 @@ import picocli.CommandLine.Option;
 public class UsersMigratePreAuthenticatedToRealmCliCommand
     implements Callable<Integer>
 {
-    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private final static Logger LOG = LoggerFactory.getLogger("inception.cli");
 
     private final UserDao userService;
     private final PasswordEncoder passwordEncoder;
@@ -84,7 +83,7 @@ public class UsersMigratePreAuthenticatedToRealmCliCommand
         }
 
         LOG.info("Looking for users with no password to migrate them to the [] realm...",
-                REALM_PREAUTH);
+                Realm.REALM_PREAUTH);
         if (dryRun) {
             LOG.info("Operating in dry-run mode - no changes applied to the database.");
         }
@@ -113,10 +112,10 @@ public class UsersMigratePreAuthenticatedToRealmCliCommand
             if (user.getPassword() == null
                     || passwordEncoder.matches(EMPTY_PASSWORD, user.getPassword())) {
                 if (!dryRun) {
-                    user.setRealm(REALM_PREAUTH);
+                    user.setRealm(Realm.REALM_PREAUTH);
                     userService.update(user);
                 }
-                LOG.info("User {} updated: moved to realm [{}]", user, REALM_PREAUTH);
+                LOG.info("User {} updated: moved to realm [{}]", user, Realm.REALM_PREAUTH);
                 updated++;
             }
         }

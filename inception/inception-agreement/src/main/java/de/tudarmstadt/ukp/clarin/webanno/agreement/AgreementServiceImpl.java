@@ -20,11 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Tag.USED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -50,16 +48,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.core.JsonFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
@@ -68,11 +62,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
@@ -88,13 +83,16 @@ public class AgreementServiceImpl
     private final DocumentService documentService;
     private final AnnotationSchemaService schemaService;
     private final UserDao userService;
+    private final DiffAdapterRegistry diffAdapterRegistry;
 
     public AgreementServiceImpl(DocumentService aDocumentService,
-            AnnotationSchemaService aSchemaService, UserDao aUserService)
+            AnnotationSchemaService aSchemaService, UserDao aUserService,
+            DiffAdapterRegistry aDiffAdapterRegistry)
     {
         documentService = aDocumentService;
         schemaService = aSchemaService;
         userService = aUserService;
+        diffAdapterRegistry = aDiffAdapterRegistry;
     }
 
     @Override
@@ -127,115 +125,9 @@ public class AgreementServiceImpl
     }
 
     @Override
-    public void exportSpanLayerDataAsJson(OutputStream aOut, AnnotationLayer aLayer,
-            AnnotationFeature aFeature, DefaultAgreementTraits aTraits,
-            List<SourceDocument> aDocuments, List<String> aAnnotators)
-        throws IOException
-    {
-        if (!SpanLayerSupport.TYPE.equals(aLayer.getType())) {
-            throw new IllegalArgumentException(
-                    "Only span layers supported but got [" + aLayer.getType() + "]");
-        }
-
-        var project = aLayer.getProject();
-
-        var allAnnDocs = getDocumentsToEvaluate(project, aDocuments, aTraits);
-        var docs = allAnnDocs.keySet().stream() //
-                .sorted(comparing(SourceDocument::getName)) //
-                .toList();
-
-        var featureName = aFeature != null ? aFeature.getName() : null;
-
-        var jsonFactory = new JsonFactory();
-
-        var adapter = schemaService.getAdapter(aLayer);
-
-        try (var jg = jsonFactory.createGenerator(CloseShieldOutputStream.wrap(aOut))) {
-            jg.useDefaultPrettyPrinter();
-
-            jg.writeStartArray();
-
-            for (var doc : docs) {
-                var annDocs = allAnnDocs.get(doc);
-                try (var session = CasStorageSession.openNested()) {
-                    var casMap = loadCasForAnnotators(doc, annDocs, aAnnotators);
-
-                    for (var mapEntry : casMap.entrySet()) {
-                        var dataOwner = mapEntry.getKey();
-                        var cas = mapEntry.getValue();
-
-                        for (var ann : cas.<Annotation> select(adapter.getAnnotationTypeName())) {
-                            jg.writeStartObject();
-                            jg.writeStringField("doc", doc.getName());
-                            jg.writeStringField("user", dataOwner);
-                            jg.writeNumberField("begin", ann.getBegin());
-                            jg.writeNumberField("end", ann.getEnd());
-                            jg.writeStringField("text", ann.getCoveredText());
-                            if (featureName != null) {
-                                var label = adapter.renderFeatureValue(ann, featureName);
-                                jg.writeStringField("label", label);
-                            }
-                            jg.writeEndObject();
-                        }
-
-                        jg.flush();
-                    }
-                }
-            }
-
-            jg.writeEndArray();
-            jg.flush();
-        }
-    }
-
-    @Override
-    public void exportSpanLayerDataAsCsv(OutputStream aOut, AnnotationLayer aLayer,
-            AnnotationFeature aFeature, DefaultAgreementTraits aTraits,
-            List<SourceDocument> aDocuments, List<String> aAnnotators)
-        throws IOException
-    {
-        if (!SpanLayerSupport.TYPE.equals(aLayer.getType())) {
-            throw new IllegalArgumentException(
-                    "Only span layers supported but got [" + aLayer.getType() + "]");
-        }
-
-        var project = aLayer.getProject();
-        var allAnnDocs = getDocumentsToEvaluate(project, aDocuments, aTraits);
-        var docs = allAnnDocs.keySet().stream().sorted(comparing(SourceDocument::getName)).toList();
-        var featureName = aFeature != null ? aFeature.getName() : null;
-        var adapter = schemaService.getAdapter(aLayer);
-
-        try (var writer = new OutputStreamWriter(aOut, UTF_8);
-                var csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.builder()
-                        .setHeader("doc", "user", "begin", "end", "text", "label").get())) {
-
-            for (var doc : docs) {
-                var annDocs = allAnnDocs.get(doc);
-                try (var session = CasStorageSession.openNested()) {
-                    var casMap = loadCasForAnnotators(doc, annDocs, aAnnotators);
-
-                    for (var mapEntry : casMap.entrySet()) {
-                        var dataOwner = mapEntry.getKey();
-                        var cas = mapEntry.getValue();
-
-                        for (var ann : cas.<Annotation> select(adapter.getAnnotationTypeName())) {
-                            var label = featureName != null
-                                    ? adapter.renderFeatureValue(ann, featureName)
-                                    : "";
-                            csvPrinter.printRecord(doc.getName(), dataOwner, ann.getBegin(),
-                                    ann.getEnd(), ann.getCoveredText(), label);
-                        }
-                    }
-                }
-            }
-            csvPrinter.flush();
-        }
-    }
-
-    @Override
     public void exportDiff(OutputStream aOut, AnnotationLayer aLayer, AnnotationFeature aFeature,
             DefaultAgreementTraits aTraits, List<SourceDocument> aDocuments,
-            List<String> aAnnotators)
+            List<AnnotationSet> aAnnotators)
     {
         var project = aLayer.getProject();
 
@@ -244,7 +136,7 @@ public class AgreementServiceImpl
                 .sorted(comparing(SourceDocument::getName)) //
                 .toList();
 
-        var adapters = getDiffAdapters(schemaService, asList(aLayer));
+        var adapters = diffAdapterRegistry.getDiffAdapters(asList(aLayer));
 
         Set<String> tagset = aFeature != null
                 ? schemaService.listTags(aFeature.getTagset()).stream() //
@@ -282,7 +174,7 @@ public class AgreementServiceImpl
     }
 
     private LinkedHashMap<String, CAS> loadCasForAnnotators(SourceDocument aDocument,
-            List<AnnotationDocument> aAnnDocs, List<String> aAnnotators)
+            List<AnnotationDocument> aAnnDocs, List<AnnotationSet> aAnnotators)
         throws IOException
     {
         var casMap = new LinkedHashMap<String, CAS>();
@@ -290,38 +182,38 @@ public class AgreementServiceImpl
         for (var annotator : aAnnotators) {
             var maybeCas = loadCas(aDocument, annotator, aAnnDocs);
             var cas = maybeCas.isPresent() ? maybeCas.get() : loadInitialCas(aDocument);
-            casMap.put(annotator, cas);
+            casMap.put(annotator.id(), cas);
         }
 
         return casMap;
     }
 
-    private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner,
+    private Optional<CAS> loadCas(SourceDocument aDocument, AnnotationSet aSet,
             List<AnnotationDocument> aAnnDocs)
         throws IOException
     {
-        if (CURATION_USER.equals(aDataOwner)) {
+        if (AnnotationSet.CURATION_SET.equals(aSet)) {
             if (!asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(aDocument.getState())) {
                 return Optional.empty();
             }
 
-            return loadCas(aDocument, aDataOwner);
+            return loadCas(aDocument, aSet);
         }
 
-        if (aAnnDocs.stream().noneMatch(annDoc -> aDataOwner.equals(annDoc.getUser()))) {
+        if (aAnnDocs.stream().noneMatch(annDoc -> aSet.id().equals(annDoc.getUser()))) {
             return Optional.empty();
         }
 
-        if (!documentService.existsCas(aDocument, aDataOwner)) {
-            Optional.empty();
+        if (!documentService.existsCas(aDocument, aSet)) {
+            return Optional.empty();
         }
 
-        return loadCas(aDocument, aDataOwner);
+        return loadCas(aDocument, aSet);
     }
 
-    private Optional<CAS> loadCas(SourceDocument aDocument, String aDataOwner) throws IOException
+    private Optional<CAS> loadCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException
     {
-        var cas = documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,
+        var cas = documentService.readAnnotationCas(aDocument, aSet, AUTO_CAS_UPGRADE,
                 SHARED_READ_ONLY_ACCESS);
 
         // Set the CAS name in the DocumentMetaData so that we can pick it

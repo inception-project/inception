@@ -17,22 +17,32 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
+import de.tudarmstadt.ukp.inception.schema.api.feature.RecommendableFeatureTrait;
 
 /**
  * Traits for knowledge-base-related features.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class ConceptFeatureTraits_ImplBase
-    implements Serializable
+    implements Serializable, RecommendableFeatureTrait
 {
-    private static final long serialVersionUID = 6303541487449965932L;
+    private static final long serialVersionUID = 3351053348043107018L;
 
     private String repositoryId;
     private String scope;
     private ConceptFeatureValueType allowedValueType;
+    private boolean retainSuggestionInfo = false;
+    private @JsonInclude(NON_EMPTY) List<PermissionLevel> rolesSeeingSuggestionInfo = new ArrayList<>();
 
     public ConceptFeatureTraits_ImplBase()
     {
@@ -67,5 +77,34 @@ public abstract class ConceptFeatureTraits_ImplBase
     public void setAllowedValueType(ConceptFeatureValueType aAllowedType)
     {
         allowedValueType = aAllowedType;
+    }
+
+    @Override
+    public boolean isRetainSuggestionInfo()
+    {
+        return retainSuggestionInfo;
+    }
+
+    @Override
+    public void setRetainSuggestionInfo(boolean aRetainSuggestionInfo)
+    {
+        retainSuggestionInfo = aRetainSuggestionInfo;
+    }
+
+    @Override
+    public void setRolesSeeingSuggestionInfo(List<PermissionLevel> aRolesSeeingSuggestionInfo)
+    {
+        if (aRolesSeeingSuggestionInfo == null) {
+            rolesSeeingSuggestionInfo = new ArrayList<>();
+        }
+        else {
+            rolesSeeingSuggestionInfo = aRolesSeeingSuggestionInfo;
+        }
+    }
+
+    @Override
+    public List<PermissionLevel> getRolesSeeingSuggestionInfo()
+    {
+        return rolesSeeingSuggestionInfo;
     }
 }

@@ -32,8 +32,8 @@ import java.util.Set;
 
 import org.apache.uima.cas.FeatureStructure;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
+import de.tudarmstadt.ukp.inception.curation.api.Position;
 
 /**
  * The set of configurations seen at a particular position.
@@ -60,6 +60,15 @@ public class ConfigurationSet
     {
         if (aTag != null) {
             tags.addAll(asList(aTag));
+        }
+
+        return this;
+    }
+
+    public ConfigurationSet removeTags(Tag... aTag)
+    {
+        if (aTag != null) {
+            tags.removeAll(asList(aTag));
         }
 
         return this;

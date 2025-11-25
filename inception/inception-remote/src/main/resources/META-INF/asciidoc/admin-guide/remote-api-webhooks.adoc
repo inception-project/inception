@@ -138,3 +138,49 @@ The `annotatorComment` field contains the comment that annotators can set when c
 and is typically used to report a problem with the document. Thus, it can typically be found only
 when the `annotatorState` is `COMPLETE` (document closed as successful) or `LOCKED` (document closed
 as not successful).
+
+== Kafka
+
+Instead of delivering webhook notifications via HTTP(S), it is also possible to send them to a Kafka topic.
+To turn a webhook into a Kafka webhook, set the `driver` property to 'kafka' and the url property to the kafka bootstrap servers to which the messages should be sent.
+
+.Example Kafka webhook configuration
+----
+webhooks.globalHooks[0].url=localhost:9092
+webhooks.globalHooks[0].driver=kafka
+webhooks.globalHooks[0].topics[0]=DOCUMENT_STATE
+webhooks.globalHooks[0].topics[1]=ANNOTATION_STATE
+webhooks.globalHooks[0].topics[2]=PROJECT_STATE
+----
+
+Most likely, you will want to customize the topic names to which the different event types are sent. 
+This can be done via the `routes` property:
+
+.Example Kafka webhook topic routing
+----
+webhooks.globalHooks[0].url=localhost:9092
+webhooks.globalHooks[0].driver=kafka
+webhooks.globalHooks[0].topics[0]=...
+webhooks.globalHooks[0].routes.DOCUMENT_STATE=doc-state-topic
+webhooks.globalHooks[0].routes.ANNOTATION_STATE=ann-state-topic
+webhooks.globalHooks[0].routes.PROJECT_STATE=proj-state-topic
+----
+
+There will be additional settings you need to make depending on your Kafka setup.
+These include most importantly authentication and security settings.
+Any additional Kafka-specific properties you may need to set can be specified via the `properties` property.
+
+.Example Kafka webhook with additional properties
+----
+webhooks.globalHooks[0].url=localhost:9092
+webhooks.globalHooks[0].driver=kafka
+...
+webhooks.globalHooks[0].properties.security.protocol=SSL
+webhooks.globalHooks[0].properties.ssl.truststore.location=<PATH TO CLIENT TRUSTSTORE>
+webhooks.globalHooks[0].properties.ssl.truststore.password=<PASSWORD>
+webhooks.globalHooks[0].properties.ssl.keystore.location=<PATH TO CLIENT KEYSTORE>
+webhooks.globalHooks[0].properties.ssl.keystore.password=<PASSWORD>
+webhooks.globalHooks[0].properties.ssl.key.password=<PASSWORD>
+----
+
+For more information about the available Kafka properties, see the link:https://kafka.apache.org/documentation/#producerconfigs[Kafka documentation].

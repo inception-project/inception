@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.project.export.task.curated;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -48,18 +47,14 @@ public class CuratedDocumentsProjectExporterPanel
     {
         super(aId);
 
-        CompoundPropertyModel<CuratedDocumentsProjectExportRequest> model = CompoundPropertyModel
-                .of(aModel);
-
+        var model = CompoundPropertyModel.of(aModel);
         setDefaultModel(model);
 
-        DropDownChoice<String> format = new FormatDropdownChoice("format", model.bind("format"));
+        var format = new FormatDropdownChoice("format", model.bind("format"));
         format.add(new LambdaAjaxFormComponentUpdatingBehavior());
         format.add(LambdaBehavior.onConfigure(
                 _comp -> model.getObject().setFormat(getDefaultFormat(format.getChoices()))));
         add(format);
-
-        ;
 
         add(new LambdaAjaxLink("startExport", this::actionStartExport));
     }

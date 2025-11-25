@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerTypes;
 
 public class LayerFactory
 {
@@ -41,7 +41,7 @@ public class LayerFactory
                 .withProject(aProject) //
                 .forJCasClass(NamedEntity.class) //
                 .withUiName("Named entity") //
-                .withType(SpanLayerSupport.TYPE) //
+                .withType(LayerTypes.SPAN_LAYER_TYPE) //
                 .withBuiltIn(true) //
                 .withAnchoringMode(TOKENS) //
                 .withOverlapMode(NO_OVERLAP) //
@@ -54,7 +54,7 @@ public class LayerFactory
                 .withProject(aProject) //
                 .forJCasClass(POS.class) //
                 .withUiName("Part of speech") //
-                .withType(SpanLayerSupport.TYPE) //
+                .withType(LayerTypes.SPAN_LAYER_TYPE) //
                 .withBuiltIn(true) //
                 .withAnchoringMode(SINGLE_TOKEN) //
                 .withOverlapMode(NO_OVERLAP) //
@@ -69,7 +69,7 @@ public class LayerFactory
         return AnnotationLayer.builder() //
                 .withProject(aProject) //
                 .forJCasClass(Token.class) //
-                .withType(SpanLayerSupport.TYPE) //
+                .withType(LayerTypes.SPAN_LAYER_TYPE) //
                 .withBuiltIn(true) //
                 .withAnchoringMode(CHARACTERS) //
                 .withOverlapMode(NO_OVERLAP) //
@@ -84,7 +84,7 @@ public class LayerFactory
         return AnnotationLayer.builder() //
                 .withProject(aProject) //
                 .forJCasClass(Sentence.class) //
-                .withType(SpanLayerSupport.TYPE) //
+                .withType(LayerTypes.SPAN_LAYER_TYPE) //
                 .withBuiltIn(true) //
                 .withAnchoringMode(TOKENS) //
                 .withOverlapMode(NO_OVERLAP) //

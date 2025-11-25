@@ -22,10 +22,12 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.io.xmi.BinaryCasFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xmi.UimaInlineXmlFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiXml11FormatSupport;
+import de.tudarmstadt.ukp.inception.io.xmi.XmiXmlStructureFormatSupport;
 
 @Configuration
 @EnableConfigurationProperties(UimaFormatsPropertiesImpl.class)
@@ -53,6 +55,15 @@ public class UimaFormatsAutoConfiguration
     public XmiFormatSupport xmiFormatSupport(UimaFormatsProperties aProperties)
     {
         return new XmiFormatSupport(aProperties.getUimaXmi());
+    }
+
+    @ConditionalOnProperty(prefix = "format.uima-xmi-struct", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
+    @Bean
+    public XmiXmlStructureFormatSupport xmiXmlStructureFormatSupport(
+            UimaFormatsProperties aProperties, DocumentService aDocumentService)
+    {
+        return new XmiXmlStructureFormatSupport(aProperties.getUimaXmi(), aDocumentService);
     }
 
     @ConditionalOnProperty(prefix = "format.uima-inline-xml", name = "enabled", //

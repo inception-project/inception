@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier">
+  <name>INCEpTION Static Type System</name>
+  <description>Contains types which may be used by INCEpTION as part of (custom) layers or other
+    functionalities, but which themselves are static (i.e. do not change depending on user
+    customization).</description>
+  <version>1.0</version>
+  <vendor />
+  <types>
+    <typeDescription>
+      <name>de.tudarmstadt.ukp.inception.annotation.type.StringSuggestion</name>
+      <description />
+      <supertypeName>uima.cas.TOP</supertypeName>
+      <features>
+        <featureDescription>
+          <name>label</name>
+          <description />
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>score</name>
+          <description />
+          <rangeTypeName>uima.cas.Double</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>recommender</name>
+          <description />
+          <rangeTypeName>de.tudarmstadt.ukp.inception.annotation.type.RecommenderDecl
+          </rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>de.tudarmstadt.ukp.inception.annotation.type.RecommenderDecl</name>
+      <description />
+      <supertypeName>uima.cas.TOP</supertypeName>
+      <features>
+        <featureDescription>
+          <name>name</name>
+          <description />
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+  </types>
+</typeSystemDescription>

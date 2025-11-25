@@ -39,6 +39,7 @@ import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -51,14 +52,16 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanPosition;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffAdapterImpl;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeIncompleteStrategy;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 
+@Execution(CONCURRENT)
 public class CasMergeRemergeTest
     extends CasMergeTestBase
 {
@@ -268,7 +271,7 @@ public class CasMergeRemergeTest
         var curatorCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1")).getCas();
         curatorCas.setDocumentText(casByUser.values().stream().findFirst().get().getDocumentText());
 
-        var adapter = new SpanDiffAdapter(HOST_TYPE);
+        var adapter = new SpanDiffAdapterImpl(HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES, EXCLUDE);
 
         var result = doDiff(asList(adapter), casByUser).toResult();

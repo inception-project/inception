@@ -53,8 +53,9 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.log.EventRepository;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.EventRepositoryImpl;
+import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.model.LoggedEventEntity;
 
 @ExtendWith(MockitoExtension.class)
 public class LoggedEventExporterTest
@@ -62,7 +63,7 @@ public class LoggedEventExporterTest
     public @TempDir File tempFolder;
 
     private @Mock DocumentService documentService;
-    private @Mock EventRepository eventRepository;
+    private @Mock EventRepositoryImpl eventRepository;
     private @Captor ArgumentCaptor<LoggedEvent[]> loggedEventCaptor;
 
     private Project sourceProject;
@@ -92,7 +93,7 @@ public class LoggedEventExporterTest
         when(documentService.listSourceDocuments(any())).thenReturn(documents(sourceProject));
 
         doAnswer((Answer<Void>) invocation -> {
-            FailableConsumer<LoggedEvent, Exception> consumer = invocation.getArgument(1);
+            FailableConsumer<LoggedEventEntity, Exception> consumer = invocation.getArgument(1);
             failableStream(events(sourceProject)).forEach(consumer);
             return null;
         }).when(eventRepository).forEachLoggedEvent(any(), any());
@@ -179,9 +180,9 @@ public class LoggedEventExporterTest
         return asList(doc1);
     }
 
-    private List<LoggedEvent> events(Project aProject)
+    private List<LoggedEventEntity> events(Project aProject)
     {
-        var event1 = new LoggedEvent(1l);
+        var event1 = new LoggedEventEntity(1l);
         event1.setUser("user");
         event1.setCreated(new Date(782341234123l));
         event1.setDocument(1l);
@@ -190,7 +191,7 @@ public class LoggedEventExporterTest
         event1.setAnnotator("annotator");
         event1.setDetails("{\"value\":1}");
 
-        var event2 = new LoggedEvent(2l);
+        var event2 = new LoggedEventEntity(2l);
         event2.setUser("user");
         event2.setCreated(new Date(782341234124l));
         event2.setDocument(2l);
@@ -199,7 +200,7 @@ public class LoggedEventExporterTest
         event2.setAnnotator("annotator");
         event2.setDetails("{\"value\":1}");
 
-        var event3 = new LoggedEvent(3l);
+        var event3 = new LoggedEventEntity(3l);
         event3.setUser("user");
         event3.setCreated(new Date(782341234125l));
         event3.setDocument(1l);
@@ -208,7 +209,7 @@ public class LoggedEventExporterTest
         event3.setAnnotator("annotator");
         event3.setDetails("{\"value\":2}");
 
-        var event4 = new LoggedEvent(3l);
+        var event4 = new LoggedEventEntity(3l);
         event4.setUser("user");
         event4.setCreated(new Date(782341234126l));
         // This event is not associated with a document thus the document ID is -1

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.SPEL_IS_ADMIN_ACCOUNT_RECOVERY_MODE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
@@ -35,6 +34,7 @@ import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 
 @ConditionalOnExpression("!" + SPEL_IS_ADMIN_ACCOUNT_RECOVERY_MODE)
@@ -91,7 +91,7 @@ public class InceptionSecurityRemoteApiAutoConfiguration
             aHttp.oauth2ResourceServer().jwt().jwtAuthenticationConverter(jwt -> {
                 var token = authCon.convert(jwt);
                 aOAuth2Handling.validateToken(token,
-                        REALM_EXTERNAL_PREFIX + oauth2Properties.getRealm());
+                        Realm.REALM_EXTERNAL_PREFIX + oauth2Properties.getRealm());
                 return token;
             });
         }

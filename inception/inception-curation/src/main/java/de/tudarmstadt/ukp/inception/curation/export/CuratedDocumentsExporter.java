@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.curation.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
@@ -55,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
@@ -134,7 +136,7 @@ public class CuratedDocumentsExporter
                     continue;
                 }
 
-                if (!documentService.existsCas(sourceDocument, CURATION_USER)) {
+                if (!documentService.existsCas(sourceDocument, CURATION_SET)) {
                     aMonitor.addMessage(LogMessage.warn(this,
                             "Curation CAS for document %s could not be found!", sourceDocument));
                     LOG.warn("Curation CAS for document {} could not be found!", sourceDocument);
@@ -192,7 +194,7 @@ public class CuratedDocumentsExporter
                     });
         }
         catch (UIMAException | IOException e) {
-            throw new ProjectExportException("Error exporting annotations of " + srcDoc.getName()
+            throw new ProjectExportException("Error exporting annotations of " + srcDoc
                     + " for user [" + CURATION_USER + "] as [" + format.getName() + "]: "
                     + ExceptionUtils.getRootCauseMessage(e), e);
         }
@@ -208,7 +210,7 @@ public class CuratedDocumentsExporter
     {
         ProjectExporter.writeEntry(aStage,
                 CURATION_CAS_FOLDER + sourceDocument.getName() + "/" + CURATION_USER + ".ser",
-                os -> documentService.exportCas(sourceDocument, CURATION_USER, os));
+                os -> documentService.exportCas(sourceDocument, CURATION_SET, os));
     }
 
     /**
@@ -265,7 +267,7 @@ public class CuratedDocumentsExporter
             var sourceDocument = documentService.getSourceDocument(aProject, fileName);
 
             try (var is = aZip.getInputStream(entry)) {
-                documentService.importCas(sourceDocument, username, is);
+                documentService.importCas(sourceDocument, AnnotationSet.forUser(username), is);
             }
 
             LOG.info("Imported curation document content for user [" + username

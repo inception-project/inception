@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 import type { AnnotationEditor, AnnotationEditorProperties, DiamAjax, Offsets } from '@inception-project/inception-js-api'
-// import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
-import AnnotationDetailPopOver from './annotator_ui/AnnotationDetailPopOver.svelte'
+import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
 import { Ajax } from './ajax/Ajax'
 import { AnnotatorUI } from './annotator_ui/AnnotatorUI'
 import { Dispatcher } from './dispatcher/Dispatcher'

@@ -50,7 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
@@ -304,7 +304,7 @@ public class LayerImportExportUtils
         exLayer.setValidationMode(aLayer.getValidationMode());
         exLayer.setLinkedListBehavior(aLayer.isLinkedListBehavior());
         exLayer.setName(aLayer.getName());
-        exLayer.setProjectName(aLayer.getProject().getName());
+        exLayer.setProjectId(aLayer.getProject().getId());
         exLayer.setType(aLayer.getType());
         exLayer.setUiName(aLayer.getUiName());
         exLayer.setTraits(aLayer.getTraits());
@@ -322,7 +322,7 @@ public class LayerImportExportUtils
             exFeature.setRequired(feature.isRequired());
             exFeature.setHideUnconstraintFeature(feature.isHideUnconstraintFeature());
             exFeature.setName(feature.getName());
-            exFeature.setProjectName(feature.getProject().getName());
+            exFeature.setProjectId(feature.getProject().getId());
             exFeature.setType(feature.getType());
             exFeature.setUiName(feature.getUiName());
             exFeature.setVisible(feature.isVisible());

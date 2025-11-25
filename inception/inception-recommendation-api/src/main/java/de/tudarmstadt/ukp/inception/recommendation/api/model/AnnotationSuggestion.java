@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.NEVER;
+
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
@@ -25,8 +27,12 @@ import javax.annotation.Nullable;
 
 import org.apache.uima.cas.text.AnnotationPredicates;
 
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public abstract class AnnotationSuggestion
     implements Serializable
@@ -79,40 +85,58 @@ public abstract class AnnotationSuggestion
     protected final String recommenderName;
     protected final long layerId;
     protected final String feature;
-    protected final String documentName;
+    protected final long documentId;
     protected final String label;
     protected final String uiLabel;
-    protected final double score;
-    protected final String scoreExplanation;
-    protected final boolean correction;
-    protected final String correctionExplanation;
+
+    protected double score;
+    protected String scoreExplanation;
+    protected boolean correction;
+    protected String correctionExplanation;
 
     private AutoAcceptMode autoAcceptMode;
     private int hidingFlags = 0;
     private int age = 0;
 
-    public AnnotationSuggestion(int aId, int aGeneration, int aAge, long aRecommenderId,
-            String aRecommenderName, long aLayerId, String aFeature, String aDocumentName,
-            String aLabel, String aUiLabel, double aScore, String aScoreExplanation,
-            AutoAcceptMode aAutoAcceptMode, int aHidingFlags, boolean aCorrection,
-            String aCorrectionExplanation)
+    public AnnotationSuggestion(Builder<?> aBuilder)
     {
-        generation = aGeneration;
-        age = aAge;
-        label = aLabel;
-        uiLabel = aUiLabel;
-        id = aId;
-        layerId = aLayerId;
-        feature = aFeature;
-        recommenderName = aRecommenderName;
-        score = aScore;
-        scoreExplanation = aScoreExplanation;
-        recommenderId = aRecommenderId;
-        documentName = aDocumentName;
-        autoAcceptMode = aAutoAcceptMode != null ? aAutoAcceptMode : AutoAcceptMode.NEVER;
-        hidingFlags = aHidingFlags;
-        correction = aCorrection;
-        correctionExplanation = aCorrectionExplanation;
+        generation = aBuilder.generation;
+        age = aBuilder.age;
+        label = aBuilder.label;
+        uiLabel = aBuilder.uiLabel;
+        id = aBuilder.id;
+        score = aBuilder.score;
+        scoreExplanation = aBuilder.scoreExplanation;
+        documentId = aBuilder.documentId;
+        autoAcceptMode = aBuilder.autoAcceptMode != null ? aBuilder.autoAcceptMode : NEVER;
+        hidingFlags = aBuilder.hidingFlags;
+        correction = aBuilder.correction;
+        correctionExplanation = aBuilder.correctionExplanation;
+
+        recommenderId = aBuilder.recommenderId != null ? aBuilder.recommenderId
+                : (aBuilder.recommender != null ? aBuilder.recommender.getId() : 0);
+
+        recommenderName = aBuilder.recommenderName != null ? aBuilder.recommenderName
+                : (aBuilder.recommender != null ? aBuilder.recommender.getName() : null);
+
+        layerId = aBuilder.layerId != null ? aBuilder.layerId
+                : (aBuilder.recommender != null && aBuilder.recommender.getLayer() != null
+                        ? aBuilder.recommender.getLayer().getId()
+                        : 0);
+
+        feature = aBuilder.feature != null ? aBuilder.feature
+                : (aBuilder.recommender != null && aBuilder.recommender.getFeature() != null
+                        ? aBuilder.recommender.getFeature().getName()
+                        : null);
+
+        assert layerId > 0l : "Layer must be persisted (id > 0) but was [" + layerId + "]";
+        assert recommenderId > 0l : "Recommender must be persisted (id > 0) but was "
+                + recommenderId + "]";
+        assert documentId > 0l : "Document must be persisted (id > 0) but was " + documentId + "]";
+        assert feature != null : "Feature cannot be null";
+        assert recommenderName != null : "Recommender name cannot be null";
+        assert generation >= 0 : "Generation cannot be negative but was [" + generation + "]";
+        assert age >= 0 : "Age cannot be negative but was [" + age + "]";
     }
 
     public int getId()
@@ -157,9 +181,34 @@ public abstract class AnnotationSuggestion
         return score;
     }
 
+    public void setScore(double aScore)
+    {
+        score = aScore;
+    }
+
     public Optional<String> getScoreExplanation()
     {
         return Optional.ofNullable(scoreExplanation);
+    }
+
+    public void setScoreExplanation(String aScoreExplanation)
+    {
+        scoreExplanation = aScoreExplanation;
+    }
+
+    /**
+     * @return whether the suggestion is a correction suggestion for an existing annotation.
+     *         Corrections should not be hidden for overlap with an existing annotation unless the
+     *         label matches.
+     */
+    public boolean isCorrection()
+    {
+        return correction;
+    }
+
+    public void setCorrection(boolean aCorrection)
+    {
+        correction = aCorrection;
     }
 
     public Optional<String> getCorrectionExplanation()
@@ -167,14 +216,19 @@ public abstract class AnnotationSuggestion
         return Optional.ofNullable(correctionExplanation);
     }
 
+    public void setCorrectionExplanation(String aCorrectionExplanation)
+    {
+        correctionExplanation = aCorrectionExplanation;
+    }
+
     public long getRecommenderId()
     {
         return recommenderId;
     }
 
-    public String getDocumentName()
+    public long getDocumentId()
     {
-        return documentName;
+        return documentId;
     }
 
     public void hide(int aFlags)
@@ -221,16 +275,6 @@ public abstract class AnnotationSuggestion
         return hidingFlags == 0;
     }
 
-    /**
-     * @return whether the suggestion is a correction suggestion for an existing annotation.
-     *         Corrections should not be hidden for overlap with an existing annotation unless the
-     *         label matches.
-     */
-    public boolean isCorrection()
-    {
-        return correction;
-    }
-
     public AutoAcceptMode getAutoAcceptMode()
     {
         return autoAcceptMode;
@@ -252,7 +296,7 @@ public abstract class AnnotationSuggestion
     {
         // The recommenderId captures uniquely the project, layer and feature, so we do not have to
         // check them separately
-        return Objects.hash(id, recommenderId, documentName);
+        return Objects.hash(id, recommenderId, documentId);
     }
 
     @Override
@@ -268,7 +312,7 @@ public abstract class AnnotationSuggestion
         }
         AnnotationSuggestion that = (AnnotationSuggestion) o;
         return id == that.id && recommenderId == that.recommenderId
-                && documentName.equals(that.documentName);
+                && documentId == that.documentId;
     }
 
     /**
@@ -327,6 +371,16 @@ public abstract class AnnotationSuggestion
         return age;
     }
 
+    public AnnotationSuggestion reconcileWith(AnnotationSuggestion aNewSuggestion)
+    {
+        incrementAge();
+        setScore(aNewSuggestion.getScore());
+        aNewSuggestion.getScoreExplanation().ifPresent(this::setScoreExplanation);
+        setCorrection(aNewSuggestion.isCorrection());
+        aNewSuggestion.getCorrectionExplanation().ifPresent(this::setCorrectionExplanation);
+        return this;
+    }
+
     /**
      * @return a clone of the current suggestion with the new ID. This is used when adding a
      *         suggestion to {@link Predictions} if the ID of the suggestion is set to
@@ -335,4 +389,165 @@ public abstract class AnnotationSuggestion
      *            the ID of the suggestion.
      */
     abstract public AnnotationSuggestion assignId(int aId);
+
+    public static abstract class Builder<T extends Builder<?>>
+    {
+        protected int generation;
+        protected int age;
+        protected int id;
+        protected Recommender recommender;
+        protected Long recommenderId;
+        protected String recommenderName;
+        protected Long layerId;
+        protected String feature;
+        protected long documentId;
+        protected String label;
+        protected String uiLabel;
+        protected double score;
+        protected String scoreExplanation;
+        protected AutoAcceptMode autoAcceptMode;
+        protected int hidingFlags;
+        protected boolean correction;
+        protected String correctionExplanation;
+
+        protected Builder()
+        {
+            // No initialization
+        }
+
+        public T withId(int aId)
+        {
+            id = aId;
+            return (T) this;
+        }
+
+        public T withContext(ExtractionContext aCtx)
+        {
+            withGeneration(aCtx.getGeneration());
+            withRecommender(aCtx.getRecommender());
+            withLayer(aCtx.getLayer());
+            withFeature(aCtx.getFeature());
+            withDocument(aCtx.getDocument());
+            return (T) this;
+        }
+
+        public T withGeneration(int aGeneration)
+        {
+            generation = aGeneration;
+            return (T) this;
+        }
+
+        public T withAge(int aAge)
+        {
+            age = aAge;
+            return (T) this;
+        }
+
+        public T withRecommender(Recommender aRecommender)
+        {
+            recommender = aRecommender;
+            return (T) this;
+        }
+
+        public T withLayer(AnnotationLayer aLayer)
+        {
+            layerId = aLayer.getId();
+            return (T) this;
+        }
+
+        public T withFeature(AnnotationFeature aFeature)
+        {
+            feature = aFeature.getName();
+            return (T) this;
+        }
+
+        @Deprecated
+        T withRecommenderId(long aRecommenderId)
+        {
+            recommenderId = aRecommenderId;
+            return (T) this;
+        }
+
+        @Deprecated
+        T withRecommenderName(String aRecommenderName)
+        {
+            recommenderName = aRecommenderName;
+            return (T) this;
+        }
+
+        @Deprecated
+        T withLayerId(long aLayerId)
+        {
+            layerId = aLayerId;
+            return (T) this;
+        }
+
+        @Deprecated
+        T withFeature(String aFeature)
+        {
+            feature = aFeature;
+            return (T) this;
+        }
+
+        public T withDocument(SourceDocument aDocument)
+        {
+            documentId = aDocument.getId();
+            return (T) this;
+        }
+
+        @Deprecated
+        public T withDocument(long aDocumentId)
+        {
+            documentId = aDocumentId;
+            return (T) this;
+        }
+
+        public T withLabel(String aLabel)
+        {
+            label = aLabel;
+            return (T) this;
+        }
+
+        public T withUiLabel(String aUiLabel)
+        {
+            uiLabel = aUiLabel;
+            return (T) this;
+        }
+
+        public T withScore(double aScore)
+        {
+            score = aScore;
+            return (T) this;
+        }
+
+        public T withScoreExplanation(String aScoreExplanation)
+        {
+            scoreExplanation = aScoreExplanation;
+            return (T) this;
+        }
+
+        public T withAutoAcceptMode(AutoAcceptMode aAutoAcceptMode)
+        {
+            autoAcceptMode = aAutoAcceptMode;
+            return (T) this;
+        }
+
+        public T withHidingFlags(int aFlags)
+        {
+            hidingFlags = aFlags;
+            return (T) this;
+        }
+
+        public T withCorrection(boolean aCorrection)
+        {
+            correction = aCorrection;
+            return (T) this;
+        }
+
+        public T withCorrectionExplanation(String aCorrectionExplanation)
+        {
+            correctionExplanation = aCorrectionExplanation;
+            return (T) this;
+        }
+    }
 }

@@ -53,13 +53,16 @@ public class AnnotationDocument
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Deprecated
+    @Column(name = "name", nullable = false)
     private String name;
 
+    @Deprecated
     @ManyToOne
     @JoinColumn(name = "project")
     private Project project;
 
+    @Column(name = "user")
     private String user;
 
     @ManyToOne
@@ -70,9 +73,13 @@ public class AnnotationDocument
      * The effective state of the annotation document. This state may be set by the annotator user
      * or by a third person (e.g. curator/manager) or the system (e.g. workload manager).
      */
-    @Column(nullable = false)
+    @Column(name = "state", nullable = false)
     @Type(AnnotationDocumentStateType.class)
     private AnnotationDocumentState state = AnnotationDocumentState.NEW;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "state_updated", nullable = true)
+    private Date stateUpdated = new Date();
 
     /**
      * State manually set by the annotator user. If a third person (e.g. curator/manager) or the
@@ -82,7 +89,7 @@ public class AnnotationDocument
      * allow managers to see whether an annotation document as marked as finished by the annotator
      * or if it was marked as finished by the manager or by the system.
      */
-    @Column(nullable = true)
+    @Column(name = "annotatorState", nullable = true)
     @Type(AnnotationDocumentStateType.class)
     private AnnotationDocumentState annotatorState;
 
@@ -90,7 +97,7 @@ public class AnnotationDocument
      * Comment the anntoator can leave when marking a document as finished. Typically used to report
      * problems to the curator.
      */
-    @Column(length = 64000)
+    @Column(name = "annotatorComment", length = 64000)
     private String annotatorComment;
 
     /**
@@ -102,15 +109,19 @@ public class AnnotationDocument
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
+    /**
+     * @deprecated no longer used.
+     */
+    @Deprecated
     @Column(name = "sentenceAccessed")
     private int sentenceAccessed = 0;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = true)
+    @Column(name = "created", nullable = true)
     private Date created;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = true)
+    @Column(name = "updated", nullable = true)
     private Date updated;
 
     private AnnotationDocument(Builder builder)
@@ -162,34 +173,64 @@ public class AnnotationDocument
         id = aId;
     }
 
+    /**
+     * @deprecated Use {@link #getDocument() getDocument().getName()} instead.
+     * @return the name of the source document this annotation document is for.
+     */
+    @Deprecated
     public String getName()
     {
         return name;
     }
 
+    @Deprecated
     public void setName(String aName)
     {
         name = aName;
     }
 
+    /**
+     * @deprecated Use {@link #getDocument() getDocument().getProject()} instead.
+     * @return the project of the source document this annotation document is for.
+     */
+    @Deprecated
     public Project getProject()
     {
         return project;
     }
 
+    @Deprecated
     public void setProject(Project aProject)
     {
         project = aProject;
     }
 
+    /**
+     * @deprecated Use {@link #getAnnotationSet}
+     */
+    @Deprecated
     public String getUser()
     {
         return user;
     }
 
+    /**
+     * @deprecated Use {@link #setAnnotationSet}
+     */
+    @Deprecated
     public void setUser(String aUser)
     {
         user = aUser;
+    }
+
+    public AnnotationSet getAnnotationSet()
+    {
+        return AnnotationSet.forUser(user);
+    }
+
+    public void setAnnotationSet(AnnotationSet aSet)
+    {
+        user = aSet.id();
     }
 
     public AnnotationDocumentState getState()
@@ -197,9 +238,46 @@ public class AnnotationDocument
         return state;
     }
 
+    /**
+     * @param aState
+     *            the new state.
+     * @deprecated Use this only when you need to import the state from an external source and call
+     *             {@link #setStateUpdated(Date)} as well. Otherwise use
+     *             {@link #updateState(AnnotationDocumentState)} which implicitly sets
+     *             {@link #stateUpdated} when required.
+     */
+    @Deprecated
     public void setState(AnnotationDocumentState aState)
     {
         state = aState;
+    }
+
+    public void updateState(AnnotationDocumentState aState)
+    {
+        if (aState != state) {
+            stateUpdated = new Date();
+        }
+
+        state = aState;
+    }
+
+    /**
+     * @param aStateUpdated
+     *            the new state updated time.
+     * @deprecated Use this only when you need to import the state from an external source and call
+     *             {@link #setStateUpdated(Date)} as well. Otherwise use
+     *             {@link #updateState(AnnotationDocumentState)} which implicitly sets
+     *             {@link #stateUpdated} when required.
+     */
+    @Deprecated
+    public void setStateUpdated(Date aStateUpdated)
+    {
+        stateUpdated = aStateUpdated;
+    }
+
+    public Date getStateUpdated()
+    {
+        return stateUpdated;
     }
 
     public AnnotationDocumentState getAnnotatorState()
@@ -237,11 +315,19 @@ public class AnnotationDocument
         timestamp = aTimestamp;
     }
 
+    /**
+     * @deprecated no longer used.
+     */
+    @Deprecated
     public int getSentenceAccessed()
     {
         return sentenceAccessed;
     }
 
+    /**
+     * @deprecated no longer used.
+     */
+    @Deprecated
     public void setSentenceAccessed(int sentenceAccessed)
     {
         this.sentenceAccessed = sentenceAccessed;
@@ -299,7 +385,7 @@ public class AnnotationDocument
         if (!(other instanceof AnnotationDocument)) {
             return false;
         }
-        AnnotationDocument castOther = (AnnotationDocument) other;
+        var castOther = (AnnotationDocument) other;
         return Objects.equals(name, castOther.name) && Objects.equals(project, castOther.project)
                 && Objects.equals(user, castOther.user)
                 && Objects.equals(document, castOther.document);
@@ -327,6 +413,10 @@ public class AnnotationDocument
         private AnnotationDocumentState annotatorState;
         private String annotatorComment;
         private Date timestamp;
+        /**
+         * @deprecated no longer used.
+         */
+        @Deprecated
         private int sentenceAccessed = 0;
         private Date created;
         private Date updated;
@@ -398,6 +488,10 @@ public class AnnotationDocument
             return this;
         }
 
+        /**
+         * @deprecated no longer used.
+         */
+        @Deprecated
         public Builder withSentenceAccessed(int aSentenceAccessed)
         {
             sentenceAccessed = aSentenceAccessed;

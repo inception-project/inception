@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.lang.Character.isJavaIdentifierStart;
@@ -61,7 +59,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.FeatureSelectionForm;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
@@ -193,7 +192,7 @@ public class LayerDetailForm
         };
         attachTypeSelect.setNullValid(true);
         attachTypeSelect.add(visibleWhen(() -> isNull(getModelObject().getId())
-                && RELATION_TYPE.equals(getModelObject().getType())));
+                && RelationLayerSupport.TYPE.equals(getModelObject().getType())));
         attachTypeSelect.setOutputMarkupPlaceholderTag(true);
         add(attachTypeSelect);
 
@@ -201,7 +200,7 @@ public class LayerDetailForm
                 LoadableDetachableModel.of(this::getEffectiveAttachTypeUiName));
         effectiveAttachType.setOutputMarkupPlaceholderTag(true);
         effectiveAttachType.add(visibleWhen(() -> !isNull(getModelObject().getId())
-                && RELATION_TYPE.equals(getModelObject().getType())));
+                && RelationLayerSupport.TYPE.equals(getModelObject().getType())));
         add(effectiveAttachType);
 
         // Behaviors of layers
@@ -272,7 +271,7 @@ public class LayerDetailForm
         }
 
         // Attach layers are only valid for relation layers.
-        if (!RELATION_TYPE.equals(layer.getType())) {
+        if (!RelationLayerSupport.TYPE.equals(layer.getType())) {
             return emptyList();
         }
 
@@ -280,7 +279,8 @@ public class LayerDetailForm
         var allLayers = annotationService.listAnnotationLayer(project);
 
         // Candidates for attach-layers are only span layers, so lets filter these
-        var candidateLayers = allLayers.stream().filter(l -> SPAN_TYPE.equals(l.getType()))
+        var candidateLayers = allLayers.stream()
+                .filter(l -> SpanLayerSupport.TYPE.equals(l.getType()))
                 .filter(l -> !Token._TypeName.equals(l.getName())
                         && !Sentence._TypeName.equals(l.getName()))
                 .collect(toCollection(ArrayList::new));

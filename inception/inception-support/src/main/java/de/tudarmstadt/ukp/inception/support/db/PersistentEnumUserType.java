@@ -90,6 +90,16 @@ public abstract class PersistentEnumUserType<T extends PersistentEnum>
                 return (T) value;
             }
         }
+
+        // As a fallback, also check the enum name
+        for (PersistentEnum value : returnedClass().getEnumConstants()) {
+            if (value instanceof Enum enumValue) {
+                if (name.equals(enumValue.name())) {
+                    return (T) value;
+                }
+            }
+        }
+
         throw new IllegalStateException(
                 "Unknown " + returnedClass().getSimpleName() + " value [" + name + "]");
     }

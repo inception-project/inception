@@ -53,6 +53,7 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.LambdaChoiceRenderer;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -69,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsP
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -85,10 +87,10 @@ import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSuggesti
 import de.tudarmstadt.ukp.inception.active.learning.strategy.UncertaintySamplingStrategy;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationCreatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanCreatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanDeletedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.event.RelationCreatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.event.SpanCreatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.event.SpanDeletedEvent;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -123,7 +125,6 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
@@ -187,7 +188,7 @@ public class ActiveLearningSidebar
     private Form<Void> sessionControlForm;
 
     private AnnotationSuggestion highlightSuggestion;
-    private String highlightDocumentName;
+    private Long highlightDocumentId;
     private VID highlightVID;
     private Offset highlightSpan;
     private boolean protectHighlight;
@@ -415,7 +416,7 @@ public class ActiveLearningSidebar
         highlightSuggestion = aSuggestion;
         highlightVID = aSuggestion.getVID();
         highlightSpan = new Offset(aSuggestion.getBegin(), aSuggestion.getEnd());
-        highlightDocumentName = aSuggestion.getDocumentName();
+        highlightDocumentId = aSuggestion.getDocumentId();
     }
 
     private void setActiveLearningHighlight(LearningRecord aRecord)
@@ -424,7 +425,7 @@ public class ActiveLearningSidebar
         highlightSuggestion = null;
         highlightVID = null;
         highlightSpan = new Offset(aRecord.getOffsetBegin(), aRecord.getOffsetEnd());
-        highlightDocumentName = aRecord.getSourceDocument().getName();
+        highlightDocumentId = aRecord.getSourceDocument().getId();
         // This is a bit of hack. Consider the following case:
         // - use removes an ACCEPT history item
         // - user clicks then on another history item
@@ -439,7 +440,7 @@ public class ActiveLearningSidebar
         highlightSuggestion = null;
         highlightVID = new VID(ICasUtil.getAddr(aAnnotation));
         highlightSpan = new Offset(aAnnotation.getBegin(), aAnnotation.getEnd());
-        highlightDocumentName = aDocument.getName();
+        highlightDocumentId = aDocument.getId();
         protectHighlight = false;
     }
 
@@ -452,7 +453,7 @@ public class ActiveLearningSidebar
         }
 
         LOG.trace("Active learning sidebar cleared highlights");
-        highlightDocumentName = null;
+        highlightDocumentId = null;
         highlightSpan = null;
         highlightVID = null;
     }
@@ -580,9 +581,9 @@ public class ActiveLearningSidebar
         // REC: Potential bug: jumping causes the document to re-renderer and therefore the
         // predictions to switch. If the suggestion is no longer visible in the switched predictions
         // (e.g. because it is no longer predicted), then we jump to nothing?
-        actionShowSelectedDocument(aTarget,
-                documentService.getSourceDocument(this.getModelObject().getProject(),
-                        suggestion.getDocumentName()),
+        getAnnotationPage().actionShowSelectedDocument(aTarget,
+                documentService.getSourceDocument(this.getModelObject().getProject().getId(),
+                        suggestion.getDocumentId()),
                 suggestion.getBegin(), suggestion.getEnd());
     }
 
@@ -717,15 +718,19 @@ public class ActiveLearningSidebar
         // from the update event created by acceptSuggestion/upsertSpanFeature.
         requestClearningSelectionAndJumpingToSuggestion();
 
-        var document = documentService.getSourceDocument(state.getProject(),
-                suggestion.getDocumentName());
-        activeLearningService.acceptSpanSuggestion(document, state.getUser(), suggestion,
-                editor.getModelObject().value);
+        var project = state.getProject();
+        var dataOwner = state.getUser();
+        var document = documentService.getSourceDocument(state.getProject().getId(),
+                suggestion.getDocumentId());
+        var predictions = recommendationService.getPredictions(dataOwner, project);
+        activeLearningService.acceptSpanSuggestion(document, state.getUser(), predictions,
+                suggestion, editor.getModelObject().value);
 
         // If the currently displayed document is the same one where the annotation was created,
         // then update timestamp in state to avoid concurrent modification errors
         if (Objects.equals(state.getDocument().getId(), document.getId())) {
-            documentService.getAnnotationCasTimestamp(document, state.getUser().getUsername())
+            documentService
+                    .getAnnotationCasTimestamp(document, AnnotationSet.forUser(state.getUser()))
                     .ifPresent(state::setAnnotationDocumentTimestamp);
         }
     }
@@ -809,7 +814,8 @@ public class ActiveLearningSidebar
 
         // If there is a suggestion, open it in the sidebar and take the main editor to its location
         var suggestion = alState.getSuggestion().get();
-        var document = documentService.getSourceDocument(project, suggestion.getDocumentName());
+        var document = documentService.getSourceDocument(project.getId(),
+                suggestion.getDocumentId());
         loadSuggestionInActiveLearningSidebar(aTarget, suggestion, document);
 
         if (shouldBeClearningSelectionAndJumpingToSuggestion()) {
@@ -843,8 +849,8 @@ public class ActiveLearningSidebar
         var state = getModelObject();
         var project = state.getProject();
         var user = state.getUser();
-        var sourceDocument = documentService.getSourceDocument(project,
-                suggestion.getDocumentName());
+        var sourceDocument = documentService.getSourceDocument(project.getId(),
+                suggestion.getDocumentId());
 
         LOG.trace("Jumping to {}", suggestion);
 
@@ -855,8 +861,8 @@ public class ActiveLearningSidebar
             state.getSelection().clear();
             aTarget.add((Component) getActionHandler());
 
-            actionShowSelectedDocument(aTarget, sourceDocument, suggestion.getBegin(),
-                    suggestion.getEnd());
+            getAnnotationPage().actionShowSelectedDocument(aTarget, sourceDocument,
+                    suggestion.getBegin(), suggestion.getEnd());
 
             // When the document is opened, the recommendation service defaults to only
             // predicting for the current document. Therefore, while in an AL session,
@@ -882,7 +888,7 @@ public class ActiveLearningSidebar
         // access to the document which contains the current suggestion
         try {
             var cas = documentService.readAnnotationCas(sourceDocument,
-                    getModelObject().getUser().getUsername(), AUTO_CAS_UPGRADE,
+                    AnnotationSet.forUser(getModelObject().getUser()), AUTO_CAS_UPGRADE,
                     SHARED_READ_ONLY_ACCESS);
             var text = cas.getDocumentText();
 
@@ -966,8 +972,8 @@ public class ActiveLearningSidebar
     private void actionSelectHistoryItem(AjaxRequestTarget aTarget, LearningRecord aRecord)
         throws IOException
     {
-        actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(), aRecord.getOffsetBegin(),
-                aRecord.getOffsetEnd());
+        getAnnotationPage().actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
+                aRecord.getOffsetBegin(), aRecord.getOffsetEnd());
 
         // Since we have switched documents above (if it was necessary), the editor CAS should
         // now point to the correct one
@@ -1001,7 +1007,7 @@ public class ActiveLearningSidebar
     private List<SpanSuggestion> getMatchingSuggestion(
             List<SuggestionGroup<SpanSuggestion>> aSuggestions, LearningRecord aRecord)
     {
-        return getMatchingSuggestion(aSuggestions, aRecord.getSourceDocument().getName(),
+        return getMatchingSuggestion(aSuggestions, aRecord.getSourceDocument().getId(),
                 aRecord.getLayer().getId(), aRecord.getAnnotationFeature().getName(),
                 aRecord.getOffsetBegin(), aRecord.getOffsetEnd(), aRecord.getAnnotation());
     }
@@ -1009,18 +1015,18 @@ public class ActiveLearningSidebar
     private List<SpanSuggestion> getMatchingSuggestion(
             List<SuggestionGroup<SpanSuggestion>> aSuggestions, SpanSuggestion aSuggestion)
     {
-        return getMatchingSuggestion(aSuggestions, aSuggestion.getDocumentName(),
+        return getMatchingSuggestion(aSuggestions, aSuggestion.getDocumentId(),
                 aSuggestion.getLayerId(), aSuggestion.getFeature(), aSuggestion.getBegin(),
                 aSuggestion.getEnd(), aSuggestion.getLabel());
     }
 
     private List<SpanSuggestion> getMatchingSuggestion(
-            List<SuggestionGroup<SpanSuggestion>> aSuggestions, String aDocumentName, long aLayerId,
+            List<SuggestionGroup<SpanSuggestion>> aSuggestions, long aDocumentId, long aLayerId,
             String aFeature, int aBegin, int aEnd, String aLabel)
     {
         return aSuggestions.stream() //
                 .filter(group -> group.getPosition() instanceof Offset) //
-                .filter(group -> aDocumentName.equals(group.getDocumentName())
+                .filter(group -> aDocumentId == group.getDocumentId()
                         && aLayerId == group.getLayerId()
                         && (aFeature == null || aFeature.equals(group.getFeature()))
                         && (aBegin == -1 || aBegin == ((Offset) group.getPosition()).getBegin())
@@ -1065,11 +1071,11 @@ public class ActiveLearningSidebar
             // be deleted because deleteAnnotationByHistory will delete the annotation via the
             // methods provided by the AnnotationActionHandler and these operate ONLY on the
             // currently visible/selected document.
-            CAS cas = documentService.readAnnotationCas(aRecord.getSourceDocument(),
-                    aRecord.getUser());
+            var cas = documentService.readAnnotationCas(aRecord.getSourceDocument(),
+                    AnnotationSet.forUser(aRecord.getUser()));
             if (getMatchingAnnotation(cas, aRecord).isPresent()) {
                 setActiveLearningHighlight(aRecord);
-                actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
+                getAnnotationPage().actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
                         aRecord.getOffsetBegin(), aRecord.getOffsetEnd());
 
                 openHistoryItemRemovalConfirmationDialog(aTarget, aRecord);
@@ -1244,9 +1250,10 @@ public class ActiveLearningSidebar
             annotationPage.actionRefreshDocument(aTarget);
 
             // Update visibility in case the that was created/deleted overlaps with any suggestions
-            var cas = documentService.readAnnotationCas(aDocument, dataOwner.getUsername());
+            var cas = documentService.readAnnotationCas(aDocument,
+                    AnnotationSet.forUser(dataOwner));
             var group = SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class,
-                    predictions.getPredictionsByDocument(aDocument.getName()));
+                    predictions.getPredictionsByDocument(aDocument.getId()));
             recommendationService.calculateSuggestionVisibility(sessionOwner, aDocument, cas,
                     dataOwner.getUsername(), aLayer, group, 0, cas.getDocumentText().length());
 
@@ -1371,15 +1378,15 @@ public class ActiveLearningSidebar
         // recreate them because the VIDs may have changed
         aVDoc.getMarkers().removeIf(marker -> marker.getSource() == this);
 
-        if (highlightDocumentName == null) {
+        if (highlightDocumentId == null) {
             LOG.trace("Active learning sidebar has no highlights to render");
             return;
         }
 
-        String currentDoc = getModelObject().getDocument().getName();
-        if (!currentDoc.equals(highlightDocumentName)) {
+        var currentDoc = getModelObject().getDocument();
+        if (!Objects.equals(currentDoc.getId(), highlightDocumentId)) {
             LOG.trace("Active learning sidebar highlights are in document [{}], not in [{}]",
-                    highlightDocumentName, currentDoc);
+                    highlightDocumentId, currentDoc);
             return;
         }
 

@@ -18,17 +18,16 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.model;
 
 import static java.lang.Integer.MAX_VALUE;
-import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Comparator.comparing;
 import static java.util.function.Function.identity;
 
 import java.util.IllformedLocaleException;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -58,7 +57,7 @@ public class CandidateEntity
     public static final Key<String> KEY_QUERY = new Key<>("query");
     public static final Key<String> KEY_QUERY_NC = new Key<>("queryNC");
     public static final Key<String[]> KEY_QUERY_BOW = new Key<>("queryBow");
-    public static final Key<String[]> KEY_QUERY_BOW_NC = new Key<>("queryBowNc");
+    public static final Key<String[]> KEY_QUERY_BOW_NC = new Key<>("queryBowNC");
 
     /**
      * The term which had the best match with query or mention. This should be displayed to the user
@@ -76,9 +75,9 @@ public class CandidateEntity
      * The mention in the text which is to be linked.
      */
     public static final Key<String> KEY_MENTION = new Key<>("mention");
-    public static final Key<String> KEY_MENTION_NC = new Key<>("mentionNc");
+    public static final Key<String> KEY_MENTION_NC = new Key<>("mentionNC");
     public static final Key<String[]> KEY_MENTION_BOW = new Key<>("mentionBow");
-    public static final Key<String[]> KEY_MENTION_BOW_NC = new Key<>("mentionBowNc");
+    public static final Key<String[]> KEY_MENTION_BOW_NC = new Key<>("mentionBowNC");
 
     public static final Key<String> KEY_LABEL_NC = new Key<>("labelNC");
 
@@ -96,14 +95,14 @@ public class CandidateEntity
      */
     public static final Key<Integer> SCORE_LEVENSHTEIN_MENTION = new Key<>("levMention", MAX_VALUE);
 
-    public static final Key<Integer> SCORE_LEVENSHTEIN_MENTION_NC = new Key<>("levMentionNc",
+    public static final Key<Integer> SCORE_LEVENSHTEIN_MENTION_NC = new Key<>("levMentionNC",
             MAX_VALUE);
 
     public static final Key<Integer> SCORE_TOKEN_OVERLAP_MENTION = new Key<>("tokenOverlapMention",
             MAX_VALUE);
 
     public static final Key<Integer> SCORE_TOKEN_OVERLAP_MENTION_NC = new Key<>(
-            "tokenOverlapMentionNc", MAX_VALUE);
+            "tokenOverlapMentionNC", MAX_VALUE);
 
     /**
      * Edit distance between mention + context and candidate entity label
@@ -127,47 +126,19 @@ public class CandidateEntity
      */
     public static final Key<Integer> SCORE_LEVENSHTEIN_QUERY = new Key<>("levQuery", MAX_VALUE);
 
-    public static final Key<Integer> SCORE_LEVENSHTEIN_QUERY_NC = new Key<>("levQueryNc",
+    public static final Key<Integer> SCORE_LEVENSHTEIN_QUERY_NC = new Key<>("levQueryNC",
             MAX_VALUE);
 
     public static final Key<Integer> SCORE_TOKEN_OVERLAP_QUERY = new Key<>("tokenOverlapQuery",
             MAX_VALUE);
 
-    public static final Key<Integer> SCORE_TOKEN_OVERLAP_QUERY_NC = new Key<>("tokenOverlapQueryNc",
+    public static final Key<Integer> SCORE_TOKEN_OVERLAP_QUERY_NC = new Key<>("tokenOverlapQueryNC",
             MAX_VALUE);
-
-    /**
-     * set of directly related entities as IRI Strings
-     */
-    public static final Key<Set<String>> KEY_SIGNATURE_OVERLAP = new Key<>("signatureOverlap",
-            emptySet());
-
-    /**
-     * number of distinct relations to other entities
-     */
-    public static final Key<Integer> KEY_NUM_RELATIONS = new Key<>("numRelatedRelations", 0);
-
-    /**
-     * number of related entities whose entity label occurs in <i>content tokens</i> <i>Content
-     * tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or adjectives
-     */
-    public static final Key<Integer> SCORE_SIGNATURE_OVERLAP = new Key<>("signatureOverlapScore",
-            0);
-
-    /**
-     * logarithm of the wikidata ID - based on the assumption that lower IDs are more important
-     */
-    public static final Key<Double> KEY_ID_RANK = new Key<>("idRank", 0.0d);
 
     /**
      * FTS score - score assigned by the KB FTS (if any)
      */
     public static final Key<Double> SCORE_FTS = new Key<>("ftsScore", 0.0d);
-
-    /**
-     * in-link count of wikipedia article of IRI
-     */
-    public static final Key<Integer> KEY_FREQUENCY = new Key<>("frequency", 0);
 
     private final KBHandle handle;
     private final ConcurrentHashMap<String, Object> features = new ConcurrentHashMap<>();
@@ -311,7 +282,24 @@ public class CandidateEntity
     {
         var sb = new StringBuilder();
 
-        for (var key : features.keySet().stream().sorted().toList()) {
+        var featureKeys = new LinkedHashSet<String>();
+        featureKeys.add(KEY_QUERY_NC.name);
+        featureKeys.add(KEY_MENTION_NC.name);
+        featureKeys.add(KEY_MENTION_CONTEXT.name);
+        featureKeys.add(KEY_LABEL_NC.name);
+        featureKeys.add(KEY_QUERY_BEST_MATCH_TERM_NC.name);
+        featureKeys.add(KEY_QUERY_IS_LOWER_CASE.name);
+        featureKeys.add(SCORE_TOKEN_OVERLAP_QUERY_NC.name);
+        featureKeys.add(SCORE_LEVENSHTEIN_QUERY_NC.name);
+        featureKeys.add(SCORE_LEVENSHTEIN_QUERY.name);
+        featureKeys.add(SCORE_LEVENSHTEIN_MENTION_NC.name);
+        featureKeys.add(SCORE_LEVENSHTEIN_MENTION.name);
+        featureKeys.add(SCORE_LEVENSHTEIN_MENTION_CONTEXT.name);
+        featureKeys.addAll(features.keySet());
+        featureKeys.remove(KEY_QUERY.name);
+        featureKeys.remove(KEY_MENTION.name);
+
+        for (var key : featureKeys) {
             var value = features.get(key);
             if (value == null || value.getClass().isArray()) {
                 continue;
@@ -354,7 +342,9 @@ public class CandidateEntity
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this).append("handle", handle).append("features", features)
+        return new ToStringBuilder(this) //
+                .append("handle", handle) //
+                .append("features", features) //
                 .toString();
     }
 }

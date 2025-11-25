@@ -26,20 +26,29 @@ If you need to provide your own tokenization, then the best choice would be to u
 
 == How can I annotate discontinuous spans?
 
-The is no immediate support for discontinuous spans in INCEpTION.
+There is currently no immediate support for discontinuous spans in INCEpTION.
 
-However, you can emulate them using either a relations or link features.
+However, you can emulate them using either relations or link features.
 
 You can define a relation layer on top of your span layer.
 When you have multiple spans that should be considered as one, you can use a relation to connect them.
 
-Or you can add a _Link: XXX_ feature to your span layer which either points to the same layer or which points to a new layer you might call e.g. _Extension_.
+Alternatively, you can add a _Link: XXX_ feature to your span layer, which either points to the same layer or to a new layer you might call, for example, _Extension_.
 
-So when you have a discontinuous span, you could annotate the first span with your normal span layer and then add one or more links to the other spans.
+So, when you have a discontinuous span, you could annotate the first span with your normal span layer and then add one or more links to the other spans.
+
+For example:
+- Annotate the first part of the discontinuous span as usual.
+- Use a link or relation to connect it to the other part(s) of the span.
 
 == What is the relation between WebAnno and INCEpTION?
 
 INCEpTION is the successor of WebAnno and evolved from the WebAnno code base. Both INCEpTION and WebAnno are currently developed/maintained by the same team at the UKP Lab at the Technical University of Darmstadt.
 
 INCEpTION has all the flexibility and many more exciting features including a completely new human-in-the-loop annotation assistance support, the ability to search texts and annotations, support for RDF/SPARQL knowledge bases for entity linking, and much more.
-And best: it can import your WebAnno annotation projects (Projects of type _automation_ or _correction_ are not supported).
+
+[IMPORTANT]
+====
+INCEpTION can import your WebAnno _annotation_ projects!
+However, projects of type _automation_ or _correction_ are not supported.
+====

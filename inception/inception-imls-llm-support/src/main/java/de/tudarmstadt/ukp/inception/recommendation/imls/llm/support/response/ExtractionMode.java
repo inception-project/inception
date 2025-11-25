@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 
 public enum ExtractionMode
 {
@@ -29,6 +29,9 @@ public enum ExtractionMode
 
     @JsonProperty("mentions-from-json")
     MENTIONS_FROM_JSON;
+
+    // @JsonProperty("relations-from-json")
+    // RELATIONS_FROM_JSON;
 
     public boolean accepts(AnnotationLayer aLayer)
     {

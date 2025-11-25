@@ -1394,4 +1394,35 @@
   <changeSet author="INCEpTION Team" id="20240629-14-pg" dbms="postgresql">
     <sql>ALTER TABLE annotation_feature ALTER "curatable" TYPE BOOLEAN USING ("curatable"::int::bool)</sql>
   </changeSet>
+ 
+  <changeSet author="INCEpTION Team" id="20251031-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="source_document" columnName="state_updated"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="source_document">
+      <column name="state_updated" type="datetime(6)"/>
+    </addColumn>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20251031-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_document" columnName="state_updated"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_document">
+      <column name="state_updated" type="datetime(6)"/>
+    </addColumn>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20251031-3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="project" columnName="state_updated"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="project">
+      <column name="state_updated" type="datetime(6)"/>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

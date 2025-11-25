@@ -24,6 +24,7 @@ package de.tudarmstadt.ukp.inception.recommendation;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.wicket.event.Broadcast.BREADTH;
@@ -31,7 +32,6 @@ import static org.apache.wicket.event.Broadcast.BREADTH;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.tcas.Annotation;
@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationA
 import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
@@ -134,7 +135,10 @@ public class RecommendationEditorExtension
             ((AnnotationPageBase) aTarget.getPage()).ensureIsEditable();
 
             var recommendationVid = VID.parse(aVID.getExtensionPayload());
-            var prediction = getPrediction(aState, recommendationVid);
+            var predictions = recommendationService.getPredictions(aState.getUser(),
+                    aState.getProject());
+            var prediction = predictions.getPredictionByVID(aState.getDocument(),
+                    recommendationVid);
             var document = aState.getDocument();
 
             if (prediction.isEmpty()) {
@@ -145,8 +149,8 @@ public class RecommendationEditorExtension
                 return;
             }
 
-            actionAcceptPrediction(aActionHandler, aState, aTarget, aCas, aVID, prediction,
-                    document);
+            actionAcceptPrediction(aActionHandler, aState, aTarget, aCas, aVID, predictions,
+                    prediction.get(), document);
         }
         else if (DoActionResponse.is(aAction) || RejectActionResponse.is(aAction)) {
             ((AnnotationPageBase) aTarget.getPage()).ensureIsEditable();
@@ -155,7 +159,10 @@ public class RecommendationEditorExtension
         }
         else if (ScrollToHandler.COMMAND.equals(aAction)) {
             var recommendationVid = VID.parse(aVID.getExtensionPayload());
-            var prediction = getPrediction(aState, recommendationVid);
+            var predictions = recommendationService.getPredictions(aState.getUser(),
+                    aState.getProject());
+            var prediction = predictions.getPredictionByVID(aState.getDocument(),
+                    recommendationVid);
             var page = (AnnotationPageBase) aTarget.getPage();
             if (prediction.map(p -> p instanceof SpanSuggestion).orElse(false)) {
                 var suggestion = (SpanSuggestion) prediction.get();
@@ -183,18 +190,17 @@ public class RecommendationEditorExtension
      */
     private void actionAcceptPrediction(AnnotationActionHandler aActionHandler,
             AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID,
-            Optional<AnnotationSuggestion> aSuggestion, SourceDocument document)
+            Predictions aPredictions, AnnotationSuggestion aSuggestion, SourceDocument document)
         throws AnnotationException, IOException
     {
-        var suggestion = aSuggestion.get();
         var page = (AnnotationPage) aTarget.getPage();
         var dataOwner = aState.getUser().getUsername();
         var sessionOwner = userService.getCurrentUsername();
-        var layer = annotationService.getLayer(suggestion.getLayerId());
+        var layer = annotationService.getLayer(aSuggestion.getLayerId());
         var adapter = annotationService.getAdapter(layer);
 
         var annotation = (Annotation) recommendationService.acceptSuggestion(sessionOwner, document,
-                dataOwner, aCas, suggestion, MAIN_EDITOR);
+                dataOwner, aCas, aPredictions, aSuggestion, MAIN_EDITOR);
 
         page.writeEditorCas(aCas);
 
@@ -204,16 +210,6 @@ public class RecommendationEditorExtension
 
         // Send a UI event that the suggestion has been accepted
         page.send(page, BREADTH, new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));
-    }
-
-    private Optional<AnnotationSuggestion> getPrediction(AnnotatorState aState, VID aRecVid)
-    {
-        var predictions = recommendationService.getPredictions(aState.getUser(),
-                aState.getProject());
-        var document = aState.getDocument();
-        var prediction = predictions //
-                .getPredictionByVID(document, aRecVid);
-        return prediction;
     }
 
     /**
@@ -337,7 +333,7 @@ public class RecommendationEditorExtension
 
             var sao = representative.get();
             var group = predictions
-                    .getGroupedPredictions(AnnotationSuggestion.class, aDocument.getName(),
+                    .getGroupedPredictions(AnnotationSuggestion.class, aDocument,
                             aFeature.getLayer(), sao.getWindowBegin(), sao.getWindowEnd())
                     .stream() //
                     .filter(g -> g.contains(representative.get())) //
@@ -358,10 +354,10 @@ public class RecommendationEditorExtension
 
             for (var ao : sortedByScore) {
                 var detailGroup = new VLazyDetailGroup(ao.getRecommenderName());
+                detailGroup.addDetail(new VLazyDetail("Feature", aFeature.getUiName()));
                 // detailGroup.addDetail(new VLazyDetail("Age", String.valueOf(ao.getAge())));
                 if (ao.getScore() > 0.0d) {
-                    detailGroup.addDetail(
-                            new VLazyDetail("Score", String.format("%.2f", ao.getScore())));
+                    detailGroup.addDetail(new VLazyDetail("Score", format("%.2f", ao.getScore())));
                 }
                 if (ao.getScoreExplanation().isPresent()) {
                     detailGroup.addDetail(

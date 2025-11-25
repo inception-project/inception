@@ -119,6 +119,7 @@ wikidata:
   name: Wikidata (direct mapping)
   type: REMOTE
   default-language: en
+  base-prefix: http://www.wikidata.org/entity/
   access:
     access-url: https://query.wikidata.org/sparql
     full-text-search: https://www.mediawiki.org/ontology#API/search
@@ -342,6 +343,7 @@ snomed-ct:
   name: SNOMED Clinical Terms (manual steps required!)
   type: LOCAL
   default-language: en
+  base-prefix: http://snomed.info/id/
   access:
     full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
   mapping:

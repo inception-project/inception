@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import de.tudarmstadt.ukp.inception.schema.api.feature.RecommendableFeatureTrait;
 
 /**
  * Traits for knowledge-base-related features.
@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MultiValueConceptFeatureTraits
     extends ConceptFeatureTraits_ImplBase
-    implements Serializable
+    implements RecommendableFeatureTrait
 {
     private static final long serialVersionUID = -7104243059568629203L;
 

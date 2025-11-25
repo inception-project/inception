@@ -28,23 +28,23 @@ class ExtendedId
     private final int suggestionId;
     private final long recommenderId;
     private final long layerId;
-    private final String documentName;
+    private final long documentId;
     private final Position position;
     private final int hash;
 
     public ExtendedId(AnnotationSuggestion aSuggestion)
     {
-        documentName = aSuggestion.getDocumentName();
+        documentId = aSuggestion.getDocumentId();
         layerId = aSuggestion.getLayerId();
         suggestionId = aSuggestion.getId();
         recommenderId = aSuggestion.getRecommenderId();
         position = aSuggestion.getPosition();
-        hash = Objects.hash(suggestionId, documentName, layerId, position, recommenderId);
+        hash = Objects.hash(suggestionId, documentId, layerId, position, recommenderId);
     }
 
-    public String getDocumentName()
+    public long getDocumentId()
     {
-        return documentName;
+        return documentId;
     }
 
     public long getLayerId()
@@ -91,7 +91,7 @@ class ExtendedId
         ExtendedId other = (ExtendedId) obj;
         return Objects.equals(position, other.position) //
                 && suggestionId == other.suggestionId //
-                && Objects.equals(documentName, other.documentName) //
+                && documentId == other.documentId //
                 && layerId == other.layerId //
                 && recommenderId == other.recommenderId;
     }

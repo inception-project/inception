@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -39,7 +39,7 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
 public interface SuggestionSupport
-    extends Extension<Recommender>
+    extends Extension<SuggestionSupportQuery>
 {
     /**
      * @param aCtx
@@ -84,19 +84,25 @@ public interface SuggestionSupport
      *            the location from where the change was triggered
      * @param aAction
      *            whether the annotation was accepted or corrected
-     * @return the created/updated annotation.
+     * @return an {@link Optional} containing created/updated annotation
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    AnnotationBaseFS acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
+    Optional<AnnotationBaseFS> acceptSuggestion(String aSessionOwner, SourceDocument aDocument,
             String aDataOwner, CAS aCas, TypeAdapter aAdapter, AnnotationFeature aFeature,
-            AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation,
-            LearningRecordUserAction aAction)
+            Predictions aPredictions, AnnotationSuggestion aSuggestion,
+            LearningRecordChangeLocation aLocation, LearningRecordUserAction aAction)
         throws AnnotationException;
 
     /**
      * Reject the given suggestion.
      * 
+     * @param aSessionOwner
+     *            the user currently logged in
+     * @param aDocument
+     *            the source document to which the annotations belong
+     * @param aDataOwner
+     *            the annotator user to whom the annotations belong
      * @param aSuggestion
      *            the suggestion to reject.
      * @throws AnnotationException
@@ -109,6 +115,12 @@ public interface SuggestionSupport
     /**
      * Skip the given suggestion.
      * 
+     * @param aSessionOwner
+     *            the user currently logged in
+     * @param aDocument
+     *            the source document to which the annotations belong
+     * @param aDataOwner
+     *            the annotator user to whom the annotations belong
      * @param aSuggestion
      *            the suggestion to skip.
      * @throws AnnotationException
@@ -120,6 +132,11 @@ public interface SuggestionSupport
 
     /**
      * Create a learning record from the given suggestion.
+     * 
+     * @param aDocument
+     *            the source document to which the annotations belong
+     * @param aDataOwner
+     *            the annotator user to whom the annotations belong
      */
     LearningRecord toLearningRecord(SourceDocument aDocument, String aDataOwner,
             AnnotationSuggestion aSuggestion, AnnotationFeature aFeature,

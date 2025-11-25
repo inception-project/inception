@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraits;
+import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
 
 public class AzureAiOpenAiRecommenderTraits
     extends LlmRecommenderTraits
@@ -29,11 +30,18 @@ public class AzureAiOpenAiRecommenderTraits
 
     private AuthenticationTraits authentication;
 
+    public AzureAiOpenAiRecommenderTraits()
+    {
+        setAuthentication(new ApiKeyAuthenticationTraits());
+    }
+
+    @Override
     public AuthenticationTraits getAuthentication()
     {
         return authentication;
     }
 
+    @Override
     public void setAuthentication(AuthenticationTraits aAuthentication)
     {
         authentication = aAuthentication;

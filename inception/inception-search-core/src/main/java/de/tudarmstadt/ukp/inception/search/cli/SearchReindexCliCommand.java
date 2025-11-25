@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.search.cli;
 
 import static java.util.Arrays.asList;
 
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -48,7 +47,7 @@ import picocli.CommandLine.Option;
 public class SearchReindexCliCommand
     implements Callable<Integer>
 {
-    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private final static Logger LOG = LoggerFactory.getLogger("inception.cli");
 
     @Option(names = { "--project-slug" }, description = "Re-index only the given project")
     private String slug;

@@ -34,8 +34,8 @@ import java.util.Set;
 
 import org.apache.uima.cas.FeatureStructure;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
+import de.tudarmstadt.ukp.inception.curation.api.Position;
 
 /**
  * A description of the differences between CASes.

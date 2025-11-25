@@ -18,8 +18,7 @@
 package de.tudarmstadt.ukp.inception.schema.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport.FEATURE_NAME_FIRST;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport.FEATURE_NAME_FIRST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -54,9 +53,11 @@ import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfig
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.config.ChainLayerAutoConfiguration;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.config.RelationLayerAutoConfiguration;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -69,6 +70,7 @@ import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoCon
         excludeAutoConfiguration = LiquibaseAutoConfiguration.class, //
         showSql = false, //
         properties = { //
+                "recommender.enabled=false", //
                 "spring.main.banner-mode=off", //
                 "repository.path=" + AnnotationSchemaServiceImplTest.TEST_OUTPUT_FOLDER })
 @EntityScan({ //
@@ -79,7 +81,9 @@ import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoCon
         ProjectServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
         AnnotationSchemaServiceAutoConfiguration.class, //
-        SecurityAutoConfiguration.class })
+        SecurityAutoConfiguration.class, //
+        RelationLayerAutoConfiguration.class, //
+        ChainLayerAutoConfiguration.class })
 class AnnotationSchemaServiceImplTest
 {
     private static final String TAG_NOT_IN_LIST = "TAG-NOT-IN-LIST";
@@ -191,11 +195,12 @@ class AnnotationSchemaServiceImplTest
                         .extracting(ValidationError::getMessage).first().asString() //
                         .contains("empty");
 
-        assertThat(sut.validateFeatureName(AnnotationFeature.builder().withName(FEAT_REL_SOURCE)
-                .withLayer(relationLayer).build())) //
-                        .hasSize(1) //
-                        .extracting(ValidationError::getMessage).first().asString() //
-                        .contains("reserved feature name");
+        assertThat(sut.validateFeatureName(
+                AnnotationFeature.builder().withName(RelationLayerSupport.FEAT_REL_SOURCE) //
+                        .withLayer(relationLayer).build())) //
+                                .hasSize(1) //
+                                .extracting(ValidationError::getMessage).first().asString() //
+                                .contains("reserved feature name");
 
         assertThat(sut.validateFeatureName(AnnotationFeature.builder().withName(FEATURE_NAME_FIRST)
                 .withLayer(chainLayer).build())) //

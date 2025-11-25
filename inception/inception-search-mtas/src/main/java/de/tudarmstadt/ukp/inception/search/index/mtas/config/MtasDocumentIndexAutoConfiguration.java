@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.index.mtas.MtasDocumentIndexFactory;
+import de.tudarmstadt.ukp.inception.search.index.mtas.footprint.MtasDocumentIndexFootprintProvider;
 
 @AutoConfigureAfter(SearchServiceAutoConfiguration.class)
 @ConditionalOnBean(PhysicalIndexRegistry.class)
@@ -41,5 +42,12 @@ public class MtasDocumentIndexAutoConfiguration
     {
         return new MtasDocumentIndexFactory(aDocumentService, aRepositoryProperties,
                 aFeatureIndexingSupportRegistry, aFeatureSupportRegistry);
+    }
+
+    @Bean
+    public MtasDocumentIndexFootprintProvider mtasDocumentIndexFootprintProvider(
+            MtasDocumentIndexFactory aMtasDocumentIndexFactory)
+    {
+        return new MtasDocumentIndexFootprintProvider(aMtasDocumentIndexFactory);
     }
 }

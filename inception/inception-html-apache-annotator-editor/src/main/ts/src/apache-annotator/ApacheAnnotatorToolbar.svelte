@@ -31,38 +31,46 @@
   let dispatch = createEventDispatcher()
 
   const defaultPreferences = {
-      showLabels: false,
-      showAggregatedLabels: true,
-      showEmptyHighlights: false,
-      showDocumentStructure: false,
-      showImages: true,
-      showTables: true,
-      documentStructureWidth: 0.2,
+    showLabels: false,
+    showAggregatedLabels: true,
+    showEmptyHighlights: false,
+    showDocumentStructure: false,
+    showImages: true,
+    showTables: true,
+    documentStructureWidth: 0.2,
+  }
+
+  $effect(() => {
+    annotatorState.showDocumentStructure;
+    annotatorState.documentStructureWidth;
+    savePreferences()
+    dispatch('documentStructurePreferencesChanged', {});
+  });
+
+  $effect(() => {
+    annotatorState.showImages;
+    annotatorState.showTables;
+    savePreferences()
+    dispatch('cssRenderingPreferencesChanged', {});
+  });
+
+  $effect(() => {
+    annotatorState.showLabels;
+    annotatorState.showAggregatedLabels;
+    annotatorState.showEmptyHighlights;
+    savePreferences()
+    dispatch('renderingPreferencesChanged', {});
+  });
+
+  let preferencesDebounceTimeout: number | undefined = undefined
+
+  function savePreferences() {
+    if (preferencesDebounceTimeout) {
+      window.clearTimeout(preferencesDebounceTimeout)
+      preferencesDebounceTimeout = undefined
     }
-
-    $effect(() => { 
-      annotatorState.showDocumentStructure;
-      annotatorState.documentStructureWidth;
-      savePreferences()
-      dispatch('documentStructurePreferencesChanged', {});
-    });
-
-    $effect(() => { 
-      annotatorState.showImages;
-      annotatorState.showTables;
-      savePreferences()
-      dispatch('cssRenderingPreferencesChanged', {});
-    });
-
-    $effect(() => { 
-      annotatorState.showLabels;
-      annotatorState.showAggregatedLabels;
-      annotatorState.showEmptyHighlights;
-      savePreferences()
-      dispatch('renderingPreferencesChanged', {});
-    });
-
-    function savePreferences() {
+    preferencesDebounceTimeout = window.setTimeout(() => { 
+      console.log("Saved preferences")
       ajax.savePreferences(userPreferencesKey, {
         showLabels: annotatorState.showLabels,
         showAggregatedLabels: annotatorState.showAggregatedLabels,
@@ -70,9 +78,10 @@
         showDocumentStructure: annotatorState.showDocumentStructure,
         showImages: annotatorState.showImages,
         showTables: annotatorState.showTables,
-        documentStructureWidth: annotatorState.documentStructureWidth,
+        documentStructureWidth: annotatorState.documentStructureWidth
       });
-    }
+    }, 250)
+  }
 </script>
 
 <div class="bootstrap card card-header border-0 border-bottom rounded-0 p-1" role="toolbar">

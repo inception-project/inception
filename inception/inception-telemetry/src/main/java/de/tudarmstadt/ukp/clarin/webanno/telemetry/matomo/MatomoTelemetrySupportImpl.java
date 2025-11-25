@@ -26,13 +26,10 @@ import static java.util.Collections.newSetFromMap;
 import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 
 import java.io.IOException;
-import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
+import java.lang.invoke.MethodHandles;
+import java.net.URI;
 import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,17 +37,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.TrustAllStrategy;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
-import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.matomo.java.tracking.MatomoRequest;
+import org.matomo.java.tracking.MatomoTracker;
+import org.matomo.java.tracking.TrackerConfiguration;
+import org.matomo.java.tracking.parameters.VisitorId;
 import org.piwik.java.tracking.CustomVariable;
-import org.piwik.java.tracking.PiwikRequest;
-import org.piwik.java.tracking.PiwikTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -62,7 +55,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.session.HttpSessionCreatedEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.InstanceIdentity;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryDetail;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryService;
@@ -90,7 +82,7 @@ public class MatomoTelemetrySupportImpl
     public static final String ACTION_PING = "ping";
     public static final String ACTION_ALIVE = "alive";
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final InstanceIdentityService identityService;
     private final TelemetryService telemetryService;
@@ -105,7 +97,7 @@ public class MatomoTelemetrySupportImpl
 
     private ScheduledExecutorService scheduler;
     private boolean trackerInitialized = false;
-    private PiwikTracker tracker;
+    private MatomoTracker tracker;
     // private PiwikConfig config;
 
     @Autowired
@@ -122,7 +114,7 @@ public class MatomoTelemetrySupportImpl
         properties = aMatomoProperties;
     }
 
-    private PiwikTracker getTracker()
+    private MatomoTracker getTracker()
     {
         if (trackerInitialized) {
             return tracker;
@@ -133,12 +125,20 @@ public class MatomoTelemetrySupportImpl
         trackerInitialized = true;
 
         try {
-            String url = properties.getServerScheme() + "://" + properties.getServerHost()
+            var url = properties.getServerScheme() + "://" + properties.getServerHost()
                     + prependIfMissing(properties.getServerPath(), "/");
-            tracker = new SslIgnoringPiwikTracker(url, Duration.of(30, SECONDS));
+
+            tracker = new MatomoTracker(TrackerConfiguration.builder() //
+                    .enabled(true) //
+                    .apiEndpoint(URI.create(url)) //
+                    .connectTimeout(Duration.of(30, SECONDS)) //
+                    .socketTimeout(Duration.of(30, SECONDS)) //
+                    .disableSslCertValidation(true) //
+                    .disableSslHostVerification(true) //
+                    .build());
         }
         catch (Exception e) {
-            log.info("Unable to set up telemetry client: {}", e.getMessage());
+            LOG.info("Unable to set up telemetry client: {}", e.getMessage());
             tracker = null;
         }
 
@@ -166,24 +166,25 @@ public class MatomoTelemetrySupportImpl
     @Override
     public boolean hasValidSettings()
     {
-        Optional<TelemetrySettings> settings = telemetryService.readSettings(this);
+        var settings = telemetryService.readSettings(this);
 
         if (!settings.isPresent()) {
             return false;
         }
 
-        boolean outdated = settings.get().getVersion() != getVersion();
+        var outdated = settings.get().getVersion() != getVersion();
         if (outdated) {
             return false;
         }
 
-        return settings.map(this::readTraits).map(traits -> traits.isEnabled() != null)
+        return settings.map(this::readTraits) //
+                .map(traits -> traits.isEnabled() != null) //
                 .orElse(false);
     }
 
     public boolean isEnabled()
     {
-        Optional<TelemetrySettings> settings = telemetryService.readSettings(this);
+        var settings = telemetryService.readSettings(this);
 
         if (!settings.isPresent()) {
             return false;
@@ -242,7 +243,7 @@ public class MatomoTelemetrySupportImpl
             sendTelemetry(ACTION_BOOT);
         }
         else {
-            log.debug("Telemetry disabled");
+            LOG.debug("Telemetry disabled");
         }
     }
 
@@ -256,14 +257,14 @@ public class MatomoTelemetrySupportImpl
         }
         else {
             resetActivePrincipals();
-            log.debug("Telemetry disabled");
+            LOG.debug("Telemetry disabled");
         }
     }
 
     private void updateActivePrincipals()
     {
         // Collect all active principals
-        List<Object> allPrincipals = sessionRegistry.getAllPrincipals();
+        var allPrincipals = sessionRegistry.getAllPrincipals();
         allPrincipals.stream()
                 .flatMap(principal -> sessionRegistry.getAllSessions(principal, false).stream())
                 .forEach(sessionInfo -> activePrincipals.add(sessionInfo.getPrincipal()));
@@ -293,14 +294,14 @@ public class MatomoTelemetrySupportImpl
 
         // Check if there are any active (non-expired) sessions - if yes, we send a ping.
         updateActivePrincipals();
-        boolean hasActiveSessions = !activePrincipals.isEmpty();
+        var hasActiveSessions = !activePrincipals.isEmpty();
 
         if (!hasActiveSessions) {
-            log.debug("Telemetry detected no active principals: {}", activePrincipals);
+            LOG.debug("Telemetry detected no active principals: {}", activePrincipals);
             return;
         }
         else {
-            log.debug("Telemetry detected active principals: {}", activePrincipals);
+            LOG.debug("Telemetry detected active principals: {}", activePrincipals);
         }
 
         // Clear the active principals from the last period and perform an initial collection for
@@ -323,20 +324,22 @@ public class MatomoTelemetrySupportImpl
     private void sendTelemetry(String aAction)
     {
         if (getTracker() == null) {
-            log.debug("Telemetry unavailable");
+            LOG.debug("Telemetry unavailable");
             return;
         }
 
         try {
-            InstanceIdentity id = identityService.getInstanceIdentity();
+            var id = identityService.getInstanceIdentity();
 
-            UUID uuid = UUID.fromString(id.getId());
+            var uuid = UUID.fromString(id.getId());
 
-            PiwikRequest request = new PiwikRequest(properties.getSiteId(),
-                    new URL(properties.getContext()));
+            var request = MatomoRequest.request() //
+                    .siteId(properties.getSiteId()) //
+                    .actionUrl(properties.getContext()) //
+                    .build();
             request.setHeaderUserAgent(System.getProperty("os.name"));
             request.setActionName(aAction);
-            request.setVisitorId(format("%016x", uuid.getMostSignificantBits()));
+            request.setVisitorId(VisitorId.fromHex(format("%016x", uuid.getMostSignificantBits())));
             request.setUserId(id.getId());
             request.setVisitCustomVariable(new CustomVariable("app", applicationName), 1);
             request.setVisitCustomVariable(
@@ -350,18 +353,18 @@ public class MatomoTelemetrySupportImpl
                     telemetryService.getDeploymentMode().toString()), 5);
 
             getTracker().sendRequestAsync(request);
-            log.debug("Telemetry sent ({})", aAction);
+            LOG.debug("Telemetry sent ({})", aAction);
         }
-        catch (IOException e) {
-            log.debug("Unable to send telemetry server", e);
+        catch (Exception e) {
+            LOG.debug("Unable to send telemetry server", e);
         }
     }
 
     @Override
     public List<TelemetryDetail> getDetails()
     {
-        InstanceIdentity id = identityService.getInstanceIdentity();
-        UUID uuid = UUID.fromString(id.getId());
+        var id = identityService.getInstanceIdentity();
+        var uuid = UUID.fromString(id.getId());
 
         return asList(new TelemetryDetail("Instance ID", id.getId(),
                 "Unique anonymous identifier for your installation. This value is randomly "
@@ -417,7 +420,7 @@ public class MatomoTelemetrySupportImpl
             traits = JSONUtil.fromJsonString(MatomoTelemetryTraits.class, aSettings.getTraits());
         }
         catch (IOException e) {
-            log.error("Unable to read traits", e);
+            LOG.error("Unable to read traits", e);
         }
 
         if (traits == null) {
@@ -434,7 +437,7 @@ public class MatomoTelemetrySupportImpl
             aSettings.setTraits(JSONUtil.toJsonString(aTraits));
         }
         catch (IOException e) {
-            log.error("Unable to write traits", e);
+            LOG.error("Unable to write traits", e);
         }
     }
 
@@ -448,43 +451,5 @@ public class MatomoTelemetrySupportImpl
     public void rejectAll(MatomoTelemetryTraits aTraits)
     {
         aTraits.setEnabled(false);
-    }
-
-    private class SslIgnoringPiwikTracker
-        extends PiwikTracker
-    {
-        private final Duration timeout;
-        private CloseableHttpAsyncClient asyncClient = null;
-
-        public SslIgnoringPiwikTracker(String aHostUrl, Duration aTimeout)
-        {
-            super(aHostUrl, (int) aTimeout.toMillis());
-            timeout = aTimeout;
-        }
-
-        @Override
-        protected CloseableHttpAsyncClient getHttpAsyncClient()
-        {
-            if (asyncClient != null) {
-                return asyncClient;
-            }
-
-            try {
-                HttpAsyncClientBuilder builder = HttpAsyncClientBuilder.create();
-                builder.setDefaultRequestConfig(RequestConfig.custom() //
-                        .setConnectTimeout((int) timeout.toMillis()) //
-                        .setConnectionRequestTimeout((int) timeout.toMillis()) //
-                        .setSocketTimeout((int) timeout.toMillis()).build());
-                builder.setSSLContext(new SSLContextBuilder()
-                        .loadTrustMaterial(null, TrustAllStrategy.INSTANCE).build());
-                builder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
-                asyncClient = builder.build();
-            }
-            catch (KeyStoreException | KeyManagementException | NoSuchAlgorithmException e) {
-                throw new IllegalStateException(e);
-            }
-
-            return asyncClient;
-        }
     }
 }

@@ -30,15 +30,15 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUti
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.loadWebAnnoTsv3;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.makeLinkHostFS;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.EXCLUDE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode.INCLUDE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.MULTIPLE_TARGETS_MULTIPLE_ROLES;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.MULTIPLE_TARGETS_ONE_ROLE;
 import static de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode.ONE_TARGET_MULTIPLE_ROLES;
-import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.curation.RelationDiffAdapterImpl.DEPENDENCY_DIFF_ADAPTER;
+import static de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffAdapterImpl.POS_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -72,15 +72,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.curation.RelationDiffAdapterImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanDiffAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanPosition;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffAdapterImpl;
 
 public class CasDiffTest
 {
@@ -89,9 +90,9 @@ public class CasDiffTest
     private static final SpanDiffAdapter LEMMA_ADAPTER;
 
     static {
-        POS_VALUE_ADAPTER = new SpanDiffAdapter(POS.class.getName(), "PosValue");
-        TOKEN_ADAPTER = new SpanDiffAdapter(Token.class.getName());
-        LEMMA_ADAPTER = new SpanDiffAdapter(Lemma.class.getName());
+        POS_VALUE_ADAPTER = new SpanDiffAdapterImpl(POS.class.getName(), "PosValue");
+        TOKEN_ADAPTER = new SpanDiffAdapterImpl(Token.class.getName());
+        LEMMA_ADAPTER = new SpanDiffAdapterImpl(Lemma.class.getName());
     }
 
     @Test
@@ -280,7 +281,7 @@ public class CasDiffTest
                     "casdiff/relationDistance/user1.conll", //
                     "casdiff/relationDistance/user2.conll");
 
-            var diffAdapters = asList(new RelationDiffAdapter(Dependency.class.getName(),
+            var diffAdapters = asList(new RelationDiffAdapterImpl(Dependency.class.getName(),
                     "Dependent", "Governor", "DependencyType"));
 
             var result = doDiff(diffAdapters, casByUser).toResult();
@@ -370,7 +371,7 @@ public class CasDiffTest
             casByUser.put("user1", jcasA.getCas());
             casByUser.put("user2", jcasB.getCas());
 
-            var diffAdapters = asList(new RelationDiffAdapter("webanno.custom.Relation",
+            var diffAdapters = asList(new RelationDiffAdapterImpl("webanno.custom.Relation",
                     FEAT_REL_TARGET, FEAT_REL_SOURCE, "value"));
 
             var result = doDiff(diffAdapters, casByUser).toResult();
@@ -389,7 +390,7 @@ public class CasDiffTest
         private static final SpanDiffAdapter SPAN_MULTI_VALUE_ADAPTER;
 
         static {
-            SPAN_MULTI_VALUE_ADAPTER = new SpanDiffAdapter(TYPE_SPAN_MULTI_VALUE, "values");
+            SPAN_MULTI_VALUE_ADAPTER = new SpanDiffAdapterImpl(TYPE_SPAN_MULTI_VALUE, "values");
         }
 
         @Test
@@ -500,11 +501,11 @@ public class CasDiffTest
         private Map<String, CAS> casByUser;
 
         static {
-            HOST_TYPE_ADAPTER = new SpanDiffAdapter(HOST_TYPE);
+            HOST_TYPE_ADAPTER = new SpanDiffAdapterImpl(HOST_TYPE);
             HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target",
                     MULTIPLE_TARGETS_MULTIPLE_ROLES, INCLUDE);
 
-            FILLER_ADAPTER = new SpanDiffAdapter(SLOT_FILLER_TYPE, "value");
+            FILLER_ADAPTER = new SpanDiffAdapterImpl(SLOT_FILLER_TYPE, "value");
         }
 
         @BeforeEach
@@ -557,11 +558,11 @@ public class CasDiffTest
         private Map<String, CAS> casByUser;
 
         static {
-            HOST_TYPE_ADAPTER = new SpanDiffAdapter(HOST_TYPE);
+            HOST_TYPE_ADAPTER = new SpanDiffAdapterImpl(HOST_TYPE);
             HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target",
                     MULTIPLE_TARGETS_MULTIPLE_ROLES, EXCLUDE);
 
-            FILLER_ADAPTER = new SpanDiffAdapter(SLOT_FILLER_TYPE, "value");
+            FILLER_ADAPTER = new SpanDiffAdapterImpl(SLOT_FILLER_TYPE, "value");
         }
 
         @BeforeEach
@@ -830,11 +831,11 @@ public class CasDiffTest
         private Map<String, CAS> casByUser;
 
         static {
-            HOST_TYPE_ADAPTER = new SpanDiffAdapter(HOST_TYPE);
+            HOST_TYPE_ADAPTER = new SpanDiffAdapterImpl(HOST_TYPE);
             HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target", ONE_TARGET_MULTIPLE_ROLES,
                     EXCLUDE);
 
-            FILLER_ADAPTER = new SpanDiffAdapter(SLOT_FILLER_TYPE, "value");
+            FILLER_ADAPTER = new SpanDiffAdapterImpl(SLOT_FILLER_TYPE, "value");
         }
 
         @BeforeEach
@@ -1055,11 +1056,11 @@ public class CasDiffTest
         private Map<String, CAS> casByUser;
 
         static {
-            HOST_TYPE_ADAPTER = new SpanDiffAdapter(HOST_TYPE);
+            HOST_TYPE_ADAPTER = new SpanDiffAdapterImpl(HOST_TYPE);
             HOST_TYPE_ADAPTER.addLinkFeature("links", "role", "target", MULTIPLE_TARGETS_ONE_ROLE,
                     EXCLUDE);
 
-            FILLER_ADAPTER = new SpanDiffAdapter(SLOT_FILLER_TYPE, "value");
+            FILLER_ADAPTER = new SpanDiffAdapterImpl(SLOT_FILLER_TYPE, "value");
         }
 
         @BeforeEach

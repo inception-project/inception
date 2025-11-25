@@ -185,7 +185,7 @@ public class CompactSerializerV2Impl
         for (var comment : aVDoc.comments()) {
             var cann = vidToAnnotation.get(comment.getVid());
             if (cann == null) {
-                LOG.warn("VID {} referenced by comment does not exist: {}", comment.getVid(),
+                LOG.debug("VID {} referenced by comment does not exist: {}", comment.getVid(),
                         comment);
                 continue;
             }

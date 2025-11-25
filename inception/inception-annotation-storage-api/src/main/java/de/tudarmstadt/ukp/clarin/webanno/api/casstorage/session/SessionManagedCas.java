@@ -27,11 +27,12 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 
 public class SessionManagedCas
 {
     private final long sourceDocumentId;
-    private final String userId;
+    private final AnnotationSet set;
     private final CasAccessMode mode;
     private final CAS cas;
     private final CasHolder casHolder;
@@ -40,21 +41,22 @@ public class SessionManagedCas
     private int readCount;
     private int writeCount;
 
-    public SessionManagedCas(long aSourceDocumentId, String aUserId, CasAccessMode aMode, CAS aCas)
+    public SessionManagedCas(long aSourceDocumentId, AnnotationSet aSet, CasAccessMode aMode,
+            CAS aCas)
     {
         super();
 
         Validate.notNull(aCas, "CAS cannot be null");
 
         sourceDocumentId = aSourceDocumentId;
-        userId = aUserId;
+        set = aSet;
         mode = aMode;
         cas = aCas;
         casHolder = null;
         shouldReleaseOnClose = true;
     }
 
-    public SessionManagedCas(long aSourceDocumentId, String aUserId, CasAccessMode aMode,
+    public SessionManagedCas(long aSourceDocumentId, AnnotationSet aSet, CasAccessMode aMode,
             CasHolder aCasHolder)
     {
         super();
@@ -62,7 +64,7 @@ public class SessionManagedCas
         Validate.notNull(aCasHolder, "CAS holder cannot be null");
 
         sourceDocumentId = aSourceDocumentId;
-        userId = aUserId;
+        set = aSet;
         mode = aMode;
         cas = null;
         casHolder = aCasHolder;
@@ -78,9 +80,9 @@ public class SessionManagedCas
         return sourceDocumentId;
     }
 
-    public String getUserId()
+    public AnnotationSet getSet()
     {
-        return userId;
+        return set;
     }
 
     public CasAccessMode getMode()
@@ -158,27 +160,27 @@ public class SessionManagedCas
         if (!(other instanceof SessionManagedCas)) {
             return false;
         }
-        SessionManagedCas castOther = (SessionManagedCas) other;
+        var castOther = (SessionManagedCas) other;
         return Objects.equals(sourceDocumentId, castOther.sourceDocumentId)
-                && Objects.equals(userId, castOther.userId) && Objects.equals(mode, castOther.mode);
+                && Objects.equals(set, castOther.set) && Objects.equals(mode, castOther.mode);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(sourceDocumentId, userId, mode);
+        return Objects.hash(sourceDocumentId, set, mode);
     }
 
     @Override
     public String toString()
     {
-        ToStringBuilder builder = new ToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE);
+        var builder = new ToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE);
 
         if (sourceDocumentId >= 0l) {
-            builder.append("doc", sourceDocumentId).append("user", userId);
+            builder.append("doc", sourceDocumentId).append("set", set);
         }
         else {
-            builder.append("purpose", userId);
+            builder.append("purpose", set);
         }
 
         return builder.append("cas", cas != null ? cas.hashCode() : "[NULL]").append("m", mode)

@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>37.0-SNAPSHOT</version>
+    <version>39.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-project-initializers-wikidatalinking</artifactId>
   <name>INCEpTION - Core - Project initializers - Entity Linking (Wikidata)</name>
@@ -108,6 +108,11 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api-annotation</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-feature-string</artifactId>
       <version>${project.version}</version>
     </dependency>
 

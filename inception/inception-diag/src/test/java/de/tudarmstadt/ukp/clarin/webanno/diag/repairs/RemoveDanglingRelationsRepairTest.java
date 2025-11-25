@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
-import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,7 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
-import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
+import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllFeatureStructuresIndexedCheck;
@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapterImpl;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
@@ -69,7 +69,7 @@ public class RemoveDanglingRelationsRepairTest
     public void test() throws Exception
     {
         when(schemaService.findAdapter(any(), any()))
-                .thenReturn(new RelationAdapter(null, null, null, null, FEAT_REL_SOURCE,
+                .thenReturn(new RelationAdapterImpl(null, null, null, null, FEAT_REL_SOURCE,
                         FEAT_REL_TARGET, () -> asList(), asList(), constraintsService));
 
         var checksRegistry = new ChecksRegistryImpl(asList(new AllFeatureStructuresIndexedCheck()));
@@ -93,7 +93,7 @@ public class RemoveDanglingRelationsRepairTest
         dep.addToIndexes();
 
         var messages = new ArrayList<LogMessage>();
-        var cd = new CasDoctor(checksRegistry, repairsRegistry);
+        var cd = new CasDoctorImpl(checksRegistry, repairsRegistry);
         cd.setActiveChecks(
                 checksRegistry.getExtensions().stream().map(c -> c.getId()).toArray(String[]::new));
         cd.setActiveRepairs(repairsRegistry.getExtensions().stream().map(c -> c.getId())

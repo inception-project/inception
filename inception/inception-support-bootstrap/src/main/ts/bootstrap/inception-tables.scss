@@ -37,15 +37,15 @@ tr.even:hover{
 }
 
 .headers,
-.headers a:link,
-.headers a:visited{
+.headers th > a:link,
+.headers th > a:visited{
     --bs-table-color: var(--bs-light);
     --bs-table-bg: #B90F22 !important;
     background-color:#B90F22 !important;
     color:white !important;
 }
 
-tr.headers th.wicket_orderDown a::after {
+tr.headers th.wicket_orderDown > a::after {
     font-family: "Font Awesome 5 Free";
     content: "\f0dd";
     display: inline-block;
@@ -53,7 +53,7 @@ tr.headers th.wicket_orderDown a::after {
     font-weight: 900;
 }
 
-tr.headers th.wicket_orderUp a::after {
+tr.headers th.wicket_orderUp > a::after {
     font-family: "Font Awesome 5 Free";
     content: "\f0de";
     display: inline-block;

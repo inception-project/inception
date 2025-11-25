@@ -39,10 +39,6 @@ public interface ProjectExportService
     File exportProject(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
         throws ProjectExportException, IOException, InterruptedException;
 
-    void exportProject(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
-            File aProjectZipFile)
-        throws ProjectExportException, IOException, InterruptedException;
-
     ProjectExportTaskHandle startProjectExportTask(FullProjectExportRequest aModel,
             String aUsername);
 

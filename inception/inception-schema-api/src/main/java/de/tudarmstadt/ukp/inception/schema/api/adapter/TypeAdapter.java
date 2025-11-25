@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeatureFilter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -186,6 +187,8 @@ public interface TypeAdapter
      */
     <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs);
 
+    FeatureState getFeatureState(AnnotationFeature aFeature, FeatureStructure aFs);
+
     boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS);
 
     /**
@@ -236,7 +239,7 @@ public interface TypeAdapter
 
     <T> Optional<T> getFeatureTraits(AnnotationFeature aFeature, Class<T> aInterface);
 
-    default boolean isEquivalentAnnotation(AnnotationFS aFS1, AnnotationFS aFS2)
+    default boolean isEquivalentAnnotation(FeatureStructure aFS1, FeatureStructure aFS2)
     {
         if (!isSamePosition(aFS1, aFS2)) {
             return false;
@@ -262,6 +265,8 @@ public interface TypeAdapter
     }
 
     <T> Optional<FeatureSupport<T>> getFeatureSupport(String aName);
+
+    <T> Optional<FeatureSupport<T>> getFeatureSupport(AnnotationFeature aFeature);
 
     String renderFeatureValue(FeatureStructure aFS, String aFeature);
 

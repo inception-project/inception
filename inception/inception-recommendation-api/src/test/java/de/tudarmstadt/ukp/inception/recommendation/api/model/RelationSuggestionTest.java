@@ -34,7 +34,7 @@ class RelationSuggestionTest
                 .withRecommenderName("rec") //
                 .withLayerId(5) //
                 .withFeature("feature") //
-                .withDocumentName("document") //
+                .withDocument(1234L) //
                 .withLabel("label") //
                 .withUiLabel("uiLabel") //
                 .withScore(6.0) //

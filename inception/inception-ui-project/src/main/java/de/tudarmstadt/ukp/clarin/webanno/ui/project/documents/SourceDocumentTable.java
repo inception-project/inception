@@ -58,6 +58,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
@@ -98,11 +99,11 @@ public class SourceDocumentTable
     private SourceDocumentTableDataProvider dataProvider;
     private DataTable<SourceDocumentTableRow, SourceDocumentTableSortKeys> table;
     private TextField<String> nameFilter;
-    private LambdaAjaxLink toggleBulkChange;
     private ModalDialog confirmationDialog;
+
+    private LambdaAjaxLink toggleBulkChange;
     private WebMarkupContainer bulkActionDropdown;
     private WebMarkupContainer bulkActionDropdownButton;
-
     private boolean bulkChangeMode = false;
     private SourceDocumentSelectColumn selectColumn;
 
@@ -132,6 +133,7 @@ public class SourceDocumentTable
                 $ -> renderDate($.getDocument().getCreated())));
         columns.add(new SourceDocumentTableDeleteActionColumn(this));
         columns.add(new SourceDocumentTableExportActionColumn(this));
+        columns.add(new SourceDocumentTableRenameActionColumn(this));
         if (getApplication().getConfigurationType() == DEVELOPMENT) {
             columns.add(new LambdaColumn<>(new ResourceModel("id"), FORMAT,
                     $ -> $.getDocument().getId()));
@@ -168,7 +170,7 @@ public class SourceDocumentTable
         queue(new LambdaAjaxLink("bulkDelete", this::actionBulkDeleteDocuments));
         queue(new AjaxDownloadLink("bulkExport", //
                 Model.of("files.zip"), //
-                LoadableDetachableModel.of(this::exportDocuments)));
+                LoadableDetachableModel.of(this::exportDocumentsAsZip)));
 
         queue(new SourceDocumentStateFilterPanel(CID_STATE_FILTERS,
                 () -> dataProvider.getFilterState().getStates()));
@@ -276,6 +278,13 @@ public class SourceDocumentTable
     }
 
     @OnEvent
+    public void onSourceDocumentTableRenameDocumentEvent(
+            SourceDocumentTableRenameDocumentEvent aEvent)
+    {
+        actionRenameDocument(aEvent.getTarget(), aEvent.getDocument());
+    }
+
+    @OnEvent
     public void onSourceDocumentTableToggleSelectAllEvent(
             SourceDocumentTableToggleSelectAllEvent aEvent)
     {
@@ -284,13 +293,13 @@ public class SourceDocumentTable
         boolean targetValue = aEvent.isSelectAll();
 
         for (var row : dataProvider) {
-            if (row.isSelected()) {
-                selected++;
-            }
-
             if (row.isSelected() != targetValue) {
                 changed++;
                 row.setSelected(targetValue);
+            }
+
+            if (row.isSelected()) {
+                selected++;
             }
         }
 
@@ -302,18 +311,18 @@ public class SourceDocumentTable
 
     private List<SourceDocument> getSelectedDocuments()
     {
-        var selectedDocuments = dataProvider.getModel().getObject().stream() //
+        return dataProvider.getModel().getObject().stream() //
                 .filter(SourceDocumentTableRow::isSelected) //
                 .map(SourceDocumentTableRow::getDocument) //
                 .collect(toList());
-        return selectedDocuments;
     }
 
-    private IResourceStream exportDocuments()
+    private IResourceStream exportDocumentsAsZip()
     {
         var selectedDocuments = getSelectedDocuments();
         return new PipedStreamResource(
-                os -> documentService.exportSourceDocuments(os, selectedDocuments));
+                os -> documentService.exportSourceDocuments(os, selectedDocuments),
+                MediaType.valueOf("application/zip"));
     }
 
     private void actionDeleteDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
@@ -321,11 +330,31 @@ public class SourceDocumentTable
         var dialogContent = new DeleteDocumentConfirmationDialogContentPanel(
                 ModalDialog.CONTENT_ID);
 
-        IModel<String> documentNameModel = Model.of(aDocument.getName());
+        var documentNameModel = Model.of(aDocument.getName());
         dialogContent.setExpectedResponseModel(documentNameModel);
         dialogContent.setConfirmAction($ -> actionConfirmDeleteDocuments($, asList(aDocument)));
 
         confirmationDialog.open(dialogContent, aTarget);
+    }
+
+    private void actionRenameDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
+    {
+        var dialogContent = new RenameDocumentDialogContent(ModalDialog.CONTENT_ID,
+                Model.of(aDocument),
+                (_target, _newName) -> actionConfirmRenameDocument(_target, aDocument, _newName));
+
+        confirmationDialog.open(dialogContent, aTarget);
+    }
+
+    private void actionConfirmRenameDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            String aNewName)
+    {
+        documentService.renameSourceDocument(aDocument, aNewName);
+        success("Document [" + aDocument.getName() + "] has been renamed to [" + aNewName + "]");
+        confirmationDialog.close(aTarget);
+        aTarget.addChildren(getPage(), IFeedback.class);
+        dataProvider.refresh();
+        aTarget.add(table);
     }
 
     private void actionBulkDeleteDocuments(AjaxRequestTarget aTarget)
@@ -340,7 +369,7 @@ public class SourceDocumentTable
 
         var project = selectedDocuments.get(0).getProject();
 
-        IModel<String> projectNameModel = Model.of(project.getName());
+        var projectNameModel = Model.of(project.getName());
 
         var dialogContent = new DeleteDocumentConfirmationDialogContentPanel(ModalDialog.CONTENT_ID,
                 Model.of(selectedDocuments));

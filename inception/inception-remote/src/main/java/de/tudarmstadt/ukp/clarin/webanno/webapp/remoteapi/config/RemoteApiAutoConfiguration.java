@@ -19,24 +19,29 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.SPEL_IS_ADMIN_ACCOUNT_RECOVERY_MODE;
 
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
+import java.security.GeneralSecurityException;
+import java.util.List;
 
 import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroAnnotationController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroCurationController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroDocumentController;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroKnowledgeBaseController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroProjectController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.legacy.LegacyRemoteApiController;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.menubar.SwaggerUiMenuBarItemSupport;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.HttpWebhookDriver;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.KafkaWebhookDriver;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookDriver;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhooksConfiguration;
 import de.tudarmstadt.ukp.inception.remoteapi.Controller_ImplBase;
@@ -44,6 +49,7 @@ import de.tudarmstadt.ukp.inception.remoteapi.next.AnnotationController;
 import de.tudarmstadt.ukp.inception.remoteapi.next.PermissionController;
 import de.tudarmstadt.ukp.inception.remoteapi.next.TaskBulkPredictionController;
 import de.tudarmstadt.ukp.inception.remoteapi.next.TaskController;
+import de.tudarmstadt.ukp.inception.remoteapi.next.UserController;
 import io.swagger.v3.oas.models.info.Info;
 
 @ConditionalOnWebApplication
@@ -121,6 +127,20 @@ public class RemoteApiAutoConfiguration
         return new LegacyRemoteApiController();
     }
 
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    @Bean
+    public AeroKnowledgeBaseController aeroKnowledgeBaseController()
+    {
+        return new AeroKnowledgeBaseController();
+    }
+
+    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    @Bean
+    public UserController userController()
+    {
+        return new UserController();
+    }
+
     @ConditionalOnExpression("!(" + REMOTE_API_ENABLED_CONDITION + ")")
     @Bean
     public GroupedOpenApi defaultDocket()
@@ -168,10 +188,23 @@ public class RemoteApiAutoConfiguration
 
     @Bean
     public WebhookService webhookService(WebhooksConfiguration aConfiguration,
-            RestTemplateBuilder aRestTemplateBuilder)
-        throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException
+            @Lazy @Autowired(required = false) List<WebhookDriver> aExtensions)
+        throws GeneralSecurityException
     {
-        return new WebhookService(aConfiguration, aRestTemplateBuilder);
+        return new WebhookService(aConfiguration, aExtensions);
+    }
+
+    @Bean
+    public HttpWebhookDriver httpWebhookDriver(RestTemplateBuilder aRestTemplateBuilder)
+        throws GeneralSecurityException
+    {
+        return new HttpWebhookDriver(aRestTemplateBuilder);
+    }
+
+    @Bean
+    public KafkaWebhookDriver kafkaWebhookDriver()
+    {
+        return new KafkaWebhookDriver();
     }
 
     @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)

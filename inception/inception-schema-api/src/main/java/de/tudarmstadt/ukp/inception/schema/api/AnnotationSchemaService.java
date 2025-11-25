@@ -57,6 +57,12 @@ public interface AnnotationSchemaService
     String SERVICE_NAME = "annotationService";
 
     /**
+     * Used when generating INCEpTION-specific feature names between a base name defined by the user
+     * and an INCEpTION-specific suffix.
+     */
+    static final String FEATURE_SUFFIX_SEP = "__";
+
+    /**
      * Creates a {@link Tag}. Combination of {@code tag name} and {@code tagset name} should be
      * unique.
      *
@@ -285,6 +291,8 @@ public interface AnnotationSchemaService
      * @return the feature.
      */
     AnnotationFeature getFeature(String aFeature, AnnotationLayer aLayer);
+
+    Optional<AnnotationFeature> getFeature(long aLayerId, String aName);
 
     /**
      * Check if an {@link AnnotationLayer} already exists.

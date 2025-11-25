@@ -59,8 +59,7 @@ public class MatrixWorkloadServiceImpl
         var documentsPerUser = new LinkedHashMap<String, AtomicInteger>();
 
         // Pre-load the map so we have a stable order
-        var annotators = projectService.listProjectUsersWithPermissions(aProject, ANNOTATOR)
-                .stream() //
+        var annotators = projectService.listUsersWithRoleInProject(aProject, ANNOTATOR).stream() //
                 .map(User::getUsername) //
                 .sorted() //
                 .toList();

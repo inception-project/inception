@@ -20,7 +20,10 @@
 <body>
   <wicket:panel>
     <div class="card border-start-0 border-end-0 border-bottom-0 rounded-0 flex-content flex-v-container overflow-hidden">
-      <div class="card-header rounded-0">Activities</div>
+      <div class="card-header rounded-0 d-flex align-items-center gap-2">
+        <div>Activities</div>
+        <select wicket:id="user" class="form-select"/>
+      </div>
       <div wicket:id="content" class="card-body overflow-auto p-0"/>
     </div>
   </wicket:panel>

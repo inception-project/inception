@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.project.export.task.curated;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.apache.commons.io.FileUtils.forceDelete;
@@ -26,8 +27,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -39,7 +38,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.export.task.ProjectExportTask_ImplBase;
@@ -77,7 +75,7 @@ public class CuratedDocumentsProjectExportTask
             exportTempDir.delete();
             exportTempDir.mkdirs();
 
-            boolean curationDocumentExist = documentService.existsCurationDocument(project);
+            var curationDocumentExist = documentService.existsCurationDocument(project);
 
             if (!curationDocumentExist) {
                 throw new ProjectExportException(
@@ -131,7 +129,7 @@ public class CuratedDocumentsProjectExportTask
         var project = aModel.getProject();
 
         // Get all the source documents from the project
-        List<SourceDocument> documents = documentService.listSourceDocuments(project);
+        var documents = documentService.listSourceDocuments(project);
 
         // Determine which format to use for export.
         FormatSupport format;
@@ -140,15 +138,15 @@ public class CuratedDocumentsProjectExportTask
         }
         else {
             format = importExportService.getWritableFormatById(aModel.getFormat()).orElseGet(() -> {
-                FormatSupport formatSupport = importExportService.getFallbackFormat();
+                var formatSupport = importExportService.getFallbackFormat();
                 LOG.info("Format [{}] is not writable - exporting as [{}] instead.",
                         aModel.getFormat(), formatSupport.getName());
                 return formatSupport;
             });
         }
 
-        int initProgress = aMonitor.getProgress() - 1;
-        int i = 1;
+        var initProgress = aMonitor.getProgress() - 1;
+        var i = 1;
         for (var sourceDocument : documents) {
             // check if the export has been cancelled
             if (Thread.interrupted()) {
@@ -156,11 +154,11 @@ public class CuratedDocumentsProjectExportTask
             }
 
             try (var session = CasStorageSession.openNested()) {
-                File curationCasDir = new File(
+                var curationCasDir = new File(
                         aCopyDir + CURATION_AS_SERIALISED_CAS + sourceDocument.getName());
                 FileUtils.forceMkdir(curationCasDir);
 
-                File curationDir = new File(aCopyDir + CURATION_FOLDER + sourceDocument.getName());
+                var curationDir = new File(aCopyDir + CURATION_FOLDER + sourceDocument.getName());
                 FileUtils.forceMkdir(curationDir);
 
                 // If depending on a InProgress, include only the the curation documents that are
@@ -169,16 +167,16 @@ public class CuratedDocumentsProjectExportTask
                         .equals(sourceDocument.getState()))
                         || SourceDocumentState.CURATION_FINISHED
                                 .equals(sourceDocument.getState())) {
-                    if (documentService.existsCas(sourceDocument, CURATION_USER)) {
+                    if (documentService.existsCas(sourceDocument, CURATION_SET)) {
                         // Copy CAS - this is used when importing the project again
-                        try (OutputStream os = new FileOutputStream(
+                        try (var os = new FileOutputStream(
                                 new File(curationDir, CURATION_USER + ".ser"))) {
-                            documentService.exportCas(sourceDocument, CURATION_USER, os);
+                            documentService.exportCas(sourceDocument, CURATION_SET, os);
                         }
 
                         // Copy secondary export format for convenience - not used during import
                         try {
-                            File curationFile = importExportService.exportAnnotationDocument(
+                            var curationFile = importExportService.exportAnnotationDocument(
                                     sourceDocument, WebAnnoConst.CURATION_USER, format,
                                     WebAnnoConst.CURATION_USER, Mode.CURATION);
                             FileUtils.copyFileToDirectory(curationFile, curationDir);

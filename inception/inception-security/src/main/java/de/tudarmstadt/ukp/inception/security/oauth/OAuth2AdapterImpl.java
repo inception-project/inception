@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.security.oauth;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
 import static java.util.stream.Collectors.joining;
 import static org.springframework.security.oauth2.core.OAuth2ErrorCodes.ACCESS_DENIED;
 
@@ -53,6 +52,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
@@ -141,7 +141,8 @@ public class OAuth2AdapterImpl
 
         denyAccessToUsersWithIllegalUsername(username);
 
-        var realm = REALM_EXTERNAL_PREFIX + userRequest.getClientRegistration().getRegistrationId();
+        var realm = Realm.REALM_EXTERNAL_PREFIX
+                + userRequest.getClientRegistration().getRegistrationId();
 
         User u = userRepository.get(username);
         if (u != null) {

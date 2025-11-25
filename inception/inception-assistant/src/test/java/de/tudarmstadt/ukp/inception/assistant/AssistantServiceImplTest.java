@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.assistant.config.AssistantToolsAutoConfiguration;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
@@ -69,25 +70,30 @@ import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfigur
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.config.ToolLibraryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.test.websocket.WebSocketStompTestClient;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
+import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest( //
         webEnvironment = RANDOM_PORT, //
         properties = { //
+                "recommender.enabled=false", //
                 "server.address=127.0.0.1", //
                 "spring.main.banner-mode=off", //
                 "assistant.enabled=true", //
                 "websocket.enabled=true" })
 @SpringBootApplication( //
         exclude = { //
+                AssistantToolsAutoConfiguration.class, //
                 LiquibaseAutoConfiguration.class, //
                 SearchServiceAutoConfiguration.class, //
+                WorkloadManagementAutoConfiguration.class, //
                 EventLoggingAutoConfiguration.class })
 @ImportAutoConfiguration({ //
         SecurityAutoConfiguration.class, //
@@ -97,6 +103,7 @@ import jakarta.persistence.EntityManager;
         CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
         CasDoctorAutoConfiguration.class, //
+        ToolLibraryAutoConfiguration.class, //
         DocumentImportExportServiceAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class })
 @EntityScan({ //

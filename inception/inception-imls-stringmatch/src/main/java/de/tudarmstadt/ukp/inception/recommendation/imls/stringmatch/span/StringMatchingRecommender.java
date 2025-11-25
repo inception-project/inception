@@ -67,12 +67,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.GazeteerEntry;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.text.KeySanitizerFactory;
 import de.tudarmstadt.ukp.inception.support.text.Trie;
 import de.tudarmstadt.ukp.inception.support.text.WhitespaceNormalizingSanitizer;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public class StringMatchingRecommender
     extends RecommendationEngine
@@ -189,12 +189,9 @@ public class StringMatchingRecommender
                 catch (IOException e) {
                     aContext.log(LogMessage.error(getRecommender().getName(),
                             "Unable to load gazeteer [%s]: %s", gaz.getName(), e.getMessage()));
-                    LOG.error(
-                            "Unable to load gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
-                            gaz.getName(), gaz.getRecommender().getName(),
-                            gaz.getRecommender().getId(),
-                            gaz.getRecommender().getProject().getName(),
-                            gaz.getRecommender().getProject().getId(), e);
+                    LOG.error("Unable to load gazeteer [{}] for recommender {} in project {}",
+                            gaz.getName(), gaz.getRecommender(), gaz.getRecommender().getProject(),
+                            e);
                 }
             }
         }
@@ -443,7 +440,12 @@ public class StringMatchingRecommender
         var entry = aDict.get(text);
         if (entry == null) {
             entry = new DictEntry(text);
-            aDict.put(text, entry);
+            try {
+                aDict.put(text, entry);
+            }
+            catch (IllegalArgumentException e) {
+                // This can happen if the text is empty after sanitization
+            }
         }
 
         entry.put(label);

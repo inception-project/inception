@@ -190,7 +190,7 @@
     </div>
     {#if annotation}
         <div class="popover-body p-0">
-            {#if annotation.comments}
+            {#if annotation.comments && annotation.comments.length > 0}
                 <div class="p-1">
                     {#each annotation.comments as comment}
                         <div class="i7n-marker-{comment.type}">{comment.comment}</div>
@@ -214,7 +214,7 @@
                                 <div class="fw-bold">{detailGroup.title}</div>
                             {/if}
                             {#each detailGroup.details as detail}
-                                <div class:ps-2={detailGroup.title}>
+                                <div class:ps-2={detailGroup.title} style="white-space: pre-line;">
                                     <span class="fw-semibold">{detail.label}:</span>
                                     {detail.value}
                                 </div>

@@ -39,29 +39,44 @@
         score: number;
     }
 
-    interface MTextMessage {
+    interface MChatMessage {
         id: string;
         role: string;
         actor?: string;
-        message: string;
-        done: boolean;
         internal: boolean;
         performance?: MPerformanceMetrics;
+        context?: string;
         references?: MReference[];
     }
 
+    interface MTextMessage extends MChatMessage {
+        thinking: string;
+        message: string;
+        done: boolean;
+    }
+
+    interface MCallResponse extends MChatMessage {
+        toolName: string;
+        arguments: any;
+        payload: any;
+    }
+
     interface Props {
-        wsEndpointUrl: string; // should this be full ws://... url
-        topicChannel: string;
         ajaxEndpointUrl?: string;
+        wsEndpointUrl: string; // should this be full ws://... url
         csrfToken: string;
+        topicChannel: string;
+        dataOwner: string;
+        documentId: number;
     }
 
     let {
-        wsEndpointUrl,
-        topicChannel,
         ajaxEndpointUrl,
-        csrfToken
+        wsEndpointUrl,
+        csrfToken,
+        topicChannel,
+        dataOwner,
+        documentId
     }: Props = $props();
 
     let socket: WebSocket = null;
@@ -74,7 +89,7 @@
     let chatContainer = null;
     let autoScroll = true;
 
-    let messages : MTextMessage[] = $state([]);
+    let messages : MChatMessage[] = $state([]);
     let messageInput;
     let waitingForResponse = $state(false);
 
@@ -187,8 +202,13 @@
 
     function dispatchMessage(incomingMessage: any) {
         const type = incomingMessage["@type"];
+        console.log(
+            `Received message of type ${type} with id ${incomingMessage.id}`,
+        );
         if (type === "textMessage") {
             onTextMessage(incomingMessage);
+        } else if (type === "callResponse") {
+            onCallResponse(incomingMessage);
         } else if (type === "clearCmd") {
             onClearCommand();
         }
@@ -208,9 +228,25 @@
         // If message is new, add it
         if (index === -1) {
             console.log(
-                `Starting message ${msg.id} with message fragment: ${msg.message}`,
+                `Starting message ${msg.id} with message fragment: ${msg.thinking || msg.message}`,
             );
-            messages = [...messages, msg];
+            if (msg.context) {
+                // Insert before the message with id == msg.context
+                const ctxIndex = messages.findIndex((m) => m.id === msg.context);
+                if (ctxIndex !== -1) {
+                    messages = [
+                        ...messages.slice(0, ctxIndex),
+                        msg,
+                        ...messages.slice(ctxIndex),
+                    ];
+                } else {
+                    // If context id not found, just append
+                    messages = [...messages, msg];
+                }
+            } else {
+                    // If no context id also just append
+                messages = [...messages, msg];
+            }
 
             if (
                 msg.role == "assistant" &&
@@ -225,13 +261,20 @@
 
         // Merge with existing message
         console.log(
-            `Merging message ${msg.id} with message fragment: ${msg.message}`,
+            `Merging message ${msg.id} with message fragment: ${msg.thinking || msg.message}`,
         );
         messages = [
             ...messages.slice(0, index),
             {
                 ...messages[index],
                 message: (messages[index].message || "") + (msg.message || ""),
+                thinking: (messages[index].thinking || "") + (msg.thinking || ""),
+                references: [
+                    ...(messages[index].references || []),
+                    ...(msg.references || []).filter(
+                        (newRef) => !(messages[index].references || []).some((existingRef) => existingRef.id === newRef.id)
+                    )
+                ],
                 performance: msg.performance,
                 done: msg.done,
             },
@@ -249,6 +292,26 @@
 
         if (msg.role == "assistant" && msg.done) {
             waitingForResponse = false;
+        }
+    }
+
+    function onCallResponse(msg: MCallResponse) {
+        if (msg.context) {
+            // Insert before the message with id == msg.context
+            const ctxIndex = messages.findIndex((m) => m.id === msg.context);
+            if (ctxIndex !== -1) {
+                messages = [
+                    ...messages.slice(0, ctxIndex),
+                    msg,
+                    ...messages.slice(ctxIndex),
+                ];
+            } else {
+                // If context id not found, just append
+                messages = [...messages, msg];
+            }
+        } else {
+                // If no context id also just append
+            messages = [...messages, msg];
         }
     }
 
@@ -377,7 +440,24 @@
         }
     });
 
-    function renderMessage(message: MTextMessage) {
+    function renderThinking(message: MTextMessage) {
+        if (!message?.thinking) {
+            return "";
+        }
+
+        const trimmedMessage = message.thinking.replace(/{{ref::[\w-]*}?$/, "");
+
+        const rawHtml = marked(trimmedMessage) as string;
+        var pureHtml = DOMPurify.sanitize(rawHtml, { RETURN_DOM: false });
+
+        // Replace all references with the respective reference link
+        pureHtml = replaceReferencesWithHtmlLinks(message, pureHtml, refIdReplacementPattern);
+        pureHtml = replaceReferencesWithHtmlLinks(message, pureHtml, docIdReplacementPattern);
+
+        return pureHtml;
+    }
+
+    function renderContent(message: MTextMessage) {
         if (!message?.message) {
             return "";
         }
@@ -392,6 +472,22 @@
         pureHtml = replaceReferencesWithHtmlLinks(message, pureHtml, docIdReplacementPattern);
 
         return pureHtml;
+    }
+
+    function renderCallArguments(message: MCallResponse) {
+        if (!message?.arguments) {
+            return "no arguments";
+        }
+
+        return JSON.stringify(message.arguments, null, 2);
+    }
+
+    function renderCallPayload(message: MCallResponse) {
+        if (!message?.payload) {
+            return "no payload";
+        }
+
+        return JSON.stringify(message.payload, null, 2);
     }
 
     function replaceReferencesWithHtmlLinks(message, text, pattern) {
@@ -440,6 +536,10 @@
 
             stompClient.publish({
                 destination: "/app" + topicChannel,
+                headers: {
+                    user: dataOwner,
+                    document: documentId
+                },
                 body: message,
             });
             inputElement.value = "";
@@ -455,7 +555,7 @@
         }
     }
 
-    function toggleMessage(event) {
+    function toggleCollapse(event) {
         const messageElement = event.currentTarget.parentElement;
         messageElement.classList.toggle("collapsed");
     }
@@ -491,6 +591,7 @@
             <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
             <div
                 class="message"
+                data-id={message.id}
                 data-role={message.role}
                 data-internal={message.internal}
                 class:collapsed={message.internal}
@@ -498,7 +599,7 @@
             >
                 <div
                     class="message-header text-body-secondary"
-                    onclick={message.internal ? toggleMessage : null}
+                    onclick={(message.internal) ? toggleCollapse : null}
                     role={message.internal ? "button" : undefined}
                 >
                     {#if message.role === "assistant"}
@@ -510,6 +611,8 @@
                         <i class="fas fa-user me-1" title="User message"></i>
                     {:else if message.role === "system"}
                         <i class="fas fa-cog me-1" title="System message"></i>
+                    {:else if message.role === "tool"}
+                        <i class="fas fa-hammer me-1" title="Tool"></i>
                     {/if}
                     {message.actor ? message.actor : message.role}
                     {#if !message.internal}
@@ -530,24 +633,52 @@
                     {/if}
                 </div>
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
-                <div
-                    class="message-body"
-                    class:dots={!message.done}
-                    onclick={handleClick}
-                >
-                    {@html renderMessage(message)}
-                </div>
+                {#if message["@type"] === "textMessage"}
+                    {@const thinking = renderThinking(message)}
+                    {#if thinking}
+                        <div class="message-thinking collapsed">
+                            <div class="message-thinking-header" onclick={toggleCollapse}>
+                                Thinking...
+                            </div>
+                            <div class="message-thinking-body">
+                                {@html thinking}
+                            </div>
+                        </div>
+                    {/if}
+                    <!-- svelte-ignore a11y_no_static_element_interactions -->
+                    <div
+                        class="message-body"
+                        class:dots={!message.done}
+                        onclick={handleClick}
+                    >
+                        {@html renderContent(message)}
+                    </div>
+                {:else if message["@type"] === "callResponse"}
+                    <div class="message-body">
+                        <strong>Called tool: {message.toolName}</strong>
+                        <div>{renderCallArguments(message)}</div>
+                        <div>{renderCallPayload(message)}</div>
+                    </div>
+                {:else}
+                    <div class="message-body">
+                        Unknown message type: {message["@type"]}
+                    </div>
+                {/if}
                 {#if message.performance}
                     <div class="message-footer fw-ligher">
-                        <span
-                            ><i class="far fa-clock me-1"></i>{(message.performance
-                                .duration / 1000).toFixed(2)}s</span
+                        <small
+                            ><i class="fas fa-pause me-1"></i>{(message.performance
+                                .delay / 1000).toFixed(2)}s</small
                         >
-                        <span
+                        <small
+                            ><i class="far fa-clock ms-2 me-1"></i>{(message.performance
+                                .duration / 1000).toFixed(2)}s</small
+                        >
+                        <small
                             ><i class="fas fa-stream ms-2 me-1"></i>{(
                                 message.performance.tokens /
                                 (message.performance.duration / 1000)
-                            ).toFixed(2)}t/s</span
+                            ).toFixed(2)}t/s</small
                         >
                     </div>
                 {/if}
@@ -655,7 +786,26 @@
             color: var(--bs-body-color-secondary);
         }
 
-        .message-body {
+        .message-thinking {
+            /* opacity: 0.7; */
+            margin-bottom: 0.5em;
+
+            .message-thinking-header {
+                display: inline;
+                cursor: pointer;
+                font-size: 0.8em;
+                border-radius: 0.5em;
+                border: 1px solid var(--bs-border-color-translucent);
+                padding: 0.05em 0.3em;
+            }
+
+            .message-thinking-body {
+                padding-left: 0.5em;
+                border-left: solid 2px var(--bs-border-color-translucent);
+            }
+        }
+
+        .message-body, .message-thinking-body {
             display: block;
             font-size: smaller;
 
@@ -691,6 +841,7 @@
         }
 
         .message-footer {
+            opacity: 0.5;
             display: block;
             font-size: x-small;
             padding-top: 0.25em;
@@ -703,6 +854,10 @@
 
         &[data-role="assistant"] {
             background-color: var(--bs-success-bg-subtle);
+        }
+
+        &[data-role="tool"] .message-body {
+            word-break: break-word;
         }
 
         &[data-internal="true"] {
@@ -731,7 +886,7 @@
             }
         }
 
-        &.collapsed .message-body {
+        &.collapsed .message-body, .message-thinking.collapsed .message-thinking-body {
             display: none;
         }
 

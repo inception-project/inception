@@ -31,6 +31,7 @@ public class NamedEntityLinkerTraits
 
     private boolean emptyCandidateFeatureRequired = true;
     private boolean synchronous = true;
+    private boolean includeLinkTargetsInQuery = true;
 
     public boolean isEmptyCandidateFeatureRequired()
     {
@@ -50,5 +51,15 @@ public class NamedEntityLinkerTraits
     public void setSynchronous(boolean aSynchronous)
     {
         synchronous = aSynchronous;
+    }
+
+    public boolean isIncludeLinkTargetsInQuery()
+    {
+        return includeLinkTargetsInQuery;
+    }
+
+    public void setIncludeLinkTargetsInQuery(boolean aIncludeLinkTargetsInQuery)
+    {
+        includeLinkTargetsInQuery = aIncludeLinkTargetsInQuery;
     }
 }

@@ -26,6 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.fleisskappa.FleissKa
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha.KrippendorffAlphaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing.KrippendorffAlphaUnitizingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
@@ -33,30 +34,33 @@ public class AgreementAutoConfiguration
 {
     @Bean
     public AgreementService agreementService(DocumentService aDocumentService,
-            AnnotationSchemaService aSchemaService, UserDao aUserService)
+            AnnotationSchemaService aSchemaService, UserDao aUserService,
+            DiffAdapterRegistry aDiffAdapterRegistry)
     {
-        return new AgreementServiceImpl(aDocumentService, aSchemaService, aUserService);
+        return new AgreementServiceImpl(aDocumentService, aSchemaService, aUserService,
+                aDiffAdapterRegistry);
     }
 
     @Bean
     public CohenKappaAgreementMeasureSupport cohenKappaAgreementMeasureSupport(
-            AnnotationSchemaService aAnnotationService)
+            AnnotationSchemaService aAnnotationService, DiffAdapterRegistry aDiffAdapterRegistry)
     {
-        return new CohenKappaAgreementMeasureSupport(aAnnotationService);
+        return new CohenKappaAgreementMeasureSupport(aAnnotationService, aDiffAdapterRegistry);
     }
 
     @Bean
     public FleissKappaAgreementMeasureSupport fleissKappaAgreementMeasureSupport(
-            AnnotationSchemaService aAnnotationService)
+            AnnotationSchemaService aAnnotationService, DiffAdapterRegistry aDiffAdapterRegistry)
     {
-        return new FleissKappaAgreementMeasureSupport(aAnnotationService);
+        return new FleissKappaAgreementMeasureSupport(aAnnotationService, aDiffAdapterRegistry);
     }
 
     @Bean
     public KrippendorffAlphaAgreementMeasureSupport KrippendorffAlphaAgreementMeasureSupport(
-            AnnotationSchemaService aAnnotationService)
+            AnnotationSchemaService aAnnotationService, DiffAdapterRegistry aDiffAdapterRegistry)
     {
-        return new KrippendorffAlphaAgreementMeasureSupport(aAnnotationService);
+        return new KrippendorffAlphaAgreementMeasureSupport(aAnnotationService,
+                aDiffAdapterRegistry);
     }
 
     @Bean

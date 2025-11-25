@@ -17,25 +17,22 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks;
 
+import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookDriver.X_AERO_NOTIFICATION;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.ANNOTATION_STATE;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.DOCUMENT_STATE;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.PROJECT_STATE;
-import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.X_AERO_NOTIFICATION;
-import static de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils.assumeEndpointIsAvailable;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,8 +56,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.ResourceAccessException;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -112,7 +107,6 @@ public class WebhookServiceTest
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
     private @Autowired WebhooksConfiguration webhooksConfiguration;
     private @Autowired TestService testService;
-    private @Autowired WebhookService webhookService;
 
     private Project project;
     private SourceDocument doc;
@@ -131,25 +125,30 @@ public class WebhookServiceTest
 
         webhooksConfiguration.setGlobalHooks(asList(hook));
 
-        project = new Project("test");
-        project.setState(ProjectState.NEW);
-        project.setId(1l);
+        project = Project.builder() //
+                .withName("test") //
+                .withSlug("test") //
+                .withState(ProjectState.NEW) //
+                .withId(1l) //
+                .build();
 
-        doc = new SourceDocument();
-        doc.setProject(project);
-        doc.setName("testDoc");
-        doc.setId(2l);
-        doc.setState(SourceDocumentState.ANNOTATION_IN_PROGRESS);
+        doc = SourceDocument.builder() //
+                .withProject(project) //
+                .withName("testDoc") //
+                .withId(2l) //
+                .withState(SourceDocumentState.ANNOTATION_IN_PROGRESS) //
+                .build();
 
-        ann = new AnnotationDocument();
-        ann.setName("testDoc");
-        ann.setProject(project);
-        ann.setUser("user");
-        ann.setId(3l);
-        ann.setDocument(doc);
-        ann.setState(AnnotationDocumentState.FINISHED);
-        ann.setAnnotatorState(AnnotationDocumentState.IN_PROGRESS);
-        ann.setAnnotatorComment("Test comment");
+        ann = AnnotationDocument.builder() //
+                .withName("testDoc") //
+                .withProject(project) //
+                .withUser("user") //
+                .withId(3l) //
+                .withDocument(doc) //
+                .withState(AnnotationDocumentState.FINISHED) //
+                .withAnnotatorState(AnnotationDocumentState.IN_PROGRESS) //
+                .withAnnotatorComment("Test comment") //
+                .build();
     }
 
     @Test
@@ -195,6 +194,21 @@ public class WebhookServiceTest
     }
 
     @Test
+    public void thatTopicMappingWorks()
+    {
+        hook.setTopics(asList(DOCUMENT_STATE));
+        hook.setRoutes(Map.of(DOCUMENT_STATE, "Alt" + DOCUMENT_STATE));
+
+        var event = new DocumentStateChangedEvent(this, doc, SourceDocumentState.NEW);
+        applicationEventPublisher.publishEvent(event);
+
+        assertThat(testService.altDocStateChangeMsgs) //
+                .extracting(Pair::getLeft) //
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactly(new DocumentStateChangeMessage(event));
+    }
+
+    @Test
     public void thatAuthHeaderIsSent()
     {
         var header = "Bearer";
@@ -232,116 +246,6 @@ public class WebhookServiceTest
                 .containsExactly(new AnnotationStateChangeMessage(event));
     }
 
-    @Tag("slow")
-    @Test
-    void thatDisablingCertificateValidationWorks_expired()
-    {
-        assumeEndpointIsAvailable("https://expired.badssl.com/");
-
-        hook.setUrl("https://expired.badssl.com/");
-
-        hook.setVerifyCertificates(true);
-        assertThatExceptionOfType(ResourceAccessException.class) //
-                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
-                .withMessageContaining("PKIX path validation failed");
-
-        hook.setVerifyCertificates(false);
-        assertThatExceptionOfType(HttpClientErrorException.class) //
-                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
-                .withMessageContaining("405 Not Allowed");
-    }
-
-    @Tag("slow")
-    @Test
-    void thatDisablingCertificateValidationWorks_wrongHost()
-    {
-        assumeEndpointIsAvailable("https://wrong.host.badssl.com/");
-
-        hook.setUrl("https://wrong.host.badssl.com/");
-
-        hook.setVerifyCertificates(true);
-        assertThatExceptionOfType(ResourceAccessException.class) //
-                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
-                .withMessageContaining("match any of the subject alternative names");
-
-        hook.setVerifyCertificates(false);
-        assertThatExceptionOfType(HttpClientErrorException.class) //
-                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
-                .withMessageContaining("405 Not Allowed");
-    }
-
-    @Tag("slow")
-    @Test
-    void thatDisablingCertificateValidationWorks_selfSigned()
-    {
-        assumeEndpointIsAvailable("https://self-signed.badssl.com/");
-
-        hook.setUrl("https://self-signed.badssl.com/");
-
-        hook.setVerifyCertificates(true);
-        assertThatExceptionOfType(ResourceAccessException.class) //
-                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
-                .withMessageContaining("PKIX path building failed");
-
-        hook.setVerifyCertificates(false);
-        assertThatExceptionOfType(HttpClientErrorException.class) //
-                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
-                .withMessageContaining("405 Not Allowed");
-    }
-
-    @Tag("slow")
-    @Test
-    void thatDisablingCertificateValidationWorks_untrusted()
-    {
-        assumeEndpointIsAvailable("https://untrusted-root.badssl.com/");
-
-        hook.setUrl("https://untrusted-root.badssl.com/");
-
-        hook.setVerifyCertificates(true);
-        assertThatExceptionOfType(ResourceAccessException.class) //
-                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
-                .withMessageContaining("PKIX path building failed");
-
-        hook.setVerifyCertificates(false);
-        assertThatExceptionOfType(HttpClientErrorException.class) //
-                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
-                .withMessageContaining("405 Not Allowed");
-    }
-
-    @Tag("slow")
-    @Test
-    @Disabled("Currently tends to fail with a 404 error")
-    void thatDisablingCertificateValidationWorks_revoked()
-    {
-        assumeEndpointIsAvailable("https://revoked.badssl.com");
-
-        hook.setUrl("https://revoked.badssl.com");
-
-        hook.setVerifyCertificates(true);
-        assertThatExceptionOfType(ResourceAccessException.class) //
-                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
-                .withMessageContaining("PKIX path validation failed");
-
-        hook.setVerifyCertificates(false);
-        assertThatExceptionOfType(HttpClientErrorException.class) //
-                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
-                .withMessageContaining("405 Not Allowed");
-    }
-
-    @Tag("slow")
-    @Test
-    void thatCertificateValidationWorks()
-    {
-        assumeEndpointIsAvailable("https://tls-v1-2.badssl.com:1012/");
-
-        hook.setUrl("https://tls-v1-2.badssl.com:1012/");
-
-        hook.setVerifyCertificates(true);
-        assertThatExceptionOfType(HttpClientErrorException.class) //
-                .isThrownBy(() -> webhookService.sendNotification("test", "test", hook)) //
-                .withMessageContaining("405 Not Allowed");
-    }
-
     @RequestMapping("/test")
     @Controller
     public static class TestService
@@ -349,6 +253,7 @@ public class WebhookServiceTest
         private List<Pair<ProjectStateChangeMessage, HttpHeaders>> projectStateChangeMsgs = new ArrayList<>();
         private List<Pair<DocumentStateChangeMessage, HttpHeaders>> docStateChangeMsgs = new ArrayList<>();
         private List<Pair<AnnotationStateChangeMessage, HttpHeaders>> annStateChangeMsgs = new ArrayList<>();
+        private List<Pair<DocumentStateChangeMessage, HttpHeaders>> altDocStateChangeMsgs = new ArrayList<>();
         private int callCount;
 
         public void reset()
@@ -398,6 +303,20 @@ public class WebhookServiceTest
         {
             LOG.info("Received: {}", aMsg);
             annStateChangeMsgs.add(Pair.of(aMsg, aHeaders));
+            return ResponseEntity.ok().build();
+        }
+
+        @PostMapping( //
+                value = "/subscribe", //
+                headers = X_AERO_NOTIFICATION + "=Alt" + DOCUMENT_STATE, //
+                consumes = APPLICATION_JSON_VALUE)
+        public ResponseEntity<Void> onRawEvent( //
+                @RequestHeader HttpHeaders aHeaders, //
+                @RequestBody DocumentStateChangeMessage aMsg)
+            throws Exception
+        {
+            LOG.info("Received: {}", aMsg);
+            altDocStateChangeMsgs.add(Pair.of(aMsg, aHeaders));
             return ResponseEntity.ok().build();
         }
 

@@ -17,9 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
+import static org.apache.wicket.event.Broadcast.BUBBLE;
+
 import java.util.Objects;
 
+import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.ajax.AjaxEventBehavior;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
 import org.apache.wicket.markup.html.basic.Label;
@@ -30,7 +36,7 @@ import org.apache.wicket.model.IModel;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public class UsernameColumn
-    extends AbstractColumn<User, UserTableSortKeys>
+    extends AbstractColumn<UserTableRow, UserTableSortKeys>
 {
     private static final long serialVersionUID = 8324173231787296215L;
 
@@ -46,14 +52,25 @@ public class UsernameColumn
     }
 
     @Override
-    public void populateItem(Item<ICellPopulator<User>> aItem, String aComponentId,
-            IModel<User> aRowModel)
+    public void populateItem(Item<ICellPopulator<UserTableRow>> aItem, String aComponentId,
+            IModel<UserTableRow> aRowModel)
     {
         var fragment = new Fragment(aComponentId, FID_SELECT_USER_COLUMN, fragmentProvider);
         var user = aRowModel.getObject();
-        fragment.queue(new Label("uiName", aRowModel.map(User::getUiName)));
-        fragment.queue(new Label("name", aRowModel.map(User::getUsername))
-                .setVisible(!Objects.equals(user.getUiName(), user.getUsername())));
+        fragment.queue(
+                new Label("uiName", aRowModel.map(UserTableRow::getUser).map(User::getUiName)));
+        fragment.queue(new Label("name",
+                aRowModel.map(UserTableRow::getUser).map(User::getUsername)).setVisible(
+                        !Objects.equals(user.getUser().getUiName(), user.getUser().getUsername())));
         aItem.add(fragment);
+
+        aItem.add(AttributeModifier.replace("role", "button"));
+        aItem.add(AjaxEventBehavior.onEvent("click",
+                _target -> actionSelectUser(_target, aItem, user.getUser())));
+    }
+
+    private void actionSelectUser(AjaxRequestTarget aTarget, Component aItem, User aUser)
+    {
+        aItem.send(aItem, BUBBLE, new SelectUserEvent(aTarget, aUser));
     }
 }

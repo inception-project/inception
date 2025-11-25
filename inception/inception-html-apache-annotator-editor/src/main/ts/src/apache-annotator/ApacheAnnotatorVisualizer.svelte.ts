@@ -358,9 +358,14 @@ export class ApacheAnnotatorVisualizer {
     if (classList.includes('iaa-marker-error')) decorations += ERROR_LABEL
     if (decorations) decorations += ' '
 
+    let label = `${decorations}${span.label || `[${span.layer.name}]` || NO_LABEL}`
+    if (span.score && !span.hideScore) {
+      label += ` [${span.score.toFixed(2)}]`
+    }
+
     const attributes = {
       'data-iaa-id': `${span.vid}`,
-      'data-iaa-label': `${decorations}${span.label || `[${span.layer.name}]` || NO_LABEL}`,
+      'data-iaa-label': label,
       class: classList.join(' '),
       style: styleList.join('; ')
     }
@@ -418,7 +423,7 @@ export class ApacheAnnotatorVisualizer {
 
   private clearScrollMarkers () {
     if (this.removeScrollMarkersTimeout) {
-      window.cancelIdleCallback(this.removeScrollMarkersTimeout)
+      this.cancelScheduled(this.removeScrollMarkersTimeout)
       this.removeScrollMarkersTimeout = undefined
       this.removeScrollMarkers.forEach(remove => remove())
       this.removeScrollMarkers = []
@@ -441,7 +446,7 @@ export class ApacheAnnotatorVisualizer {
     this.removeSpuriousZeroWidthHighlights()
 
     if (this.removePingMarkers.length > 0) {
-      this.removePingMarkersTimeout = window.setTimeout(() => this.clearPingMarkers(), 2000)
+      this.removePingMarkersTimeout = this.schedule(2000, () => this.clearPingMarkers())
     }
  }
 
@@ -449,7 +454,7 @@ export class ApacheAnnotatorVisualizer {
     console.log('Clearing ping markers');
     
     if (this.removePingMarkersTimeout) {
-      window.clearTimeout(this.removePingMarkersTimeout)
+      this.cancelScheduled(this.removePingMarkersTimeout)
       this.removePingMarkersTimeout = undefined
       this.removePingMarkers.forEach(remove => remove())
       this.removePingMarkers = []
@@ -499,7 +504,7 @@ export class ApacheAnnotatorVisualizer {
       var scrollIntoViewFunc = () => { 
         finalScrollTarget.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' })
         if (this.removeScrollMarkers.length > 0) {
-          window.setTimeout(scrollIntoViewFunc, 100)
+          this.schedule(100, scrollIntoViewFunc)
         }
         
         if (this.root instanceof HTMLElement) {
@@ -515,7 +520,23 @@ export class ApacheAnnotatorVisualizer {
       this.scrolling = true
       this.sectionAnnotationVisualizer.suspend()
       this.sectionAnnotationCreator.suspend()
-      this.removeScrollMarkersTimeout = window.setTimeout(scrollIntoViewFunc, 100)
+      this.removeScrollMarkersTimeout = this.schedule(100, scrollIntoViewFunc)
+    }
+  }
+
+  private schedule(timeout: number, callback: () => void): number{
+    if (typeof window.requestIdleCallback=="undefined") {
+      return window.setTimeout(callback, timeout)
+    } else {
+      return window.requestIdleCallback(callback, { timeout: timeout })
+    }
+  }
+
+  private cancelScheduled(handle: number) {
+    if (typeof window.cancelIdleCallback=="undefined") {
+      window.clearTimeout(handle)
+    } else {
+      window.cancelIdleCallback(handle)
     }
   }
 
@@ -530,6 +551,14 @@ export class ApacheAnnotatorVisualizer {
     this.sectionAnnotationCreator.resume()
     this.sectionAnnotationVisualizer.resume()
     this.lastScrollTop = undefined
+
+    // Workaround for Firefox somehow scrolling the page body a bit when we scroll
+    // inside the iframe during page loading
+    if (navigator.userAgent.includes("Firefox")) {
+      if (window?.parent?.document?.body?.scrollTop) {
+        window.parent.document.body.scrollTop = 0
+      }
+    }
   }
 
   private clearHighlights (): void {

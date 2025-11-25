@@ -57,7 +57,7 @@ public class WebsocketSecurityConfig
                 + TOPIC_ELEMENT_DOCUMENT + "{" + PARAM_DOCUMENT + "}" + TOPIC_ELEMENT_USER + "{"
                 + PARAM_USER + "}/**";
 
-        final var recommenterEventsTopic = "/**" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}"
+        final var recommenderEventsTopic = "/**" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}"
                 + TOPIC_ELEMENT_USER + "{" + PARAM_USER + "}/**";
 
         var msgSecurityExpressionHandler = new DefaultMessageSecurityExpressionHandler();
@@ -74,7 +74,6 @@ public class WebsocketSecurityConfig
             // messages other than MESSAGE,SUBSCRIBE are allowed for authenticated users
             .nullDestMatcher().authenticated() //
             .simpSubscribeDestMatchers("/*/errors*").hasRole("USER")
-            .simpSubscribeDestMatchers("/*/loggedEvents").hasRole("ADMIN")
             .simpSubscribeDestMatchers("/*/scheduler/user").hasRole("USER")
             .simpSubscribeDestMatchers("/*/scheduler" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}")
                 .access(expression(mah, "@projectAccess.canManageProject(#" + PARAM_PROJECT + ")"))
@@ -83,7 +82,7 @@ public class WebsocketSecurityConfig
             .simpSubscribeDestMatchers(annotationEditorTopic)
                 .access(expression(mah, "@documentAccess.canViewAnnotationDocument(#" + PARAM_PROJECT + 
                         ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ")"))
-            .simpSubscribeDestMatchers(recommenterEventsTopic)
+            .simpSubscribeDestMatchers(recommenderEventsTopic)
                 .access(expression(mah, "@projectAccess.canAccessProject(#" + PARAM_PROJECT + ") and "
                         + "@userAccess.isUser(#" + PARAM_USER + ")"))
             .simpDestMatchers("/*/assistant" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}")

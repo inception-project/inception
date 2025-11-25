@@ -52,10 +52,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderTypeSystemUtil
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.OllamaRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.OllamaRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionMode;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.SpanJsonAnnotationTaskCodec;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
 
@@ -70,6 +72,7 @@ class OllamaRecommenderTest
     private AnnotationFeature feature;
     private Recommender recommender;
     private CAS cas;
+    private AnnotationTaskCodecExtensionPointImpl responseExtractorExtensionPoint;
 
     @BeforeAll
     static void checkIfOllamaIsRunning()
@@ -88,6 +91,10 @@ class OllamaRecommenderTest
         recommender.setLayer(layer);
         recommender.setFeature(feature);
 
+        responseExtractorExtensionPoint = new AnnotationTaskCodecExtensionPointImpl(
+                asList(new SpanJsonAnnotationTaskCodec()));
+        responseExtractorExtensionPoint.init();
+
         var tsd = TypeSystemDescriptionFactory.createTypeSystemDescription();
         RecommenderTypeSystemUtils.addPredictionFeaturesToTypeSystem(tsd, asList(feature));
         cas = CasFactory.createCas(tsd);
@@ -104,7 +111,8 @@ class OllamaRecommenderTest
         traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(ExtractionMode.RESPONSE_AS_LABEL);
 
-        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce);
+        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce,
+                responseExtractorExtensionPoint);
         sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
         var predictions = cas.select(NamedEntity.class)
@@ -128,7 +136,8 @@ class OllamaRecommenderTest
         traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(MENTIONS_FROM_JSON);
 
-        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce);
+        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce,
+                responseExtractorExtensionPoint);
         sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
         var predictions = cas.select(NamedEntity.class)
@@ -150,7 +159,8 @@ class OllamaRecommenderTest
         traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(MENTIONS_FROM_JSON);
 
-        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce);
+        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce,
+                responseExtractorExtensionPoint);
         sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
         var predictions = cas.select(NamedEntity.class)
@@ -177,7 +187,8 @@ class OllamaRecommenderTest
         traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(MENTIONS_FROM_JSON);
 
-        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce);
+        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce,
+                responseExtractorExtensionPoint);
         sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
         var predictions = cas.select(NamedEntity.class)
@@ -225,7 +236,8 @@ class OllamaRecommenderTest
         traits.setPromptingMode(PER_SENTENCE);
         traits.setExtractionMode(MENTIONS_FROM_JSON);
 
-        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce);
+        var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce,
+                responseExtractorExtensionPoint);
         sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
         var predictions = cas.select(NamedEntity.class)

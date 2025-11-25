@@ -84,6 +84,7 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5I
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -93,8 +94,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.CreateSpanAnnotationRequest;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.CreateSpanAnnotationRequest;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.CreateAnnotationsOptions;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.DeleteAnnotationsOptions;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchOptions;
@@ -915,7 +916,7 @@ public class SearchAnnotationSidebar
             return;
         }
 
-        documentService.writeAnnotationCas(aCas, aSourceDoc, state.getUser().getUsername(),
+        documentService.writeAnnotationCas(aCas, aSourceDoc, AnnotationSet.forUser(state.getUser()),
                 EXPLICIT_ANNOTATOR_USER_ACTION);
     }
 
@@ -1078,7 +1079,7 @@ public class SearchAnnotationSidebar
                 {
                     var selectedResult = aItem.getModelObject();
                     searchOptions.getObject().setSelectedResult(selectedResult);
-                    actionShowSelectedDocument(t,
+                    getAnnotationPage().actionShowSelectedDocument(t,
                             documentService.getSourceDocument(currentProject,
                                     selectedResult.getDocumentTitle()),
                             selectedResult.getOffsetStart(), selectedResult.getOffsetEnd());

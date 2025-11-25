@@ -65,7 +65,7 @@
             </div>
         </div>
     {:else if !activities || activities.length === 0}
-        <div class="flex-content no-data-notice">
+        <div class="flex-content no-data-notice" style="margin: 0px !important;">
             <span>No recent activity</span>
         </div>
     {:else}

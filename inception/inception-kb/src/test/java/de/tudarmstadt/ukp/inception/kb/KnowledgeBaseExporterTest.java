@@ -57,11 +57,11 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -216,7 +216,7 @@ public class KnowledgeBaseExporterTest
 
     private List<AnnotationFeature> features(Project aProject) throws Exception
     {
-        var layer1 = new AnnotationLayer("layer", "layer", WebAnnoConst.SPAN_TYPE, aProject, false,
+        var layer1 = new AnnotationLayer("layer", "layer", SpanLayerSupport.TYPE, aProject, false,
                 TOKENS, NO_OVERLAP);
 
         var feat1 = new AnnotationFeature(1, layer1, "conceptFeature", "kb:conceptA");

@@ -52,7 +52,6 @@ import org.wicketstuff.jquery.core.JQueryBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.inception.annotation.feature.string.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
@@ -65,6 +64,8 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.SuggestionStatePanel;
+import de.tudarmstadt.ukp.inception.support.kendo.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.IriInfoBadge;
@@ -127,6 +128,8 @@ public class ConceptFeatureEditor
         add(focusComponent = new AutoCompleteField(MID_VALUE,
                 _query -> getCandidates(aStateModel, aHandler, _query)));
 
+        add(new SuggestionStatePanel("suggestionInfo", aModel));
+
         add(new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(), aModel, aHandler)
                 // The key bindings are only visible when the label is also enabled, i.e. when the
                 // editor is used in a "normal" context and not e.g. in the keybindings
@@ -149,7 +152,7 @@ public class ConceptFeatureEditor
         // There is now KB selector in the browser yet, so we do not show it unless either the
         // feature is bound to a specific KB or there is only a single KB in the project.
         if (traits.getRepositoryId() == null && knowledgeBaseService
-                .getEnabledKnowledgeBases(getModelObject().feature.getProject()).size() > 1) {
+                .hasMoreThanOneEnabledKnowledgeBases(getModelObject().feature.getProject())) {
             return false;
         }
 

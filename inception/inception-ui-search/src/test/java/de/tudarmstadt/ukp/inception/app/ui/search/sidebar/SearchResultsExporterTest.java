@@ -18,10 +18,10 @@
 
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
+import static org.apache.commons.csv.CSVFormat.EXCEL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -33,14 +33,14 @@ import org.junit.jupiter.api.io.TempDir;
 import de.tudarmstadt.ukp.inception.search.ResultsGroup;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 
-public class SearchResultsExporterTest
+class SearchResultsExporterTest
 {
     @Test
-    public void testSearchResultsExporter(@TempDir Path tempDir) throws Exception
+    void testSearchResultsExporter(@TempDir Path tempDir) throws Exception
     {
-        Path csvPath = tempDir.resolve("csv.txt");
+        var csvPath = tempDir.resolve("csv.txt");
 
-        SearchResult result1 = new SearchResult();
+        var result1 = new SearchResult();
         result1.setText("is");
         result1.setLeftContext("of Galicia");
         result1.setRightContext("Santiago de");
@@ -48,7 +48,7 @@ public class SearchResultsExporterTest
         result1.setOffsetStart(5);
         result1.setOffsetEnd(7);
 
-        SearchResult result2 = new SearchResult();
+        var result2 = new SearchResult();
         result2.setText("is");
         result2.setLeftContext("de Compostela");
         result2.setRightContext("the capital");
@@ -56,30 +56,28 @@ public class SearchResultsExporterTest
         result2.setOffsetStart(2);
         result2.setOffsetEnd(3);
 
-        List<SearchResult> results1 = new ArrayList<SearchResult>();
+        var results1 = new ArrayList<SearchResult>();
         results1.add(result1);
         results1.add(result2);
 
-        List<SearchResult> results2 = new ArrayList<SearchResult>();
+        var results2 = new ArrayList<SearchResult>();
         results2.add(result2);
         results2.add(result1);
 
-        ResultsGroup resultsGroup1 = new ResultsGroup("1", results1);
-        ResultsGroup resultsGroup2 = new ResultsGroup("2", results2);
-        List<ResultsGroup> resultList = new ArrayList<ResultsGroup>();
+        var resultsGroup1 = new ResultsGroup("1", results1);
+        var resultsGroup2 = new ResultsGroup("2", results2);
+        var resultList = new ArrayList<ResultsGroup>();
         resultList.add(resultsGroup1);
         resultList.add(resultsGroup2);
 
-        SearchResultsExporter exporter = new SearchResultsExporter();
+        var exporter = new SearchResultsExporter();
 
-        try (InputStream stream = exporter.generateCsv(resultList);
-                OutputStream os = Files.newOutputStream(csvPath);) {
+        try (var stream = exporter.generateCsv(resultList);
+                var os = Files.newOutputStream(csvPath);) {
             stream.transferTo(os);
         }
 
-        List<ResultsGroup> reimported = new ArrayList<ResultsGroup>();
-
-        reimported = SearchResultsExporter.importCSV(csvPath);
+        var reimported = importCSV(csvPath);
 
         assertEquals(reimported.size(), resultList.size());
         for (int i = 0; i < reimported.size(); i++) {
@@ -100,4 +98,36 @@ public class SearchResultsExporterTest
         }
     }
 
+    static List<ResultsGroup> importCSV(Path aDataPath) throws IOException
+    {
+        var list = new ArrayList<ResultsGroup>();
+        try (var reader = Files.newBufferedReader(aDataPath)) {
+            var records = EXCEL.parse(reader);
+
+            var i = 0;
+            var inCurrentGroup = new ArrayList<SearchResult>();
+            for (var record : records) {
+                // skip header
+                if (i != 0) {
+                    // blank line indicates new group
+                    if (record.size() < 3) {
+                        list.add(new ResultsGroup(String.valueOf(i), inCurrentGroup));
+                        inCurrentGroup = new ArrayList<SearchResult>();
+                    }
+                    else {
+                        var currentSearchResult = new SearchResult();
+                        currentSearchResult.setDocumentTitle(record.get(0));
+                        currentSearchResult.setOffsetStart(Integer.parseInt(record.get(1)));
+                        currentSearchResult.setOffsetEnd(Integer.parseInt(record.get(2)));
+                        currentSearchResult.setLeftContext(record.get(3));
+                        currentSearchResult.setText(record.get(4));
+                        currentSearchResult.setRightContext(record.get(5));
+                        inCurrentGroup.add(currentSearchResult);
+                    }
+                }
+                i = i + 1;
+            }
+        }
+        return list;
+    }
 }

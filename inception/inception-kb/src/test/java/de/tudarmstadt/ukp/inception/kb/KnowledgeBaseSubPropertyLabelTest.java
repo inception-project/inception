@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.io.TempDir;
@@ -94,11 +93,11 @@ public class KnowledgeBaseSubPropertyLabelTest
                 .collect(Collectors.toList());
     }
 
-    @BeforeAll
-    public static void setUpOnce()
-    {
-        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
-    }
+    // @BeforeAll
+    // public static void setUpOnce()
+    // {
+    // System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
+    // }
 
     @BeforeEach
     public void setUp()

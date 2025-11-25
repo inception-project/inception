@@ -28,7 +28,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
@@ -41,7 +42,6 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,7 +62,7 @@ public class CompactSerializerV2ImplTest
                 .withId(2l) //
                 .withUiName("Relation") //
                 .withName("custom.Relation") //
-                .withType(WebAnnoConst.RELATION_TYPE) //
+                .withType(RelationLayerSupport.TYPE) //
                 .build();
         var vdoc = new VDocument("This is a test.");
         var span1 = new VSpan(spanLayer, new VID(1), new VRange(0, 4), Map.of(), null);

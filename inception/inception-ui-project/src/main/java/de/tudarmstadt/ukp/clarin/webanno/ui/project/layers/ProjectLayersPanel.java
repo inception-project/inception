@@ -82,7 +82,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFileInputField;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.export.LayerImportExportUtils;
@@ -143,19 +143,20 @@ public class ProjectLayersPanel
 
         featureSelectionForm = new FeatureSelectionForm(MID_FEATURE_SELECTION_FORM,
                 selectedFeature);
+        queue(featureSelectionForm);
+
         featureDetailForm = new FeatureDetailForm(MID_FEATURE_DETAIL_FORM, selectedFeature);
+        queue(featureDetailForm);
 
         layerSelectionPane = new LayerSelectionPane("layerSelectionPane", selectedLayer);
+        queue(layerSelectionPane);
+
         layerDetailForm = new LayerDetailForm("layerDetailForm", selectedLayer,
                 featureSelectionForm, featureDetailForm);
-
-        add(layerSelectionPane);
-        add(featureSelectionForm);
-        add(layerDetailForm);
-        add(featureDetailForm);
+        queue(layerDetailForm);
 
         importLayerForm = new ImportLayerForm("importLayerForm");
-        layerSelectionPane.add(importLayerForm);
+        queue(importLayerForm);
     }
 
     @Override

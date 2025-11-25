@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<head>
+  <wicket:head>
+    <style>
+      .project-progress-bar {
+        width: 100px;
+        height: 0.9em;
+        outline: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color);
+        border: var(--bs-border-width) var(--bs-border-style) var(--bs-body-bg);
+        
+        span:not(:last-child) {
+          margin-right: 2px;
+        }
+      }
+      
+      .show-states-on-hover {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5em;
+      }
+      
+      .states-container .show-counts-on-hover {
+        opacity: 0.0;
+        transition: opacity 0.3s ease-in-out;
+      }
+      
+      .states-container:hover .show-counts-on-hover {
+        opacity: 1.0;
+      }
+    </style>
+  </wicket:head>
+</head>
+<body>
+  <wicket:panel>
+    <span class="states-container">
+      <span class="show-counts-on-hover me-2">
+        <span wicket:id="badgeNew" class="text-body me-2">
+          <span wicket:id="iconNew"/>
+          <span wicket:id="docsNew"/>
+        </span>
+        <span wicket:id="badgeAnnotationInProgress" class="text-body me-2">
+          <span wicket:id="iconAnnotationInProgress"/>
+          <span wicket:id="docsAnnotationInProgress"/>
+        </span>
+        <span wicket:id="badgeAnnotationFinished" class="text-body me-2">
+          <span wicket:id="iconAnnotationFinished"/>
+          <span wicket:id="docsAnnotationFinished"/>
+        </span>
+        <span wicket:id="badgeCurationInProgress" class="text-body me-2">
+          <span wicket:id="iconCurationInProgress"/>
+          <span wicket:id="docsCurationInProgress"/>
+        </span>
+        <span wicket:id="badgeCurationFinished"  class="text-body">
+          <span wicket:id="iconCurationFinished"/>
+          <span wicket:id="docsCurationFinished"/>
+        </span>
+      </span>
+      <span class="d-inline-flex project-progress-bar rounded border-1 overflow-hidden">
+        <span wicket:id="barAnnotationInProgress" />
+        <span wicket:id="barAnnotationFinished" />
+        <span wicket:id="barCurationInProgress" />
+        <span wicket:id="barCurationFinished" />
+        <span wicket:id="barNew" />
+      </span>
+    </span>
+  </wicket:panel>
+</body>
+</html>

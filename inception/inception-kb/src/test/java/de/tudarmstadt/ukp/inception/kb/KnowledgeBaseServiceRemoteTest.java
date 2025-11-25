@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClien
 import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.assumeEndpointIsAvailable;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
 import java.io.File;
 import java.io.InputStream;
@@ -40,11 +41,11 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
@@ -73,6 +74,7 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
         properties = { //
                 "spring.main.banner-mode=off" }, //
         excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@Execution(SAME_THREAD)
 public class KnowledgeBaseServiceRemoteTest
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -85,11 +87,11 @@ public class KnowledgeBaseServiceRemoteTest
     @Autowired
     private TestEntityManager testEntityManager;
 
-    @BeforeAll
-    public static void setUpOnce() throws Exception
-    {
-        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
-    }
+    // @BeforeAll
+    // public static void setUpOnce() throws Exception
+    // {
+    // System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
+    // }
 
     @BeforeEach
     public void testWatcher(TestInfo aTestInfo)

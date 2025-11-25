@@ -18,9 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode.NEVER;
-import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeClippedToDocument;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.uima.Range.rangeClippedToDocument;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 
@@ -98,6 +98,9 @@ public abstract class AnnotationPageBase
     private LoadableDetachableModel<Boolean> annotationFinished = LoadableDetachableModel
             .of(this::loadAnnotationFinished);
 
+    private LoadableDetachableModel<String> annotationNotEditableReason = LoadableDetachableModel
+            .of(this::loadAnnotationNotEditableReason);
+
     protected AnnotationPageBase(PageParameters aParameters)
     {
         super(aParameters);
@@ -125,8 +128,8 @@ public abstract class AnnotationPageBase
             }
 
             var url = Url.parse(requestCycle.urlFor(this.getClass(), params));
-            url.setFragment("!" + fragmentParams.stream().collect(joining("&")));
-            var finalUrl = requestCycle.getUrlRenderer().renderFullUrl(url);
+            var finalUrl = requestCycle.getUrlRenderer().renderFullUrl(url) + "#!"
+                    + fragmentParams.stream().collect(joining("&"));
             LOG.trace(
                     "Pushing parameter for document [{}] and user [{}] into fragment: {} (URL redirect)",
                     documentParameter, userParameter, finalUrl);
@@ -462,6 +465,20 @@ public abstract class AnnotationPageBase
         userPreferenceService.loadPreferences(state, userRepository.getCurrentUsername());
     }
 
+    private String loadAnnotationNotEditableReason()
+    {
+        try {
+            var state = getModelObject();
+            var sessionOwner = userRepository.getCurrentUser();
+            documentAccess.assertCanEditAnnotationDocument(sessionOwner, state.getDocument(),
+                    state.getUser().getUsername());
+            return null;
+        }
+        catch (AccessDeniedException e) {
+            return e.getMessage();
+        }
+    }
+
     public void ensureIsEditable() throws NotEditableException
     {
         var state = getModelObject();
@@ -470,14 +487,9 @@ public abstract class AnnotationPageBase
             throw new NotEditableException("No document selected");
         }
 
-        var sessionOwner = userRepository.getCurrentUser();
-
-        try {
-            documentAccess.assertCanEditAnnotationDocument(sessionOwner, state.getDocument(),
-                    state.getUser().getUsername());
-        }
-        catch (AccessDeniedException e) {
-            throw new NotEditableException(e.getMessage());
+        var notEditableReason = annotationNotEditableReason.getObject();
+        if (notEditableReason != null) {
+            throw new NotEditableException(notEditableReason);
         }
     }
 
@@ -508,6 +520,7 @@ public abstract class AnnotationPageBase
     {
         super.detachModels();
         annotationFinished.detach();
+        annotationNotEditableReason.detach();
     }
 
     public abstract IModel<List<DecoratedObject<Project>>> getAllowedProjects();

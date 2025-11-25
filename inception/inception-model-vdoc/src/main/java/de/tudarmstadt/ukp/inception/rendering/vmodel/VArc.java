@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.vmodel;
 
-import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.getAddr;
-
 import java.util.Collections;
 import java.util.Map;
 
@@ -40,78 +38,9 @@ public class VArc
         super(builder.layer, builder.vid, builder.equivalenceSet, builder.features);
         setPlaceholder(builder.placeholder);
         setLabelHint(builder.label);
+        setColorHint(builder.color);
         source = builder.source;
         target = builder.target;
-    }
-
-    /**
-     * @deprecated Unused - to be removed without replacement
-     */
-    @Deprecated
-    @SuppressWarnings("javadoc")
-    public VArc(AnnotationLayer aLayer, AnnotationFS aFS, FeatureStructure aSourceFS,
-            FeatureStructure aTargetFS, String aLabelHint)
-    {
-        this(aLayer, VID.of(aFS), new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)),
-                aLabelHint, null, null);
-    }
-
-    /**
-     * @deprecated Unused - to be removed without replacement
-     */
-    @Deprecated
-    @SuppressWarnings("javadoc")
-    public VArc(AnnotationLayer aLayer, AnnotationFS aFS, FeatureStructure aSourceFS,
-            FeatureStructure aTargetFS, Map<String, String> aFeatures)
-    {
-        this(aLayer, VID.of(aFS), new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)), null,
-                aFeatures, null);
-    }
-
-    public VArc(AnnotationLayer aLayer, VID aVid, FeatureStructure aSourceFS,
-            FeatureStructure aTargetFS, String aLabelHint)
-    {
-        this(aLayer, aVid, VID.of(aSourceFS), VID.of(aTargetFS), aLabelHint, null, null);
-    }
-
-    /**
-     * @deprecated Unused - to be removed without replacement
-     */
-    @Deprecated
-    @SuppressWarnings("javadoc")
-    public VArc(AnnotationLayer aLayer, VID aVid, FeatureStructure aSourceFS,
-            FeatureStructure aTargetFS, String aLabelHint, Map<String, String> aFeatures)
-    {
-        this(aLayer, aVid, new VID(getAddr(aSourceFS)), new VID(getAddr(aTargetFS)), aLabelHint,
-                aFeatures, null);
-    }
-
-    public VArc(AnnotationLayer aLayer, VID aVid, FeatureStructure aSourceFS,
-            FeatureStructure aTargetFS, int aEquivalenceSet, String aLabel)
-    {
-        super(aLayer, aVid, aEquivalenceSet, null);
-        setLabelHint(aLabel);
-        source = new VID(getAddr(aSourceFS));
-        target = new VID(getAddr(aTargetFS));
-    }
-
-    /**
-     * @deprecated Unused - to be removed without replacement
-     */
-    @Deprecated
-    @SuppressWarnings("javadoc")
-    public VArc(AnnotationLayer aLayer, VID aVid, FeatureStructure aSourceFS,
-            FeatureStructure aTargetFS, int aEquivalenceSet, Map<String, String> aFeatures)
-    {
-        super(aLayer, aVid, aEquivalenceSet, aFeatures);
-        source = new VID(getAddr(aSourceFS));
-        target = new VID(getAddr(aTargetFS));
-    }
-
-    public VArc(AnnotationLayer aLayer, VID aVid, VID aSource, VID aTarget, String aLabel,
-            String aColor)
-    {
-        this(aLayer, aVid, aSource, aTarget, aLabel, null, aColor);
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, VID aSource, VID aTarget, String aLabel,
@@ -164,6 +93,7 @@ public class VArc
         private VID source;
         private VID target;
         private String label;
+        private String color;
         private boolean placeholder;
 
         private Builder()
@@ -227,6 +157,12 @@ public class VArc
         public Builder withLabel(String aLabel)
         {
             label = aLabel;
+            return this;
+        }
+
+        public Builder withColor(String aColor)
+        {
+            color = aColor;
             return this;
         }
 

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
@@ -25,32 +26,42 @@ import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.INPU
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.KEYDOWN_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.KeyCodes.ENTER;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenModelIsNotNull;
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.lang.String.join;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.containsAny;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
 import static org.slf4j.LoggerFactory.getLogger;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.TextField;
@@ -58,9 +69,11 @@ import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.navigation.paging.PagingNavigator;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
@@ -75,7 +88,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameApp
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.ajax.BootstrapAjaxPagingNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccess;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -84,9 +97,13 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.project.AjaxProjectImportedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectImportPanel;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterPanel;
 import de.tudarmstadt.ukp.inception.annotation.filters.ProjectRoleFilterStateChanged;
+import de.tudarmstadt.ukp.inception.annotation.filters.ProjectStateFilterPanel;
+import de.tudarmstadt.ukp.inception.annotation.filters.ProjectStateFilterStateChanged;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectAccess;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxBehavior;
@@ -96,8 +113,11 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.support.markdown.TerseMarkdownLabel;
 import de.tudarmstadt.ukp.inception.support.wicket.SanitizingHtmlLabel;
+import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.ui.core.config.DashboardProperties;
+import de.tudarmstadt.ukp.inception.ui.core.config.ProjectUiProperties;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
 @MountPath(value = "/")
@@ -108,12 +128,14 @@ public class ProjectsOverviewPage
             ProjectListSortState.class, "project-overview/project-list-sort-mode");
 
     private static final String MID_CREATED = "created";
+    private static final String MID_UPDATED = "updated";
     private static final String MID_NAME = "name";
     private static final String MID_DESCRIPTION = "description";
     private static final String MID_PROJECT_LINK = "projectLink";
     private static final String MID_LABEL = "label";
     private static final String MID_ROLE = "role";
     private static final String MID_ROLE_FILTER = "roleFilter";
+    private static final String MID_STATE_FILTER = "stateFilter";
     private static final String MID_PROJECTS = "projects";
     private static final String MID_PROJECT = "project";
     private static final String MID_ID = "id";
@@ -122,9 +144,10 @@ public class ProjectsOverviewPage
     private static final String MID_LEAVE_PROJECT = "leaveProject";
     private static final String MID_DIALOG = "dialog";
     private static final String MID_EMPTY_LIST_LABEL = "emptyListLabel";
-    private static final String MID_START_TUTORIAL = "startTutorial";
-    private static final String MID_IMPORT_PROJECT_BUTTON = "importProjectBtn";
     private static final String MID_PAGING_NAVIGATOR = "pagingNavigator";
+    private static final String MID_TOGGLE_BULK_CHANGE = "toggleBulkChange";
+    private static final String MID_BULK_ACTION_DROPDOWN_BUTTON = "bulkActionDropdownButton";
+    private static final String MID_BULK_ACTION_DROPDOWN = "bulkActionDropdown";
 
     private static final long serialVersionUID = -2159246322262294746L;
 
@@ -135,7 +158,9 @@ public class ProjectsOverviewPage
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectExportService exportService;
     private @SpringBean DashboardProperties dashboardProperties;
+    private @SpringBean ProjectUiProperties projectUiProperties;
     private @SpringBean PreferencesService userPrefService;
+    private @SpringBean DocumentService documentService;
 
     private IModel<List<ProjectEntry>> allAccessibleProjects;
     private IModel<User> currentUser;
@@ -146,8 +171,11 @@ public class ProjectsOverviewPage
     private PagingNavigator navigator;
     private BootstrapModalDialog dialog;
     private Label noProjectsNotice;
-    private TextField<String> nameFilter;
+    private TextField<String> queryField;
     private LambdaAjaxLink newProjectLink;
+    private LambdaAjaxLink toggleBulkChange;
+    private boolean bulkChangeMode = false;
+    private Label selectCount;
 
     private Set<Long> highlightedProjects = new HashSet<>();
     private ProjectListDataProvider dataProvider;
@@ -187,11 +215,12 @@ public class ProjectsOverviewPage
         noProjectsNotice.setOutputMarkupPlaceholderTag(true);
         queue(noProjectsNotice);
 
-        add(createStartTutorialLink()); // Must be add instead of queue otherwise there is an error
         queue(createProjectCreationGroup());
         queue(createProjectImportGroup());
         queue(new ProjectRoleFilterPanel(MID_ROLE_FILTER,
                 () -> dataProvider.getFilterState().getRoles()));
+        queue(new ProjectStateFilterPanel(MID_STATE_FILTER,
+                () -> dataProvider.getFilterState().getStates()));
 
         var sortOrder = new DropDownChoice<ProjectListSortStrategy>("sortOrder");
         sortOrder.setModel(sortStrategy);
@@ -205,16 +234,16 @@ public class ProjectsOverviewPage
         }));
         queue(sortOrder);
 
-        nameFilter = new TextField<>("nameFilter",
-                PropertyModel.of(dataProvider.getFilterState(), "projectName"), String.class);
-        nameFilter.setOutputMarkupPlaceholderTag(true);
-        nameFilter.add(
+        queryField = new TextField<>("query",
+                PropertyModel.of(dataProvider.getFilterState(), "query"), String.class);
+        queryField.setOutputMarkupPlaceholderTag(true);
+        queryField.add(
                 new LambdaAjaxFormComponentUpdatingBehavior(INPUT_EVENT, this::actionApplyFilter)
                         .withDebounce(ofMillis(200)));
-        nameFilter.add(new LambdaAjaxFormComponentUpdatingBehavior(KEYDOWN_EVENT, this::actionOpen)
+        queryField.add(new LambdaAjaxFormComponentUpdatingBehavior(KEYDOWN_EVENT, this::actionOpen)
                 .withKeyCode(ENTER));
-        nameFilter.add(visibleWhen(() -> !allAccessibleProjects.getObject().isEmpty()));
-        queue(nameFilter);
+        queryField.add(visibleWhen(() -> !allAccessibleProjects.getObject().isEmpty()));
+        queue(queryField);
 
         dialog = new BootstrapModalDialog(MID_DIALOG);
         dialog.trapFocus();
@@ -223,6 +252,127 @@ public class ProjectsOverviewPage
         openCreateProjectDialogByDefaultBehavior = new LambdaAjaxBehavior(
                 this::actionCreateProject);
         add(openCreateProjectDialogByDefaultBehavior);
+
+        var selectionStatePanel = new WebMarkupContainer("selectionStatePanel");
+        selectionStatePanel.add(visibleWhen(() -> bulkChangeMode));
+        queue(selectionStatePanel);
+
+        queue(new LambdaAjaxLink("selectAll", this::actionSelectAll));
+        queue(new LambdaAjaxLink("selectNone", this::actionSelectNone));
+
+        selectCount = new Label("selectCount", LambdaModel.of(() -> {
+            return allAccessibleProjects.getObject().stream().filter(e -> e.isSelected()).count()
+                    + " / " + allAccessibleProjects.getObject().size();
+        }));
+        selectCount.setOutputMarkupId(true);
+        queue(selectCount);
+
+        var sessionOwner = userRepository.getCurrentUser();
+        toggleBulkChange = new LambdaAjaxLink(MID_TOGGLE_BULK_CHANGE, this::actionToggleBulkChange);
+        toggleBulkChange.setOutputMarkupId(true);
+        toggleBulkChange.setVisibilityAllowed(
+                projectUiProperties.getBulkActions().anyActionsAccessible(sessionOwner));
+        toggleBulkChange.add(new CssClassNameAppender(LoadableDetachableModel
+                .of(() -> bulkChangeMode ? "btn-primary active" : "btn-outline-primary")));
+        queue(toggleBulkChange);
+
+        var bulkActionDropdown = new WebMarkupContainer(MID_BULK_ACTION_DROPDOWN);
+        bulkActionDropdown.setVisibilityAllowed(
+                projectUiProperties.getBulkActions().anyActionsAccessible(sessionOwner));
+        bulkActionDropdown.add(visibleWhen(() -> bulkChangeMode));
+        queue(bulkActionDropdown);
+
+        var bulkActionDropdownButton = new WebMarkupContainer(MID_BULK_ACTION_DROPDOWN_BUTTON);
+        bulkActionDropdownButton.setVisibilityAllowed(
+                projectUiProperties.getBulkActions().anyActionsAccessible(sessionOwner));
+        bulkActionDropdownButton.add(visibleWhen(() -> bulkChangeMode));
+        queue(bulkActionDropdownButton);
+
+        queue(new LambdaAjaxLink("bulkDelete", this::actionBulkDeleteProjects).setVisibilityAllowed(
+                projectUiProperties.getBulkActions().getDelete().isAccessible(sessionOwner)));
+
+        queue(new ProjectOverviewFeedPanel("feed").add(visibleWhen(
+                () -> projectService.hasRoleInAnyProject(sessionOwner, MANAGER, CURATOR))));
+    }
+
+    private void actionSelectAll(AjaxRequestTarget aTarget)
+    {
+        dataProvider.iterator(0, dataProvider.size()).forEachRemaining(e -> e.setSelected(true));
+        aTarget.add(this);
+    }
+
+    private void actionSelectNone(AjaxRequestTarget aTarget)
+    {
+        dataProvider.iterator(0, dataProvider.size()).forEachRemaining(e -> e.setSelected(false));
+        aTarget.add(this);
+    }
+
+    private void actionBulkDeleteProjects(AjaxRequestTarget aTarget)
+    {
+        var selectedProjects = getSelectedProjects().stream().map(ProjectEntry::getProject)
+                .toList();
+
+        if (selectedProjects.isEmpty()) {
+            info("No projects have been selected");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        var dialogContent = new DeleteProjectConfirmationDialogContentPanel(ModalDialog.CONTENT_ID,
+                Model.of(selectedProjects));
+
+        if (selectedProjects.size() == 1) {
+            dialogContent.setExpectedResponseModel(Model.of(selectedProjects.get(0).getName()));
+        }
+        else {
+            dialogContent.setExpectedResponseModel(Model.of("I am absolutely sure"));
+        }
+        dialogContent.setConfirmAction($ -> actionConfirmDeleteProjects($, selectedProjects));
+
+        dialog.open(dialogContent, aTarget);
+    }
+
+    private List<ProjectEntry> getSelectedProjects()
+    {
+        return dataProvider.getModel() //
+                .map(l -> l.stream().filter(ProjectEntry::isSelected).toList()) //
+                .orElse(emptyList()) //
+                .getObject();
+    }
+
+    private void actionConfirmDeleteProjects(AjaxRequestTarget aTarget,
+            List<Project> aSelectedProjects)
+    {
+        var count = 0;
+        for (var project : aSelectedProjects) {
+            try {
+                projectService.removeProject(project);
+                count++;
+            }
+            catch (IOException e) {
+                WicketExceptionUtil.handleException(LOG, this, aTarget, e);
+            }
+        }
+
+        if (aSelectedProjects.size() == 1) {
+            success("Project [" + aSelectedProjects.get(0).getName() + "] has been deleted");
+        }
+        else {
+            success(count + " projects have been deleted");
+        }
+
+        aTarget.addChildren(getPage(), IFeedback.class);
+        allAccessibleProjects.detach();
+        dataProvider.refresh();
+        actionApplyFilter(aTarget);
+    }
+
+    private void actionToggleBulkChange(AjaxRequestTarget aTarget)
+    {
+        bulkChangeMode = !bulkChangeMode;
+        allAccessibleProjects.detach();
+        dataProvider.refresh();
+        aTarget.add(this);
     }
 
     @Override
@@ -235,7 +385,7 @@ public class ProjectsOverviewPage
                     .forScript(openCreateProjectDialogByDefaultBehavior.getCallbackScript()));
         }
         else {
-            WicketUtil.ajaxFallbackFocus(aResponse, nameFilter);
+            WicketUtil.ajaxFallbackFocus(aResponse, queryField);
         }
     }
 
@@ -256,6 +406,12 @@ public class ProjectsOverviewPage
 
     @OnEvent
     public void onProjectRoleFilterStateChanged(ProjectRoleFilterStateChanged aEvent)
+    {
+        actionApplyFilter(aEvent.getTarget());
+    }
+
+    @OnEvent
+    public void onProjectStateFilterStateChanged(ProjectStateFilterStateChanged aEvent)
     {
         actionApplyFilter(aEvent.getTarget());
     }
@@ -360,36 +516,6 @@ public class ProjectsOverviewPage
         return newProjectLink;
     }
 
-    private LambdaAjaxLink createStartTutorialLink()
-    {
-        var startTutorialLink = new LambdaAjaxLink(MID_START_TUTORIAL, this::startTutorial);
-        startTutorialLink.setVisibilityAllowed(isTutorialAvailable());
-        startTutorialLink.add(visibleWhen(() -> {
-            return userRepository.isAdministrator(currentUser.getObject())
-                    || userRepository.isProjectCreator(currentUser.getObject());
-        }));
-
-        add(startTutorialLink);
-
-        return startTutorialLink;
-    }
-
-    private boolean isTutorialAvailable()
-    {
-        try {
-            Class.forName("de.tudarmstadt.ukp.inception.tutorial.TutorialFooterItem");
-            return true;
-        }
-        catch (Exception e) {
-            return false;
-        }
-    }
-
-    private void startTutorial(AjaxRequestTarget aTarget)
-    {
-        aTarget.appendJavaScript(" startTutorial(); ");
-    }
-
     private DataView<ProjectEntry> createProjectList(String aId,
             ProjectListDataProvider aDataProvider)
     {
@@ -404,21 +530,93 @@ public class ProjectsOverviewPage
 
                 var pageParameters = new PageParameters();
                 ProjectPageBase.setProjectPageParameter(pageParameters, project);
-                BookmarkablePageLink<Void> projectLink = new BookmarkablePageLink<>(
-                        MID_PROJECT_LINK, ProjectDashboardPage.class, pageParameters);
+                var projectLink = new BookmarkablePageLink<Void>(MID_PROJECT_LINK,
+                        ProjectDashboardPage.class, pageParameters);
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
                 aItem.add(new TerseMarkdownLabel(MID_DESCRIPTION,
                         aItem.getModelObject().getShortDescription()));
+
+                aItem.add(new CheckBox("selected") //
+                        .setModel(LambdaModel.of(aItem.getModel(), ProjectEntry::isSelected,
+                                ProjectEntry::setSelected))
+                        .setOutputMarkupId(true) //
+                        .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
+                                _target -> _target.add(selectCount))) //
+                        .setVisible(bulkChangeMode));
 
                 addActionsDropdown(aItem);
                 aItem.add(projectLink);
                 aItem.add(createRoleBadges(aItem.getModelObject()));
 
+                var isAdmin = userRepository.isAdministrator(currentUser.getObject());
+                var seeStats = isAdmin || projectService.hasRole(currentUser.getObject(), project,
+                        MANAGER, CURATOR);
+                if (seeStats) {
+                    var stats = documentService.getSourceDocumentStats(project);
+                    aItem.add(new ProjectDocumentStatsPanel("stats", Model.of(stats)));
+                    aItem.add(new SymbolLabel("stateIcon", stats.getProjectState()));
+                }
+                else {
+                    aItem.add(new EmptyPanel("stats"));
+                    aItem.add(new EmptyPanel("stateIcon"));
+                }
+
+                var seeManagers = isAdmin
+                        || projectService.hasRole(currentUser.getObject(), project, MANAGER);
+                if (seeManagers) {
+                    var sessionOwner = userRepository.getCurrentUsername();
+                    var permissions = projectService.listProjectUserPermissions(project);
+                    var comparator = Comparator
+                            .comparing((ProjectUserPermissions p) -> p.getUser()
+                                    .map(User::isEnabled).orElse(false))
+                            .reversed() //
+                            .thenComparing(p -> p.render(), CASE_INSENSITIVE_ORDER);
+                    var managers = permissions.stream() //
+                            .filter(p -> p.getRoles().contains(MANAGER)) //
+                            .sorted(comparator) //
+                            .collect(toCollection(ArrayList::new));
+
+                    String primeManager;
+                    var managedByYou = managers.removeIf(p -> p.getUsername().equals(sessionOwner));
+                    if (managedByYou) {
+                        primeManager = "You";
+                    }
+                    else if (!managers.isEmpty()) {
+                        primeManager = managers.get(0).render();
+                        managers.remove(0);
+                    }
+                    else {
+                        primeManager = "-";
+                    }
+
+                    var otherManagersNames = managers.stream().map(u -> u.render()).toList();
+                    var otherManagersCount = otherManagersNames.isEmpty() ? ""
+                            : "+" + otherManagersNames.size();
+
+                    aItem.add(new Label("primeManager", primeManager));
+
+                    var otherManagers = new Label("otherManagers", otherManagersCount);
+                    otherManagers.setVisible(!otherManagersNames.isEmpty());
+                    otherManagers.add(
+                            AttributeModifier.replace("title", join(", ", otherManagersNames)));
+                    aItem.add(otherManagers);
+                }
+                else {
+                    aItem.add(new EmptyPanel("primeManager"));
+                    aItem.add(new EmptyPanel("otherManagers"));
+                }
+
                 var createdLabel = new Label(MID_CREATED,
                         () -> project.getCreated() != null ? formatDate(project.getCreated())
                                 : null);
-                createdLabel.add(visibleWhen(() -> createdLabel.getDefaultModelObject() != null));
+                createdLabel.add(visibleWhenModelIsNotNull(createdLabel));
                 aItem.add(createdLabel);
+
+                var updatedLabel = new Label(MID_UPDATED,
+                        () -> project.getUpdated() != null ? formatDate(project.getUpdated())
+                                : null);
+                updatedLabel.add(visibleWhenModelIsNotNull(updatedLabel));
+                aItem.add(updatedLabel);
 
                 var projectId = new Label(MID_ID, () -> project.getId());
                 projectId.add(visibleWhen(
@@ -487,15 +685,14 @@ public class ProjectsOverviewPage
 
     private ListView<PermissionLevel> createRoleBadges(ProjectEntry aProjectEntry)
     {
-        var levels = aProjectEntry.getLevels();
-        return new ListView<PermissionLevel>(MID_ROLE, levels)
+        return new ListView<>(MID_ROLE, aProjectEntry.getLevels())
         {
             private static final long serialVersionUID = -96472758076828409L;
 
             @Override
             protected void populateItem(ListItem<PermissionLevel> aItem)
             {
-                PermissionLevel level = aItem.getModelObject();
+                var level = aItem.getModelObject();
                 aItem.add(new Label(MID_LABEL, getString(
                         Classes.simpleName(level.getDeclaringClass()) + '.' + level.toString())));
             }
@@ -512,10 +709,11 @@ public class ProjectsOverviewPage
     @OnEvent
     public void onProjectImported(AjaxProjectImportedEvent aEvent)
     {
-        List<Project> projects = aEvent.getProjects();
+        var projects = aEvent.getProjects();
 
         if (projects.size() > 1) {
-            allAccessibleProjects.detach(); // Ensure that the subsequent refresh gets fresh data
+            // Detach to ensure that the subsequent refresh gets fresh data
+            allAccessibleProjects.detach();
             dataProvider.refresh();
             aEvent.getTarget().add(projectListContainer);
             highlightedProjects.clear();

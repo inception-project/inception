@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
-import java.util.List;
-
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -29,7 +27,6 @@ import org.apache.wicket.request.cycle.RequestCycle;
 
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 import de.tudarmstadt.ukp.inception.rendering.paging.PagingStrategy;
-import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 import de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition;
 import de.tudarmstadt.ukp.inception.rendering.selection.ScrollToEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
@@ -50,9 +47,8 @@ public abstract class PagingStrategy_ImplBase
             break;
         }
         case CENTERED: {
-            List<Unit> units = units(aCas);
-
             // Find the unit containing the given offset
+            var units = units(aCas);
             var unit = units.stream() //
                     .filter(u -> u.getBegin() <= aOffset && aOffset <= u.getEnd()) //
                     .findFirst() //
@@ -60,7 +56,7 @@ public abstract class PagingStrategy_ImplBase
                             "No unit contains character offset [" + aOffset + "]"));
 
             // How many rows to display before the unit such that the unit is centered?
-            int rowsInPageBeforeUnit = aState.getPreferences().getWindowSize() / 2;
+            var rowsInPageBeforeUnit = aState.getPreferences().getWindowSize() / 2;
             // The -1 below is because unit.getIndex() is 1-based
             var firstUnit = units.get(Math.max(0, unit.getIndex() - rowsInPageBeforeUnit - 1));
 

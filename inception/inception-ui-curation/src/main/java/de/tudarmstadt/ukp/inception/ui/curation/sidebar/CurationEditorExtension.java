@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static java.util.Arrays.asList;
@@ -44,11 +43,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ScrollToHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
@@ -88,12 +89,14 @@ public class CurationEditorExtension
     private final CurationSidebarService curationSidebarService;
     private final FeatureSupportRegistry featureSupportRegistry;
     private final LazyDetailsLookupService detailsLookupService;
+    private final DiffAdapterRegistry diffAdapterRegistry;
 
     public CurationEditorExtension(AnnotationSchemaService aAnnotationService,
             DocumentService aDocumentService, ApplicationEventPublisher aApplicationEventPublisher,
             UserDao aUserRepository, CurationSidebarService aCurationSidebarService,
             FeatureSupportRegistry aFeatureSupportRegistry,
-            LazyDetailsLookupService aDetailsLookupService)
+            LazyDetailsLookupService aDetailsLookupService,
+            DiffAdapterRegistry aDiffAdapterRegistry)
     {
         annotationService = aAnnotationService;
         documentService = aDocumentService;
@@ -102,6 +105,7 @@ public class CurationEditorExtension
         curationSidebarService = aCurationSidebarService;
         featureSupportRegistry = aFeatureSupportRegistry;
         detailsLookupService = aDetailsLookupService;
+        diffAdapterRegistry = aDiffAdapterRegistry;
     }
 
     @Override
@@ -128,7 +132,7 @@ public class CurationEditorExtension
         var doc = aState.getDocument();
         var srcUser = curationVid.getUsername();
 
-        if (!documentService.existsAnnotationDocument(doc, srcUser)) {
+        if (!documentService.existsAnnotationDocument(doc, AnnotationSet.forUser(srcUser))) {
             LOG.error("Source CAS of [{}] for curation not found", srcUser);
             return;
         }
@@ -149,7 +153,7 @@ public class CurationEditorExtension
         // get user CAS and annotation (to be merged into curator's)
         var vid = VID.parse(curationVid.getExtensionPayload());
 
-        var srcCas = documentService.readAnnotationCas(doc, srcUser);
+        var srcCas = documentService.readAnnotationCas(doc, AnnotationSet.forUser(srcUser));
         var sourceAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
 
         aActionHandler.actionJump(aTarget, sourceAnnotation.getBegin(), sourceAnnotation.getEnd());
@@ -187,15 +191,15 @@ public class CurationEditorExtension
             return null;
         }
 
-        var srcUser = curationVid.getUsername();
+        var srcSet = AnnotationSet.forUser(curationVid.getUsername());
 
-        if (!documentService.existsAnnotationDocument(aDocument, srcUser)) {
-            LOG.error("Source CAS of [{}] for curation not found", srcUser);
+        if (!documentService.existsAnnotationDocument(aDocument, srcSet)) {
+            LOG.error("Source CAS of [{}] for curation not found", srcSet);
             return null;
         }
 
         var vid = VID.parse(curationVid.getExtensionPayload());
-        var cas = documentService.readAnnotationCas(aDocument, srcUser);
+        var cas = documentService.readAnnotationCas(aDocument, srcSet);
         var fs = selectAnnotationByAddr(cas, vid.getId());
         var ext = featureSupportRegistry.findExtension(aFeature).orElseThrow();
         return ext.getFeatureValue(aFeature, fs);
@@ -216,7 +220,7 @@ public class CurationEditorExtension
 
         var vid = VID.parse(aCurationVid.getExtensionPayload());
 
-        var srcCas = documentService.readAnnotationCas(doc, srcUser);
+        var srcCas = documentService.readAnnotationCas(doc, AnnotationSet.forUser(srcUser));
         var sourceAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
         var layer = annotationService.findLayer(aState.getProject(), sourceAnnotation);
 
@@ -291,7 +295,8 @@ public class CurationEditorExtension
             var curationVid = CurationVID.parse(aVid.getExtensionPayload());
             var vid = VID.parse(curationVid.getExtensionPayload());
             var srcUser = curationVid.getUsername();
-            var srcCas = documentService.readAnnotationCas(aDocument, srcUser);
+            var srcCas = documentService.readAnnotationCas(aDocument,
+                    AnnotationSet.forUser(srcUser));
             var features = annotationService.listEnabledFeatures(aLayer).stream() //
                     .filter(f -> f.isIncludeInHover()) //
                     .filter(f -> NONE == f.getMultiValueMode()) //
@@ -381,7 +386,8 @@ public class CurationEditorExtension
 
         for (var user : selectedUsers) {
             try {
-                var userCas = documentService.readAnnotationCas(aDocument, user.getUsername());
+                var userCas = documentService.readAnnotationCas(aDocument,
+                        AnnotationSet.forUser(user.getUsername()));
                 casses.put(user.getUsername(), userCas);
             }
             catch (IOException e) {
@@ -396,7 +402,7 @@ public class CurationEditorExtension
     private CasDiff createDiff(Map<String, CAS> aCasses, AnnotationLayer aLayer, int aBegin,
             int aEnd)
     {
-        var adapters = getDiffAdapters(annotationService, asList(aLayer));
+        var adapters = diffAdapterRegistry.getDiffAdapters(asList(aLayer));
         return doDiff(adapters, aCasses, aBegin, aEnd);
     }
 }
