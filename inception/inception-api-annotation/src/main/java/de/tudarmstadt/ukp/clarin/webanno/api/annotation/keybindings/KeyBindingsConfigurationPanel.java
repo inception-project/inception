@@ -89,6 +89,10 @@ public class KeyBindingsConfigurationPanel
         var fs = featureSupportRegistry.findExtension(feature).orElseThrow();
         featureState = Model.of(new FeatureState(VID.NONE_ID, feature, null));
         if (feature.getTagset() != null) {
+            // Make sure editor is not hidden if hideUnconstraintFeature is enabled
+            featureState.getObject().indicator.setAffected(true);
+            featureState.getObject().indicator.rulesApplied();
+            // Load tagset
             featureState.getObject().tagset = schemaService
                     .listTagsReorderable(feature.getTagset());
         }
