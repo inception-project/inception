@@ -528,11 +528,16 @@ public class ProjectsOverviewPage
             {
                 var project = aItem.getModelObject().getProject();
 
+                if (bulkChangeMode) {
+                    aItem.add(AttributeModifier.append("class", " states-container"));
+                }
+
                 var pageParameters = new PageParameters();
                 ProjectPageBase.setProjectPageParameter(pageParameters, project);
                 var projectLink = new BookmarkablePageLink<Void>(MID_PROJECT_LINK,
                         ProjectDashboardPage.class, pageParameters);
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
+                projectLink.setEnabled(!bulkChangeMode);
                 aItem.add(new TerseMarkdownLabel(MID_DESCRIPTION,
                         aItem.getModelObject().getShortDescription()));
 
