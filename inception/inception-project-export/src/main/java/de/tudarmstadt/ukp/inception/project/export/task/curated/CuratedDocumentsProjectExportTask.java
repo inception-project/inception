@@ -75,7 +75,7 @@ public class CuratedDocumentsProjectExportTask
             exportTempDir.delete();
             exportTempDir.mkdirs();
 
-            boolean curationDocumentExist = documentService.existsCurationDocument(project);
+            var curationDocumentExist = documentService.existsCurationDocument(project);
 
             if (!curationDocumentExist) {
                 throw new ProjectExportException(
@@ -138,15 +138,15 @@ public class CuratedDocumentsProjectExportTask
         }
         else {
             format = importExportService.getWritableFormatById(aModel.getFormat()).orElseGet(() -> {
-                FormatSupport formatSupport = importExportService.getFallbackFormat();
+                var formatSupport = importExportService.getFallbackFormat();
                 LOG.info("Format [{}] is not writable - exporting as [{}] instead.",
                         aModel.getFormat(), formatSupport.getName());
                 return formatSupport;
             });
         }
 
-        int initProgress = aMonitor.getProgress() - 1;
-        int i = 1;
+        var initProgress = aMonitor.getProgress() - 1;
+        var i = 1;
         for (var sourceDocument : documents) {
             // check if the export has been cancelled
             if (Thread.interrupted()) {
