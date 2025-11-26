@@ -117,7 +117,29 @@ pipeline {
         }
       }
     }
-    
+
+    // Perform security assessment using ZAST Express for PR builds
+    stage("Security Assess - PR") {
+      when { branch 'PR-*' }
+
+      steps {
+        dir('checkout') {
+          withCredentials([string(credentialsId: 'ZAST_API_KEY', variable: 'API_KEY')]) {
+            sh '''
+              # 安装 ZAST CLI（若未安装）
+              curl -fsSL https://zast.ai/install-cli.sh | sh
+
+              # 运行 ZAST 评估
+              zast-cli assess \
+                --api-key $API_KEY \
+                --target inception/inception-app-webapp/target/*.war \
+                --fail-on-critical
+            '''
+          }
+        }
+      }
+    }
+
     // Perform a SNAPSHOT build of a main branch. This stage is typically executed after a
     // merge request has been merged. On success, it deploys the generated artifacts to the
     // Maven repository server.
@@ -152,8 +174,30 @@ pipeline {
         }
       }
     }
+
+    // Perform security assessment using ZAST Express for SNAPSHOT builds
+    stage("Security Assess - SNAPSHOT") {
+      when { branch pattern: "main|release/.*", comparator: "REGEXP" }
+
+      steps {
+        dir('checkout') {
+          withCredentials([string(credentialsId: 'ZAST_API_KEY', variable: 'API_KEY')]) {
+            sh '''
+              # 安装 ZAST CLI（若未安装）
+              curl -fsSL https://zast.ai/install-cli.sh | sh
+
+              # 运行 ZAST 评估
+              zast-cli assess \
+                --api-key $API_KEY \
+                --target inception/inception-app-webapp/target/*.war \
+                --fail-on-critical
+            '''
+          }
+        }
+      }
+    }
   }
-  
+
   post {
     always {
       script {
