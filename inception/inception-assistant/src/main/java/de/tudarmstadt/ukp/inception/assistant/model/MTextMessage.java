@@ -91,7 +91,7 @@ public record MTextMessage( //
         Validate.isTrue(Objects.equals(aMessage.role(), role()));
         Validate.isTrue(Objects.equals(aMessage.internal(), internal()));
         Validate.isTrue(Objects.equals(aMessage.ephemeral(), ephemeral()));
-        Validate.isTrue(!done());
+        Validate.isTrue(!done(), "Cannot append to a complete message");
 
         if (context() != null) {
             Objects.requireNonNull(aMessage.context());

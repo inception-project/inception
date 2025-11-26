@@ -25,6 +25,7 @@ import static java.util.Collections.unmodifiableMap;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -32,6 +33,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.Optio
 
 public class OllamaGenerateRequest
 {
+    private @JsonIgnore String apiKey;
     private String model;
     private String prompt;
     private boolean stream;
@@ -41,6 +43,7 @@ public class OllamaGenerateRequest
 
     private OllamaGenerateRequest(Builder builder)
     {
+        apiKey = builder.apiKey;
         model = builder.model;
         prompt = builder.prompt;
         format = builder.format;
@@ -54,6 +57,11 @@ public class OllamaGenerateRequest
     public JsonNode getFormat()
     {
         return format;
+    }
+
+    public String getApiKey()
+    {
+        return apiKey;
     }
 
     public String getModel()
@@ -88,6 +96,7 @@ public class OllamaGenerateRequest
 
     public static final class Builder
     {
+        private String apiKey;
         private String model;
         private String prompt;
         private JsonNode format;
@@ -97,6 +106,12 @@ public class OllamaGenerateRequest
 
         private Builder()
         {
+        }
+
+        public Builder withApiKey(String aApiKey)
+        {
+            apiKey = aApiKey;
+            return this;
         }
 
         public Builder withModel(String aModel)

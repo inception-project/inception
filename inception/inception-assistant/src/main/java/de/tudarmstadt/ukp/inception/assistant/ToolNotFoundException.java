@@ -15,21 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.config;
+package de.tudarmstadt.ukp.inception.assistant;
 
-public interface AssistantProperties
+public class ToolNotFoundException
+    extends Exception
 {
-    String getUrl();
+    private static final long serialVersionUID = -5362071917531348869L;
 
-    String getApiKey();
+    private final String function;
 
-    AssistantChatProperties getChat();
+    public ToolNotFoundException(String aFunction)
+    {
+        function = aFunction;
+    }
 
-    AssistantEmbeddingProperties getEmbedding();
+    public String getFunction()
+    {
+        return function;
+    }
 
-    String getNickname();
-
-    AssitantUserGuideProperties getUserGuide();
-
-    AssistantDocumentIndexProperties getDocumentIndex();
+    @Override
+    public String getMessage()
+    {
+        return "There is no tool named `" + function + "`.";
+    }
 }

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -37,6 +38,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.Optio
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OllamaChatRequest
 {
+    private @JsonIgnore String apiKey;
     private String model;
     private List<OllamaChatMessage> messages;
     private boolean stream;
@@ -48,6 +50,7 @@ public class OllamaChatRequest
 
     private OllamaChatRequest(Builder builder)
     {
+        apiKey = builder.apiKey;
         model = builder.model;
         messages = builder.messages;
         format = builder.format;
@@ -58,6 +61,11 @@ public class OllamaChatRequest
             options.put(opt.getKey().getName(), opt.getValue());
         }
         tools.addAll(builder.tools);
+    }
+
+    public String getApiKey()
+    {
+        return apiKey;
     }
 
     public JsonNode getFormat()
@@ -109,6 +117,7 @@ public class OllamaChatRequest
 
     public static final class Builder
     {
+        private String apiKey;
         private String model;
         private List<OllamaChatMessage> messages = new ArrayList<>();
         private final List<OllamaTool> tools = new ArrayList<>();
@@ -121,6 +130,12 @@ public class OllamaChatRequest
 
         private Builder()
         {
+        }
+
+        public Builder withApiKey(String aApiKey)
+        {
+            apiKey = aApiKey;
+            return this;
         }
 
         public Builder withModel(String aModel)

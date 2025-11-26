@@ -21,7 +21,8 @@ import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.joining;
-import static org.apache.commons.lang3.StringUtils.appendIfMissing;
+import static org.apache.commons.lang3.Strings.CS;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
 import java.io.ByteArrayInputStream;
@@ -112,12 +113,16 @@ public class OllamaClientImpl
         LOG.trace("Request: {}", requestPayload);
 
         var request = HttpRequest.newBuilder() //
-                .uri(URI.create(appendIfMissing(aUrl, "/") + "api/generate")) //
-                .header(CONTENT_TYPE, APPLICATION_JSON)
-                .POST(BodyPublishers.ofString(requestPayload, UTF_8)) //
-                .build();
+                .uri(URI.create(CS.appendIfMissing(aUrl, "/") + "api/generate")) //
+                .header(CONTENT_TYPE, APPLICATION_JSON);
 
-        var rawResponse = sendRequest(request);
+        if (aRequest.getApiKey() != null) {
+            request.header(AUTHORIZATION, "Bearer " + aRequest.getApiKey());
+        }
+
+        request.POST(BodyPublishers.ofString(requestPayload, UTF_8));
+
+        var rawResponse = sendRequest(request.build());
 
         handleError(rawResponse);
 
@@ -167,12 +172,16 @@ public class OllamaClientImpl
         }
 
         var request = HttpRequest.newBuilder() //
-                .uri(URI.create(appendIfMissing(aUrl, "/") + "api/chat")) //
-                .header(CONTENT_TYPE, "application/json")
-                .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
-                .build();
+                .uri(URI.create(CS.appendIfMissing(aUrl, "/") + "api/chat")) //
+                .header(CONTENT_TYPE, "application/json");
 
-        var rawResponse = sendRequest(request);
+        if (aRequest.getApiKey() != null) {
+            request.header(AUTHORIZATION, "Bearer " + aRequest.getApiKey());
+        }
+
+        request.POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8));
+
+        var rawResponse = sendRequest(request.build());
 
         handleError(rawResponse);
 
@@ -250,7 +259,7 @@ public class OllamaClientImpl
         throws IOException
     {
         var request = HttpRequest.newBuilder() //
-                .uri(URI.create(appendIfMissing(aUrl, "/") + "api/embed")) //
+                .uri(URI.create(CS.appendIfMissing(aUrl, "/") + "api/embed")) //
                 .header(CONTENT_TYPE, "application/json")
                 .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
                 .build();
@@ -321,7 +330,7 @@ public class OllamaClientImpl
     public List<OllamaTag> listModels(String aUrl) throws IOException
     {
         var request = HttpRequest.newBuilder() //
-                .uri(URI.create(appendIfMissing(aUrl, "/") + "api/tags")) //
+                .uri(URI.create(CS.appendIfMissing(aUrl, "/") + "api/tags")) //
                 .header(CONTENT_TYPE, APPLICATION_JSON).GET() //
                 .timeout(TIMEOUT) //
                 .build();
@@ -336,21 +345,21 @@ public class OllamaClientImpl
     }
 
     @Override
-    public OllamaShowResponse getModelInfo(String aUrl, String aModel) throws IOException
+    public OllamaShowResponse getModelInfo(String aUrl, OllamaShowRequest aRequest)
+        throws IOException
     {
-        var requestObject = OllamaShowRequest.builder() //
-                .withModel(aModel) //
-                .build();
-
-        var requestPayload = JSONUtil.toJsonString(requestObject);
+        var requestPayload = JSONUtil.toJsonString(aRequest);
 
         var request = HttpRequest.newBuilder() //
-                .uri(URI.create(appendIfMissing(aUrl, "/") + "api/show")) //
+                .uri(URI.create(CS.appendIfMissing(aUrl, "/") + "api/show")) //
                 .header(CONTENT_TYPE, APPLICATION_JSON)
-                .POST(BodyPublishers.ofString(requestPayload, UTF_8)) //
-                .build();
+                .POST(BodyPublishers.ofString(requestPayload, UTF_8));
 
-        var response = sendRequest(request);
+        if (aRequest.apiKey() != null) {
+            request.header(AUTHORIZATION, "Bearer " + aRequest.apiKey());
+        }
+
+        var response = sendRequest(request.build());
 
         handleError(response);
 

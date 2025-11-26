@@ -56,6 +56,11 @@ public record MCallResponse<T>(UUID id, String role, String actor, boolean inter
         return new Builder<>();
     }
 
+    public static <T> Builder<T> builder()
+    {
+        return new Builder<>();
+    }
+
     @Override
     public String textRepresentation()
     {
