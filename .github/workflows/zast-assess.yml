@@ -1,0 +1,28 @@
+name: ZAST Security Assessment
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security-assess:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build project
+        run: mvn clean package -DskipTests -B -T 4
+
+      - name: Run ZAST Express Assessment
+        uses: zast-security/assess-action@v1
+        with:
+          api-key: ${{ secrets.ZAST_API_KEY }}
+          target-artifact: inception/inception-app-webapp/target/*.war
+          fail-on-critical: true
