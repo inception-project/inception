@@ -74,8 +74,7 @@
     <build-ant-version>1.10.15</build-ant-version>
     <build-groovy-version>4.0.29</build-groovy-version>
 
-    <junit-jupiter.version>5.14.1</junit-jupiter.version>
-    <junit-platform.version>1.14.1</junit-platform.version>
+    <junit.version>6.0.1</junit.version>
     <mockito.version>5.20.0</mockito.version>
     <assertj.version>3.27.6</assertj.version>
     <xmlunit.version>2.11.0</xmlunit.version>
