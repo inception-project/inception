@@ -802,6 +802,18 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      
+      <!-- httpcomponents needs to come before OpenSAML to avoid OpenSAML picking an older version -->
+      <dependency>
+        <groupId>org.apache.httpcomponents.core5</groupId>
+        <artifactId>httpcore5</artifactId>
+        <version>5.3.6</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents.client5</groupId>
+        <artifactId>httpclient5</artifactId>
+        <version>5.5.1</version>
+      </dependency>
 
       <dependency>
         <groupId>com.networknt</groupId>
@@ -846,23 +858,6 @@
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-gson</artifactId>
         <version>${jjwt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.opensaml</groupId>
-        <artifactId>opensaml-bom</artifactId>
-        <version>${opensaml.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>com.fasterxml.jackson</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <!-- Springdoc -->
@@ -1592,6 +1587,24 @@
           </exclusion>
           <exclusion>
             <groupId>org.eclipse.jetty</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      
+      <dependency>
+        <groupId>org.opensaml</groupId>
+        <artifactId>opensaml-bom</artifactId>
+        <version>${opensaml.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>com.fasterxml.jackson</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>*</artifactId>
           </exclusion>
         </exclusions>

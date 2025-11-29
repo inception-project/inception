@@ -31,11 +31,11 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
@@ -49,10 +49,12 @@ public class InceptionSecurityRemoteApiAutoConfiguration
     @Order(1)
     @Bean
     public SecurityFilterChain remoteApiFilterChain(PasswordEncoder aPasswordEncoder,
-            UserDetailsManager aUserDetailsService, HttpSecurity aHttp,
+            UserDetailsService aUserDetailsService, HttpSecurity aHttp,
             RemoteApiProperties aProperties, OAuth2Adapter aOAuth2Handling)
         throws Exception
     {
+        // The remote API should always authenticate against the built-in user-database and
+        // not e.g. against the external pre-authentication
         var authProvider = new InceptionDaoAuthenticationProvider(aUserDetailsService);
         authProvider.setPasswordEncoder(aPasswordEncoder);
 

@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.security.saml;
 
 import java.util.Map;
 
-import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider.ResponseToken;
+import org.springframework.security.saml2.provider.service.authentication.OpenSaml5AuthenticationProvider.ResponseToken;
 import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;

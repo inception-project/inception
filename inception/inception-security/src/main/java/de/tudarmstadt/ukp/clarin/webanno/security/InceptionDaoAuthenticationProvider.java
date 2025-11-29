@@ -29,12 +29,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 public class InceptionDaoAuthenticationProvider
     extends DaoAuthenticationProvider
 {
-    @Deprecated
-    public InceptionDaoAuthenticationProvider()
-    {
-        // TODO Auto-generated constructor stub
-    }
-
     public InceptionDaoAuthenticationProvider(UserDetailsService aUserDetailsService)
     {
         super(aUserDetailsService);

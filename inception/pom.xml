@@ -559,8 +559,8 @@
                 </requireJavaVersion>
                 <bannedDependencies>
                   <excludes>
-                    <exclude>commons-logging:commons-logging</exclude>
-                    <exclude>commons-logging:commons-logging-api</exclude>
+<!--                    <exclude>commons-logging:commons-logging</exclude>-->
+<!--                    <exclude>commons-logging:commons-logging-api</exclude>-->
                     <exclude>org.slf4j:jcl-over-slf4j</exclude>
                   </excludes>
                 </bannedDependencies>

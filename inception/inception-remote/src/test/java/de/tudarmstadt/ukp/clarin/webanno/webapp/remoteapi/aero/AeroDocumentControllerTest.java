@@ -37,7 +37,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -63,7 +62,6 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
 @EnableWebSecurity
 @EnableAutoConfiguration( //
         exclude = { //
-                LiquibaseAutoConfiguration.class, //
                 SearchServiceAutoConfiguration.class })
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //
