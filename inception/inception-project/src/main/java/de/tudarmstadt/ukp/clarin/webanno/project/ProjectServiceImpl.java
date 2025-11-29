@@ -37,7 +37,6 @@ import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.Strings.CS;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
-import static org.hibernate.annotations.QueryHints.CACHEABLE;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -298,7 +297,6 @@ public class ProjectServiceImpl
         return entityManager.createQuery(query, ProjectPermission.class) //
                 .setParameter("user", aUser) //
                 .setParameter("project", aProject) //
-                .setHint(CACHEABLE, true) //
                 .getResultList();
     }
 
@@ -313,7 +311,6 @@ public class ProjectServiceImpl
 
         return entityManager.createQuery(query, ProjectPermission.class) //
                 .setParameter("user", aUser.getUsername()) //
-                .setHint(CACHEABLE, true) //
                 .getResultList();
     }
 

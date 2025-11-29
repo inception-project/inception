@@ -99,14 +99,6 @@
       <artifactId>commons-io</artifactId>
     </dependency>
     <dependency>
-      <!-- 
-        This is required by MTAS despite it not being declared as a dependency: 
-        MtasPosition.add(MtasPosition.java:178)
-      -->
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>
@@ -307,7 +299,7 @@
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-jpa</artifactId>
+      <artifactId>spring-boot-starter-data-jpa-test</artifactId>
       <scope>test</scope>
       <exclusions>
         <exclusion>

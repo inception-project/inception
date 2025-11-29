@@ -33,6 +33,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
@@ -62,7 +63,7 @@ public class InceptionSecurityAutoConfiguration
         return new GlobalAuthenticationConfigurerAdapter()
         {
             @Override
-            public void configure(AuthenticationManagerBuilder aAuth) throws Exception
+            public void configure(AuthenticationManagerBuilder aAuth)
             {
                 aAuth.authenticationProvider(authenticationProvider);
                 aAuth.authenticationEventPublisher(aAuthenticationEventPublisher);
@@ -75,7 +76,7 @@ public class InceptionSecurityAutoConfiguration
     public PreAuthenticatedAuthenticationProvider externalAuthenticationProvider(
             @Lazy UserDetailsManager aUserDetails)
     {
-        PreAuthenticatedAuthenticationProvider authProvider = new PreAuthenticatedAuthenticationProvider();
+        var authProvider = new PreAuthenticatedAuthenticationProvider();
         authProvider.setPreAuthenticatedUserDetailsService(
                 new UserDetailsByNameServiceWrapper<PreAuthenticatedAuthenticationToken>(
                         aUserDetails));
@@ -85,10 +86,9 @@ public class InceptionSecurityAutoConfiguration
     @Bean(name = "authenticationProvider")
     @Profile(DeploymentModeService.PROFILE_AUTH_MODE_DATABASE)
     public DaoAuthenticationProvider internalAuthenticationProvider(
-            @Lazy UserDetailsManager aUserDetails, PasswordEncoder aPasswordEncoder)
+            @Lazy UserDetailsService aUserDetails, PasswordEncoder aPasswordEncoder)
     {
-        DaoAuthenticationProvider authProvider = new InceptionDaoAuthenticationProvider();
-        authProvider.setUserDetailsService(aUserDetails);
+        var authProvider = new InceptionDaoAuthenticationProvider(aUserDetails);
         authProvider.setPasswordEncoder(aPasswordEncoder);
         return authProvider;
     }

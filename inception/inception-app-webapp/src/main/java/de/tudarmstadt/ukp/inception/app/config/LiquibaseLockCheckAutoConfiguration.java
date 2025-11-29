@@ -23,9 +23,8 @@ import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.boot.autoconfigure.AbstractDependsOnBeanFactoryPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 
 import de.tudarmstadt.ukp.inception.support.db.LiquibaseLockManager;
@@ -34,7 +33,7 @@ import de.tudarmstadt.ukp.inception.support.db.NotLockedException;
 import liquibase.exception.LockException;
 import liquibase.integration.spring.SpringLiquibase;
 
-@AutoConfigureBefore(LiquibaseAutoConfiguration.class)
+@AutoConfigureBefore()
 @AutoConfigureAfter({ DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class })
 public class LiquibaseLockCheckAutoConfiguration
 {

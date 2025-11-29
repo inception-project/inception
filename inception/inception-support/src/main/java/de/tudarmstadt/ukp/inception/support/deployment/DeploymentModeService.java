@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.support.deployment;
 
-import org.springframework.boot.web.context.WebServerInitializedEvent;
+import org.springframework.boot.web.server.context.WebServerInitializedEvent;
 
 public interface DeploymentModeService
 {

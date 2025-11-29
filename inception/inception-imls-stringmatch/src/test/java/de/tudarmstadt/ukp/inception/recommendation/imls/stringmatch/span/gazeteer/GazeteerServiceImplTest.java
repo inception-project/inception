@@ -45,10 +45,9 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -66,8 +65,7 @@ import jakarta.persistence.EntityManager;
 @DataJpaTest( //
         showSql = false, //
         properties = { //
-                "spring.main.banner-mode=off" }, //
-        excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+                "spring.main.banner-mode=off" })
 @Transactional
 @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception", "de.tudarmstadt.ukp.clarin.webanno" })
 public class GazeteerServiceImplTest

@@ -96,7 +96,7 @@ public class DiamWebsocketController
     public static final String PARAM_FORMAT = "format";
 
     public static final PropertyPlaceholderHelper PLACEHOLDER_RESOLVER = new PropertyPlaceholderHelper(
-            "{", "}", null, false);
+            "{", "}", null, '\\', false);
 
     public static final String DOCUMENT_BASE_TOPIC_TEMPLATE = TOPIC_ELEMENT_PROJECT + "{"
             + PARAM_PROJECT + "}" + TOPIC_ELEMENT_DOCUMENT + "{" + PARAM_DOCUMENT + "}"
