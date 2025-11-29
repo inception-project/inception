@@ -4,7 +4,7 @@
 #
 ############################################################
 
-FROM eclipse-temurin:21-jre-noble@sha256:a29160fa56fad2b32e3e605bd468a7bb280a096b1c2339a70a31752c3463ba20
+FROM eclipse-temurin:25-jre-noble@sha256:d8dd4342b7dbb5a9c06d0499eecca86315346acc6a20026080642610344ceb2c
 
 LABEL maintainer="INCEpTION Team"
 
@@ -18,12 +18,12 @@ ENV APP_GROUP=inception
 ENV APP_GID=2000
 
 # Language settings
-ENV LANG en_US.UTF-8
+ENV LANG=en_US.UTF-8
 
 # Application settings
-ENV JAVA_OPTS=""
-ENV JAVA_MEM_OPTS="-XX:MaxRAMPercentage=80"
-ENV APP_ARGS=""
+ENV JAVA_OPTS=
+ENV JAVA_MEM_OPTS=-XX:MaxRAMPercentage=80
+ENV APP_ARGS=
 
 # Install application JAR
 WORKDIR /opt/inception
