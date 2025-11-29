@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
+import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.chevron_down_s;
+import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.chevron_up_s;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs.KEY_ANNOTATION_EDITOR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
@@ -27,6 +29,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPageLayoutState.KEY_LAYOUT_STATE;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
@@ -48,6 +51,7 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -58,6 +62,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
@@ -67,7 +72,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -99,6 +103,7 @@ import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChanged
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
@@ -126,20 +131,22 @@ public abstract class AnnotationPageBase2
     private @SpringBean DocumentAccess documentAccess;
     private @SpringBean EventRepository eventRepository;
 
-    private long currentProjectId;
-
     private WebMarkupContainer centerArea;
     private ActionBar actionBar;
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;
     private SidebarPanel leftSidebar;
+    private LambdaAjaxLink actionBarToggle;
+
+    private long currentProjectId;
     private boolean pageReloaded = false;
+    private boolean actionBarCollapsed = false;
 
     public AnnotationPageBase2(final PageParameters aPageParameters)
     {
         super(aPageParameters);
 
-        var state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        var state = new AnnotatorStateImpl();
         state.setUser(userRepository.getCurrentUser());
         setModel(Model.of(state));
 
@@ -177,18 +184,42 @@ public abstract class AnnotationPageBase2
         centerArea = new WebMarkupContainer("centerArea");
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
         centerArea.setOutputMarkupPlaceholderTag(true);
-        centerArea.add(createDocumentInfoLabel());
         add(centerArea);
 
+        centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
+
         actionBar = new ActionBar("actionBar");
+        actionBar.setOutputMarkupId(true);
+        actionBar.add(AttributeModifier.append("class",
+                LambdaModel.of(() -> actionBarCollapsed ? " visually-hidden" : "")));
         centerArea.add(actionBar);
 
-        add(createRightSidebar());
+        add(createRightSidebar("rightSidebar"));
 
-        createAnnotationEditor();
+        createAnnotationEditor(MID_EDITOR);
 
-        leftSidebar = createLeftSidebar();
+        leftSidebar = createLeftSidebar("leftSidebar");
         add(leftSidebar);
+
+        actionBarToggle = new LambdaAjaxLink("toggleActionBar", this::toggleActionBar);
+        actionBarToggle.add(new Icon("toggleActionBarIcon",
+                LambdaModel.of(() -> actionBarCollapsed ? chevron_down_s : chevron_up_s)));
+        actionBarToggle.setOutputMarkupId(true);
+        centerArea.add(actionBarToggle);
+    }
+
+    private void toggleActionBar(AjaxRequestTarget aTarget)
+    {
+        actionBarCollapsed = !actionBarCollapsed;
+
+        var project = getProject();
+        var sessionOwner = userRepository.getCurrentUser();
+        var layoutState = preferencesService.loadTraitsForUserAndProject(KEY_LAYOUT_STATE,
+                sessionOwner, project);
+        layoutState.setActionBarCollapsed(actionBarCollapsed);
+        preferencesService.saveTraitsForUserAndProject(KEY_LAYOUT_STATE, sessionOwner, project,
+                layoutState);
+        aTarget.add(actionBar, actionBarToggle);
     }
 
     @Override
@@ -202,11 +233,6 @@ public abstract class AnnotationPageBase2
             }
             return allowedProjects;
         });
-    }
-
-    private DocumentNamePanel createDocumentInfoLabel()
-    {
-        return new DocumentNamePanel("documentNamePanel", getModel());
     }
 
     private AnnotationDetailEditorPanel createDetailEditor()
@@ -311,7 +337,7 @@ public abstract class AnnotationPageBase2
         actionRefreshDocument(aEvent.getRequestHandler());
     }
 
-    private void createAnnotationEditor()
+    private void createAnnotationEditor(String aId)
     {
         var state = getModelObject();
 
@@ -344,7 +370,7 @@ public abstract class AnnotationPageBase2
         }
 
         state.setEditorFactoryId(factory.getBeanName());
-        annotationEditor = factory.create(MID_EDITOR, getModel(), detailEditor, this::getEditorCas);
+        annotationEditor = factory.create(aId, getModel(), detailEditor, this::getEditorCas);
         annotationEditor.setOutputMarkupPlaceholderTag(true);
 
         centerArea.addOrReplace(annotationEditor);
@@ -359,17 +385,17 @@ public abstract class AnnotationPageBase2
                         .add(visibleWhen(() -> getModelObject().getDocument() != null)));
     }
 
-    private SidebarPanel createLeftSidebar()
+    private SidebarPanel createLeftSidebar(String aId)
     {
-        return new SidebarPanel("leftSidebar",
+        return new SidebarPanel(aId,
                 getModel().map(AnnotatorState::getPreferences)
                         .map(AnnotationPreference::getSidebarSizeLeft),
                 detailEditor, () -> getEditorCas(), AnnotationPageBase2.this);
     }
 
-    private WebMarkupContainer createRightSidebar()
+    private WebMarkupContainer createRightSidebar(String aId)
     {
-        var rightSidebar = new WebMarkupContainer("rightSidebar");
+        var rightSidebar = new WebMarkupContainer(aId);
         rightSidebar.setOutputMarkupPlaceholderTag(true);
         // Override sidebar width from preferences
         rightSidebar.add(new AttributeModifier("style",
@@ -470,7 +496,7 @@ public abstract class AnnotationPageBase2
             // Set the actual editor component. This has to happen *before* any AJAX refreshes are
             // scheduled and *after* the preferences have been loaded (because the current editor
             // type is set in the preferences.
-            createAnnotationEditor();
+            createAnnotationEditor(MID_EDITOR);
 
             state.reset();
 
@@ -641,6 +667,10 @@ public abstract class AnnotationPageBase2
         }
 
         state.setProject(project);
+
+        var layoutState = preferencesService.loadTraitsForUserAndProject(KEY_LAYOUT_STATE,
+                sessionOwner, project);
+        actionBarCollapsed = layoutState.isActionBarCollapsed();
 
         if (!aUserParameter.isEmpty()
                 && !state.getUser().getUsername().equals(aUserParameter.toString())) {

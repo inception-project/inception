@@ -162,7 +162,10 @@ public class AnnotatorStateImpl
     /**
      * The Mode of the current operations as either {@link Mode#ANNOTATION} or as
      * {@link Mode#CURATION}
+     * 
+     * @deprecated Should no longer be used
      */
+    @Deprecated
     private Mode mode;
 
     /**
@@ -205,9 +208,18 @@ public class AnnotatorStateImpl
 
     private AnchoringMode anchoringMode;
 
+    /**
+     * @deprecated Use {@link #AnnotatorStateImpl()} instead.
+     */
+    @Deprecated
     public AnnotatorStateImpl(Mode aMode)
     {
         mode = aMode;
+    }
+
+    public AnnotatorStateImpl()
+    {
+        mode = Mode.ANNOTATION;
     }
 
     @Override

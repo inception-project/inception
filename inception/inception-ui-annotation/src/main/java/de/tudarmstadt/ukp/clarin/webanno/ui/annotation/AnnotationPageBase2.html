@@ -24,9 +24,14 @@
         <div wicket:id="leftSidebar" class="flex-v-container flex-gutter"></div>
         <div wicket:id="centerArea" class="flex-content flex-v-container flex-gutter">
           <div class="flex-content card overflow-hidden">
-            <div class="card-header border-bottom-0">
-              <span wicket:id="documentNamePanel"/> 
-              <span wicket:id="numberOfPages" class="small text-muted float-end"/>
+            <div class="card-header d-flex justify-content-between border-bottom-0">
+              <div wicket:id="documentNamePanel"/> 
+              <div class="d-flex">
+                <div wicket:id="numberOfPages" class="small text-muted"/>
+                <button wicket:id="toggleActionBar" class="btn btn-sm btn-outline-secondary border-0">
+                  <i wicket:id="toggleActionBarIcon"/>
+                </button>
+              </div>
             </div>
             <div class="card-body flex-v-container" style="padding: 0px;">
               <nav wicket:id="actionBar" class="action-bar"/>
