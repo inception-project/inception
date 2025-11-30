@@ -538,6 +538,7 @@
             <dependency>org.springframework.boot:spring-boot-test-autoconfigure</dependency>
             <dependency>com.squareup.okhttp3:mockwebserver</dependency>
             <dependency>com.squareup.okhttp3:okhttp</dependency>
+            <dependency>com.squareup.okhttp3:okhttp-jvm</dependency>
             <dependency>com.squareup.okio:okio-jvm</dependency>
           </ignoredUsedUndeclaredDependencies>
         </configuration>
