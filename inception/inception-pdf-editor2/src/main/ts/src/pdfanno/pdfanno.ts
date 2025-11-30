@@ -38,51 +38,85 @@ export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
   globalThis.globalEvent.setMaxListeners(0)
   diamAjax = ajax
 
-  // Create an annocation container.
-  annotationContainer = new AnnotationContainer()
-  annoPage = new PDFAnnoPage(annotationContainer)
+    // Configure PDF.js options before loading documents
+    const opts = (globalThis as any).PDFViewerApplicationOptions
+    opts.set('annotationMode', 0) // 0 = DISABLE (completely disable annotation rendering)
+    opts.set('annotationEditorMode', -1) // -1 = Disable editor mode
+    opts.set('defaultUrl', null)
+    opts.set('disablePreferences', true)
+    opts.set('workerSrc', 'pdf.worker.min.mjs')
+    opts.set('sandboxBundleSrc', 'pdf.sandbox.min.mjs')
+    opts.set('wasmUrl', 'wasm/')
+    opts.set('cMapUrl', 'cmaps/')
+    opts.set('imageResourcesPath', 'image_decoders/')
+    opts.set('standardFontDataUrl', 'standard_fonts/')
+    opts.set('cMapPacked', true)
+    opts.set('isEvalSupported', false)
+    opts.set('enableScripting', false)
+    opts.set('externalLinkEnabled', false)
+    opts.set('externalLinkTarget', 0)
+    opts.set('viewOnLoad', 1)
+    opts.set('sidebarViewOnLoad', 0)
 
-  // FIXME: These should be removed
-  globalThis.annotationContainer = annotationContainer
+    // Create an annocation container.
+    annotationContainer = new AnnotationContainer()
+    annoPage = new PDFAnnoPage(annotationContainer)
 
-  // Enable a view mode.
-  // UI.enableViewMode()
+    // FIXME: These should be removed
+    globalThis.annotationContainer = annotationContainer
 
-  const initPromise = new Promise<void>((resolve) => {
-    if (!globalThis.PDFViewerApplication.initializedPromise) {
-      return
-    }
+    // Enable a view mode.
+    // UI.enableViewMode()
 
-    console.log('Waiting for the document to load...')
-    globalThis.PDFViewerApplication.initializedPromise.then(function () {
-      // The event called at page rendered by pdfjs.
-      globalThis.PDFViewerApplication.eventBus.on('pagerendered', ev => onPageRendered(ev))
-      // Adapt to scale change.
-      globalThis.PDFViewerApplication.eventBus.on('scalechanged', ev => onScaleChange(ev))
-      globalThis.PDFViewerApplication.eventBus.on('zoomin', ev => onScaleChange(ev))
-      globalThis.PDFViewerApplication.eventBus.on('zoomout', ev => onScaleChange(ev))
-      globalThis.PDFViewerApplication.eventBus.on('zoomreset', ev => onScaleChange(ev))
-      globalThis.PDFViewerApplication.eventBus.on('sidebarviewchanged', ev => onScaleChange(ev))
-      globalThis.PDFViewerApplication.eventBus.on('resize', ev => onScaleChange(ev))
-
-      const loadedCallback = () => {
-        console.log('Document loaded...')
-        globalThis.PDFViewerApplication.eventBus.off('pagerendered', loadedCallback)
-        resolve()
+    const initPromise = new Promise<void>((resolve) => {
+      if (!globalThis.PDFViewerApplication.initializedPromise) {
+        return
       }
 
-      globalThis.PDFViewerApplication.eventBus.on('pagerendered', loadedCallback)
+      console.log('Waiting for the document to load...')
+      globalThis.PDFViewerApplication.initializedPromise.then(function () {
+        const app = globalThis.PDFViewerApplication
+
+        if (app.pdfViewer) {
+          app.pdfViewer.annotationMode = 0 // DISABLE
+        }
+        
+        // Disable PDF.js search and delegate to browser search
+        delete app.supportsIntegratedFind
+        app.supportsIntegratedFind = true
+
+        // Disable PDF.js printing
+        delete app.supportsPrinting
+        app.supportsPrinting = false
+
+        // The event called at page rendered by pdfjs.
+        app.eventBus.on('pagerendered', ev => onPageRendered(ev))
+        // Adapt to scale change.
+        app.eventBus.on('scalechanged', ev => onScaleChange(ev))
+        app.eventBus.on('zoomin', ev => onScaleChange(ev))
+        app.eventBus.on('zoomout', ev => onScaleChange(ev))
+        app.eventBus.on('zoomreset', ev => onScaleChange(ev))
+        app.eventBus.on('sidebarviewchanged', ev => onScaleChange(ev))
+        app.eventBus.on('resize', ev => onScaleChange(ev))
+
+        const loadedCallback = () => {
+          console.log('Document loaded...')
+          app.eventBus.off('pagerendered', loadedCallback)
+          resolve()
+        }
+
+        app.eventBus.on('pagerendered', loadedCallback)
+      })
     })
-  })
 
-  // Init viewer.
-  annoPage.initializeViewer(undefined)
+    // Init viewer.
+    annoPage.initializeViewer(undefined)
 
-  // Start application.
-  annoPage.startViewerApplication()
+    // Start application.
+    annoPage.startViewerApplication()
 
-  installSpanSelection()
-  installRelationSelection()
+    installSpanSelection()
+    installRelationSelection()
 
   popover = mount(AnnotationDetailPopOver, {
     target: document.body,
@@ -93,7 +127,7 @@ export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
   })
 
   // Show a content.
-  displayViewer()
+  await displayViewer()
 
   return initPromise
 }
@@ -113,11 +147,17 @@ function onPageRendered (ev) {
   }
 
   adjustPageGaps()
+  removePdfJsAnnotationLayers()
   removeAnnoLayer()
   renderAnno()
 }
 
 function onScaleChange (ev) {
+  // No action, if the viewer is not ready.
+  if (!globalThis.PDFViewerApplication.pdfViewer.getPageView(0)) {
+    return
+  }
+
   adjustPageGaps()
   removeAnnoLayer()
   renderAnno()
@@ -136,6 +176,15 @@ function adjustPageGaps () {
     page.style.borderBottomWidth = borderWidth
     page.style.marginBottom = `${-9 * scale}px`
     page.style.marginTop = `${1 * scale}px`
+  })
+}
+
+/*
+ * Remove PDF.js native annotation layers (which contain external links, etc.)
+ */
+function removePdfJsAnnotationLayers () {
+  document.querySelectorAll('.annotationLayer').forEach(layer => {
+    layer.remove()
   })
 }
 
@@ -462,6 +511,11 @@ async function displayViewer (): Promise<void> {
   const q = urijs(document.URL).query(true)
   const pdfUrl = q.pdf
   const vModelUrl = q.vmodel
+
+  if (!vModelUrl) {
+    console.error('No vmodel URL provided in query parameters')
+    throw new Error('Visual model URL is required')
+  }
 
   // Load a PDF file.
   return Promise.all([

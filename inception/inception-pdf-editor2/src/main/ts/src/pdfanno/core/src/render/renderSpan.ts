@@ -18,10 +18,16 @@ export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[]
 
   const firstPageLeft = firstPageElement.getBoundingClientRect().left
 
-  const paddingTop = 9
+  // Get the actual computed border width and margin from the first page
+  const computedStyle = window.getComputedStyle(firstPageElement)
   const pageView = globalThis.PDFViewerApplication.pdfViewer.getPageView(0)
   const scale = pageView.viewport.scale
-  const marginBetweenPages = 1 // TODO Where does this 1 come from?!
+  
+  // PDF.js 5.x coordinate adjustment: empirically determined offsets
+  // These account for the border/margin differences between PDF.js 2.x and 5.x
+  const paddingTop = 9
+  const marginBetweenPages = 0
+  const paddingLeft = 0
 
   // Build a cache of all the pages we need and their positions
   const pageMap = new Map();
@@ -42,14 +48,18 @@ export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[]
 
     const pageContainer = pageInfo.container
     const pageTopY = pageContainer.offsetTop / scale + paddingTop + marginBetweenPages
-    let leftOffset = 0
+    const pageLeftX = paddingLeft
 
-    // If the pages are not rendered left-aligned because one is wider than the other, we need
-    // to adjust the position of the rectangle on the X-axis
-    leftOffset = (pageInfo.left - firstPageLeft) / scale
+    // PDF.js 5.x has a slight X/Y-axis scaling error that varies with zoom
+    // Empirically determined: correction = 1 - (0.029 / scale)
+    // 0.983*r.x @ 1.66667
+    // 0.976*r.x @ 1.25656
+    // At scale 1.25656: 1 - 0.029/1.25656 = 0.9769 ≈ 0.976
+    // At scale 1.66667: 1 - 0.029/1.66667 = 0.9826 ≈ 0.983
+    const xCorrectionFactor = 1 - (0.029 / scale)
+    const yCorrectionFactor = 0.980
 
-    // console.log(leftOffset, r.x + leftOffset, r.y + pageTopY, r.w, r.h)
-    r = new Rectangle({ p: r.p, x: r.x + leftOffset, y: r.y + pageTopY, w: r.w, h: r.h })
+    r = new Rectangle({ p: r.p, x: (xCorrectionFactor*r.x) + pageLeftX, y: (yCorrectionFactor*r.y) + pageTopY, w: r.w, h: r.h })
     if (r.w > 0 && r.h > 0 /* && r.x > -1 && r.y > -1 */) {
       rectangles.push(r)
     }

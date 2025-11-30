@@ -41,6 +41,6 @@ public class PdfJsJavaScriptReference
      */
     private PdfJsJavaScriptReference()
     {
-        super(PdfJsJavaScriptReference.class, "pdf.min.js");
+        super(PdfJsJavaScriptReference.class, "pdf.min.mjs");
     }
 }

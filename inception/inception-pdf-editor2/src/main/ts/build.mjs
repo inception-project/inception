@@ -70,7 +70,10 @@ fs.emptyDirSync(outbase)
 fs.copySync('pdfjs-web', `${outbase}`)
 fs.copySync('node_modules/pdfjs-dist/build', `${outbase}`)
 fs.copySync('node_modules/pdfjs-dist/cmaps', `${outbase}/cmaps`)
+fs.copySync('node_modules/pdfjs-dist/iccs', `${outbase}/iccs`)
+fs.copySync('node_modules/pdfjs-dist/image_decoders', `${outbase}/image_decoders`)
 fs.copySync('node_modules/pdfjs-dist/standard_fonts', `${outbase}/standard_fonts`)
+fs.copySync('node_modules/pdfjs-dist/wasm', `${outbase}/wasm`)
 
 if (argv.live) {
   const context = await esbuild.context(defaults)

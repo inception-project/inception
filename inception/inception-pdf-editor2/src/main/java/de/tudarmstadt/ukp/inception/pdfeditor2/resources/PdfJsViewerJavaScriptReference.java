@@ -56,6 +56,6 @@ public class PdfJsViewerJavaScriptReference
      */
     private PdfJsViewerJavaScriptReference()
     {
-        super(PdfJsViewerJavaScriptReference.class, "viewer.js");
+        super(PdfJsViewerJavaScriptReference.class, "viewer.mjs");
     }
 }

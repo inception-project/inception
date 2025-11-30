@@ -215,7 +215,7 @@
     <jquery.version>3.7.1</jquery.version>
     <jquery-ui.version>1.14.1</jquery-ui.version>
     <marked.version>^17.0.1</marked.version>
-    <pdfjs.version>2.14.305</pdfjs.version> <!-- Do not update this version! -->
+    <pdfjs.version>5.4.449</pdfjs.version>
     <popperjs.version>2.11.8</popperjs.version>
     <recogitojs.version>1.8.4</recogitojs.version>
     <recogito-connections.version>0.1.11</recogito-connections.version>
