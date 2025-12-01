@@ -1,7 +1,7 @@
 /**
  * Create text layers which enable users to select texts.
  */
-import { Offsets } from '@inception-project/inception-js-api'
+import { type Offsets } from '@inception-project/inception-js-api'
 import { VGlyph } from '../../vmodel/VGlyph'
 import { deserializeVModelFromJson } from '../../vmodel/VModelJsonDeserializer'
 import { VPage } from '../../vmodel/VPage'
@@ -49,9 +49,16 @@ export function getPageAfter (num: number): VPage | undefined {
 }
 
 export function findPageForTextOffset (offset: number): VPage | undefined {
+  if (!pages || pages.length === 0) {
+    console.error(`No pages available. Cannot find page for offset [${offset}]`)
+    return undefined
+  }
+  
   const page = pages.find(p => p.range[0] <= offset && offset < p.range[1])
   if (!page) {
-    console.error(`No page found for offset [${offset}]. Last offset is [${pages[pages.length - 1].range[1]}]`)
+    const lastPage = pages[pages.length - 1]
+    const lastOffset = lastPage ? lastPage.range[1] : 'unknown'
+    console.error(`No page found for offset [${offset}]. Last offset is [${lastOffset}]`)
   }
   return page
 }

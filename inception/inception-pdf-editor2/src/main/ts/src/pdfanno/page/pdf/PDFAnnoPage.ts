@@ -39,8 +39,15 @@ export default class PDFAnnoPage {
 
     console.log(`Loading PDF from ${pdfUrl}`)
 
+    // Ensure annotation mode is disabled before opening document
+    if (globalThis.PDFViewerApplication?.pdfViewer) {
+      globalThis.PDFViewerApplication.pdfViewer.annotationMode = 0 // DISABLE
+      // globalThis.PDFViewerApplication.pdfViewer.annotationEditorMode = -1
+    }
+
     // Load PDF.
-    return globalThis.PDFViewerApplication.open(pdfUrl).then(() => {
+    // PDF.js 5.x expects an object with a url property, not a string
+    return globalThis.PDFViewerApplication.open({ url: pdfUrl }).then(() => {
       // Set the PDF file name.
       globalThis.PDFViewerApplication.url = name
     })

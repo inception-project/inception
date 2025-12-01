@@ -25,8 +25,10 @@ import static org.apache.wicket.core.util.string.CssUtils.ATTR_TYPE;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.IMarkupCacheKeyProvider;
 import org.apache.wicket.markup.IMarkupResourceStreamProvider;
+import org.apache.wicket.markup.head.CssContentHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.head.JavaScriptReferenceType;
 import org.apache.wicket.markup.head.StringHeaderItem;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.UrlRenderer;
@@ -37,6 +39,8 @@ import org.apache.wicket.util.value.AttributeMap;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.inception.pdfeditor2.config.PdfAnnotationEditor2WebMvcConfiguration;
+import de.tudarmstadt.ukp.inception.pdfeditor2.resources.PdfJsJavaScriptReference;
+import de.tudarmstadt.ukp.inception.pdfeditor2.resources.PdfJsViewerJavaCssReference;
 import de.tudarmstadt.ukp.inception.pdfeditor2.resources.PdfJsViewerJavaScriptReference;
 import de.tudarmstadt.ukp.inception.support.wicket.InputStreamResourceStream;
 import jakarta.servlet.ServletContext;
@@ -54,36 +58,22 @@ public class PdfJsViewerPage
     public void renderHead(IHeaderResponse aResponse)
     {
         renderLocaleReference(aResponse);
-
-        aResponse.render(JavaScriptHeaderItem.forReference(PdfJsViewerJavaScriptReference.get()));
-        var script = String.join("\n", //
-                "window.addEventListener('DOMContentLoaded', function() {", //
-                "  PDFViewerApplicationOptions.set('annotationMode', 0);", //
-                "  PDFViewerApplicationOptions.set('defaultUrl', null);", //
-                "  PDFViewerApplicationOptions.set('disablePreferences', true);", //
-                "  PDFViewerApplicationOptions.set('workerSrc', 'pdf.worker.min.js');", //
-                "  PDFViewerApplicationOptions.set('isEvalSupported', false);", //
-                "  PDFViewerApplicationOptions.set('enableScripting', false);", //
-                "  PDFViewerApplicationOptions.set('viewOnLoad', 1);", //
-                // Because when when we jump to a location in a different document it sucks when
-                // the sidebar automatically opens and causes a re-scaling which leads to a wrong
-                // scroll position!
-                "  PDFViewerApplicationOptions.set('sidebarViewOnLoad', 0);", //
-                // Disable the PDF.js search and instead delegate to the browser search
-                "  delete PDFViewerApplication.supportsIntegratedFind;", //
-                "  PDFViewerApplication.supportsIntegratedFind = true;", //
-                // Disable the PDF.js printing
-                "  delete PDFViewerApplication.supportsPrinting;", //
-                "  PDFViewerApplication.supportsPrinting = false;", //
-                "});");
-        aResponse.render(JavaScriptHeaderItem.forScript(script, "initialization"));
+        
+        // Render CSS dependency
+        aResponse.render(CssContentHeaderItem.forReference(PdfJsViewerJavaCssReference.get()));
+        
+        // Render JavaScript dependencies as ES modules using Wicket's built-in module support
+        aResponse.render(JavaScriptHeaderItem.forReference(PdfJsJavaScriptReference.get())
+                .setType(JavaScriptReferenceType.MODULE));
+        aResponse.render(JavaScriptHeaderItem.forReference(PdfJsViewerJavaScriptReference.get())
+                .setType(JavaScriptReferenceType.MODULE));
     }
 
     private void renderLocaleReference(IHeaderResponse aResponse)
     {
         UrlRenderer urlRenderer = RequestCycle.get().getUrlRenderer();
         String localeUrl = urlRenderer
-                .renderContextRelativeUrl(BASE_URL + "/locale/locale.properties");
+                .renderContextRelativeUrl(BASE_URL + "/locale/locale.json");
 
         AttributeMap attributes = new AttributeMap();
         attributes.putAttribute(ATTR_LINK_REL, "resource");

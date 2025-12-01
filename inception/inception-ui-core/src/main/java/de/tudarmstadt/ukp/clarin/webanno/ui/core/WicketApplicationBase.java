@@ -59,6 +59,7 @@ import org.apache.wicket.csp.CSPDirective;
 import org.apache.wicket.csp.CSPRenderable;
 import org.apache.wicket.csp.FixedCSPValue;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
+import org.apache.wicket.markup.html.SecurePackageResourceGuard;
 import org.apache.wicket.protocol.http.ResourceIsolationRequestCycleListener;
 import org.apache.wicket.request.Response;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
@@ -242,6 +243,17 @@ public abstract class WicketApplicationBase
         initNonCachingInDevEnvironment();
 
         initErrorPage();
+        
+        initPackageResourceGuard();
+    }
+    
+    private void initPackageResourceGuard()
+    {
+        // Allow .mjs (ES module) files to be served as package resources
+        var guard = getResourceSettings().getPackageResourceGuard();
+        if (guard instanceof SecurePackageResourceGuard secureGuard) {
+            secureGuard.addPattern("+*.mjs");
+        }
     }
 
     private void initNonCachingInDevEnvironment()
