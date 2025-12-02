@@ -19,14 +19,16 @@ package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK_EVENT;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CONTEXTMENU_EVENT;
 import static de.tudarmstadt.ukp.inception.workload.matrix.management.MatrixWorkloadManagementPage.CSS_CLASS_STATE_TOGGLE;
 import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey.CURATION_STATE;
 import static org.apache.wicket.ajax.AjaxEventBehavior.onEvent;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
-import org.apache.wicket.ajax.AjaxEventBehavior;
+import java.util.Set;
+
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
@@ -34,7 +36,11 @@ import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxEventBehavior;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.MatrixWorkloadManagementPage;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColumnCellClickEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColumnCellOpenContextMenuEvent;
 
@@ -42,10 +48,13 @@ public class DocumentMatrixCuratorColumn
     extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
 {
     private static final long serialVersionUID = 8324173231787296215L;
+    private IModel<Set<AnnotationSet>> selectedUsers;
 
-    public DocumentMatrixCuratorColumn()
+    public DocumentMatrixCuratorColumn(IModel<Set<AnnotationSet>> aSelectedUsers)
     {
         super(Model.of("Curation"), CURATION_STATE, row -> row.getSourceDocument());
+
+        selectedUsers = aSelectedUsers;
     }
 
     @Override
@@ -61,28 +70,28 @@ public class DocumentMatrixCuratorColumn
 
         var stateLabel = new CurationStateSymbolLabel(aComponentId, state);
         stateLabel.add(new AttributeAppender("class", CSS_CLASS_STATE_TOGGLE, " "));
+        stateLabel.add(
+                new CssClassNameAppender(aRowModel.map(this::isSelected).orElse(false).getObject()
+                        ? MatrixWorkloadManagementPage.CSS_CLASS_SELECTED
+                        : ""));
         stateLabel.add(onEvent(CLICK_EVENT, //
                 _target -> stateLabel.send(stateLabel, BUBBLE,
                         new CuratorColumnCellClickEvent(_target, row.getSourceDocument()))));
-        stateLabel.add(new AjaxEventBehavior("contextmenu")
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void updateAjaxAttributes(AjaxRequestAttributes aAttributes)
-            {
-                super.updateAjaxAttributes(aAttributes);
-                aAttributes.setPreventDefault(true);
-            };
-
-            @Override
-            protected void onEvent(AjaxRequestTarget aTarget)
-            {
-                stateLabel.send(stateLabel, BUBBLE, new CuratorColumnCellOpenContextMenuEvent(
-                        aTarget, stateLabel, row.getSourceDocument()));
-            };
-        });
+        stateLabel.add(new LambdaAjaxEventBehavior(CONTEXTMENU_EVENT,
+                _t -> actionContextMenu(_t, stateLabel, aRowModel)).setPreventDefault(true));
 
         aItem.add(stateLabel);
+    }
+
+    private boolean isSelected(DocumentMatrixRow aRow)
+    {
+        return selectedUsers.getObject().contains(AnnotationSet.CURATION_SET) || aRow.isSelected();
+    }
+
+    private void actionContextMenu(AjaxRequestTarget aTarget, Component aComponent,
+            IModel<DocumentMatrixRow> aRowModel)
+    {
+        aComponent.send(aComponent, BUBBLE, new CuratorColumnCellOpenContextMenuEvent(aTarget,
+                aComponent, aRowModel.getObject().getSourceDocument()));
     }
 }

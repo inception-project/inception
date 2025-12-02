@@ -22,8 +22,8 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
  * Fired when a user right-clicks on a cell in an annotator column.
@@ -34,10 +34,10 @@ public class AnnotatorColumnCellOpenContextMenuEvent
     private final Component cell;
     private final SourceDocument sourceDocument;
     private final AnnotationDocumentState state;
-    private final User user;
+    private final AnnotationSet user;
 
     public AnnotatorColumnCellOpenContextMenuEvent(AjaxRequestTarget aTarget, Component aCell,
-            SourceDocument aSourceDocument, User aUser, AnnotationDocumentState aState)
+            SourceDocument aSourceDocument, AnnotationSet aUser, AnnotationDocumentState aState)
     {
         super(aTarget);
 
@@ -52,7 +52,7 @@ public class AnnotatorColumnCellOpenContextMenuEvent
         return sourceDocument;
     }
 
-    public User getUser()
+    public AnnotationSet getUser()
     {
         return user;
     }

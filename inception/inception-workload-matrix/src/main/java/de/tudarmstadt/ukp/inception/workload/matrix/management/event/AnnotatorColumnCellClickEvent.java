@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.inception.workload.matrix.management.event;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
  * Fired when a user clicks on a cell in an annotator column.
@@ -30,10 +30,10 @@ public class AnnotatorColumnCellClickEvent
     extends AbstractAjaxAwareEvent
 {
     private final SourceDocument sourceDocument;
-    private final User user;
+    private final AnnotationSet user;
 
     public AnnotatorColumnCellClickEvent(AjaxRequestTarget aTarget, SourceDocument aSourceDocument,
-            User aUser)
+            AnnotationSet aUser)
     {
         super(aTarget);
 
@@ -46,7 +46,7 @@ public class AnnotatorColumnCellClickEvent
         return sourceDocument;
     }
 
-    public User getUser()
+    public AnnotationSet getUser()
     {
         return user;
     }

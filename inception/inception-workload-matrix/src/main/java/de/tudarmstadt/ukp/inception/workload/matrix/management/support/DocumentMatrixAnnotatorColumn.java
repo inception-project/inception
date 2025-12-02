@@ -28,25 +28,26 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 
 public class DocumentMatrixAnnotatorColumn
     extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
 {
     private static final long serialVersionUID = 8324173231787296215L;
 
-    private IModel<Set<String>> selectedUsers;
-    private User user;
+    private IModel<Set<AnnotationSet>> selectedUsers;
+    private AnnotationSet user;
 
-    public DocumentMatrixAnnotatorColumn(User aUser, IModel<Set<String>> aSelectedUsers)
+    public DocumentMatrixAnnotatorColumn(AnnotationSet aUser,
+            IModel<Set<AnnotationSet>> aSelectedUsers)
     {
-        super(Model.of(aUser.getUiName()), annotatorSortKey(aUser.getUsername()),
-                row -> row.getAnnotationDocument(aUser.getUsername()));
+        super(Model.of(aUser.displayName()), annotatorSortKey(aUser),
+                row -> row.getAnnotationDocument(aUser));
         user = aUser;
         selectedUsers = aSelectedUsers;
     }
 
-    public User getUser()
+    public AnnotationSet getUser()
     {
         return user;
     }

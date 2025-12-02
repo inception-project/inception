@@ -624,13 +624,34 @@ public interface DocumentService
      * if the user owning the document does not actually exist in the system!
      * 
      * @param project
-     *            the {@link SourceDocument}
+     *            the {@link Project}
      * @param user
      *            the {@link User}
      * @return {@link AnnotationDocument}
      * @see #createOrGetAnnotationDocument(SourceDocument, User)
+     * @deprecated Use {@link #listAllDocuments(Project, AnnotationSet)}
      */
+    @Deprecated
     List<AnnotationDocument> listAnnotationDocuments(Project project, User user);
+
+    /**
+     * List all the {@link AnnotationDocument annotation documents} from a project for a given user.
+     * <p>
+     * Note that this method does may not return an {@link AnnotationDocument annotation document}
+     * for every user in the project because they are created lazily when a user opens a document
+     * for annotation the first time.
+     * <p>
+     * Note that this method returns <b>ALL</b> {@link AnnotationDocument annotation document} even
+     * if the user owning the document does not actually exist in the system!
+     * 
+     * @param aProject
+     *            the {@link Project}
+     * @param aSet
+     *            the {@link AnnotationSEt}
+     * @return {@link AnnotationDocument}
+     * @see #createOrGetAnnotationDocument(SourceDocument, User)
+     */
+    List<AnnotationDocument> listAnnotationDocuments(Project aProject, AnnotationSet aSet);
 
     /**
      * List all annotation documents in a project that are already closed. used to compute overall
@@ -717,10 +738,10 @@ public interface DocumentService
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, AnnotationSet aSet);
 
     List<AnnotationDocument> createOrGetAnnotationDocuments(SourceDocument aDocument,
-            Collection<User> aUsers);
+            Collection<AnnotationSet> aUsers);
 
     List<AnnotationDocument> createOrGetAnnotationDocuments(Collection<SourceDocument> aDocuments,
-            User aUsers);
+            AnnotationSet aUser);
 
     /**
      * Returns the annotatable {@link SourceDocument source documents} from the given project for

@@ -36,6 +36,7 @@ import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnSelectionChangedEvent;
 
@@ -44,7 +45,8 @@ public class UserSelectToolbar
 {
     private static final long serialVersionUID = 8850551593688910044L;
 
-    public UserSelectToolbar(IModel<Set<String>> aSelection, DataTable<DocumentMatrixRow, ?> aTable)
+    public UserSelectToolbar(IModel<Set<AnnotationSet>> aSelection,
+            DataTable<DocumentMatrixRow, ?> aTable)
     {
         super(aSelection, aTable);
 

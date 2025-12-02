@@ -36,7 +36,7 @@ import org.apache.wicket.model.IModel;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxEventBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
@@ -50,13 +50,14 @@ public class DocumentMatrixAnnotatorStateCell
 {
     private static final long serialVersionUID = 8669237603186001024L;
 
-    private final User user;
-    private final IModel<Set<String>> selectedUsers;
+    private final AnnotationSet user;
+    private final IModel<Set<AnnotationSet>> selectedUsers;
     private final IModel<DocumentMatrixRow> rowModel;
     private final IModel<AnnotationDocument> columnModel;
 
     public DocumentMatrixAnnotatorStateCell(String aId, IModel<DocumentMatrixRow> aRowModel,
-            IModel<AnnotationDocument> aColumnModel, IModel<Set<String>> aSelectedUsers, User aUser)
+            IModel<AnnotationDocument> aColumnModel, IModel<Set<AnnotationSet>> aSelectedUsers,
+            AnnotationSet aUser)
     {
         super(aId);
         setOutputMarkupId(true);
@@ -91,7 +92,7 @@ public class DocumentMatrixAnnotatorStateCell
 
     private boolean isSelected(DocumentMatrixRow aRow)
     {
-        return selectedUsers.getObject().contains(user.getUiName()) || aRow.isSelected();
+        return selectedUsers.getObject().contains(user) || aRow.isSelected();
     }
 
     private void actionContextMenu(IModel<DocumentMatrixRow> aRowModel,
