@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CONTEXTMENU_EVENT;
@@ -55,6 +56,11 @@ public class DocumentMatrixCuratorColumn
         super(Model.of("Curation"), CURATION_STATE, row -> row.getSourceDocument());
 
         selectedUsers = aSelectedUsers;
+    }
+
+    public AnnotationSet getAnnotationSet()
+    {
+        return CURATION_SET;
     }
 
     @Override

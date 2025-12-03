@@ -21,6 +21,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NE
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static java.util.Comparator.comparing;
+import static java.util.Comparator.naturalOrder;
+import static java.util.Comparator.nullsFirst;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -48,7 +51,8 @@ public class DocumentMatrixRow
     {
         sourceDocument = aSourceDocument;
         annotators = aAnnotators;
-        annotationDocuments = new TreeMap<>();
+        annotationDocuments = new TreeMap<>(
+                comparing(AnnotationSet::displayName, nullsFirst(naturalOrder())));
     }
 
     public void add(AnnotationDocument aAnnotationDocument)
@@ -61,9 +65,9 @@ public class DocumentMatrixRow
         return sourceDocument;
     }
 
-    public AnnotationDocument getAnnotationDocument(AnnotationSet aUsername)
+    public AnnotationDocument getAnnotationDocument(AnnotationSet aSet)
     {
-        return annotationDocuments.get(aUsername);
+        return annotationDocuments.get(aSet);
     }
 
     public Set<AnnotationSet> getAnnotators()

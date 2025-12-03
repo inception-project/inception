@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
@@ -40,12 +40,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnSelectionChangedEvent;
 
-public class UserSelectToolbar
+public class AnnotationSetSelectionToolbar
     extends AbstractToolbar
 {
     private static final long serialVersionUID = 8850551593688910044L;
 
-    public UserSelectToolbar(IModel<Set<AnnotationSet>> aSelection,
+    public AnnotationSetSelectionToolbar(IModel<Set<AnnotationSet>> aSelection,
             DataTable<DocumentMatrixRow, ?> aTable)
     {
         super(aSelection, aTable);
@@ -79,15 +79,15 @@ public class UserSelectToolbar
                 var selected = new CheckBox("selected");
 
                 if (column instanceof DocumentMatrixAnnotatorColumn annotatorColumn) {
-                    var username = annotatorColumn.getDisplayModel().getObject();
+                    var username = annotatorColumn.getAnnotationSet();
                     selected.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
-                            _target -> actionSelectAnnotator(_target, username, selected)));
+                            _target -> actionSelect(_target, username, selected)));
                     selected.setModel(Model.of(getSelection().contains(username)));
                 }
                 else if (column instanceof DocumentMatrixCuratorColumn curatorColumn) {
                     selected.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
-                            _target -> actionSelectCurator(_target, selected)));
-                    selected.setModel(Model.of(getSelection().contains(CURATION_USER)));
+                            _target -> actionSelect(_target, CURATION_SET, selected)));
+                    selected.setModel(Model.of(getSelection().contains(CURATION_SET)));
                 }
                 else {
                     selected.setVisible(false);
@@ -99,39 +99,23 @@ public class UserSelectToolbar
         add(headers);
     }
 
-    private void actionSelectAnnotator(AjaxRequestTarget aTarget, String aUsername,
-            CheckBox aCheckbox)
+    private void actionSelect(AjaxRequestTarget aTarget, AnnotationSet aAnnSet, CheckBox aCheckbox)
     {
-        getSelection().remove(CURATION_USER);
         if (aCheckbox.getModelObject()) {
-            getSelection().add(aUsername);
+            getSelection().add(aAnnSet);
         }
         else {
-            getSelection().remove(aUsername);
+            getSelection().remove(aAnnSet);
         }
 
         send(this, BUBBLE,
-                new AnnotatorColumnSelectionChangedEvent(aTarget, aUsername, aCheckbox.getModel()));
-    }
-
-    private void actionSelectCurator(AjaxRequestTarget aTarget, CheckBox aCheckbox)
-    {
-        getSelection().clear();
-        if (aCheckbox.getModelObject()) {
-            getSelection().add(CURATION_USER);
-        }
-        else {
-            getSelection().remove(CURATION_USER);
-        }
-
-        send(this, BUBBLE, new AnnotatorColumnSelectionChangedEvent(aTarget, CURATION_USER,
-                aCheckbox.getModel()));
+                new AnnotatorColumnSelectionChangedEvent(aTarget, aAnnSet, aCheckbox.getModel()));
     }
 
     @SuppressWarnings("unchecked")
-    public Set<String> getSelection()
+    public Set<AnnotationSet> getSelection()
     {
-        return (Set<String>) getDefaultModelObject();
+        return (Set<AnnotationSet>) getDefaultModelObject();
     }
 
     @SuppressWarnings("unchecked")

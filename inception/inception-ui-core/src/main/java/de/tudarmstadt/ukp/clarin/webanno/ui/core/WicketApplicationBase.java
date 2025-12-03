@@ -243,10 +243,10 @@ public abstract class WicketApplicationBase
         initNonCachingInDevEnvironment();
 
         initErrorPage();
-        
+
         initPackageResourceGuard();
     }
-    
+
     private void initPackageResourceGuard()
     {
         // Allow .mjs (ES module) files to be served as package resources

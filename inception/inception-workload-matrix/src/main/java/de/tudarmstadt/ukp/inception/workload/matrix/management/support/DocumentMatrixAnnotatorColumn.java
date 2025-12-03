@@ -36,20 +36,20 @@ public class DocumentMatrixAnnotatorColumn
     private static final long serialVersionUID = 8324173231787296215L;
 
     private IModel<Set<AnnotationSet>> selectedUsers;
-    private AnnotationSet user;
+    private AnnotationSet annotationSet;
 
-    public DocumentMatrixAnnotatorColumn(AnnotationSet aUser,
-            IModel<Set<AnnotationSet>> aSelectedUsers)
+    public DocumentMatrixAnnotatorColumn(AnnotationSet aAnnSet,
+            IModel<Set<AnnotationSet>> aSelectedSets)
     {
-        super(Model.of(aUser.displayName()), annotatorSortKey(aUser),
-                row -> row.getAnnotationDocument(aUser));
-        user = aUser;
-        selectedUsers = aSelectedUsers;
+        super(Model.of(aAnnSet.displayName()), annotatorSortKey(aAnnSet),
+                row -> row.getAnnotationDocument(aAnnSet));
+        annotationSet = aAnnSet;
+        selectedUsers = aSelectedSets;
     }
 
-    public AnnotationSet getUser()
+    public AnnotationSet getAnnotationSet()
     {
-        return user;
+        return annotationSet;
     }
 
     @Override
@@ -61,6 +61,6 @@ public class DocumentMatrixAnnotatorColumn
                 aRowModel);
 
         aItem.add(new DocumentMatrixAnnotatorStateCell(aComponentId, aRowModel, annDocument,
-                selectedUsers, user));
+                selectedUsers, annotationSet));
     }
 }

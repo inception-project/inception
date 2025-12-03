@@ -34,16 +34,16 @@ public class AnnotatorColumnCellOpenContextMenuEvent
     private final Component cell;
     private final SourceDocument sourceDocument;
     private final AnnotationDocumentState state;
-    private final AnnotationSet user;
+    private final AnnotationSet annotationSet;
 
     public AnnotatorColumnCellOpenContextMenuEvent(AjaxRequestTarget aTarget, Component aCell,
-            SourceDocument aSourceDocument, AnnotationSet aUser, AnnotationDocumentState aState)
+            SourceDocument aSourceDocument, AnnotationSet aSet, AnnotationDocumentState aState)
     {
         super(aTarget);
 
         cell = aCell;
         sourceDocument = aSourceDocument;
-        user = aUser;
+        annotationSet = aSet;
         state = aState;
     }
 
@@ -52,9 +52,9 @@ public class AnnotatorColumnCellOpenContextMenuEvent
         return sourceDocument;
     }
 
-    public AnnotationSet getUser()
+    public AnnotationSet getAnnotationSet()
     {
-        return user;
+        return annotationSet;
     }
 
     public AnnotationDocumentState getState()

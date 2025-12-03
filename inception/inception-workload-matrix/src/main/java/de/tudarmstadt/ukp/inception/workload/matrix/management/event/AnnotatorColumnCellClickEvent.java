@@ -30,15 +30,15 @@ public class AnnotatorColumnCellClickEvent
     extends AbstractAjaxAwareEvent
 {
     private final SourceDocument sourceDocument;
-    private final AnnotationSet user;
+    private final AnnotationSet annotationSet;
 
     public AnnotatorColumnCellClickEvent(AjaxRequestTarget aTarget, SourceDocument aSourceDocument,
-            AnnotationSet aUser)
+            AnnotationSet aSet)
     {
         super(aTarget);
 
         sourceDocument = aSourceDocument;
-        user = aUser;
+        annotationSet = aSet;
     }
 
     public SourceDocument getSourceDocument()
@@ -46,8 +46,8 @@ public class AnnotatorColumnCellClickEvent
         return sourceDocument;
     }
 
-    public AnnotationSet getUser()
+    public AnnotationSet getAnnotationSet()
     {
-        return user;
+        return annotationSet;
     }
 }

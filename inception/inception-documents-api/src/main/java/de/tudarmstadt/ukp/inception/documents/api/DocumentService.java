@@ -635,19 +635,20 @@ public interface DocumentService
     List<AnnotationDocument> listAnnotationDocuments(Project project, User user);
 
     /**
-     * List all the {@link AnnotationDocument annotation documents} from a project for a given user.
+     * List all the {@link AnnotationDocument annotation documents} from a project for a given
+     * annotation set.
      * <p>
      * Note that this method does may not return an {@link AnnotationDocument annotation document}
-     * for every user in the project because they are created lazily when a user opens a document
-     * for annotation the first time.
+     * for every annotation set in the project because they are created lazily when a document is
+     * opened for annotation the first time.
      * <p>
-     * Note that this method returns <b>ALL</b> {@link AnnotationDocument annotation document} even
-     * if the user owning the document does not actually exist in the system!
+     * Note that this method returns <b>ALL</b> {@link AnnotationDocument annotation document}
+     * associated with the project.
      * 
      * @param aProject
      *            the {@link Project}
      * @param aSet
-     *            the {@link AnnotationSEt}
+     *            the {@link AnnotationSet}
      * @return {@link AnnotationDocument}
      * @see #createOrGetAnnotationDocument(SourceDocument, User)
      */

@@ -72,9 +72,9 @@ public abstract class DocumentMatrixSortKey
 
     public abstract int compare(DocumentMatrixRow aRow1, DocumentMatrixRow aRow2);
 
-    public static AnnotatorDocumentMatrixSortKey annotatorSortKey(AnnotationSet aUsername)
+    public static AnnotatorDocumentMatrixSortKey annotatorSortKey(AnnotationSet aSet)
     {
-        return new AnnotatorDocumentMatrixSortKey(aUsername);
+        return new AnnotatorDocumentMatrixSortKey(aSet);
     }
 
     static public abstract class FixedDocumentMatrixSortKey
