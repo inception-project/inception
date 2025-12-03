@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor2.resources;
 
+import org.apache.wicket.request.resource.JavaScriptPackageResource;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
 public class PdfJsJavaScriptReference
@@ -42,5 +43,13 @@ public class PdfJsJavaScriptReference
     private PdfJsJavaScriptReference()
     {
         super(PdfJsJavaScriptReference.class, "pdf.min.mjs");
+    }
+
+    @Override
+    public JavaScriptPackageResource getResource()
+    {
+        var res = super.getResource();
+        res.setCompress(false);
+        return res;
     }
 }

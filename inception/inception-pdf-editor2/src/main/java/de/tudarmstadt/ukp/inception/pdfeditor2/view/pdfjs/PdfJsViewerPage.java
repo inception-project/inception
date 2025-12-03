@@ -58,10 +58,10 @@ public class PdfJsViewerPage
     public void renderHead(IHeaderResponse aResponse)
     {
         renderLocaleReference(aResponse);
-        
+
         // Render CSS dependency
         aResponse.render(CssContentHeaderItem.forReference(PdfJsViewerJavaCssReference.get()));
-        
+
         // Render JavaScript dependencies as ES modules using Wicket's built-in module support
         aResponse.render(JavaScriptHeaderItem.forReference(PdfJsJavaScriptReference.get())
                 .setType(JavaScriptReferenceType.MODULE));
@@ -72,8 +72,7 @@ public class PdfJsViewerPage
     private void renderLocaleReference(IHeaderResponse aResponse)
     {
         UrlRenderer urlRenderer = RequestCycle.get().getUrlRenderer();
-        String localeUrl = urlRenderer
-                .renderContextRelativeUrl(BASE_URL + "/locale/locale.json");
+        String localeUrl = urlRenderer.renderContextRelativeUrl(BASE_URL + "/locale/locale.json");
 
         AttributeMap attributes = new AttributeMap();
         attributes.putAttribute(ATTR_LINK_REL, "resource");
