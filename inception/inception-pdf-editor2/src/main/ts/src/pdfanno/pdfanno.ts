@@ -38,85 +38,65 @@ export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
   globalThis.globalEvent.setMaxListeners(0)
   diamAjax = ajax
 
-    // Configure PDF.js options before loading documents
-    const opts = (globalThis as any).PDFViewerApplicationOptions
-    opts.set('annotationMode', 0) // 0 = DISABLE (completely disable annotation rendering)
-    opts.set('annotationEditorMode', -1) // -1 = Disable editor mode
-    opts.set('defaultUrl', null)
-    opts.set('disablePreferences', true)
-    opts.set('workerSrc', 'pdf.worker.min.mjs')
-    opts.set('sandboxBundleSrc', 'pdf.sandbox.min.mjs')
-    opts.set('wasmUrl', 'wasm/')
-    opts.set('cMapUrl', 'cmaps/')
-    opts.set('imageResourcesPath', 'image_decoders/')
-    opts.set('standardFontDataUrl', 'standard_fonts/')
-    opts.set('cMapPacked', true)
-    opts.set('isEvalSupported', false)
-    opts.set('enableScripting', false)
-    opts.set('externalLinkEnabled', false)
-    opts.set('externalLinkTarget', 0)
-    opts.set('viewOnLoad', 1)
-    opts.set('sidebarViewOnLoad', 0)
+  // Create an annocation container.
+  annotationContainer = new AnnotationContainer()
+  annoPage = new PDFAnnoPage(annotationContainer)
 
-    // Create an annocation container.
-    annotationContainer = new AnnotationContainer()
-    annoPage = new PDFAnnoPage(annotationContainer)
+  // FIXME: These should be removed
+  globalThis.annotationContainer = annotationContainer
 
-    // FIXME: These should be removed
-    globalThis.annotationContainer = annotationContainer
+  // Enable a view mode.
+  // UI.enableViewMode()
 
-    // Enable a view mode.
-    // UI.enableViewMode()
+  const initPromise = new Promise<void>((resolve) => {
+    if (!globalThis.PDFViewerApplication.initializedPromise) {
+      return
+    }
 
-    const initPromise = new Promise<void>((resolve) => {
-      if (!globalThis.PDFViewerApplication.initializedPromise) {
-        return
+    console.log('Waiting for the document to load...')
+    globalThis.PDFViewerApplication.initializedPromise.then(function () {
+      const app = globalThis.PDFViewerApplication
+
+      if (app.pdfViewer) {
+        app.pdfViewer.annotationMode = 0 // DISABLE
+      }
+      
+      // Disable PDF.js search and delegate to browser search
+      delete app.supportsIntegratedFind
+      app.supportsIntegratedFind = true
+
+      // Disable PDF.js printing
+      delete app.supportsPrinting
+      app.supportsPrinting = false
+
+      // The event called at page rendered by pdfjs.
+      app.eventBus.on('pagerendered', ev => onPageRendered(ev))
+      // Adapt to scale change.
+      app.eventBus.on('scalechanged', ev => onScaleChange(ev))
+      app.eventBus.on('zoomin', ev => onScaleChange(ev))
+      app.eventBus.on('zoomout', ev => onScaleChange(ev))
+      app.eventBus.on('zoomreset', ev => onScaleChange(ev))
+      app.eventBus.on('sidebarviewchanged', ev => onScaleChange(ev))
+      app.eventBus.on('resize', ev => onScaleChange(ev))
+
+      const loadedCallback = () => {
+        console.log('Document loaded...')
+        app.eventBus.off('pagerendered', loadedCallback)
+        resolve()
       }
 
-      console.log('Waiting for the document to load...')
-      globalThis.PDFViewerApplication.initializedPromise.then(function () {
-        const app = globalThis.PDFViewerApplication
-
-        if (app.pdfViewer) {
-          app.pdfViewer.annotationMode = 0 // DISABLE
-        }
-        
-        // Disable PDF.js search and delegate to browser search
-        delete app.supportsIntegratedFind
-        app.supportsIntegratedFind = true
-
-        // Disable PDF.js printing
-        delete app.supportsPrinting
-        app.supportsPrinting = false
-
-        // The event called at page rendered by pdfjs.
-        app.eventBus.on('pagerendered', ev => onPageRendered(ev))
-        // Adapt to scale change.
-        app.eventBus.on('scalechanged', ev => onScaleChange(ev))
-        app.eventBus.on('zoomin', ev => onScaleChange(ev))
-        app.eventBus.on('zoomout', ev => onScaleChange(ev))
-        app.eventBus.on('zoomreset', ev => onScaleChange(ev))
-        app.eventBus.on('sidebarviewchanged', ev => onScaleChange(ev))
-        app.eventBus.on('resize', ev => onScaleChange(ev))
-
-        const loadedCallback = () => {
-          console.log('Document loaded...')
-          app.eventBus.off('pagerendered', loadedCallback)
-          resolve()
-        }
-
-        app.eventBus.on('pagerendered', loadedCallback)
-      })
+      app.eventBus.on('pagerendered', loadedCallback)
     })
+  })
 
-    // Init viewer.
-    annoPage.initializeViewer(undefined)
+  // Init viewer.
+  annoPage.initializeViewer(undefined)
 
-    // Start application.
-    annoPage.startViewerApplication()
+  // Start application.
+  annoPage.startViewerApplication()
 
-    installSpanSelection()
-    installRelationSelection()
+  installSpanSelection()
+  installRelationSelection()
 
   popover = mount(AnnotationDetailPopOver, {
     target: document.body,

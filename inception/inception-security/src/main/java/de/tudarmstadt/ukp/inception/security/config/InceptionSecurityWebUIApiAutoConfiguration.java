@@ -57,12 +57,18 @@ public class InceptionSecurityWebUIApiAutoConfiguration
     public SecurityFilterChain uiViewFilterChain(HttpSecurity aHttp, CspProperties aCspProperties)
         throws Exception
     {
-        var imgSrcValue = new ArrayList<>(asList(SELF, new FixedCSPValue("data:")));
+        var imgSrcValue = new ArrayList<>(asList( //
+            SELF,  //
+            new FixedCSPValue("data:"),  //
+            // blob needed by pdf.js for the thumbnails
+            new FixedCSPValue("blob:")));
         aCspProperties.getAllowedImageSources().stream() //
                 .map(FixedCSPValue::new) //
                 .forEachOrdered(imgSrcValue::add);
 
-        var mediaSrcValue = new ArrayList<>(asList(SELF, new FixedCSPValue("data:")));
+        var mediaSrcValue = new ArrayList<>(asList( //
+            SELF, //
+            new FixedCSPValue("data:")));
         aCspProperties.getAllowedMediaSources().stream() //
                 .map(FixedCSPValue::new) //
                 .forEachOrdered(mediaSrcValue::add);

@@ -17,46 +17,31 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor2.resources;
 
-import static java.util.Arrays.asList;
-
-import java.util.List;
-
-import org.apache.wicket.markup.head.CssContentHeaderItem;
-import org.apache.wicket.markup.head.HeaderItem;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.request.resource.JavaScriptPackageResource;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class PdfJsViewerJavaScriptReference
+public class PdfJsOptionsJavaScriptReference
     extends JavaScriptResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final PdfJsViewerJavaScriptReference INSTANCE = new PdfJsViewerJavaScriptReference();
+    private static final PdfJsOptionsJavaScriptReference INSTANCE = new PdfJsOptionsJavaScriptReference();
 
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static PdfJsViewerJavaScriptReference get()
+    public static PdfJsOptionsJavaScriptReference get()
     {
         return INSTANCE;
     }
 
-    @Override
-    public List<HeaderItem> getDependencies()
+    private PdfJsOptionsJavaScriptReference()
     {
-        return asList( //
-                CssContentHeaderItem.forReference(PdfJsViewerJavaCssReference.get()),
-                JavaScriptHeaderItem.forReference(PdfJsOptionsJavaScriptReference.get()),
-                JavaScriptHeaderItem.forReference(PdfJsJavaScriptReference.get()));
+        super(PdfJsOptionsJavaScriptReference.class, "pdfjs-options.js");
     }
 
-    /**
-     * Private constructor
-     */
-    private PdfJsViewerJavaScriptReference()
+    @Override
+    public JavaScriptPackageResource getResource()
     {
-        super(PdfJsViewerJavaScriptReference.class, "viewer.mjs");
+        var res = super.getResource();
+        res.setCompress(false);
+        return res;
     }
 }
