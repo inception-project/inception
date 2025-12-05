@@ -26,6 +26,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 
 public abstract class DocumentMatrixSortKey
     implements Serializable
@@ -71,9 +72,9 @@ public abstract class DocumentMatrixSortKey
 
     public abstract int compare(DocumentMatrixRow aRow1, DocumentMatrixRow aRow2);
 
-    public static AnnotatorDocumentMatrixSortKey annotatorSortKey(String aUsername)
+    public static AnnotatorDocumentMatrixSortKey annotatorSortKey(AnnotationSet aSet)
     {
-        return new AnnotatorDocumentMatrixSortKey(aUsername);
+        return new AnnotatorDocumentMatrixSortKey(aSet);
     }
 
     static public abstract class FixedDocumentMatrixSortKey
@@ -109,9 +110,9 @@ public abstract class DocumentMatrixSortKey
     {
         private static final long serialVersionUID = -8232983429696733363L;
 
-        private final String name;
+        private final AnnotationSet name;
 
-        public AnnotatorDocumentMatrixSortKey(String aName)
+        public AnnotatorDocumentMatrixSortKey(AnnotationSet aName)
         {
             name = aName;
         }
