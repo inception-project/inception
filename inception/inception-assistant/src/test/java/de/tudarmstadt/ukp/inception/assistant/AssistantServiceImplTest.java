@@ -240,8 +240,7 @@ class AssistantServiceImplTest
         public DaoAuthenticationProvider authenticationProvider(PasswordEncoder aEncoder,
                 @Lazy UserDetailsManager aUserDetailsManager)
         {
-            var authProvider = new InceptionDaoAuthenticationProvider();
-            authProvider.setUserDetailsService(aUserDetailsManager);
+            var authProvider = new InceptionDaoAuthenticationProvider(aUserDetailsManager);
             authProvider.setPasswordEncoder(aEncoder);
             return authProvider;
         }

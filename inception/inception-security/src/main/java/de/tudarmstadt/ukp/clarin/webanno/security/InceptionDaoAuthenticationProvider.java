@@ -24,10 +24,22 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 public class InceptionDaoAuthenticationProvider
     extends DaoAuthenticationProvider
 {
+    @Deprecated
+    public InceptionDaoAuthenticationProvider()
+    {
+        // TODO Auto-generated constructor stub
+    }
+
+    public InceptionDaoAuthenticationProvider(UserDetailsService aUserDetailsService)
+    {
+        super(aUserDetailsService);
+    }
+
     @Override
     protected void additionalAuthenticationChecks(UserDetails aUserDetails,
             UsernamePasswordAuthenticationToken aAuthentication)

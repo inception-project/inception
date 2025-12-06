@@ -60,6 +60,8 @@ public abstract class CachingContextLookupExtensionPoint_ImplBase<C, E extends E
         return null;
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
     public synchronized <X extends E> Optional<X> findGenericExtension(C aContext)
     {
         Validate.notNull(aContext, "Extension lookup context must be specified");

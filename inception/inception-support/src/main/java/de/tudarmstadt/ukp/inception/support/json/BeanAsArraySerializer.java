@@ -56,6 +56,7 @@ public class BeanAsArraySerializer
         super(Collection.class, elemType, staticTyping, vts, valueSerializer);
     }
 
+    @SuppressWarnings("deprecation")
     public BeanAsArraySerializer(JavaType elemType, boolean staticTyping, TypeSerializer vts,
             BeanProperty property, JsonSerializer<Object> valueSerializer)
     {

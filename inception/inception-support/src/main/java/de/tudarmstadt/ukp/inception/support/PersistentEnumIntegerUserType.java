@@ -40,6 +40,7 @@ public abstract class PersistentEnumIntegerUserType<T extends Enum<T>>
 {
     private static final long serialVersionUID = -3080625439869047088L;
 
+    @SuppressWarnings("unchecked")
     @Override
     public T assemble(Serializable cached, Object owner) throws HibernateException
     {

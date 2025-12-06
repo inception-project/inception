@@ -23,6 +23,7 @@ import org.danekja.java.util.function.serializable.SerializableFunction;
 /**
  * @deprecated Use {@link org.apache.wicket.markup.html.form.LambdaChoiceRenderer} instead.
  */
+@SuppressWarnings("javadoc")
 @Deprecated
 public class LambdaChoiceRenderer<T>
     extends ChoiceRenderer<T>

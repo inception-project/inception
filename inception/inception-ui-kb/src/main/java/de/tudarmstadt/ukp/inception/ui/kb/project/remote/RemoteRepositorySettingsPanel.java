@@ -59,7 +59,7 @@ public class RemoteRepositorySettingsPanel
     private final TextField<String> defaultDatasetField;
     private final DropDownChoice<AuthenticationType> authenticationType;
 
-    private AuthenticationTraitsEditor authenticationTraitsEditor;
+    private AuthenticationTraitsEditor<?> authenticationTraitsEditor;
 
     public RemoteRepositorySettingsPanel(String aId,
             CompoundPropertyModel<KnowledgeBaseWrapper> kbModel,
@@ -102,9 +102,9 @@ public class RemoteRepositorySettingsPanel
         aTarget.add(authenticationTraitsEditor);
     }
 
-    private AuthenticationTraitsEditor updateAuthenticationPanel()
+    private AuthenticationTraitsEditor<?> updateAuthenticationPanel()
     {
-        AuthenticationTraitsEditor panel;
+        AuthenticationTraitsEditor<?> panel;
 
         KnowledgeBaseWrapper kbw = getModel().getObject();
         if (kbw.getAuthenticationType() != null) {
@@ -145,7 +145,7 @@ public class RemoteRepositorySettingsPanel
         if (authenticationTraitsEditor == null
                 || panel.getClass() != authenticationTraitsEditor.getClass()) {
             if (authenticationTraitsEditor != null) {
-                authenticationTraitsEditor = (AuthenticationTraitsEditor) authenticationTraitsEditor
+                authenticationTraitsEditor = (AuthenticationTraitsEditor<?>) authenticationTraitsEditor
                         .replaceWith(panel);
             }
             else {

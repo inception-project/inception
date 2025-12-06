@@ -30,7 +30,6 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 
-import org.dkpro.core.api.resources.ResourceObjectProviderBase;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.springframework.boot.Banner;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
@@ -113,7 +112,7 @@ public class INCEpTION
         System.setProperty(ALWAYS_HOLD_ONTO_FSS, "true");
 
         // We do not want DKPro Core to try and auto-download anything
-        System.setProperty(ResourceObjectProviderBase.PROP_REPO_OFFLINE, "true");
+        System.setProperty("dkpro.model.repository.offline", "true");
 
         try {
             new EmbeddedDatabaseBackupHandler().maybeBackupEmbeddedDatabase();

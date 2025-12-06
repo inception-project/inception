@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.support.xml;
 
-import static org.apache.commons.lang3.StringUtils.startsWith;
+import static org.apache.commons.lang3.Strings.CS;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -102,7 +102,7 @@ public abstract class NamspaceDecodingContentHandlerAdapter
                 if (XMLNS.equals(qName)) {
                     mappings.put("", aAtts.getValue(i));
                 }
-                if (startsWith(qName, XMLNS_PREFIX)) {
+                if (CS.startsWith(qName, XMLNS_PREFIX)) {
                     mappings.put(qName.substring(XMLNS_PREFIX.length()), aAtts.getValue(i));
                 }
             }
