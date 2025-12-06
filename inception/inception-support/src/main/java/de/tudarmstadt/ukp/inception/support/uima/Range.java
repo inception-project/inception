@@ -58,6 +58,7 @@ public class Range
     /**
      * @deprecated Use {@link #rangeCoveringDocument} instead.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public Range(CAS aCas)
     {
@@ -74,6 +75,7 @@ public class Range
     /**
      * @deprecated Use {@link #rangeCoveringAnnotations(Iterable)} instead.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public Range(Iterable<? extends AnnotationFS> aAnnotations)
     {

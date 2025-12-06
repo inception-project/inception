@@ -22,8 +22,9 @@ import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.commons.lang3.StringUtils.lowerCase;
 import static org.apache.commons.lang3.StringUtils.splitByCharacterTypeCamelCase;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static org.apache.commons.lang3.Strings.CS;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -45,7 +46,7 @@ public class StartupWatcher
 
         String name = aBean.getClass().getSimpleName();
         if (name.contains("$")) {
-            name = StringUtils.substringBefore(name, "$");
+            name = substringBefore(name, "$");
         }
 
         if (name.isBlank()) {
@@ -63,7 +64,7 @@ public class StartupWatcher
         }
 
         if (isInterestingForUser) {
-            name = StringUtils.removeEnd(name, "AutoConfiguration");
+            name = CS.removeEnd(name, "AutoConfiguration");
             name = lowerCase(join(splitByCharacterTypeCamelCase(name), SPACE));
 
             BOOT_LOG.info("Initializing " + name);

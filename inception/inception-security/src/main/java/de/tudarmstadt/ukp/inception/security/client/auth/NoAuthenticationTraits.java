@@ -17,25 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.security.client.auth;
 
-public class NoAuthenticationTraitsEditor
-    extends AuthenticationTraitsEditor<NoAuthenticationTraits>
+public class NoAuthenticationTraits
+    extends AuthenticationTraits
 {
-    private static final long serialVersionUID = 2314779756017515092L;
-
-    public NoAuthenticationTraitsEditor(String aId)
-    {
-        super(aId);
-    }
+    private static final long serialVersionUID = 1L;
+    public static final String TYPE_ID = "None";
 
     @Override
-    public void setEditMode(boolean aMode)
+    public AuthenticationType getType()
     {
-        // Ignore
-    }
-
-    @Override
-    public void commit()
-    {
-        // Ignore
+        return null;
     }
 }

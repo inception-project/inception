@@ -26,9 +26,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
@@ -49,34 +52,27 @@ public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
             ShibbolethRequestHeaderAuthenticationFilter aFilter, SessionRegistry aSessionRegistry)
         throws Exception
     {
-        // @formatter:off
-        aHttp
-            .rememberMe()
-            .and()
-            .csrf().disable()
-            .addFilterBefore(aFilter, RequestHeaderAuthenticationFilter.class);
-        
-        var authorizations = aHttp.authorizeHttpRequests();
-        accessToStaticResources(authorizations);
-        accessToRemoteApiAndSwagger(authorizations);
-        accessToApplication(authorizations);
-        authorizations.anyRequest().denyAll();
+        aHttp.rememberMe(Customizer.withDefaults())
 
-        aHttp.exceptionHandling()
-                .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
-            .and()
-                .headers().frameOptions().sameOrigin()
-            .and()
-            .sessionManagement() 
-                // Configuring an unlimited session per-user maximum as a side-effect registers
-                // the ConcurrentSessionFilter which checks for valid sessions in the session
-                // registry. This allows us to indirectly invalidate a server session by marking
-                // its Spring-security registration as invalid and have Spring Security in turn
-                // mark the server session as invalid on the next request. This is used e.g. to
-                // force-sign-out users that are being deleted.
-                .maximumSessions(-1)
-                .sessionRegistry(aSessionRegistry);
-        // @formatter:on
+                .csrf(AbstractHttpConfigurer::disable)
+
+                .addFilterBefore(aFilter, RequestHeaderAuthenticationFilter.class)
+
+                .authorizeHttpRequests(auth -> {
+                    accessToStaticResources(auth);
+                    accessToRemoteApiAndSwagger(auth);
+                    accessToApplication(auth);
+                    auth.anyRequest().denyAll();
+                })
+
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
+
+                .headers(headers -> headers.frameOptions(FrameOptionsConfig::sameOrigin))
+
+                .sessionManagement(
+                        session -> session.maximumSessions(-1).sessionRegistry(aSessionRegistry));
+
         return aHttp.build();
     }
 
@@ -86,7 +82,7 @@ public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
             AuthenticationConfiguration aAuthenticationConfiguration, UserDao aUserRepository)
         throws Exception
     {
-        ShibbolethRequestHeaderAuthenticationFilter filter = new ShibbolethRequestHeaderAuthenticationFilter();
+        var filter = new ShibbolethRequestHeaderAuthenticationFilter();
         filter.setPrincipalRequestHeader(preAuthPrincipalHeader);
         filter.setAuthenticationManager(aAuthenticationConfiguration.getAuthenticationManager());
         filter.setUserRepository(aUserRepository);

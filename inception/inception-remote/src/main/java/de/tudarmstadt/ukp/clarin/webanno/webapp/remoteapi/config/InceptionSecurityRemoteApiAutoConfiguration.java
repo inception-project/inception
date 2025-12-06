@@ -19,15 +19,20 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.SPEL_IS_ADMIN_ACCOUNT_RECOVERY_MODE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.provisioning.UserDetailsManager;
@@ -48,25 +53,20 @@ public class InceptionSecurityRemoteApiAutoConfiguration
             RemoteApiProperties aProperties, OAuth2Adapter aOAuth2Handling)
         throws Exception
     {
-        // The remote API should always authenticate against the built-in user-database and
-        // not e.g. against the external pre-authentication
-        var authProvider = new InceptionDaoAuthenticationProvider();
-        authProvider.setUserDetailsService(aUserDetailsService);
+        var authProvider = new InceptionDaoAuthenticationProvider(aUserDetailsService);
         authProvider.setPasswordEncoder(aPasswordEncoder);
 
         aHttp.securityMatcher("/api/**");
-        aHttp.csrf().disable();
-        aHttp.cors();
 
-        // We hard-wire the internal user DB as the authentication provider here because
-        // because the API shouldn't work with external pre-authentication
+        aHttp.csrf(AbstractHttpConfigurer::disable);
+        aHttp.cors(Customizer.withDefaults());
+
         aHttp.authenticationProvider(authProvider);
 
-        aHttp.authorizeHttpRequests() //
-                .anyRequest().hasAnyRole("REMOTE");
+        aHttp.authorizeHttpRequests(auth -> auth.anyRequest().hasAnyRole("REMOTE"));
 
         if (aProperties.getHttpBasic().isEnabled()) {
-            aHttp.httpBasic();
+            aHttp.httpBasic(Customizer.withDefaults());
         }
 
         var oauth2Properties = aProperties.getOauth2();
@@ -77,27 +77,29 @@ public class InceptionSecurityRemoteApiAutoConfiguration
             }
 
             var authCon = new JwtAuthenticationConverter();
-            String principalClaimName;
-            if (isNotBlank(oauth2Properties.getUserNameAttribute())) {
-                principalClaimName = oauth2Properties.getUserNameAttribute();
-            }
-            else {
-                principalClaimName = JwtClaimNames.SUB;
-            }
+            String principalClaimName = isNotBlank(oauth2Properties.getUserNameAttribute())
+                    ? oauth2Properties.getUserNameAttribute()
+                    : JwtClaimNames.SUB;
+
             authCon.setPrincipalClaimName(principalClaimName);
 
             authCon.setJwtGrantedAuthoritiesConverter(jwt -> aOAuth2Handling.loadAuthorities(jwt,
                     oauth2Properties.getRealm(), principalClaimName));
-            aHttp.oauth2ResourceServer().jwt().jwtAuthenticationConverter(jwt -> {
+
+            Converter<Jwt, AbstractAuthenticationToken> customJwtConverter = jwt -> {
                 var token = authCon.convert(jwt);
+                // Assuming validateToken throws an exception if invalid
                 aOAuth2Handling.validateToken(token,
                         Realm.REALM_EXTERNAL_PREFIX + oauth2Properties.getRealm());
                 return token;
-            });
+            };
+
+            aHttp.oauth2ResourceServer(oauth2 -> oauth2.jwt(
+                    jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(customJwtConverter)));
         }
 
-        aHttp.sessionManagement() //
-                .sessionCreationPolicy(STATELESS);
+        aHttp.sessionManagement(
+                session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return aHttp.build();
     }
