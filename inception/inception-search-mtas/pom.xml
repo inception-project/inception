@@ -99,14 +99,6 @@
       <artifactId>commons-io</artifactId>
     </dependency>
     <dependency>
-      <!-- 
-        This is required by MTAS despite it not being declared as a dependency: 
-        MtasPosition.add(MtasPosition.java:178)
-      -->
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>
@@ -329,9 +321,6 @@
             <!-- Plugin does not get it... -->
               <ignoredDependency>org.springframework:spring-core</ignoredDependency>
             </ignoredDependencies>
-            <usedDependencies>
-              <usedDependency>commons-lang:commons-lang</usedDependency>
-            </usedDependencies>
           </configuration>
         </plugin>
       </plugins>
