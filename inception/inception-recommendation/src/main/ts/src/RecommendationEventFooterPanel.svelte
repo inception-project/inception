@@ -56,6 +56,7 @@
         wsEndpoint.protocol = protocol;
 
         stompClient = Stomp.over(() => (socket = new WebSocket(wsEndpoint.toString())));
+        stompClient.debug = () => {}; // Disable debug logging of all messages
         stompClient.connectHeaders = {
             'X-CSRF-TOKEN': csrfToken
         } 
