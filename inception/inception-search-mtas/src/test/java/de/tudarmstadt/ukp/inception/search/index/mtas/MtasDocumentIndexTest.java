@@ -89,6 +89,7 @@ import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAut
 import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
@@ -121,6 +122,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 // waits forever for the indexing to complete...
 @Transactional(propagation = Propagation.NEVER)
 @Import({ //
+        EventLoggingAutoConfiguration.class, //
         ConstraintsServiceAutoConfiguration.class, //
         AnnotationSchemaServiceAutoConfiguration.class, //
         TextFormatsAutoConfiguration.class, //

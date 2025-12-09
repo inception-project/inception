@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.dashboard.cli;
+package de.tudarmstadt.ukp.inception.documents.cli;
 
 import static java.util.Arrays.asList;
 
@@ -52,8 +52,6 @@ import picocli.CommandLine.Option;
 public class RebuildStateUpdatedFieldsCliCommand
     implements Callable<Integer>
 {
-    private final static Logger LOG = LoggerFactory.getLogger("inception.cli");
-
     @Option(names = { "--project-slug" }, description = "Re-build only the given project")
     private String slug;
 
@@ -70,14 +68,26 @@ public class RebuildStateUpdatedFieldsCliCommand
     }
 
     @Override
-    public Integer call() throws Exception
+    public Integer call()
+    {
+        rebuild(LoggerFactory.getLogger("inception.cli"), slug);
+
+        return 0;
+    }
+
+    public void rebuildAll(Logger aLog)
+    {
+        rebuild(aLog, null);
+    }
+
+    private void rebuild(Logger aLog, String aSlug)
     {
         var projectsUpdated = new LongOpenHashSet();
         var sourceDocumentUpdated = new LongOpenHashSet();
         var annotationDocumentUpdated = new LongOpenHashSet();
 
-        for (var project : selectProjects()) {
-            LOG.info("Processing project: {}", project);
+        for (var project : selectProjects(aSlug)) {
+            aLog.info("Processing project: {}", project);
 
             var srcDocs = documentService.listSourceDocuments(project);
             var annDocs = documentService.listAnnotationDocuments(project);
@@ -148,22 +158,20 @@ public class RebuildStateUpdatedFieldsCliCommand
                     }
                 }
                 catch (Exception e) {
-                    LOG.error("Error while processing event [{}]", event, e);
+                    aLog.error("Error while processing event [{}]", event, e);
                 }
             });
         }
 
-        LOG.info("Projects updated: {}", projectsUpdated.size());
-        LOG.info("Source documents updated: {}", sourceDocumentUpdated.size());
-        LOG.info("Annotation documents updated: {}", annotationDocumentUpdated.size());
-
-        return 0;
+        aLog.info("Projects updated: {}", projectsUpdated.size());
+        aLog.info("Source documents updated: {}", sourceDocumentUpdated.size());
+        aLog.info("Annotation documents updated: {}", annotationDocumentUpdated.size());
     }
 
-    private List<Project> selectProjects()
+    private List<Project> selectProjects(String aSlug)
     {
-        if (slug != null) {
-            return asList(projectService.getProjectBySlug(slug));
+        if (aSlug != null) {
+            return asList(projectService.getProjectBySlug(aSlug));
         }
 
         return projectService.listProjects();

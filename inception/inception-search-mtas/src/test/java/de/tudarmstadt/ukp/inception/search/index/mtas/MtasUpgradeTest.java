@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfigur
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
@@ -78,6 +79,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 @EnableAutoConfiguration
 @ImportAutoConfiguration( //
         classes = { //
+                EventLoggingAutoConfiguration.class, //
                 ConstraintsServiceAutoConfiguration.class, //
                 PreferencesServiceAutoConfig.class, //
                 ProjectServiceAutoConfiguration.class, //
