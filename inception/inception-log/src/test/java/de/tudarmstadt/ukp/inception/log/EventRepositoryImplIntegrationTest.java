@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.api.model.SummarizedLoggedEvent;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEventEntity;
+import jakarta.persistence.EntityManager;
 
 @EnableAutoConfiguration
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
@@ -81,7 +82,7 @@ public class EventRepositoryImplIntegrationTest
 
     private @Autowired TestEntityManager testEntityManager;
 
-    private EventRepositoryImpl sut;
+    private @Autowired EventRepositoryImpl sut;
     private Project project;
     private User user;
     private LoggedEventEntity le;
@@ -89,7 +90,6 @@ public class EventRepositoryImplIntegrationTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        sut = new EventRepositoryImpl(testEntityManager.getEntityManager());
         project = createProject(PROJECT_NAME);
         user = createUser(USERNAME);
     }
@@ -177,6 +177,12 @@ public class EventRepositoryImplIntegrationTest
     @SpringBootConfiguration
     public static class TestContext
     {
+        @Bean
+        EventRepositoryImpl EventRepositoryImpl(EntityManager aEntityManager)
+        {
+            return new EventRepositoryImpl(aEntityManager);
+        }
+
         @Bean
         DocumentImportExportService documentImportExportService() throws Exception
         {

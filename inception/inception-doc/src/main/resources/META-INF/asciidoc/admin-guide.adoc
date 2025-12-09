@@ -71,6 +71,10 @@ include::{include-dir}settings_security-csp.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}cli.adoc[]
+
+<<<
+
 include::{include-dir}logging.adoc[]
 
 <<<

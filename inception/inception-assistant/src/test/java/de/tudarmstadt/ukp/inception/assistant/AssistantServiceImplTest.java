@@ -93,9 +93,9 @@ import jakarta.persistence.EntityManager;
                 AssistantToolsAutoConfiguration.class, //
                 LiquibaseAutoConfiguration.class, //
                 SearchServiceAutoConfiguration.class, //
-                WorkloadManagementAutoConfiguration.class, //
-                EventLoggingAutoConfiguration.class })
+                WorkloadManagementAutoConfiguration.class })
 @ImportAutoConfiguration({ //
+        EventLoggingAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
         WebsocketAutoConfiguration.class, //
         WebsocketSecurityConfig.class, //

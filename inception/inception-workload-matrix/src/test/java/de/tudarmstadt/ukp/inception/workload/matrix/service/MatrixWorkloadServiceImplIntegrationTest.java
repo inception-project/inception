@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.exporters.AnnotationDocumentExporter;
@@ -72,6 +73,7 @@ import de.tudarmstadt.ukp.inception.schema.exporters.AnnotationDocumentExporter;
         "de.tudarmstadt.ukp.clarin.webanno.security.model", //
         "de.tudarmstadt.ukp.clarin.webanno.model" })
 @Import({ //
+        EventLoggingAutoConfiguration.class, //
         ConstraintsServiceAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
