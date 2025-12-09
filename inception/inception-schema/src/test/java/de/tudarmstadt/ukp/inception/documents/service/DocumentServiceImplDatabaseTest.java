@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceA
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
@@ -77,6 +78,7 @@ import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoCon
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @Import({ //
+        EventLoggingAutoConfiguration.class, //
         ConstraintsServiceAutoConfiguration.class, //
         TextFormatsAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
