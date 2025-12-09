@@ -32,7 +32,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
-public abstract class NamspaceDecodingContentHandlerAdapter
+public abstract class NamespaceDecodingContentHandlerAdapter
     extends ContentHandlerAdapter
 {
     private static final String XMLNS = "xmlns";
@@ -42,7 +42,7 @@ public abstract class NamspaceDecodingContentHandlerAdapter
 
     private final Map<String, String> namespaceMappings = new LinkedHashMap<>();
 
-    public NamspaceDecodingContentHandlerAdapter(ContentHandler aDelegate)
+    public NamespaceDecodingContentHandlerAdapter(ContentHandler aDelegate)
     {
         super(aDelegate);
         stack = new Stack<>();
