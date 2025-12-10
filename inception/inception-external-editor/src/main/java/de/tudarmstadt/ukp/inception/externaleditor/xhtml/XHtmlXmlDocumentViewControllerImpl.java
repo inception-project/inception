@@ -30,7 +30,6 @@ import static java.util.Optional.ofNullable;
 import static javax.xml.XMLConstants.DEFAULT_NS_PREFIX;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.slf4j.LoggerFactory.getLogger;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.IMAGE_GIF;
@@ -208,12 +207,12 @@ public class XHtmlXmlDocumentViewControllerImpl
 
     private ContentHandler applyImageDimensions(SourceDocument aDoc, ContentHandler aDelegate)
     {
-        var maybyFormatSupport = formatRegistry.getFormatById(aDoc.getFormat());
-        if (maybyFormatSupport.isEmpty()) {
+        var maybeFormatSupport = formatRegistry.getFormatById(aDoc.getFormat());
+        if (maybeFormatSupport.isEmpty()) {
             return aDelegate;
         }
 
-        var formatSupport = maybyFormatSupport.get();
+        var formatSupport = maybeFormatSupport.get();
 
         return new NamespaceDecodingContentHandlerAdapter(aDelegate)
         {
@@ -505,9 +504,7 @@ public class XHtmlXmlDocumentViewControllerImpl
             return ResponseEntity.notFound().build();
         }
 
-        try {
-            var inputStream = formatSupport.openResourceStream(srcDocFile, aResourceId);
-
+        try (var inputStream = formatSupport.openResourceStream(srcDocFile, aResourceId)) {
             var httpHeaders = new HttpHeaders();
             httpHeaders.setContentType(APPLICATION_JSON);
 
@@ -516,7 +513,7 @@ public class XHtmlXmlDocumentViewControllerImpl
                 return new ResponseEntity<>(toJsonString(imageMetaData.get()), httpHeaders, OK);
             }
 
-            return new ResponseEntity<>("{}", httpHeaders, NOT_FOUND);
+            return ResponseEntity.notFound().build();
         }
         catch (FileNotFoundException e) {
             LOG.debug("Resource [{}] for document {} not found", aResourceId, srcDoc);
@@ -528,16 +525,14 @@ public class XHtmlXmlDocumentViewControllerImpl
         }
     }
 
-    public Optional<ImageMetaData> getImageDimensions(InputStream inputStream) throws IOException
+    static Optional<ImageMetaData> getImageDimensions(InputStream inputStream) throws IOException
     {
-        // 1. Wrap the InputStream so ImageIO can read it
         try (var in = ImageIO.createImageInputStream(inputStream)) {
             if (in == null) {
                 // Content is not an image or stream is empty
                 return Optional.empty();
             }
 
-            // 2. Detect the content type dynamically
             var readers = ImageIO.getImageReaders(in);
             if (readers.hasNext()) {
                 var reader = readers.next();
@@ -552,8 +547,9 @@ public class XHtmlXmlDocumentViewControllerImpl
                     reader.dispose();
                 }
             }
+
+            return Optional.empty();
         }
-        return Optional.empty();
     }
 
     private Optional<MediaType> getContentType(String aResourceId)
