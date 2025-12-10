@@ -17,24 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.Optional;
 
-import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.AttributesImpl;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicy;
-import de.tudarmstadt.ukp.inception.support.xml.NamspaceDecodingContentHandlerAdapter;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.SanitizingContentHandler;
 
@@ -79,54 +71,6 @@ public abstract class XmlDocumentViewControllerImplBase
             ch = new SanitizingContentHandler(ch, defaultPolicy.getPolicy());
         }
         return ch;
-    }
-
-    protected ContentHandler applyHtmlResourceUrlFilter(SourceDocument aDoc,
-            ContentHandler aDelegate)
-    {
-        var hasResources = formatRegistry.getFormatById(aDoc.getFormat())
-                .map(FormatSupport::hasResources).orElse(false);
-        if (!hasResources) {
-            return aDelegate;
-        }
-
-        return new NamspaceDecodingContentHandlerAdapter(aDelegate)
-        {
-            @Override
-            public void startElement(String aUri, String aLocalName, String aQName,
-                    Attributes aAtts)
-                throws SAXException
-            {
-                var atts = aAtts;
-
-                var element = toQName(aUri, aLocalName, aQName);
-
-                if ("a".equalsIgnoreCase(element.getLocalPart())
-                        || "link".equalsIgnoreCase(element.getLocalPart())) {
-                    atts = filterResourceUrl(aAtts, "href");
-                }
-
-                if ("img".equalsIgnoreCase(element.getLocalPart())
-                        || "audio".equalsIgnoreCase(element.getLocalPart())
-                        || "video".equalsIgnoreCase(element.getLocalPart())) {
-                    atts = filterResourceUrl(aAtts, "src");
-                }
-
-                super.startElement(aUri, aLocalName, aQName, atts);
-            }
-
-            private Attributes filterResourceUrl(Attributes aAtts, String attribute)
-            {
-                var attributes = new AttributesImpl(aAtts);
-                var index = attributes.getIndex(attribute);
-                if (index != -1) {
-                    var value = attributes.getValue(index);
-                    value = "res?resId=" + URLEncoder.encode(value, UTF_8);
-                    attributes.setValue(index, value);
-                }
-                return attributes;
-            }
-        };
     }
 
     private Optional<PolicyCollection> getEditorPolicy(Optional<String> aEditor) throws IOException

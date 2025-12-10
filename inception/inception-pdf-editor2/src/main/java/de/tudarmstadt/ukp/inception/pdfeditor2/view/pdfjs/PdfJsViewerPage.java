@@ -64,13 +64,14 @@ public class PdfJsViewerPage
         aResponse.render(CssContentHeaderItem.forReference(PdfJsViewerJavaCssReference.get()));
 
         // Render JavaScript dependencies as ES modules using Wicket's built-in module support
-        // First render a small script that must be present at viewer boot time (PDFViewerApplicationOptions)
+        // First render a small script that must be present at viewer boot time
+        // (PDFViewerApplicationOptions)
         aResponse.render(JavaScriptHeaderItem.forReference(PdfJsOptionsJavaScriptReference.get())
-            .setType(JavaScriptReferenceType.MODULE));
+                .setType(JavaScriptReferenceType.MODULE));
         aResponse.render(JavaScriptHeaderItem.forReference(PdfJsJavaScriptReference.get())
-            .setType(JavaScriptReferenceType.MODULE));
+                .setType(JavaScriptReferenceType.MODULE));
         aResponse.render(JavaScriptHeaderItem.forReference(PdfJsViewerJavaScriptReference.get())
-            .setType(JavaScriptReferenceType.MODULE));
+                .setType(JavaScriptReferenceType.MODULE));
     }
 
     private void renderLocaleReference(IHeaderResponse aResponse)
