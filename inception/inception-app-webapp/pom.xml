@@ -431,6 +431,11 @@
       <artifactId>inception-log</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-log-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <!-- INCEPTION - EDITORS -->
     <dependency>
@@ -1099,12 +1104,14 @@
               <dependency>de.tudarmstadt.ukp.inception.app:inception-layer-span-api</dependency>
               <dependency>de.tudarmstadt.ukp.inception.app:inception-export-api</dependency>
               <dependency>de.tudarmstadt.ukp.inception.app:inception-schema-api</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-documents</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-log</dependency>
+              <dependency>de.tudarmstadt.ukp.inception.app:inception-log-api</dependency>
             </ignoredNonTestScopedDependencies>
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-assistant</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-guidelines</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-documents</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
@@ -1125,7 +1132,6 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-pubannotation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-pubmed</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-ui</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-dynamic</usedDependency>

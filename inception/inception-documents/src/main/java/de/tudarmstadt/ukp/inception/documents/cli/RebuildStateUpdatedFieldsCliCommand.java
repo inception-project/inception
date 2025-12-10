@@ -95,7 +95,7 @@ public class RebuildStateUpdatedFieldsCliCommand
                     "AnnotationStateChangeEvent");
 
             // We get the events in creation order
-            eventRepository.forEachLoggedEvent(project, event -> {
+            eventRepository.forEachLoggedEventUpdatable(project, event -> {
                 if (!stateChangeEvents.contains(event.getEvent())) {
                     return;
                 }

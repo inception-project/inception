@@ -1157,8 +1157,8 @@ public class MatrixWorkloadManagementPage
     @OnEvent
     public void onAnnotatorColumnCellClickEvent(AnnotatorColumnCellClickEvent aEvent)
     {
-        var annotationDocument = documentService
-                .createOrGetAnnotationDocument(aEvent.getSourceDocument(), aEvent.getAnnotationSet());
+        var annotationDocument = documentService.createOrGetAnnotationDocument(
+                aEvent.getSourceDocument(), aEvent.getAnnotationSet());
 
         var targetState = oneClickTransition(annotationDocument);
 

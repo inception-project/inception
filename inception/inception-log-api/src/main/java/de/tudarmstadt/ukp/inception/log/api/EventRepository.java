@@ -38,6 +38,9 @@ public interface EventRepository
     <E extends Throwable> void forEachLoggedEvent(Project aProject,
             FailableConsumer<LoggedEvent, E> aConsumer);
 
+    <E extends Throwable> void forEachLoggedEventUpdatable(Project aProject,
+            FailableConsumer<LoggedEvent, E> aConsumer);
+
     Optional<Range> getLastEditRange(SourceDocument aDocument, String aDataOwner);
 
     List<LoggedEvent> listRecentActivity(Project aProject, String aDataOwner,
