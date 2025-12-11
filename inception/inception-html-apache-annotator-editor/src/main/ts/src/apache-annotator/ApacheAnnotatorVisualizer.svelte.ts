@@ -38,6 +38,11 @@ export class ApacheAnnotatorVisualizer {
   private toCleanUp = new Set<Function>()
   private resizer: ResizeManager
   private tracker: ViewportTracker
+  private rootResizeTimeout: number | undefined = undefined
+  private rootResizeTracker: ResizeObserver | undefined = undefined
+  private rootDimensions: { width: number, height: number } | undefined = undefined
+  private optimizingLayout = false
+  private sectionTracker: IntersectionObserver | undefined = undefined
 
   private sectionSelector: string
   private sectionAnnotationVisualizer: SectionAnnotationVisualizer
@@ -51,6 +56,7 @@ export class ApacheAnnotatorVisualizer {
   private removeScrollMarkersTimeout: number | undefined = undefined
   private removePingMarkers: (() => void)[] = []
   private removePingMarkersTimeout: number | undefined = undefined
+  private loadAnnotationsTimeout: number | undefined = undefined
 
   private alpha = '55'
 
@@ -58,6 +64,8 @@ export class ApacheAnnotatorVisualizer {
     this.ajax = ajax
     this.root = element
     this.sectionSelector = sectionSelector
+
+    this.optimizeLayout("constructor")
 
     this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations())
     this.resizer = new ResizeManager(this, this.ajax)
@@ -91,6 +99,146 @@ export class ApacheAnnotatorVisualizer {
     this.root.addEventListener('mouseout', e => this.removeAnnotationHighight(e as MouseEvent))
   }
 
+  public optimizeLayout(trigger: string) {
+    if (this.optimizingLayout) return
+
+    try {
+      console.log('optimizeLayout called by ' + trigger)
+      this.optimizingLayout = true
+
+      if (this.sectionTracker) {
+        this.sectionTracker.disconnect()
+      }
+
+      if (this.rootResizeTracker) {
+        this.rootResizeTracker.disconnect()
+      } 
+
+      this.root.querySelectorAll(".iaa-secluded").forEach(e => e.classList.remove("iaa-secluded"))
+
+      this.materializeWidthAndHeight(this.root, this.sectionSelector)
+
+      this.sectionTracker = this.sectionSeclusionTracker(this.root, this.sectionSelector)
+      this.rootResizeTracker = new ResizeObserver((entries) => {
+        if (this.optimizingLayout || entries.length === 0) return
+
+        let dim = entries[0].contentRect // Only observing one element
+        if (!this.rootDimensions || dim.width !== this.rootDimensions.width || dim.height !== this.rootDimensions.height) {
+          console.log(`Root resized from ${this.rootDimensions?.width}/${this.rootDimensions?.height} to ${dim.width}/${dim.height}`)
+          this.rootDimensions = { width: dim.width, height: dim.height }
+
+          if (this.rootResizeTimeout) {
+            this.cancelScheduled(this.rootResizeTimeout)
+            this.rootResizeTimeout = undefined
+          }
+
+          this.rootResizeTimeout = this.schedule(500, () => this.optimizeLayout("resize observer"))
+        }
+      })
+
+      this.rootResizeTracker.observe(this.root)
+    }
+    finally {
+      console.log('Finished optimizeLayout called by ' + trigger)
+      this.optimizingLayout = false
+    }
+  }
+
+  private sectionSeclusionTracker(element: Element, sectionSelector: string): IntersectionObserver | undefined {
+    if (!sectionSelector) return
+
+    const observer = new IntersectionObserver((entries) => {
+      console.log('hideSectionsOutsideViewport: processing entries', entries.length)
+      for (const entry of entries) {
+        const target = entry.target as HTMLElement
+        if (!target) continue
+
+        if (entry.isIntersecting) {
+          target.classList.remove('iaa-secluded')
+        } else {
+          target.classList.add('iaa-secluded')
+        }
+      }
+    }, {
+      root: (element instanceof Element) ? element as Element : null,
+      rootMargin: '1000px',
+      threshold: 0
+    })
+
+    const nodes = element.querySelectorAll(sectionSelector)
+    console.log('hideSectionsOutsideViewport: found nodes count', nodes.length)
+    nodes.forEach(n => {
+      if (!(n instanceof Element)) return
+      observer.observe(n)
+    })
+
+    return observer;
+  }
+
+  private materializeWidthAndHeight(element: Element, sectionSelector: string) {
+    if (!sectionSelector) return
+
+    try {
+      const nodes = element.querySelectorAll(sectionSelector)
+      const measurements = []
+
+      // PASS 1: Clear any previously set midnHeight/minWidth styles
+      nodes.forEach((n) => {
+        if (!(n instanceof HTMLElement)) return
+        n.style.minHeight = ''
+        n.style.minWidth = ''
+        n.style.height = ''
+        n.style.width = ''
+        n.style.maxHeight = ''
+        n.style.maxWidth = ''
+        n.style.boxSizing = ''
+      })
+
+      // PASS 2: READ (Batch all measurements)
+      // The browser calculates layout once here, and reuses it for subsequent reads
+      // as long as no write operations occur in between.
+      nodes.forEach((n) => {
+        if (!(n instanceof HTMLElement)) return
+
+        const rect = n.getBoundingClientRect()
+        let height = rect.height
+        let width = rect.width
+
+        // Fallbacks
+        if (!height || height === 0) height = n.offsetHeight || n.scrollHeight || 0
+        if (!width || width === 0) width = n.offsetWidth || n.scrollWidth || 0
+
+        // Store the node and its new dimensions
+        if (height > 0 || width > 0) {
+          measurements.push({ n, height, width })
+        }
+      })
+
+      // PASS 3: WRITE (Batch all mutations)
+      // Now we apply styles. This invalidates layout, but since we are done reading,
+      // we don't force a recalculation until the next frame/paint.
+      measurements.forEach(({ n, height, width }) => {
+        if (height > 0 || width > 0) {
+          n.style.boxSizing = 'border-box'
+        }
+        if (height > 0) {
+          n.style.minHeight = `${height}px`
+          n.style.height = `${height}px`
+          n.style.maxHeight = `${height}px`
+        }
+        if (width > 0) { 
+          n.style.minWidth = `${width}px`
+          n.style.width = `${width}px`
+          n.style.maxWidth = `${width}px`
+        }
+      })
+
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('defineMinExtensions failed for selector', sectionSelector, e)
+    }
+  }
+
   private showResizer (event: Event): void {
     if (!(event instanceof MouseEvent) || !(event.target instanceof HTMLElement)) return
 
@@ -119,6 +267,11 @@ export class ApacheAnnotatorVisualizer {
     // in progress. Once scrolling is complete, we should get triggered by the ViewportTracker.
     if (this.scrolling) return
 
+    if (this.loadAnnotationsTimeout) {
+      window.clearTimeout(this.loadAnnotationsTimeout)
+      this.loadAnnotationsTimeout = undefined
+    }
+    this.loadAnnotationsTimeout = this.schedule(250, () => {
     const options: DiamLoadAnnotationsOptions = {
       range: this.tracker.currentRange,
       includeText: false,
@@ -132,7 +285,9 @@ export class ApacheAnnotatorVisualizer {
       .then((doc: CompactAnnotatedText) => {
         this.data = unpackCompactAnnotatedTextV2(doc)
         this.renderAnnotations(this.data)
+        this.loadAnnotationsTimeout = undefined
       })
+    })
   }
 
   private renderAnnotations (doc: AnnotatedText): void {
@@ -482,6 +637,9 @@ export class ApacheAnnotatorVisualizer {
 
     // The scroll target may be hidden. In this case, we need to find the next visible element.
     let scrollTarget: Element | null = this.root.querySelector('#iaa-scroll-marker')
+    if (scrollTarget !== null) {
+      removeClassFromAncestors(scrollTarget, 'iaa-secluded', this.root)
+    }
     while (scrollTarget !== null) {
       const targetStyle = window.getComputedStyle(scrollTarget)
       if (targetStyle.display === 'none' || targetStyle.visibility === 'hidden') {
@@ -581,6 +739,7 @@ export class ApacheAnnotatorVisualizer {
     this.sectionAnnotationCreator.destroy()
     this.sectionAnnotationVisualizer.destroy()
     this.tracker.disconnect()
+    this.sectionTracker.disconnect()
     this.clearHighlights()
   }
 }
@@ -676,4 +835,17 @@ export function getInlineLabelClientRect (highlight: Element): DOMRect {
  */
 export function isPointInRect (point: { x: number; y: number }, rect: DOMRect): boolean {
   return point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom
+}
+
+export function removeClassFromAncestors(start: Element, className: string, root?: Element | null) {
+  let current: Element | null = start.parentElement
+  while (current) {
+    try {
+      current.classList.remove(className)
+    } catch (e) {
+      // ignore errors removing class from exotic nodes
+    }
+    if (root && current === root) break
+    current = current.parentElement
+  }
 }
