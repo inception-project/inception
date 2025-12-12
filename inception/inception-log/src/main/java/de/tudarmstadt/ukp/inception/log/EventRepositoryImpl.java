@@ -273,6 +273,24 @@ public class EventRepositoryImpl
     }
 
     @Override
+    @Transactional() // NOT read-only!
+    public <E extends Throwable> void forEachLoggedEventUpdatable(Project aProject,
+            FailableConsumer<LoggedEvent, E> aConsumer)
+    {
+        // Set up data source
+        var query = String.join("\n", //
+                "FROM LoggedEventEntity WHERE ", //
+                "project = :project ", //
+                "ORDER BY id");
+        var typedQuery = entityManager.createQuery(query, LoggedEventEntity.class) //
+                .setParameter("project", aProject.getId());
+
+        try (var eventStream = typedQuery.getResultStream()) {
+            Streams.failableStream(eventStream).forEach(e -> aConsumer.accept(e));
+        }
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<SummarizedLoggedEvent> summarizeEventsBySessionOwner(String aSessionOwner,
             Project aProject, Instant aFrom, Instant aTo)
