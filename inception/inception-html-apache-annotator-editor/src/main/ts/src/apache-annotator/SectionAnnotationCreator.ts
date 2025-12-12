@@ -212,7 +212,7 @@ export class SectionAnnotationCreator {
     document.head.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
       doc.head.appendChild(s.cloneNode(true))
     })
-    const root = this.root.closest('.i7n-wrapper') || this.root
+    const root = this.root.closest('.iaa-document-container') || this.root
     const copy = root.cloneNode(true) as HTMLElement
     if (!doc.body) {
       // Fix for browsers like Firefox, which do not create a body element by default

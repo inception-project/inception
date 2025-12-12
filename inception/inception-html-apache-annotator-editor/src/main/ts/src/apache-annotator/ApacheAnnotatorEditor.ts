@@ -44,6 +44,7 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
   private navigatorContainer: HTMLElement
   private deferredInitializationSteps: (() => void)[] = []
   private initializationComplete = false
+  private activeResizeCleanup: (() => void) | undefined = undefined
 
   public constructor (element: Element, ajax: DiamAjax, userPreferencesKey: string, sectionElementLocalNames: Set<string>) {
     this.ajax = ajax
@@ -151,39 +152,59 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     let totalWidth = 0
     let leftStartWidth = 0
     let glass: HTMLElement | undefined = undefined
+    let currentDelta = 0
 
     divider.classList.add('iaa-divider')
     divider.addEventListener('mousedown', e => { 
       if (e.buttons !== 1) return
 
+      // Clean up any previous resize operation
+      if (this.activeResizeCleanup) {
+        this.activeResizeCleanup()
+      }
+
       origin = e.clientX
       totalWidth = pane.getBoundingClientRect().width
       leftStartWidth = leftPane.getBoundingClientRect().width
+      currentDelta = 0
       glass = document.createElement('div')
       glass.classList.add('iaa-glass')
-      glass.addEventListener('mouseup', e => {
-        if (e.buttons !== 1) return
+      
+      const finishResize = () => {
         glass?.remove()
         glass = undefined
-        const width = leftPane.getBoundingClientRect().width
-        const relativeWidth = width / totalWidth
-        annotatorState.documentStructureWidth = relativeWidth
-      })
-      glass.addEventListener('mousemove', e => { 
-        if (e.buttons !== 1) {
-          glass?.remove()
-          glass = undefined
-          return
-        }
-  
-        const delta = e.clientX - origin
-        let relativeWidth =  Math.max(0, Math.min(leftStartWidth + delta, totalWidth)) / totalWidth
+        window.removeEventListener('mouseup', finishResize, true)
+        this.activeResizeCleanup = undefined
+        
+        // Apply the final resize when mouse is released
+        const delta = currentDelta
+        let relativeWidth = Math.max(0, Math.min(leftStartWidth + delta, totalWidth)) / totalWidth
         relativeWidth = Math.max(0.1, Math.min(0.9, relativeWidth))
         let leftWidth = relativeWidth * totalWidth
         leftPane.style.width = `${leftWidth}px`
         leftPane.style.minWidth = `${leftWidth}px`
         leftPane.style.maxWidth = `${leftWidth}px`
         annotatorState.documentStructureWidth = relativeWidth
+        
+        // Reset divider transform
+        divider.style.transform = ''
+      }
+      
+      // Listen for mouseup globally to catch releases outside the iframe
+      window.addEventListener('mouseup', finishResize, true)
+      this.activeResizeCleanup = finishResize
+      
+      glass.addEventListener('mousemove', e => { 
+        if (e.buttons !== 1) {
+          finishResize()
+          return
+        }
+  
+        currentDelta = e.clientX - origin
+        const delta = currentDelta
+        let relativeWidth = Math.max(0, Math.min(leftStartWidth + delta, totalWidth)) / totalWidth
+        relativeWidth = Math.max(0.1, Math.min(0.9, relativeWidth))
+        divider.style.transform = `translateX(${(relativeWidth * totalWidth) - leftStartWidth}px)`
       }, true)
       this.root.ownerDocument.body.appendChild(glass)
     })
@@ -240,7 +261,6 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
             tick().then(() => {
               const totalWidth = this.horizSplitPane.getBoundingClientRect().width
               const width = totalWidth * Math.max(0.1, Math.min(0.9, annotatorState.documentStructureWidth))
-              console.log(`width: ${width} / totalWidth: ${totalWidth}`)
               this.navigatorContainer.style.width = `${width}px`
               this.navigatorContainer.style.minWidth = `${width}px`
               this.navigatorContainer.style.maxWidth = `${width}px`
@@ -316,6 +336,12 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
   }
 
   destroy (): void {
+    // Clean up any active resize operation
+    if (this.activeResizeCleanup) {
+      this.activeResizeCleanup()
+      this.activeResizeCleanup = undefined
+    }
+
     if (this.popover) {
       unmount(this.popover)
       this.popover = undefined  
