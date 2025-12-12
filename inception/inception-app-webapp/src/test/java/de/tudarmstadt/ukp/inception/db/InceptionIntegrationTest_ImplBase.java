@@ -22,8 +22,11 @@ import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServ
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_INTERNAL_SERVER;
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_PRODUCTION_MODE;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.lang.invoke.MethodHandles;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.AfterEach;
@@ -46,6 +49,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.webanno.StandardProjectInitializer;
 import de.tudarmstadt.ukp.inception.INCEpTION;
@@ -53,6 +57,10 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.cli.RebuildStateUpdatedFieldsCliCommand;
+import de.tudarmstadt.ukp.inception.log.EventLoggingListener;
+import de.tudarmstadt.ukp.inception.log.api.EventRepository;
+import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
@@ -92,6 +100,12 @@ public abstract class InceptionIntegrationTest_ImplBase
 
     @Autowired
     AnnotationSchemaService schemaService;
+
+    @Autowired
+    EventRepository eventRepository;
+
+    @Autowired
+    EventLoggingListener eventLoggingListener;
 
     @Autowired
     LearningRecordService learningRecordService;
@@ -191,6 +205,66 @@ public abstract class InceptionIntegrationTest_ImplBase
             learningRecordService.createLearningRecord(learningRecord);
 
             documentService.removeSourceDocument(doc);
+        }
+        finally {
+            projectService.removeProject(project);
+        }
+    }
+
+    @Test
+    void testRebuildStateUpdatedSetsProjectStateUpdatedFromEvent() throws Exception
+    {
+        // Create a project and ensure the state_updated database field is null
+        var project = new Project("rebuild-state-test");
+        project = projectService.createProject(project);
+
+        try {
+            // Ensure the DB field is NULL
+            projectService.updateProjectStateUpdatedDirectly(project.getId(), null);
+
+            assertThat(projectService.getProject(project.getId()).getStateUpdated()) //
+                    .as("stateUpdated") //
+                    .isNull();
+
+            // Change the project state to generate an event
+            projectService.setProjectState(project, ProjectState.ANNOTATION_IN_PROGRESS);
+
+            // Ensure events are flushed to the DB (EventLoggingListener schedules flushes)
+            eventLoggingListener.flush();
+
+            var eventsCreated = new ArrayList<LoggedEvent>();
+            eventRepository.forEachLoggedEvent(project, event -> {
+                if ("ProjectStateChangedEvent".equals(event.getEvent())) {
+                    eventsCreated.add(event);
+                }
+            });
+
+            assertThat(eventsCreated) //
+                    .hasSize(1) //
+                    .allSatisfy(e -> assertThat(e.getCreated()).isNotNull());
+
+            // Set the database field back to NULL to ensure it has to be rebuilt
+            projectService.updateProjectStateUpdatedDirectly(project.getId(), null);
+            assertThat(projectService.getProject(project.getId()).getStateUpdated()) //
+                    .as("stateUpdated") //
+                    .isNull();
+
+            // Run the rebuild and check that the project state_updated field gets set to the event
+            // timestamp
+            var rebuildStateUpdatedFieldsCliCommand = new RebuildStateUpdatedFieldsCliCommand(
+                    projectService, documentService, eventRepository);
+            rebuildStateUpdatedFieldsCliCommand
+                    .rebuildAll(LoggerFactory.getLogger("inception.test"));
+
+            var projectAfter = projectService.getProject(project.getId());
+            // Allow a small time tolerance for the state_updated value because some DB backends
+            // apply timestamps with slightly different resolution. The important thing is that
+            // the timestamp was propagated from the event, not that it matches exactly down to
+            // the millisecond.
+            var expectedInstant = eventsCreated.get(0).getCreated().toInstant();
+            var actualInstant = projectAfter.getStateUpdated().toInstant();
+            var deltaMillis = Math.abs(Duration.between(expectedInstant, actualInstant).toMillis());
+            assertThat(deltaMillis).as("Timestamp difference (ms)").isLessThanOrEqualTo(200);
         }
         finally {
             projectService.removeProject(project);
