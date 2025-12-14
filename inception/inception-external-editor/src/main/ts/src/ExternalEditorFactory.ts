@@ -15,14 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AnnotationEditor, AnnotationEditorFactory, AnnotationEditorProperties, DiamClientFactory } from '@inception-project/inception-js-api'
+import { type AnnotationEditor, type AnnotationEditorFactory, type AnnotationEditorProperties, type DiamClientFactory } from '@inception-project/inception-js-api'
 
 const PROP_EDITOR = '__editor__'
+const PROP_INITIALIZING = '__initializing__'
 
 export class ExternalEditorFactory implements AnnotationEditorFactory {
   async getOrInitialize (element: Node, diam: DiamClientFactory, props: AnnotationEditorProperties): Promise<AnnotationEditor> {
+    // If already initialized, return the existing editor
     if (element[PROP_EDITOR] != null) {
+      console.debug('[getOrInitialize] Editor already exists, returning existing instance')
       return element[PROP_EDITOR]
+    }
+
+    // If initialization is in progress, wait for it
+    if (element[PROP_INITIALIZING] != null) {
+      console.debug('[getOrInitialize] Initialization already in progress, waiting for existing promise')
+      return await element[PROP_INITIALIZING]
     }
 
     if (element instanceof HTMLIFrameElement) {
@@ -54,10 +63,19 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
         iframe.before(loadingIndicator)
       }
 
-      element[PROP_EDITOR] = await this.loadIFrameContent(iframe)
-        .then(win => this.loadEditorResources(win, props))
-        .then(win => this.installKeyEventForwarding(win, element.ownerDocument.defaultView))
+      console.debug('[getOrInitialize] Starting promise chain for iframe')
+      // Store the initialization promise to prevent duplicate initialization
+      element[PROP_INITIALIZING] = this.loadIFrameContent(iframe)
         .then(win => {
+          console.debug('[getOrInitialize] loadIFrameContent resolved, calling loadEditorResources')
+          return this.loadEditorResources(win, props)
+        })
+        .then(win => {
+          console.debug('[getOrInitialize] loadEditorResources resolved, calling installKeyEventForwarding')
+          return this.installKeyEventForwarding(win, element.ownerDocument.defaultView)
+        })
+        .then(win => {
+          console.debug('[getOrInitialize] installKeyEventForwarding resolved, calling initEditor')
           if (this.isDocumentJavascriptCapable(win.document)) {
             // On HTML documents provide the body element as target to the editor
             return this.initEditor(win, win.document.getElementsByTagName('body')[0], diam, props)
@@ -66,6 +84,10 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
           // On XML documents, provide the document root as target to the editor
           return this.initEditor(window, win.document, diam, props)
         })
+      
+      element[PROP_EDITOR] = await element[PROP_INITIALIZING]
+      delete element[PROP_INITIALIZING]
+      console.debug('[getOrInitialize] Promise chain completed')
 
       // Restoring visibility
       if (!props.loadingIndicatorDisabled) {
@@ -87,16 +109,21 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
   loadIFrameContent (iframe: HTMLIFrameElement): Promise<Window> {
     return new Promise(resolve => {
       const iframeUrl = iframe.src
+      console.debug(`[loadIFrameContent] Starting - iframe.src: ${iframeUrl}`)
+      console.debug(`[loadIFrameContent] Setting iframe.src to about:blank`)
       iframe.src = 'about:blank'
       const eventHandler = () => {
         iframe.removeEventListener('load', eventHandler)
-        const content = iframe.contentDocument || iframe.contentWindow?.document
-        console.debug(`IFrame has loaded: ${content?.location}`)
+        const content = iframe.contentDocument || iframe.contentWindow?.document
+        console.debug(`[loadIFrameContent] Load event fired - document location: ${content?.location}, readyState: ${content?.readyState}`)
+        console.debug(`[loadIFrameContent] Resolving promise with iframe window`)
         resolve(iframe.contentWindow)
       }
-      console.debug('Waiting for IFrame content to load...')
+      console.debug('[loadIFrameContent] Adding load event listener')
       iframe.addEventListener('load', eventHandler)
+      console.debug(`[loadIFrameContent] Setting iframe.src to: ${iframeUrl}`)
       iframe.src = iframeUrl
+      console.debug('[loadIFrameContent] iframe.src set, waiting for load event...')
     })
   }
 
@@ -137,7 +164,7 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
 
   loadEditorResources (win: Window, props: AnnotationEditorProperties): Promise<Window> {
     return new Promise(resolve => {
-      console.debug('Preparing to load editor resources...')
+      console.debug(`[loadEditorResources] Starting - document location: ${win.document.location}, readyState: ${win.document.readyState}`)
 
       // Make sure body is accessible via body property - seems the browser does not always ensure
       // this...
@@ -153,17 +180,21 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
       }
 
       const target = this.isDocumentJavascriptCapable(win.document) ? win.document : document
+      const targetDesc = target === win.document ? 'iframe document' : 'parent document'
+      console.debug(`[loadEditorResources] Target for resources: ${targetDesc}`)
+      
       const allPromises: Promise<void>[] = []
       if (this.isDocumentStylesheetCapable(win.document) && props.stylesheetSources) {
         allPromises.push(...props.stylesheetSources.map(src => this.loadStylesheet(target, src)))
       }
 
       if (props.scriptSources) {
+        console.debug(`[loadEditorResources] Loading ${props.scriptSources.length} script(s)`)
         allPromises.push(...props.scriptSources.map(src => this.loadScript(target, src)))
       }
 
       Promise.all(allPromises).then(() => {
-        console.info(`${allPromises.length} editor resources loaded`)
+        console.info(`[loadEditorResources] ${allPromises.length} editor resources loaded - resolving`)
         resolve(win)
       })
     })
@@ -171,11 +202,12 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
 
   initEditor (contextWindow: Window, targetElement: HTMLElement | Document, diam: DiamClientFactory, props: AnnotationEditorProperties): Promise<AnnotationEditor> {
     return new Promise(resolve => {
-      console.debug('Preparing to initialize editor...')
+      console.debug(`[initEditor] Starting - document location: ${contextWindow.document.location}, readyState: ${contextWindow.document.readyState}`)
 
       const editorFactory = (contextWindow as any).eval(props.editorFactory) as AnnotationEditorFactory
+      console.debug('[initEditor] Calling editorFactory.getOrInitialize...')
       editorFactory.getOrInitialize(targetElement, diam, props).then(editor => {
-        console.info('Editor initialized')
+        console.info('[initEditor] Editor initialized - resolving')
         resolve(editor)
       })
     })

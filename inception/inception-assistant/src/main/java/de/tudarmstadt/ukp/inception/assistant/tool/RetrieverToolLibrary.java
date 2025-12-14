@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -92,7 +91,7 @@ public class RetrieverToolLibrary
             value = "context", //
             actor = "Search documents", //
             description = TOOL_DESCRIPTION)
-    public MCallResponse.Builder<Map<String, Serializable>> getContext( //
+    public MCallResponse.Builder<?> getContext( //
             Project aProject, //
             @ToolParam(value = "query", description = PARAM_QUERY_DESCRIPTION) //
             String aTopic)
@@ -112,13 +111,17 @@ public class RetrieverToolLibrary
             chunkTexts.add(data);
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        Builder<Map<String, Serializable>> callResponse = (Builder) MCallResponse
-                .builder(List.class);
-        callResponse.withReferences(references.values());
-        callResponse.withPayload(Map.of( //
-                "instructions", INSTRUCTIONS, //
-                "data", chunkTexts));
-        return callResponse;
+        if (chunkTexts.isEmpty()) {
+            return MCallResponse.builder(String.class) //
+                    .withPayload("The search has yielded no results");
+        }
+        else {
+            Builder<Map<String, Serializable>> callResponse = MCallResponse.builder();
+            callResponse.withReferences(references.values());
+            callResponse.withPayload(Map.of( //
+                    "instructions", INSTRUCTIONS, //
+                    "data", chunkTexts));
+            return callResponse;
+        }
     }
 }

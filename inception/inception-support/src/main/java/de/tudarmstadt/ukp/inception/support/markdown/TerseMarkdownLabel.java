@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.support.markdown;
 
+import static org.apache.commons.lang3.Strings.CS;
+
 import java.io.Serializable;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.basic.Label;
@@ -55,10 +56,10 @@ public class TerseMarkdownLabel
     @Override
     public void onComponentTagBody(final MarkupStream markupStream, final ComponentTag openTag)
     {
-        String markdownString = getDefaultModelObjectAsString();
-        String htmlString = MarkdownUtil.markdownToTerseHtml(markdownString);
-        htmlString = StringUtils.removeStart(htmlString, "<p>");
-        htmlString = StringUtils.removeEnd(htmlString, "</p>");
+        var markdownString = getDefaultModelObjectAsString();
+        var htmlString = MarkdownUtil.markdownToTerseHtml(markdownString);
+        htmlString = CS.removeStart(htmlString, "<p>");
+        htmlString = CS.removeEnd(htmlString, "</p>");
         replaceComponentTagBody(markupStream, openTag, htmlString);
     }
 }

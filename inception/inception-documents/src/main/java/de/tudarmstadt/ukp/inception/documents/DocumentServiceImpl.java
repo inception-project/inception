@@ -387,23 +387,24 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     public List<AnnotationDocument> createOrGetAnnotationDocuments(SourceDocument aDocument,
-            Collection<User> aUsers)
+            Collection<AnnotationSet> aSets)
     {
         Validate.notNull(aDocument, "Source document must be specified");
-        Validate.notNull(aUsers, "Users must be specified");
+        Validate.notNull(aSets, "Sets must be specified");
 
-        if (aUsers.isEmpty()) {
+        if (aSets.isEmpty()) {
             return emptyList();
         }
 
-        var usersWithoutAnnotationDocument = new HashSet<String>();
-        aUsers.forEach(user -> usersWithoutAnnotationDocument.add(user.getUsername()));
+        var setsWithoutAnnotationDocument = new HashSet<AnnotationSet>();
+        aSets.forEach(setsWithoutAnnotationDocument::add);
 
         var annDocs = listAnnotationDocuments(aDocument);
-        annDocs.stream().forEach(annDoc -> usersWithoutAnnotationDocument.remove(annDoc.getUser()));
+        annDocs.stream()
+                .forEach(annDoc -> setsWithoutAnnotationDocument.remove(annDoc.getAnnotationSet()));
 
-        for (var user : usersWithoutAnnotationDocument) {
-            var annDoc = new AnnotationDocument(user, aDocument);
+        for (var annSet : setsWithoutAnnotationDocument) {
+            var annDoc = new AnnotationDocument(annSet.id(), aDocument);
             createOrUpdateAnnotationDocument(annDoc);
             annDocs.add(annDoc);
         }
@@ -414,10 +415,10 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     public List<AnnotationDocument> createOrGetAnnotationDocuments(
-            Collection<SourceDocument> aDocuments, User aUser)
+            Collection<SourceDocument> aDocuments, AnnotationSet aSet)
     {
         Validate.notNull(aDocuments, "Source documents must be specified");
-        Validate.notNull(aUser, "User must be specified");
+        Validate.notNull(aSet, "Set must be specified");
 
         if (aDocuments.isEmpty()) {
             return emptyList();
@@ -427,12 +428,12 @@ public class DocumentServiceImpl
         var sourceDocsWithoutAnnotationDocument = new HashSet<SourceDocument>();
         aDocuments.forEach(srcDoc -> sourceDocsWithoutAnnotationDocument.add(srcDoc));
 
-        var annDocs = listAnnotationDocuments(project, aUser);
+        var annDocs = listAnnotationDocuments(project, aSet);
         annDocs.stream().forEach(
                 annDoc -> sourceDocsWithoutAnnotationDocument.remove(annDoc.getDocument()));
 
         for (var srcDoc : sourceDocsWithoutAnnotationDocument) {
-            var annDoc = new AnnotationDocument(aUser.getUsername(), srcDoc);
+            var annDoc = new AnnotationDocument(aSet.id(), srcDoc);
             createOrUpdateAnnotationDocument(annDoc);
             annDocs.add(annDoc);
         }
@@ -1286,6 +1287,18 @@ public class DocumentServiceImpl
                         AnnotationDocument.class)
                 .setParameter("project", aProject) //
                 .setParameter("user", aUser.getUsername()) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public List<AnnotationDocument> listAnnotationDocuments(Project aProject, AnnotationSet aSet)
+    {
+        return entityManager
+                .createQuery("FROM AnnotationDocument WHERE project = :project AND user = :user",
+                        AnnotationDocument.class)
+                .setParameter("project", aProject) //
+                .setParameter("user", aSet.id()) //
                 .getResultList();
     }
 

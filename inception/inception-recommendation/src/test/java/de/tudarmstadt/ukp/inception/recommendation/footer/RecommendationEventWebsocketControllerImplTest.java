@@ -90,8 +90,7 @@ import jakarta.persistence.EntityManager;
 @SpringBootApplication( //
         exclude = { //
                 LiquibaseAutoConfiguration.class, //
-                SearchServiceAutoConfiguration.class, //
-                EventLoggingAutoConfiguration.class })
+                SearchServiceAutoConfiguration.class })
 @ImportAutoConfiguration({ //
         CasDoctorAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
@@ -99,6 +98,7 @@ import jakarta.persistence.EntityManager;
         WebsocketSecurityConfig.class, //
         ProjectServiceAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
+        EventLoggingAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
         AnnotationSchemaServiceAutoConfiguration.class, //
@@ -235,8 +235,7 @@ class RecommendationEventWebsocketControllerImplTest
         public DaoAuthenticationProvider authenticationProvider(PasswordEncoder aEncoder,
                 @Lazy UserDetailsManager aUserDetailsManager)
         {
-            var authProvider = new InceptionDaoAuthenticationProvider();
-            authProvider.setUserDetailsService(aUserDetailsManager);
+            var authProvider = new InceptionDaoAuthenticationProvider(aUserDetailsManager);
             authProvider.setPasswordEncoder(aEncoder);
             return authProvider;
         }

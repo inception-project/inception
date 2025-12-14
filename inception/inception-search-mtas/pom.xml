@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>39.0-SNAPSHOT</version>
+    <version>40.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-search-mtas</artifactId>
   <name>INCEpTION - Search - MTAS</name>
@@ -97,14 +97,6 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-    </dependency>
-    <dependency>
-      <!-- 
-        This is required by MTAS despite it not being declared as a dependency: 
-        MtasPosition.add(MtasPosition.java:178)
-      -->
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -281,6 +273,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-log</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-ner-asl</artifactId>
       <scope>test</scope>
@@ -329,9 +327,6 @@
             <!-- Plugin does not get it... -->
               <ignoredDependency>org.springframework:spring-core</ignoredDependency>
             </ignoredDependencies>
-            <usedDependencies>
-              <usedDependency>commons-lang:commons-lang</usedDependency>
-            </usedDependencies>
           </configuration>
         </plugin>
       </plugins>

@@ -62,7 +62,7 @@ public class LookupFeatureTraitsEditor
     private IModel<AnnotationFeature> feature;
     private CompoundPropertyModel<LookupFeatureTraits> model;
 
-    private AuthenticationTraitsEditor authenticationTraitsEditor;
+    private AuthenticationTraitsEditor<?> authenticationTraitsEditor;
 
     public LookupFeatureTraitsEditor(String aId, FeatureSupport<LookupFeatureTraits> aFS,
             IModel<AnnotationFeature> aFeature)
@@ -127,9 +127,9 @@ public class LookupFeatureTraitsEditor
         add(form);
     }
 
-    private AuthenticationTraitsEditor updateAuthenticationPanel()
+    private AuthenticationTraitsEditor<?> updateAuthenticationPanel()
     {
-        AuthenticationTraitsEditor panel;
+        AuthenticationTraitsEditor<?> panel;
 
         LookupFeatureTraits traits = model.getObject();
         if (traits.getAuthenticationType() != null) {
@@ -157,7 +157,7 @@ public class LookupFeatureTraitsEditor
         if (authenticationTraitsEditor == null
                 || panel.getClass() != authenticationTraitsEditor.getClass()) {
             if (authenticationTraitsEditor != null) {
-                authenticationTraitsEditor = (AuthenticationTraitsEditor) authenticationTraitsEditor
+                authenticationTraitsEditor = (AuthenticationTraitsEditor<?>) authenticationTraitsEditor
                         .replaceWith(panel);
             }
             else {

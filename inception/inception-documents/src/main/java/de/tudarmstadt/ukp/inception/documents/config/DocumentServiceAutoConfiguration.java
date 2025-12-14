@@ -38,8 +38,10 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporter;
 import de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporterRegistry;
+import de.tudarmstadt.ukp.inception.documents.cli.StateUpdatedFieldsMigration;
 import de.tudarmstadt.ukp.inception.documents.exporters.CrossDocumentExporterRegistryImpl;
 import de.tudarmstadt.ukp.inception.documents.exporters.SourceDocumentExporter;
+import de.tudarmstadt.ukp.inception.log.api.EventRepository;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -48,6 +50,13 @@ import jakarta.persistence.PersistenceContext;
 public class DocumentServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
+
+    @Bean
+    public StateUpdatedFieldsMigration StateUpdatedFieldsMigration(ProjectService aProjectService,
+            EventRepository aEventRepository, DocumentService aDocumentService)
+    {
+        return new StateUpdatedFieldsMigration(aProjectService, aEventRepository, aDocumentService);
+    }
 
     @Bean
     public DocumentService documentService(RepositoryProperties aRepositoryProperties,

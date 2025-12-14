@@ -53,7 +53,6 @@ import org.springframework.web.context.WebApplicationContext;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
@@ -73,7 +72,6 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
 @EnableAutoConfiguration( //
         exclude = { //
                 LiquibaseAutoConfiguration.class, //
-                EventLoggingAutoConfiguration.class, //
                 SearchServiceAutoConfiguration.class })
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //

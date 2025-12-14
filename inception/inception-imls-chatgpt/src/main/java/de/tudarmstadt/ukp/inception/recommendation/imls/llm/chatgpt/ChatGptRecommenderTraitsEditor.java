@@ -60,7 +60,7 @@ public class ChatGptRecommenderTraitsEditor
     }
 
     @Override
-    protected AuthenticationTraitsEditor createAuthenticationTraitsEditor(String aId)
+    protected AuthenticationTraitsEditor<?> createAuthenticationTraitsEditor(String aId)
     {
         return new ApiKeyAuthenticationTraitsEditor("authentication",
                 Model.of((ApiKeyAuthenticationTraits) getTraits().getObject().getAuthentication()));

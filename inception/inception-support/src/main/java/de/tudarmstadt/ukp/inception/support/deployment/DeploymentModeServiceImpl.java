@@ -140,9 +140,11 @@ public class DeploymentModeServiceImpl
     }
 
     /**
+     * @param aActiveProfiles
+     *            list of currently active profiles
      * @return if the embedded server was used (i.e. not running as a WAR).
      */
-    public static boolean isEmbeddedServerDeployment(String... aActiveProfiles)
+    static boolean isEmbeddedServerDeployment(String... aActiveProfiles)
     {
         return Set.of(aActiveProfiles)
                 .containsAll(asList(PROFILE_APPLICATION_MODE, PROFILE_INTERNAL_SERVER));

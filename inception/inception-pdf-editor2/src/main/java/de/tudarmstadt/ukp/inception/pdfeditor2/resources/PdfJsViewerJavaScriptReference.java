@@ -48,6 +48,7 @@ public class PdfJsViewerJavaScriptReference
     {
         return asList( //
                 CssContentHeaderItem.forReference(PdfJsViewerJavaCssReference.get()),
+                JavaScriptHeaderItem.forReference(PdfJsOptionsJavaScriptReference.get()),
                 JavaScriptHeaderItem.forReference(PdfJsJavaScriptReference.get()));
     }
 
@@ -56,6 +57,6 @@ public class PdfJsViewerJavaScriptReference
      */
     private PdfJsViewerJavaScriptReference()
     {
-        super(PdfJsViewerJavaScriptReference.class, "viewer.js");
+        super(PdfJsViewerJavaScriptReference.class, "viewer.mjs");
     }
 }

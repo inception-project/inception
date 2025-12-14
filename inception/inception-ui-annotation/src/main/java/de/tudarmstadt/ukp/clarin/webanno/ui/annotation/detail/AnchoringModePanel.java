@@ -19,10 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
+import static wicket.contrib.input.events.EventType.click;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -41,6 +45,8 @@ import de.tudarmstadt.ukp.inception.support.lambda.AjaxPayloadCallback;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
+import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
+import wicket.contrib.input.events.key.KeyType;
 
 public class AnchoringModePanel
     extends GenericPanel<AnchoringMode>
@@ -52,6 +58,12 @@ public class AnchoringModePanel
     private static final String MID_LABEL = "label";
     private static final String MID_MODE = "mode";
     private static final String MID_MODE_LINK = "modeLink";
+
+    private static final Map<AnchoringMode, KeyType[]> SHORTCUTS = Map.of( //
+            AnchoringMode.CHARACTERS, new KeyType[] { KeyType.Shift, KeyType.one }, //
+            AnchoringMode.SINGLE_TOKEN, new KeyType[] { KeyType.Shift, KeyType.two }, //
+            AnchoringMode.TOKENS, new KeyType[] { KeyType.Shift, KeyType.three }, //
+            AnchoringMode.SENTENCES, new KeyType[] { KeyType.Shift, KeyType.four });
 
     private AjaxPayloadCallback<AnchoringMode> onApplied;
 
@@ -87,9 +99,13 @@ public class AnchoringModePanel
                 link.add(new AttributeAppender("class",
                         () -> AnchoringModePanel.this.getModelObject() == mode ? "active" : "",
                         " "));
+                var shortcutStr = " [" + Stream.of(SHORTCUTS.get(mode)).map(Object::toString)
+                        .collect(joining(" + ")) + "]";
                 link.add(AttributeModifier.replace("title",
-                        new ResourceModel(mode.getClass().getSimpleName() + "." + mode.name())));
+                        new ResourceModel(mode.getClass().getSimpleName() + "." + mode.name())
+                                .getObject() + shortcutStr));
                 link.add(enabledWhen(aAllowedModes.map(modes -> modes.contains(mode))));
+                link.add(new InputBehavior(SHORTCUTS.get(mode), click));
 
                 aItem.add(link);
             }

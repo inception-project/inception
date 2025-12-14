@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>39.0-SNAPSHOT</version>
+    <version>40.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-versioning</artifactId>
   <name>INCEpTION - Versioning</name>
@@ -219,6 +219,12 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-project</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-log</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

@@ -40,4 +40,8 @@ public interface XHtmlXmlDocumentViewController
     ResponseEntity<InputStreamResource> getResource(long aProjectId, long aDocumentId,
             String aResourceId, Principal aPrincipal)
         throws Exception;
+
+    ResponseEntity<String> getResourceMetadata(long aProjectId, long aDocumentId,
+            String aResourceId, Principal aPrincipal)
+        throws Exception;
 }

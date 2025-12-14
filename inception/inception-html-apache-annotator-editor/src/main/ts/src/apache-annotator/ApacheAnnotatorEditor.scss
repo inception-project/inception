@@ -32,6 +32,14 @@ html > body {
   margin: 0px;
 }
 
+.iaa-secluded {
+  visibility: hidden !important;
+
+  .iaa-secluded {
+    display: none !important;
+  }
+}
+
 .iaa-document-container {
   display: flex;
   flex-direction: column;

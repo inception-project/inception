@@ -39,7 +39,7 @@ public interface OllamaClient
 
     List<OllamaTag> listModels(String aUrl) throws IOException;
 
-    OllamaShowResponse getModelInfo(String aUrl, String aModel) throws IOException;
+    OllamaShowResponse getModelInfo(String aUrl, OllamaShowRequest aRequest) throws IOException;
 
     List<Pair<String, float[]>> embed(String aUrl, OllamaEmbedRequest aRequest) throws IOException;
 }

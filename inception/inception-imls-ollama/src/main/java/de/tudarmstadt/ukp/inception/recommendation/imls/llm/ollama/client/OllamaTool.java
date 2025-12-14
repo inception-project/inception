@@ -141,8 +141,8 @@ public class OllamaTool
             var schemaBuilder = generator.buildMultipleSchemaDefinitions();
             var propertySchema = schemaBuilder.createSchemaReference(param.getType());
 
-            getParameterDescription(param)
-                    .ifPresent(description -> propertySchema.put("description", description));
+            getParameterDescription(param).ifPresent(
+                    description -> propertySchema.put("description", description.strip()));
 
             parameters.addProperty(paramName, propertySchema) //
                     .addRequired(paramName);

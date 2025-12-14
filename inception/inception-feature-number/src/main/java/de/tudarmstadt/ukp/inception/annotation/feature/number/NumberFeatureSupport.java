@@ -112,11 +112,11 @@ public class NumberFeatureSupport
                 return new RatingFeatureEditor(aId, aOwner, aFeatureStateModel, range);
             }
             else {
-                return new NumberFeatureEditor(aId, aOwner, aFeatureStateModel, traits);
+                return new NumberFeatureEditor<>(aId, aOwner, aFeatureStateModel, traits);
             }
         }
         case CAS.TYPE_NAME_FLOAT: {
-            return new NumberFeatureEditor(aId, aOwner, aFeatureStateModel, traits);
+            return new NumberFeatureEditor<>(aId, aOwner, aFeatureStateModel, traits);
         }
         default:
             throw unsupportedFeatureTypeException(feature);

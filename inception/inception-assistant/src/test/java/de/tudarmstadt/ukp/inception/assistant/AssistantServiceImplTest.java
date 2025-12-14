@@ -93,9 +93,9 @@ import jakarta.persistence.EntityManager;
                 AssistantToolsAutoConfiguration.class, //
                 LiquibaseAutoConfiguration.class, //
                 SearchServiceAutoConfiguration.class, //
-                WorkloadManagementAutoConfiguration.class, //
-                EventLoggingAutoConfiguration.class })
+                WorkloadManagementAutoConfiguration.class })
 @ImportAutoConfiguration({ //
+        EventLoggingAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
         WebsocketAutoConfiguration.class, //
         WebsocketSecurityConfig.class, //
@@ -240,8 +240,7 @@ class AssistantServiceImplTest
         public DaoAuthenticationProvider authenticationProvider(PasswordEncoder aEncoder,
                 @Lazy UserDetailsManager aUserDetailsManager)
         {
-            var authProvider = new InceptionDaoAuthenticationProvider();
-            authProvider.setUserDetailsService(aUserDetailsManager);
+            var authProvider = new InceptionDaoAuthenticationProvider(aUserDetailsManager);
             authProvider.setPasswordEncoder(aEncoder);
             return authProvider;
         }

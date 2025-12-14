@@ -21,6 +21,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NE
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static java.util.Comparator.comparing;
+import static java.util.Comparator.naturalOrder;
+import static java.util.Comparator.nullsFirst;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -29,6 +32,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 
@@ -38,21 +42,22 @@ public class DocumentMatrixRow
     private static final long serialVersionUID = 7351346533262118753L;
 
     private final SourceDocument sourceDocument;
-    private final Set<String> annotators;
-    private final Map<String, AnnotationDocument> annotationDocuments;
+    private final Set<AnnotationSet> annotators;
+    private final Map<AnnotationSet, AnnotationDocument> annotationDocuments;
 
     private boolean selected;
 
-    public DocumentMatrixRow(SourceDocument aSourceDocument, Set<String> aAnnotators)
+    public DocumentMatrixRow(SourceDocument aSourceDocument, Set<AnnotationSet> aAnnotators)
     {
         sourceDocument = aSourceDocument;
         annotators = aAnnotators;
-        annotationDocuments = new TreeMap<>();
+        annotationDocuments = new TreeMap<>(
+                comparing(AnnotationSet::displayName, nullsFirst(naturalOrder())));
     }
 
     public void add(AnnotationDocument aAnnotationDocument)
     {
-        annotationDocuments.put(aAnnotationDocument.getUser(), aAnnotationDocument);
+        annotationDocuments.put(aAnnotationDocument.getAnnotationSet(), aAnnotationDocument);
     }
 
     public SourceDocument getSourceDocument()
@@ -60,12 +65,12 @@ public class DocumentMatrixRow
         return sourceDocument;
     }
 
-    public AnnotationDocument getAnnotationDocument(String aUsername)
+    public AnnotationDocument getAnnotationDocument(AnnotationSet aSet)
     {
-        return annotationDocuments.get(aUsername);
+        return annotationDocuments.get(aSet);
     }
 
-    public Set<String> getAnnotators()
+    public Set<AnnotationSet> getAnnotators()
     {
         return annotators;
     }
@@ -83,7 +88,7 @@ public class DocumentMatrixRow
     public SourceDocumentState getState()
     {
         long newCount = 0;
-        for (String username : annotators) {
+        for (var username : annotators) {
             AnnotationDocument annDoc = annotationDocuments.get(username);
             if (annDoc == null || annDoc.getState() == NEW) {
                 newCount++;
@@ -92,7 +97,7 @@ public class DocumentMatrixRow
 
         long[] counts = new long[3];
         annotationDocuments.values().stream() //
-                .filter(annDoc -> annotators.contains(annDoc.getUser())) //
+                .filter(annDoc -> annotators.contains(annDoc.getAnnotationSet())) //
                 .forEach(annDoc -> {
                     switch (annDoc.getState()) {
                     case IGNORE:

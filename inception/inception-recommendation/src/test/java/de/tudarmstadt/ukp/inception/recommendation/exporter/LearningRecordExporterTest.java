@@ -128,7 +128,7 @@ public class LearningRecordExporterTest
         assertThat(captor.getAllValues().stream().flatMap(Stream::of)) //
                 .usingRecursiveComparison() //
                 .ignoringFields("id", "actionDate", "annotationFeature.project.id",
-                        "sourceDocument.stateUpdated") //
+                        "annotationFeature.project.stateUpdated", "sourceDocument.stateUpdated") //
                 .isEqualTo(records);
     }
 

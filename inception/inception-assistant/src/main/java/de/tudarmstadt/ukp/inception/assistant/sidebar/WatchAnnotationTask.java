@@ -142,8 +142,8 @@ public class WatchAnnotationTask
                             "```")) //
                     .build();
 
-            assistantService.processAgentMessage(getSessionOwner().get().getUsername(),
-                    getProject(), inquiryContext);
+            assistantService.processInternalMessage(getSessionOwner().get().getUsername(),
+                    getProject(), document, dataOwner, inquiryContext);
         }
     }
 

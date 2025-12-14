@@ -25,17 +25,24 @@ public class AnnotationEditorContext
     private final Project project;
     private final SourceDocument document;
     private final String dataOwner;
+    private final String sessionOwner;
 
     private AnnotationEditorContext(Builder aBuilder)
     {
         project = aBuilder.project;
         document = aBuilder.document;
         dataOwner = aBuilder.dataOwner;
+        sessionOwner = aBuilder.sessionOwner;
     }
 
     public String getDataOwner()
     {
         return dataOwner;
+    }
+
+    public String getSessionOwner()
+    {
+        return sessionOwner;
     }
 
     public SourceDocument getDocument()
@@ -57,6 +64,7 @@ public class AnnotationEditorContext
     {
         private Project project;
         private SourceDocument document;
+        private String sessionOwner;
         private String dataOwner;
 
         private Builder()
@@ -79,6 +87,12 @@ public class AnnotationEditorContext
         public Builder withDataOwner(String aDataOwner)
         {
             dataOwner = aDataOwner;
+            return this;
+        }
+
+        public Builder withSessionOwner(String aSessionOwner)
+        {
+            sessionOwner = aSessionOwner;
             return this;
         }
 

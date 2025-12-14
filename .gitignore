@@ -26,3 +26,5 @@ dependency-reduced-pom.xml
 **/src/main/ts/package-lock.json
 local/
 .asciidoctorconfig.adoc
+outdated-packages-report.txt
+outdated-packages-summary.txt

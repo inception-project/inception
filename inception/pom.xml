@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
-    <version>39.0-SNAPSHOT</version>
+    <version>40.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>inception-app</artifactId>
@@ -43,7 +43,7 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-dependencies</artifactId>
-        <version>39.0-SNAPSHOT</version>
+        <version>40.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -538,6 +538,7 @@
             <dependency>org.springframework.boot:spring-boot-test-autoconfigure</dependency>
             <dependency>com.squareup.okhttp3:mockwebserver</dependency>
             <dependency>com.squareup.okhttp3:okhttp</dependency>
+            <dependency>com.squareup.okhttp3:okhttp-jvm</dependency>
             <dependency>com.squareup.okio:okio-jvm</dependency>
           </ignoredUsedUndeclaredDependencies>
         </configuration>

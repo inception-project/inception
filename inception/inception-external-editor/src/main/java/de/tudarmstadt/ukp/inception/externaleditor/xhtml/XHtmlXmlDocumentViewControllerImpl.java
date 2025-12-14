@@ -23,21 +23,29 @@ import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.H
 import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.P;
 import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.SPAN;
 import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.XHTML_NS_URI;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toJsonString;
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.ofNullable;
 import static javax.xml.XMLConstants.DEFAULT_NS_PREFIX;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.IMAGE_GIF;
 import static org.springframework.http.MediaType.IMAGE_JPEG;
 import static org.springframework.http.MediaType.IMAGE_PNG;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URLEncoder;
 import java.security.Principal;
 import java.util.Locale;
 import java.util.Optional;
+
+import javax.imageio.ImageIO;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
@@ -56,11 +64,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
@@ -71,6 +81,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPol
 import de.tudarmstadt.ukp.inception.externaleditor.policy.SafetyNetDocumentPolicy;
 import de.tudarmstadt.ukp.inception.externaleditor.xml.XmlCas2SaxEvents;
 import de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils;
+import de.tudarmstadt.ukp.inception.support.xml.NamespaceDecodingContentHandlerAdapter;
 import jakarta.servlet.ServletContext;
 
 @ConditionalOnWebApplication
@@ -86,6 +97,7 @@ public class XHtmlXmlDocumentViewControllerImpl
 
     private static final String GET_DOCUMENT_PATH = "/p/{projectId}/d/{documentId}/xml";
     private static final String GET_RESOURCE_PATH = "/p/{projectId}/d/{documentId}/res";
+    private static final String GET_METADATA_PATH = "/p/{projectId}/d/{documentId}/meta";
 
     private final DocumentService documentService;
     private final DocumentStorageService documentStorageService;
@@ -156,7 +168,8 @@ public class XHtmlXmlDocumentViewControllerImpl
             var rawHandler = XmlCas2SaxEvents.makeSerializer(out);
             var sanitizingHandler = applySanitizers(aEditor, doc, rawHandler);
             var resourceFilteringHandler = applyHtmlResourceUrlFilter(doc, sanitizingHandler);
-            var finalHandler = resourceFilteringHandler;
+            var imageDimensionHandler = applyImageDimensions(doc, resourceFilteringHandler);
+            var finalHandler = imageDimensionHandler;
 
             // If the CAS contains an actual HTML structure, then we send that. Mind that we do
             // not inject format-specific CSS then!
@@ -190,6 +203,126 @@ public class XHtmlXmlDocumentViewControllerImpl
 
             return toResponse(out);
         }
+    }
+
+    private ContentHandler applyImageDimensions(SourceDocument aDoc, ContentHandler aDelegate)
+    {
+        var maybeFormatSupport = formatRegistry.getFormatById(aDoc.getFormat());
+        if (maybeFormatSupport.isEmpty()) {
+            return aDelegate;
+        }
+
+        var formatSupport = maybeFormatSupport.get();
+
+        return new NamespaceDecodingContentHandlerAdapter(aDelegate)
+        {
+            @Override
+            public void startElement(String aUri, String aLocalName, String aQName,
+                    Attributes aAtts)
+                throws SAXException
+            {
+                var attributes = aAtts;
+
+                var element = toQName(aUri, aLocalName, aQName);
+                if ("img".equalsIgnoreCase(element.getLocalPart())) {
+                    attributes = applyImageDimensions(aQName, aAtts);
+                }
+
+                super.startElement(aUri, aLocalName, aQName, attributes);
+            }
+
+            private Attributes applyImageDimensions(String aQName, Attributes aAtts)
+            {
+                var src = aAtts.getValue("src");
+                if (isBlank(src)) {
+                    // Image has no source - no need to process
+                    return aAtts;
+                }
+
+                var atts = new AttributesImpl(aAtts);
+                var widthIdx = atts.getIndex("width");
+                var heightIdx = atts.getIndex("height");
+                if (widthIdx >= 0 || heightIdx >= 0) {
+                    // Leave original attributes
+                    return aAtts;
+                }
+
+                var srcDocFile = documentStorageService.getSourceDocumentFile(aDoc);
+                try (var is = formatSupport.openResourceStream(srcDocFile, src)) {
+                    var maybeMeta = getImageDimensions(is);
+                    if (maybeMeta.isEmpty()) {
+                        return aAtts;
+                    }
+
+                    var meta = maybeMeta.get();
+
+                    if (meta.width() > 0) {
+                        atts.addAttribute(null, "width", "width", "CDATA",
+                                String.valueOf(meta.width()));
+                    }
+                    if (meta.height() > 0) {
+                        atts.addAttribute(null, "height", "height", "CDATA",
+                                String.valueOf(meta.height()));
+                    }
+
+                    return atts;
+                }
+                catch (IOException e) {
+                    LOG.debug("Resource [{}] not found in [{}]", src, srcDocFile);
+                    // Ignore
+                }
+
+                return aAtts;
+            }
+        };
+
+    }
+
+    private ContentHandler applyHtmlResourceUrlFilter(SourceDocument aDoc, ContentHandler aDelegate)
+    {
+        var hasResources = formatRegistry.getFormatById(aDoc.getFormat())
+                .map(FormatSupport::hasResources).orElse(false);
+        if (!hasResources) {
+            return aDelegate;
+        }
+
+        return new NamespaceDecodingContentHandlerAdapter(aDelegate)
+        {
+            @Override
+            public void startElement(String aUri, String aLocalName, String aQName,
+                    Attributes aAtts)
+                throws SAXException
+            {
+                var atts = aAtts;
+
+                var element = toQName(aUri, aLocalName, aQName);
+
+                if ("a".equalsIgnoreCase(element.getLocalPart())
+                        || "link".equalsIgnoreCase(element.getLocalPart())) {
+                    atts = filterResourceUrl(aAtts, "href");
+                }
+
+                if ("img".equalsIgnoreCase(element.getLocalPart())
+                        || "audio".equalsIgnoreCase(element.getLocalPart())
+                        || "video".equalsIgnoreCase(element.getLocalPart())) {
+                    atts = filterResourceUrl(aAtts, "src");
+                }
+
+                super.startElement(aUri, aLocalName, aQName, atts);
+            }
+
+            private Attributes filterResourceUrl(Attributes aAttributes, String aAttribute)
+            {
+                var attributes = new AttributesImpl(aAttributes);
+                var index = attributes.getIndex(aAttribute);
+                if (index != -1) {
+                    var value = attributes.getValue(index);
+                    value = "res?resId=" + URLEncoder.encode(value, UTF_8);
+                    attributes.setValue(index, value);
+                }
+                return attributes;
+            }
+        };
     }
 
     private void renderXmlDocument(SourceDocument aDoc, XmlDocument aXmlDocument,
@@ -302,9 +435,10 @@ public class XHtmlXmlDocumentViewControllerImpl
     @PreAuthorize("@documentAccess.canViewAnnotationDocument(#aProjectId, #aDocumentId, #principal.name)")
     @Override
     @GetMapping(path = GET_RESOURCE_PATH)
-    public ResponseEntity<InputStreamResource> getResource(
-            @PathVariable("projectId") long aProjectId,
-            @PathVariable("documentId") long aDocumentId, @RequestParam("resId") String aResourceId,
+    public ResponseEntity<InputStreamResource> getResource( //
+            @PathVariable("projectId") long aProjectId, //
+            @PathVariable("documentId") long aDocumentId, //
+            @RequestParam("resId") String aResourceId, //
             Principal principal)
         throws Exception
     {
@@ -340,6 +474,81 @@ public class XHtmlXmlDocumentViewControllerImpl
         catch (Exception e) {
             LOG.debug("Unable to load resource [{}] for document {}", aResourceId, srcDoc, e);
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PreAuthorize("@documentAccess.canViewAnnotationDocument(#aProjectId, #aDocumentId, #principal.name)")
+    @Override
+    @GetMapping(path = GET_METADATA_PATH)
+    public ResponseEntity<String> getResourceMetadata( //
+            @PathVariable("projectId") long aProjectId, //
+            @PathVariable("documentId") long aDocumentId, //
+            @RequestParam("resId") String aResourceId, //
+            Principal principal)
+        throws Exception
+    {
+        var srcDoc = documentService.getSourceDocument(aProjectId, aDocumentId);
+
+        var maybeFormatSupport = formatRegistry.getFormatById(srcDoc.getFormat());
+        if (maybeFormatSupport.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var srcDocFile = documentStorageService.getSourceDocumentFile(srcDoc);
+
+        var formatSupport = maybeFormatSupport.get();
+
+        if (!formatSupport.hasResources()
+                || !formatSupport.isAccessibleResource(srcDocFile, aResourceId)) {
+            LOG.debug("Resource [{}] for document {} not found", aResourceId, srcDoc);
+            return ResponseEntity.notFound().build();
+        }
+
+        try (var inputStream = formatSupport.openResourceStream(srcDocFile, aResourceId)) {
+            var httpHeaders = new HttpHeaders();
+            httpHeaders.setContentType(APPLICATION_JSON);
+
+            var imageMetaData = getImageDimensions(inputStream);
+            if (imageMetaData.isPresent()) {
+                return new ResponseEntity<>(toJsonString(imageMetaData.get()), httpHeaders, OK);
+            }
+
+            return ResponseEntity.notFound().build();
+        }
+        catch (FileNotFoundException e) {
+            LOG.debug("Resource [{}] for document {} not found", aResourceId, srcDoc);
+            return ResponseEntity.notFound().build();
+        }
+        catch (Exception e) {
+            LOG.debug("Unable to load resource [{}] for document {}", aResourceId, srcDoc, e);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    static Optional<ImageMetaData> getImageDimensions(InputStream inputStream) throws IOException
+    {
+        try (var in = ImageIO.createImageInputStream(inputStream)) {
+            if (in == null) {
+                // Content is not an image or stream is empty
+                return Optional.empty();
+            }
+
+            var readers = ImageIO.getImageReaders(in);
+            if (readers.hasNext()) {
+                var reader = readers.next();
+                try {
+                    reader.setInput(in);
+                    return Optional.of(ImageMetaData.builder() //
+                            .withHeight(reader.getHeight(0)) //
+                            .withWidth(reader.getWidth(0)) //
+                            .build());
+                }
+                finally {
+                    reader.dispose();
+                }
+            }
+
+            return Optional.empty();
         }
     }
 

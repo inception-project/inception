@@ -159,7 +159,7 @@ public class CheckAnnotationTask
                     .withMessage(rewrittenQuestion.message()) //
                     .build();
 
-            assistantService.processUserMessage(sessionOwner, getProject(), document, dataOwner,
+            assistantService.processInternalMessage(sessionOwner, getProject(), document, dataOwner,
                     inquiryTask, inquiryContext);
         }
     }

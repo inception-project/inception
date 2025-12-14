@@ -85,7 +85,7 @@
 </script>
 
 <div class="bootstrap card card-header border-0 border-bottom rounded-0 p-1" role="toolbar">
-  <div class="d-flex">
+  <div class="d-flex align-items-center">
     <div class="form-check form-switch mx-2">
       <input class="form-check-input" type="checkbox" role="switch" id="inlineLabelsEnabled" bind:checked={annotatorState.showLabels}>
       <label class="form-check-label" for="inlineLabelsEnabled">Inline labels</label>

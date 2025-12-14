@@ -14,13 +14,75 @@
     },
     {
       "name": "PDF.js Viewer",
-      "versionInfo": "2.14.305",
+      "versionInfo": "5.4.449",
       "originator": "Mozilla Foundation",
       "homepage": "https://github.com/mozilla/pdf.js/",
       "licenseDeclared": "Apache-2.0",
       "description": "Just a stripped down and modified frontend part is embedded, rest is obtained via npm",
       "hasFiles": [
         "src/main/ts/pdfjs-web/**/*"
+      ]
+    },
+    {
+      "name": "OpenJPEG",
+      "originator": "Universite catholique de Louvain (UCL), Belgium and contributors",
+      "homepage": "https://www.openjpeg.org/",
+      "licenseDeclared": "BSD-2-Clause",
+      "description": "WASM-compiled OpenJPEG library for JPEG2000 decoding, bundled with PDF.js",
+      "hasFiles": [
+        "src/main/ts/pdfjs-web/wasm/LICENSE_OPENJPEG",
+        "src/main/ts/pdfjs-web/wasm/LICENSE_PDFJS_OPENJPEG"
+      ]
+    },
+    {
+      "name": "qcms (Quick Color Management System)",
+      "originator": "Mozilla Corporation, Marti Maria",
+      "homepage": "https://github.com/mozilla/qcms",
+      "licenseDeclared": "MIT",
+      "description": "WASM-compiled color management library, bundled with PDF.js",
+      "hasFiles": [
+        "src/main/ts/pdfjs-web/wasm/LICENSE_QCMS",
+        "src/main/ts/pdfjs-web/wasm/LICENSE_PDFJS_QCMS"
+      ]
+    },
+    {
+      "name": "ICC Color Profiles",
+      "originator": "International Color Consortium",
+      "homepage": "https://www.color.org/",
+      "licenseDeclared": "CC0-1.0",
+      "description": "ICC color profiles for color management",
+      "hasFiles": [
+        "src/main/ts/pdfjs-web/iccs/LICENSE"
+      ]
+    },
+    {
+      "name": "Liberation Fonts",
+      "originator": "Red Hat, Inc., Google Corporation",
+      "homepage": "https://github.com/liberationfonts/liberation-fonts",
+      "licenseDeclared": "OFL-1.1",
+      "description": "Standard fonts for PDF rendering",
+      "hasFiles": [
+        "src/main/ts/pdfjs-web/standard_fonts/LICENSE_LIBERATION"
+      ]
+    },
+    {
+      "name": "Foxit Fonts",
+      "originator": "PDFium Authors (Google Inc.)",
+      "homepage": "https://pdfium.googlesource.com/pdfium/",
+      "licenseDeclared": "BSD-3-Clause",
+      "description": "Standard fonts for PDF rendering from PDFium",
+      "hasFiles": [
+        "src/main/ts/pdfjs-web/standard_fonts/LICENSE_FOXIT"
+      ]
+    },
+    {
+      "name": "Adobe CMap Resources",
+      "originator": "Adobe Systems Incorporated",
+      "homepage": "https://github.com/adobe-type-tools/cmap-resources",
+      "licenseDeclared": "BSD-3-Clause",
+      "description": "Character mapping files for CJK fonts",
+      "hasFiles": [
+        "src/main/ts/pdfjs-web/cmaps/LICENSE"
       ]
     }
   ]

@@ -186,8 +186,13 @@ public class LocalLoginPanel
         // This does not work because it was Spring Security that intercepted the access, not
         // Wicket continueToOriginalDestination();
 
-        if (aRedirectUrl == null || aRedirectUrl.contains(".IBehaviorListener.")
-                || aRedirectUrl.contains("-logoutPanel-") || aRedirectUrl.endsWith("/ws")) {
+        if ( //
+        aRedirectUrl == null || //
+                aRedirectUrl.contains(".IBehaviorListener.") || //
+                aRedirectUrl.contains("-logoutPanel-") || //
+                aRedirectUrl.endsWith("/ws") || //
+                aRedirectUrl.contains(".well-known/appspecific/com.chrome.devtools.json") //
+        ) {
             LOG.debug("Redirecting to welcome page");
             setResponsePage(getApplication().getHomePage());
             return;
