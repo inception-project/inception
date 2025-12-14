@@ -23,3 +23,5 @@ NOTE: This functionality is only available to *annotators* and *managers*.
       Annotators and managers  only see projects in which they hold the respective roles. 
 
 The annotation screen allows to view text documents and to annotate them.
+
+image::images/annotation_page.png[align="center"]
