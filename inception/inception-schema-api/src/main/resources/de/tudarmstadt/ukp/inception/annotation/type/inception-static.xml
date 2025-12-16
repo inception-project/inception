@@ -42,5 +42,17 @@
         </featureDescription>
       </features>
     </typeDescription>
+    <typeDescription>
+      <name>de.tudarmstadt.ukp.inception.annotation.type.ResumptionLocation</name>
+      <description />
+      <supertypeName>uima.cas.AnnotationBase</supertypeName>
+      <features>
+        <featureDescription>
+          <name>offset</name>
+          <description />
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
   </types>
 </typeSystemDescription>

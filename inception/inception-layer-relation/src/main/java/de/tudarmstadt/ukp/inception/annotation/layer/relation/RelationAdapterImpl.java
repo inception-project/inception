@@ -159,6 +159,7 @@ public class RelationAdapterImpl
         newAnnotation.setFeatureValue(dependentFeature, targetFS);
         newAnnotation.setFeatureValue(governorFeature, originFS);
         cas.addFsToIndexes(newAnnotation);
+        setResumptionLocation(cas, targetFS.getBegin());
         return newAnnotation;
     }
 
@@ -177,6 +178,8 @@ public class RelationAdapterImpl
     {
         var fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
         aCas.addFsToIndexes(fs);
+
+        setResumptionLocation(aCas, getTargetAnnotation(fs).getBegin());
 
         publishEvent(() -> new RelationCreatedEvent(this, aDocument, aUsername, getLayer(), fs,
                 getTargetAnnotation(fs), getSourceAnnotation(fs)));
