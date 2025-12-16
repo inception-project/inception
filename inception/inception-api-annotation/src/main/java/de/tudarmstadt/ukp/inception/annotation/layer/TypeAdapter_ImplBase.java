@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.type.ResumptionLocation;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -53,6 +54,7 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public abstract class TypeAdapter_ImplBase
     implements TypeAdapter
@@ -145,6 +147,48 @@ public abstract class TypeAdapter_ImplBase
     public <T> Optional<FeatureSupport<T>> getFeatureSupport(AnnotationFeature aFeature)
     {
         return getFeature(aFeature.getName()).flatMap(featureSupportRegistry::findExtension);
+    }
+
+    public static int getResumptionLocation(CAS aCAS)
+    {
+        var candidates = aCAS.select(ResumptionLocation.class).asList();
+
+        // Create new instance of necessary
+        if (candidates.isEmpty()) {
+
+            // Heuristic: let's assume that annotation with the highest address is the latest one
+            org.apache.uima.jcas.tcas.Annotation latest = null;
+            for (var ann : aCAS.select(org.apache.uima.jcas.tcas.Annotation.class)) {
+                var addr = ICasUtil.getAddr(ann);
+                if (latest == null || addr < ICasUtil.getAddr(latest)) {
+                    latest = ann;
+                }
+            }
+
+            return latest == null ? 0 : latest.getBegin();
+        }
+
+        // Get offset from first instance
+        return candidates.get(0).getOffset();
+    }
+
+    public static void setResumptionLocation(CAS aCAS, int aOffset)
+    {
+        var candidates = aCAS.select(ResumptionLocation.class).asList();
+
+        // Create new instance of necessary
+        if (candidates.isEmpty()) {
+            var loc = new ResumptionLocation(aCAS.getJCasImpl());
+            loc.setOffset(aOffset);
+            aCAS.addFsToIndexes(loc);
+            return;
+        }
+
+        // Update first instance
+        candidates.get(0).setOffset(aOffset);
+
+        // Remove any further instances (there shouldn't be any really - just in case)
+        candidates.stream().skip(1).forEach(aCAS::removeFsFromIndexes);
     }
 
     private void initFeaturesCacheIfNecessary()

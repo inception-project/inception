@@ -85,6 +85,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.BeforeDocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.PreparingToOpenDocumentEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.TypeAdapter_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -566,8 +567,8 @@ public abstract class AnnotationPageBase2
             }
             else if (dataOwnerName.equals(sessionOwnerName)
                     || dataOwnerName.equals(CURATION_USER)) {
-                eventRepository.getLastEditRange(state.getDocument(), dataOwnerName).ifPresent(
-                        range -> state.moveToOffset(editorCas, range.getBegin(), CENTERED));
+                var offset = TypeAdapter_ImplBase.getResumptionLocation(editorCas);
+                state.moveToOffset(editorCas, offset, CENTERED);
             }
             else {
                 state.moveToUnit(editorCas, 0, TOP);
@@ -758,9 +759,8 @@ public abstract class AnnotationPageBase2
                             || dataOwnerName.equals(CURATION_USER)) {
                         try {
                             var editorCas = getEditorCas();
-                            eventRepository.getLastEditRange(state.getDocument(), dataOwnerName)
-                                    .ifPresent(range -> state.moveToOffset(editorCas,
-                                            range.getBegin(), CENTERED));
+                            var offset = TypeAdapter_ImplBase.getResumptionLocation(editorCas);
+                            state.moveToOffset(editorCas, offset, CENTERED);
                         }
                         catch (Exception e) {
                             LOG.error("Error reading CAS of document {} for user {}",

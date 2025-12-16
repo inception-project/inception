@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.util.Arrays.asList;
+import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
+import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -601,11 +603,13 @@ class CurationSidebarRendererTest
             support.generateTypes(tsd, layer, schemaService.listSupportedFeatures(project));
         }
 
-        curatorCas = CasFactory.createCas(tsd);
+        var mergedTsd = mergeTypeSystems(asList(tsd, createTypeSystemDescription()));
+
+        curatorCas = CasFactory.createCas(mergedTsd);
         curatorCas.setDocumentText(aText);
-        anno1Cas = CasFactory.createCas(tsd);
+        anno1Cas = CasFactory.createCas(mergedTsd);
         anno1Cas.setDocumentText(aText);
-        anno2Cas = CasFactory.createCas(tsd);
+        anno2Cas = CasFactory.createCas(mergedTsd);
         anno2Cas.setDocumentText(aText);
 
         vdoc = new VDocument();
