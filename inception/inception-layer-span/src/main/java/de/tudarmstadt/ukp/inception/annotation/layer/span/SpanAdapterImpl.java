@@ -196,6 +196,8 @@ public class SpanAdapterImpl
 
         aCas.addFsToIndexes(newAnnotation);
 
+        setResumptionLocation(aCas, aBegin);
+
         return newAnnotation;
     }
 
@@ -219,6 +221,8 @@ public class SpanAdapterImpl
                 aAnnotation.getCoveredText());
 
         aCas.addFsToIndexes(aAnnotation);
+
+        setResumptionLocation(aCas, aAnnotation.getBegin());
 
         return aAnnotation;
     }
@@ -259,6 +263,8 @@ public class SpanAdapterImpl
         if (getAttachFeatureName() != null) {
             attach(aCas, fs.getBegin(), fs.getEnd(), fs);
         }
+
+        setResumptionLocation(aCas, fs.getBegin());
 
         aCas.addFsToIndexes(fs);
 

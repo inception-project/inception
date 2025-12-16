@@ -418,6 +418,7 @@ public class ChainAdapterImpl
         var linkType = CasUtil.getType(aCas, getAnnotationTypeName());
         var newLink = aCas.createAnnotation(linkType, aBegin, aEnd);
         aCas.addFsToIndexes(newLink);
+        setResumptionLocation(aCas, aBegin);
         return newLink;
     }
 

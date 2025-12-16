@@ -20,10 +20,7 @@ package de.tudarmstadt.ukp.inception.log;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 import static java.lang.String.join;
 import static java.time.temporal.ChronoUnit.DAYS;
-import static java.util.Arrays.asList;
-import static java.util.Optional.empty;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.time.Instant;
@@ -33,7 +30,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang3.function.FailableConsumer;
@@ -45,18 +41,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.log.api.EventRepository;
 import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.log.api.model.SummarizedLoggedEvent;
 import de.tudarmstadt.ukp.inception.log.api.model.UserSessionStats;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
-import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
-import de.tudarmstadt.ukp.inception.log.model.FeatureChangeDetails;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEventEntity;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEventEntity_;
 import de.tudarmstadt.ukp.inception.log.model.SessionDetails;
-import de.tudarmstadt.ukp.inception.support.uima.Range;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Tuple;
@@ -129,71 +121,6 @@ public class EventRepositoryImpl
         }
 
         return new UserSessionStats(aSessionOwner, Duration.ofMillis(accuDuration.get()));
-    }
-
-    @Override
-    public Optional<Range> getLastEditRange(SourceDocument aDocument, String aDataOwner)
-    {
-        var cb = entityManager.getCriteriaBuilder();
-        var cq = cb.createQuery(LoggedEventEntity.class);
-        var root = cq.from(LoggedEventEntity.class);
-
-        // Predicates for filtering
-        var documentPredicate = cb.equal(root.get(LoggedEventEntity_.document), aDocument.getId());
-        var dataOwnerPredicate = cb.equal(root.get(LoggedEventEntity_.annotator), aDataOwner);
-
-        var eventPredicate = cb.or( //
-                root.get(LoggedEventEntity_.event).in(asList( //
-                        "ChainLinkCreatedEvent", //
-                        "ChainSpanCreatedEvent", //
-                        "RelationCreatedEvent", //
-                        "SpanCreatedEvent")),
-                cb.equal(root.get(LoggedEventEntity_.event), "SpanMovedEvent"), //
-                cb.equal(root.get(LoggedEventEntity_.event), "FeatureValueUpdatedEvent"));
-
-        // Combine all together with AND
-        cq.select(root).where(cb.and(documentPredicate, dataOwnerPredicate, eventPredicate))
-                .orderBy(cb.desc(root.get("created"))); // Most recent first
-
-        // Build query and limit to 1 result
-        var query = entityManager.createQuery(cq).setMaxResults(1);
-
-        var latestEvent = query.getResultStream().findFirst().orElse(null);
-        if (latestEvent == null) {
-            return empty();
-        }
-
-        // Extract range from details
-        var detailsString = latestEvent.getDetails();
-        if ("FeatureValueUpdatedEvent".equals(latestEvent.getEvent())) {
-            try {
-                var details = fromJsonString(FeatureChangeDetails.class, detailsString);
-                if (details.getAnnotation().getBegin() < 0
-                        || details.getAnnotation().getEnd() < 0) {
-                    return empty();
-                }
-
-                return Optional.of(new Range(details.getAnnotation().getBegin(),
-                        details.getAnnotation().getEnd()));
-            }
-            catch (IOException e) {
-                // Maybe it is not a feature update event after all
-            }
-        }
-
-        try {
-            var details = fromJsonString(AnnotationDetails.class, detailsString);
-            if (details.getBegin() < 0 || details.getEnd() < 0) {
-                return empty();
-            }
-            return Optional.of(new Range(details.getBegin(), details.getEnd()));
-
-        }
-        catch (IOException e) {
-            // Maybe it is not an annotation event after all
-        }
-
-        return empty();
     }
 
     @Override

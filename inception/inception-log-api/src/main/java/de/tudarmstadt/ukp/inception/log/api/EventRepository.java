@@ -20,16 +20,13 @@ package de.tudarmstadt.ukp.inception.log.api;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.lang3.function.FailableConsumer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.log.api.model.SummarizedLoggedEvent;
 import de.tudarmstadt.ukp.inception.log.api.model.UserSessionStats;
-import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public interface EventRepository
 {
@@ -40,8 +37,6 @@ public interface EventRepository
 
     <E extends Throwable> void forEachLoggedEventUpdatable(Project aProject,
             FailableConsumer<LoggedEvent, E> aConsumer);
-
-    Optional<Range> getLastEditRange(SourceDocument aDocument, String aDataOwner);
 
     List<LoggedEvent> listRecentActivity(Project aProject, String aDataOwner,
             Collection<String> aEventTypes, int aMaxSize);
