@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.annotation.layer;
 
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
+import static java.util.Collections.emptyList;
 
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
@@ -151,7 +152,16 @@ public abstract class TypeAdapter_ImplBase
 
     public static int getResumptionLocation(CAS aCAS)
     {
-        var candidates = aCAS.select(ResumptionLocation.class).asList();
+        List<ResumptionLocation> candidates = emptyList();
+
+        if (aCAS.getTypeSystem().getType(ResumptionLocation._TypeName) == null) {
+            LOG.warn(
+                    "Unable to fetch resuption location. CAS type system does not include [{}] yet",
+                    ResumptionLocation._TypeName);
+        }
+        else {
+            candidates = aCAS.select(ResumptionLocation.class).asList();
+        }
 
         // Create new instance of necessary
         if (candidates.isEmpty()) {
@@ -174,6 +184,13 @@ public abstract class TypeAdapter_ImplBase
 
     public static void setResumptionLocation(CAS aCAS, int aOffset)
     {
+        if (aCAS.getTypeSystem().getType(ResumptionLocation._TypeName) == null) {
+            LOG.warn(
+                    "Unable to store resuption location. CAS type system does not include [{}] yet",
+                    ResumptionLocation._TypeName);
+            return;
+        }
+
         var candidates = aCAS.select(ResumptionLocation.class).asList();
 
         // Create new instance of necessary
