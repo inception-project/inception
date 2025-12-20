@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>32</version>
+    <version>34</version>
   </parent>
 
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -264,4 +264,17 @@
       </snapshots>
     </repository>
   </repositories>
+  
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <!-- https://github.com/eclipse-m2e/m2e-core/issues/2091 -->
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.4.2</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>
