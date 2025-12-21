@@ -323,8 +323,8 @@ html > body {
  */
 .iaa-related {
   box-shadow: 0px calc(0px - var(--border-width)) 0px 0px var(--i7n-focus-color) !important;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
+  // box-decoration-break: clone;
+  // -webkit-box-decoration-break: clone;
 }
 
 .iaa-menu {
