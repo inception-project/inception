@@ -94,6 +94,9 @@ export class ApacheAnnotatorVisualizer {
   private showResizer (event: Event): void {
     if (!(event instanceof MouseEvent) || !(event.target instanceof HTMLElement)) return
 
+    // If a mouse button is pressed, we do not show the resizer so we do not interrupt drag operations
+    if (event.buttons !== 0) return
+
     const vid = event.target.getAttribute('data-iaa-id')
     if (vid) this.resizer.show(vid)
   }
