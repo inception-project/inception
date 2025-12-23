@@ -38,10 +38,10 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.FileSystemUtils;
@@ -74,7 +74,6 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.config.DashboardAutoConfig
                         + AeroRemoteApiController_Authentication_PreAuth_Test.TEST_OUTPUT_FOLDER })
 @EnableAutoConfiguration( //
         exclude = { //
-                LiquibaseAutoConfiguration.class, //
                 DashboardAutoConfiguration.class, //
                 SearchServiceAutoConfiguration.class, //
                 WicketAutoConfiguration.class })
@@ -82,6 +81,7 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.config.DashboardAutoConfig
         "de.tudarmstadt.ukp.inception", //
         "de.tudarmstadt.ukp.clarin.webanno" })
 @TestMethodOrder(MethodOrderer.MethodName.class)
+@AutoConfigureTestRestTemplate
 class AeroRemoteApiController_Authentication_PreAuth_Test
 {
     static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Authentication_Test";

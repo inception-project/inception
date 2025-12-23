@@ -82,17 +82,17 @@
 
     <awaitility.version>4.3.0</awaitility.version>
 
-    <dkpro.version>2.5.0</dkpro.version>
+    <dkpro.version>3.0.0-SNAPSHOT</dkpro.version>
     <uima.version>3.6.1</uima.version>
     <uima-json.version>0.5.0</uima-json.version>
 
     <pdfbox.version>3.0.5</pdfbox.version>
 
-    <spring.version>6.2.14</spring.version>
-    <spring.boot.version>3.5.8</spring.boot.version>
-    <spring.data.version>3.5.6</spring.data.version>
-    <spring.security.version>6.5.7</spring.security.version>
-    <springdoc.version>2.8.14</springdoc.version>
+    <spring.version>7.0.1</spring.version>
+    <spring.boot.version>4.0.0</spring.boot.version>
+    <spring.data.version>4.0.0</spring.data.version>
+    <spring.security.version>7.0.0</spring.security.version>
+    <springdoc.version>3.0.0</springdoc.version>
     <swagger.version>2.2.41</swagger.version>
     <jjwt.version>0.13.0</jjwt.version>
 
@@ -169,7 +169,7 @@
     <zjsonpatch.version>0.4.16</zjsonpatch.version>
     <picocli.version>4.7.7</picocli.version>
     <woodstox-core.version>6.7.0</woodstox-core.version>
-    <nimbus-jose-jwt.version>9.48</nimbus-jose-jwt.version>
+    <nimbus-jose-jwt.version>10.6</nimbus-jose-jwt.version>
     <json-schema-validator.version>1.5.9</json-schema-validator.version>
     <json-schema-generator.version>4.38.0</json-schema-generator.version>
     <jgit.version>6.10.1.202505221210-r</jgit.version>
@@ -186,7 +186,7 @@
     <matomo-java-tracker-core-version>3.4.0</matomo-java-tracker-core-version>
     <mime4j.version>0.8.13</mime4j.version>
     <hsqldb.version>2.7.4</hsqldb.version>
-    <opensaml.version>4.3.2</opensaml.version>
+    <opensaml.version>5.1.6</opensaml.version>
     <oauth2-oidc-sdk.version>9.43.6</oauth2-oidc-sdk.version>
     <javassist.version>3.30.2-GA</javassist.version>
     <openjson.version>1.0.13</openjson.version>

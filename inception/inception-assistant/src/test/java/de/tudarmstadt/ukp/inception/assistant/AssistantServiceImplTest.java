@@ -40,18 +40,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
@@ -91,7 +94,6 @@ import jakarta.persistence.EntityManager;
 @SpringBootApplication( //
         exclude = { //
                 AssistantToolsAutoConfiguration.class, //
-                LiquibaseAutoConfiguration.class, //
                 SearchServiceAutoConfiguration.class, //
                 WorkloadManagementAutoConfiguration.class })
 @ImportAutoConfiguration({ //
@@ -218,9 +220,14 @@ class AssistantServiceImplTest
         }
     }
 
-    @SpringBootConfiguration
+    @TestConfiguration
     public static class SpringConfig
     {
+        @Bean
+        public AuthenticationEventPublisher authenticationEventPublisher(ApplicationEventPublisher publisher) {
+            return new DefaultAuthenticationEventPublisher(publisher);
+        }
+
         @Bean
         public ChannelInterceptor csrfChannelInterceptor()
         {
@@ -238,7 +245,7 @@ class AssistantServiceImplTest
 
         @Bean
         public DaoAuthenticationProvider authenticationProvider(PasswordEncoder aEncoder,
-                @Lazy UserDetailsManager aUserDetailsManager)
+                @Lazy UserDetailsService aUserDetailsManager)
         {
             var authProvider = new InceptionDaoAuthenticationProvider(aUserDetailsManager);
             authProvider.setPasswordEncoder(aEncoder);

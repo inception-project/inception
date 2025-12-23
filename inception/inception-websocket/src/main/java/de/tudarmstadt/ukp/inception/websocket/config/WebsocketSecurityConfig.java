@@ -53,11 +53,11 @@ public class WebsocketSecurityConfig
             MessageMatcherDelegatingAuthorizationManager.Builder messages,
             ExtensiblePermissionEvaluator aEval, ApplicationContext aContext)
     {
-        final var annotationEditorTopic = "/**" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}"
+        final var annotationEditorTopic = "/" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}"
                 + TOPIC_ELEMENT_DOCUMENT + "{" + PARAM_DOCUMENT + "}" + TOPIC_ELEMENT_USER + "{"
                 + PARAM_USER + "}/**";
 
-        final var recommenderEventsTopic = "/**" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}"
+        final var recommenderEventsTopic = "/" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}"
                 + TOPIC_ELEMENT_USER + "{" + PARAM_USER + "}/**";
 
         var msgSecurityExpressionHandler = new DefaultMessageSecurityExpressionHandler();

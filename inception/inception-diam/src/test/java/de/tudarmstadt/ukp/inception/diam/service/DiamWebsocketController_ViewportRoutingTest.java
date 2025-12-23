@@ -42,19 +42,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.annotation.Order;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -109,7 +111,6 @@ import jakarta.persistence.EntityManager;
                 "websocket.enabled=true" })
 @SpringBootApplication( //
         exclude = { //
-                LiquibaseAutoConfiguration.class, //
                 WorkloadManagementAutoConfiguration.class })
 @ImportAutoConfiguration({ //
         PreferencesServiceAutoConfig.class, //
@@ -239,6 +240,11 @@ public class DiamWebsocketController_ViewportRoutingTest
     public static class WebsocketBrokerTestConfig
     {
         @Bean
+        public AuthenticationEventPublisher authenticationEventPublisher(ApplicationEventPublisher publisher) {
+            return new DefaultAuthenticationEventPublisher(publisher);
+        }
+
+        @Bean
         public ChannelInterceptor csrfChannelInterceptor()
         {
             // Disable CSRF
@@ -255,7 +261,7 @@ public class DiamWebsocketController_ViewportRoutingTest
 
         @Bean
         public DaoAuthenticationProvider authenticationProvider(PasswordEncoder aEncoder,
-                @Lazy UserDetailsManager aUserDetailsManager)
+                @Lazy UserDetailsService aUserDetailsManager)
         {
             var authProvider = new InceptionDaoAuthenticationProvider(aUserDetailsManager);
             authProvider.setPasswordEncoder(aEncoder);

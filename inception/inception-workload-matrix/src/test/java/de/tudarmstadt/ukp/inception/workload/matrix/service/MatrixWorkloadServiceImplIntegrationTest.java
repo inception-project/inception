@@ -37,9 +37,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -64,7 +63,7 @@ import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoCon
 import de.tudarmstadt.ukp.inception.schema.exporters.AnnotationDocumentExporter;
 
 @EnableAutoConfiguration
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
+@DataJpaTest(showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off", //
                 "workload.matrix.enabled=true", //
