@@ -2771,9 +2771,11 @@ export class Visualizer {
         to = this.rtlmode ? 0 : this.canvasWidth - 2 * Configuration.visual.margin.y
       }
 
+      const labelText = this.renderArcLabelText(docData, arc, to, from)
+
       let adjustHeight = true
       if (this.collapseArcs) {
-        let arcCacheKey = arc.type + ' ' + rowIndex + ' ' + from + ' ' + to
+        let arcCacheKey = arc.type + ' ' + rowIndex + ' ' + from + ' ' + to + ' ' + labelText
         if (rowIndex === leftRow) { arcCacheKey = left.span.id + ' ' + arcCacheKey }
         if (rowIndex === rightRow) { arcCacheKey += ' ' + right.span.id }
         const rowHeight = arcCache[arcCacheKey]
@@ -2799,7 +2801,7 @@ export class Visualizer {
         shadowGroup = this.svg.group().addTo(arcGroup)
       }
 
-      let { textStart, textEnd } = this.renderArcLabel(docData, arc, to, from, height, arcGroup, shadowGroup)
+      let { textStart, textEnd } = this.renderArcLabel(docData, arc, to, from, labelText, height, arcGroup, shadowGroup)
 
       if (this.roundCoordinates) {
         // don't ask
@@ -2995,7 +2997,7 @@ export class Visualizer {
     return path
   }
 
-  private renderArcLabel(docData: DocumentData, arc: Arc, to: number, from: number, height: number, arcGroup: G, shadowGroup: import("@svgdotjs/svg.js").G | undefined) {
+  private renderArcLabelText(docData: DocumentData, arc: Arc, to: number, from: number): string {
     const originType = docData.spans[arc.origin].type
     const arcLabels = Util.getArcLabels(this.entityTypes, originType, arc.type, this.relationTypes)
     let labelText = Util.arcDisplayForm(this.entityTypes, originType, arc.type, this.relationTypes)
@@ -3018,6 +3020,10 @@ export class Visualizer {
         labelText = docData.eventDescs[arc.eventDescId].labelText
       }
     }
+    return labelText
+  }
+
+  private renderArcLabel(docData: DocumentData, arc: Arc, to: number, from: number, labelText: str, height: number, arcGroup: G, shadowGroup: import("@svgdotjs/svg.js").G | undefined) {
 
     // guess at the correct baseline shift to get vertical centering.
     // (CSS dominant-baseline can't be used as not all SVG renders support it.)
