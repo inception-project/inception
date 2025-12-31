@@ -121,6 +121,10 @@ public class NumberFeatureTraitsEditor
         maximum.add(visibleWhen(() -> traits.getObject().isLimited()));
         form.add(maximum);
 
+        var defaultValue = new NumberTextField<>("defaultValue", clazz, options);
+        defaultValue.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
+        form.add(defaultValue);
+
         minimum.add(new LambdaAjaxFormComponentUpdatingBehavior("change", target -> {
             var min = new BigDecimal(traits.getObject().getMinimum().toString());
             var max = new BigDecimal(traits.getObject().getMaximum().toString());
@@ -174,6 +178,7 @@ public class NumberFeatureTraitsEditor
         result.setMinimum(t.getMinimum());
         result.setMaximum(t.getMaximum());
         result.setEditorType(t.getEditorType());
+        result.setDefaultValue(t.getDefaultValue());
 
         return result;
     }
@@ -191,6 +196,7 @@ public class NumberFeatureTraitsEditor
         t.setMaximum(traits.getObject().getMaximum());
         t.setEditorType(
                 isEditorTypeSelectionPossible() ? traits.getObject().getEditorType() : SPINNER);
+        t.setDefaultValue(traits.getObject().getDefaultValue());
 
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
@@ -208,6 +214,7 @@ public class NumberFeatureTraitsEditor
         private Number minimum;
         private Number maximum;
         private NumberFeatureTraits.EditorType editorType;
+        private Number defaultValue;
 
         public boolean isLimited()
         {
@@ -247,6 +254,16 @@ public class NumberFeatureTraitsEditor
         public void setEditorType(NumberFeatureTraits.EditorType aEditorType)
         {
             editorType = aEditorType;
+        }
+
+        public Number getDefaultValue()
+        {
+            return defaultValue;
+        }
+
+        public void setDefaultValue(Number aDefaultValue)
+        {
+            defaultValue = aDefaultValue;
         }
     }
 }
