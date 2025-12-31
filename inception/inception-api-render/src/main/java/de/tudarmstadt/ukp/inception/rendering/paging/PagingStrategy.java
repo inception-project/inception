@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 import de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public interface PagingStrategy
     extends Serializable
@@ -56,10 +57,17 @@ public interface PagingStrategy
 
     default void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, FocusPosition aPos)
     {
-        moveToOffset(aState, aCas, aOffset, null, aPos);
+        moveToOffset(aState, aCas, aOffset, (VRange) null, aPos);
     }
 
-    void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, VRange aPingRange,
+    default void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, VRange aPingRange,
+            FocusPosition aPos)
+    {
+        moveToOffset(aState, aCas, aOffset,
+                aPingRange != null ? List.of(aPingRange) : null, aPos);
+    }
+
+    void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, List<VRange> aPingRanges,
             FocusPosition aPos);
 
     default void recalculatePage(AnnotatorViewState aState, CAS aCas)
@@ -164,7 +172,24 @@ public interface PagingStrategy
 
     default void moveToSelection(AnnotatorViewState aState, CAS aCas)
     {
-        moveToOffset(aState, aCas, aState.getSelection().getBegin(), CENTERED);
+        var selection = aState.getSelection();
+        List<VRange> pingRanges;
+        
+        if (selection.isArc()) {
+            // For arcs, ping both endpoints
+            var originFs = ICasUtil.selectAnnotationByAddr(aCas, selection.getOrigin());
+            var targetFs = ICasUtil.selectAnnotationByAddr(aCas, selection.getTarget());
+            pingRanges = List.of(
+                new VRange(originFs.getBegin(), originFs.getEnd()),
+                new VRange(targetFs.getBegin(), targetFs.getEnd())
+            );
+        }
+        else {
+            // For spans, ping the selected range
+            pingRanges = List.of(new VRange(selection.getBegin(), selection.getEnd()));
+        }
+        
+        moveToOffset(aState, aCas, selection.getBegin(), pingRanges, CENTERED);
     }
 
     default void moveForward(AnnotatorViewState aState, CAS aCas)

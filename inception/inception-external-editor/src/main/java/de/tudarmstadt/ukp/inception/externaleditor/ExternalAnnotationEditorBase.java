@@ -180,7 +180,9 @@ public abstract class ExternalAnnotationEditorBase
         // hierarchy a this time
         if (aEvent.getPayload() instanceof ScrollToEvent event) {
             var command = new ScrollToCommand(event.getOffset(), event.getPosition());
-            command.setPingRange(event.getPingRange());
+            if (event.getPingRanges() != null && !event.getPingRanges().isEmpty()) {
+                command.setPingRanges(event.getPingRanges());
+            }
             QueuedEditorCommandsMetaDataKey.get().add(command);
 
             // Do not call our requestRender because we do not want to unnecessarily add the

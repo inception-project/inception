@@ -103,6 +103,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -446,8 +447,25 @@ public abstract class AnnotationDetailEditorPanel
         throws IOException, AnnotationException
     {
         actionSelect(aTarget, annoFs);
-        editorPage.actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
-                annoFs.getBegin(), annoFs.getEnd());
+        
+        var state = getModelObject();
+        var doc = state.getDocument();
+        
+        // For arcs, pass the endpoint ranges as additional ping ranges
+        if (state.getSelection().isArc()) {
+            var cas = editorPage.getEditorCas();
+            var originFs = ICasUtil.selectAnnotationByAddr(cas, state.getSelection().getOrigin());
+            var targetFs = ICasUtil.selectAnnotationByAddr(cas, state.getSelection().getTarget());
+            var endpointRanges = List.of(
+                new VRange(originFs.getBegin(), originFs.getEnd()),
+                new VRange(targetFs.getBegin(), targetFs.getEnd())
+            );
+            editorPage.actionShowSelectedDocument(aTarget, doc, annoFs.getBegin(), annoFs.getEnd(), 
+                    endpointRanges);
+        }
+        else {
+            editorPage.actionShowSelectedDocument(aTarget, doc, annoFs.getBegin(), annoFs.getEnd());
+        }
     }
 
     @Override
