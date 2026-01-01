@@ -23,6 +23,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 import static org.springframework.http.HttpMethod.GET;
 
@@ -36,7 +37,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -72,8 +72,8 @@ public class PubAnnotationProvider
         variables.put("page", Integer.toString(aPage));
         variables.put("per", Integer.toString(aPageSize));
 
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<PubAnnotationDocumentHandle[]> response = restTemplate.exchange(
+        var restTemplate = new RestTemplate();
+        var response = restTemplate.exchange(
                 aTraits.getUrl() + "/docs.json?keywords={keywords}&page={page}&per={per}", GET,
                 null, PubAnnotationDocumentHandle[].class, variables);
 
@@ -142,7 +142,7 @@ public class PubAnnotationProvider
     {
         return getSections(aDocumentRepository, aTraits, aCollectionId, aDocumentId).stream()
                 .map(PubAnnotationDocumentSection::getText) //
-                .collect(Collectors.joining("\n\n"));
+                .collect(joining("\n\n"));
     }
 
     @Override
@@ -173,8 +173,8 @@ public class PubAnnotationProvider
         }
         catch (RestClientException e) {
             // If the document has as single section, an object is returned...
-            PubAnnotationDocumentSection section = restTemplate.getForObject(url,
-                    PubAnnotationDocumentSection.class, variables);
+            var section = restTemplate.getForObject(url, PubAnnotationDocumentSection.class,
+                    variables);
 
             return asList(section);
         }

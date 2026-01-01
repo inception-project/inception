@@ -416,13 +416,13 @@ public class ActiveLearningSidebar
     private void actionToggleDocumentFilter(AjaxRequestTarget aTarget)
     {
         var alState = alStateModel.getObject();
-        
+
         // When filter is toggled, clear current suggestion and find a new one
         alState.setCurrentDifference(Optional.empty());
         clearActiveLearningHighlight();
-        
+
         moveToNextSuggestion(aTarget);
-        
+
         aTarget.add(alMainContainer);
     }
 
