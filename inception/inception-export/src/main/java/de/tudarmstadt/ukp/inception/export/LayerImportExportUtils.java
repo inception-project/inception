@@ -149,7 +149,7 @@ public class LayerImportExportUtils
         for (var feature : aSchemaService.listAnnotationFeature(aLayer)) {
             if (feature.getLinkMode() != null && feature.getLinkMode() != LinkMode.NONE) {
                 var targetLayerName = feature.getType();
-                
+
                 // Skip generic annotation type
                 if (CAS.TYPE_NAME_ANNOTATION.equals(targetLayerName)) {
                     continue;
@@ -163,8 +163,10 @@ public class LayerImportExportUtils
                     }
                 }
                 catch (Exception e) {
-                    LOG.warn("Unable to find layer [{}] referenced by link feature [{}] in layer "
-                            + "[{}]: {}", targetLayerName, feature.getName(), aLayer.getName(),
+                    LOG.warn(
+                            "Unable to find layer [{}] referenced by link feature [{}] in layer "
+                                    + "[{}]: {}",
+                            targetLayerName, feature.getName(), aLayer.getName(),
                             ExceptionUtils.getRootCauseMessage(e));
                 }
             }
