@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubannotation;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -57,17 +57,13 @@ public class PubAnnotationProviderTest
     {
         var results = sut.query(traits, "binding", 1, 10);
 
-        // System.out.println(results);
-
         assertThat(results).isNotEmpty();
     }
 
     @Test
     public void thatExecuteQueryWorks() throws Exception
     {
-        List<ExternalSearchResult> results = sut.executeQuery(repo, traits, "binding");
-
-        // System.out.println(results);
+        var results = sut.executeQuery(repo, traits, "binding");
 
         assertThat(results).isNotEmpty();
     }
@@ -76,8 +72,6 @@ public class PubAnnotationProviderTest
     public void thatDocumentTextCanBeRetrieved() throws Exception
     {
         var text = sut.getDocumentText(repo, traits, "PMC", "1064873");
-
-        // System.out.println(text);
 
         assertThat(text)
                 .startsWith("Resistance to IL-10 inhibition of interferon gamma production");
@@ -88,10 +82,8 @@ public class PubAnnotationProviderTest
     {
         String data;
         try (var is = sut.getDocumentAsStream(repo, traits, "PMC", "1064873")) {
-            data = IOUtils.toString(is, StandardCharsets.UTF_8);
+            data = IOUtils.toString(is, UTF_8);
         }
-
-        // System.out.println(data);
 
         assertThat(data).startsWith(
                 "[{\"text\":\"Resistance to IL-10 inhibition of interferon gamma production");
