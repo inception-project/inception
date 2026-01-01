@@ -84,3 +84,111 @@
 | 1000
 |===
 
+.Settings related to keyboard shortcuts
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| ui.keybindings.navigation.nextPage
+| Keyboard shortcut to navigate to the next page
+| Page_down
+| Ctrl,Down
+
+| ui.keybindings.navigation.previousPage
+| Keyboard shortcut to navigate to the previous page
+| Page_up
+| Ctrl,Up
+
+| ui.keybindings.navigation.firstPage
+| Keyboard shortcut to navigate to the first page
+| Home
+| Ctrl,Home
+
+| ui.keybindings.navigation.lastPage
+| Keyboard shortcut to navigate to the last page
+| End
+| Ctrl,End
+
+| ui.keybindings.navigation.nextDocument
+| Keyboard shortcut to navigate to the next document
+| Shift,Page_down
+| Alt,Page_down
+
+| ui.keybindings.navigation.previousDocument
+| Keyboard shortcut to navigate to the previous document
+| Shift,Page_up
+| Alt,Page_up
+
+| ui.keybindings.navigation.nextAnnotation
+| Keyboard shortcut to jump to the next annotation
+| Shift,Right
+| Ctrl,Shift,n
+
+| ui.keybindings.navigation.previousAnnotation
+| Keyboard shortcut to jump to the previous annotation
+| Shift,Left
+| Ctrl,Shift,p
+
+| ui.keybindings.editing.undo
+| Keyboard shortcut to undo the last annotation action
+| Ctrl,z
+| Alt,Backspace
+
+| ui.keybindings.editing.redo
+| Keyboard shortcut to redo an undone annotation action
+| Shift,Ctrl,z
+| Ctrl,y
+
+| ui.keybindings.editing.deleteAnnotation
+| Keyboard shortcut to delete the selected annotation
+| Shift,Delete
+| Ctrl,d
+
+| ui.keybindings.editing.clearSelection
+| Keyboard shortcut to clear the annotation detail editor
+| Shift,Escape
+| Ctrl,Escape
+
+| ui.keybindings.editing.toggleSelection
+| Keyboard shortcut to toggle selection mode
+| Shift,Space
+| Alt,s
+
+| ui.keybindings.anchoring-mode.characters
+| Keyboard shortcut to switch to character-based selection mode
+| Shift,one
+| Alt,one
+
+| ui.keybindings.anchoring-mode.singleToken
+| Keyboard shortcut to switch to single token selection mode
+| Shift,two
+| Alt,two
+
+| ui.keybindings.anchoring-mode.tokens
+| Keyboard shortcut to switch to multi-token selection mode
+| Shift,three
+| Alt,three
+
+| ui.keybindings.anchoring-mode.sentences
+| Keyboard shortcut to switch to sentence selection mode
+| Shift,four
+| Alt,four
+
+| ui.keybindings.dialog.closeDialog
+| Keyboard shortcut to close the currently open dialog
+| Escape
+| Ctrl,w
+|===
+
+[IMPORTANT]
+====
+Keyboard shortcuts should always include modifier keys (Ctrl, Shift, Alt) to:
+
+* Work properly even when focus is in input fields (modifier keys prevent conflicts with normal typing)
+* Avoid conflicts with standard browser shortcuts (e.g., use Ctrl+y instead of just y)
+====
+
+NOTE: Keyboard shortcuts are specified as comma-separated key names (e.g., `Ctrl,z` for Ctrl+Z). Available key names include: `Ctrl`, `Shift`, `Alt`, `Meta`, `Enter`, `Escape`, `Delete`, `Backspace`, `Tab`, `Space`, `Page_up`, `Page_down`, `Home`, `End`, `Insert`, arrow keys (`Up`, `Down`, `Left`, `Right`), function keys (`F1` through `F12`), and regular character keys (`a` through `z`, `0` through `9`).

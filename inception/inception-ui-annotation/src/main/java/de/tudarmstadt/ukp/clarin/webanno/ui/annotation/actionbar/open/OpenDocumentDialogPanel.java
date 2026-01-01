@@ -48,6 +48,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.danekja.java.util.function.serializable.SerializableBiFunction;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -63,7 +64,6 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdati
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
-import wicket.contrib.input.events.key.KeyType;
 
 /**
  * A panel used as Open dialog. It Lists all projects a user is member of for annotation/curation
@@ -83,6 +83,7 @@ public class OpenDocumentDialogPanel
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userRepository;
     private @SpringBean PreferencesService preferencesService;
+    private @SpringBean KeyBindingsProperties keyBindings;
 
     private final DropDownChoice<DecoratedObject<User>> userListChoice;
     private final AnnotationDocumentTable table;
@@ -101,7 +102,7 @@ public class OpenDocumentDialogPanel
         queue(userListChoice = createUserListChoice(CID_USER));
 
         queue(new LambdaAjaxLink(CID_CLOSE_DIALOG, this::actionCancel)
-                .add(new InputBehavior(new KeyType[] { KeyType.Escape }, click)));
+                .add(new InputBehavior(keyBindings.getDialog().getCloseDialog(), click)));
 
         finishedDocumentsSkippedByNavigation = LambdaModel.of(
                 this::isFinishedDocumentsSkippedByNavigation,
