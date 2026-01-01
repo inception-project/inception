@@ -173,8 +173,8 @@ public class PubAnnotationProvider
         }
         catch (RestClientException e) {
             // If the document has as single section, an object is returned...
-            var section = restTemplate.getForObject(url,
-                    PubAnnotationDocumentSection.class, variables);
+            var section = restTemplate.getForObject(url, PubAnnotationDocumentSection.class,
+                    variables);
 
             return asList(section);
         }
