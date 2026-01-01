@@ -39,8 +39,10 @@ import de.tudarmstadt.ukp.inception.annotation.feature.misc.UimaPrimitiveFeature
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
  * <p>
@@ -137,6 +139,24 @@ public class NumberFeatureSupport
     public NumberFeatureTraits createDefaultTraits()
     {
         return new NumberFeatureTraits();
+    }
+
+    @Override
+    public void initializeAnnotation(AnnotationFeature aFeature, FeatureStructure aFS)
+        throws AnnotationException
+    {
+        var traits = readTraits(aFeature);
+
+        if (traits.getDefaultValue() != null) {
+            // We cannot use var here because the compiler may infer the wrong type
+            // and then setFeatureFeatureValue may fail.
+            Number defaultValue = switch (aFeature.getType()) {
+            case CAS.TYPE_NAME_INTEGER -> traits.getDefaultValue().intValue();
+            case CAS.TYPE_NAME_FLOAT -> traits.getDefaultValue().floatValue();
+            default -> throw unsupportedFeatureTypeException(aFeature);
+            };
+            setFeatureValue(aFS.getCAS(), aFeature, ICasUtil.getAddr(aFS), defaultValue);
+        }
     }
 
     @SuppressWarnings("unchecked")
