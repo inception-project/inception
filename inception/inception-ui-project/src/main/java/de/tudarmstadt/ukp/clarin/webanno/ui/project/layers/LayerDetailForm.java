@@ -207,6 +207,7 @@ public class LayerDetailForm
         add(new CheckBox("readonly").setOutputMarkupPlaceholderTag(true));
 
         add(new AjaxDownloadLink("exportLayersAsJson", this::exportLayerAsJson));
+        add(new AjaxDownloadLink("exportAllLayersAsJson", this::exportAllLayersAsJson));
         add(new AjaxDownloadLink("exportLayersAsUima", this::exportAllLayersAsUimaXml));
         add(new AjaxDownloadLink("exportFullTypeSystemAsUima",
                 this::exportFullTypeSystemAsUimaXml));
@@ -447,6 +448,21 @@ public class LayerDetailForm
                     getModelObject());
             return new InputStreamResourceStream(new ByteArrayInputStream(json.getBytes(UTF_8)),
                     "layer.json");
+        }
+        catch (Exception e) {
+            WicketExceptionUtil.handleException(ProjectLayersPanel.LOG, this, e);
+            return null;
+        }
+    }
+
+    private IResourceStream exportAllLayersAsJson()
+    {
+        try {
+            var project = getModelObject().getProject();
+            var layers = annotationService.listAnnotationLayer(project);
+            String json = LayerImportExportUtils.exportLayersToJson(annotationService, layers);
+            return new InputStreamResourceStream(new ByteArrayInputStream(json.getBytes(UTF_8)),
+                    "all-layers.json");
         }
         catch (Exception e) {
             WicketExceptionUtil.handleException(ProjectLayersPanel.LOG, this, e);
