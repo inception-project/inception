@@ -63,8 +63,7 @@ public interface PagingStrategy
     default void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, VRange aPingRange,
             FocusPosition aPos)
     {
-        moveToOffset(aState, aCas, aOffset,
-                aPingRange != null ? List.of(aPingRange) : null, aPos);
+        moveToOffset(aState, aCas, aOffset, aPingRange != null ? List.of(aPingRange) : null, aPos);
     }
 
     void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, List<VRange> aPingRanges,
@@ -174,21 +173,19 @@ public interface PagingStrategy
     {
         var selection = aState.getSelection();
         List<VRange> pingRanges;
-        
+
         if (selection.isArc()) {
             // For arcs, ping both endpoints
             var originFs = ICasUtil.selectAnnotationByAddr(aCas, selection.getOrigin());
             var targetFs = ICasUtil.selectAnnotationByAddr(aCas, selection.getTarget());
-            pingRanges = List.of(
-                new VRange(originFs.getBegin(), originFs.getEnd()),
-                new VRange(targetFs.getBegin(), targetFs.getEnd())
-            );
+            pingRanges = List.of(new VRange(originFs.getBegin(), originFs.getEnd()),
+                    new VRange(targetFs.getBegin(), targetFs.getEnd()));
         }
         else {
             // For spans, ping the selected range
             pingRanges = List.of(new VRange(selection.getBegin(), selection.getEnd()));
         }
-        
+
         moveToOffset(aState, aCas, selection.getBegin(), pingRanges, CENTERED);
     }
 

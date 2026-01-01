@@ -321,16 +321,16 @@ public abstract class AnnotationPageBase
 
         var cas = getEditorCas();
         var range = rangeClippedToDocument(cas, aBegin, aEnd);
-        
+
         // Always include the target range as a ping range
         List<VRange> pingRanges = new ArrayList<>();
         pingRanges.add(new VRange(range.getBegin(), range.getEnd()));
-        
+
         // Add any additional ping ranges if provided
         if (aAdditionalPingRanges != null && !aAdditionalPingRanges.isEmpty()) {
             pingRanges.addAll(aAdditionalPingRanges);
         }
-        
+
         state.getPagingStrategy().moveToOffset(state, cas, aBegin, pingRanges, CENTERED);
 
         if (!switched && state.getPagingStrategy() instanceof NoPagingStrategy) {

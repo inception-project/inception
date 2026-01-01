@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo;
 
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil.handleException;
 import static wicket.contrib.input.events.EventType.click;
-import static wicket.contrib.input.events.key.KeyType.Ctrl;
-import static wicket.contrib.input.events.key.KeyType.Shift;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -28,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -37,6 +36,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.RedoableAnnotationAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableActionSupportRegistry;
@@ -48,7 +49,6 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
-import wicket.contrib.input.events.key.KeyType;
 
 public class UndoPanel
     extends Panel
@@ -59,6 +59,7 @@ public class UndoPanel
 
     private static final AtomicLong NEXT_REQUEST_ID = new AtomicLong(1);
 
+    private @SpringBean KeyBindingsProperties keyBindings;
     private @SpringBean AnnotationSchemaService schemaService;
     private @SpringBean UndoableActionSupportRegistry undoableActionSupportRegistry;
 
@@ -67,9 +68,17 @@ public class UndoPanel
         super(aId);
 
         queue(new LambdaAjaxLink("undo", this::actionUndo)
-                .add(new InputBehavior(new KeyType[] { Ctrl, KeyType.z }, click)));
+                .add(new InputBehavior(keyBindings.getEditing().getUndo(), click))
+                .add(AttributeModifier.append("title",
+                        () -> " ("
+                                + KeyBindingsUtil.formatShortcut(keyBindings.getEditing().getUndo())
+                                + ")")));
         queue(new LambdaAjaxLink("redo", this::actionRedo)
-                .add(new InputBehavior(new KeyType[] { Shift, Ctrl, KeyType.z }, click)));
+                .add(new InputBehavior(keyBindings.getEditing().getRedo(), click))
+                .add(AttributeModifier.append("title",
+                        () -> " ("
+                                + KeyBindingsUtil.formatShortcut(keyBindings.getEditing().getRedo())
+                                + ")")));
 
     }
 
