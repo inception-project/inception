@@ -60,7 +60,7 @@ public interface ActiveLearningService
             List<SuggestionGroup<SpanSuggestion>> aSuggestionGroups);
 
     Optional<Delta<SpanSuggestion>> generateNextSuggestion(String aSessionOwner, User aDataOwner,
-            ActiveLearningUserState aAlState);
+            ActiveLearningUserState aAlState, Long aCurrentDocumentId);
 
     void acceptSpanSuggestion(SourceDocument aDocument, User aDataOwner, Predictions aPredictions,
             SpanSuggestion aSuggestion, Object aValue)
