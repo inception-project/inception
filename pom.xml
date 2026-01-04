@@ -72,13 +72,13 @@
 
   <properties>
     <build-ant-version>1.10.15</build-ant-version>
-    <build-groovy-version>4.0.29</build-groovy-version>
+    <build-groovy-version>5.0.3</build-groovy-version>
 
     <junit.version>6.0.1</junit.version>
-    <mockito.version>5.20.0</mockito.version>
+    <mockito.version>5.21.0</mockito.version>
     <assertj.version>3.27.6</assertj.version>
     <xmlunit.version>2.11.0</xmlunit.version>
-    <testcontainers.version>1.21.3</testcontainers.version>
+    <testcontainers.version>1.21.4</testcontainers.version>
 
     <awaitility.version>4.3.0</awaitility.version>
 
@@ -89,17 +89,17 @@
     <pdfbox.version>3.0.5</pdfbox.version>
 
     <spring.version>7.0.1</spring.version>
-    <spring.boot.version>4.0.0</spring.boot.version>
-    <spring.data.version>4.0.0</spring.data.version>
-    <spring.security.version>7.0.0</spring.security.version>
+    <spring.boot.version>4.0.1</spring.boot.version>
+    <spring.data.version>4.0.1</spring.data.version>
+    <spring.security.version>7.0.2</spring.security.version>
     <springdoc.version>3.0.0</springdoc.version>
     <swagger.version>2.2.41</swagger.version>
     <jjwt.version>0.13.0</jjwt.version>
 
     <slf4j.version>2.0.17</slf4j.version>
-    <log4j2.version>2.25.2</log4j2.version>
+    <log4j2.version>2.25.3</log4j2.version>
     <jboss.logging.version>3.6.1.Final</jboss.logging.version>
-    <sentry.version>8.27.1</sentry.version>
+    <sentry.version>8.29.0</sentry.version>
 
     <tomcat.version>10.1.48</tomcat.version>
     <jetty.version>12.1.4</jetty.version>
