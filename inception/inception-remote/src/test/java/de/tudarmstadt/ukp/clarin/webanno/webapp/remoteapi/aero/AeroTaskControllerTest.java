@@ -41,6 +41,9 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -226,6 +229,10 @@ public class AeroTaskControllerTest
     @SpringBootConfiguration
     public static class TestContext
     {
-        // All handled by auto-config
+        @Bean
+        AuthenticationEventPublisher authenticationEventPublisher()
+        {
+            return new DefaultAuthenticationEventPublisher();
+        }
     }
 }

@@ -40,8 +40,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.restclient.autoconfigure.RestTemplateAutoConfiguration;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.tomcat.autoconfigure.servlet.TomcatServletWebServerAutoConfiguration;
 import org.springframework.boot.webmvc.autoconfigure.DispatcherServletAutoConfiguration;
 import org.springframework.boot.webmvc.autoconfigure.WebMvcAutoConfiguration;
 import org.springframework.context.ApplicationEventPublisher;
@@ -85,6 +87,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
         exclude = { //
                 SecurityAutoConfiguration.class }, //
         classes = { //
+                TomcatServletWebServerAutoConfiguration.class, //
                 RestTemplateAutoConfiguration.class, //
                 DispatcherServletAutoConfiguration.class, //
                 WebMvcAutoConfiguration.class, //
@@ -93,6 +96,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //
         "de.tudarmstadt.ukp.clarin.webanno" })
+@AutoConfigureTestRestTemplate
 public class WebhookServiceTest
 {
     static final String TEST_OUTPUT_FOLDER = "target/test-output/WebhookServiceTest";

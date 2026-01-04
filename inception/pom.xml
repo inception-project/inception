@@ -29,7 +29,7 @@
   <properties>
     <maven.surefire.heap>6g</maven.surefire.heap>
     <maven.surefire.argLine>-XX:+EnableDynamicAgentLoading</maven.surefire.argLine>
-    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.release>21</maven.compiler.release>
     <maven.compiler.target>${maven.compiler.release}</maven.compiler.target>
     <maven.compiler.source>${maven.compiler.release}</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>

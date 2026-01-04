@@ -325,13 +325,13 @@ public class DiamWebsocketController
 
     private void sendUpdate(AnnotationDocument aDoc)
     {
-        sendUpdate(aDoc.getProject().getId(), aDoc.getDocument().getId(), aDoc.getUser(), 0,
+        sendUpdate(aDoc.getDocument().getProject().getId(), aDoc.getDocument().getId(), aDoc.getUser(), 0,
                 MAX_VALUE);
     }
 
     void sendUpdate(AnnotationDocument aDoc, int aUpdateBegin, int aUpdateEnd)
     {
-        sendUpdate(aDoc.getProject().getId(), aDoc.getDocument().getId(), aDoc.getUser(),
+        sendUpdate(aDoc.getDocument().getProject().getId(), aDoc.getDocument().getId(), aDoc.getUser(),
                 aUpdateBegin, aUpdateEnd);
     }
 
@@ -357,6 +357,8 @@ public class DiamWebsocketController
             var diff = JsonDiff.asJson(vps.getJson(), newJson);
 
             vps.setJson(newJson);
+
+            var debug = diff.toPrettyString();
 
             msgTemplate.convertAndSend("/topic" + vpd.getTopic(),
                     new MViewportUpdate(aUpdateBegin, aUpdateEnd, diff));

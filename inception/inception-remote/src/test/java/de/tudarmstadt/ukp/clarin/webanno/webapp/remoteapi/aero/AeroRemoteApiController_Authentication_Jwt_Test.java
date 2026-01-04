@@ -45,6 +45,8 @@ import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -218,7 +220,11 @@ class AeroRemoteApiController_Authentication_Jwt_Test
     @SpringBootConfiguration
     public static class TestContext
     {
-        // All handled by auto-config
+        @Bean
+        AuthenticationEventPublisher authenticationEventPublisher()
+        {
+            return new DefaultAuthenticationEventPublisher();
+        }
 
         @Bean
         public ApplicationContextProvider applicationContextProvider()
