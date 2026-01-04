@@ -37,7 +37,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
@@ -224,7 +223,9 @@ class AssistantServiceImplTest
     public static class SpringConfig
     {
         @Bean
-        public AuthenticationEventPublisher authenticationEventPublisher(ApplicationEventPublisher publisher) {
+        public AuthenticationEventPublisher authenticationEventPublisher(
+                ApplicationEventPublisher publisher)
+        {
             return new DefaultAuthenticationEventPublisher(publisher);
         }
 

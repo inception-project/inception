@@ -21,7 +21,6 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.function.Supplier;
 
-import org.jspecify.annotations.Nullable;
 import org.springframework.expression.Expression;
 import org.springframework.security.access.expression.ExpressionUtils;
 import org.springframework.security.access.expression.SecurityExpressionHandler;
@@ -55,8 +54,8 @@ public class MessageExpressionAuthorizationManager
     }
 
     @Override
-    public @Nullable AuthorizationResult authorize(
-            Supplier<? extends @Nullable Authentication> aAuthentication,
+    public AuthorizationResult authorize(
+            Supplier<? extends Authentication> aAuthentication,
             MessageAuthorizationContext<?> aObject)
     {
         var context = expressionHandler.createEvaluationContext(aAuthentication, aObject);
