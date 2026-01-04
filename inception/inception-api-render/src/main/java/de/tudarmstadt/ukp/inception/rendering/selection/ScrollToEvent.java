@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.selection;
 
+import static java.util.Arrays.asList;
+
+import java.util.List;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
@@ -25,16 +29,22 @@ public class ScrollToEvent
 {
     private final AjaxRequestTarget requestHandler;
     private final int offset;
-    private final VRange pingRange;
+    private final List<VRange> pingRanges;
     private final FocusPosition position;
 
     public ScrollToEvent(AjaxRequestTarget aRequestHandler, int aOffset, VRange aPingRange,
             FocusPosition aPos)
     {
+        this(aRequestHandler, aOffset, aPingRange != null ? asList(aPingRange) : null, aPos);
+    }
+
+    public ScrollToEvent(AjaxRequestTarget aRequestHandler, int aOffset, List<VRange> aPingRanges,
+            FocusPosition aPos)
+    {
         requestHandler = aRequestHandler;
         offset = aOffset;
         position = aPos;
-        pingRange = aPingRange;
+        pingRanges = aPingRanges;
     }
 
     public AjaxRequestTarget getRequestHandler()
@@ -47,9 +57,18 @@ public class ScrollToEvent
         return offset;
     }
 
+    /**
+     * @deprecated Use {@link #getPingRanges()} instead.
+     */
+    @Deprecated
     public VRange getPingRange()
     {
-        return pingRange;
+        return pingRanges != null && !pingRanges.isEmpty() ? pingRanges.get(0) : null;
+    }
+
+    public List<VRange> getPingRanges()
+    {
+        return pingRanges;
     }
 
     public FocusPosition getPosition()

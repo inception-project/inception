@@ -29,11 +29,17 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
@@ -42,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTag;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -59,26 +66,109 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
  */
 public class LayerImportExportUtils
 {
+    private static final Logger LOG = LoggerFactory.getLogger(LayerImportExportUtils.class);
+
     public static String exportLayerToJson(AnnotationSchemaService aSchemaService,
-            AnnotationLayer layer)
+            AnnotationLayer aLayer)
         throws IOException
     {
+        return exportLayersToJson(aSchemaService, List.of(aLayer));
+    }
+
+    /**
+     * Export multiple layers to JSON format. This method ensures that all layers referenced by the
+     * provided layers (through attach layers or link features) are also included in the export,
+     * with no layer appearing more than once.
+     * 
+     * @param aSchemaService
+     *            the annotation schema service
+     * @param aLayers
+     *            the layers to export
+     * @return JSON string containing all layers and their dependencies
+     * @throws IOException
+     *             if there is an I/O error
+     */
+    public static String exportLayersToJson(AnnotationSchemaService aSchemaService,
+            List<AnnotationLayer> aLayers)
+        throws IOException
+    {
+        // Use LinkedHashSet to maintain order and avoid duplicates
+        var layersToExport = new LinkedHashSet<AnnotationLayer>();
+        var project = !aLayers.isEmpty() ? aLayers.get(0).getProject() : null;
+
+        // Collect all layers that need to be exported
+        for (var layer : aLayers) {
+            collectLayerAndDependencies(aSchemaService, layer, layersToExport, project);
+        }
+
+        // Export all collected layers
         var exLayers = new ArrayList<ExportedAnnotationLayer>();
+        var layerToExLayer = new HashMap<AnnotationLayer, ExportedAnnotationLayer>();
 
-        var exMainLayer = exportLayerDetails(null, null, layer, aSchemaService);
-        exLayers.add(exMainLayer);
+        for (var layer : layersToExport) {
+            var exLayer = exportLayerDetails(layerToExLayer, null, layer, aSchemaService);
+            exLayers.add(exLayer);
+        }
 
-        // If the layer is attached to another layer, then we also have to export
-        // that, otherwise we would be missing it during re-import.
-        if (layer.getAttachType() != null) {
-            var attachLayer = layer.getAttachType();
-            var exAttachLayer = exportLayerDetails(null, null, attachLayer, aSchemaService);
-            exMainLayer
-                    .setAttachType(new ExportedAnnotationLayerReference(exAttachLayer.getName()));
-            exLayers.add(exAttachLayer);
+        // Wire up attach layer references
+        for (var layer : layersToExport) {
+            if (layer.getAttachType() != null) {
+                var exLayer = layerToExLayer.get(layer);
+                var exAttachLayer = layerToExLayer.get(layer.getAttachType());
+                if (exAttachLayer != null) {
+                    exLayer.setAttachType(
+                            new ExportedAnnotationLayerReference(exAttachLayer.getName()));
+                }
+            }
         }
 
         return JSONUtil.toPrettyJsonString(exLayers);
+    }
+
+    /**
+     * Recursively collect a layer and all its dependencies (attach layers and link feature target
+     * layers).
+     */
+    private static void collectLayerAndDependencies(AnnotationSchemaService aSchemaService,
+            AnnotationLayer aLayer, Set<AnnotationLayer> aCollectedLayers, Project aProject)
+    {
+        // Avoid infinite recursion and duplicates
+        if (aCollectedLayers.contains(aLayer)) {
+            return;
+        }
+
+        aCollectedLayers.add(aLayer);
+
+        // Add attach layer if present
+        if (aLayer.getAttachType() != null) {
+            collectLayerAndDependencies(aSchemaService, aLayer.getAttachType(), aCollectedLayers,
+                    aProject);
+        }
+
+        // Add layers referenced by link features
+        for (var feature : aSchemaService.listAnnotationFeature(aLayer)) {
+            if (feature.getLinkMode() != null && feature.getLinkMode() != LinkMode.NONE) {
+                var targetLayerName = feature.getType();
+                
+                // Skip generic annotation type
+                if (CAS.TYPE_NAME_ANNOTATION.equals(targetLayerName)) {
+                    continue;
+                }
+
+                try {
+                    var targetLayer = aSchemaService.findLayer(aProject, targetLayerName);
+                    if (targetLayer != null) {
+                        collectLayerAndDependencies(aSchemaService, targetLayer, aCollectedLayers,
+                                aProject);
+                    }
+                }
+                catch (Exception e) {
+                    LOG.warn("Unable to find layer [{}] referenced by link feature [{}] in layer "
+                            + "[{}]: {}", targetLayerName, feature.getName(), aLayer.getName(),
+                            ExceptionUtils.getRootCauseMessage(e));
+                }
+            }
+        }
     }
 
     /**

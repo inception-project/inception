@@ -155,7 +155,7 @@ public class ActiveLearningServiceImpl
 
     @Override
     public Optional<Delta<SpanSuggestion>> generateNextSuggestion(String aSessionOwner,
-            User aDataOwner, ActiveLearningUserState alState)
+            User aDataOwner, ActiveLearningUserState alState, Long aCurrentDocumentId)
     {
         // Fetch the next suggestion to present to the user (if there is any)
         long startTimer = System.currentTimeMillis();
@@ -180,6 +180,22 @@ public class ActiveLearningServiceImpl
         long removeDuplicateRecommendation = System.currentTimeMillis();
         LOG.trace("Removing duplicate recommendations took {} ms.",
                 (removeDuplicateRecommendation - removeRejectedSkippedRecommendation));
+
+        // filter by current document if requested
+        if (alState.isFilterByCurrentDocument()) {
+            if (aCurrentDocumentId == null) {
+                LOG.trace("Document filter is enabled but no document is open - returning empty");
+                return Optional.empty();
+            }
+
+            suggestionGroups = suggestionGroups.stream() //
+                    .filter(group -> group.stream()
+                            .anyMatch(s -> s.getDocumentId() == aCurrentDocumentId)) //
+                    .collect(toList());
+            long filterByDocument = System.currentTimeMillis();
+            LOG.trace("Filtering by current document took {} ms.",
+                    (filterByDocument - removeDuplicateRecommendation));
+        }
 
         var pref = recommendationService.getPreferences(aDataOwner,
                 alState.getLayer().getProject());
@@ -358,6 +374,7 @@ public class ActiveLearningServiceImpl
 
         private boolean sessionActive = false;
         private boolean doExistRecommenders = true;
+        private boolean filterByCurrentDocument = false;
         private AnnotationLayer layer;
         private ActiveLearningStrategy strategy;
         private List<SuggestionGroup<SpanSuggestion>> suggestions;
@@ -450,6 +467,16 @@ public class ActiveLearningServiceImpl
         public void setRightContext(String aRightContext)
         {
             rightContext = aRightContext;
+        }
+
+        public boolean isFilterByCurrentDocument()
+        {
+            return filterByCurrentDocument;
+        }
+
+        public void setFilterByCurrentDocument(boolean aFilterByCurrentDocument)
+        {
+            filterByCurrentDocument = aFilterByCurrentDocument;
         }
     }
 

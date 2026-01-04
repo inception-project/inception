@@ -645,7 +645,7 @@ export class ApacheAnnotatorVisualizer {
     this.removeSpuriousZeroWidthHighlights()
 
     if (this.removePingMarkers.length > 0) {
-      this.removePingMarkersTimeout = this.schedule(PING_MARKER_REMOVAL_DELAY_MS, () => this.clearPingMarkers())
+      this.removePingMarkersTimeout = window.setTimeout(() => this.clearPingMarkers(), PING_MARKER_REMOVAL_DELAY_MS)
     }
  }
 
@@ -653,7 +653,7 @@ export class ApacheAnnotatorVisualizer {
     console.log('Clearing ping markers');
     
     if (this.removePingMarkersTimeout) {
-      this.cancelScheduled(this.removePingMarkersTimeout)
+      window.clearTimeout(this.removePingMarkersTimeout)
       this.removePingMarkersTimeout = undefined
       this.removePingMarkers.forEach(remove => remove())
       this.removePingMarkers = []

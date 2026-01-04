@@ -31,12 +31,6 @@ import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isSame;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static wicket.contrib.input.events.EventType.click;
-import static wicket.contrib.input.events.key.KeyType.Delete;
-import static wicket.contrib.input.events.key.KeyType.Escape;
-import static wicket.contrib.input.events.key.KeyType.Left;
-import static wicket.contrib.input.events.key.KeyType.Right;
-import static wicket.contrib.input.events.key.KeyType.Shift;
-import static wicket.contrib.input.events.key.KeyType.Space;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -57,6 +51,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -74,6 +69,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsEvaluator;
@@ -103,6 +100,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -116,7 +114,6 @@ import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import jakarta.persistence.NoResultException;
-import wicket.contrib.input.events.key.KeyType;
 
 /**
  * Annotation Detail Editor Panel.
@@ -129,6 +126,7 @@ public abstract class AnnotationDetailEditorPanel
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    private @SpringBean KeyBindingsProperties keyBindings;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaProperties schemaProperties;
@@ -201,14 +199,27 @@ public abstract class AnnotationDetailEditorPanel
     private LambdaAjaxLink createNextAnnotationButton()
     {
         var link = new LambdaAjaxLink("nextAnnotation", this::actionNextAnnotation);
-        link.add(new InputBehavior(new KeyType[] { Shift, Right }, click));
+        link.add(new InputBehavior(keyBindings.getNavigation().getNextAnnotation(), click));
+        link.add(
+                AttributeModifier
+                        .append("title",
+                                () -> " ("
+                                        + KeyBindingsUtil.formatShortcut(
+                                                keyBindings.getNavigation().getNextAnnotation())
+                                        + ")"));
         return link;
     }
 
     private LambdaAjaxLink createPreviousAnnotationButton()
     {
         var link = new LambdaAjaxLink("previousAnnotation", this::actionPreviousAnnotation);
-        link.add(new InputBehavior(new KeyType[] { Shift, Left }, click));
+        link.add(new InputBehavior(keyBindings.getNavigation().getPreviousAnnotation(), click));
+        link.add(
+                AttributeModifier.append("title",
+                        () -> " ("
+                                + KeyBindingsUtil.formatShortcut(
+                                        keyBindings.getNavigation().getPreviousAnnotation())
+                                + ")"));
         return link;
     }
 
@@ -446,8 +457,23 @@ public abstract class AnnotationDetailEditorPanel
         throws IOException, AnnotationException
     {
         actionSelect(aTarget, annoFs);
-        editorPage.actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
-                annoFs.getBegin(), annoFs.getEnd());
+
+        var state = getModelObject();
+        var doc = state.getDocument();
+
+        // For arcs, pass the endpoint ranges as additional ping ranges
+        if (state.getSelection().isArc()) {
+            var cas = editorPage.getEditorCas();
+            var originFs = ICasUtil.selectAnnotationByAddr(cas, state.getSelection().getOrigin());
+            var targetFs = ICasUtil.selectAnnotationByAddr(cas, state.getSelection().getTarget());
+            var endpointRanges = List.of(new VRange(originFs.getBegin(), originFs.getEnd()),
+                    new VRange(targetFs.getBegin(), targetFs.getEnd()));
+            editorPage.actionShowSelectedDocument(aTarget, doc, annoFs.getBegin(), annoFs.getEnd(),
+                    endpointRanges);
+        }
+        else {
+            editorPage.actionShowSelectedDocument(aTarget, doc, annoFs.getBegin(), annoFs.getEnd());
+        }
     }
 
     @Override
@@ -1354,7 +1380,14 @@ public abstract class AnnotationDetailEditorPanel
         link.setOutputMarkupPlaceholderTag(true);
         link.setAlwaysEnabled(true); // Not to be disabled when document is read-only
         link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
-        link.add(new InputBehavior(new KeyType[] { Shift, Escape }, click));
+        link.add(new InputBehavior(keyBindings.getEditing().getClearSelection(), click));
+        link.add(
+                AttributeModifier
+                        .append("title",
+                                () -> " ("
+                                        + KeyBindingsUtil.formatShortcut(
+                                                keyBindings.getEditing().getClearSelection())
+                                        + ")"));
         return link;
     }
 
@@ -1371,7 +1404,14 @@ public abstract class AnnotationDetailEditorPanel
                                     .equals(state.getSelectedAnnotationLayer().getType())
                             && editorPage.isEditable());
         }));
-        link.add(new InputBehavior(new KeyType[] { Shift, Space }, click));
+        link.add(new InputBehavior(keyBindings.getEditing().getToggleSelection(), click));
+        link.add(
+                AttributeModifier
+                        .append("title",
+                                () -> " ("
+                                        + KeyBindingsUtil.formatShortcut(
+                                                keyBindings.getEditing().getToggleSelection())
+                                        + ")"));
         return link;
     }
 
@@ -1381,7 +1421,14 @@ public abstract class AnnotationDetailEditorPanel
         link.setOutputMarkupPlaceholderTag(true);
         link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
                 && editorPage.isEditable()));
-        link.add(new InputBehavior(new KeyType[] { Shift, Delete }, click));
+        link.add(new InputBehavior(keyBindings.getEditing().getDeleteAnnotation(), click));
+        link.add(
+                AttributeModifier
+                        .append("title",
+                                () -> " ("
+                                        + KeyBindingsUtil.formatShortcut(
+                                                keyBindings.getEditing().getDeleteAnnotation())
+                                        + ")"));
         return link;
     }
 

@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -35,8 +36,10 @@ import de.tudarmstadt.ukp.inception.annotation.feature.misc.UimaPrimitiveFeature
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
  * <p>
@@ -45,7 +48,7 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
  * </p>
  */
 public class BooleanFeatureSupport
-    extends UimaPrimitiveFeatureSupport_ImplBase<Void>
+    extends UimaPrimitiveFeatureSupport_ImplBase<BooleanFeatureTraits>
 {
     private List<FeatureType> primitiveTypes;
 
@@ -113,5 +116,31 @@ public class BooleanFeatureSupport
     public <V> V getNullFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         return (V) FALSE;
+    }
+
+    @Override
+    public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
+    {
+        var feature = aFeatureModel.getObject();
+
+        if (!accepts(feature)) {
+            throw unsupportedFeatureTypeException(feature);
+        }
+
+        return new BooleanFeatureTraitsEditor(aId, this, aFeatureModel);
+    }
+
+    @Override
+    public BooleanFeatureTraits createDefaultTraits()
+    {
+        return new BooleanFeatureTraits();
+    }
+
+    @Override
+    public void initializeAnnotation(AnnotationFeature aFeature, FeatureStructure aFS)
+        throws AnnotationException
+    {
+        var traits = readTraits(aFeature);
+        setFeatureValue(aFS.getCAS(), aFeature, ICasUtil.getAddr(aFS), traits.getDefaultValue());
     }
 }

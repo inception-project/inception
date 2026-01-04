@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
+import static java.util.Arrays.asList;
 import static org.apache.wicket.event.Broadcast.BREADTH;
+
+import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Page;
@@ -37,13 +40,13 @@ public abstract class PagingStrategy_ImplBase
     private static final long serialVersionUID = 928025483609029306L;
 
     @Override
-    public void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, VRange aPingRange,
-            FocusPosition aPos)
+    public void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset,
+            List<VRange> aPingRanges, FocusPosition aPos)
     {
         switch (aPos) {
         case TOP: {
             aState.setPageBegin(aCas, aOffset);
-            fireScrollToEvent(aOffset, aPingRange, aPos);
+            fireScrollToEvent(aOffset, aPingRanges, aPos);
             break;
         }
         case CENTERED: {
@@ -62,7 +65,7 @@ public abstract class PagingStrategy_ImplBase
 
             aState.setPageBegin(aCas, firstUnit.getBegin());
             aState.setFocusUnitIndex(unit.getIndex());
-            fireScrollToEvent(aOffset, aPingRange, aPos);
+            fireScrollToEvent(aOffset, aPingRanges, aPos);
             break;
         }
         default:
@@ -70,7 +73,14 @@ public abstract class PagingStrategy_ImplBase
         }
     }
 
-    private void fireScrollToEvent(int aOffset, VRange aPingRange, FocusPosition aPos)
+    @Override
+    public void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, VRange aPingRange,
+            FocusPosition aPos)
+    {
+        moveToOffset(aState, aCas, aOffset, aPingRange != null ? asList(aPingRange) : null, aPos);
+    }
+
+    private void fireScrollToEvent(int aOffset, List<VRange> aPingRanges, FocusPosition aPos)
     {
         var requestCycle = RequestCycle.get();
 
@@ -82,7 +92,7 @@ public abstract class PagingStrategy_ImplBase
         if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
             var page = (Page) handler.get().getPage();
             var target = requestCycle.find(AjaxRequestTarget.class).orElse(null);
-            page.send(page, BREADTH, new ScrollToEvent(target, aOffset, aPingRange, aPos));
+            page.send(page, BREADTH, new ScrollToEvent(target, aOffset, aPingRanges, aPos));
         }
     }
 }
