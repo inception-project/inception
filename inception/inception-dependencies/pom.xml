@@ -1528,7 +1528,7 @@
 
       <dependency>
         <groupId>org.dkpro.core</groupId>
-        <artifactId>dkpro-core-bom-asl</artifactId>
+        <artifactId>dkpro-core-bom</artifactId>
         <version>${dkpro.version}</version>
         <type>pom</type>
         <scope>import</scope>

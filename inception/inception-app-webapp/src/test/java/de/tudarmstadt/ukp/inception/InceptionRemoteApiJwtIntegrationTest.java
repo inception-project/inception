@@ -82,6 +82,7 @@ public class InceptionRemoteApiJwtIntegrationTest
         setProperty("spring.main.banner-mode", "off");
         setProperty("java.awt.headless", "true");
         setProperty("database.url", "jdbc:hsqldb:mem:testdb;hsqldb.tx=mvcc");
+        setProperty("spring.jpa.hibernate.ddl-auto", "create-drop");
         setProperty("inception.home", appHome.toString());
         setProperty("remote-api.enabled", "true");
         setProperty("remote-api.oauth2.enabled", "true");

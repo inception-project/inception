@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 @AutoConfigurationPackage(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EntityScan(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EnableAsync
-@EnableCaching
 @EnableMethodSecurity(prePostEnabled = true)
 //@formatter:on
 public class INCEpTION
