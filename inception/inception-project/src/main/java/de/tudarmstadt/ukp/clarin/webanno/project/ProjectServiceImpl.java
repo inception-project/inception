@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MAX_PROJECT_SLUG_L
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MIN_PROJECT_SLUG_LENGTH;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlug;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlugInitialCharacter;
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.NO_PASSWORD;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static java.lang.Math.min;
@@ -678,7 +678,7 @@ public class ProjectServiceImpl
         return userRepository.create(User.builder() //
                 .withUsername(generateRandomUsername()) //
                 .withUiName(aUiName) //
-                .withPassword(EMPTY_PASSWORD) //
+                .withPassword(NO_PASSWORD) //
                 .withRealm(realm) //
                 .withEnabled(true) //
                 .withRoles(ROLE_USER) //
@@ -700,7 +700,7 @@ public class ProjectServiceImpl
         return userRepository.create(User.builder() //
                 .withUsername(generateRandomUsername()) //
                 .withUiName(aUiName) //
-                .withPassword(EMPTY_PASSWORD) //
+                .withPassword(NO_PASSWORD) //
                 .withRealm(realm) //
                 .withEnabled(true) //
                 .withRoles(ROLE_USER) //

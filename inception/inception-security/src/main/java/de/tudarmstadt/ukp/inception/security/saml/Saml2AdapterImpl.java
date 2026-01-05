@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.security.saml;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.NO_PASSWORD;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.removeEnd;
@@ -141,7 +142,7 @@ public class Saml2AdapterImpl
     {
         var u = new User();
         u.setUsername(username);
-        u.setPassword(UserDao.EMPTY_PASSWORD);
+        u.setPassword(NO_PASSWORD);
         u.setEnabled(true);
         u.setRealm(realm);
         u.setRoles(PreAuthUtils.getPreAuthenticationNewUserRoles(u));

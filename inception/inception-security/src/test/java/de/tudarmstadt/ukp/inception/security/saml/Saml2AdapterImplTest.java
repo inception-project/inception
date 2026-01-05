@@ -109,7 +109,7 @@ class Saml2AdapterImplTest
                         .withEnabled(true) //
                         .build());
 
-        assertThat(userService.userHasNoPassword(autoCreatedUser)) //
+        assertThat(UserDao.userHasNoPassword(autoCreatedUser)) //
                 .as("Auto-created external users should be created without password") //
                 .isTrue();
     }

@@ -118,9 +118,8 @@ public class UserDetailPanel
 
         var passwordUnsetNotice = new WebMarkupContainer("passwordUnsetNotice");
         passwordUnsetNotice.setOutputMarkupPlaceholderTag(true);
-        passwordUnsetNotice
-                .add(visibleWhen(() -> userService.userHasNoPassword(getModel().getObject())
-                        && userService.canChangePassword(getModelObject())));
+        passwordUnsetNotice.add(visibleWhen(() -> UserDao.userHasNoPassword(getModel().getObject())
+                && userService.canChangePassword(getModelObject())));
         queue(passwordUnsetNotice);
 
         oldPasswordField = new PasswordTextField("oldPassword");

@@ -36,6 +36,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 
@@ -56,6 +57,9 @@ class UserDaoImplTest
 {
     @Autowired
     SecurityPropertiesImpl securityProperties;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @Autowired
     UserDaoImpl userDao;
