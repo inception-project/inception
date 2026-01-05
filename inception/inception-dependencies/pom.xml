@@ -31,6 +31,17 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>org.liquibase</groupId>
+        <artifactId>liquibase-core</artifactId>
+        <version>4.33.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.mattbertolini</groupId>
+        <artifactId>liquibase-slf4j</artifactId>
+        <version>5.1.0</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-bom</artifactId>
         <version>${slf4j.version}</version>
@@ -802,6 +813,13 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>tools.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson3.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       
       <!-- httpcomponents needs to come before OpenSAML to avoid OpenSAML picking an older version -->
       <dependency>
@@ -1422,7 +1440,7 @@
       </dependency>
 
       <dependency>
-        <groupId>com.flipkart.zjsonpatch</groupId>
+        <groupId>io.github.vishwakarma</groupId>
         <artifactId>zjsonpatch</artifactId>
         <version>${zjsonpatch.version}</version>
       </dependency>

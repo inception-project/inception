@@ -161,11 +161,10 @@
       <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
 
-    <dependency>
+   <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-    </dependency>
-    <dependency>
+    </dependency>    <dependency>
       <groupId>com.networknt</groupId>
       <artifactId>json-schema-validator</artifactId>
     </dependency>

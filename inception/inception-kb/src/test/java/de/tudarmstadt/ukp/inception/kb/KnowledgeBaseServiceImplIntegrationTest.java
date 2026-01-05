@@ -1582,7 +1582,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         importKnowledgeBase("data/wildlife_ontology.ttl");
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
-        List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
+        var rootConcepts = sut.listRootConcepts(kb, false);
 
         assertThat(rootConcepts) //
                 .as("Check that all root concepts have been found")

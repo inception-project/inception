@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import tools.jackson.databind.annotation.JsonSerialize;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize

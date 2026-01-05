@@ -30,15 +30,14 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.flipkart.zjsonpatch.JsonDiff;
+import com.flipkart.zjsonpatch.Jackson3JsonDiff;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
 import de.tudarmstadt.ukp.inception.support.http.ServerTimingWatch;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
 
 class DifferentialRenderingSupport
     implements Serializable
@@ -72,13 +71,13 @@ class DifferentialRenderingSupport
         throws IOException
     {
         try (var watch = new ServerTimingWatch("brat-json")) {
-            ObjectMapper mapper = JSONUtil.getObjectMapper();
-            JsonNode current = mapper.valueToTree(aBratDoc);
-            String json = JSONUtil.toInterpretableJsonString(current);
+            var mapper = JSONUtil.getObjectMapper();
+            var current = mapper.valueToTree(aBratDoc);
+            var json = JSONUtil.toInterpretableJsonString(current);
 
             // By default, we do a full rendering...
-            RenderType renderType = FULL;
-            String responseJson = json;
+            var renderType = FULL;
+            var responseJson = json;
             JsonNode diff;
             String diffJsonStr = null;
 
@@ -105,13 +104,13 @@ class DifferentialRenderingSupport
                                 : null;
                     }
                 }
-                catch (IOException e) {
+                catch (Exception e) {
                     LOG.error("Unable to generate diff, falling back to full render.", e);
                     // Fall-through
                 }
 
                 if (previous != null && current != null) {
-                    diff = JsonDiff.asJson(previous, current);
+                    diff = Jackson3JsonDiff.asJson(previous, current);
                     diffJsonStr = diff.toString();
 
                     if (diff instanceof ArrayNode && ((ArrayNode) diff).isEmpty()) {

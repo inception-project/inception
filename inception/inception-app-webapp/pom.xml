@@ -693,7 +693,7 @@
     <!-- SENTRY DEPENDENCIES -->
     <dependency>
       <groupId>io.sentry</groupId>
-      <artifactId>sentry-spring-boot-starter-jakarta</artifactId>
+      <artifactId>sentry-spring-boot-4</artifactId>
     </dependency>
     <dependency>
       <groupId>io.sentry</groupId>
@@ -703,13 +703,16 @@
     <!-- DATABASE / HIBERNATE -->
 
     <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-liquibase</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
     </dependency>
     <dependency>
       <groupId>com.mattbertolini</groupId>
       <artifactId>liquibase-slf4j</artifactId>
-      <version>5.0.0</version>
     </dependency>
 
     <dependency>
@@ -831,11 +834,11 @@
       <artifactId>javamelody-spring-boot-starter</artifactId>
       <version>${javamelody.version}</version>
       </dependency>
-    -->
     <dependency>
-      <groupId>com.fasterxml.jackson.module</groupId>
+      <groupId>tools.jackson.module</groupId>
       <artifactId>jackson-module-kotlin</artifactId>
     </dependency>
+    -->
     <dependency>
       <groupId>info.picocli</groupId>
       <artifactId>picocli</artifactId>
@@ -1103,6 +1106,7 @@
                uber-JAR and we get ClassNotFoundExceptions at runtime.
                -->
               <ignoredDependency>com.nimbusds:nimbus-jose-jwt</ignoredDependency>
+              <ignoredDependency>org.springframework.security:spring-security-oauth2-jose</ignoredDependency>
               <ignoredDependency>org.apache.logging.log4j:log4j-api</ignoredDependency>
               <!-- 
                 - Detection of this dependency is flickering. We need it for a menu-item. So
@@ -1224,13 +1228,14 @@
               <usedDependency>org.postgresql:postgresql</usedDependency>
               <usedDependency>com.mysql:mysql-connector-j</usedDependency>
               <!-- Logging - used via reflection / optional -->
+              <usedDependency>org.springframework.boot:spring-boot-starter-liquibase</usedDependency>
               <usedDependency>com.mattbertolini:liquibase-slf4j</usedDependency>
               <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-slf4j2-impl</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-layout-template-json</usedDependency>
               <!-- Monitoring - used via reflection / optional -->
-              <usedDependency>io.sentry:sentry-spring-boot-starter-jakarta</usedDependency>
+              <usedDependency>io.sentry:sentry-spring-boot-4</usedDependency>
               <usedDependency>io.sentry:sentry-log4j2</usedDependency>
               <!-- Themes -->
               <usedDependency>org.wicketstuff:wicketstuff-kendo-ui-theme-bootstrap</usedDependency>
@@ -1250,7 +1255,7 @@
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Other -->
               <usedDependency>info.picocli:picocli-spring-boot-starter</usedDependency>
-              <usedDependency>com.fasterxml.jackson.module:jackson-module-kotlin</usedDependency>
+              <!-- <usedDependency>com.fasterxml.jackson.module:jackson-module-kotlin</usedDependency> -->
             </usedDependencies>
           </configuration>
         </plugin>

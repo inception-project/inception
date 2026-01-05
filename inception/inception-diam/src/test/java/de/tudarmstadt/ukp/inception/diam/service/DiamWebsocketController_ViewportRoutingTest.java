@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_E
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.io.IOUtils.toInputStream;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
@@ -60,8 +61,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.web.SecurityFilterChain;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
@@ -78,6 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfigurati
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.diam.messages.MViewportInit;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -101,6 +101,7 @@ import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 import jakarta.persistence.EntityManager;
+import tools.jackson.databind.node.JsonNodeFactory;
 
 @SpringBootTest( //
         webEnvironment = RANDOM_PORT, //
@@ -216,11 +217,17 @@ public class DiamWebsocketController_ViewportRoutingTest
                 var client2 = new WebSocketStompTestClient(USER, PASS)) {
             client1.expectSuccessfulConnection().connect(websocketUrl);
             client1.subscribe("/topic" + vpd1.getTopic());
-            client1.expect(new MViewportUpdate(0, 0, null)).subscribe("/app" + vpd1.getTopic());
+            client1.expect(MViewportInit.class, msg -> {
+                assertThat(msg.getText()).contains("test. This");
+            });
+            client1.subscribe("/app" + vpd1.getTopic());
 
             client2.expectSuccessfulConnection().connect(websocketUrl);
             client2.subscribe("/topic" + vpd2.getTopic());
-            client2.expect(new MViewportUpdate(0, 0, null)).subscribe("/app" + vpd2.getTopic());
+            client2.expect(MViewportInit.class, msg -> {
+                assertThat(msg.getText()).contains(". This is ");
+            });
+            client2.subscribe("/app" + vpd2.getTopic());
 
             client1.expect(new MViewportUpdate(12, 15, emptyListNode))
                     .expect(new MViewportUpdate(15, 35, emptyListNode));
@@ -240,7 +247,9 @@ public class DiamWebsocketController_ViewportRoutingTest
     public static class WebsocketBrokerTestConfig
     {
         @Bean
-        public AuthenticationEventPublisher authenticationEventPublisher(ApplicationEventPublisher publisher) {
+        public AuthenticationEventPublisher authenticationEventPublisher(
+                ApplicationEventPublisher publisher)
+        {
             return new DefaultAuthenticationEventPublisher(publisher);
         }
 

@@ -49,7 +49,7 @@ import org.springframework.security.core.session.SessionRegistry;
 
 import com.knuddels.jtokkit.api.Encoding;
 import com.knuddels.jtokkit.api.EncodingRegistry;
-import com.networknt.schema.JsonSchema;
+import com.networknt.schema.Schema;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -91,7 +91,7 @@ public class AssistantServiceImpl
     private static final ClientSidePreferenceKey<ClientSidePreferenceMapValue> KEY_ASSISTANT_PREFS = //
             new ClientSidePreferenceKey<>(ClientSidePreferenceMapValue.class, "assistant/general");
 
-    private WatchedResourceFile<JsonSchema> userPreferencesSchema;
+    private WatchedResourceFile<Schema> userPreferencesSchema;
 
     public AssistantServiceImpl(SessionRegistry aSessionRegistry,
             SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
@@ -478,7 +478,7 @@ public class AssistantServiceImpl
     }
 
     @Override
-    public Optional<JsonSchema> getUserPreferencesSchema() throws IOException
+    public Optional<Schema> getUserPreferencesSchema() throws IOException
     {
         return userPreferencesSchema.get();
     }

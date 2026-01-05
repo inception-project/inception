@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonGenerator;
 
 public class BratConfiguration
 {
@@ -166,28 +166,28 @@ public class BratConfiguration
     {
         aJG.writeStartObject();
 
-        aJG.writeFieldName("entity_types");
+        aJG.writeName("entity_types");
         aJG.writeStartArray();
         for (BratTextAnnotationDecl decl : entities.values()) {
             aJG.writeStartObject();
-            aJG.writeStringField("type", decl.getType());
+            aJG.writeStringProperty("type", decl.getType());
             writeLabelAndStyle(aJG, decl);
             aJG.writeEndObject();
         }
         aJG.writeEndArray();
 
-        aJG.writeFieldName("entity_attribute_types");
+        aJG.writeName("entity_attribute_types");
         aJG.writeStartArray();
         for (BratAttributeDecl decl : attributes.values()) {
             aJG.writeStartObject();
-            aJG.writeStringField("type", decl.getName());
-            aJG.writeFieldName("values");
+            aJG.writeStringProperty("type", decl.getName());
+            aJG.writeName("values");
             aJG.writeStartArray();
             aJG.writeStartObject();
             for (String value : decl.getValues()) {
-                aJG.writeFieldName(value);
+                aJG.writeName(value);
                 aJG.writeStartObject();
-                aJG.writeStringField("glyph", value);
+                aJG.writeStringProperty("glyph", value);
                 aJG.writeEndObject();
             }
             aJG.writeEndObject();
@@ -196,18 +196,18 @@ public class BratConfiguration
         }
         aJG.writeEndArray();
 
-        aJG.writeFieldName("relation_types");
+        aJG.writeName("relation_types");
         aJG.writeStartArray();
         for (BratRelationAnnotationDecl decl : relations.values()) {
             aJG.writeStartObject();
-            aJG.writeStringField("type", decl.getType());
-            aJG.writeFieldName("args");
+            aJG.writeStringProperty("type", decl.getType());
+            aJG.writeName("args");
             aJG.writeStartArray();
 
             // Arg 1
             aJG.writeStartObject();
-            aJG.writeStringField("role", decl.getArg1Label());
-            aJG.writeFieldName("targets");
+            aJG.writeStringProperty("role", decl.getArg1Label());
+            aJG.writeName("targets");
             aJG.writeStartArray();
             aJG.writeString(decl.getArg1Range());
             aJG.writeEndArray();
@@ -215,8 +215,8 @@ public class BratConfiguration
 
             // Arg 2
             aJG.writeStartObject();
-            aJG.writeStringField("role", decl.getArg2Label());
-            aJG.writeFieldName("targets");
+            aJG.writeStringProperty("role", decl.getArg2Label());
+            aJG.writeName("targets");
             aJG.writeStartArray();
             aJG.writeString(decl.getArg2Range());
             aJG.writeEndArray();
@@ -228,17 +228,17 @@ public class BratConfiguration
         }
         aJG.writeEndArray();
 
-        aJG.writeFieldName("event_types");
+        aJG.writeName("event_types");
         aJG.writeStartArray();
         for (BratEventAnnotationDecl decl : events.values()) {
             aJG.writeStartObject();
-            aJG.writeStringField("type", decl.getType());
+            aJG.writeStringProperty("type", decl.getType());
 
-            aJG.writeFieldName("arcs");
+            aJG.writeName("arcs");
             aJG.writeStartArray();
             for (BratEventArgumentDecl arg : decl.getSlots()) {
                 aJG.writeStartObject();
-                aJG.writeStringField("type", arg.getName());
+                aJG.writeStringProperty("type", arg.getName());
                 aJG.writeEndObject();
             }
             aJG.writeEndArray();

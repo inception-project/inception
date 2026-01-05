@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.pdfeditor2.visual.model;
 import java.io.Serializable;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize
 public class VModel

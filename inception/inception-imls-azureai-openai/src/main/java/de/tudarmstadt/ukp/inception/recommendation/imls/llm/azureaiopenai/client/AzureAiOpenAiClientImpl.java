@@ -32,9 +32,8 @@ import java.net.http.HttpResponse;
 
 import org.apache.commons.io.IOUtils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import tools.jackson.databind.ObjectMapper;
 
 public class AzureAiOpenAiClientImpl
     implements AzureAiOpenAiClient

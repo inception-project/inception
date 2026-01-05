@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.inception.diam.messages;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
+
+import tools.jackson.databind.JsonNode;
 
 public record MViewportUpdate(@JsonProperty("begin") int begin, @JsonProperty("end") int end,
         @JsonProperty("diff") JsonNode diff)

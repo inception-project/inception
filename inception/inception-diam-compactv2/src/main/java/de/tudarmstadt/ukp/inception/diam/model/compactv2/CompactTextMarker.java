@@ -22,9 +22,9 @@ import static java.util.Arrays.asList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize(using = BeanAsArraySerializer.class)
 @JsonPropertyOrder(value = { "type", "offsets" })

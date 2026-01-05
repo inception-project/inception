@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.elg.model;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import tools.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize
 @JsonIgnoreProperties(ignoreUnknown = true)

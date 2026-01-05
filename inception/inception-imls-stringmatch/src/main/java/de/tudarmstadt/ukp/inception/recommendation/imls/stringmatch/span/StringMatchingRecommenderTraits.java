@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import tools.jackson.databind.annotation.JsonSerialize;
 
 //The @JsonSerialize annotation avoid the "InvalidDefinitionException: No serializer found"
 //exception without having to set SerializationFeature.FAIL_ON_EMPTY_BEANS

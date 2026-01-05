@@ -24,8 +24,6 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecQuery;
@@ -34,6 +32,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.Promp
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
+import tools.jackson.databind.JsonNode;
 
 public sealed interface AnnotationTaskCodec
     extends Extension<AnnotationTaskCodecQuery>

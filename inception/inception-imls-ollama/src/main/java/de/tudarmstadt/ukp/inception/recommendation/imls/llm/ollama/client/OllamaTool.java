@@ -35,8 +35,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.victools.jsonschema.generator.Option;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
@@ -45,6 +43,9 @@ import com.github.victools.jsonschema.module.jackson.JacksonOption;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.Tool;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolUtils;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OllamaTool
@@ -144,7 +145,7 @@ public class OllamaTool
             getParameterDescription(param).ifPresent(
                     description -> propertySchema.put("description", description.strip()));
 
-            parameters.addProperty(paramName, propertySchema) //
+            parameters.addProperty(paramName, JSONUtil.adaptJackson2To3(propertySchema)) //
                     .addRequired(paramName);
         }
 

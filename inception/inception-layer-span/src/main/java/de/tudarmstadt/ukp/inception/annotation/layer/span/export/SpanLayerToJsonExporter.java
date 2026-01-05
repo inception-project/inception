@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.annotation.layer.span.export;
 
 import static java.util.Comparator.comparing;
+import static tools.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -27,8 +28,6 @@ import java.util.Map;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.springframework.http.MediaType;
-
-import com.fasterxml.jackson.core.JsonFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -41,6 +40,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporter_ImplBase;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import tools.jackson.databind.json.JsonMapper;
 
 public class SpanLayerToJsonExporter
     extends CrossDocumentExporter_ImplBase
@@ -76,12 +76,14 @@ public class SpanLayerToJsonExporter
 
         var featureName = aFeature != null ? aFeature.getName() : null;
 
-        var jsonFactory = new JsonFactory();
+        var mapper = JsonMapper.builder() //
+                .enable(INDENT_OUTPUT) //
+                .build();
 
         var adapter = schemaService.getAdapter(aLayer);
 
-        try (var jg = jsonFactory.createGenerator(CloseShieldOutputStream.wrap(aOut))) {
-            jg.useDefaultPrettyPrinter();
+        try (var jg = mapper.createGenerator(CloseShieldOutputStream.wrap(aOut))) {
+            // jg.setPrettyPrinter(new DefaultPrettyPrinter());
 
             jg.writeStartArray();
 
@@ -98,14 +100,14 @@ public class SpanLayerToJsonExporter
 
                         for (var ann : cas.<Annotation> select(adapter.getAnnotationTypeName())) {
                             jg.writeStartObject();
-                            jg.writeStringField("doc", doc.getName());
-                            jg.writeStringField("user", dataOwner.id());
-                            jg.writeNumberField("begin", ann.getBegin());
-                            jg.writeNumberField("end", ann.getEnd());
-                            jg.writeStringField("text", ann.getCoveredText());
+                            jg.writeStringProperty("doc", doc.getName());
+                            jg.writeStringProperty("user", dataOwner.id());
+                            jg.writeNumberProperty("begin", ann.getBegin());
+                            jg.writeNumberProperty("end", ann.getEnd());
+                            jg.writeStringProperty("text", ann.getCoveredText());
                             if (featureName != null) {
                                 var label = adapter.renderFeatureValue(ann, featureName);
-                                jg.writeStringField("label", label);
+                                jg.writeStringProperty("label", label);
                             }
                             jg.writeEndObject();
                         }

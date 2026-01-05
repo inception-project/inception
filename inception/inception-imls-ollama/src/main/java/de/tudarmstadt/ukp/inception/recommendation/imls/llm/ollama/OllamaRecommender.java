@@ -29,8 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPoint;
@@ -41,6 +39,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.Ollama
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.JsonNodeFactory;
 
 public class OllamaRecommender
     extends ChatBasedLlmRecommenderImplBase<OllamaRecommenderTraits>

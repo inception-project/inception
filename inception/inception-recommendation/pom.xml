@@ -293,11 +293,10 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
 
-    <dependency>
+   <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-annotationeventdispatcher</artifactId>
@@ -374,6 +373,12 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-testing</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

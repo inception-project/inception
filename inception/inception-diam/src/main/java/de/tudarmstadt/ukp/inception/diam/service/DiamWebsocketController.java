@@ -48,8 +48,7 @@ import org.springframework.util.PropertyPlaceholderHelper;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.flipkart.zjsonpatch.JsonDiff;
+import com.flipkart.zjsonpatch.Jackson3JsonDiff;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
@@ -78,6 +77,7 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import jakarta.persistence.NoResultException;
 import jakarta.servlet.ServletContext;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Differential INCEpTION Annotation Messaging (DIAM) protocol controller.
@@ -325,14 +325,14 @@ public class DiamWebsocketController
 
     private void sendUpdate(AnnotationDocument aDoc)
     {
-        sendUpdate(aDoc.getDocument().getProject().getId(), aDoc.getDocument().getId(), aDoc.getUser(), 0,
-                MAX_VALUE);
+        sendUpdate(aDoc.getDocument().getProject().getId(), aDoc.getDocument().getId(),
+                aDoc.getUser(), 0, MAX_VALUE);
     }
 
     void sendUpdate(AnnotationDocument aDoc, int aUpdateBegin, int aUpdateEnd)
     {
-        sendUpdate(aDoc.getDocument().getProject().getId(), aDoc.getDocument().getId(), aDoc.getUser(),
-                aUpdateBegin, aUpdateEnd);
+        sendUpdate(aDoc.getDocument().getProject().getId(), aDoc.getDocument().getId(),
+                aDoc.getUser(), aUpdateBegin, aUpdateEnd);
     }
 
     private void sendUpdate(long aProjectId, long aDocumentId, String aUser, int aUpdateBegin,
@@ -354,11 +354,9 @@ public class DiamWebsocketController
             var newJson = render(project, vpd.getDocumentId(), vpd.getUser(), vpd.getBegin(),
                     vpd.getEnd(), vpd.getFormat());
 
-            var diff = JsonDiff.asJson(vps.getJson(), newJson);
+            var diff = Jackson3JsonDiff.asJson(vps.getJson(), newJson);
 
             vps.setJson(newJson);
-
-            var debug = diff.toPrettyString();
 
             msgTemplate.convertAndSend("/topic" + vpd.getTopic(),
                     new MViewportUpdate(aUpdateBegin, aUpdateEnd, diff));

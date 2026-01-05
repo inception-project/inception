@@ -24,9 +24,9 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize(using = BeanAsArraySerializer.class)
 @JsonPropertyOrder(value = { "dir", "x", "y", "w", "h", "glyphs" })

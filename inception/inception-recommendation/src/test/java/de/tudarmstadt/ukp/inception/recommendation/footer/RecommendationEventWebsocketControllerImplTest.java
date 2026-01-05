@@ -77,6 +77,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.test.websocket.WebSocketStompTestClient;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
+import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest( //
@@ -88,6 +89,7 @@ import jakarta.persistence.EntityManager;
                 "websocket.recommender-events.enabled=true" })
 @SpringBootApplication( //
         exclude = { //
+                WorkloadManagementAutoConfiguration.class, //
                 SearchServiceAutoConfiguration.class })
 @ImportAutoConfiguration({ //
         CasDoctorAutoConfiguration.class, //
@@ -161,7 +163,7 @@ class RecommendationEventWebsocketControllerImplTest
     @Test
     void thatSubscriptionWithoutProjectPermissionIsRejected() throws Exception
     {
-        projectService.revokeRole(project, user, MANAGER);
+        projectService.revokeAllRoles(project, user);
 
         var channel = "/topic" + RecommendationEventWebsocketControllerImpl.getChannel(project,
                 user.getUsername());
@@ -169,8 +171,8 @@ class RecommendationEventWebsocketControllerImplTest
         try (var client = new WebSocketStompTestClient(USER, PASS)) {
             client.expectSuccessfulConnection().connect(websocketUrl);
             client.expectError(
-                    "Failed to send message to ExecutorSubscribableChannel[clientInboundChannel]")
-                    .subscribe(channel);
+                    "Failed to send message to ExecutorSubscribableChannel[clientInboundChannel]");
+            client.subscribe(channel);
         }
     }
 
@@ -184,8 +186,8 @@ class RecommendationEventWebsocketControllerImplTest
         try (var client = new WebSocketStompTestClient(USER, PASS)) {
             client.expectSuccessfulConnection().connect(websocketUrl);
             client.expectError(
-                    "Failed to send message to ExecutorSubscribableChannel[clientInboundChannel]")
-                    .subscribe(channel);
+                    "Failed to send message to ExecutorSubscribableChannel[clientInboundChannel]");
+            client.subscribe(channel);
         }
     }
 
