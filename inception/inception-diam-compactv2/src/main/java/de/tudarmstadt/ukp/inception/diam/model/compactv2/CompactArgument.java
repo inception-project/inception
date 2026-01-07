@@ -18,10 +18,10 @@
 package de.tudarmstadt.ukp.inception.diam.model.compactv2;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
  * The Arguments used during arc annotation in the form of [["Arg1","p_21346"],["Arg2","p_21341"]]

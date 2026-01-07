@@ -23,8 +23,10 @@ import static org.apache.commons.lang3.StringUtils.removeStart;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(Include.NON_DEFAULT)
+@JsonPropertyOrder({ "l", "c", "cm", "s" })
 public class CompactSpanAttributes
     extends CompactAnnotationAttributes
 {

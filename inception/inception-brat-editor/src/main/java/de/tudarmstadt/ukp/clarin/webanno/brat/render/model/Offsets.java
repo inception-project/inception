@@ -17,21 +17,20 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
 
-import static com.fasterxml.jackson.core.JsonToken.END_ARRAY;
-import static com.fasterxml.jackson.core.JsonToken.START_ARRAY;
-import static com.fasterxml.jackson.core.JsonToken.VALUE_NUMBER_INT;
+import static tools.jackson.core.JsonToken.END_ARRAY;
+import static tools.jackson.core.JsonToken.START_ARRAY;
+import static tools.jackson.core.JsonToken.VALUE_NUMBER_INT;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
  * The start and End offset positions of a span annotation as required by the Brat protocol
@@ -93,14 +92,14 @@ public class Offsets
      *
      */
     public static class OffsetsDeserializer
-        extends JsonDeserializer<Offsets>
+        extends ValueDeserializer<Offsets>
     {
         @Override
-        public Offsets deserialize(JsonParser aJp, DeserializationContext aCtxt) throws IOException
+        public Offsets deserialize(JsonParser aJp, DeserializationContext aCtxt)
         {
             Offsets offsets = new Offsets();
 
-            if (aJp.getCurrentToken() != START_ARRAY) {
+            if (aJp.currentToken() != START_ARRAY) {
                 aCtxt.reportWrongTokenException(this, START_ARRAY, "Expecting array begin");
             }
 
@@ -120,7 +119,7 @@ public class Offsets
                         "Expecting end offset as integer");
             }
 
-            if (aJp.getCurrentToken() != END_ARRAY) {
+            if (aJp.currentToken() != END_ARRAY) {
                 aCtxt.reportWrongTokenException(this, END_ARRAY, "Expecting array end");
             }
 

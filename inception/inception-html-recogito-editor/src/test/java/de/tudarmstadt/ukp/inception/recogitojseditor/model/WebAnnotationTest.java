@@ -36,6 +36,6 @@ public class WebAnnotationTest
         var parsed = JSONUtil.fromJsonString(WebAnnotations.class, expected);
         var actual = JSONUtil.toPrettyJsonString(parsed);
 
-        assertThat(actual).isEqualTo(expected);
+        assertThat(actual).isEqualToNormalizingNewlines(expected);
     }
 }

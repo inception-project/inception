@@ -71,19 +71,19 @@ public class FeatureValueUpdatedEventAdapterTest
         loggedEvent.setId(1l);
         loggedEvent.setCreated(Date.from(Instant.ofEpochMilli(1234567l)));
 
-        ExportedLoggedEvent exportedEvent = ExportedLoggedEvent.fromLoggedEvent(doc.getName(),
-                loggedEvent);
+        var exportedEvent = ExportedLoggedEvent.fromLoggedEvent(doc.getName(), loggedEvent);
 
         // @formatter:off
-        assertThat(toPrettyJsonString(exportedEvent)).isEqualTo("{\n"
-                + "  \"annotator\" : \"user\",\n"
-                + "  \"created\" : 1234567,\n"
-                + "  \"details\" : {\"feature\":\"value\",\"value\":\"new-value\",\"previousValue\":\"old-value\",\"annotation\":{\"addr\":2,\"begin\":0,\"end\":10,\"type\":\"customType\"}},\n"
-                + "  \"document_name\" : \"document name\",\n"
-                + "  \"event\" : \"FeatureValueUpdatedEvent\",\n"
-                + "  \"id\" : 1,\n"
-                + "  \"user\" : \"<SYSTEM>\"\n"
-                + "}");
+        assertThat(toPrettyJsonString(exportedEvent)).isEqualToNormalizingNewlines("""
+            {
+              "annotator" : "user",
+              "created" : 1234567,
+              "details" : {"feature":"value","value":"new-value","previousValue":"old-value","annotation":{"addr":2,"begin":0,"end":10,"type":"customType"}},
+              "document_name" : "document name",
+              "event" : "FeatureValueUpdatedEvent",
+              "id" : 1,
+              "user" : "<SYSTEM>"
+            }""");
         // @formatter:on
     }
 }

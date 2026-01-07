@@ -26,9 +26,8 @@
   <artifactId>inception-api-diam</artifactId>
   <name>INCEpTION - DIAM - API</name>
   <dependencies>
-    <dependency>
+   <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-    </dependency>
-  </dependencies>
+    </dependency>  </dependencies>
 </project>

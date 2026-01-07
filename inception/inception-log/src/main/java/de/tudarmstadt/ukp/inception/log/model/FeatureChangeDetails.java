@@ -24,10 +24,12 @@ import org.apache.uima.cas.FeatureStructure;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 @JsonInclude(Include.NON_NULL)
+@JsonPropertyOrder({ "feature", "value", "previousValue", "annotation" })
 public class FeatureChangeDetails
 {
     private AnnotationDetails ann;

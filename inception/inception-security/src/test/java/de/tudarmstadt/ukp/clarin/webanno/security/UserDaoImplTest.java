@@ -34,9 +34,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 
@@ -49,7 +49,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
                 "spring.main.banner-mode=off" })
 @EnableAutoConfiguration
 @ImportAutoConfiguration( //
-        exclude = { LiquibaseAutoConfiguration.class }, //
         classes = { SecurityAutoConfiguration.class })
 @EntityScan({ //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
@@ -58,6 +57,9 @@ class UserDaoImplTest
 {
     @Autowired
     SecurityPropertiesImpl securityProperties;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @Autowired
     UserDaoImpl userDao;

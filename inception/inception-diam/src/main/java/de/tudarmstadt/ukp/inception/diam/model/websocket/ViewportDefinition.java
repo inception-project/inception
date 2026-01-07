@@ -112,7 +112,7 @@ public class ViewportDefinition
 
     public String getTopic()
     {
-        Properties properties = new Properties();
+        var properties = new Properties();
         properties.setProperty(WebSocketConstants.PARAM_PROJECT, String.valueOf(projectId));
         properties.setProperty(WebSocketConstants.PARAM_DOCUMENT, String.valueOf(documentId));
         properties.setProperty(WebSocketConstants.PARAM_USER, user);

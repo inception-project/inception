@@ -71,7 +71,7 @@ public class CompactSerializerV2Impl
     @Override
     public CompactAnnotatedText render(VDocument aVDoc, RenderRequest aRequest)
     {
-        CompactAnnotatedText aResponse = new CompactAnnotatedText();
+        var aResponse = new CompactAnnotatedText();
 
         aResponse.setWindow(new CompactRange(aVDoc.getWindowBegin(), aVDoc.getWindowEnd()));
 

@@ -91,7 +91,7 @@ public class CompactSerializerV2ImplTest
         var cdoc = sut.render(vdoc, req);
         var actual = JSONUtil.toPrettyJsonString(cdoc);
 
-        assertThat(actual)
-                .isEqualTo(contentOf(getClass().getResource("/compactv2/reference.json")));
+        assertThat(actual).isEqualToNormalizingNewlines(
+                contentOf(getClass().getResource("/compactv2/reference.json")));
     }
 }

@@ -48,7 +48,7 @@ import org.apache.wicket.request.Url;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.security.core.session.SessionRegistry;
 import org.wicketstuff.event.annotation.OnEvent;
 

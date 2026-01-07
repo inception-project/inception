@@ -68,9 +68,8 @@
       <artifactId>uimaj-core</artifactId>
     </dependency>
     
-    <dependency>
+   <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-    </dependency>
-  </dependencies>
+    </dependency>  </dependencies>
 </project>

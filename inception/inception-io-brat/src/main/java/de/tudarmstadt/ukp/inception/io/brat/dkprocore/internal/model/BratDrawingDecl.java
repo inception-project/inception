@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model;
 
 import java.io.IOException;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonGenerator;
 
 public abstract class BratDrawingDecl
 {

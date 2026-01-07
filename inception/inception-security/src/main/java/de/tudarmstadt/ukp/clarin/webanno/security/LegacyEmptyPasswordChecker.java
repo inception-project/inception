@@ -15,26 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.elg.model;
+package de.tudarmstadt.ukp.clarin.webanno.security;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import tools.jackson.databind.annotation.JsonSerialize;
+/**
+ * Since Spring 7, the AbstractValidatingPasswordEncoder.matches fails directly if the raw password
+ * to match against is empty. But we may still have legacy encoded empty passwords in the DB we need
+ * to detect.
+ */
 
-@JsonSerialize
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ElgUserInfoResponse
+class LegacyEmptyPasswordChecker
+    extends BCryptPasswordEncoder
 {
-    private @JsonProperty("preferred_username") String preferredUsername;
+    private static final LegacyEmptyPasswordChecker INSTANCE = new LegacyEmptyPasswordChecker();
 
-    public String getPreferredUsername()
+    public static boolean isEmptyOrNull(String aEncodedPassword)
     {
-        return preferredUsername;
-    }
+        if (aEncodedPassword == null) {
+            return true;
+        }
 
-    public void setPreferredUsername(String aPreferredUsername)
-    {
-        preferredUsername = aPreferredUsername;
+        return INSTANCE.matchesNonNull("", aEncodedPassword);
     }
 }

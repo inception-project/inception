@@ -29,7 +29,7 @@
   <properties>
     <maven.surefire.heap>6g</maven.surefire.heap>
     <maven.surefire.argLine>-XX:+EnableDynamicAgentLoading</maven.surefire.argLine>
-    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.release>21</maven.compiler.release>
     <maven.compiler.target>${maven.compiler.release}</maven.compiler.target>
     <maven.compiler.source>${maven.compiler.release}</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
@@ -86,11 +86,6 @@
       <!-- Add json logger for Logstash -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-layout-template-json</artifactId>
-    </dependency>
-    <dependency>
-      <!-- Route Java Commons Logging over SLF4J -->
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-jcl</artifactId>
     </dependency>
     
     <!-- Dev aids -->
@@ -479,7 +474,6 @@
             <dependency>org.slf4j:log4j-over-slf4j</dependency>
             <dependency>org.slf4j:jul-to-slf4j</dependency>
             <dependency>commons-logging:commons-logging</dependency>
-            <dependency>org.springframework:spring-jcl</dependency>
             <!--
               - JAXB is used via reflection and cannot be detected by Maven
             -->
@@ -559,9 +553,9 @@
                 </requireJavaVersion>
                 <bannedDependencies>
                   <excludes>
-                    <exclude>commons-logging:commons-logging</exclude>
-                    <exclude>commons-logging:commons-logging-api</exclude>
                     <exclude>org.slf4j:jcl-over-slf4j</exclude>
+                    <!-- Liquibase >= 5 has an incompatible non-OSS license -->
+                    <exclude>org.liquibase:liquibase-core:[5.0.0,)</exclude>
                   </excludes>
                 </bannedDependencies>
               </rules>

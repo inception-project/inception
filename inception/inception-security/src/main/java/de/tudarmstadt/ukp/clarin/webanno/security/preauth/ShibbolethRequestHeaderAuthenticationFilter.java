@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security.preauth;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.NO_PASSWORD;
 import static java.util.stream.Collectors.joining;
 
 import java.lang.invoke.MethodHandles;
@@ -45,7 +45,7 @@ public class ShibbolethRequestHeaderAuthenticationFilter
     {
         var u = new User();
         u.setUsername(aUsername);
-        u.setPassword(EMPTY_PASSWORD);
+        u.setPassword(NO_PASSWORD);
         u.setEnabled(true);
         u.setRealm(Realm.REALM_PREAUTH);
         u.setRoles(PreAuthUtils.getPreAuthenticationNewUserRoles(u));

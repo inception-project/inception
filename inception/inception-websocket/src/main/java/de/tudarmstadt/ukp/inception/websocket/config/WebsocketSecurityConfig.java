@@ -26,7 +26,6 @@ import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.T
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_USER;
 import static org.springframework.messaging.simp.SimpMessageType.DISCONNECT;
-import static org.springframework.messaging.simp.SimpMessageType.SUBSCRIBE;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -53,11 +52,11 @@ public class WebsocketSecurityConfig
             MessageMatcherDelegatingAuthorizationManager.Builder messages,
             ExtensiblePermissionEvaluator aEval, ApplicationContext aContext)
     {
-        final var annotationEditorTopic = "/**" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}"
+        final var annotationEditorTopic = "/*" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}"
                 + TOPIC_ELEMENT_DOCUMENT + "{" + PARAM_DOCUMENT + "}" + TOPIC_ELEMENT_USER + "{"
                 + PARAM_USER + "}/**";
 
-        final var recommenderEventsTopic = "/**" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}"
+        final var recommenderEventsTopic = "/*" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}"
                 + TOPIC_ELEMENT_USER + "{" + PARAM_USER + "}/**";
 
         var msgSecurityExpressionHandler = new DefaultMessageSecurityExpressionHandler();
@@ -87,8 +86,6 @@ public class WebsocketSecurityConfig
                         + "@userAccess.isUser(#" + PARAM_USER + ")"))
             .simpDestMatchers("/*/assistant" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}")
                 .access(expression(mah, "@projectAccess.canAccessProject(#" + PARAM_PROJECT + ")"))
-            // authenticated users can subscribe
-            .simpTypeMatchers(SUBSCRIBE).authenticated()
             // authenticated clients can send messages
             .simpMessageDestMatchers(annotationEditorTopic)
                 .access(expression(mah, "@documentAccess.canEditAnnotationDocument(#" + PARAM_PROJECT + 

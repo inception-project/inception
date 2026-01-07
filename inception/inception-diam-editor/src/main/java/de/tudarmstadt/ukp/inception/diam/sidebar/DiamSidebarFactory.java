@@ -23,7 +23,7 @@ import java.util.Optional;
 import org.apache.wicket.model.IModel;
 import org.springframework.core.annotation.Order;
 
-import com.networknt.schema.JsonSchema;
+import com.networknt.schema.Schema;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
@@ -54,7 +54,7 @@ public class DiamSidebarFactory
     private static final ClientSidePreferenceKey<ClientSidePreferenceMapValue> KEY_ANNOTATION_BROWSER_SIDEBAR_PREFS = //
             new ClientSidePreferenceKey<>(ClientSidePreferenceMapValue.class,
                     "annotation/annotation-browser-sidebar");
-    private WatchedResourceFile<JsonSchema> userPreferencesSchema;
+    private WatchedResourceFile<Schema> userPreferencesSchema;
 
     public DiamSidebarFactory()
     {
@@ -98,7 +98,7 @@ public class DiamSidebarFactory
     }
 
     @Override
-    public Optional<JsonSchema> getUserPreferencesSchema() throws IOException
+    public Optional<Schema> getUserPreferencesSchema() throws IOException
     {
         return userPreferencesSchema.get();
     }

@@ -93,7 +93,7 @@ public class PubAnnotationProviderTest
 
         // System.out.println(data);
 
-        assertThat(data).startsWith(
-                "[{\"text\":\"Resistance to IL-10 inhibition of interferon gamma production");
+        assertThat(data).contains(
+                "\"text\" : \"Resistance to IL-10 inhibition of interferon gamma production");
     }
 }

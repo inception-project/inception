@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.display.model;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
@@ -33,18 +33,16 @@ public class EntityTest
     @Test
     public void toJsonTest() throws IOException
     {
-        String json = JSONUtil.toPrettyJsonString(
+        var json = JSONUtil.toPrettyJsonString(
                 new Entity(new VID(1, 2), "type", new Offsets(1, 2), "label", "color", true));
 
         // @formatter:off
-        assertEquals(
-                String.join("\n",
-                        "[ \"1.2\", \"type\", [ [ 1, 2 ] ], {",
-                        "  \"l\" : \"label\",",
-                        "  \"c\" : \"color\",",
-                        "  \"a\" : 1",
-                        "} ]"),
-                json);
+        assertThat(json).isEqualToIgnoringNewLines("""
+                    [ "1.2", "type", [ [ 1, 2 ] ], {
+                      "l" : "label",
+                      "c" : "color",
+                      "a" : 1
+                    } ]""");
         // @formatter:on
     }
 }

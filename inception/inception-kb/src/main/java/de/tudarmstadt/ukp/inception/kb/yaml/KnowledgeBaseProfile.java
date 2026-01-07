@@ -29,13 +29,13 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 public class KnowledgeBaseProfile
     implements Serializable
@@ -265,7 +265,9 @@ public class KnowledgeBaseProfile
         try (var r = new InputStreamReader(
                 KnowledgeBaseProfile.class.getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML),
                 UTF_8)) {
-            var mapper = new ObjectMapper(new YAMLFactory());
+            var mapper =  YAMLMapper.builder() //
+                .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES) //
+                .build();
             return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
             {
             });
