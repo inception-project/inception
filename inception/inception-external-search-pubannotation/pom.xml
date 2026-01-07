@@ -112,21 +112,20 @@
       <artifactId>wicket-spring</artifactId>
     </dependency>
 
-    <dependency>
+   <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
+    </dependency>    <dependency>
+      <groupId>tools.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
+      <groupId>tools.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <groupId>tools.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-xml</artifactId>
     </dependency>
 
@@ -148,7 +147,7 @@
               <!--
                - Test dependencies used via auto-configuration and reflection
                -->
-              <ignoredDependency>com.fasterxml.jackson.dataformat:jackson-dataformat-xml</ignoredDependency>
+              <ignoredDependency>tools.jackson.dataformat:jackson-dataformat-xml</ignoredDependency>
             </ignoredDependencies>
           </configuration>
         </plugin>

@@ -38,7 +38,10 @@ public interface UserDao
 
     static final String ADMIN_DEFAULT_USERNAME = "admin";
 
+    @Deprecated
     static final String EMPTY_PASSWORD = "";
+
+    static final String NO_PASSWORD = null;
 
     User getCurrentUser();
 
@@ -196,8 +199,6 @@ public interface UserDao
 
     List<ValidationError> validateUiName(String aName);
 
-    boolean userHasNoPassword(User aUser);
-
     /**
      * Users that are bound to a project (i.e. the realm is set) or which are external users (i.e.
      * they have an empty password) cannot change their password.
@@ -213,4 +214,14 @@ public interface UserDao
     boolean isEmpty();
 
     boolean isAdminAccountRecoveryMode();
+
+    static boolean userHasNoPassword(User aUser)
+    {
+        return isNoOrEmptyPassword(aUser.getPassword());
+    }
+
+    static boolean isNoOrEmptyPassword(String aPassword)
+    {
+        return LegacyEmptyPasswordChecker.isEmptyOrNull(aPassword);
+    }
 }

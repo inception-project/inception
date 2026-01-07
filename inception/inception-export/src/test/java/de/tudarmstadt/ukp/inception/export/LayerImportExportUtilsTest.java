@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,8 +33,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -50,7 +49,6 @@ class LayerImportExportUtilsTest
     private @Mock AnnotationSchemaService annotationService;
 
     private Project project;
-    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp()
@@ -59,8 +57,6 @@ class LayerImportExportUtilsTest
                 .withId(1L) //
                 .withName("Test Project") //
                 .build();
-
-        objectMapper = new ObjectMapper();
     }
 
     @Test
@@ -76,7 +72,7 @@ class LayerImportExportUtilsTest
         var json = LayerImportExportUtils.exportLayersToJson(annotationService,
                 asList(layer1, layer2, layer3));
 
-        var exportedLayers = objectMapper.readValue(json, ExportedAnnotationLayer[].class);
+        var exportedLayers = fromJsonString(ExportedAnnotationLayer[].class, json);
         assertThat(exportedLayers).hasSize(3);
         assertThat(exportedLayers).extracting(ExportedAnnotationLayer::getName)
                 .containsExactlyInAnyOrder("Layer1", "Layer2", "Layer3");
@@ -94,7 +90,7 @@ class LayerImportExportUtilsTest
         var json = LayerImportExportUtils.exportLayersToJson(annotationService,
                 asList(relationLayer));
 
-        var exportedLayers = objectMapper.readValue(json, ExportedAnnotationLayer[].class);
+        var exportedLayers = fromJsonString(ExportedAnnotationLayer[].class, json);
         assertThat(exportedLayers).hasSize(2);
         assertThat(exportedLayers).extracting(ExportedAnnotationLayer::getName)
                 .containsExactlyInAnyOrder("RelationLayer", "AttachLayer");
@@ -119,7 +115,7 @@ class LayerImportExportUtilsTest
         var json = LayerImportExportUtils.exportLayersToJson(annotationService,
                 asList(relationLayer1, relationLayer2));
 
-        var exportedLayers = objectMapper.readValue(json, ExportedAnnotationLayer[].class);
+        var exportedLayers = fromJsonString(ExportedAnnotationLayer[].class, json);
         // Should export 3 layers total: 2 relation layers + 1 shared attach layer
         assertThat(exportedLayers).hasSize(3);
         assertThat(exportedLayers).extracting(ExportedAnnotationLayer::getName)
@@ -140,7 +136,7 @@ class LayerImportExportUtilsTest
         var json = LayerImportExportUtils.exportLayersToJson(annotationService,
                 asList(sourceLayer));
 
-        var exportedLayers = objectMapper.readValue(json, ExportedAnnotationLayer[].class);
+        var exportedLayers = fromJsonString(ExportedAnnotationLayer[].class, json);
         assertThat(exportedLayers).hasSize(2);
         assertThat(exportedLayers).extracting(ExportedAnnotationLayer::getName)
                 .containsExactlyInAnyOrder("SourceLayer", "TargetLayer");
@@ -165,7 +161,7 @@ class LayerImportExportUtilsTest
         var json = LayerImportExportUtils.exportLayersToJson(annotationService,
                 asList(sourceLayer1, sourceLayer2));
 
-        var exportedLayers = objectMapper.readValue(json, ExportedAnnotationLayer[].class);
+        var exportedLayers = fromJsonString(ExportedAnnotationLayer[].class, json);
         // Should export 3 layers total: 2 source layers + 1 shared target layer
         assertThat(exportedLayers).hasSize(3);
         assertThat(exportedLayers).extracting(ExportedAnnotationLayer::getName)
@@ -188,7 +184,7 @@ class LayerImportExportUtilsTest
 
         var json = LayerImportExportUtils.exportLayersToJson(annotationService, asList(layer1));
 
-        var exportedLayers = objectMapper.readValue(json, ExportedAnnotationLayer[].class);
+        var exportedLayers = fromJsonString(ExportedAnnotationLayer[].class, json);
         // Should export all 3 layers following the dependency chain
         assertThat(exportedLayers).hasSize(3);
         assertThat(exportedLayers).extracting(ExportedAnnotationLayer::getName)
@@ -206,7 +202,7 @@ class LayerImportExportUtilsTest
 
         var json = LayerImportExportUtils.exportLayersToJson(annotationService, asList(layer));
 
-        var exportedLayers = objectMapper.readValue(json, ExportedAnnotationLayer[].class);
+        var exportedLayers = fromJsonString(ExportedAnnotationLayer[].class, json);
         // Should only export Layer1, not try to export the generic annotation type
         assertThat(exportedLayers).hasSize(1);
         assertThat(exportedLayers).extracting(ExportedAnnotationLayer::getName)
@@ -227,7 +223,7 @@ class LayerImportExportUtilsTest
         // Should not throw exception, just log warning
         var json = LayerImportExportUtils.exportLayersToJson(annotationService, asList(layer));
 
-        var exportedLayers = objectMapper.readValue(json, ExportedAnnotationLayer[].class);
+        var exportedLayers = fromJsonString(ExportedAnnotationLayer[].class, json);
         assertThat(exportedLayers).hasSize(1);
         assertThat(exportedLayers).extracting(ExportedAnnotationLayer::getName)
                 .containsExactly("Layer1");
@@ -238,7 +234,7 @@ class LayerImportExportUtilsTest
     {
         var json = LayerImportExportUtils.exportLayersToJson(annotationService, List.of());
 
-        var exportedLayers = objectMapper.readValue(json, ExportedAnnotationLayer[].class);
+        var exportedLayers = fromJsonString(ExportedAnnotationLayer[].class, json);
         assertThat(exportedLayers).isEmpty();
     }
 
@@ -255,7 +251,7 @@ class LayerImportExportUtilsTest
         var json = LayerImportExportUtils.exportLayersToJson(annotationService,
                 asList(builtInLayer, customLayer));
 
-        var exportedLayers = objectMapper.readValue(json, ExportedAnnotationLayer[].class);
+        var exportedLayers = fromJsonString(ExportedAnnotationLayer[].class, json);
         assertThat(exportedLayers).hasSize(2);
         assertThat(exportedLayers).extracting(ExportedAnnotationLayer::getName)
                 .containsExactlyInAnyOrder("Token", "CustomLayer");

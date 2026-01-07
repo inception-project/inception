@@ -18,10 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize(using = BeanAsArraySerializer.class)
 @JsonPropertyOrder(value = { "vid", "commentType", "comment" })

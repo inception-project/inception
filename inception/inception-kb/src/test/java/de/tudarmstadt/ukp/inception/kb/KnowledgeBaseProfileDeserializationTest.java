@@ -28,15 +28,14 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseAccess;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 public class KnowledgeBaseProfileDeserializationTest
 {
@@ -66,7 +65,9 @@ public class KnowledgeBaseProfileDeserializationTest
         Map<String, KnowledgeBaseProfile> profiles;
         try (var r = new InputStreamReader(
                 resolver.getResource(KNOWLEDGEBASE_TEST_PROFILES_YAML).getInputStream())) {
-            var mapper = new ObjectMapper(new YAMLFactory());
+                var mapper =  YAMLMapper.builder() //
+                    .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES) //
+                    .build();
             profiles = mapper.readValue(r,
                     new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
                     {

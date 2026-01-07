@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.support.json;
 
-import static com.fasterxml.jackson.databind.DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE;
 import static java.util.stream.Collectors.toList;
 
 import java.io.File;
@@ -29,32 +28,62 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.SerializableString;
-import com.fasterxml.jackson.core.io.CharacterEscapes;
-import com.fasterxml.jackson.core.io.SerializedString;
-import com.fasterxml.jackson.core.util.DefaultIndenter;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersion;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.dialect.Dialects;
 
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import tools.jackson.core.SerializableString;
+import tools.jackson.core.io.CharacterEscapes;
+import tools.jackson.core.io.SerializedString;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.cfg.DateTimeFeature;
+import tools.jackson.databind.cfg.EnumFeature;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 public class JSONUtil
 {
-    private static final ObjectMapper OBJECT_MAPPER;
+    private static final ObjectMapper JSON_MAPPER;
 
     static {
-        OBJECT_MAPPER = new ObjectMapper();
-        OBJECT_MAPPER.registerModule(new JavaTimeModule());
-        // Used mainly by traits e.g. when switching from a string to a number trait or back where
-        // the editortype property has different ranges
-        OBJECT_MAPPER.configure(READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE, true);
+        JSON_MAPPER = JsonMapper.builder() //
+                .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS) //
+                // .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY) //
+                .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES) //
+                .enable(EnumFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE) //
+                .disable(EnumFeature.READ_ENUMS_USING_TO_STRING) //
+                .disable(EnumFeature.WRITE_ENUMS_USING_TO_STRING) //
+                .enable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS) //
+                .build();
+    }
 
+    private static final JsonMapper J3_MAPPER = JsonMapper.builder().build();
+    private static final com.fasterxml.jackson.databind.ObjectMapper J2_MAPPER = new com.fasterxml.jackson.databind.ObjectMapper();
+
+    public static com.fasterxml.jackson.databind.JsonNode adaptJackson3To2(JsonNode aNode)
+    {
+        try {
+            var json = J3_MAPPER.writeValueAsString(aNode);
+            return J2_MAPPER.readTree(json);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Conversion failed", e);
+        }
+    }
+
+    public static ObjectNode adaptJackson2To3(com.fasterxml.jackson.databind.JsonNode aNode)
+    {
+        try {
+            var json = J2_MAPPER.writeValueAsString(aNode);
+            return (ObjectNode) J3_MAPPER.readTree(json);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Conversion failed", e);
+        }
     }
 
     /**
@@ -93,18 +122,10 @@ public class JSONUtil
     public static String toJsonString(ObjectMapper aMapper, boolean aPretty, Object aObject)
         throws IOException
     {
-        var out = new StringWriter();
-
-        var jsonGenerator = aMapper.getFactory().createGenerator(out);
-
         if (aPretty) {
-            jsonGenerator.setPrettyPrinter(new DefaultPrettyPrinter() //
-                    .withObjectIndenter(new DefaultIndenter() //
-                            .withLinefeed("\n")));
+            return aMapper.writerWithDefaultPrettyPrinter().writeValueAsString(aObject);
         }
-
-        jsonGenerator.writeObject(aObject);
-        return out.toString();
+        return aMapper.writeValueAsString(aObject);
     }
 
     public static <T> T fromJsonString(Class<T> aClass, String aJSON) throws IOException
@@ -116,7 +137,7 @@ public class JSONUtil
         return getObjectMapper().readValue(aJSON, aClass);
     }
 
-    public static <T> T fromValidatedJsonString(Class<T> aClass, String aJSON, JsonSchema aSchema)
+    public static <T> T fromValidatedJsonString(Class<T> aClass, String aJSON, Schema aSchema)
         throws IOException
     {
         if (aJSON == null) {
@@ -125,10 +146,10 @@ public class JSONUtil
 
         var mapper = getObjectMapper();
         var jsonNode = mapper.readTree(aJSON);
-        var result = aSchema.validateAndCollect(jsonNode);
-        if (!result.getValidationMessages().isEmpty()) {
-            throw new IOException("JSON does not match JSON schema: "
-                    + result.getValidationMessages().iterator().next().getMessage());
+        var errors = aSchema.validate(jsonNode);
+        if (!errors.isEmpty()) {
+            throw new IOException(
+                    "JSON does not match JSON schema: " + errors.iterator().next().getMessage());
         }
 
         return mapper.treeToValue(jsonNode, aClass);
@@ -146,31 +167,32 @@ public class JSONUtil
 
     public static ObjectMapper getObjectMapper()
     {
-        return OBJECT_MAPPER;
+        return JSON_MAPPER;
     }
 
     public static String toInterpretableJsonString(Object aObject) throws IOException
     {
-        StringWriter out = new StringWriter();
-        JsonGenerator jsonGenerator = JSONUtil.getObjectMapper().getFactory().createGenerator(out);
-        jsonGenerator.setCharacterEscapes(JavaScriptCharacterEscapes.get());
-        jsonGenerator.writeObject(aObject);
+        var out = new StringWriter();
+        try (var jsonGenerator = JSONUtil.getObjectMapper().createGenerator(out)) {
+            jsonGenerator.setCharacterEscapes(JavaScriptCharacterEscapes.get());
+            jsonGenerator.writePOJO(aObject);
+        }
         return out.toString();
     }
 
     public static String toInterpretableJsonString(JsonNode aTree) throws IOException
     {
-        StringWriter out = new StringWriter();
-        JsonGenerator jsonGenerator = JSONUtil.getObjectMapper().getFactory().createGenerator(out);
-        jsonGenerator.setCharacterEscapes(JavaScriptCharacterEscapes.get());
-        jsonGenerator.writeTree(aTree);
+        var out = new StringWriter();
+        try (var jsonGenerator = JSONUtil.getObjectMapper().createGenerator(out)) {
+            jsonGenerator.setCharacterEscapes(JavaScriptCharacterEscapes.get());
+            jsonGenerator.writeTree(aTree);
+        }
         return out.toString();
     }
 
-    public static JsonSchema loadJsonSchema(InputStream aSource)
+    public static Schema loadJsonSchema(InputStream aSource)
     {
-        var factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
-        return factory.getSchema(aSource);
+        return SchemaRegistry.withDialect(Dialects.getDraft202012()).getSchema(aSource);
     }
 
     public static List<LogMessage> validateJsonString(URL aSchemaUrl, String aJsonString)

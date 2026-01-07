@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model;
 
 import java.io.IOException;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonGenerator;
 
 public class BratTextAnnotationDrawingDecl
     extends BratDrawingDecl
@@ -60,9 +60,9 @@ public class BratTextAnnotationDrawingDecl
     @Override
     public void write(JsonGenerator aJG) throws IOException
     {
-        aJG.writeStringField("fgColor", getFgColor());
-        aJG.writeStringField("bgColor", getBgColor());
-        aJG.writeStringField("borderColor", getBorderColor());
+        aJG.writeStringProperty("fgColor", getFgColor());
+        aJG.writeStringProperty("bgColor", getBgColor());
+        aJG.writeStringProperty("borderColor", getBorderColor());
     }
 
     @Override

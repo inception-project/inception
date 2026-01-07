@@ -31,7 +31,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
+import org.springframework.security.saml2.provider.service.authentication.OpenSaml5AuthenticationProvider;
 import org.springframework.security.saml2.provider.service.metadata.OpenSaml5MetadataResolver;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.web.DefaultRelyingPartyRegistrationResolver;
@@ -111,8 +111,8 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
                 saml2.loginPage("/login.html");
 
                 // Configure the authentication provider
-                var authProvider = new OpenSaml4AuthenticationProvider();
-                var converter = OpenSaml4AuthenticationProvider
+                var authProvider = new OpenSaml5AuthenticationProvider();
+                var converter = OpenSaml5AuthenticationProvider
                         .createDefaultResponseAuthenticationConverter();
                 authProvider.setResponseAuthenticationConverter(token -> {
                     var authentication = converter.convert(token);

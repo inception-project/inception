@@ -35,10 +35,12 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -61,7 +63,6 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl
 @EnableWebSecurity
 @EnableAutoConfiguration( //
         exclude = { //
-                LiquibaseAutoConfiguration.class, //
                 SearchServiceAutoConfiguration.class })
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //
@@ -143,6 +144,10 @@ public class AeroAnnotationControllerTest
     @SpringBootConfiguration
     static class TestContext
     {
-        // All handled by auto-config
+        @Bean
+        AuthenticationEventPublisher authenticationEventPublisher()
+        {
+            return new DefaultAuthenticationEventPublisher();
+        }
     }
 }

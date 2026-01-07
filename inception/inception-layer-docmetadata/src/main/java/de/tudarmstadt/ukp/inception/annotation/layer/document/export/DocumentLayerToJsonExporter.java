@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.annotation.layer.document.export;
 
 import static java.util.Comparator.comparing;
+import static tools.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -26,8 +27,6 @@ import java.util.Map;
 
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.springframework.http.MediaType;
-
-import com.fasterxml.jackson.core.JsonFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -40,6 +39,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetada
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporter_ImplBase;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import tools.jackson.databind.json.JsonMapper;
 
 public class DocumentLayerToJsonExporter
     extends CrossDocumentExporter_ImplBase
@@ -75,12 +75,13 @@ public class DocumentLayerToJsonExporter
 
         var featureName = aFeature != null ? aFeature.getName() : null;
 
-        var jsonFactory = new JsonFactory();
+        var jsonFactory = JsonMapper.builder() //
+                .enable(INDENT_OUTPUT) //
+                .build();
 
         var adapter = schemaService.getAdapter(aLayer);
 
         try (var jg = jsonFactory.createGenerator(CloseShieldOutputStream.wrap(aOut))) {
-            jg.useDefaultPrettyPrinter();
 
             jg.writeStartArray();
 
@@ -97,12 +98,12 @@ public class DocumentLayerToJsonExporter
 
                         for (var ann : cas.select(adapter.getAnnotationTypeName())) {
                             jg.writeStartObject();
-                            jg.writeStringField("doc", doc.getName());
-                            jg.writeStringField("user", dataOwner.id());
+                            jg.writeStringProperty("doc", doc.getName());
+                            jg.writeStringProperty("user", dataOwner.id());
 
                             if (featureName != null) {
                                 var label = adapter.renderFeatureValue(ann, featureName);
-                                jg.writeStringField("label", label);
+                                jg.writeStringProperty("label", label);
                             }
 
                             jg.writeEndObject();

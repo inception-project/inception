@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>34</version>
+    <version>35</version>
   </parent>
 
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -72,37 +72,37 @@
 
   <properties>
     <build-ant-version>1.10.15</build-ant-version>
-    <build-groovy-version>4.0.29</build-groovy-version>
+    <build-groovy-version>5.0.3</build-groovy-version>
 
-    <junit.version>6.0.1</junit.version>
-    <mockito.version>5.20.0</mockito.version>
+    <junit.version>6.0.2</junit.version>
+    <mockito.version>5.21.0</mockito.version>
     <assertj.version>3.27.6</assertj.version>
     <xmlunit.version>2.11.0</xmlunit.version>
-    <testcontainers.version>1.21.3</testcontainers.version>
+    <testcontainers.version>1.21.4</testcontainers.version>
 
     <awaitility.version>4.3.0</awaitility.version>
 
-    <dkpro.version>2.5.0</dkpro.version>
+    <dkpro.version>3.0.0-beta-1</dkpro.version>
     <uima.version>3.6.1</uima.version>
     <uima-json.version>0.5.0</uima-json.version>
 
     <pdfbox.version>3.0.5</pdfbox.version>
 
-    <spring.version>6.2.14</spring.version>
-    <spring.boot.version>3.5.8</spring.boot.version>
-    <spring.data.version>3.5.6</spring.data.version>
-    <spring.security.version>6.5.7</spring.security.version>
-    <springdoc.version>2.8.14</springdoc.version>
+    <spring.version>7.0.2</spring.version>
+    <spring.boot.version>4.0.1</spring.boot.version>
+    <spring.data.version>4.0.1</spring.data.version>
+    <spring.security.version>7.0.2</spring.security.version>
+    <springdoc.version>3.0.0</springdoc.version>
     <swagger.version>2.2.41</swagger.version>
     <jjwt.version>0.13.0</jjwt.version>
 
     <slf4j.version>2.0.17</slf4j.version>
     <log4j2.version>2.25.3</log4j2.version>
     <jboss.logging.version>3.6.1.Final</jboss.logging.version>
-    <sentry.version>8.27.1</sentry.version>
+    <sentry.version>8.29.0</sentry.version>
 
     <tomcat.version>10.1.48</tomcat.version>
-    <jetty.version>12.1.4</jetty.version>
+    <jetty.version>12.1.5</jetty.version>
     <servlet-api.version>6.0.0</servlet-api.version>
 
     <mariadb.driver.version>3.5.6</mariadb.driver.version>
@@ -138,6 +138,7 @@
     <ant-version>1.10.15</ant-version>
     <json.version>20240303</json.version>
     <jackson.version>2.20.1</jackson.version>
+    <jackson3.version>3.0.3</jackson3.version>
     <httpclient5.version>5.4.3</httpclient5.version>
     <snakeyaml.version>2.5</snakeyaml.version>
     <okhttp.version>5.3.2</okhttp.version>
@@ -167,11 +168,11 @@
     <owasp-java-html-sanitizer.version>20220608.1</owasp-java-html-sanitizer.version>
     <jinjava.version>2.8.2</jinjava.version>
     <fastutil.version>8.5.18</fastutil.version>
-    <zjsonpatch.version>0.4.16</zjsonpatch.version>
+    <zjsonpatch.version>0.6.2</zjsonpatch.version>
     <picocli.version>4.7.7</picocli.version>
     <woodstox-core.version>6.7.0</woodstox-core.version>
-    <nimbus-jose-jwt.version>10.0.2</nimbus-jose-jwt.version>
-    <json-schema-validator.version>1.5.9</json-schema-validator.version>
+    <nimbus-jose-jwt.version>10.6</nimbus-jose-jwt.version>
+    <json-schema-validator.version>3.0.0</json-schema-validator.version>
     <json-schema-generator.version>4.38.0</json-schema-generator.version>
     <jgit.version>6.10.1.202505221210-r</jgit.version>
     <javax.activation-api-version>1.2.0</javax.activation-api-version>
@@ -187,7 +188,7 @@
     <matomo-java-tracker-core-version>3.4.0</matomo-java-tracker-core-version>
     <mime4j.version>0.8.13</mime4j.version>
     <hsqldb.version>2.7.4</hsqldb.version>
-    <opensaml.version>4.3.2</opensaml.version>
+    <opensaml.version>5.1.6</opensaml.version>
     <oauth2-oidc-sdk.version>9.43.6</oauth2-oidc-sdk.version>
     <javassist.version>3.30.2-GA</javassist.version>
     <openjson.version>1.0.13</openjson.version>

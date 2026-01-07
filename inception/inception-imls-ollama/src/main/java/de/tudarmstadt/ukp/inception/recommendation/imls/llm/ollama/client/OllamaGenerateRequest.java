@@ -27,9 +27,9 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.JsonNode;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.Option;
+import tools.jackson.databind.JsonNode;
 
 public class OllamaGenerateRequest
 {

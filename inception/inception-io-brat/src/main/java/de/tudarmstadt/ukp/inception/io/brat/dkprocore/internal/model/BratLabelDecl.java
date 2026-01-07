@@ -21,7 +21,7 @@ import java.io.IOException;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonGenerator;
 
 public class BratLabelDecl
 {
@@ -47,7 +47,7 @@ public class BratLabelDecl
 
     public void write(JsonGenerator aJG) throws IOException
     {
-        aJG.writeFieldName("labels");
+        aJG.writeName("labels");
         aJG.writeStartArray();
         for (String label : labels) {
             aJG.writeString(label);

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.support.json;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collection;
 
@@ -26,14 +25,15 @@ import org.springframework.util.ReflectionUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.BeanProperty;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
-import com.fasterxml.jackson.databind.ser.ContainerSerializer;
-import com.fasterxml.jackson.databind.ser.std.AsArraySerializerBase;
+
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.BeanProperty;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueSerializer;
+import tools.jackson.databind.jsontype.TypeSerializer;
+import tools.jackson.databind.ser.std.AsArraySerializerBase;
+import tools.jackson.databind.ser.std.StdContainerSerializer;
 
 /**
  * Fallback serializer for cases where Collection is not known to be of type for which more
@@ -43,34 +43,31 @@ import com.fasterxml.jackson.databind.ser.std.AsArraySerializerBase;
 public class BeanAsArraySerializer
     extends AsArraySerializerBase<Object>
 {
-    private static final long serialVersionUID = -127555258771436639L;
-
     public BeanAsArraySerializer()
     {
         this(null, false, null, null, null);
     }
 
     public BeanAsArraySerializer(JavaType elemType, boolean staticTyping, TypeSerializer vts,
-            JsonSerializer<Object> valueSerializer)
+            ValueSerializer<Object> valueSerializer)
     {
         super(Collection.class, elemType, staticTyping, vts, valueSerializer);
     }
 
-    @SuppressWarnings("deprecation")
     public BeanAsArraySerializer(JavaType elemType, boolean staticTyping, TypeSerializer vts,
-            BeanProperty property, JsonSerializer<Object> valueSerializer)
+            BeanProperty property, ValueSerializer<Object> valueSerializer)
     {
-        super(Collection.class, elemType, staticTyping, vts, property, null);
+        super(Collection.class, elemType, staticTyping, vts, valueSerializer);
     }
 
     public BeanAsArraySerializer(BeanAsArraySerializer src, BeanProperty property,
-            TypeSerializer vts, JsonSerializer<?> valueSerializer, Boolean unwrapSingle)
+            TypeSerializer vts, ValueSerializer<?> valueSerializer, Boolean unwrapSingle)
     {
-        super(src, property, vts, valueSerializer, unwrapSingle);
+        super(src, vts, valueSerializer, unwrapSingle, property);
     }
 
     @Override
-    public ContainerSerializer<?> _withValueTypeSerializer(TypeSerializer vts)
+    public StdContainerSerializer<?> _withValueTypeSerializer(TypeSerializer vts)
     {
         return new BeanAsArraySerializer(_elementType, _staticTyping, vts, _property,
                 _elementSerializer);
@@ -78,7 +75,7 @@ public class BeanAsArraySerializer
 
     @Override
     public BeanAsArraySerializer withResolved(BeanProperty aProperty, TypeSerializer aVts,
-            JsonSerializer<?> aElementSerializer, Boolean aUnwrapSingle)
+            ValueSerializer<?> aElementSerializer, Boolean aUnwrapSingle)
     {
         return new BeanAsArraySerializer(this, aProperty, aVts, aElementSerializer, aUnwrapSingle);
     }
@@ -96,8 +93,27 @@ public class BeanAsArraySerializer
     }
 
     @Override
-    public void serializeContents(Object value, JsonGenerator jgen, SerializerProvider provider)
-        throws IOException
+    public boolean isEmpty(SerializationContext provider, Object value)
+    {
+        if (value == null) {
+            return true;
+        }
+        if (value.getClass().isArray()) {
+            return ((Object[]) value).length == 0;
+        }
+        return false;
+    }
+
+    @Override
+    public void serialize(Object value, JsonGenerator gen, SerializationContext provider)
+    {
+        gen.writeStartArray();
+        serializeContents(value, gen, provider);
+        gen.writeEndArray();
+    }
+
+    @Override
+    public void serializeContents(Object value, JsonGenerator jgen, SerializationContext provider)
     {
         JsonPropertyOrder order = value.getClass().getAnnotation(JsonPropertyOrder.class);
         String[] propOrder = (order == null) ? null : order.value();
@@ -121,12 +137,12 @@ public class BeanAsArraySerializer
                     boolean renderNull = (include == null) ? false
                             : include.value() == Include.ALWAYS;
                     if (renderNull) {
-                        provider.defaultSerializeNull(jgen);
+                        jgen.writeNull();
                     }
                 }
                 else {
                     Class<?> cc = elem.getClass();
-                    JsonSerializer<Object> serializer = provider.findValueSerializer(cc, null);
+                    ValueSerializer<Object> serializer = provider.findValueSerializer(cc);
                     serializer.serialize(elem, jgen, provider);
                 }
                 ++i;

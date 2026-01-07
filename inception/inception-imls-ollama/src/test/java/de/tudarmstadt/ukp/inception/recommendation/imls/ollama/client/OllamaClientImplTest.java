@@ -34,8 +34,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.Tool;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolParam;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatMessage;
@@ -50,6 +48,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.Ollama
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaTag;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaTool;
 import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
+import tools.jackson.databind.node.JsonNodeFactory;
 
 class OllamaClientImplTest
 {

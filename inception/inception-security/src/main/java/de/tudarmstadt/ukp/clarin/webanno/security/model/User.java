@@ -159,7 +159,7 @@ public class User
     {
         if (passwordEncoder == null) {
             var context = ApplicationContextProvider.getApplicationContext();
-            passwordEncoder = context.getBean("passwordEncoder", PasswordEncoder.class);
+            passwordEncoder = context.getBean(PasswordEncoder.class);
         }
         return passwordEncoder;
     }

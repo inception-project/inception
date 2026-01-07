@@ -28,8 +28,6 @@ import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.springframework.http.MediaType;
 
-import com.fasterxml.jackson.core.JsonFactory;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -42,6 +40,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerS
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporter_ImplBase;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import tools.jackson.core.json.JsonFactory;
 
 public class RelationLayerToJsonExporter
     extends CrossDocumentExporter_ImplBase
@@ -82,7 +81,6 @@ public class RelationLayerToJsonExporter
         var adapter = (RelationAdapter) schemaService.getAdapter(aLayer);
 
         try (var jg = jsonFactory.createGenerator(CloseShieldOutputStream.wrap(aOut))) {
-            jg.useDefaultPrettyPrinter();
 
             jg.writeStartArray();
 
@@ -103,27 +101,27 @@ public class RelationLayerToJsonExporter
                             var target = adapter.getTargetAnnotation(ann);
 
                             jg.writeStartObject();
-                            jg.writeStringField("doc", doc.getName());
-                            jg.writeStringField("user", dataOwner.id());
+                            jg.writeStringProperty("doc", doc.getName());
+                            jg.writeStringProperty("user", dataOwner.id());
 
                             if (featureName != null) {
                                 var label = adapter.renderFeatureValue(ann, featureName);
-                                jg.writeStringField("label", label);
+                                jg.writeStringProperty("label", label);
                             }
 
                             if (source != null) {
-                                jg.writeObjectFieldStart("source");
-                                jg.writeNumberField("begin", source.getBegin());
-                                jg.writeNumberField("end", source.getEnd());
-                                jg.writeStringField("text", source.getCoveredText());
+                                jg.writeStartObject("source");
+                                jg.writeNumberProperty("begin", source.getBegin());
+                                jg.writeNumberProperty("end", source.getEnd());
+                                jg.writeStringProperty("text", source.getCoveredText());
                                 jg.writeEndObject();
                             }
 
                             if (target != null) {
-                                jg.writeObjectFieldStart("target");
-                                jg.writeNumberField("begin", target.getBegin());
-                                jg.writeNumberField("end", target.getEnd());
-                                jg.writeStringField("text", target.getCoveredText());
+                                jg.writeStartObject("target");
+                                jg.writeNumberProperty("begin", target.getBegin());
+                                jg.writeNumberProperty("end", target.getEnd());
+                                jg.writeStringProperty("text", target.getCoveredText());
                                 jg.writeEndObject();
                             }
 

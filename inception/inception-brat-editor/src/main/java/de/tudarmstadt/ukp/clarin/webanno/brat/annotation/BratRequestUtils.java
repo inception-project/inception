@@ -26,10 +26,9 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.IRequestParameters;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import tools.jackson.databind.JsonNode;
 
 public class BratRequestUtils
 {

@@ -22,7 +22,7 @@ import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
 
-import com.networknt.schema.JsonSchema;
+import com.networknt.schema.Schema;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
@@ -52,7 +52,7 @@ public class RecogitoHtmlAnnotationEditorFactory
             new ClientSidePreferenceKey<>(ClientSidePreferenceMapValue.class,
                     "annotation/recogito-annotator-editor");
 
-    private WatchedResourceFile<JsonSchema> userPreferencesSchema;
+    private WatchedResourceFile<Schema> userPreferencesSchema;
 
     public RecogitoHtmlAnnotationEditorFactory()
     {
@@ -90,7 +90,7 @@ public class RecogitoHtmlAnnotationEditorFactory
     }
 
     @Override
-    public Optional<JsonSchema> getUserPreferencesSchema() throws IOException
+    public Optional<Schema> getUserPreferencesSchema() throws IOException
     {
         return userPreferencesSchema.get();
     }

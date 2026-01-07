@@ -36,8 +36,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
 /**
@@ -83,11 +81,11 @@ public class Project
     @Type(ScriptDirectionType.class)
     private ScriptDirection scriptDirection;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    // @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date created;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    // @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date updated;
 
@@ -95,7 +93,7 @@ public class Project
     @Type(ProjectStateType.class)
     private ProjectState state = ProjectState.NEW;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    // @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "state_updated", nullable = true)
     private Date stateUpdated = new Date();
 
