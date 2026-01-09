@@ -34,7 +34,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar
 import de.tudarmstadt.ukp.inception.diam.sidebar.config.AnnotationBrowserSidebarAutoConfiguration;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceKey;
-import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceMapValue;
 import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
@@ -51,8 +50,8 @@ public class DiamSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
     implements ClientSideUserPreferencesProvider
 {
-    private static final ClientSidePreferenceKey<ClientSidePreferenceMapValue> KEY_ANNOTATION_BROWSER_SIDEBAR_PREFS = //
-            new ClientSidePreferenceKey<>(ClientSidePreferenceMapValue.class,
+    private static final ClientSidePreferenceKey<DiamSidebarFactoryUserPreferences> KEY_ANNOTATION_BROWSER_SIDEBAR_PREFS = //
+            new ClientSidePreferenceKey<>(DiamSidebarFactoryUserPreferences.class,
                     "annotation/annotation-browser-sidebar");
     private WatchedResourceFile<Schema> userPreferencesSchema;
 
@@ -92,7 +91,7 @@ public class DiamSidebarFactory
 
     @SuppressWarnings({ "unchecked" })
     @Override
-    public Optional<ClientSidePreferenceKey<ClientSidePreferenceMapValue>> getUserPreferencesKey()
+    public Optional<ClientSidePreferenceKey<DiamSidebarFactoryUserPreferences>> getUserPreferencesKey()
     {
         return Optional.of(KEY_ANNOTATION_BROWSER_SIDEBAR_PREFS);
     }

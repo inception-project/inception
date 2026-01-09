@@ -25,6 +25,7 @@ import org.apache.wicket.model.IModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.preferences.BratAnnotationEditorManagerPrefPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.inception.diam.sidebar.preferences.DiamSidebarFactoryUserPrefsPanel;
 import de.tudarmstadt.ukp.inception.diam.sidebar.preferences.DiamSidebarManagerPrefPanel;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaForm;
@@ -41,6 +42,7 @@ public class AnnotationPreferencesProjectSettingsPanel
     private static final String CID_NAVIGATION_PREFS = "navigationPrefs";
     private static final String CID_BRAT_ANNOTATION_EDITOR_MANAGER_PREFS = "bratAnnotationEditorManagerPrefs";
     private static final String CID_DIAM_ANNOTATION_SIDEBAR_MANAGER_PREFS = "diamAnnotationSidebarManagerPrefs";
+    private static final String CID_DIAM_SIDEBAR_USER_PREFS = "diamSidebarUserPrefs";
     private static final String CID_ANNOTATION_SEARCH = "annotationSearch";
 
     public AnnotationPreferencesProjectSettingsPanel(String aId, IModel<Project> aProject)
@@ -53,6 +55,7 @@ public class AnnotationPreferencesProjectSettingsPanel
 
         queue(new DefaultAnnotationSidebarStatePanel(CID_ANNOTATION_SIDEBAR, aProject));
         queue(new DiamSidebarManagerPrefPanel(CID_DIAM_ANNOTATION_SIDEBAR_MANAGER_PREFS, aProject));
+        queue(new DiamSidebarFactoryUserPrefsPanel(CID_DIAM_SIDEBAR_USER_PREFS, aProject));
         queue(new AnnotationEditorManagerPrefsPanel(CID_ANNOTATION_EDITOR_MANAGER_PREFS, aProject));
         queue(new AnnotationNavigationUserPrefsPanel(CID_NAVIGATION_PREFS, aProject));
         queue(new BratAnnotationEditorManagerPrefPanel(CID_BRAT_ANNOTATION_EDITOR_MANAGER_PREFS,
