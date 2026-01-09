@@ -65,7 +65,7 @@ public class KnowledgeBaseProfileDeserializationTest
         Map<String, KnowledgeBaseProfile> profiles;
         try (var r = new InputStreamReader(
                 resolver.getResource(KNOWLEDGEBASE_TEST_PROFILES_YAML).getInputStream())) {
-                var mapper =  YAMLMapper.builder() //
+            var mapper = YAMLMapper.builder() //
                     .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES) //
                     .build();
             profiles = mapper.readValue(r,

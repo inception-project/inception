@@ -54,8 +54,7 @@ public class MessageExpressionAuthorizationManager
     }
 
     @Override
-    public AuthorizationResult authorize(
-            Supplier<? extends Authentication> aAuthentication,
+    public AuthorizationResult authorize(Supplier<? extends Authentication> aAuthentication,
             MessageAuthorizationContext<?> aObject)
     {
         var context = expressionHandler.createEvaluationContext(aAuthentication, aObject);
