@@ -519,13 +519,16 @@ public class SPARQLQueryBuilder
             forceDisableFTS.add("Wikidata property query");
         }
 
+        var langs = new LinkedHashSet<String>();
+
         var appCtx = ApplicationContextProvider.getApplicationContext();
         if (appCtx != null) {
             var props = appCtx.getBean(KnowledgeBaseProperties.class);
-            var langs = new LinkedHashSet<>(props.getDefaultFallbackLanguages());
-            langs.addAll(aKB.getAdditionalLanguages());
-            withFallbackLanguages(langs);
+            langs.addAll(props.getDefaultFallbackLanguages());
         }
+
+        langs.addAll(aKB.getAdditionalLanguages());
+        withFallbackLanguages(langs);
     }
 
     void addPattern(Priority aPriority, GraphPattern aPattern)
@@ -1439,8 +1442,6 @@ public class SPARQLQueryBuilder
     {
         var startTime = currentTimeMillis();
         var queryId = toHexString(hashCode());
-
-        limit(1);
 
         var queryString = selectQuery().getQueryString();
         LOG.trace("[{}] Query: {}", queryId, queryString);

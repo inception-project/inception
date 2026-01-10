@@ -48,7 +48,6 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
-import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
@@ -264,7 +263,7 @@ public class TestFixtures
         try (var conn = r.getConnection()) {
             var query = conn.prepareTupleQuery("SELECT ?v WHERE { BIND (true AS ?v)}");
             query.setMaxExecutionTime(5);
-            try (TupleQueryResult result = query.evaluate()) {
+            try (var result = query.evaluate()) {
                 return true;
             }
         }

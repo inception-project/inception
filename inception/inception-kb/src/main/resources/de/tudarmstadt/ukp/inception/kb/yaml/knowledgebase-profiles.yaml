@@ -92,7 +92,7 @@ db_pedia:
   type: REMOTE
   default-language: de
   access:
-    access-url: http://de.dbpedia.org/sparql
+    access-url: https://dbpedia.org/sparql
     full-text-search: bif:contains
   mapping:
     class: http://www.w3.org/2002/07/owl#Class
