@@ -1,0 +1,144 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_settings_keybindings]]
+= Keyboard shortcuts
+
+[IMPORTANT]
+====
+Keyboard shortcuts should always include modifier keys (kbd:[Ctrl], kbd:[Shift], kbd:[Alt]) to:
+
+* Work properly even when focus is in input fields (modifier keys prevent conflicts with normal typing)
+* Avoid conflicts with standard browser shortcuts (e.g., use kbd:[Ctrl + y] instead of just kbd:[y])
+====
+
+Keyboard shortcuts are specified as comma-separated key names (e.g., `Ctrl,z` for kbd:[Ctrl + Z]).
+Available key names include: 
+
+* Modifier keys: `Ctrl`, `Shift`, `Alt`, `Meta`;
+* Arrow keys: `Up`, `Down`, `Left`, `Right`;
+* Function keys: `F1` through `F12`;
+* Special keys: `Enter`, `Escape`, `Delete`, `Backspace`, `Tab`, `Space`, `Page_up`, `Page_down`, `Home`, `End`, `Insert`;
+* regular character keys: `a` through `z`, `zero` through `nine`.
+
+By default, most key bindings are active even if the focus is on an input field.
+However, if you e.g. want to bind some function e.g. to kbd:[Shift + 2], that could easily prevent you from `"` into e.g. the search field.
+Thus, you can disable individual key bindings while the focus is in an input field or text area:
+
+.Disable specific keyboard shortcuts when focus is in input field
+```
+ui.keybindings.anchoring-mode.singleToken.keys=Shift,two
+ui.keybindings.anchoring-mode.singleToken.disabled-in-inputs=true
+```
+
+.Settings related to keyboard shortcuts
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| ui.keybindings.navigation.nextPage.keys
+| Keyboard shortcut to navigate to the next page
+| `Page_down`
+| `Ctrl,Down`
+
+| ui.keybindings.navigation.previousPage.keys
+| Keyboard shortcut to navigate to the previous page
+| `Page_up`
+| `Ctrl,Up`
+
+| ui.keybindings.navigation.firstPage.keys
+| Keyboard shortcut to navigate to the first page
+| `Home`
+| `Ctrl,Home`
+
+| ui.keybindings.navigation.lastPage.keys
+| Keyboard shortcut to navigate to the last page
+| `End`
+| `Ctrl,End`
+
+| ui.keybindings.navigation.nextDocument.keys
+| Keyboard shortcut to navigate to the next document
+| `Shift,Page_down`
+| `Alt,Page_down`
+
+| ui.keybindings.navigation.previousDocument.keys
+| Keyboard shortcut to navigate to the previous document
+| `Shift,Page_up`
+| `Alt,Page_up`
+
+| ui.keybindings.navigation.nextAnnotation.keys
+| Keyboard shortcut to jump to the next annotation
+| `Shift,Right`
+| `Ctrl,Shift,n`
+
+| ui.keybindings.navigation.previousAnnotation.keys
+| Keyboard shortcut to jump to the previous annotation
+| `Shift,Left`
+| `Ctrl,Shift,p`
+
+| ui.keybindings.editing.undo.keys
+| Keyboard shortcut to undo the last annotation action
+| `Ctrl,z`
+| `Alt,Backspace`
+
+| ui.keybindings.editing.redo.keys
+| Keyboard shortcut to redo an undone annotation action
+| `Shift,Ctrl,z`
+| `Ctrl,y`
+
+| ui.keybindings.editing.deleteAnnotation.keys
+| Keyboard shortcut to delete the selected annotation
+| `Shift,Delete`
+| `Ctrl,d`
+
+| ui.keybindings.editing.clearSelection.keys
+| Keyboard shortcut to clear the annotation detail editor
+| `Shift,Escape`
+| `Ctrl,Escape`
+
+| ui.keybindings.editing.toggleSelection.keys
+| Keyboard shortcut to toggle selection mode
+| `Shift,Space`
+| `Alt,s`
+
+| ui.keybindings.anchoring-mode.characters.keys
+| Keyboard shortcut to switch to character-based selection mode
+| `Shift,one` (disabled in inputs)
+| `Alt,one`
+
+| ui.keybindings.anchoring-mode.singleToken.keys
+| Keyboard shortcut to switch to single token selection mode
+| `Shift,two` (disabled in inputs)
+| `Alt,two`
+
+| ui.keybindings.anchoring-mode.tokens.keys
+| Keyboard shortcut to switch to multi-token selection mode
+| `Shift,three` (disabled in inputs)
+| `Alt,three`
+
+| ui.keybindings.anchoring-mode.sentences.keys
+| Keyboard shortcut to switch to sentence selection mode
+| `Shift,four` (disabled in inputs)
+| `Alt,four`
+
+| ui.keybindings.dialog.closeDialog.keys
+| Keyboard shortcut to close the currently open dialog
+| `Escape`
+| `Ctrl,w`
+|===

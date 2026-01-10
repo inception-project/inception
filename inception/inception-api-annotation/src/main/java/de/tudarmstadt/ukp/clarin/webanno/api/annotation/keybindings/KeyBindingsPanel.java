@@ -119,16 +119,7 @@ public class KeyBindingsPanel
                         _target -> actionInvokeShortcut(_target, aItem.getModelObject()));
 
                 var keyCombo = aItem.getModelObject().asKeyTypes();
-                link.add(new InputBehavior(keyCombo, EventType.click)
-                {
-                    private static final long serialVersionUID = -413804179695231212L;
-
-                    @Override
-                    protected Boolean getDisable_in_input()
-                    {
-                        return true;
-                    }
-                });
+                link.add(new InputBehavior(keyCombo, EventType.click).setDisabledInInput(true));
 
                 aItem.add(new KeybindingLabel("keyCombo", aItem.getModel()));
 

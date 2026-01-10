@@ -112,7 +112,6 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import jakarta.persistence.NoResultException;
 
 /**
@@ -199,7 +198,7 @@ public abstract class AnnotationDetailEditorPanel
     private LambdaAjaxLink createNextAnnotationButton()
     {
         var link = new LambdaAjaxLink("nextAnnotation", this::actionNextAnnotation);
-        link.add(new InputBehavior(keyBindings.getNavigation().getNextAnnotation(), click));
+        link.add(keyBindings.getNavigation().getNextAnnotation().toInputBehavior(click));
         link.add(
                 AttributeModifier
                         .append("title",
@@ -213,7 +212,7 @@ public abstract class AnnotationDetailEditorPanel
     private LambdaAjaxLink createPreviousAnnotationButton()
     {
         var link = new LambdaAjaxLink("previousAnnotation", this::actionPreviousAnnotation);
-        link.add(new InputBehavior(keyBindings.getNavigation().getPreviousAnnotation(), click));
+        link.add(keyBindings.getNavigation().getPreviousAnnotation().toInputBehavior(click));
         link.add(
                 AttributeModifier.append("title",
                         () -> " ("
@@ -1380,7 +1379,7 @@ public abstract class AnnotationDetailEditorPanel
         link.setOutputMarkupPlaceholderTag(true);
         link.setAlwaysEnabled(true); // Not to be disabled when document is read-only
         link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
-        link.add(new InputBehavior(keyBindings.getEditing().getClearSelection(), click));
+        link.add(keyBindings.getEditing().getClearSelection().toInputBehavior(click));
         link.add(
                 AttributeModifier
                         .append("title",
@@ -1404,7 +1403,7 @@ public abstract class AnnotationDetailEditorPanel
                                     .equals(state.getSelectedAnnotationLayer().getType())
                             && editorPage.isEditable());
         }));
-        link.add(new InputBehavior(keyBindings.getEditing().getToggleSelection(), click));
+        link.add(keyBindings.getEditing().getToggleSelection().toInputBehavior(click));
         link.add(
                 AttributeModifier
                         .append("title",
@@ -1421,7 +1420,7 @@ public abstract class AnnotationDetailEditorPanel
         link.setOutputMarkupPlaceholderTag(true);
         link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
                 && editorPage.isEditable()));
-        link.add(new InputBehavior(keyBindings.getEditing().getDeleteAnnotation(), click));
+        link.add(keyBindings.getEditing().getDeleteAnnotation().toInputBehavior(click));
         link.add(
                 AttributeModifier
                         .append("title",
