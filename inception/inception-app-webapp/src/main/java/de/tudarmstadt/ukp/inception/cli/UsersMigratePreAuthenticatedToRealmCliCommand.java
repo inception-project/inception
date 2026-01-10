@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.cli;
 
 import static com.nimbusds.oauth2.sdk.util.CollectionUtils.contains;
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getPropApplicationHome;
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
@@ -109,8 +108,7 @@ public class UsersMigratePreAuthenticatedToRealmCliCommand
             // It could also be a user that was imported as part of a project import... we'll
             // take the risk and assume that in a pre-authenticated context, these are still
             // probably external users
-            if (user.getPassword() == null
-                    || passwordEncoder.matches(EMPTY_PASSWORD, user.getPassword())) {
+            if (UserDao.userHasNoPassword(user)) {
                 if (!dryRun) {
                     user.setRealm(Realm.REALM_PREAUTH);
                     userService.update(user);

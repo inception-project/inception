@@ -30,10 +30,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.FileSystemUtils;
 
@@ -47,7 +46,6 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 @DataJpaTest( //
         showSql = false, //
-        excludeAutoConfiguration = LiquibaseAutoConfiguration.class, //
         properties = { //
                 "spring.main.banner-mode=off", //
                 "repository.path=" + PreferencesServiceImplIntegrationTest.TEST_OUTPUT_FOLDER })

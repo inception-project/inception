@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
  * @param duration

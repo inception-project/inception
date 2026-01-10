@@ -34,8 +34,6 @@ import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
@@ -46,6 +44,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRe
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.uima.Range;
+import tools.jackson.databind.JsonNode;
 
 public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTraits>
     extends NonTrainableRecommenderEngineImplBase

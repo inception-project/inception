@@ -23,13 +23,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonRawValue;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
+import tools.jackson.databind.annotation.JsonDeserialize;
 
-@JsonPropertyOrder(alphabetic = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
 public class ExportedLoggedEvent

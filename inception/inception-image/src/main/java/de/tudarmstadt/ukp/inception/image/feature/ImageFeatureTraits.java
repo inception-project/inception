@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.image.feature;
 
 import java.io.Serializable;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
  * Traits for image features.

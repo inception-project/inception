@@ -21,10 +21,10 @@ import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.webresources.StandardRoot;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
-import org.springframework.boot.web.servlet.error.ErrorController;
+import org.springframework.boot.webmvc.error.ErrorController;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -110,7 +110,7 @@ public class InceptionApplicationContainerConfiguration
             ajpConnector.setProperty("secretRequired", ajpSecretRequired);
             ajpConnector.setProperty("secret", ajpSecret);
             ajpConnector.setProperty("address", ajpAddress);
-            factory.addAdditionalTomcatConnectors(ajpConnector);
+            factory.addAdditionalConnectors(ajpConnector);
         }
 
         return factory;

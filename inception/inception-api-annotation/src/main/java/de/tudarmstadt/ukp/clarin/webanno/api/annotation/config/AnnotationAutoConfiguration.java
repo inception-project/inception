@@ -48,7 +48,9 @@ import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 
 @Configuration
-@EnableConfigurationProperties(AnnotationEditorDefaultPreferencesPropertiesImpl.class)
+@EnableConfigurationProperties({ //
+        AnnotationEditorDefaultPreferencesPropertiesImpl.class, //
+        KeyBindingsPropertiesImpl.class })
 public class AnnotationAutoConfiguration
 {
     @Bean
@@ -108,5 +110,11 @@ public class AnnotationAutoConfiguration
             @Lazy @Autowired(required = false) List<ContextMenuItemExtension> aExtensions)
     {
         return new ContextMenuItemRegistryImpl(aExtensions);
+    }
+
+    @Bean
+    public StringToEnumArrayConverter stringToEnumArrayConverter()
+    {
+        return new StringToEnumArrayConverter();
     }
 }

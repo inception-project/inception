@@ -45,9 +45,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import tools.jackson.databind.ObjectMapper;
 
 public class OllamaClientImpl
     implements OllamaClient

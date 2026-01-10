@@ -121,7 +121,9 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
@@ -149,6 +151,7 @@ public class ActiveLearningSidebar
     private static final String CID_RECOMMENDED_DIFFERENCE = "recommendedDifference";
     private static final String CID_RECOMMENDED_SCORE = "recommendedScore";
     private static final String CID_RECOMMENDED_PREDITION = "recommendedPredition";
+    private static final String CID_RECOMMENDATION_DOCUMENT = "recommendationDocument";
     private static final String CID_RECOMMENDATION_FORM = "recommendationForm";
     private static final String CID_LEARN_SKIPPED_ONES = "learnSkippedOnes";
     private static final String CID_ONLY_SKIPPED_RECOMMENDATION_LABEL = "onlySkippedRecommendationLabel";
@@ -325,6 +328,14 @@ public class ActiveLearningSidebar
         form.add(new LambdaAjaxLink(CID_STOP_SESSION_BUTTON, this::actionStopSession)
                 .add(visibleWhen(() -> alStateModel.getObject().isSessionActive())));
 
+        var filterCheckbox = new org.apache.wicket.markup.html.form.CheckBox(
+                "filterByCurrentDocument", alStateModel.bind("filterByCurrentDocument"));
+        filterCheckbox.add(new LambdaAjaxFormComponentUpdatingBehavior(
+                HtmlElementEvents.CHANGE_EVENT, this::actionToggleDocumentFilter));
+        filterCheckbox.add(visibleWhen(() -> alStateModel.getObject().isSessionActive()));
+        filterCheckbox.setOutputMarkupPlaceholderTag(true);
+        form.add(filterCheckbox);
+
         return form;
     }
 
@@ -400,6 +411,19 @@ public class ActiveLearningSidebar
 
         aTarget.add(alMainContainer, sessionControlForm);
         annotationPage.actionRefreshDocument(aTarget);
+    }
+
+    private void actionToggleDocumentFilter(AjaxRequestTarget aTarget)
+    {
+        var alState = alStateModel.getObject();
+
+        // When filter is toggled, clear current suggestion and find a new one
+        alState.setCurrentDifference(Optional.empty());
+        clearActiveLearningHighlight();
+
+        moveToNextSuggestion(aTarget);
+
+        aTarget.add(alMainContainer);
     }
 
     private void setActiveLearningHighlight(SpanSuggestion aSuggestion)
@@ -515,6 +539,11 @@ public class ActiveLearningSidebar
         recommendationForm.setOutputMarkupPlaceholderTag(true);
 
         recommendationForm.add(createJumpToSuggestionLink());
+        recommendationForm.add(new Label(CID_RECOMMENDATION_DOCUMENT,
+                LoadableDetachableModel.of(() -> alStateModel.getObject().getSuggestion()
+                        .map(s -> documentService.getSourceDocument(
+                                getModelObject().getProject().getId(), s.getDocumentId()))
+                        .map(SourceDocument::getName).orElse(null))));
         recommendationForm.add(
                 new Label(CID_RECOMMENDED_PREDITION, LoadableDetachableModel.of(() -> alStateModel
                         .getObject().getSuggestion().map(this::formatLabel).orElse(null))));
@@ -788,8 +817,9 @@ public class ActiveLearningSidebar
 
         // Generate the next recommendation but remember the current one
         var currentSuggestion = alState.getSuggestion();
-        var nextSuggestion = activeLearningService
-                .generateNextSuggestion(sessionOwner.getUsername(), dataOwner, alState);
+        var currentDocumentId = state.getDocument() != null ? state.getDocument().getId() : null;
+        var nextSuggestion = activeLearningService.generateNextSuggestion(
+                sessionOwner.getUsername(), dataOwner, alState, currentDocumentId);
         alState.setCurrentDifference(nextSuggestion);
 
         // If there is no new suggestion, nothing left to do here
@@ -1435,6 +1465,13 @@ public class ActiveLearningSidebar
 
         // Make sure we know about the current suggestions and their visibility state
         refreshAvailableSuggestions();
+
+        // If filtering by current document, clear the current suggestion and find a new one
+        // for the newly opened document
+        if (alState.isFilterByCurrentDocument()) {
+            alState.setCurrentDifference(Optional.empty());
+            clearActiveLearningHighlight();
+        }
 
         // Maybe the prediction switch has made a new suggestion available for us to go to
         if (alState.getSuggestion().isEmpty()) {

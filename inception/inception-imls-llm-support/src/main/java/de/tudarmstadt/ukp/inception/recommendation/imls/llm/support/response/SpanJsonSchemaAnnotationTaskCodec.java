@@ -52,8 +52,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.victools.jsonschema.generator.Option;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
@@ -70,8 +68,11 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.text.Trie;
 import de.tudarmstadt.ukp.inception.support.text.WhitespaceNormalizingSanitizer;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 public final class SpanJsonSchemaAnnotationTaskCodec
     implements AnnotationTaskCodec
@@ -233,7 +234,9 @@ public final class SpanJsonSchemaAnnotationTaskCodec
 
         var generator = new SchemaGenerator(configBuilder.build());
 
-        return Optional.of(generator.generateSchema(MentionResult.class));
+        // Convert Jackson 2 ObjectNode (from jsonschema-generator) to Jackson 3 JsonNode
+        var j2Schema = generator.generateSchema(MentionResult.class);
+        return Optional.of(JSONUtil.adaptJackson2To3(j2Schema));
     }
 
     @Override

@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.service;
 
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 
 @SpringBootConfiguration
 @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.recommendation.api.model",

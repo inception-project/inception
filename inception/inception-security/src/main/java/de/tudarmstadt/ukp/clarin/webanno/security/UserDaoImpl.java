@@ -55,7 +55,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -748,16 +747,6 @@ public class UserDaoImpl
         return authentication != null ? authentication.getName() : null;
     }
 
-    // FIXME: Use DI to get password encoder
-    @Override
-    public boolean userHasNoPassword(User aUser)
-    {
-        var applicationContext = ApplicationContextProvider.getApplicationContext();
-        var passwordEncoder = applicationContext.getBean(PasswordEncoder.class);
-        return aUser.getPassword() == null
-                || passwordEncoder.matches(EMPTY_PASSWORD, aUser.getPassword());
-    }
-
     // FIXME: Use DI to get password encoder and environment
     @Override
     public boolean canChangePassword(User aUser)
@@ -769,9 +758,7 @@ public class UserDaoImpl
         // they would be able to log in via form-based login...
         if (ArrayUtils.contains(applicationContext.getEnvironment().getActiveProfiles(),
                 PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)) {
-            var passwordEncoder = applicationContext.getBean(PasswordEncoder.class);
-            if (aUser.getPassword() == null
-                    || passwordEncoder.matches(EMPTY_PASSWORD, aUser.getPassword())) {
+            if (UserDao.userHasNoPassword(aUser)) {
                 return false;
             }
         }

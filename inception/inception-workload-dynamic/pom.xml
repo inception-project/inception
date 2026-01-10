@@ -96,11 +96,10 @@
       <artifactId>jakarta.persistence-api</artifactId>
     </dependency>
 
-    <dependency>
+   <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
@@ -228,7 +227,12 @@
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-test-autoconfigure</artifactId>
+      <artifactId>spring-boot-jdbc-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-persistence</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -250,14 +254,8 @@
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-jpa</artifactId>
+      <artifactId>spring-boot-data-jpa-test</artifactId>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-starter-logging</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.hsqldb</groupId>

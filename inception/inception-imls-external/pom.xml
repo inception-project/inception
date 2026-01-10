@@ -105,15 +105,10 @@
       <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-    </dependency>
-    <dependency>
+   <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
     </dependency>
-
     <!-- LOGGING DEPENDENCIES - SLF4J -->
     <dependency>
       <groupId>org.slf4j</groupId>

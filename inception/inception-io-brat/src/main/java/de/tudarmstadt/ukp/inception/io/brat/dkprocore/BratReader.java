@@ -54,11 +54,6 @@ import org.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import org.dkpro.core.api.parameter.ComponentParameters;
 import org.dkpro.core.api.parameter.MimeTypes;
 
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.mapping.Mapping;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.mapping.RelationMapping;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.mapping.TypeMapping;
@@ -70,6 +65,8 @@ import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratEventAr
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratNoteAnnotation;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratRelationAnnotation;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratTextAnnotation;
+import tools.jackson.core.json.JsonReadFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Reader for the brat format.
@@ -116,13 +113,13 @@ public class BratReader
         super.initialize(aContext);
 
         if (mappingJson != null) {
-            var mapper = new ObjectMapper();
-            mapper.setDefaultSetterInfo(JsonSetter.Value.forContentNulls(Nulls.AS_EMPTY));
-            mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+            var mapper = JsonMapper.builder() //
+                    .enable(JsonReadFeature.ALLOW_SINGLE_QUOTES) //
+                    .build();
             try {
                 mapping = mapper.readValue(mappingJson, Mapping.class);
             }
-            catch (IOException e) {
+            catch (Exception e) {
                 throw new ResourceInitializationException(e);
             }
         }

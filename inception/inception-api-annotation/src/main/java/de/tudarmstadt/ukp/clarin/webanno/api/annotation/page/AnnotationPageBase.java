@@ -308,14 +308,30 @@ public abstract class AnnotationPageBase
             int aBegin, int aEnd)
         throws IOException
     {
+        actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd, null);
+    }
+
+    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            int aBegin, int aEnd, List<VRange> aAdditionalPingRanges)
+        throws IOException
+    {
         boolean switched = actionShowDocument(aTarget, aDocument);
 
         var state = getModelObject();
 
         var cas = getEditorCas();
         var range = rangeClippedToDocument(cas, aBegin, aEnd);
-        state.getPagingStrategy().moveToOffset(state, cas, aBegin,
-                new VRange(range.getBegin(), range.getEnd()), CENTERED);
+
+        // Always include the target range as a ping range
+        List<VRange> pingRanges = new ArrayList<>();
+        pingRanges.add(new VRange(range.getBegin(), range.getEnd()));
+
+        // Add any additional ping ranges if provided
+        if (aAdditionalPingRanges != null && !aAdditionalPingRanges.isEmpty()) {
+            pingRanges.addAll(aAdditionalPingRanges);
+        }
+
+        state.getPagingStrategy().moveToOffset(state, cas, aBegin, pingRanges, CENTERED);
 
         if (!switched && state.getPagingStrategy() instanceof NoPagingStrategy) {
             return;

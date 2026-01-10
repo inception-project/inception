@@ -22,7 +22,8 @@ import java.io.Serializable;
 import org.apache.uima.cas.FeatureStructure;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
  * Represents a link with a role in the UI.

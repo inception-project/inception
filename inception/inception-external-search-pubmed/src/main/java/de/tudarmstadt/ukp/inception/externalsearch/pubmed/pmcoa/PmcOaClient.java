@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.springframework.http.HttpMethod;
-import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.web.client.HttpClientErrorException.NotFound;
 import org.springframework.web.client.RestTemplate;
 
@@ -39,7 +39,7 @@ public class PmcOaClient
     public PmcOaClient()
     {
         restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters().add(new MappingJackson2XmlHttpMessageConverter());
+        restTemplate.getMessageConverters().add(new JacksonJsonHttpMessageConverter());
     }
 
     public byte[] bioc(PubMedProviderTraits aTraits, String aID) throws IOException

@@ -305,7 +305,7 @@ public class AgentLoop
                         .map(msg -> new OllamaChatMessage(msg.role(), msg.message(), msg.thinking(),
                                 msg.toolName())) //
                         .toList()) //
-                .withFormat(schema) //
+                .withFormat(JSONUtil.adaptJackson2To3(schema)) //
                 .withOption(OllamaOptions.NUM_CTX, chatProperties.getContextLength()) //
                 .withOption(OllamaOptions.TOP_P, chatProperties.getTopP()) //
                 .withOption(OllamaOptions.TOP_K, chatProperties.getTopK()) //

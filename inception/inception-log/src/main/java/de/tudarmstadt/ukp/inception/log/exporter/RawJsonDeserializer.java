@@ -17,13 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.log.exporter;
 
-import java.io.IOException;
-
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.ValueDeserializer;
 
 /**
  * @see <a href=
@@ -31,14 +27,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *      Deserializing JSON property as String with Jackson</a>
  */
 public class RawJsonDeserializer
-    extends JsonDeserializer<String>
+    extends ValueDeserializer<String>
 {
     @Override
     public String deserialize(JsonParser aParser, DeserializationContext aContext)
-        throws IOException, JsonProcessingException
     {
-        var mapper = (ObjectMapper) aParser.getCodec();
-        var node = mapper.readTree(aParser);
-        return mapper.writeValueAsString(node);
+        var node = aContext.readTree(aParser);
+        return node.toString();
     }
 }

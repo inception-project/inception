@@ -19,16 +19,16 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static wicket.contrib.input.events.EventType.click;
-import static wicket.contrib.input.events.key.KeyType.Page_down;
-import static wicket.contrib.input.events.key.KeyType.Page_up;
-import static wicket.contrib.input.events.key.KeyType.Shift;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentDialog;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
@@ -37,7 +37,6 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
 import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
-import wicket.contrib.input.events.key.KeyType;
 
 /**
  * @deprecated Can be removed when the sidebar curation mode on the annotation page goes away. On
@@ -51,6 +50,7 @@ public class CurationSidebarDocumentNavigator
 {
     private static final long serialVersionUID = 7061696472939390003L;
 
+    private @SpringBean KeyBindingsProperties keyBindings;
     private @SpringBean ProjectService projectService;
     private @SpringBean DocumentAccess documentAccess;
     private @SpringBean UserDao userService;
@@ -66,10 +66,21 @@ public class CurationSidebarDocumentNavigator
         page = aPage;
 
         queue(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
-                .add(new InputBehavior(new KeyType[] { Shift, Page_up }, click)));
+                .add(new InputBehavior(keyBindings.getNavigation().getPreviousDocument(), click))
+                .add(AttributeModifier
+                        .append("title",
+                                () -> " ("
+                                        + KeyBindingsUtil.formatShortcut(
+                                                keyBindings.getNavigation().getPreviousDocument())
+                                        + ")")));
 
         queue(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
-                .add(new InputBehavior(new KeyType[] { Shift, Page_down }, click)));
+                .add(new InputBehavior(keyBindings.getNavigation().getNextDocument(), click)).add(
+                        AttributeModifier.append("title",
+                                () -> " ("
+                                        + KeyBindingsUtil.formatShortcut(
+                                                keyBindings.getNavigation().getNextDocument())
+                                        + ")")));
 
         queue(new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
 

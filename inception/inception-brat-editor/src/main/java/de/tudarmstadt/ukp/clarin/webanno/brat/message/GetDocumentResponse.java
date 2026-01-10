@@ -26,6 +26,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
@@ -37,6 +38,8 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 /**
  * Response for the {@code getDocument} command.
  */
+@JsonPropertyOrder({ "action", "text", "windowBegin", "windowEnd", "entities", "args", "rtl_mode",
+        "font_zoom", "sentence_number_offset", "token_offsets", "sentence_offsets" })
 public class GetDocumentResponse
     extends AjaxResponse
 {

@@ -122,12 +122,11 @@
       <artifactId>commons-io</artifactId>
     </dependency>
 
-    <dependency>
+   <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
+    </dependency>    <dependency>
+      <groupId>tools.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
     

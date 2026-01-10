@@ -31,6 +31,17 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>org.liquibase</groupId>
+        <artifactId>liquibase-core</artifactId>
+        <version>4.33.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.mattbertolini</groupId>
+        <artifactId>liquibase-slf4j</artifactId>
+        <version>5.1.0</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-bom</artifactId>
         <version>${slf4j.version}</version>
@@ -802,6 +813,25 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>tools.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson3.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      
+      <!-- httpcomponents needs to come before OpenSAML to avoid OpenSAML picking an older version -->
+      <dependency>
+        <groupId>org.apache.httpcomponents.core5</groupId>
+        <artifactId>httpcore5</artifactId>
+        <version>5.3.6</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents.client5</groupId>
+        <artifactId>httpclient5</artifactId>
+        <version>5.5.1</version>
+      </dependency>
 
       <dependency>
         <groupId>com.networknt</groupId>
@@ -846,23 +876,6 @@
         <groupId>io.jsonwebtoken</groupId>
         <artifactId>jjwt-gson</artifactId>
         <version>${jjwt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.opensaml</groupId>
-        <artifactId>opensaml-bom</artifactId>
-        <version>${opensaml.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>com.fasterxml.jackson</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <!-- Springdoc -->
@@ -1427,7 +1440,7 @@
       </dependency>
 
       <dependency>
-        <groupId>com.flipkart.zjsonpatch</groupId>
+        <groupId>io.github.vishwakarma</groupId>
         <artifactId>zjsonpatch</artifactId>
         <version>${zjsonpatch.version}</version>
       </dependency>
@@ -1533,7 +1546,7 @@
 
       <dependency>
         <groupId>org.dkpro.core</groupId>
-        <artifactId>dkpro-core-bom-asl</artifactId>
+        <artifactId>dkpro-core-bom</artifactId>
         <version>${dkpro.version}</version>
         <type>pom</type>
         <scope>import</scope>
@@ -1592,6 +1605,24 @@
           </exclusion>
           <exclusion>
             <groupId>org.eclipse.jetty</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      
+      <dependency>
+        <groupId>org.opensaml</groupId>
+        <artifactId>opensaml-bom</artifactId>
+        <version>${opensaml.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>com.fasterxml.jackson</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>*</artifactId>
           </exclusion>
         </exclusions>

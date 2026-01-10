@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import './ApacheAnnotatorEditor.scss'
-import { unpackCompactAnnotatedTextV2, type DiamAjax, type DiamLoadAnnotationsOptions, type VID, ViewportTracker, offsetToRange, AnnotatedText, Span, TextMarker, type Offsets, AnnotationOverEvent, AnnotationOutEvent } from '@inception-project/inception-js-api'
+import { ViewportTracker, unpackCompactAnnotatedTextV2, type DiamAjax, type DiamLoadAnnotationsOptions, type VID, offsetToRange, AnnotatedText, Span, TextMarker, type Offsets, AnnotationOverEvent, AnnotationOutEvent } from '@inception-project/inception-js-api'
 import { type CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2'
 import { highlightText } from '@apache-annotator/dom'
 import { annotatorState } from './ApacheAnnotatorState.svelte'
@@ -31,6 +31,13 @@ export const NO_LABEL = '◌'
 export const ERROR_LABEL = '🔴'
 export const INFO_LABEL = 'ℹ️'
 export const WARN_LABEL = '⚠️'
+
+const SCROLL_ITERATION_MS = 100
+const RESIZE_DEBOUNCE_MS = 500
+const LOAD_ANNOTATIONS_DEBOUNCE_MS = 150
+const PING_MARKER_REMOVAL_DELAY_MS = 2000
+const SECLUSION_MARGIN_PX = 1000
+const HOVER_DEBOUNCE_MS = 250
 
 export class ApacheAnnotatorVisualizer {
   private ajax: DiamAjax
@@ -57,6 +64,8 @@ export class ApacheAnnotatorVisualizer {
   private removePingMarkers: (() => void)[] = []
   private removePingMarkersTimeout: number | undefined = undefined
   private loadAnnotationsTimeout: number | undefined = undefined
+  private addHoverTimeout: number | undefined = undefined
+  private removeHoverTimeout: number | undefined = undefined
 
   private alpha = '55'
 
@@ -95,8 +104,8 @@ export class ApacheAnnotatorVisualizer {
     })
 
     // Add event handlers for highlighting extent of the annotation the mouse is currently over
-    this.root.addEventListener('mouseover', e => this.addAnnotationHighlight(e as MouseEvent))
-    this.root.addEventListener('mouseout', e => this.removeAnnotationHighight(e as MouseEvent))
+    this.root.addEventListener('mouseover', e => this.addHoverHighlight(e as MouseEvent))
+    this.root.addEventListener('mouseout', e => this.removeHoverHighlight(e as MouseEvent))
   }
 
   public optimizeLayout(trigger: string) {
@@ -132,7 +141,7 @@ export class ApacheAnnotatorVisualizer {
             this.rootResizeTimeout = undefined
           }
 
-          this.rootResizeTimeout = this.schedule(500, () => this.optimizeLayout("resize observer"))
+          this.rootResizeTimeout = this.schedule(RESIZE_DEBOUNCE_MS, () => this.optimizeLayout("resize observer"))
         }
       })
 
@@ -161,7 +170,7 @@ export class ApacheAnnotatorVisualizer {
       }
     }, {
       root: (element instanceof Element) ? element as Element : null,
-      rootMargin: '1000px',
+      rootMargin: `${SECLUSION_MARGIN_PX}px`,
       threshold: 0
     })
 
@@ -223,8 +232,9 @@ export class ApacheAnnotatorVisualizer {
         }
         if (height > 0) {
           n.style.minHeight = `${height}px`
-          n.style.height = `${height}px`
-          n.style.maxHeight = `${height}px`
+          // We just set the minHeight to allow growing when annotations are rendered
+          // n.style.height = `${height}px`
+          // n.style.maxHeight = `${height}px`
         }
         if (width > 0) { 
           n.style.minWidth = `${width}px`
@@ -242,56 +252,89 @@ export class ApacheAnnotatorVisualizer {
   private showResizer (event: Event): void {
     if (!(event instanceof MouseEvent) || !(event.target instanceof HTMLElement)) return
 
+    // If a mouse button is pressed, we do not show the resizer so we do not interrupt drag operations
+    if (event.buttons !== 0) return
+
     const vid = event.target.getAttribute('data-iaa-id')
     if (vid) this.resizer.show(vid)
   }
 
-  private addAnnotationHighlight (event: MouseEvent) {
+  private addHoverHighlight (event: MouseEvent) {
     if (!(event.target instanceof Element)) return
 
     const vid = event.target.getAttribute('data-iaa-id')
     if (!vid) return
 
-    this.getHighlightsForAnnotation(vid).forEach(e => e.classList.add('iaa-hover'))
-  }
-
-  private removeAnnotationHighight (event: MouseEvent) {
-    if (!(event.target instanceof Element)) return
-
-    this.root.querySelectorAll('.iaa-hover').forEach(e => e.classList.remove('iaa-hover'))
-  }
-
-  loadAnnotations (): void {
-    // scrollTo uses a timeout to work around the problem that the browser does not always properly
-    // scroll to the target element. We want to avoid loading annotations while scrolling is still
-    // in progress. Once scrolling is complete, we should get triggered by the ViewportTracker.
-    if (this.scrolling) return
-
-    if (this.loadAnnotationsTimeout) {
-      window.clearTimeout(this.loadAnnotationsTimeout)
-      this.loadAnnotationsTimeout = undefined
-    }
-    this.loadAnnotationsTimeout = this.schedule(250, () => {
-    const options: DiamLoadAnnotationsOptions = {
-      range: this.tracker.currentRange,
-      includeText: false,
-      clipSpans: false,
-      format: 'compact_v2'
+    if (this.addHoverTimeout) {
+      this.cancelScheduled(this.addHoverTimeout)
+      this.addHoverTimeout = undefined
     }
 
-    console.log(`Loading annotations for range ${JSON.stringify(options.range)}`)
+    this.addHoverTimeout = this.schedule(HOVER_DEBOUNCE_MS, () => {
+      if (this.removeHoverTimeout) {
+        window.clearTimeout(this.removeHoverTimeout)
+        this.removeHoverTimeout = undefined
+      }
 
-    this.ajax.loadAnnotations(options)
-      .then((doc: CompactAnnotatedText) => {
-        this.data = unpackCompactAnnotatedTextV2(doc)
-        this.renderAnnotations(this.data)
-        this.loadAnnotationsTimeout = undefined
-      })
+      this.root.querySelectorAll('.iaa-hover').forEach(e => e.classList.remove('iaa-hover'))
+      this.getHighlightsForAnnotation(vid).forEach(e => e.classList.add('iaa-hover'))
     })
   }
 
+  private removeHoverHighlight (event: MouseEvent) {
+    if (!(event.target instanceof Element)) return
+
+    // Intentionally using window.setTimeout here because we want to wait a *minimum* amount of time
+    // before removing the hover. this.schedule() will try to run as fast as possible
+    if (this.removeHoverTimeout) {
+      window.clearTimeout(this.removeHoverTimeout)
+      this.removeHoverTimeout = undefined
+    }
+
+    this.removeHoverTimeout = window.setTimeout(() => { 
+      this.root.querySelectorAll('.iaa-hover').forEach(e => e.classList.remove('iaa-hover'))
+    }, HOVER_DEBOUNCE_MS)
+  }
+
+  loadAnnotations (): void {
+    if (this.loadAnnotationsTimeout) {
+      this.cancelScheduled(this.loadAnnotationsTimeout)
+      this.loadAnnotationsTimeout = undefined
+    }
+
+    const loader = () => {
+      if (this.scrolling) {
+        this.loadAnnotationsTimeout = this.schedule(LOAD_ANNOTATIONS_DEBOUNCE_MS, loader)
+        return
+      }
+
+      const options: DiamLoadAnnotationsOptions = {
+        range: this.tracker.currentRange,
+        includeText: false,
+        clipSpans: false,
+        format: 'compact_v2'
+      }
+
+      console.log(`Loading annotations for range ${JSON.stringify(options.range)}`)
+      const startTime = performance.now()
+
+      this.ajax.loadAnnotations(options)
+        .then((doc: CompactAnnotatedText) => {
+          this.loadAnnotationsTimeout = undefined
+
+          this.data = unpackCompactAnnotatedTextV2(doc)
+          const endTime = performance.now()
+          console.log(`Loading annotations took ${endTime - startTime}ms`)
+
+          this.renderAnnotations(this.data)
+        })
+    };
+
+    this.loadAnnotationsTimeout = this.schedule(LOAD_ANNOTATIONS_DEBOUNCE_MS, loader)
+  }
+
   private renderAnnotations (doc: AnnotatedText): void {
-    console.log(`Client-side starting`)
+    console.log(`Client-side rendering started`)
     const startTime = performance.now()
 
     this.clearHighlights()
@@ -360,8 +403,9 @@ export class ApacheAnnotatorVisualizer {
       return
     }
 
-    const scrollerContainerRect = this.root.closest('.i7n-wrapper')?.getBoundingClientRect() || this.root.getBoundingClientRect()
-    const scrollTop = this.root.closest('.i7n-wrapper')?.scrollTop || this.root.scrollTop || 0
+    const wrapper = this.root.closest('.i7n-wrapper')
+    const scrollerContainerRect = wrapper?.getBoundingClientRect() || this.root.getBoundingClientRect()
+    const scrollTop = wrapper?.scrollTop || this.root.scrollTop || 0
 
     const vhl = this.root.ownerDocument.createElement('div')
     vhl.classList.add('iaa-vertical-marker-focus')
@@ -601,7 +645,7 @@ export class ApacheAnnotatorVisualizer {
     this.removeSpuriousZeroWidthHighlights()
 
     if (this.removePingMarkers.length > 0) {
-      this.removePingMarkersTimeout = this.schedule(2000, () => this.clearPingMarkers())
+      this.removePingMarkersTimeout = window.setTimeout(() => this.clearPingMarkers(), PING_MARKER_REMOVAL_DELAY_MS)
     }
  }
 
@@ -609,7 +653,7 @@ export class ApacheAnnotatorVisualizer {
     console.log('Clearing ping markers');
     
     if (this.removePingMarkersTimeout) {
-      this.cancelScheduled(this.removePingMarkersTimeout)
+      window.clearTimeout(this.removePingMarkersTimeout)
       this.removePingMarkersTimeout = undefined
       this.removePingMarkers.forEach(remove => remove())
       this.removePingMarkers = []
@@ -662,23 +706,23 @@ export class ApacheAnnotatorVisualizer {
       var scrollIntoViewFunc = () => { 
         finalScrollTarget.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' })
         if (this.removeScrollMarkers.length > 0) {
-          this.schedule(100, scrollIntoViewFunc)
+          this.schedule(SCROLL_ITERATION_MS, scrollIntoViewFunc)
         }
         
-        if (this.root instanceof HTMLElement) {
-          if (this.root.scrollTop === this.lastScrollTop) {
-            this.scrollToComplete(args.pingRanges)
-          }
-          else {
-            this.lastScrollTop = this.root.scrollTop
-          }
+        const wrapper = this.root.closest('.i7n-wrapper')
+        const scrollTop =wrapper?.scrollTop || this.root.scrollTop || 0
+        if (scrollTop === this.lastScrollTop) {
+          this.scrollToComplete(args.pingRanges)
+        }
+        else {
+          this.lastScrollTop = scrollTop
         }
       }
 
       this.scrolling = true
       this.sectionAnnotationVisualizer.suspend()
       this.sectionAnnotationCreator.suspend()
-      this.removeScrollMarkersTimeout = this.schedule(100, scrollIntoViewFunc)
+      this.removeScrollMarkersTimeout = this.schedule(SCROLL_ITERATION_MS, scrollIntoViewFunc)
     }
   }
 

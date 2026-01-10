@@ -43,7 +43,15 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.web.client.RestOperations;
+import org.springframework.web.client.RestTemplate;
 
 import com.nimbusds.jwt.SignedJWT;
 
@@ -82,6 +90,7 @@ public class InceptionRemoteApiJwtIntegrationTest
         setProperty("spring.main.banner-mode", "off");
         setProperty("java.awt.headless", "true");
         setProperty("database.url", "jdbc:hsqldb:mem:testdb;hsqldb.tx=mvcc");
+        setProperty("spring.jpa.hibernate.ddl-auto", "create-drop");
         setProperty("inception.home", appHome.toString());
         setProperty("remote-api.enabled", "true");
         setProperty("remote-api.oauth2.enabled", "true");
@@ -90,9 +99,14 @@ public class InceptionRemoteApiJwtIntegrationTest
         setProperty("spring.security.oauth2.resourceserver.jwt.issuer-uri", issuerUrl);
         // setProperty("logging.level.org.springframework.security", "TRACE");
 
-        context = INCEpTION.start(new String[] {}, INCEpTION.class);
+        context = INCEpTION.start( //
+                new String[] {}, //
+                INCEpTION.class, //
+                LongTimeoutJwtConfig.class);
 
-        client = HttpClient.newBuilder().build();
+        client = HttpClient.newBuilder() //
+                .connectTimeout(Duration.ofSeconds(60)) //
+                .build();
 
         userService = context.getBean(UserDao.class);
 
@@ -163,5 +177,28 @@ public class InceptionRemoteApiJwtIntegrationTest
                 .setHeader("Authorization", "Bearer " + token.serialize()) //
                 .build();
         return request;
+    }
+
+    @TestConfiguration
+    public static class LongTimeoutJwtConfig
+    {
+        @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+        private String issuerUri;
+
+        @Bean
+        public JwtDecoder jwtDecoder()
+        {
+            // Force a 90-second timeout to survive Windows CI starvation on GitHub actions
+            var requestFactory = new SimpleClientHttpRequestFactory();
+            requestFactory.setConnectTimeout(90_000);
+            requestFactory.setReadTimeout(90_000);
+
+            RestOperations rest = new RestTemplate(requestFactory);
+
+            return NimbusJwtDecoder //
+                    .withIssuerLocation(issuerUri) //
+                    .restOperations(rest) //
+                    .build();
+        }
     }
 }

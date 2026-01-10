@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 public class ViewportState
 {

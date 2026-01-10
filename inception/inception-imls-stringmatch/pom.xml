@@ -157,12 +157,11 @@
       <groupId>jakarta.data</groupId>
       <artifactId>jakarta.data-api</artifactId>
     </dependency>
-    <dependency>
+   <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
+    </dependency>    <dependency>
+      <groupId>tools.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
 
@@ -223,18 +222,17 @@
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-jpa</artifactId>
+      <artifactId>spring-boot-data-jpa-test</artifactId>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-test-autoconfigure</artifactId>
+      <artifactId>spring-boot-jpa-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-persistence</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -254,7 +252,6 @@
               <!-- Testing - used via reflection -->
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-test</usedDependency>
-              <usedDependency>org.springframework.boot:spring-boot-starter-data-jpa</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.annotation.layer.chain.export;
 
 import static java.util.Comparator.comparing;
+import static tools.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -27,8 +28,6 @@ import java.util.Map;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.http.MediaType;
-
-import com.fasterxml.jackson.core.JsonFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -41,6 +40,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporter_ImplBase;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import tools.jackson.databind.json.JsonMapper;
 
 public class ChainLayerToJsonExporter
     extends CrossDocumentExporter_ImplBase
@@ -70,13 +70,13 @@ public class ChainLayerToJsonExporter
                 .sorted(comparing(SourceDocument::getName)) //
                 .toList();
 
-        var jsonFactory = new JsonFactory();
+        var mapper = JsonMapper.builder() //
+                .enable(INDENT_OUTPUT) //
+                .build();
 
         var adapter = (ChainAdapter) schemaService.getAdapter(aLayer);
 
-        try (var jg = jsonFactory.createGenerator(CloseShieldOutputStream.wrap(aOut))) {
-            jg.useDefaultPrettyPrinter();
-
+        try (var jg = mapper.createGenerator(CloseShieldOutputStream.wrap(aOut))) {
             jg.writeStartArray();
 
             for (var doc : docs) {
@@ -106,10 +106,10 @@ public class ChainLayerToJsonExporter
                             }
 
                             jg.writeStartObject();
-                            jg.writeStringField("doc", doc.getName());
-                            jg.writeStringField("user", dataOwner.id());
+                            jg.writeStringProperty("doc", doc.getName());
+                            jg.writeStringProperty("user", dataOwner.id());
 
-                            jg.writeArrayFieldStart("elements");
+                            jg.writeStartArray("elements");
 
                             // Iterate over the links of the chain
                             while (linkFs != null) {
@@ -118,18 +118,18 @@ public class ChainLayerToJsonExporter
                                 var nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
 
                                 jg.writeStartObject();
-                                jg.writeNumberField("begin", linkFs.getBegin());
-                                jg.writeNumberField("end", linkFs.getEnd());
-                                jg.writeStringField("text", linkFs.getCoveredText());
+                                jg.writeNumberProperty("begin", linkFs.getBegin());
+                                jg.writeNumberProperty("end", linkFs.getEnd());
+                                jg.writeStringProperty("text", linkFs.getCoveredText());
 
                                 if (spanLabelFeature != null) {
                                     var label = linkFs.getFeatureValueAsString(spanLabelFeature);
-                                    jg.writeStringField("label", label);
+                                    jg.writeStringProperty("label", label);
                                 }
 
                                 if (adapter.isLinkedListBehavior() && arcLabelFeature != null) {
                                     var label = linkFs.getFeatureValueAsString(arcLabelFeature);
-                                    jg.writeStringField("link_label", label);
+                                    jg.writeStringProperty("link_label", label);
                                 }
 
                                 jg.writeEndObject();

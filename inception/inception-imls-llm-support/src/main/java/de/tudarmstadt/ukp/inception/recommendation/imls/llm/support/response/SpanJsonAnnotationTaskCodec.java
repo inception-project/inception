@@ -29,7 +29,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.normalizeSpace;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -49,8 +48,6 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.node.TextNode;
-
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -62,6 +59,7 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.text.Trie;
 import de.tudarmstadt.ukp.inception.support.text.WhitespaceNormalizingSanitizer;
+import tools.jackson.databind.node.StringNode;
 
 public final class SpanJsonAnnotationTaskCodec
     implements AnnotationTaskCodec
@@ -220,7 +218,7 @@ public final class SpanJsonAnnotationTaskCodec
             // https://github.com/jmorganca/ollama/commit/5cba29b9d666854706a194805c9d66518fe77545#diff-a604f7ba9b7f66dd7b59a9e884d3c82c96e5269fee85c906a7cca5f0c3eff7f8R30-R57
             var rootNode = JSONUtil.getObjectMapper().readTree(aResponse);
 
-            var fieldIterator = rootNode.fields();
+            var fieldIterator = rootNode.properties().iterator();
             while (fieldIterator.hasNext()) {
                 var fieldEntry = fieldIterator.next();
                 if (fieldEntry.getValue().isArray()) {
@@ -232,7 +230,7 @@ public final class SpanJsonAnnotationTaskCodec
                             mentions.add(Pair.of(item.asText(), fieldEntry.getKey()));
                         }
                         if (item.isObject()) {
-                            var fields = toList(item.fields());
+                            var fields = item.properties();
                             if (fields.size() == 1) {
                                 // Looks like this
                                 // "politicians": [
@@ -240,7 +238,7 @@ public final class SpanJsonAnnotationTaskCodec
                                 // { "name": "John" },
                                 // { "name": "Don Horny" }
                                 // ]
-                                var nestedFieldIterator = item.fields();
+                                var nestedFieldIterator = item.properties().iterator();
                                 while (nestedFieldIterator.hasNext()) {
                                     var nestedEntry = nestedFieldIterator.next();
                                     if (nestedEntry.getValue().isTextual()) {
@@ -259,22 +257,22 @@ public final class SpanJsonAnnotationTaskCodec
                                 // ]
                                 String text = null;
                                 String label = null;
-                                if (item.get("text") instanceof TextNode tn) {
+                                if (item.get("text") instanceof StringNode tn) {
                                     text = tn.asText();
                                 }
-                                else if (item.get("name") instanceof TextNode tn) {
+                                else if (item.get("name") instanceof StringNode tn) {
                                     text = tn.asText();
                                 }
-                                if (item.get("type") instanceof TextNode tn) {
+                                if (item.get("type") instanceof StringNode tn) {
                                     label = tn.asText();
                                 }
-                                else if (item.get("value") instanceof TextNode tn) {
+                                else if (item.get("value") instanceof StringNode tn) {
                                     label = tn.asText();
                                 }
-                                else if (item.get("label") instanceof TextNode tn) {
+                                else if (item.get("label") instanceof StringNode tn) {
                                     label = tn.asText();
                                 }
-                                else if (item.get("category") instanceof TextNode tn) {
+                                else if (item.get("category") instanceof StringNode tn) {
                                     label = tn.asText();
                                 }
                                 if (isNotBlank(text) && isNotBlank(label)) {
@@ -311,7 +309,7 @@ public final class SpanJsonAnnotationTaskCodec
                 }
             }
         }
-        catch (IOException e) {
+        catch (Exception e) {
             LOG.error("Unable to extract mentions - not valid JSON: [" + aResponse + "]");
         }
         return mentions;

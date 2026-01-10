@@ -47,7 +47,7 @@ import org.awaitility.Awaitility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.converter.JacksonJsonMessageConverter;
 import org.springframework.messaging.converter.MessageConversionException;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -61,13 +61,16 @@ import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.json.JsonMapper;
+
 public class WebSocketStompTestClient
     implements Closeable
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final Duration connectTimeout = Duration.ofSeconds(60);
-    private final Duration messageTimeout = Duration.ofSeconds(10);
+    private final Duration messageTimeout = Duration.ofHours(10);
 
     private final String username;
     private final String password;
@@ -88,7 +91,9 @@ public class WebSocketStompTestClient
 
         recieved = new ConcurrentLinkedQueue<>();
         expectations = new ConcurrentLinkedDeque<>();
-        messageConverter = new MappingJackson2MessageConverter();
+        messageConverter = new JacksonJsonMessageConverter(JsonMapper.builder() //
+                .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES) //
+                .build());
 
         wsClient = new StandardWebSocketClient();
         wsClient.setUserProperties(Map.of( //
@@ -157,11 +162,12 @@ public class WebSocketStompTestClient
     }
 
     @SuppressWarnings("unchecked")
-    public <T> WebSocketStompTestClient expect(T aObject, FailableConsumer<T, Exception> aMatcher)
+    public <T> WebSocketStompTestClient expect(Class<T> aClass,
+            FailableConsumer<T, Exception> aMatcher)
     {
         expectations.add(new Expectation<>(Message.class, false, msg -> {
             try {
-                var obj = messageConverter.fromMessage(msg, aObject.getClass());
+                var obj = messageConverter.fromMessage(msg, aClass);
                 aMatcher.accept((T) obj);
             }
             catch (MessageConversionException e) {
@@ -285,14 +291,14 @@ public class WebSocketStompTestClient
         }
     }
 
-    private final class Message2MessageConverter
-        extends MappingJackson2MessageConverter
+    private static class Message2MessageConverter
+        extends JacksonJsonMessageConverter
     {
         @Override
-        protected Object convertFromInternal(Message<?> aMessage, Class<?> aTargetClass,
-                Object aConversionHint)
+        protected Object convertFromInternal(Message<?> message, Class<?> targetClass,
+                Object conversionHint)
         {
-            return aMessage;
+            return message;
         }
     }
 

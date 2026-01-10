@@ -23,6 +23,7 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * Traits for number features.
@@ -57,6 +58,9 @@ public class NumberFeatureTraits
     private Number minimum = 0;
     private Number maximum = 0;
     private EditorType editorType = SPINNER;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Number defaultValue;
 
     public NumberFeatureTraits()
     {
@@ -101,5 +105,15 @@ public class NumberFeatureTraits
     public void setEditorType(EditorType aEditorType)
     {
         editorType = aEditorType;
+    }
+
+    public Number getDefaultValue()
+    {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(Number aDefaultValue)
+    {
+        defaultValue = aDefaultValue;
     }
 }

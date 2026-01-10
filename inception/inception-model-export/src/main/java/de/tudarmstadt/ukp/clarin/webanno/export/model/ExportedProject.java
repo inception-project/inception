@@ -30,13 +30,13 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * All required contents of a project to be exported.

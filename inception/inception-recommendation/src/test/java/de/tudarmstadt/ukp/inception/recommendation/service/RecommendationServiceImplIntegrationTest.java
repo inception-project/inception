@@ -40,9 +40,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -78,8 +77,7 @@ import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
 @DataJpaTest( //
         showSql = false, //
         properties = { //
-                "spring.main.banner-mode=off" }, //
-        excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+                "spring.main.banner-mode=off" })
 public class RecommendationServiceImplIntegrationTest
 {
     private static final String PROJECT_NAME = "Test project";

@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.project.exporters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.NO_PASSWORD;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.startsWith;
@@ -195,11 +195,11 @@ public class ProjectPermissionsExporter
                             && !rejectedProjectUsers.contains(name))
                     .collect(Collectors.toSet());
 
-            for (String user : nonProjectUsersWithPermissions) {
+            for (var user : nonProjectUsersWithPermissions) {
                 if (!userService.exists(user)) {
                     User u = new User();
                     u.setUsername(user);
-                    u.setPassword(EMPTY_PASSWORD);
+                    u.setPassword(NO_PASSWORD);
                     u.setRoles(Set.of(ROLE_USER));
                     u.setEnabled(false);
                     userService.create(u);
