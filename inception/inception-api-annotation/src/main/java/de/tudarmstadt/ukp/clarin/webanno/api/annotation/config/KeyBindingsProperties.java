@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.config;
 
-import wicket.contrib.input.events.key.KeyType;
-
 /**
  * Configuration properties for keyboard shortcuts in the annotation UI.
  */
@@ -37,21 +35,21 @@ public interface KeyBindingsProperties
      */
     interface NavigationShortcuts
     {
-        KeyType[] getNextPage();
+        KeyCombo getNextPage();
 
-        KeyType[] getPreviousPage();
+        KeyCombo getPreviousPage();
 
-        KeyType[] getFirstPage();
+        KeyCombo getFirstPage();
 
-        KeyType[] getLastPage();
+        KeyCombo getLastPage();
 
-        KeyType[] getNextDocument();
+        KeyCombo getNextDocument();
 
-        KeyType[] getPreviousDocument();
+        KeyCombo getPreviousDocument();
 
-        KeyType[] getNextAnnotation();
+        KeyCombo getNextAnnotation();
 
-        KeyType[] getPreviousAnnotation();
+        KeyCombo getPreviousAnnotation();
     }
 
     /**
@@ -59,15 +57,15 @@ public interface KeyBindingsProperties
      */
     interface EditingShortcuts
     {
-        KeyType[] getUndo();
+        KeyCombo getUndo();
 
-        KeyType[] getRedo();
+        KeyCombo getRedo();
 
-        KeyType[] getDeleteAnnotation();
+        KeyCombo getDeleteAnnotation();
 
-        KeyType[] getClearSelection();
+        KeyCombo getClearSelection();
 
-        KeyType[] getToggleSelection();
+        KeyCombo getToggleSelection();
     }
 
     /**
@@ -75,13 +73,13 @@ public interface KeyBindingsProperties
      */
     interface AnchoringModeShortcuts
     {
-        KeyType[] getCharacters();
+        KeyCombo getCharacters();
 
-        KeyType[] getSingleToken();
+        KeyCombo getSingleToken();
 
-        KeyType[] getTokens();
+        KeyCombo getTokens();
 
-        KeyType[] getSentences();
+        KeyCombo getSentences();
     }
 
     /**
@@ -89,6 +87,6 @@ public interface KeyBindingsProperties
      */
     interface DialogShortcuts
     {
-        KeyType[] getCloseDialog();
+        KeyCombo getCloseDialog();
     }
 }

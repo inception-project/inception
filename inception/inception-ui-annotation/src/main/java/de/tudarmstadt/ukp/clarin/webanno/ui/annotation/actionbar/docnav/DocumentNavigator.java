@@ -40,7 +40,6 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import jakarta.persistence.NoResultException;
 
 public class DocumentNavigator
@@ -66,16 +65,15 @@ public class DocumentNavigator
         page = aPage;
 
         add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
-                .add(new InputBehavior(keyBindings.getNavigation().getPreviousDocument(), click))
-                .add(AttributeModifier
-                        .append("title",
+                .add(keyBindings.getNavigation().getPreviousDocument().toInputBehavior(click)).add(
+                        AttributeModifier.append("title",
                                 () -> " ("
                                         + KeyBindingsUtil.formatShortcut(
                                                 keyBindings.getNavigation().getPreviousDocument())
                                         + ")")));
 
         add(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
-                .add(new InputBehavior(keyBindings.getNavigation().getNextDocument(), click)).add(
+                .add(keyBindings.getNavigation().getNextDocument().toInputBehavior(click)).add(
                         AttributeModifier.append("title",
                                 () -> " ("
                                         + KeyBindingsUtil.formatShortcut(

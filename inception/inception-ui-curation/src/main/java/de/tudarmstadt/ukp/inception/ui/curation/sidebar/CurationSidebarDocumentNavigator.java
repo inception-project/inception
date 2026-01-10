@@ -34,7 +34,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
 import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
 
@@ -59,6 +58,7 @@ public class CurationSidebarDocumentNavigator
 
     private final ExportDocumentDialog exportDialog;
 
+    @Deprecated
     public CurationSidebarDocumentNavigator(String aId, AnnotationPageBase aPage)
     {
         super(aId);
@@ -66,16 +66,15 @@ public class CurationSidebarDocumentNavigator
         page = aPage;
 
         queue(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
-                .add(new InputBehavior(keyBindings.getNavigation().getPreviousDocument(), click))
-                .add(AttributeModifier
-                        .append("title",
+                .add(keyBindings.getNavigation().getPreviousDocument().toInputBehavior(click)).add(
+                        AttributeModifier.append("title",
                                 () -> " ("
                                         + KeyBindingsUtil.formatShortcut(
                                                 keyBindings.getNavigation().getPreviousDocument())
                                         + ")")));
 
         queue(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
-                .add(new InputBehavior(keyBindings.getNavigation().getNextDocument(), click)).add(
+                .add(keyBindings.getNavigation().getNextDocument().toInputBehavior(click)).add(
                         AttributeModifier.append("title",
                                 () -> " ("
                                         + KeyBindingsUtil.formatShortcut(
@@ -101,6 +100,7 @@ public class CurationSidebarDocumentNavigator
      * @param aTarget
      *            the AJAX request target
      */
+    @Deprecated
     public void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
         var documentChanged = page.getModelObject().moveToPreviousDocument(page.getListOfDocs());
@@ -118,6 +118,7 @@ public class CurationSidebarDocumentNavigator
      * @param aTarget
      *            the AJAX request target
      */
+    @Deprecated
     public void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
         var documentChanged = page.getModelObject().moveToNextDocument(page.getListOfDocs());
@@ -129,6 +130,7 @@ public class CurationSidebarDocumentNavigator
         page.actionLoadDocument(aTarget);
     }
 
+    @Deprecated
     public void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
     {
         page.getModelObject().getSelection().clear();

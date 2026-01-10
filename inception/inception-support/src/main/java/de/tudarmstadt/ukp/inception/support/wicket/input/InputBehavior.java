@@ -48,11 +48,32 @@ public class InputBehavior
     private final KeyType[] keyCombo;
 
     private Component target;
+    private boolean disabledInInput = false;
 
     public InputBehavior(KeyType[] aKeyCombo, EventType aEventType)
     {
         super(aKeyCombo, aEventType);
-        this.keyCombo = aKeyCombo;
+        keyCombo = aKeyCombo;
+    }
+
+    /**
+     * Sets whether this behavior is disabled when the target component is an input field.
+     * 
+     * Note: Changing this only works before the first rendering of the behavior.
+     * 
+     * @param aDisabledInInput whether to disable in input fields.
+     * @return this for chaining.
+     */
+    public InputBehavior setDisabledInInput(boolean aDisabledInInput)
+    {
+        disabledInInput = aDisabledInInput;
+        return this;
+    }
+
+    @Override
+    public Boolean getDisable_in_input()
+    {
+        return disabledInInput;
     }
 
     @Override

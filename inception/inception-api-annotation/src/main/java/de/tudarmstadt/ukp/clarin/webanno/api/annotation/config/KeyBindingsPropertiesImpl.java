@@ -36,8 +36,6 @@ import static wicket.contrib.input.events.key.KeyType.z;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import wicket.contrib.input.events.key.KeyType;
-
 /**
  * Implementation of keyboard shortcuts configuration with default values matching the current
  * hard-coded shortcuts.
@@ -78,99 +76,99 @@ public class KeyBindingsPropertiesImpl
     public static class NavigationShortcutsImpl
         implements NavigationShortcuts
     {
-        private KeyType[] nextPage = new KeyType[] { Page_down };
-        private KeyType[] previousPage = new KeyType[] { Page_up };
-        private KeyType[] firstPage = new KeyType[] { Home };
-        private KeyType[] lastPage = new KeyType[] { End };
-        private KeyType[] nextDocument = new KeyType[] { Shift, Page_down };
-        private KeyType[] previousDocument = new KeyType[] { Shift, Page_up };
-        private KeyType[] nextAnnotation = new KeyType[] { Shift, Right };
-        private KeyType[] previousAnnotation = new KeyType[] { Shift, Left };
+        private KeyCombo nextPage = new KeyCombo(Page_down);
+        private KeyCombo previousPage = new KeyCombo(Page_up);
+        private KeyCombo firstPage = new KeyCombo(Home);
+        private KeyCombo lastPage = new KeyCombo(End);
+        private KeyCombo nextDocument = new KeyCombo(Shift, Page_down);
+        private KeyCombo previousDocument = new KeyCombo(Shift, Page_up);
+        private KeyCombo nextAnnotation = new KeyCombo(Shift, Right);
+        private KeyCombo previousAnnotation = new KeyCombo(Shift, Left);
 
         @Override
-        public KeyType[] getNextPage()
+        public KeyCombo getNextPage()
         {
             return nextPage;
         }
 
-        public void setNextPage(KeyType[] aNextPage)
+        public void setNextPage(KeyCombo aNextPage)
         {
             nextPage = aNextPage;
         }
 
         @Override
-        public KeyType[] getPreviousPage()
+        public KeyCombo getPreviousPage()
         {
             return previousPage;
         }
 
-        public void setPreviousPage(KeyType[] aPreviousPage)
+        public void setPreviousPage(KeyCombo aPreviousPage)
         {
             previousPage = aPreviousPage;
         }
 
         @Override
-        public KeyType[] getFirstPage()
+        public KeyCombo getFirstPage()
         {
             return firstPage;
         }
 
-        public void setFirstPage(KeyType[] aFirstPage)
+        public void setFirstPage(KeyCombo aFirstPage)
         {
             firstPage = aFirstPage;
         }
 
         @Override
-        public KeyType[] getLastPage()
+        public KeyCombo getLastPage()
         {
             return lastPage;
         }
 
-        public void setLastPage(KeyType[] aLastPage)
+        public void setLastPage(KeyCombo aLastPage)
         {
             lastPage = aLastPage;
         }
 
         @Override
-        public KeyType[] getNextDocument()
+        public KeyCombo getNextDocument()
         {
             return nextDocument;
         }
 
-        public void setNextDocument(KeyType[] aNextDocument)
+        public void setNextDocument(KeyCombo aNextDocument)
         {
             nextDocument = aNextDocument;
         }
 
         @Override
-        public KeyType[] getPreviousDocument()
+        public KeyCombo getPreviousDocument()
         {
             return previousDocument;
         }
 
-        public void setPreviousDocument(KeyType[] aPreviousDocument)
+        public void setPreviousDocument(KeyCombo aPreviousDocument)
         {
             previousDocument = aPreviousDocument;
         }
 
         @Override
-        public KeyType[] getNextAnnotation()
+        public KeyCombo getNextAnnotation()
         {
             return nextAnnotation;
         }
 
-        public void setNextAnnotation(KeyType[] aNextAnnotation)
+        public void setNextAnnotation(KeyCombo aNextAnnotation)
         {
             nextAnnotation = aNextAnnotation;
         }
 
         @Override
-        public KeyType[] getPreviousAnnotation()
+        public KeyCombo getPreviousAnnotation()
         {
             return previousAnnotation;
         }
 
-        public void setPreviousAnnotation(KeyType[] aPreviousAnnotation)
+        public void setPreviousAnnotation(KeyCombo aPreviousAnnotation)
         {
             previousAnnotation = aPreviousAnnotation;
         }
@@ -179,63 +177,63 @@ public class KeyBindingsPropertiesImpl
     public static class EditingShortcutsImpl
         implements EditingShortcuts
     {
-        private KeyType[] undo = new KeyType[] { Ctrl, z };
-        private KeyType[] redo = new KeyType[] { Shift, Ctrl, z };
-        private KeyType[] deleteAnnotation = new KeyType[] { Shift, Delete };
-        private KeyType[] clearSelection = new KeyType[] { Shift, Escape };
-        private KeyType[] toggleSelection = new KeyType[] { Shift, Space };
+        private KeyCombo undo = new KeyCombo(Ctrl, z);
+        private KeyCombo redo = new KeyCombo(Shift, Ctrl, z);
+        private KeyCombo deleteAnnotation = new KeyCombo(Shift, Delete);
+        private KeyCombo clearSelection = new KeyCombo(Shift, Escape);
+        private KeyCombo toggleSelection = new KeyCombo(Shift, Space);
 
         @Override
-        public KeyType[] getUndo()
+        public KeyCombo getUndo()
         {
             return undo;
         }
 
-        public void setUndo(KeyType[] aUndo)
+        public void setUndo(KeyCombo aUndo)
         {
             undo = aUndo;
         }
 
         @Override
-        public KeyType[] getRedo()
+        public KeyCombo getRedo()
         {
             return redo;
         }
 
-        public void setRedo(KeyType[] aRedo)
+        public void setRedo(KeyCombo aRedo)
         {
             redo = aRedo;
         }
 
         @Override
-        public KeyType[] getDeleteAnnotation()
+        public KeyCombo getDeleteAnnotation()
         {
             return deleteAnnotation;
         }
 
-        public void setDeleteAnnotation(KeyType[] aDeleteAnnotation)
+        public void setDeleteAnnotation(KeyCombo aDeleteAnnotation)
         {
             deleteAnnotation = aDeleteAnnotation;
         }
 
         @Override
-        public KeyType[] getClearSelection()
+        public KeyCombo getClearSelection()
         {
             return clearSelection;
         }
 
-        public void setClearSelection(KeyType[] aClearSelection)
+        public void setClearSelection(KeyCombo aClearSelection)
         {
             clearSelection = aClearSelection;
         }
 
         @Override
-        public KeyType[] getToggleSelection()
+        public KeyCombo getToggleSelection()
         {
             return toggleSelection;
         }
 
-        public void setToggleSelection(KeyType[] aToggleSelection)
+        public void setToggleSelection(KeyCombo aToggleSelection)
         {
             toggleSelection = aToggleSelection;
         }
@@ -244,51 +242,51 @@ public class KeyBindingsPropertiesImpl
     public static class AnchoringModeShortcutsImpl
         implements AnchoringModeShortcuts
     {
-        private KeyType[] characters = new KeyType[] { Shift, one };
-        private KeyType[] singleToken = new KeyType[] { Shift, two };
-        private KeyType[] tokens = new KeyType[] { Shift, three };
-        private KeyType[] sentences = new KeyType[] { Shift, four };
+        private KeyCombo characters = new KeyCombo(true, Shift, one);
+        private KeyCombo singleToken = new KeyCombo(true, Shift, two);
+        private KeyCombo tokens = new KeyCombo(true, Shift, three);
+        private KeyCombo sentences = new KeyCombo(true, Shift, four);
 
         @Override
-        public KeyType[] getCharacters()
+        public KeyCombo getCharacters()
         {
             return characters;
         }
 
-        public void setCharacters(KeyType[] aCharacters)
+        public void setCharacters(KeyCombo aCharacters)
         {
             characters = aCharacters;
         }
 
         @Override
-        public KeyType[] getSingleToken()
+        public KeyCombo getSingleToken()
         {
             return singleToken;
         }
 
-        public void setSingleToken(KeyType[] aSingleToken)
+        public void setSingleToken(KeyCombo aSingleToken)
         {
             singleToken = aSingleToken;
         }
 
         @Override
-        public KeyType[] getTokens()
+        public KeyCombo getTokens()
         {
             return tokens;
         }
 
-        public void setTokens(KeyType[] aTokens)
+        public void setTokens(KeyCombo aTokens)
         {
             tokens = aTokens;
         }
 
         @Override
-        public KeyType[] getSentences()
+        public KeyCombo getSentences()
         {
             return sentences;
         }
 
-        public void setSentences(KeyType[] aSentences)
+        public void setSentences(KeyCombo aSentences)
         {
             sentences = aSentences;
         }
@@ -297,15 +295,15 @@ public class KeyBindingsPropertiesImpl
     public static class DialogShortcutsImpl
         implements DialogShortcuts
     {
-        private KeyType[] closeDialog = new KeyType[] { Escape };
+        private KeyCombo closeDialog = new KeyCombo(Escape);
 
         @Override
-        public KeyType[] getCloseDialog()
+        public KeyCombo getCloseDialog()
         {
             return closeDialog;
         }
 
-        public void setCloseDialog(KeyType[] aCloseDialog)
+        public void setCloseDialog(KeyCombo aCloseDialog)
         {
             closeDialog = aCloseDialog;
         }

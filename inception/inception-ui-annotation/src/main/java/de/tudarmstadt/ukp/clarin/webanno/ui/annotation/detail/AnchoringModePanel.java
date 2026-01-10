@@ -41,13 +41,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyCombo;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.inception.support.lambda.AjaxPayloadCallback;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
-import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
-import wicket.contrib.input.events.key.KeyType;
 
 public class AnchoringModePanel
     extends GenericPanel<AnchoringMode>
@@ -102,7 +101,7 @@ public class AnchoringModePanel
                         new ResourceModel(mode.getClass().getSimpleName() + "." + mode.name())
                                 .getObject() + shortcutStr));
                 link.add(enabledWhen(aAllowedModes.map(modes -> modes.contains(mode))));
-                link.add(new InputBehavior(getShortcutForMode(mode), click));
+                link.add(getShortcutForMode(mode).toInputBehavior(click));
 
                 aItem.add(link);
             }
@@ -111,7 +110,7 @@ public class AnchoringModePanel
         queue(listView);
     }
 
-    private KeyType[] getShortcutForMode(AnchoringMode aMode)
+    private KeyCombo getShortcutForMode(AnchoringMode aMode)
     {
         return switch (aMode) {
         case CHARACTERS -> keyBindings.getAnchoringMode().getCharacters();
