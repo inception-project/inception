@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
@@ -54,13 +53,11 @@ public class SPARQLQueryBuilderRemoteServicesTest
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private KnowledgeBase kb;
-    private Repository ukpVirtuosoRepo;
     private Repository zbwStw;
     private Repository zbwGnd;
     private Repository wikidata;
     private Repository dbpedia;
     private Repository yago;
-    private Repository hucit;
 
     @BeforeEach
     public void setUp()
@@ -75,12 +72,9 @@ public class SPARQLQueryBuilderRemoteServicesTest
 
         initRdfsMapping(kb);
 
-        ukpVirtuosoRepo = buildSparqlRepository(
-                "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql");
         wikidata = buildSparqlRepository("https://query.wikidata.org/sparql");
-        dbpedia = buildSparqlRepository("http://de.dbpedia.org/sparql");
+        dbpedia = buildSparqlRepository("https://dbpedia.org/sparql");
         yago = buildSparqlRepository("https://yago-knowledge.org/sparql/query");
-        hucit = buildSparqlRepository("http://nlp.dainst.org:8888/sparql");
         // Web: http://zbw.eu/beta/sparql-lab/?endpoint=http://zbw.eu/beta/sparql/stw/query
         zbwStw = buildSparqlRepository("http://zbw.eu/beta/sparql/stw/query");
         // Web: http://zbw.eu/beta/sparql-lab/?endpoint=http://zbw.eu/beta/sparql/gnd/query
@@ -172,25 +166,6 @@ public class SPARQLQueryBuilderRemoteServicesTest
 
     @Tag("slow")
     @Test
-    void testWithLabelContainingAnyOf_Virtuoso_withLanguage_FTS() throws Exception
-    {
-        assertIsReachable(ukpVirtuosoRepo);
-
-        kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
-
-        var results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
-                .forItems(kb) //
-                .withLabelContainingAnyOf("Tower"));
-
-        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).isNotEmpty();
-        assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> label.toLowerCase().contains("tower"));
-    }
-
-    @Tag("slow")
-    @Test
     void testWithLabelContainingAnyOf_Wikidata_FTS() throws Exception
     {
         assertIsReachable(wikidata);
@@ -228,111 +203,6 @@ public class SPARQLQueryBuilderRemoteServicesTest
         assertThat(results).isNotEmpty();
         assertThat(results).extracting(KBHandle::getUiLabel).allMatch(
                 label -> label.contains("Schapiro-Frisch") || label.contains("Stiker-Métral"));
-    }
-
-    @Tag("slow")
-    @Test
-    void testWithLabelContainingAnyOf_classes_HUCIT_FTS() throws Exception
-    {
-        assertIsReachable(hucit);
-
-        kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
-
-        var results = asHandles(hucit, SPARQLQueryBuilder //
-                .forClasses(kb) //
-                .withLabelContainingAnyOf("work"));
-
-        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).isNotEmpty();
-        assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> label.toLowerCase().contains("work"));
-    }
-
-    @Tag("slow")
-    @Test
-    public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_1() throws Exception
-    {
-        assertIsReachable(ukpVirtuosoRepo);
-
-        kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
-
-        // Single word - actually, we add a wildcard here so anything that starts with "Barack"
-        // would also be matched
-        var results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
-                .forItems(kb) //
-                .withLabelStartingWith("Barack"));
-
-        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).isNotEmpty();
-        assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> label.startsWith("Barack"));
-    }
-
-    @Tag("slow")
-    @Test
-    public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_2() throws Exception
-    {
-        assertIsReachable(ukpVirtuosoRepo);
-
-        kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
-
-        // Two words with the second being very short - in this case, we drop the very short word
-        // so that the user doesn't stop getting suggestions while writing because Virtuoso doesn't
-        // do wildcards on words shorter than 4 characters
-        var results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
-                .forItems(kb) //
-                .withLabelStartingWith("Barack Ob"));
-
-        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).isNotEmpty();
-        assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> label.startsWith("Barack"));
-    }
-
-    @Tag("slow")
-    @Test
-    public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_3() throws Exception
-    {
-        assertIsReachable(ukpVirtuosoRepo);
-
-        kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
-
-        // Two words with the second being very short and a space following - in this case we
-        // assmume that the user is in fact searching for "Barack Ob" and do either drop the
-        // last element nor add a wildcard
-        var results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
-                .forItems(kb) //
-                .withLabelStartingWith("Barack Ob "));
-
-        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).isEmpty();
-        assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> label.startsWith("Barack"));
-    }
-
-    @Tag("slow")
-    @Test
-    public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_4() throws Exception
-    {
-        assertIsReachable(ukpVirtuosoRepo);
-
-        kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
-
-        // Two words with the second being 4+ chars - we add a wildcard here so anything
-        // starting with "Barack Obam" should match
-        var results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
-                .forItems(kb) //
-                .withLabelStartingWith("Barack Obam"));
-
-        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).isNotEmpty();
-        assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> label.startsWith("Barack Obam"));
     }
 
     @Tag("slow")
@@ -500,64 +370,6 @@ public class SPARQLQueryBuilderRemoteServicesTest
         assertThat(results).isNotEmpty();
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> "Labour".equals(label) || "Tory".equals(label));
-    }
-
-    @Tag("slow")
-    @Test
-    public void testWithLabelMatchingExactlyAnyOf_Virtuoso_withLanguage_FTS() throws Exception
-    {
-        assertIsReachable(ukpVirtuosoRepo);
-
-        kb.setType(REMOTE);
-        kb.setFullTextSearchIri(FTS_VIRTUOSO.stringValue());
-
-        var results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder //
-                .forItems(kb) //
-                .withLabelMatchingExactlyAnyOf("Green Goblin"));
-
-        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).isNotEmpty();
-        assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> "Green Goblin".equals(label));
-    }
-
-    @Tag("slow")
-    @Test
-    public void testWithLabelStartingWith_HUCIT_noFTS() throws Exception
-    {
-        assertIsReachable(hucit);
-
-        kb.setType(REMOTE);
-        kb.setFullTextSearchIri(null);
-
-        var results = asHandles(hucit, SPARQLQueryBuilder //
-                .forItems(kb) //
-                .withLabelStartingWith("Achilles"));
-
-        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).isNotEmpty();
-        assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> label.startsWith("Achilles"));
-    }
-
-    @Tag("slow")
-    @Test
-    public void testWithLabelStartingWith_onlyDescendants_HUCIT_noFTS() throws Exception
-    {
-        assertIsReachable(hucit);
-
-        kb.setType(REMOTE);
-        kb.setFullTextSearchIri(null);
-
-        var results = asHandles(hucit, SPARQLQueryBuilder //
-                .forInstances(kb) //
-                .descendantsOf("http://erlangen-crm.org/efrbroo/F1_Work") //
-                .withLabelStartingWith("Achilles"));
-
-        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).isNotEmpty();
-        assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> label.startsWith("Achilles"));
     }
 
     @Tag("slow")

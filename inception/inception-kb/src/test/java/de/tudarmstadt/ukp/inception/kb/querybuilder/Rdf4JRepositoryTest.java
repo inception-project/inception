@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLoc
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.TURTLE_PREFIX;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.importDataFromString;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.contentOf;
 import static org.eclipse.rdf4j.rio.RDFFormat.TURTLE;
 
@@ -31,12 +32,8 @@ import java.io.File;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.eclipse.rdf4j.query.BindingSet;
-import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.Repository;
-import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
@@ -87,7 +84,7 @@ public class Rdf4JRepositoryTest
 
         SPARQLQueryBuilderLocalTestScenarios.initRdfsMapping(kb);
 
-        try (RepositoryConnection conn = repository.getConnection()) {
+        try (var conn = repository.getConnection()) {
             conn.clear();
         }
     }
@@ -105,9 +102,9 @@ public class Rdf4JRepositoryTest
         var exclusions = asList();
 
         return SPARQLQueryBuilderLocalTestScenarios.tests().stream() //
-                .filter(scenario -> !exclusions.contains(scenario.name))
-                .map(scenario -> Arguments.of(scenario.name, scenario))
-                .collect(Collectors.toList());
+                .filter(scenario -> !exclusions.contains(scenario.name)) //
+                .map(scenario -> Arguments.of(scenario.name, scenario)) //
+                .collect(toList());
     }
 
     @ParameterizedTest(name = "{index}: test {0}")
@@ -121,15 +118,15 @@ public class Rdf4JRepositoryTest
     @Test
     void runSparqlQuery() throws Exception
     {
-        try (RepositoryConnection conn = repository.getConnection()) {
+        try (var conn = repository.getConnection()) {
             importDataFromString(repository, kb, TURTLE, TURTLE_PREFIX,
                     DATA_ADDITIONAL_SEARCH_PROPERTIES_2);
 
             var tupleQuery = conn.prepareTupleQuery(contentOf(new File(
                     "src/test/resources/queries/additional_search_properties_2/rdf4j.sparql")));
-            try (TupleQueryResult result = tupleQuery.evaluate()) {
+            try (var result = tupleQuery.evaluate()) {
                 while (result.hasNext()) {
-                    BindingSet bindings = result.next();
+                    var bindings = result.next();
                     LOG.info("Bindings: {}", bindings);
                 }
             }
