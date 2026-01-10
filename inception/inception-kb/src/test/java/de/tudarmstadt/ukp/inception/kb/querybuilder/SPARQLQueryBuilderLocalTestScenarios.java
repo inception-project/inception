@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClientBuilder;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandle;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.exists;
 import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.isReachable;
@@ -252,6 +253,8 @@ public class SPARQLQueryBuilderLocalTestScenarios
                         SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_withLanguage_FTS_3),
                 new Scenario("testWithLabelStartingWith_withLanguage_FTS_4",
                         SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_withLanguage_FTS_4),
+                new Scenario("testWithLabelStartingWith_withLanguage_FTS_5",
+                        SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_withLanguage_FTS_5),
                 new Scenario("testWithLabelStartingWith_withLanguage_noFTS",
                         SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_withLanguage_noFTS),
                 new Scenario("testWithLabelContainingAnyOf_pets_ttl_noFTS",
@@ -1291,6 +1294,38 @@ public class SPARQLQueryBuilderLocalTestScenarios
                         "description", "language")
                 .containsExactlyInAnyOrder(new KBHandle("http://example.org/#green-goblin",
                         "Green Goblin", null, "en"));
+    }
+
+    static void testWithLabelStartingWith_withLanguage_FTS_5(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
+    {
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
+
+        // language → expected UI label
+        var expectations = Map.of( //
+                "de", "Automobil", //
+                "en", "automobile", //
+                "fr", "automobile", //
+                "es", "automóvil", //
+                "it", "automobile", //
+                "pt", "automóvel", //
+                "nl", "auto");
+
+        expectations.forEach((language, expectedLabel) -> {
+            aKB.setDefaultLanguage(language);
+            aKB.setAdditionalLanguages(expectations.keySet().stream() //
+                    .filter(lang -> !language.equals(lang)) //
+                    .toList());
+
+            var results = asHandle(aRepository,
+                    SPARQLQueryBuilder.forItems(aKB).withLabelContainingAnyOf("auto"));
+
+            assertThat(results).as("Language: %s", language) //
+                    .extracting(KBHandle::getUiLabel) //
+                    .matches(expectedLabel::equals);
+        });
     }
 
     static void testWithLabelStartingWith_OLIA(Repository aRepository, KnowledgeBase aKB)

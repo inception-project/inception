@@ -270,6 +270,7 @@ public class ProjectsOverviewPage
         var sessionOwner = userRepository.getCurrentUser();
         toggleBulkChange = new LambdaAjaxLink(MID_TOGGLE_BULK_CHANGE, this::actionToggleBulkChange);
         toggleBulkChange.setOutputMarkupId(true);
+        toggleBulkChange.add(visibleWhen(() -> projectList.getItemCount() > 0));
         toggleBulkChange.setVisibilityAllowed(
                 projectUiProperties.getBulkActions().anyActionsAccessible(sessionOwner));
         toggleBulkChange.add(new CssClassNameAppender(LoadableDetachableModel

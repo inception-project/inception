@@ -22,3 +22,20 @@
     rdfs:label 'Folletto Blue'@it ;
     rdfs:label 'Super Blue' ;
     rdfs:comment 'Piccolo mostro blu'@it .
+
+<#automobile>
+    rdfs:label 'Automobil'@de ;
+    rdfs:label 'automobile'@fr ;
+    rdfs:label 'automobile'@en ;
+    rdfs:label 'automóvil'@es ;
+    rdfs:label 'automobile'@it ;
+    rdfs:label 'automóvel'@pt ;
+    rdfs:label 'auto'@nl ;
+
+    rdfs:comment 'Ein Automobil ist ein motorgetriebenes Straßenfahrzeug'@de ;
+    rdfs:comment 'Une automobile est un véhicule routier à moteur.'@fr ;
+    rdfs:comment 'An automobile is a motor-powered road vehicle.'@en ;
+    rdfs:comment 'Un automóvil es un vehículo de carretera propulsado por motor.'@es ;
+    rdfs:comment 'Un’automobile è un veicolo stradale a motore.'@it ;
+    rdfs:comment 'Um automóvel é um veículo rodoviário motorizado.'@pt ;
+    rdfs:comment 'Een auto is een gemotoriseerd wegvoertuig.'@nl .
