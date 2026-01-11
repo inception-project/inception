@@ -32,11 +32,13 @@ import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.move;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Collections.emptySet;
+import static java.util.Locale.ROOT;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static org.apache.commons.lang3.Strings.CS;
 import static org.apache.commons.lang3.reflect.FieldUtils.readField;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.eclipse.rdf4j.repository.manager.LocalRepositoryManager.REPOSITORIES_DIR;
@@ -54,7 +56,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -91,7 +92,6 @@ import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
-import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.SailException;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
@@ -713,7 +713,7 @@ public class KnowledgeBaseServiceImpl
             // Detect the file format
             var format = Rio.getParserFormatForFileName(aFilename).orElse(RDFXML);
 
-            String lowerCaseFilename = aFilename.toLowerCase(Locale.ROOT);
+            var lowerCaseFilename = aFilename.toLowerCase(ROOT);
             if (lowerCaseFilename.endsWith(".obo") || lowerCaseFilename.endsWith(".obo.gz")) {
                 try {
                     resource = transduceOboToOwlFunctionalSyntax(is);
@@ -731,7 +731,7 @@ public class KnowledgeBaseServiceImpl
                 // If the RDF file contains relative URLs, then they probably start with a hash.
                 // To avoid having two hashes here, we drop the hash from the base prefix configured
                 // by the user.
-                String prefix = StringUtils.removeEnd(kb.getBasePrefix(), "#");
+                var prefix = CS.removeEnd(kb.getBasePrefix(), "#");
                 conn.add(is, prefix, format);
             }
         }
@@ -776,7 +776,7 @@ public class KnowledgeBaseServiceImpl
             return;
         }
         try (var conn = getConnection(kb)) {
-            RDFWriter rdfWriter = Rio.createWriter(format, os);
+            var rdfWriter = Rio.createWriter(format, os);
             conn.export(rdfWriter);
         }
     }
@@ -1636,7 +1636,8 @@ public class KnowledgeBaseServiceImpl
 
         var luceneSail = (LuceneSail) sail;
         try (var conn = getConnection(aKB)) {
-            luceneSail.reindex();
+            ReindexingUtils.reindex(luceneSail);
+            // luceneSail.reindex();
             conn.commit();
         }
         catch (SailException e) {
@@ -1651,7 +1652,8 @@ public class KnowledgeBaseServiceImpl
 
                 // Only try to rebuild once - so no recursion here!
                 try (var conn = getConnection(aKB)) {
-                    luceneSail.reindex();
+                    ReindexingUtils.reindex(luceneSail);
+                    // luceneSail.reindex();
                     conn.commit();
                 }
             }
