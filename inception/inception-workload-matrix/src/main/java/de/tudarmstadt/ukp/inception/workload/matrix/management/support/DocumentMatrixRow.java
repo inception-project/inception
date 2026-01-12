@@ -21,9 +21,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NE
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
-import static java.util.Comparator.comparing;
-import static java.util.Comparator.naturalOrder;
-import static java.util.Comparator.nullsFirst;
+import static org.danekja.java.misc.serializable.SerializableComparator.comparing;
+import static org.danekja.java.misc.serializable.SerializableComparator.naturalOrder;
+import static org.danekja.java.misc.serializable.SerializableComparator.nullsFirst;
 
 import java.io.Serializable;
 import java.util.Map;
