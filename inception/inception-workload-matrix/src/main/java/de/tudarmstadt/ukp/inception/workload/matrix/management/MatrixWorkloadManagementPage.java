@@ -44,6 +44,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.csv.CSVFormat.EXCEL;
@@ -481,7 +482,7 @@ public class MatrixWorkloadManagementPage
 
         var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR).stream() //
                 .map(AnnotationSet::forUser) //
-                .toList();
+                .collect(toCollection(ArrayList::new));
 
         if (isNotBlank(filter.getObject().getUserName())) {
             if (filter.getObject().isMatchUserNameAsRegex()) {
