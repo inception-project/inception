@@ -1,0 +1,43 @@
+{
+  "target": "https://pubannotation.org/docs/sourcedb/PubMed/sourceid/25314077",
+  "sourcedb": "PubMed",
+  "sourceid": "25314077",
+  "source_url": "http://www.ncbi.nlm.nih.gov/pubmed/25314077",
+  "text": "Cancer-selective targeting of the NF-κB survival pathway with GADD45β/MKK7 inhibitors.\nConstitutive NF-κB signaling promotes survival in multiple myeloma (MM) and other cancers; however, current NF-κB-targeting strategies lack cancer cell specificity. Here, we identify the interaction between the NF-κB-regulated antiapoptotic factor GADD45β and the JNK kinase MKK7 as a therapeutic target in MM. Using a drug-discovery strategy, we developed DTP3, a D-tripeptide, which disrupts the GADD45β/MKK7 complex, kills MM cells effectively, and, importantly, lacks toxicity to normal cells. DTP3 has similar anticancer potency to the clinical standard, bortezomib, but more than 100-fold higher cancer cell specificity in vitro. Notably, DTP3 ablates myeloma xenografts in mice with no apparent side effects at the effective doses. Hence, cancer-selective targeting of the NF-κB pathway is possible and, at least for myeloma patients, promises a profound benefit.",
+  "tracks": [
+    {
+      "project": "Inflammaging",
+      "denotations": [
+        {
+          "id": "T1",
+          "span": {
+            "begin": 0,
+            "end": 86
+          },
+          "obj": "Sentence"
+        },
+        {
+          "id": "T2",
+          "span": {
+            "begin": 87,
+            "end": 251
+          },
+          "obj": "Sentence"
+        }
+      ]
+    },
+    {
+      "project": "PubmedHPO",
+      "denotations": [
+        {
+          "id": "T1",
+          "span": {
+            "begin": 137,
+            "end": 153
+          },
+          "obj": "HP_0006775"
+        }
+      ]
+    }
+  ]
+}
