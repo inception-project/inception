@@ -28,3 +28,7 @@ a.tree-junction {
   // z-index 1020 is in Bootstrap's .sticky-top and we need to be above that
   z-index: 1030;
 }
+
+.tree-branch .tree-node {
+  white-space: nowrap;
+}
