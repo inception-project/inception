@@ -58,7 +58,7 @@ public sealed interface MChatMessage
 
     String textRepresentation();
 
-    default String toolName()
+    default List<MToolCall> toolCalls()
     {
         return null;
     }

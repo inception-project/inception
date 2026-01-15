@@ -61,7 +61,8 @@ public class InputBehavior
      * 
      * Note: Changing this only works before the first rendering of the behavior.
      * 
-     * @param aDisabledInInput whether to disable in input fields.
+     * @param aDisabledInInput
+     *            whether to disable in input fields.
      * @return this for chaining.
      */
     public InputBehavior setDisabledInInput(boolean aDisabledInInput)

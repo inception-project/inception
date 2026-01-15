@@ -121,7 +121,7 @@ public class DocumentContextRetriever
     @Override
     public List<MTextMessage> retrieve(Project aProject, MTextMessage aMessage)
     {
-        var chunks = retrieve(aProject, aMessage.message());
+        var chunks = retrieve(aProject, aMessage.content());
 
         var references = new LinkedHashMap<Chunk, MReference>();
         var body = new StringBuilder();
@@ -135,7 +135,7 @@ public class DocumentContextRetriever
             return asList(MTextMessage.builder() //
                     .withActor("Source context retriever") //
                     .withRole(SYSTEM).internal().ephemeral() //
-                    .withMessage(
+                    .withContent(
                             "The source context retriever found no relevant information in the documents of the current project.") //
                     .build());
         }
@@ -145,7 +145,7 @@ public class DocumentContextRetriever
                 .withRole(SYSTEM).internal().ephemeral() //
                 .withReferences(references.values());
 
-        msg.withMessage(body.toString());
+        msg.withContent(body.toString());
 
         return asList(msg.build());
     }

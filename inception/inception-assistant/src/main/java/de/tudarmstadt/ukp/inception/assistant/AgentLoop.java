@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,8 +67,10 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.Ollama
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaFunctionCall;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaTool;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaToolCall;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
@@ -84,7 +87,7 @@ public class AgentLoop
      * set to 10 to prevent infinite loops and excessive resource usage. When this limit is reached,
      * the agent loop will stop and return control to the user.
      */
-    private static final int MAX_REPEAT = 10;
+    private static final int MAX_REPEAT = 20;
 
     /**
      * How much of the available context window to use (in percent) before cutting messages.
@@ -158,9 +161,15 @@ public class AgentLoop
         return systemMessages;
     }
 
-    public void recordMessage(MChatMessage aMessage)
+    public void recordAndSendMessage(MChatMessage aMessage)
     {
+        Validate.isTrue(aMessage.done(), "Message must be done");
+
         memory.recordMessage(aMessage);
+
+        if (messageStreamHandler != null) {
+            messageStreamHandler.handleMessage(sessionOwner, project, UUID.randomUUID(), aMessage);
+        }
     }
 
     public void setToolCallingEnabled(boolean aToolCallingEnabled)
@@ -209,8 +218,7 @@ public class AgentLoop
                 .withModel(chatProperties.getModel()) //
                 .withStream(true) //
                 .withMessages(aMessages.stream() //
-                        .map(msg -> new OllamaChatMessage(msg.role(), msg.textRepresentation(),
-                                msg.thinking(), msg.toolName())) //
+                        .map(this::toOllama) //
                         .toList()) //
                 .withOption(OllamaOptions.NUM_CTX, chatProperties.getContextLength()) //
                 .withOption(OllamaOptions.TOP_P, chatProperties.getTopP()) //
@@ -266,6 +274,7 @@ public class AgentLoop
                 toolCalls.add(MToolCall.builder() //
                         .withActor(tool.getFunction().getActor()) //
                         .withInstance(tool.getFunction().getService()) //
+                        .withName(tool.getFunction().getName()) //
                         .withMethod(tool.getFunction().getImplementation()) //
                         .withArguments(call.getFunction().getArguments()) //
                         .withStop(tool.isStop()) //
@@ -276,7 +285,7 @@ public class AgentLoop
         // Send a final and complete message also including final metrics
         return MChatResponse.builder() //
                 .withMessage(newMessage(responseId) //
-                        .withMessage(response.getMessage().content()) //
+                        .withContent(response.getMessage().content()) //
                         .withThinking(response.getMessage().thinking()) //
                         .withPerformance(MPerformanceMetrics.builder() //
                                 .withDelay(firstTokenTime.get() - startTime) //
@@ -285,9 +294,32 @@ public class AgentLoop
                                 .build()) //
                         // Include all references in the final message again just to be sure
                         .withReferences(references.values()) //
+                        .withToolCalls(toolCalls) //
                         .build()) //
-                .withToolCalls(toolCalls) //
                 .build();
+    }
+
+    private OllamaChatMessage toOllama(MChatMessage aMsg)
+    {
+        List<OllamaToolCall> toolCalls = null;
+
+        if (isNotEmpty(aMsg.toolCalls())) {
+            toolCalls = new ArrayList<OllamaToolCall>();
+            var i = 0;
+            for (var tc : aMsg.toolCalls()) {
+                var functionCall = new OllamaFunctionCall();
+                functionCall.setIndex(i);
+                functionCall.setName(tc.name());
+                functionCall.setArguments(tc.arguments());
+                var toolCall = new OllamaToolCall();
+                toolCall.setFunction(functionCall);
+                toolCalls.add(toolCall);
+                i++;
+            }
+        }
+
+        return new OllamaChatMessage(aMsg.role(), aMsg.textRepresentation(), aMsg.thinking(),
+                toolCalls);
     }
 
     public <T> MCallResponse<T> call(Class<T> aResult, List<MTextMessage> aMessages)
@@ -302,8 +334,7 @@ public class AgentLoop
                 .withModel(chatProperties.getModel()) //
                 .withStream(false) //
                 .withMessages(aMessages.stream() //
-                        .map(msg -> new OllamaChatMessage(msg.role(), msg.message(), msg.thinking(),
-                                msg.toolName())) //
+                        .map(this::toOllama) //
                         .toList()) //
                 .withFormat(JSONUtil.adaptJackson2To3(schema)) //
                 .withOption(OllamaOptions.NUM_CTX, chatProperties.getContextLength()) //
@@ -363,7 +394,7 @@ public class AgentLoop
         }
 
         var message = newMessage(responseId) //
-                .withMessage(aMessage.getMessage().content()) //
+                .withContent(aMessage.getMessage().content()) //
                 .withThinking(aMessage.getMessage().thinking()) //
                 .notDone() //
                 .build();
@@ -387,15 +418,14 @@ public class AgentLoop
 
             if (result instanceof MCallResponse.Builder responseBuilder) {
                 responseBuilder //
-                        .withActor(defaultIfBlank(call.actor(), "Tool")) //
-                        .withRole(TOOL).internal() //
+                        .withRole(TOOL) //
                         .withToolCall(call);
                 return responseBuilder.build();
             }
 
             return MCallResponse.builder(Object.class) //
                     .withActor(defaultIfBlank(call.actor(), "Tool")) //
-                    .withRole(TOOL).internal() //
+                    .withRole(TOOL) //
                     .withToolCall(call) //
                     .withPayload(result) //
                     .build();
@@ -403,8 +433,8 @@ public class AgentLoop
         catch (Exception e) {
             LOG.error("Error calling tool", e);
             return MTextMessage.builder() //
-                    .withActor("Error").withRole(SYSTEM).internal().ephemeral() //
-                    .withMessage("Error: " + e.getMessage()) //
+                    .withActor("Error").withRole(SYSTEM) //
+                    .withContent("Error: " + e.getMessage()) //
                     .build();
         }
     }
@@ -432,12 +462,12 @@ public class AgentLoop
     public void loop(SourceDocument aDocument, String aDataOwner, MTextMessage aMessage)
         throws IOException
     {
-        List<MChatMessage> conversationMessages = memory.getInternalChatHistory();
+        var conversationMessages = memory.getInternalChatHistory();
 
         // Recording the message only here so it does not yet appear in the initial conversation
         // messages
-        recordMessage(aMessage);
-        getEphemeralMessages().forEach(this::recordMessage);
+        recordAndSendMessage(aMessage);
+        getEphemeralMessages().forEach(this::recordAndSendMessage);
 
         var headMessage = aMessage;
 
@@ -454,6 +484,9 @@ public class AgentLoop
                     getEphemeralMessages(), conversationMessages, headMessage,
                     properties.getChat().getContextLength());
 
+            LOG.debug("Selected {} of {} to be included in the context window",
+                    recentConversation.size(), memory.getMessages().size());
+
             MChatResponse response;
             try {
                 response = chat(recentConversation, responseId);
@@ -465,18 +498,18 @@ public class AgentLoop
                                 .withId(responseId) // if null builder sets ID
                                 .withActor("Error") //
                                 .withRole(SYSTEM) //
-                                .withMessage("Error: " + e.getMessage()) //
+                                .withContent("Error: " + e.getMessage()) //
                                 .build())
                         .build();
             }
 
             // If the message we started rendering has no content yet, we re-use the message ID
             // for the next message.
-            if (isBlank(response.message().message()) && response.toolCalls().isEmpty()) {
+            if (isBlank(response.message().content()) && response.message().toolCalls().isEmpty()) {
                 responseId = response.message().id();
             }
             else {
-                // If we have any accumulated references from the tool calls, we'd need
+                // If we have any accumulated references from the tool calls, we need
                 // to inject them here so they get stored/dispatched
                 var msg = response.message();
                 msg = msg.appendReferences(accumulatedReferences);
@@ -487,8 +520,8 @@ public class AgentLoop
                 accumulatedReferences.clear();
             }
 
-            if (!response.toolCalls().isEmpty()) {
-                for (var call : response.toolCalls()) {
+            if (!response.message().toolCalls().isEmpty()) {
+                for (var call : response.message().toolCalls()) {
                     var msg = callTool(sessionOwner, project, aDocument, aDataOwner,
                             response.message(), call);
                     if (msg.references() != null) {
@@ -513,6 +546,12 @@ public class AgentLoop
                 // TODO Have some mechanism to allow the user to continue the churn
                 LOG.debug("Emergency break");
                 repeat = false;
+                recordAndSendMessage(MTextMessage.builder() //
+                        .withId(responseId) // if null builder sets ID
+                        .withRole(ASSISTANT) //
+                        .withContent(
+                                "The assistant has worked on this for a while. Should it continue?") //
+                        .build());
             }
         }
         while (repeat);
@@ -544,10 +583,10 @@ public class AgentLoop
         while (systemMsgIterator.hasNext() && allTokens < limit) {
             var msg = systemMsgIterator.next();
             if (SYSTEM.equals(msg.role())) {
-                var msgTokens = aEncoding.countTokensOrdinary(msg.message());
+                var msgTokens = aEncoding.countTokensOrdinary(msg.content());
                 if (allTokens + msgTokens > limit) {
                     LOG.trace("System message exceeds remaining token limit ({}): [{}]", msgTokens,
-                            msg.message());
+                            msg.content());
                     continue;
                 }
 
@@ -559,7 +598,7 @@ public class AgentLoop
 
         // Unconditionally the latest user message
         if (aLatestUserMessage != null) {
-            var latestUserMsgTokens = aEncoding.countTokensOrdinary(aLatestUserMessage.message());
+            var latestUserMsgTokens = aEncoding.countTokensOrdinary(aLatestUserMessage.content());
             recentTokens += latestUserMsgTokens;
             allTokens += latestUserMsgTokens;
             tailMessages.addLast(aLatestUserMessage);

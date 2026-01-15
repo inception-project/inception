@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AU
 import static java.lang.String.join;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -50,18 +49,6 @@ public class DocumentsToolLibrary
             Allows to read a document from the project.
             """;
 
-    private static final String PARAM_DOCUMENT_DESCRIPTION = """
-            Name of the document to read.
-            """;
-
-    private static final String PARAM_START_DESCRIPTION = """
-            Number of the first line to read (starting with 0).
-            """;
-
-    private static final String PARAM_LINES_DESCRIPTION = """
-            How many lines to read.
-            """;
-
     private final DocumentService documentService;
     private final UserDao userService;
 
@@ -87,7 +74,7 @@ public class DocumentsToolLibrary
             value = "list_documents", //
             actor = "List documents", //
             description = LIST_DOCUMENTS_TOOL_DESCRIPTION)
-    public MCallResponse.Builder<Map<String, List<String>>> listDocuments( //
+    public MCallResponse.Builder<?> listDocuments( //
             AnnotationEditorContext aContext)
         throws IOException
     {
@@ -100,8 +87,10 @@ public class DocumentsToolLibrary
                 .sorted() //
                 .toList();
 
-        Builder<Map<String, List<String>>> callResponse = MCallResponse.builder();
-        callResponse.withPayload(Map.of("documents", payload));
+        Builder<Map<String, Object>> callResponse = MCallResponse.builder();
+        callResponse.withPayload(Map.of( //
+                "document_count", payload.size(), //
+                "documents", payload));
         return callResponse;
     }
 
@@ -111,20 +100,23 @@ public class DocumentsToolLibrary
             description = READ_DOCUMENT_TOOL_DESCRIPTION)
     public MCallResponse.Builder<String> readDocument( //
             AnnotationEditorContext aContext,
-            @ToolParam(value = "document", description = PARAM_DOCUMENT_DESCRIPTION) String aDocument,
-            @ToolParam(value = "from", description = PARAM_START_DESCRIPTION) int aStart,
-            @ToolParam(value = "count", description = PARAM_LINES_DESCRIPTION) int aLines)
+            @ToolParam(value = "document", description = "Name of the document to read.") String aDocument,
+            @ToolParam(value = "startLine", description = "First line to read (1-indexed)") int aStartLine,
+            @ToolParam(value = "endLine", description = "Last line to read (1-indexed)") int aEndLine)
         throws IOException
     {
-        if (aStart < 0) {
+        if (aStartLine < 1) {
             return MCallResponse.builder(String.class)
-                    .withPayload("Error: The 'from' parameter (start line) must be >= 0.");
+                    .withPayload("Error: The 'startLine' parameter must be >= 1.");
         }
 
-        if (aLines <= 0) {
+        if (aEndLine < 1) {
             return MCallResponse.builder(String.class)
-                    .withPayload("Error: The 'count' parameter (number of lines) must be > 0.");
+                    .withPayload("Error: The 'endLine' parameter must be >= 1.");
         }
+
+        var startLine = Math.min(aStartLine, aEndLine);
+        var endLine = Math.max(aStartLine, aEndLine);
 
         var project = aContext.getProject();
         var sessionOwner = userService.get(aContext.getSessionOwner());
@@ -143,8 +135,15 @@ public class DocumentsToolLibrary
             var cas = documentService.createOrReadInitialCas(document.get(), AUTO_CAS_UPGRADE,
                     SHARED_READ_ONLY_ACCESS);
             var lines = cas.getDocumentText().split("\\r?\\n|\\r");
-            lines = ArrayUtils.subarray(lines, aStart, aStart + aLines);
-            return MCallResponse.builder(String.class).withPayload(join("\n", lines));
+            lines = ArrayUtils.subarray(lines, startLine - 1, endLine);
+            return MCallResponse.builder(String.class) //
+                    .withActor("Read " + aDocument + " (lines " + startLine + "-"
+                            + (startLine + lines.length - 1) + ")")
+                    .withPayload("---\n" + //
+                            "startLine: " + startLine + "\n" + //
+                            "endLine: " + (startLine + lines.length - 1) + "\n" + //
+                            "---\n" + //
+                            join("\n", lines));
         }
     }
 }

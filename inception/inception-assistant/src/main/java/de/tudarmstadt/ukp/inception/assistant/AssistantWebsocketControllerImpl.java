@@ -104,7 +104,7 @@ public class AssistantWebsocketControllerImpl
         var message = MTextMessage.builder() //
                 .withActor(sessionOwner.getUiName()) //
                 .withRole(USER) //
-                .withMessage(aMessage) //
+                .withContent(aMessage) //
                 .build();
 
         try {

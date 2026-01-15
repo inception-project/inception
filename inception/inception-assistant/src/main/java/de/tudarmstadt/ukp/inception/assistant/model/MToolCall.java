@@ -22,18 +22,20 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationEditorContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolUtils;
 
-public record MToolCall(String actor, Object instance, Method method, boolean stop,
-        Map<String, Object> arguments)
+public record MToolCall(String actor, @JsonIgnore Object instance, @JsonIgnore Method method,
+        @JsonIgnore boolean stop, String name, Map<String, Object> arguments)
 {
 
     private MToolCall(Builder builder)
     {
-        this(builder.actor, builder.instance, builder.method, builder.stop,
+        this(builder.actor, builder.instance, builder.method, builder.stop, builder.name,
                 new LinkedHashMap<>(builder.arguments));
     }
 
@@ -87,6 +89,7 @@ public record MToolCall(String actor, Object instance, Method method, boolean st
     public static final class Builder
     {
         private Object instance;
+        private String name;
         private Method method;
         private String actor;
         private boolean stop;
@@ -105,6 +108,12 @@ public record MToolCall(String actor, Object instance, Method method, boolean st
         public Builder withInstance(Object aInstance)
         {
             instance = aInstance;
+            return this;
+        }
+
+        public Builder withName(String aName)
+        {
+            this.name = aName;
             return this;
         }
 

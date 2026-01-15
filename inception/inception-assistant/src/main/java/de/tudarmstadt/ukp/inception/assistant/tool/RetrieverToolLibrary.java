@@ -113,10 +113,12 @@ public class RetrieverToolLibrary
 
         if (chunkTexts.isEmpty()) {
             return MCallResponse.builder(String.class) //
+                    .withActor("Searching: " + aTopic) //
                     .withPayload("The search has yielded no results");
         }
         else {
             Builder<Map<String, Serializable>> callResponse = MCallResponse.builder();
+            callResponse.withActor("Searching: " + aTopic);
             callResponse.withReferences(references.values());
             callResponse.withPayload(Map.of( //
                     "instructions", INSTRUCTIONS, //

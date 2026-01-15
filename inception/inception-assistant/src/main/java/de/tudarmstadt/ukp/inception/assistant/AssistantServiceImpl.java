@@ -253,7 +253,7 @@ public class AssistantServiceImpl
             var resultMessage = MTextMessage.builder() //
                     .withRole(SYSTEM).internal().ephemeral() //
                     .withActor(aMessage.actor()) //
-                    .withMessage("```json\n" + toPrettyJsonString(result.payload()) + "\n```") //
+                    .withContent("```json\n" + toPrettyJsonString(result.payload()) + "\n```") //
                     .withPerformance(result.performance()) //
                     .build();
             memory.recordMessage(resultMessage);
@@ -316,7 +316,7 @@ public class AssistantServiceImpl
                 .withRole(SYSTEM) //
                 .internal() //
                 .ephemeral() //
-                .withMessage("Error: " + e.getMessage()) //
+                .withContent("Error: " + e.getMessage()) //
                 .build();
         memoryManager.getMemory(aSessionOwner, aProject).recordMessage(errorMessage);
         dispatchMessage(aSessionOwner, aProject, errorMessage);
@@ -336,13 +336,6 @@ public class AssistantServiceImpl
             for (var retriever : retrieverExtensionPoint.getExtensions(aProject)) {
                 messages.addAll(retriever.retrieve(aProject, aMessage));
             }
-        }
-        else {
-            messages.add(MTextMessage.builder() //
-                    .withRole(SYSTEM).internal().ephemeral() //
-                    .withMessage(
-                            "It is essential to follow the tool template instructions when calling a tool!") //
-                    .build());
         }
 
         return messages;
@@ -377,7 +370,7 @@ public class AssistantServiceImpl
 
         return asList(MTextMessage.builder() //
                 .withRole(SYSTEM).internal().ephemeral() //
-                .withMessage(join("\n\n", primeDirectives)) //
+                .withContent(join("\n\n", primeDirectives)) //
                 .build());
     }
 
@@ -406,10 +399,10 @@ public class AssistantServiceImpl
         while (systemMsgIterator.hasNext() && allTokens < limit) {
             var msg = systemMsgIterator.next();
             if (SYSTEM.equals(msg.role())) {
-                var msgTokens = encoding.countTokensOrdinary(msg.message());
+                var msgTokens = encoding.countTokensOrdinary(msg.content());
                 if (allTokens + msgTokens > limit) {
                     LOG.trace("System message exceeds remaining token limit ({}): [{}]", msgTokens,
-                            msg.message());
+                            msg.content());
                     continue;
                 }
 
@@ -421,7 +414,7 @@ public class AssistantServiceImpl
 
         // Unconditionally the latest user message
         if (aLatestUserMessage != null) {
-            var latestUserMsgTokens = encoding.countTokensOrdinary(aLatestUserMessage.message());
+            var latestUserMsgTokens = encoding.countTokensOrdinary(aLatestUserMessage.content());
             recentTokens += latestUserMsgTokens;
             allTokens += latestUserMsgTokens;
             tailMessages.addLast(aLatestUserMessage);
