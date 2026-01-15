@@ -124,7 +124,7 @@ public class CheckAnnotationTask
             var rewriteQuestionTask = MTextMessage.builder() //
                     .withActor(ACTOR) //
                     .withRole(USER).internal().ephemeral() //
-                    .withMessage(join("\n", //
+                    .withContent(join("\n", //
                             "Rewrite into a question about whether the annotation is correct with respect to the "
                                     + "span marked in the context.", //
                             "Do not answer the question yet.", //
@@ -140,7 +140,7 @@ public class CheckAnnotationTask
             var inquiryContext = MTextMessage.builder() //
                     .withActor(ACTOR) //
                     .withRole(SYSTEM).internal().ephemeral() //
-                    .withMessage(join("\n", //
+                    .withContent(join("\n", //
                             "The user will ask whether the following annotation is correct.", //
                             "Give one response per annotation.", //
                             "Start each response with yes, no, or unsure, then very briefly explain.", //
@@ -156,7 +156,7 @@ public class CheckAnnotationTask
                     .withId(inquiryMsgId) //
                     .withActor(getSessionOwner().get().getUiName()) //
                     .withRole(USER) //
-                    .withMessage(rewrittenQuestion.message()) //
+                    .withContent(rewrittenQuestion.content()) //
                     .build();
 
             assistantService.processInternalMessage(sessionOwner, getProject(), document, dataOwner,

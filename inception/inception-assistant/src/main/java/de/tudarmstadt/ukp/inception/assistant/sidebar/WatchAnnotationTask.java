@@ -112,7 +112,7 @@ public class WatchAnnotationTask
             var checkQuestion = MTextMessage.builder() //
                     .withActor(ACTOR) //
                     .withRole(SYSTEM).internal().ephemeral() //
-                    .withMessage(join("\n", //
+                    .withContent(join("\n", //
                             "Is the following annotation correct or not. Answer true or false.", //
                             "\n", //
                             "```json", //
@@ -131,7 +131,7 @@ public class WatchAnnotationTask
             var inquiryContext = MTextMessage.builder() //
                     .withActor(ACTOR) //
                     .withRole(SYSTEM).internal().ephemeral() //
-                    .withMessage(join("\n", //
+                    .withContent(join("\n", //
                             "Your task is to advise the user about potential problems with the following annotation.", //
                             "Give one response per annotation.", //
                             "If expanding or reducing the span seems appropriate, mention that.", //

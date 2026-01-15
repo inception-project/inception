@@ -46,7 +46,7 @@ public final class ToolUtils
         var ann = aToolMethod.getAnnotation(Tool.class);
 
         if (ann != null && isNotBlank(ann.description())) {
-            return Optional.of(ann.description());
+            return Optional.of(ann.description().strip());
         }
 
         return Optional.empty();
@@ -56,8 +56,8 @@ public final class ToolUtils
     {
         var ann = aToolMethod.getAnnotation(Tool.class);
 
-        if (ann != null && isNotBlank(ann.description())) {
-            return Optional.of(ann.actor());
+        if (ann != null && isNotBlank(ann.actor())) {
+            return Optional.of(ann.actor().strip());
         }
 
         return Optional.empty();
@@ -96,7 +96,7 @@ public final class ToolUtils
         var ann = aToolParmeter.getAnnotation(ToolParam.class);
 
         if (ann != null && isNotBlank(ann.description())) {
-            return Optional.of(ann.description());
+            return Optional.of(ann.description().strip());
         }
 
         return Optional.empty();

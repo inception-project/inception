@@ -186,7 +186,7 @@ class AssistantServiceImplTest
 
         var message = MTextMessage.builder() //
                 .withRole("assistant") //
-                .withMessage("Test message") //
+                .withContent("Test message") //
                 .build();
 
         try (var client = new WebSocketStompTestClient(USER, PASS)) {
@@ -207,7 +207,7 @@ class AssistantServiceImplTest
 
         var message = MTextMessage.builder() //
                 .withRole("assistant") //
-                .withMessage("Test message") //
+                .withContent("Test message") //
                 .build();
 
         try (var client = new WebSocketStompTestClient(USER, PASS)) {

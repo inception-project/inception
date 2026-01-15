@@ -80,7 +80,7 @@ class AgentLoopTest
         var sut = new AgentLoop(props, client, "integration-test", null, memory, encoding);
 
         var input = List.of(MTextMessage.builder() //
-                .withMessage("Hello") //
+                .withContent("Hello") //
                 .withRole("user") //
                 .withActor("tester") //
                 .build());
@@ -91,7 +91,7 @@ class AgentLoopTest
 
         assertThat(response).isNotNull();
         assertThat(response.message()).isNotNull();
-        assertThat(response.message().message()).isNotBlank();
+        assertThat(response.message().content()).isNotBlank();
     }
 
     @Test
@@ -105,7 +105,7 @@ class AgentLoopTest
 
         // Create user message asking for time
         var input = List.of(MTextMessage.builder() //
-                .withMessage("What is the current time?") //
+                .withContent("What is the current time?") //
                 .withRole("user") //
                 .withActor("tester") //
                 .build());
@@ -120,9 +120,9 @@ class AgentLoopTest
         assertThat(response.message()).isNotNull();
 
         // Verify tool was called
-        assertThat(response.toolCalls()).isNotEmpty();
+        assertThat(response.message().toolCalls()).isNotEmpty();
 
-        var toolCall = response.toolCalls().get(0);
+        var toolCall = response.message().toolCalls().get(0);
         LOG.debug("Tool call: {}", toolCall);
 
         assertThat(toolCall.actor()).isEqualTo("Clock");
@@ -153,7 +153,7 @@ class AgentLoopTest
     void testStreamingMessagesAreAccumulatedInMemory() throws Exception
     {
         var message = MTextMessage.builder() //
-                .withMessage("Tell me a very short story about a robot.") //
+                .withContent("Tell me a very short story about a robot.") //
                 .withRole("user") //
                 .withActor("tester") //
                 .build();
@@ -167,7 +167,7 @@ class AgentLoopTest
         assertThat(responseMessages).satisfiesExactly(m -> {
             assertThat(m).isInstanceOf(MTextMessage.class);
             assertThat(((MTextMessage) m).done()).isTrue();
-            assertThat(((MTextMessage) m).message()).isNotBlank();
+            assertThat(((MTextMessage) m).content()).isNotBlank();
         });
     }
 }

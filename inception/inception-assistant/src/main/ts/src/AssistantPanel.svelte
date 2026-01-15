@@ -47,12 +47,19 @@
         performance?: MPerformanceMetrics;
         context?: string;
         references?: MReference[];
+
+        // Frontend only
+        collapsed?: boolean;
+        collapsible?: boolean;
     }
 
     interface MTextMessage extends MChatMessage {
         thinking: string;
-        message: string;
+        content: string;
         done: boolean;
+
+        // Frontend only
+        thinkingCollapsed?: boolean;
     }
 
     interface MCallResponse extends MChatMessage {
@@ -228,7 +235,7 @@
         // If message is new, add it
         if (index === -1) {
             console.log(
-                `Starting message ${msg.id} with message fragment: ${msg.thinking || msg.message}`,
+                `Starting message ${msg.id} with message fragment: ${msg.thinking || msg.content}`,
             );
             if (msg.context) {
                 // Insert before the message with id == msg.context
@@ -236,38 +243,38 @@
                 if (ctxIndex !== -1) {
                     messages = [
                         ...messages.slice(0, ctxIndex),
-                        msg,
+                        initMessage(msg),
                         ...messages.slice(ctxIndex),
                     ];
                 } else {
                     // If context id not found, just append
-                    messages = [...messages, msg];
+                    messages = [...messages, initMessage(msg)];
                 }
             } else {
                     // If no context id also just append
-                messages = [...messages, msg];
+                messages = [...messages, initMessage(msg)];
             }
 
             if (
                 msg.role == "assistant" &&
-                msg.message &&
+                msg.content &&
                 !msg.internal &&
                 !msg.done
             ) {
-                utteranceBuffer = msg.message;
+                utteranceBuffer = msg.content;
             }
             return;
         }
 
         // Merge with existing message
         console.log(
-            `Merging message ${msg.id} with message fragment: ${msg.thinking || msg.message}`,
+            `Merging message ${msg.id} with message fragment: ${msg.thinking || msg.content}`,
         );
         messages = [
             ...messages.slice(0, index),
             {
                 ...messages[index],
-                message: (messages[index].message || "") + (msg.message || ""),
+                content: (messages[index].content || "") + (msg.content || ""),
                 thinking: (messages[index].thinking || "") + (msg.thinking || ""),
                 references: [
                     ...(messages[index].references || []),
@@ -284,7 +291,7 @@
         if (
             speechAvailable &&
             msg.role == "assistant" &&
-            msg.message &&
+            msg.content &&
             !msg.internal
         ) {
             speak(msg);
@@ -295,6 +302,13 @@
         }
     }
 
+    function initMessage(msg: MChatMessage) {
+        const collapsed = !!msg.internal || (msg.role !== "user" && msg.role !== "assistant");
+        const collapsible = msg.internal || (msg.role !== "user" && msg.role !== "assistant");
+        const thinkingCollapsed = true;
+        return { ...msg, collapsed, collapsible, thinkingCollapsed };
+    }
+
     function onCallResponse(msg: MCallResponse) {
         if (msg.context) {
             // Insert before the message with id == msg.context
@@ -302,21 +316,21 @@
             if (ctxIndex !== -1) {
                 messages = [
                     ...messages.slice(0, ctxIndex),
-                    msg,
+                    initMessage(msg),
                     ...messages.slice(ctxIndex),
                 ];
             } else {
                 // If context id not found, just append
-                messages = [...messages, msg];
+                messages = [...messages, initMessage(msg)];
             }
         } else {
                 // If no context id also just append
-            messages = [...messages, msg];
+            messages = [...messages, initMessage(msg)];
         }
     }
 
     function speak(msg: MTextMessage) {
-        utteranceBuffer += msg.message;
+        utteranceBuffer += msg.content;
 
         // Remove references (we don't want to speak them)
         utteranceBuffer = utteranceBuffer.replace(/{{ref::([\w-]+)}}/g, "");
@@ -390,7 +404,7 @@
 
     function copyToClipboard(message: MTextMessage) {
         let usedReferences = {};
-        let text = message.message.replace(
+        let text = message.content.replace(
             refIdReplacementPattern,
             (match: string, refId: string, dots: string) => {
                 const refSelector = (ref) => ref.id === refId;
@@ -458,11 +472,11 @@
     }
 
     function renderContent(message: MTextMessage) {
-        if (!message?.message) {
+        if (!message?.content) {
             return "";
         }
 
-        const trimmedMessage = message.message.replace(/{{ref::[\w-]*}?$/, "");
+        const trimmedMessage = message.content.replace(/{{ref::[\w-]*}?$/, "");
 
         const rawHtml = marked(trimmedMessage) as string;
         var pureHtml = DOMPurify.sanitize(rawHtml, { RETURN_DOM: false });
@@ -485,6 +499,10 @@
     function renderCallPayload(message: MCallResponse) {
         if (!message?.payload) {
             return "no payload";
+        }
+
+        if (typeof message.payload === "string") {
+            return message.payload;
         }
 
         return JSON.stringify(message.payload, null, 2);
@@ -555,10 +573,18 @@
         }
     }
 
-    function toggleCollapse(event) {
-        const messageElement = event.currentTarget.parentElement;
-        messageElement.classList.toggle("collapsed");
+    function toggleCollapse(message: MChatMessage) {
+        messages = messages.map((m) =>
+            m.id === message.id ? { ...m, collapsed: !m.collapsed } : m,
+        );
     }
+
+    function toggleCollapseThinking(message: MChatMessage) {
+        messages = messages.map((m) =>
+            m.id === message.id ? { ...m, thinkingCollapsed: !m.thinkingCollapsed } : m,
+        );
+    }
+
 
     function handleClick(event) {
         const target = event.target;
@@ -587,6 +613,8 @@
         onscroll={handleScroll}
     >
         {#each messages as message}
+            {@const thinking = renderThinking(message)}
+
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
             <div
@@ -594,77 +622,83 @@
                 data-id={message.id}
                 data-role={message.role}
                 data-internal={message.internal}
-                class:collapsed={message.internal}
                 tabIndex={message.internal ? 0 : undefined}
             >
-                <div
-                    class="message-header text-body-secondary"
-                    onclick={(message.internal) ? toggleCollapse : null}
-                    role={message.internal ? "button" : undefined}
-                >
-                    {#if message.role === "assistant"}
-                        <i
-                            class="fas fa-robot me-1"
-                            title="Assistant message"
-                        ></i>
-                    {:else if message.role === "user"}
-                        <i class="fas fa-user me-1" title="User message"></i>
-                    {:else if message.role === "system"}
-                        <i class="fas fa-cog me-1" title="System message"></i>
-                    {:else if message.role === "tool"}
-                        <i class="fas fa-hammer me-1" title="Tool"></i>
-                    {/if}
-                    {message.actor ? message.actor : message.role}
-                    {#if !message.internal}
-                        <!-- svelte-ignore a11y_consider_explicit_label -->
-                        <button
-                            class="btn btn-sm btn-link text-body-secondary float-end fw-lighter p-0 copy-button"
-                            onclick={() => copyToClipboard(message)}
-                        >
-                            <i class="far fa-copy" title="Copy message"></i>
-                        </button>
-                    {/if}
-                    {#if message.internal}
-                        <span
-                            class="mx-2 text-body-secondary float-end fw-lighter"
-                        >
-                            <i class="fas fa-info" title="Internal message"></i>
-                        </span>
-                    {/if}
-                </div>
-                <!-- svelte-ignore a11y_no_static_element_interactions -->
-                {#if message["@type"] === "textMessage"}
-                    {@const thinking = renderThinking(message)}
-                    {#if thinking}
-                        <div class="message-thinking collapsed">
-                            <div class="message-thinking-header" onclick={toggleCollapse}>
-                                Thinking...
-                            </div>
+                {#if thinking}
+                    <div class="message-thinking">
+                        <div class="message-thinking-header" onclick={() => toggleCollapseThinking(message)} role="button" tabindex="0">
+                            Thinking...
+                        </div>
+                        {#if !message.thinkingCollapsed}
                             <div class="message-thinking-body">
                                 {@html thinking}
                             </div>
-                        </div>
-                    {/if}
-                    <!-- svelte-ignore a11y_no_static_element_interactions -->
-                    <div
-                        class="message-body"
-                        class:dots={!message.done}
-                        onclick={handleClick}
-                    >
-                        {@html renderContent(message)}
-                    </div>
-                {:else if message["@type"] === "callResponse"}
-                    <div class="message-body">
-                        <strong>Called tool: {message.toolName}</strong>
-                        <div>{renderCallArguments(message)}</div>
-                        <div>{renderCallPayload(message)}</div>
-                    </div>
-                {:else}
-                    <div class="message-body">
-                        Unknown message type: {message["@type"]}
+                        {/if}
                     </div>
                 {/if}
-                {#if message.performance}
+
+                {#if message.content || message.role !== "assistant"}
+                    <div class="message-frame">
+                        <div
+                            class="message-header text-body-secondary"
+                            onclick={message.collapsible ? () => toggleCollapse(message) : null}
+                            role={message.collapsible ? "button" : undefined}
+                        >
+                            {#if message.role === "assistant"}
+                                <i class="fas fa-robot me-1" title="Assistant message"></i>
+                            {:else if message.role === "user"}
+                                <i class="fas fa-user me-1" title="User message"></i>
+                            {:else if message.role === "system"}
+                                <i class="fas fa-cog me-1" title="System message"></i>
+                            {/if}
+                            {message.actor ? message.actor : message.role}
+                            {#if !message.collapsible}
+                                <!-- svelte-ignore a11y_consider_explicit_label -->
+                                <button
+                                    class="btn btn-sm btn-link text-body-secondary float-end fw-lighter p-0 copy-button"
+                                    onclick={() => copyToClipboard(message)}
+                                >
+                                    <i class="far fa-copy" title="Copy message"></i>
+                                </button>
+                            {/if}
+                            {#if message.internal}
+                                <span
+                                    class="mx-2 text-body-secondary float-end fw-lighter"
+                                >
+                                    <i class="fas fa-info" title="Internal message"></i>
+                                </span>
+                            {/if}
+                        </div>
+
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
+                        {#if !message.collapsed}
+                            {#if message["@type"] === "textMessage"}
+                                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                                {#if message.content}
+                                    <div
+                                        class="message-body"
+                                        class:dots={!message.done}
+                                        onclick={handleClick}
+                                    >
+                                        {@html renderContent(message)}
+                                    </div>
+                                {/if}
+                            {:else if message["@type"] === "callResponse"}
+                                <div class="message-body">
+                                    <strong>Called tool: {message.toolName}</strong>
+                                    <div>{renderCallArguments(message)}</div>
+                                    <div class="call-payload">{renderCallPayload(message)}</div>
+                                </div>
+                            {:else}
+                                <div class="message-body">
+                                    Unknown message type: {message["@type"]}
+                                </div>
+                            {/if}
+                        {/if}
+                    </div>
+                {/if}
+
+                {#if message.performance && (((message.content || message.role !== "assistant") && !message.collapsed) || (thinking && !message.thinkingCollapsed)) }
                     <div class="message-footer fw-ligher">
                         <small
                             ><i class="fas fa-pause me-1"></i>{(message.performance
@@ -749,13 +783,10 @@
         font-size: var(--bs-body-font-size);
         line-height: var(--bs-body-line-height);
         clear: both;
-        padding: 8px;
         position: relative;
-        margin: 8px 0;
         word-wrap: break-word;
         width: 100%;
         max-width: 100%;
-        border-radius: 0.25em;
 
         &.composer {
             border-radius: 5px;
@@ -786,26 +817,7 @@
             color: var(--bs-body-color-secondary);
         }
 
-        .message-thinking {
-            /* opacity: 0.7; */
-            margin-bottom: 0.5em;
-
-            .message-thinking-header {
-                display: inline;
-                cursor: pointer;
-                font-size: 0.8em;
-                border-radius: 0.5em;
-                border: 1px solid var(--bs-border-color-translucent);
-                padding: 0.05em 0.3em;
-            }
-
-            .message-thinking-body {
-                padding-left: 0.5em;
-                border-left: solid 2px var(--bs-border-color-translucent);
-            }
-        }
-
-        .message-body, .message-thinking-body {
+        @mixin message-body-common {
             display: block;
             font-size: smaller;
 
@@ -840,6 +852,32 @@
             }
         }
 
+        .message-thinking {
+            /* opacity: 0.7; */
+            // margin-bottom: 0.5em;
+
+            .message-thinking-header {
+                display: inline;
+                cursor: pointer;
+                font-size: 0.8em;
+                border-radius: 0.5em;
+                border: 1px solid var(--bs-border-color-translucent);
+                padding: 0.05em 0.3em;
+            }
+
+            .message-thinking-body {
+                @include message-body-common;
+                padding-left: 0.5em;
+                border-left: solid 2px var(--bs-border-color-translucent);
+                max-height: 6em;
+                overflow: auto;
+            }
+        }
+
+        .message-body {
+            @include message-body-common;
+        }
+
         .message-footer {
             opacity: 0.5;
             display: block;
@@ -848,17 +886,36 @@
             color: var(--bs-body-color-secondary);
         }
 
+        .message-frame {
+            border-radius: 0.25em;
+            padding: 5px;
+            margin: 3px 0;
+        }   
+
         &[data-role="user"] {
-            background-color: var(--bs-info-bg-subtle);
+            .message-frame {
+                background-color: var(--bs-info-bg-subtle);
+            }
         }
 
         &[data-role="assistant"] {
-            background-color: var(--bs-success-bg-subtle);
+            .message-frame {
+                background-color: var(--bs-success-bg-subtle);
+            }
         }
 
-        &[data-role="tool"] .message-body {
-            word-break: break-word;
+        &[data-role="tool"] {
+            .message-body {
+                word-break: break-word;
+            }
         }
+
+        .call-payload {
+            white-space: pre-wrap;
+            max-height: 6em;
+            overflow: auto;
+        }
+
 
         &[data-internal="true"] {
             background-color: var(--bs-tertiary-bg);
@@ -884,10 +941,6 @@
             :global(code) {
                 font-family: var(--bs-body-font-family);
             }
-        }
-
-        &.collapsed .message-body, .message-thinking.collapsed .message-thinking-body {
-            display: none;
         }
 
         .copy-button {

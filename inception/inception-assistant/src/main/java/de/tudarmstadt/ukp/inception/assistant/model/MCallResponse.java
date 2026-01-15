@@ -83,6 +83,7 @@ public record MCallResponse<T>(UUID id, String role, String actor, boolean inter
         private final Map<String, MReference> references = new LinkedHashMap<>();
         private final Map<String, Object> arguments = new LinkedHashMap<>();
         private String toolName;
+        private String toolActor;
         private T payload;
         private UUID context;
 
@@ -164,10 +165,12 @@ public record MCallResponse<T>(UUID id, String role, String actor, boolean inter
 
             if (aToolCall == null) {
                 toolName = null;
+                toolActor = null;
                 return this;
             }
 
             toolName = ToolUtils.getFunctionName(aToolCall.method());
+            toolActor = aToolCall.actor();
             for (var arg : aToolCall.arguments().entrySet()) {
                 arguments.put(arg.getKey(),
                         arg.getValue() != null ? arg.getValue().toString() : null);
@@ -178,11 +181,12 @@ public record MCallResponse<T>(UUID id, String role, String actor, boolean inter
 
         public MCallResponse<T> build()
         {
-            if (id == null) {
-                id = UUID.randomUUID();
-            }
+            var effectiveId = id != null ? id : UUID.randomUUID();
+            var effectiveActor = actor != null ? actor : (toolActor != null ? toolActor : "Tool");
 
-            return new MCallResponse<>(this);
+            return new MCallResponse<>(effectiveId, role, effectiveActor, internal, ephemeral,
+                    performance, references.values().stream().toList(), toolName, context,
+                    arguments, payload);
         }
     }
 }
