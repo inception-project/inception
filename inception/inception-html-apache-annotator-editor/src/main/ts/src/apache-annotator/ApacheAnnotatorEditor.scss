@@ -113,6 +113,21 @@ html > body {
   &.iaa-zero-width {
     padding-left: 0px;
     padding-right: 0px;
+
+    &:not(.iaa-inline-label) {
+      &:before {
+        content: "";
+        display: inline-block;
+        opacity: 0.5;
+        width: 16px;
+        height: 1.3em;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 10 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1,1 L9,1 M5,1 L5,19 M1,19 L9,19' stroke='black' stroke-width='1' fill='none'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        vertical-align: middle;
+      }
+    }
   }
 
   &:not(.iaa-inline-label) {
