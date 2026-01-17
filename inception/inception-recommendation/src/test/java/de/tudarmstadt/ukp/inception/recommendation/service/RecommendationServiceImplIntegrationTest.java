@@ -220,6 +220,7 @@ public class RecommendationServiceImplIntegrationTest
 
         spanLayer.setOverlapMode(NO_OVERLAP);
         var cas = createJCas();
+        cas.setDocumentText("0123456789abcdefghijk");
         var targetFS = new NamedEntity(cas, 0, 10);
         targetFS.addToIndexes();
         assertThat(targetFS.getValue()).isNull();
@@ -265,6 +266,7 @@ public class RecommendationServiceImplIntegrationTest
 
         spanLayer.setOverlapMode(ANY_OVERLAP);
         cas.reset();
+        cas.setDocumentText("0123456789abcdefghijk");
         targetFS = new NamedEntity(cas, 0, 10);
         targetFS.addToIndexes();
         assertThat(targetFS.getValue()).isNull();
