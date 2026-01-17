@@ -34,7 +34,7 @@ public interface SpanAdapter
 {
     public enum SpanOption
     {
-        TRIM;
+        NO_TRIM;
     }
 
     AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException;
