@@ -200,19 +200,19 @@
     <color-convert.version>3.1.3</color-convert.version>
     <dayjs.version>1.11.19</dayjs.version>
     <dompurify.version>3.3.0</dompurify.version>
-    <esbuild.version>0.27.0</esbuild.version>
-    <esbuild-sass-plugin.version>3.3.1</esbuild-sass-plugin.version>
-    <esbuild-svelte.version>0.9.3</esbuild-svelte.version>
-    <eslint.version>9.39.1</eslint.version>
+    <esbuild.version>0.27.2</esbuild.version>
+    <esbuild-sass-plugin.version>3.6.0</esbuild-sass-plugin.version>
+    <esbuild-svelte.version>0.9.4</esbuild-svelte.version>
+    <eslint.version>9.39.2</eslint.version>
     <neostandard.version>0.12.2</neostandard.version>
     <eslint-plugin-import.version>2.32.0</eslint-plugin-import.version>
-    <eslint-plugin-n.version>17.23.1</eslint-plugin-n.version>
+    <eslint-plugin-n.version>17.23.2</eslint-plugin-n.version>
     <eslint-plugin-promise.version>^7.2.1</eslint-plugin-promise.version>
-    <eslint-plugin-svelte.version>3.13.0</eslint-plugin-svelte.version>
+    <eslint-plugin-svelte.version>3.14.0</eslint-plugin-svelte.version>
     <events.version>3.3.0</events.version>
     <fast-json-patch.version>^3.1.1</fast-json-patch.version>
     <font-awesome.version>7.0.1</font-awesome.version>
-    <fs-extra.version>11.3.2</fs-extra.version>
+    <fs-extra.version>11.3.3</fs-extra.version>
     <jsdom.version>^27.2.0</jsdom.version>
     <jsdom-global.version>^3.0.2</jsdom-global.version>
     <jquery.version>3.7.1</jquery.version>
@@ -223,10 +223,10 @@
     <recogitojs.version>1.8.4</recogitojs.version>
     <recogito-connections.version>0.1.11</recogito-connections.version>
     <recogito-client-core.version>1.7.9</recogito-client-core.version>
-    <rollup.version>^4.53.3</rollup.version>
+    <rollup.version>4.55.1</rollup.version>
     <sass.version>^1.75.0</sass.version>
     <stomp-stompjs.version>^7.2.1</stomp-stompjs.version>
-    <svelte.version>5.45.2</svelte.version>
+    <svelte.version>5.46.4</svelte.version>
     <svelte-preprocess.version>^6.0.3</svelte-preprocess.version>
     <sveltejs-vite-plugin-svelte.version>^6.2.1</sveltejs-vite-plugin-svelte.version>
     <svgdotjs-svg-js.version>^3.2.4</svgdotjs-svg-js.version>
@@ -242,7 +242,7 @@
     <types-urijs.version>^1.19.20</types-urijs.version>
     <uuid.version>^13.0.0</uuid.version>
     <urijs.version>^1.19.11</urijs.version>
-    <vite.version>7.2.4</vite.version>
+    <vite.version>7.3.1</vite.version>
     <vitest.version>^4.0.14</vitest.version>
     <yargs.version>^18.0.0</yargs.version>
   </properties>
