@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.model;
 
+import static jakarta.persistence.GenerationType.IDENTITY;
 import static org.hibernate.annotations.OnDeleteAction.CASCADE;
 
 import java.io.Serializable;
@@ -29,7 +30,6 @@ import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfig
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -52,7 +52,7 @@ public class WorkloadManager
     private static final long serialVersionUID = -3289504168531309833L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     private Long id;
 
     @ManyToOne
@@ -60,7 +60,7 @@ public class WorkloadManager
     @OnDelete(action = CASCADE)
     private Project project;
 
-    @Column(columnDefinition = "VARCHAR(255)")
+    @Column(columnDefinition = "VARCHAR(255)", nullable = false)
     private String workloadType;
 
     @Column(length = 64000)
