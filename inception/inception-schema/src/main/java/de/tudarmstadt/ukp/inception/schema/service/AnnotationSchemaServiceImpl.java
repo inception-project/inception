@@ -1613,33 +1613,46 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AttachedAnnotation> getAttachedLinks(AnnotationLayer aLayer, AnnotationFS aFs)
     {
-        CAS cas = aFs.getCAS();
-        List<AttachedAnnotation> result = new ArrayList<>();
-        TypeAdapter adapter = getAdapter(aLayer);
+        var cas = aFs.getCAS();
+        var result = new ArrayList<AttachedAnnotation>();
+        var adapter = getAdapter(aLayer);
         if (adapter instanceof SpanAdapter) {
-            for (AnnotationFeature linkFeature : listAttachedLinkFeatures(aLayer)) {
+            // Check for incoming links - other annotations that link TO this annotation
+            for (var linkFeature : listAttachedLinkFeatures(aLayer)) {
                 if (linkFeature.getMultiValueMode() == ARRAY
                         && linkFeature.getLinkMode() == WITH_ROLE) {
                     // Fetch slot hosts that could link to the current FS and check if any of
                     // them actually links to the current FS
-                    Type linkHost = CasUtil.getType(cas, linkFeature.getLayer().getName());
-                    for (FeatureStructure linkFS : cas.select(linkHost)) {
+                    var linkHost = CasUtil.getType(cas, linkFeature.getLayer().getName());
+                    for (var linkFS : cas.select(linkHost)) {
                         if (!(linkFS instanceof AnnotationFS)) {
                             continue;
                         }
 
                         List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature,
                                 linkFS);
-                        for (int li = 0; li < links.size(); li++) {
-                            LinkWithRoleModel link = links.get(li);
-                            AnnotationFS linkTarget = selectByAddr(cas, AnnotationFS.class,
-                                    link.targetAddr);
+                        for (var li = 0; li < links.size(); li++) {
+                            var link = links.get(li);
+                            var linkTarget = selectByAddr(cas, AnnotationFS.class, link.targetAddr);
                             // If the current annotation fills a slot, then add the slot host to
                             // our list of attached links.
                             if (isSame(linkTarget, aFs)) {
                                 result.add(new AttachedAnnotation(linkFeature.getLayer(),
                                         (AnnotationFS) linkFS, INCOMING));
                             }
+                        }
+                    }
+                }
+            }
+            
+            // Check for outgoing links - this annotation links TO other annotations
+            for (var feature : listSupportedFeatures(aLayer)) {
+                if (feature.getMultiValueMode() == ARRAY && feature.getLinkMode() == WITH_ROLE) {
+                    List<LinkWithRoleModel> links = adapter.getFeatureValue(feature, aFs);
+                    for (var link : links) {
+                        var linkTarget = selectByAddr(cas, AnnotationFS.class, link.targetAddr);
+                        if (linkTarget != null) {
+                            result.add(new AttachedAnnotation(aLayer, linkTarget, OUTGOING));
                         }
                     }
                 }
