@@ -30,8 +30,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
 /**
@@ -50,12 +48,11 @@ public class Index
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "project")
+    @JoinColumn(name = "project", nullable = false)
     private Project project;
 
     private boolean invalid;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date creationDate;
 

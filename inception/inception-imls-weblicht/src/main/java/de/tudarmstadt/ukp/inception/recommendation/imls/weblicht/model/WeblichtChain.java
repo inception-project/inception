@@ -21,18 +21,19 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.model;
 
+import static jakarta.persistence.GenerationType.IDENTITY;
+import static org.hibernate.annotations.OnDeleteAction.CASCADE;
+
 import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -48,15 +49,15 @@ public class WeblichtChain
     private static final long serialVersionUID = 7310223920449064425L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     private Long id;
 
     @Column(nullable = false)
     private String name;
 
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    @OnDelete(action = CASCADE)
     @ManyToOne
-    @JoinColumn(name = "recommender")
+    @JoinColumn(name = "recommender", nullable = false)
     private Recommender recommender;
 
     public WeblichtChain()

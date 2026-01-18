@@ -26,8 +26,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
 @Entity
 @Table(name = "logged_event")
@@ -41,7 +39,6 @@ public class LoggedEventEntity
     @Column(nullable = false)
     private String event;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
     private Date created;
 

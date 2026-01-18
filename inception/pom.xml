@@ -59,12 +59,6 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <!-- Log4J2 support for Spring Boot and profiles -->
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-spring-boot</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
       <!-- Use Log4J v2 as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j2-impl</artifactId>
@@ -74,6 +68,12 @@
       <!-- Route Log4J v1 over SLF4J -->
       <groupId>org.slf4j</groupId>
       <artifactId>log4j-over-slf4j</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <!-- Modern Commons Logging should auto-route through Log4J -->
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -468,7 +468,6 @@
               - Logging is used via reflection and cannot be detected by Maven
             -->
             <dependency>org.apache.logging.log4j:log4j-slf4j2-impl</dependency>
-            <dependency>org.apache.logging.log4j:log4j-spring-boot</dependency>
             <dependency>org.apache.logging.log4j:log4j-layout-template-json</dependency>
             <dependency>org.apache.logging.log4j:log4j-core</dependency>
             <dependency>org.slf4j:log4j-over-slf4j</dependency>
@@ -877,7 +876,7 @@
                 <dependency>
                   <groupId>com.puppycrawl.tools</groupId>
                   <artifactId>checkstyle</artifactId>
-                  <version>10.20.1</version>
+                  <version>10.26.1</version>
                 </dependency>
               </dependencies>
               <configuration>

@@ -33,8 +33,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
 /**
@@ -77,7 +75,6 @@ public class AnnotationDocument
     @Type(AnnotationDocumentStateType.class)
     private AnnotationDocumentState state = AnnotationDocumentState.NEW;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "state_updated", nullable = true)
     private Date stateUpdated = new Date();
 
@@ -106,7 +103,6 @@ public class AnnotationDocument
      * workload manager) should not update the timestamp - except if the change is a reset of the
      * annotation document in which case the timestamp should be cleared.
      */
-    @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
     /**
@@ -116,11 +112,9 @@ public class AnnotationDocument
     @Column(name = "sentenceAccessed")
     private int sentenceAccessed = 0;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created", nullable = true)
     private Date created;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated", nullable = true)
     private Date updated;
 
