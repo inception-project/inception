@@ -80,8 +80,8 @@ class SpanOverlapBehaviorTest
         jcas.setDocumentText("The quick brown fox jumps over the lazy dog.");
 
         // Create tokens
-        addToken(0, 3);   // The
-        addToken(4, 9);   // quick
+        addToken(0, 3); // The
+        addToken(4, 9); // quick
         addToken(10, 15); // brown
         addToken(16, 19); // fox
         addToken(20, 25); // jumps
@@ -485,7 +485,7 @@ class SpanOverlapBehaviorTest
             Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
             var anno1 = addAnnotation(0, 10);
             var anno2 = addAnnotation(5, 15); // Overlaps
-            var anno3 = addAnnotation(0, 10);  // Stacks
+            var anno3 = addAnnotation(0, 10); // Stacks
             annoToSpanIdx.put(anno1, new VSpan(layer, anno1, new VRange(0, 10), null));
             annoToSpanIdx.put(anno2, new VSpan(layer, anno2, new VRange(5, 15), null));
             annoToSpanIdx.put(anno3, new VSpan(layer, anno3, new VRange(0, 10), null));
@@ -508,7 +508,7 @@ class SpanOverlapBehaviorTest
 
             addAnnotation(0, 10);
             addAnnotation(5, 15); // Overlaps
-            addAnnotation(0, 10);  // Stacks
+            addAnnotation(0, 10); // Stacks
 
             var result = sut.onValidate(adapter, jcas.getCas());
 

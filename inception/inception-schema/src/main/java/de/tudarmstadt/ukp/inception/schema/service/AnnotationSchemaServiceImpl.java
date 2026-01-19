@@ -1644,7 +1644,7 @@ public class AnnotationSchemaServiceImpl
                     }
                 }
             }
-            
+
             // Check for outgoing links - this annotation links TO other annotations
             for (var feature : listSupportedFeatures(aLayer)) {
                 if (feature.getMultiValueMode() == ARRAY && feature.getLinkMode() == WITH_ROLE) {
