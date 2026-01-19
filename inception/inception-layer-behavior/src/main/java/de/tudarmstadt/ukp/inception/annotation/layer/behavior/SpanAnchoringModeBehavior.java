@@ -160,6 +160,10 @@ public class SpanAnchoringModeBehavior
                     "No tokens found int range [" + aRange[0] + "-" + aRange[1] + "]");
         }
 
+        if (tokens.size() > 1) {
+            throw new IllegalPlacementException("Annotation must not cover multiple tokens");
+        }
+
         return new int[] { tokens.get(0).getBegin(), tokens.get(0).getEnd() };
     }
 }
