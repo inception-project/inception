@@ -120,8 +120,7 @@ class AnnotationSchemaServiceImplGetAttachedRelsTest
         layerBehaviorRegistry.init();
 
         var layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
-                        null),
+                new SpanLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry, null),
                 new RelationLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         null)));
         layerSupportRegistry.init();
@@ -389,16 +388,12 @@ class AnnotationSchemaServiceImplGetAttachedRelsTest
         // Then should find both relations
         assertThat(result).hasSize(2);
 
-        var incoming = result.stream()
-                .filter(a -> a.getDirection() == INCOMING)
-                .findFirst()
+        var incoming = result.stream().filter(a -> a.getDirection() == INCOMING).findFirst()
                 .orElseThrow();
         assertThat(incoming.getRelation()).isEqualTo(incomingRel);
         assertThat(incoming.getEndpoint()).isEqualTo(span1);
 
-        var outgoing = result.stream()
-                .filter(a -> a.getDirection() == OUTGOING)
-                .findFirst()
+        var outgoing = result.stream().filter(a -> a.getDirection() == OUTGOING).findFirst()
                 .orElseThrow();
         assertThat(outgoing.getRelation()).isEqualTo(outgoingRel);
         assertThat(outgoing.getEndpoint()).isEqualTo(span3);
@@ -527,8 +522,7 @@ class AnnotationSchemaServiceImplGetAttachedRelsTest
     }
 
     @Test
-    void testGetAttachedRels_withGenericRelationType_multipleCrossLayerRelations()
-            throws Exception
+    void testGetAttachedRels_withGenericRelationType_multipleCrossLayerRelations() throws Exception
     {
         // Given a span with relations to/from multiple different layer types
         jcas.setDocumentText("This is a test case.");
@@ -565,16 +559,12 @@ class AnnotationSchemaServiceImplGetAttachedRelsTest
         // Then should find both relations
         assertThat(result).hasSize(2);
 
-        var incoming = result.stream()
-                .filter(a -> a.getDirection() == INCOMING)
-                .findFirst()
+        var incoming = result.stream().filter(a -> a.getDirection() == INCOMING).findFirst()
                 .orElseThrow();
         assertThat(incoming.getRelation()).isEqualTo(incomingRel);
         assertThat(incoming.getEndpoint()).isEqualTo(spanB1);
 
-        var outgoing = result.stream()
-                .filter(a -> a.getDirection() == OUTGOING)
-                .findFirst()
+        var outgoing = result.stream().filter(a -> a.getDirection() == OUTGOING).findFirst()
                 .orElseThrow();
         assertThat(outgoing.getRelation()).isEqualTo(outgoingRel);
         assertThat(outgoing.getEndpoint()).isEqualTo(spanB2);
