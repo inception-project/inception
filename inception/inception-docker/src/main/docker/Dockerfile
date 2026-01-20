@@ -37,7 +37,7 @@ COPY launch.sh .
 RUN set -ex \
     && DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
-    && apt-get install -y --no-install-recommends locales jq \
+    && apt-get install -y --no-install-recommends locales curl jq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
