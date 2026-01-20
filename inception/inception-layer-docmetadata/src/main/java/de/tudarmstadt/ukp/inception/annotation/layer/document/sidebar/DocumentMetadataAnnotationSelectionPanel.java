@@ -41,6 +41,7 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
@@ -79,6 +80,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -183,14 +185,18 @@ public class DocumentMetadataAnnotationSelectionPanel
             var state = getModelObject();
             var dataOwner = state.getUser().getUsername();
             var sessionOwner = userService.getCurrentUser();
-            var predictions = recommendationService.getPredictions(sessionOwner,
-                    state.getProject());
-            var suggestion = predictions.getPredictionByVID(state.getDocument(), aItem.vid).get();
+            var maybeSuggestion = recommendationService.getSuggestionByVID(sessionOwner,
+                    state.getDocument(), aItem.vid);
+
+            if (maybeSuggestion.isEmpty()) {
+                return;
+            }
 
             var aCas = casProvider.get();
 
             recommendationService.acceptSuggestion(sessionOwner.getUsername(), state.getDocument(),
-                    dataOwner, aCas, predictions, suggestion, MAIN_EDITOR);
+                    dataOwner, aCas, maybeSuggestion.get().getKey(),
+                    maybeSuggestion.get().getValue(), MAIN_EDITOR);
 
             page.writeEditorCas(aCas);
 
@@ -211,13 +217,18 @@ public class DocumentMetadataAnnotationSelectionPanel
             var state = getModelObject();
             var dataOwner = state.getUser().getUsername();
             var sessionOwner = userService.getCurrentUser();
-            var suggestion = recommendationService.getPredictions(sessionOwner, state.getProject())
-                    .getPredictionByVID(state.getDocument(), aItem.vid).get();
+            var maybeSuggestion = recommendationService
+                    .getSuggestionByVID(sessionOwner, state.getDocument(), aItem.vid)
+                    .map(Pair::getValue);
+
+            if (maybeSuggestion.isEmpty()) {
+                return;
+            }
 
             var aCas = casProvider.get();
 
             recommendationService.rejectSuggestion(sessionOwner.getUsername(), state.getDocument(),
-                    dataOwner, suggestion, MAIN_EDITOR);
+                    dataOwner, maybeSuggestion.get(), MAIN_EDITOR);
 
             page.writeEditorCas(aCas);
 
@@ -508,9 +519,22 @@ public class DocumentMetadataAnnotationSelectionPanel
             List<AnnotationListItem> aItems, List<AnnotationFeature> aFeatures)
     {
         var state = getModelObject();
+        var predictions = recommendationService.getPredictions(state.getUser(), state.getProject())
+                .values();
+        for (var preds : predictions) {
+            generateSuggestionItems(preds, aLayer, aLayerSupport, aSingleton, aCas, aItems,
+                    aFeatures);
+        }
+    }
+
+    private void generateSuggestionItems(Predictions predictions, AnnotationLayer aLayer,
+            DocumentMetadataLayerSupport aLayerSupport, boolean aSingleton, CAS aCas,
+            List<AnnotationListItem> aItems, List<AnnotationFeature> aFeatures)
+    {
+        var state = getModelObject();
         var featuresIndex = aFeatures.stream()
                 .collect(toMap(AnnotationFeature::getName, identity()));
-        var predictions = recommendationService.getPredictions(state.getUser(), state.getProject());
+
         if (predictions != null) {
             var predictionsByDocument = predictions
                     .getPredictionsByDocument(state.getDocument().getId());
@@ -531,14 +555,14 @@ public class DocumentMetadataAnnotationSelectionPanel
                 }
 
                 if (suggestion instanceof MetadataSuggestion metadataSuggestion) {
-                    var feature = featuresIndex.get(suggestion.getFeature());
+                    var feature = featuresIndex.get(metadataSuggestion.getFeature());
 
                     // Retrieve the UI display label for the given feature value
                     var featureSupport = fsRegistry.findExtension(feature).orElseThrow();
                     var annotation = featureSupport.renderFeatureValue(feature,
-                            suggestion.getLabel());
-                    aItems.add(new AnnotationListItem(suggestion.getVID(), annotation, aLayer,
-                            false, suggestion.getScore(), aItems.size()));
+                            metadataSuggestion.getLabel());
+                    aItems.add(new AnnotationListItem(metadataSuggestion.getVID(), annotation,
+                            aLayer, false, metadataSuggestion.getScore(), aItems.size()));
                 }
             }
         }

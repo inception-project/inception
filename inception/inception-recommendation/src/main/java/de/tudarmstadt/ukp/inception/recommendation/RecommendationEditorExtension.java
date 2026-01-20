@@ -25,7 +25,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
@@ -33,6 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -130,27 +130,27 @@ public class RecommendationEditorExtension
             return;
         }
 
+        var sessionOwner = userService.getCurrentUser();
+        var document = aState.getDocument();
+
         // Create annotation
         if (SelectAnnotationHandler.COMMAND.equals(aAction) || AcceptActionResponse.is(aAction)) {
             ((AnnotationPageBase) aTarget.getPage()).ensureIsEditable();
 
-            var recommendationVid = VID.parse(aVID.getExtensionPayload());
-            var predictions = recommendationService.getPredictions(aState.getUser(),
-                    aState.getProject());
-            var prediction = predictions.getPredictionByVID(aState.getDocument(),
-                    recommendationVid);
-            var document = aState.getDocument();
+            var suggestionVid = VID.parse(aVID.getExtensionPayload());
+            var maybeSuggestion = recommendationService.getSuggestionByVID(sessionOwner, document,
+                    suggestionVid);
 
-            if (prediction.isEmpty()) {
+            if (maybeSuggestion.isEmpty()) {
                 log.error("Could not find annotation in [{}] with id [{}]", document,
-                        recommendationVid);
+                        suggestionVid);
                 aTarget.getPage().error("Could not find annotation");
                 aTarget.addChildren(aTarget.getPage(), IFeedback.class);
                 return;
             }
 
-            actionAcceptPrediction(aActionHandler, aState, aTarget, aCas, aVID, predictions,
-                    prediction.get(), document);
+            actionAcceptPrediction(aActionHandler, aState, aTarget, aCas, aVID,
+                    maybeSuggestion.get().getKey(), maybeSuggestion.get().getValue(), document);
         }
         else if (DoActionResponse.is(aAction) || RejectActionResponse.is(aAction)) {
             ((AnnotationPageBase) aTarget.getPage()).ensureIsEditable();
@@ -158,19 +158,18 @@ public class RecommendationEditorExtension
             actionRejectRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         }
         else if (ScrollToHandler.COMMAND.equals(aAction)) {
-            var recommendationVid = VID.parse(aVID.getExtensionPayload());
-            var predictions = recommendationService.getPredictions(aState.getUser(),
-                    aState.getProject());
-            var prediction = predictions.getPredictionByVID(aState.getDocument(),
-                    recommendationVid);
+            var suggestionVid = VID.parse(aVID.getExtensionPayload());
+            var maybeSuggestion = recommendationService
+                    .getSuggestionByVID(sessionOwner, document, suggestionVid).map(Pair::getValue);
+
             var page = (AnnotationPageBase) aTarget.getPage();
-            if (prediction.map(p -> p instanceof SpanSuggestion).orElse(false)) {
-                var suggestion = (SpanSuggestion) prediction.get();
+            if (maybeSuggestion.map(p -> p instanceof SpanSuggestion).orElse(false)) {
+                var suggestion = (SpanSuggestion) maybeSuggestion.get();
                 page.getAnnotationActionHandler().actionJump(aTarget, suggestion.getBegin(),
                         suggestion.getEnd());
             }
-            if (prediction.map(p -> p instanceof RelationSuggestion).orElse(false)) {
-                var suggestion = (RelationSuggestion) prediction.get();
+            if (maybeSuggestion.map(p -> p instanceof RelationSuggestion).orElse(false)) {
+                var suggestion = (RelationSuggestion) maybeSuggestion.get();
                 var position = suggestion.getPosition();
                 page.getAnnotationActionHandler().actionJump(aTarget, position.getSourceBegin(),
                         position.getSourceEnd());
@@ -222,20 +221,18 @@ public class RecommendationEditorExtension
      * </ul>
      */
     private void actionRejectRecommendation(AnnotationActionHandler aActionHandler,
-            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID)
+            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVid)
 
         throws AnnotationException, IOException
     {
         var sessionOwner = userService.getCurrentUser();
-        var predictions = recommendationService.getPredictions(sessionOwner, aState.getProject());
-
         var document = aState.getDocument();
-        var recommendationVID = VID.parse(aVID.getExtensionPayload());
-        var maybeSuggestion = predictions.getPredictionByVID(document, recommendationVID);
+        var suggestionVid = VID.parse(aVid.getExtensionPayload());
+        var maybeSuggestion = recommendationService
+                .getSuggestionByVID(sessionOwner, document, suggestionVid).map(Pair::getValue);
 
         if (!maybeSuggestion.isPresent()) {
-            log.error("Could not find annotation in [{}] with id [{}]", document,
-                    recommendationVID);
+            log.error("Could not find annotation in [{}] with id [{}]", document, suggestionVid);
             aTarget.getPage().error("Could not find annotation");
             aTarget.addChildren(aTarget.getPage(), IFeedback.class);
             return;
@@ -246,7 +243,7 @@ public class RecommendationEditorExtension
 
         // Send a UI event that the suggestion has been rejected
         aTarget.getPage().send(aTarget.getPage(), BREADTH,
-                new AjaxRecommendationRejectedEvent(aTarget, aState, aVID));
+                new AjaxRecommendationRejectedEvent(aTarget, aState, aVid));
 
         // Trigger a re-rendering of the document
         var page = aTarget.getPage();
@@ -289,20 +286,26 @@ public class RecommendationEditorExtension
     public <V> V getFeatureValue(SourceDocument aDocument, User aUser, CAS aCas, VID aVid,
             AnnotationFeature aFeature)
     {
+        var sessionOwner = userService.getCurrentUser();
+
         var predictions = recommendationService.getPredictions(aUser, aDocument.getProject());
 
         if (predictions == null) {
             return null;
         }
 
-        var vid = VID.parse(aVid.getExtensionPayload());
-        var ao = predictions.getPredictionByVID(aDocument, vid);
-        if (ao.isEmpty() || !ao.get().getFeature().equals(aFeature.getName())) {
+        var suggestionVid = VID.parse(aVid.getExtensionPayload());
+        var maybeSuggestion = recommendationService.getSuggestionByVID(sessionOwner, aDocument,
+                suggestionVid);
+
+        if (maybeSuggestion.isEmpty()
+                || !maybeSuggestion.get().getValue().getFeature().equals(aFeature.getName())) {
             return null;
         }
 
-        return (V) featureSupportRegistry.findExtension(aFeature)
-                .map(ext -> ext.wrapFeatureValue(aFeature, aCas, ao.get().getLabel())).orElse(null);
+        return (V) featureSupportRegistry.findExtension(aFeature).map(ext -> ext
+                .wrapFeatureValue(aFeature, aCas, maybeSuggestion.get().getValue().getLabel()))
+                .orElse(null);
     }
 
     @Override
@@ -311,12 +314,9 @@ public class RecommendationEditorExtension
     {
         var sessionOwner = userService.getCurrentUser();
 
-        var predictions = recommendationService.getPredictions(sessionOwner,
-                aDocument.getProject());
-
-        if (predictions == null) {
-            return emptyList();
-        }
+        var suggestionVid = VID.parse(aVid.getExtensionPayload());
+        var maybeSuggestion = recommendationService.getSuggestionByVID(sessionOwner, aDocument,
+                suggestionVid);
 
         var detailGroups = new ArrayList<VLazyDetailGroup>();
         for (var aFeature : annotationService.listAnnotationFeature(aLayer)) {
@@ -324,19 +324,18 @@ public class RecommendationEditorExtension
                 continue;
             }
 
-            var vid = VID.parse(aVid.getExtensionPayload());
-            var representative = predictions.getPredictionByVID(aDocument, vid);
-            if (representative.isEmpty()
-                    || !representative.get().getFeature().equals(aFeature.getName())) {
+            if (maybeSuggestion.isEmpty()
+                    || !maybeSuggestion.get().getValue().getFeature().equals(aFeature.getName())) {
                 continue;
             }
 
-            var sao = representative.get();
+            var predictions = maybeSuggestion.get().getKey();
+            var sao = maybeSuggestion.get().getValue();
             var group = predictions
                     .getGroupedPredictions(AnnotationSuggestion.class, aDocument,
                             aFeature.getLayer(), sao.getWindowBegin(), sao.getWindowEnd())
                     .stream() //
-                    .filter(g -> g.contains(representative.get())) //
+                    .filter(g -> g.contains(sao)) //
                     .findFirst();
 
             if (group.isEmpty()) {
