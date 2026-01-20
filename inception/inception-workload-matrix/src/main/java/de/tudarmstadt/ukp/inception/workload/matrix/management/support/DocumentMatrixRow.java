@@ -21,15 +21,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NE
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
-import static org.danekja.java.misc.serializable.SerializableComparator.comparing;
-import static org.danekja.java.misc.serializable.SerializableComparator.naturalOrder;
-import static org.danekja.java.misc.serializable.SerializableComparator.nullsFirst;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeMap;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
@@ -51,8 +48,7 @@ public class DocumentMatrixRow
     {
         sourceDocument = aSourceDocument;
         annotators = aAnnotators;
-        annotationDocuments = new TreeMap<>(
-                comparing(AnnotationSet::displayName, nullsFirst(naturalOrder())));
+        annotationDocuments = new HashMap<>();
     }
 
     public void add(AnnotationDocument aAnnotationDocument)
