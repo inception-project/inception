@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentContextRetriever;
 import de.tudarmstadt.ukp.inception.assistant.tool.ClockToolLibrary;
 import de.tudarmstadt.ukp.inception.assistant.tool.DocumentsToolLibrary;
@@ -64,9 +65,10 @@ public class AssistantToolsAutoConfiguration
     @Bean
     public RecommenderToolLibrary recommenderToolLibrary(
             RecommendationService aRecommendationService, UserDao aUserService,
-            DocumentAccess aDocumentAccess, SchedulingService aSchedulingService)
+            DocumentAccess aDocumentAccess, SchedulingService aSchedulingService,
+            AssistantService aAssistantService)
     {
         return new RecommenderToolLibrary(aRecommendationService, aUserService, aDocumentAccess,
-                aSchedulingService);
+                aSchedulingService, aAssistantService);
     }
 }

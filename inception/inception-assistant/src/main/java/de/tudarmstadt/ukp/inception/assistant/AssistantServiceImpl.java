@@ -58,8 +58,9 @@ import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantPropertiesImpl.AssistantChatPropertiesImpl;
 import de.tudarmstadt.ukp.inception.assistant.model.MCallResponse;
 import de.tudarmstadt.ukp.inception.assistant.model.MChatMessage;
+import de.tudarmstadt.ukp.inception.assistant.model.MClearCommand;
 import de.tudarmstadt.ukp.inception.assistant.model.MMessage;
-import de.tudarmstadt.ukp.inception.assistant.model.MRemoveConversationCommand;
+import de.tudarmstadt.ukp.inception.assistant.model.MRefreshCommand;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPoint;
 import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceKey;
@@ -185,7 +186,13 @@ public class AssistantServiceImpl
     {
         memoryManager.clearMemories(aSessionOwner, aProject);
 
-        dispatchMessage(aSessionOwner, aProject, new MRemoveConversationCommand());
+        dispatchMessage(aSessionOwner, aProject, new MClearCommand());
+    }
+
+    @Override
+    public void refreshAnnotations(String aSessionOwner, Project aProject)
+    {
+        dispatchMessage(aSessionOwner, aProject, new MRefreshCommand());
     }
 
     @Override

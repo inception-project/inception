@@ -17,9 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
-public sealed interface MCommandMessage
-    extends MMessage
-    permits MClearCommand, MRefreshCommand
-{
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
+@JsonTypeName(MRefreshCommand.TYPE_REFRESH_CMD)
+public record MRefreshCommand()
+    implements MCommandMessage
+{
+    static final String TYPE_REFRESH_CMD = "refreshCmd";
+
+    @JsonProperty(MMessage.TYPE_FIELD)
+    public String getType()
+    {
+        return TYPE_REFRESH_CMD;
+    }
 }

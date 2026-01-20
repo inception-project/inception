@@ -52,4 +52,6 @@ public interface AssistantService
     boolean isDebugMode(String aSessionOwner, Project aProject);
 
     void dispatchMessage(String aSessionOwner, Project aProject, MMessage aMessage);
+
+    void refreshAnnotations(String aSessionOwner, Project aProject);
 }

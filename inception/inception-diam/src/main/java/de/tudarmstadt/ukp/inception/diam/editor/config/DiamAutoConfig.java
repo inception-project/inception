@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.inception.diam.editor.actions.LinkToContextMenuItem;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LoadAnnotationsHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LoadPreferences;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.MoveSpanAnnotationHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.RefreshHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SavePreferences;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ScrollToHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
@@ -167,6 +168,12 @@ public class DiamAutoConfig
     {
         return new LoadAnnotationsHandler(aRenderingPipeline, aVDocumentSerializerExtensionPoint,
                 aUserService);
+    }
+
+    @Bean
+    public RefreshHandler refreshHandler()
+    {
+        return new RefreshHandler();
     }
 
     @Bean

@@ -264,6 +264,32 @@ export class DiamAjaxImpl implements DiamAjax {
     })
   }
 
+  refreshAnnotations (): Promise<void> {
+    const token = DiamAjaxImpl.newToken()
+
+    const params: Record<string, any> = {
+      action: 'refresh',
+      token
+    }
+
+    return new Promise((resolve, reject) => {
+      Wicket.Ajax.ajax({
+        m: 'POST',
+        u: this.ajaxEndpoint,
+        ep: params,
+        sh: [() => {
+          DiamAjaxImpl.clearResult(token)
+          resolve()
+        }],
+        eh: [() => {
+          DiamAjaxImpl.clearResult(token)
+
+          reject(new Error('Unable to load annotation'))
+        }]
+      })
+    })
+  }
+
   loadLazyDetails (idOrAnnotation: VID | Annotation, optionaLayerId?: number): Promise<LazyDetailGroup[]> {
     const token = DiamAjaxImpl.newToken()
 

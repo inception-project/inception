@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.inception.assistant.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@JsonTypeName(MRemoveConversationCommand.TYPE_CLEAR_CMD)
-public record MRemoveConversationCommand()
+@JsonTypeName(MClearCommand.TYPE_CLEAR_CMD)
+public record MClearCommand()
     implements MCommandMessage
 {
     static final String TYPE_CLEAR_CMD = "clearCmd";

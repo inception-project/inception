@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationEditorContext;
@@ -60,15 +61,17 @@ public class RecommenderToolLibrary
     private final RecommendationService recommendationService;
     private final UserDao userService;
     private final SchedulingService schedulingService;
+    private final AssistantService assistantService;
 
     public RecommenderToolLibrary(RecommendationService aRecommendationService,
             UserDao aUserService, DocumentAccess aDocumentAccess,
-            SchedulingService aSchedulingService)
+            SchedulingService aSchedulingService, AssistantService aAssistantService)
     {
         recommendationService = aRecommendationService;
         userService = aUserService;
         documentAccess = aDocumentAccess;
         schedulingService = aSchedulingService;
+        assistantService = aAssistantService;
     }
 
     @Override
@@ -81,6 +84,25 @@ public class RecommenderToolLibrary
     public boolean accepts(Project aContext)
     {
         return true;
+    }
+
+    /**
+     * @deprecated Just for testing the refresh mechanism - this should be removed again.
+     */
+    @SuppressWarnings("javadoc")
+    @Deprecated
+    @Tool( //
+            value = "refresh", //
+            actor = "Annotation editor", //
+            description = "Reload the currently visible annotations and show and pending annotation suggestions.")
+    public ToolStatusResponse refreshs( //
+            AnnotationEditorContext aContext, //
+            @ToolParam(value = "task_description", description = PARAM_TASK_DESCRIPTION) //
+            String aTaskDescription)
+        throws IOException
+    {
+        assistantService.refreshAnnotations(aContext.getSessionOwner(), aContext.getProject());
+        return success("Annotation editor refreshed");
     }
 
     @Tool( //

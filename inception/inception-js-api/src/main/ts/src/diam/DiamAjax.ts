@@ -106,6 +106,13 @@ export interface DiamAjax {
   loadAnnotations(options?: DiamLoadAnnotationsOptions): Promise<any>;
 
   /**
+   * Tell the server to refresh the currently visible annotations and show any pending suggestions.
+   * 
+   * @returns a promise that resolves when the refresh is complete
+   */
+  refreshAnnotations(): Promise<void>;
+
+  /**
    * Load the lazy details of the given annotation.
    *
    * @param ann either the VID or the annotation itself

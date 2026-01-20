@@ -29,7 +29,7 @@ import tools.jackson.databind.annotation.JsonSerialize;
 @JsonTypeInfo(use = NAME, include = PROPERTY, property = MMessage.TYPE_FIELD)
 @JsonSubTypes({ //
         @JsonSubTypes.Type(value = MTextMessage.class), //
-        @JsonSubTypes.Type(value = MRemoveConversationCommand.class) //
+        @JsonSubTypes.Type(value = MClearCommand.class) //
 })
 public sealed interface MMessage
     permits MChatMessage, MCommandMessage
