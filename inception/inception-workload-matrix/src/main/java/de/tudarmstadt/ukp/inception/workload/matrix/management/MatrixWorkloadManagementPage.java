@@ -43,6 +43,7 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
+import static java.util.Comparator.comparing;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
@@ -64,6 +65,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -378,42 +380,75 @@ public class MatrixWorkloadManagementPage
 
     private IResourceStream exportWorkload()
     {
-        var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR).stream() //
-                .map(AnnotationSet::forUser) //
-                .sorted() //
-                .toList();
+        var users = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR);
+        var annotators = buildAnnotatorList(users);
 
         return new PipedStreamResource(os -> {
             try (var aOut = new CSVPrinter(new OutputStreamWriter(os, UTF_8), EXCEL)) {
-                var headers = new ArrayList<String>();
-                headers.add("document name");
-                headers.add("document state");
-                headers.add("curation state");
-                annotators.forEach(s -> headers.add(s.displayName()));
-
-                aOut.printRecord(headers);
-
                 var provider = documentMatrix.getDataProvider();
-                var i = provider.iterator(0, provider.size());
-                while (i.hasNext()) {
-                    var rowIn = i.next();
-                    var rowOut = new ArrayList<String>(headers.size());
-                    rowOut.add(rowIn.getSourceDocument().getName());
-                    rowOut.add(rowIn.getState().getId());
-                    rowOut.add(rowIn.getCurationState().getId());
-                    for (var annotator : annotators) {
-                        var annDoc = rowIn.getAnnotationDocument(annotator);
-                        if (annDoc != null) {
-                            rowOut.add(annDoc.getState().getId());
-                        }
-                        else {
-                            rowOut.add(AnnotationDocumentState.NEW.getId());
-                        }
-                    }
-                    aOut.printRecord(rowOut);
-                }
+                var documentRows = provider.iterator(0, provider.size());
+                exportWorkloadToCsv(aOut, annotators, documentRows);
             }
         }, MediaType.valueOf("text/csv"));
+    }
+
+    /**
+     * Builds a sorted list of AnnotationSet objects from a list of users.
+     * 
+     * @param users
+     *            the list of users to convert to AnnotationSets
+     * @return a list of AnnotationSets sorted by display name
+     */
+    static List<AnnotationSet> buildAnnotatorList(List<User> users)
+    {
+        return users.stream() //
+                .map(AnnotationSet::forUser) //
+                .sorted(comparing(AnnotationSet::displayName)) //
+                .toList();
+    }
+
+    /**
+     * Exports workload data to CSV format.
+     * 
+     * @param csvPrinter
+     *            the CSV printer to write to
+     * @param annotators
+     *            the list of annotators (as AnnotationSets) to include in the export
+     * @param documentRows
+     *            iterator over the document matrix rows to export
+     * @throws IOException
+     *             if an error occurs during CSV writing
+     */
+    static void exportWorkloadToCsv(CSVPrinter csvPrinter, List<AnnotationSet> annotators,
+            Iterator<? extends DocumentMatrixRow> documentRows)
+        throws IOException
+    {
+        // Write headers
+        var headers = new ArrayList<String>();
+        headers.add("document name");
+        headers.add("document state");
+        headers.add("curation state");
+        annotators.forEach(s -> headers.add(s.displayName()));
+        csvPrinter.printRecord(headers);
+
+        // Write data rows
+        while (documentRows.hasNext()) {
+            var row = documentRows.next();
+            var csvRow = new ArrayList<String>(headers.size());
+            csvRow.add(row.getSourceDocument().getName());
+            csvRow.add(row.getState().getId());
+            csvRow.add(row.getCurationState().getId());
+            for (var annotator : annotators) {
+                var annDoc = row.getAnnotationDocument(annotator);
+                if (annDoc != null) {
+                    csvRow.add(annDoc.getState().getId());
+                }
+                else {
+                    csvRow.add(AnnotationDocumentState.NEW.getId());
+                }
+            }
+            csvPrinter.printRecord(csvRow);
+        }
     }
 
     @OnEvent
