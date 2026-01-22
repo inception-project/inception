@@ -27,6 +27,10 @@ export class ApacheAnnotatorSelector {
   private popupContent: HTMLElement | undefined
   private popupAnchor: HTMLElement | undefined
 
+  private clickCount = 0
+  private clickTimer: number
+  private CLICK_DELAY = 300
+
   public constructor (element: Element, ajax: DiamAjax) {
     this.ajax = ajax
     this.root = element
@@ -63,6 +67,8 @@ export class ApacheAnnotatorSelector {
   }
 
   public showSelector (event: Event): void {
+    console.warn("showSelector")
+
     const mouseEvent = event as MouseEvent
 
     this.destroyPopup()
@@ -76,7 +82,7 @@ export class ApacheAnnotatorSelector {
       // inline label
       const vid = hls[0].getAttribute('data-iaa-id')
       if (!vid) return
-      this.ajax.selectAnnotation(vid)
+      this.onClick(mouseEvent, vid)
       return
     }
 
@@ -106,7 +112,7 @@ export class ApacheAnnotatorSelector {
       labelArea.classList.add('iaa-label')
       labelArea.textContent = label !== NO_LABEL ? label : 'no label'
       labelArea.style.cursor = 'pointer'
-      labelArea.addEventListener('click', e => this.onSelectAnnotation(e, vid))
+      labelArea.addEventListener('mouseup', e => this.onClick(e, vid))
       menuItem.appendChild(labelArea)
 
       const deleteButton = document.createElement('a')
@@ -122,11 +128,51 @@ export class ApacheAnnotatorSelector {
     this.popup = createPopper(this.popupAnchor, this.popupContent, { placement: 'top' })
   }
 
-  private onSelectAnnotation (event: Event, id: VID) {
-    console.log(`Selecting annotation ${id}`)
+  /**
+   * Distinguish between double clicks and single clicks . This is relevant when clicking on
+   * annotations. For clicking on text nodes, this is not really relevant.
+   */
+  private onClick (event: MouseEvent, id: VID) {
+    if (event.button != 0) return
+
+    const singleClickAction = this.onSelectAnnotation.bind(this)
+    const doubleClickAction = this.onExtensionAction.bind(this)
+
     event.stopPropagation()
+    event.preventDefault()
+
+    this.clickCount++
+    console.warn(this.clickCount, id)
+    if (this.clickCount === 1) {
+      this.clickTimer = window.setTimeout(() => {
+        try {
+          singleClickAction(id) // perform single-click action
+        } finally {
+          this.clickCount = 0 // after action performed, reset counter
+        }
+      }, this.CLICK_DELAY)
+    } else {
+      if (this.clickTimer !== null) {
+        clearTimeout(this.clickTimer) // prevent single-click action
+      }
+      try {
+        doubleClickAction(id) // perform double-click action
+      } finally {
+        this.clickCount = 0 // after action performed, reset counter
+      }
+    }
+  }
+
+  private onSelectAnnotation (id: VID) {
+    console.warn(`Selecting annotation ${id}`)
     this.destroyPopup()
     this.ajax.selectAnnotation(id)
+  }
+
+  private onExtensionAction (id: VID) {
+    console.warn(`Trigger extension action on annotation ${id}`)
+    this.destroyPopup()
+    this.ajax.triggerExtensionAction(id)
   }
 
   private onDeleteAnnotation (event: Event, id: VID) {
