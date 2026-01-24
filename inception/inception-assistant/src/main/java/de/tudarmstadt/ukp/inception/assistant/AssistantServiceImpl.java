@@ -370,7 +370,14 @@ public class AssistantServiceImpl
         var primeDirectives = new ArrayList<String>();
         primeDirectives.add(establishIdentity);
 
-        if (!properties.getChat().getCapabilities().contains(CAP_TOOLS)) {
+        if (properties.getChat().getCapabilities().contains(CAP_TOOLS)) {
+            // When tools are enabled, collect system prompts from tool libraries
+            for (var toolLibrary : toolLibraryExtensionPoint.getExtensions(aProject)) {
+                primeDirectives.addAll(toolLibrary.getSystemPrompts(aProject));
+            }
+        }
+        else {
+            // When tools are disabled, collect system prompts from retrievers
             for (var retriever : retrieverExtensionPoint.getExtensions(aProject)) {
                 primeDirectives.addAll(retriever.getSystemPrompts());
             }

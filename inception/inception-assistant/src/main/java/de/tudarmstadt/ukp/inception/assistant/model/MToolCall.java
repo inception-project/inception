@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -44,12 +45,18 @@ public record MToolCall(String actor, @JsonIgnore Object instance, @JsonIgnore M
             String aDataOwner, CommandDispatcher aCommandDispatcher)
         throws Exception
     {
+        var objectMapper = new ObjectMapper();
         var params = new ArrayList<Object>();
         for (var param : method().getParameters()) {
             if (ToolUtils.isParameter(param)) {
                 var paramName = ToolUtils.getParameterName(param);
                 var paramValue = arguments().get(paramName);
-                params.add(paramValue);
+                
+                // Convert parameter value to the expected type using Jackson
+                // This handles LinkedHashMap -> POJO and List<LinkedHashMap> -> List<POJO>
+                var expectedType = objectMapper.getTypeFactory().constructType(param.getParameterizedType());
+                var convertedValue = objectMapper.convertValue(paramValue, expectedType);
+                params.add(convertedValue);
                 continue;
             }
 

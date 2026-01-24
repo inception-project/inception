@@ -23,8 +23,10 @@ import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolStatusRes
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -48,9 +50,10 @@ public class AnnotationToolLibrary
     implements ToolLibrary
 {
     private static final String CREATE_SPAN_SUGGESTIONS_DESCRIPTION = """
-            Creates span annotation suggestions at specified character offsets in the current document.
-            Suggestions appear in the editor for the user to review and accept or reject.
-            Use this when the user asks you to annotate, mark, or identify entities, mentions, or spans of text.
+            Creates span annotation suggestions at specified character offsets in the CURRENT DOCUMENT \
+            being edited. Suggestions appear in the editor for the user to review and accept or reject. \
+            Use this when the user asks you to annotate, mark, or identify entities, mentions, or spans \
+            of text. The layer name must match one of the available annotation layers in the project schema.
             """;
 
     private final RecommendationService recommendationService;
@@ -75,6 +78,64 @@ public class AnnotationToolLibrary
     public boolean accepts(Project aContext)
     {
         return true;
+    }
+
+    @Override
+    public Collection<String> getSystemPrompts(Project aProject)
+    {
+        var prompts = new ArrayList<String>();
+        
+        prompts.add("""
+                When asked to annotate or create suggestions, you should use the \
+                create_span_suggestions tool. You will receive information about the \
+                available annotation layers and features in the current project in each \
+                conversation. Use the exact layer names provided when calling the tool.
+                """);
+
+        var layers = schemaService.listAnnotationLayer(aProject).stream() //
+                .filter(AnnotationLayer::isEnabled) //
+                .toList();
+
+        if (!layers.isEmpty()) {
+            var schema = new StringBuilder();
+            schema.append("# Annotation Schema\n\n");
+            schema.append("The following annotation layers are available:\n\n");
+
+            for (var layer : layers) {
+                schema.append("## Layer: ").append(layer.getName()).append("\n");
+                schema.append("- **UI Name**: ").append(layer.getUiName()).append("\n");
+                schema.append("- **Type**: ").append(layer.getType()).append("\n");
+
+                var features = schemaService.listSupportedFeatures(layer).stream() //
+                        .filter(AnnotationFeature::isEnabled) //
+                        .toList();
+
+                if (!features.isEmpty()) {
+                    schema.append("- **Features**:\n");
+                    for (var feature : features) {
+                        schema.append("  - `").append(feature.getName()).append("`");
+                        schema.append(" (").append(feature.getType()).append(")");
+
+                        var tagset = feature.getTagset();
+                        if (tagset != null) {
+                            var tags = schemaService.listTags(tagset);
+                            if (!tags.isEmpty()) {
+                                schema.append(" - Valid values: ");
+                                schema.append(tags.stream() //
+                                        .map(tag -> "`" + tag.getName() + "`") //
+                                        .reduce((a, b) -> a + ", " + b) //
+                                        .orElse(""));
+                            }
+                        }
+                        schema.append("\n");
+                    }
+                }
+                schema.append("\n");
+            }
+            prompts.add(schema.toString());
+        }
+
+        return prompts;
     }
 
     @Tool( //
@@ -180,12 +241,5 @@ public class AnnotationToolLibrary
                 .build();
         recommendationService.createOrUpdateRecommender(recommender);
         return recommender;
-    }
-
-    public static class SpanSpec
-    {
-        public int begin;
-        public int end;
-        public String label;
     }
 }

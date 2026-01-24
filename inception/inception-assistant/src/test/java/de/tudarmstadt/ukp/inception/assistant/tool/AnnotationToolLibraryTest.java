@@ -47,7 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.assistant.recommender.AssistantRecommenderFactory;
-import de.tudarmstadt.ukp.inception.assistant.tool.AnnotationToolLibrary.SpanSpec;
+import de.tudarmstadt.ukp.inception.assistant.tool.SpanSpec;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -333,6 +333,55 @@ class AnnotationToolLibraryTest
         assertThat(spec.begin).isEqualTo(5);
         assertThat(spec.end).isEqualTo(15);
         assertThat(spec.label).isEqualTo("TEST");
+    }
+
+    @Test
+    void testSpanSpecDeserialization() throws Exception
+    {
+        // This test verifies that SpanSpec can be properly deserialized from LinkedHashMap,
+        // which is how JSON tool parameters arrive from the LLM
+        var context = mock(AnnotationEditorContext.class);
+        when(context.getProject()).thenReturn(project);
+        when(context.getDocument()).thenReturn(document);
+
+        when(userService.getCurrentUser()).thenReturn(user);
+        when(schemaService.findLayer(project, "NamedEntity")).thenReturn(layer);
+        when(schemaService.listSupportedFeatures(layer)).thenReturn(List.of(feature));
+        when(recommendationService.listRecommenders(project)).thenReturn(Collections.emptyList());
+        doAnswer(inv -> {
+            Recommender r = inv.getArgument(0);
+            r.setId(99L);
+            return null;
+        }).when(recommendationService).createOrUpdateRecommender(any(Recommender.class));
+
+        // Simulate what happens when JSON is deserialized - we get LinkedHashMaps
+        // This mimics the actual MToolCall.invoke() behavior which receives Map objects
+        java.util.List<java.util.LinkedHashMap<String, Object>> suggestionMaps = Arrays.asList(
+                createLinkedHashMapFromSpanSpec(0, 5, "PER"),
+                createLinkedHashMapFromSpanSpec(10, 20, "LOC")
+        );
+
+        // Convert using Jackson ObjectMapper (same as MToolCall does)
+        var objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var typeFactory = objectMapper.getTypeFactory();
+        var expectedType = typeFactory.constructCollectionType(List.class, SpanSpec.class);
+        List<SpanSpec> convertedSuggestions = objectMapper.convertValue(suggestionMaps, expectedType);
+
+        // When - now this should work because we're converting properly
+        var result = sut.createSpanSuggestions(context, null, "NamedEntity", convertedSuggestions);
+
+        // Then
+        assertThat(result.status()).isEqualTo(SUCCESS);
+        assertThat(result.message()).contains("Created 2 suggestion(s)");
+    }
+
+    private java.util.LinkedHashMap<String, Object> createLinkedHashMapFromSpanSpec(int begin, int end, String label)
+    {
+        var map = new java.util.LinkedHashMap<String, Object>();
+        map.put("begin", begin);
+        map.put("end", end);
+        map.put("label", label);
+        return map;
     }
 
     private SpanSpec createSpanSpec(int begin, int end, String label)

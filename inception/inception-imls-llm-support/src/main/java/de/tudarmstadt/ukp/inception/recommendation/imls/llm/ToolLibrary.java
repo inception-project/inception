@@ -17,11 +17,27 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm;
 
+import static java.util.Collections.emptyList;
+
+import java.util.Collection;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
 public interface ToolLibrary
     extends Extension<Project>
 {
-
+    /**
+     * Provides system prompts that should be included in the assistant's system messages when
+     * tools are enabled. This allows tool libraries to provide context about how to use the tools
+     * and information about the current project (e.g., annotation schema).
+     * 
+     * @param aProject
+     *            the project context
+     * @return collection of system prompt strings
+     */
+    default Collection<String> getSystemPrompts(Project aProject)
+    {
+        return emptyList();
+    }
 }
