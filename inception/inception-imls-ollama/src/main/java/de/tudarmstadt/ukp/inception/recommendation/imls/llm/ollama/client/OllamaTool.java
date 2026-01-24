@@ -139,8 +139,8 @@ public class OllamaTool
 
             var paramName = ToolUtils.getParameterName(param);
 
-            var schemaBuilder = generator.buildMultipleSchemaDefinitions();
-            var propertySchema = schemaBuilder.createSchemaReference(param.getType());
+            // Generate full inline schema definition using parameterized type to preserve generics
+            var propertySchema = generator.generateSchema(param.getParameterizedType());
 
             getParameterDescription(param).ifPresent(
                     description -> propertySchema.put("description", description.strip()));

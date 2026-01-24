@@ -57,7 +57,9 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.OllamaRecomme
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.OllamaRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionMode;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.LabellingAnnotationTaskCodec;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.SpanJsonAnnotationTaskCodec;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.SpanJsonSchemaAnnotationTaskCodec;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
 
@@ -65,6 +67,8 @@ import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
 class OllamaRecommenderTest
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private static final String DEFAULT_MODEL = "ministral-3:8b";
 
     private @Mock AnnotationSchemaService schemaSerivce;
 
@@ -92,7 +96,8 @@ class OllamaRecommenderTest
         recommender.setFeature(feature);
 
         responseExtractorExtensionPoint = new AnnotationTaskCodecExtensionPointImpl(
-                asList(new SpanJsonAnnotationTaskCodec()));
+                asList(new SpanJsonAnnotationTaskCodec(), new SpanJsonSchemaAnnotationTaskCodec(),
+                        new LabellingAnnotationTaskCodec()));
         responseExtractorExtensionPoint.init();
 
         var tsd = TypeSystemDescriptionFactory.createTypeSystemDescription();
@@ -106,7 +111,7 @@ class OllamaRecommenderTest
         cas.setDocumentText("1 2 3 4 5 6 7 8 9 10");
 
         var traits = new OllamaRecommenderTraits();
-        traits.setModel("mistral");
+        traits.setModel(DEFAULT_MODEL);
         traits.setPrompt("What do you see in the following text?\n\n{{ text }}");
         traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(ExtractionMode.RESPONSE_AS_LABEL);
@@ -115,8 +120,9 @@ class OllamaRecommenderTest
                 responseExtractorExtensionPoint);
         sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
-        var predictions = cas.select(NamedEntity.class)
-                .filter(ne -> getFeature(ne, FEATURE_NAME_IS_PREDICTION, Boolean.class)).toList();
+        var predictions = cas.select(NamedEntity.class) //
+                .filter(ne -> getFeature(ne, FEATURE_NAME_IS_PREDICTION, Boolean.class)) //
+                .toList();
 
         predictions.forEach($ -> LOG.info("Prediction: {} {}", $.getCoveredText(), $.getValue()));
         assertThat(predictions).as("predictions").isNotEmpty();
@@ -128,20 +134,22 @@ class OllamaRecommenderTest
         cas.setDocumentText("1 2 3 4 5 6 7 8 9 10");
 
         var traits = new OllamaRecommenderTraits();
-        traits.setModel("mistral");
+        traits.setModel(DEFAULT_MODEL);
         traits.setPrompt("""
                 Identify all even numbers in the following list and return them as JSON.
 
                 {{ text }}""");
         traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(MENTIONS_FROM_JSON);
+        traits.setStructuredOutputSupported(false);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce,
                 responseExtractorExtensionPoint);
         sut.predict(new PredictionContext(new RecommenderContext()), cas);
 
-        var predictions = cas.select(NamedEntity.class)
-                .filter(ne -> getFeature(ne, FEATURE_NAME_IS_PREDICTION, Boolean.class)).toList();
+        var predictions = cas.select(NamedEntity.class) //
+                .filter(ne -> getFeature(ne, FEATURE_NAME_IS_PREDICTION, Boolean.class)) //
+                .toList();
 
         predictions.forEach($ -> LOG.info("Prediction: {} {}", $.getCoveredText(), $.getValue()));
         assertThat(predictions).as("predictions").isNotEmpty();
@@ -154,10 +162,11 @@ class OllamaRecommenderTest
                 "John is going to work at the diner tomorrow. There, he meets a guy working at Starbucks.");
 
         var traits = new OllamaRecommenderTraits();
-        traits.setModel("mistral");
+        traits.setModel(DEFAULT_MODEL);
         traits.setPrompt("Identify all named entities in the following text.\n\n{{ text }}");
         traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(MENTIONS_FROM_JSON);
+        traits.setStructuredOutputSupported(false);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce,
                 responseExtractorExtensionPoint);
@@ -179,13 +188,14 @@ class OllamaRecommenderTest
                 Later they meet the the Lord of Darkness, Don Horny.""");
 
         var traits = new OllamaRecommenderTraits();
-        traits.setModel("mistral");
+        traits.setModel(DEFAULT_MODEL);
         traits.setPrompt("""
                 Identify all politicians in the following text and return them as JSON.
 
                 {{ text }}""");
         traits.setPromptingMode(PER_DOCUMENT);
         traits.setExtractionMode(MENTIONS_FROM_JSON);
+        traits.setStructuredOutputSupported(false);
 
         var sut = new OllamaRecommender(recommender, traits, new OllamaClientImpl(), schemaSerivce,
                 responseExtractorExtensionPoint);
@@ -205,15 +215,17 @@ class OllamaRecommenderTest
                 John is will meet President Livingston tomorrow .
                 They will lunch together with the minister of foreign affairs .
                 Later they meet the the Lord of Darkness, Don Horny .""");
-        buildAnnotation(cas, NamedEntity.class).on("John") //
+        buildAnnotation(cas, NamedEntity.class) //
+                .on("John") //
                 .withFeature(NamedEntity._FeatName_value, "PER") //
                 .buildAndAddToIndexes();
-        buildAnnotation(cas, NamedEntity.class).on("President Livingston") //
+        buildAnnotation(cas, NamedEntity.class) //
+                .on("President Livingston") //
                 .withFeature(NamedEntity._FeatName_value, "PER") //
                 .buildAndAddToIndexes();
 
         var traits = new OllamaRecommenderTraits();
-        traits.setModel("mistral");
+        traits.setModel(DEFAULT_MODEL);
         traits.setPrompt("""
                 Identify all politicians in the following text and return them as JSON.
 

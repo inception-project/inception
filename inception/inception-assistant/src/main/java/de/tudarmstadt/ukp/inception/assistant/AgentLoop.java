@@ -106,6 +106,7 @@ public class AgentLoop
     private boolean toolCallingEnabled = true;
     private SchemaGenerator generator;
     private MessageStreamHandler messageStreamHandler;
+    private CommandDispatcher commandDispatcher;
 
     private List<MTextMessage> systemMessages = new ArrayList<>();
     private List<? extends MChatMessage> ephemeralMessages = new ArrayList<>();
@@ -154,6 +155,11 @@ public class AgentLoop
     public void setMessageStreamHandler(MessageStreamHandler aHandler)
     {
         messageStreamHandler = aHandler;
+    }
+
+    public void setCommandDispatcher(CommandDispatcher aCommandDispatcher)
+    {
+        commandDispatcher = aCommandDispatcher;
     }
 
     public List<MTextMessage> getSystemMessages()
@@ -410,11 +416,12 @@ public class AgentLoop
                 .withRole(ASSISTANT);
     }
 
-    static MChatMessage callTool(String aSessionOwner, Project aProject, SourceDocument aDocument,
+    MChatMessage callTool(String aSessionOwner, Project aProject, SourceDocument aDocument,
             String aDataOwner, MChatMessage aContext, MToolCall call)
     {
         try {
-            var result = call.invoke(aSessionOwner, aProject, aDocument, aDataOwner);
+            var result = call.invoke(aSessionOwner, aProject, aDocument, aDataOwner,
+                    commandDispatcher);
 
             if (result instanceof MCallResponse.Builder responseBuilder) {
                 responseBuilder //
