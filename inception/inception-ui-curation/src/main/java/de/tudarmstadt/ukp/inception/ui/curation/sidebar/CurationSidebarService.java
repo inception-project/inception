@@ -50,20 +50,38 @@ public interface CurationSidebarService
 
     /**
      * Start a new curation session.
+     * 
+     * @deprecated Curation is a permanent feature on the curation page, so it no longer needs to be
+     *             startable/stoppable as it way on the annotation page. We keep this only as long
+     *             until we have resolved how to deal with changing the curation target without
+     *             creating inconsistencies.
      */
     @SuppressWarnings("javadoc")
+    @Deprecated
     boolean existsSession(String aSessionOwner, long aProjectId);
 
     /**
      * Start a new curation session.
+     * 
+     * @deprecated Curation is a permanent feature on the curation page, so it no longer needs to be
+     *             startable/stoppable as it way on the annotation page. We keep this only as long
+     *             until we have resolved how to deal with changing the curation target without
+     *             creating inconsistencies.
      */
     @SuppressWarnings("javadoc")
+    @Deprecated
     void startSession(String aSessionOwner, Project aProjectId, boolean aOwnDocument);
 
     /**
      * Stop a running curation session.
+     * 
+     * @deprecated Curation is a permanent feature on the curation page, so it no longer needs to be
+     *             startable/stoppable as it way on the annotation page. We keep this only as long
+     *             until we have resolved how to deal with changing the curation target without
+     *             creating inconsistencies.
      */
     @SuppressWarnings("javadoc")
+    @Deprecated
     void closeSession(String aCurrentUser, long aProjectId);
 
     /**
