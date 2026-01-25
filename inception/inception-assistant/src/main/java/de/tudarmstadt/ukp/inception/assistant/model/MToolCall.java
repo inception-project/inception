@@ -51,10 +51,11 @@ public record MToolCall(String actor, @JsonIgnore Object instance, @JsonIgnore M
             if (ToolUtils.isParameter(param)) {
                 var paramName = ToolUtils.getParameterName(param);
                 var paramValue = arguments().get(paramName);
-                
+
                 // Convert parameter value to the expected type using Jackson
                 // This handles LinkedHashMap -> POJO and List<LinkedHashMap> -> List<POJO>
-                var expectedType = objectMapper.getTypeFactory().constructType(param.getParameterizedType());
+                var expectedType = objectMapper.getTypeFactory()
+                        .constructType(param.getParameterizedType());
                 var convertedValue = objectMapper.convertValue(paramValue, expectedType);
                 params.add(convertedValue);
                 continue;

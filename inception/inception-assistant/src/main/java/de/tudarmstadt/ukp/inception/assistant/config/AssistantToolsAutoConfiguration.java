@@ -75,8 +75,7 @@ public class AssistantToolsAutoConfiguration
     }
 
     @Bean
-    public AnnotationToolLibrary annotationToolLibrary(
-            RecommendationService aRecommendationService,
+    public AnnotationToolLibrary annotationToolLibrary(RecommendationService aRecommendationService,
             AnnotationSchemaService aSchemaService, UserDao aUserService)
     {
         return new AnnotationToolLibrary(aRecommendationService, aSchemaService, aUserService);

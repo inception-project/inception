@@ -84,7 +84,7 @@ public class AnnotationToolLibrary
     public Collection<String> getSystemPrompts(Project aProject)
     {
         var prompts = new ArrayList<String>();
-        
+
         prompts.add("""
                 When asked to annotate or create suggestions, you should use the \
                 create_span_suggestions tool. You will receive information about the \

@@ -302,7 +302,8 @@ public class AssistantServiceImpl
         assistant.setSystemMessages(generateSystemMessages(aProject));
         assistant.setEphemeralMessages(generateEphemeralMessages(aProject, aMessage));
         assistant.setMessageStreamHandler(this::handleStreamedMessageFragment);
-        assistant.setCommandDispatcher(command -> dispatchMessage(aSessionOwner, aProject, command));
+        assistant
+                .setCommandDispatcher(command -> dispatchMessage(aSessionOwner, aProject, command));
 
         toolLibraryExtensionPoint.getExtensions(aProject).forEach(toolLibrary -> {
             assistant.addToolLibrary(toolLibrary);

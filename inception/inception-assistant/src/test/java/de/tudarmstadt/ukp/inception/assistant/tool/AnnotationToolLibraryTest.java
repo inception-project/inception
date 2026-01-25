@@ -47,7 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.assistant.recommender.AssistantRecommenderFactory;
-import de.tudarmstadt.ukp.inception.assistant.tool.SpanSpec;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -358,14 +357,14 @@ class AnnotationToolLibraryTest
         // This mimics the actual MToolCall.invoke() behavior which receives Map objects
         java.util.List<java.util.LinkedHashMap<String, Object>> suggestionMaps = Arrays.asList(
                 createLinkedHashMapFromSpanSpec(0, 5, "PER"),
-                createLinkedHashMapFromSpanSpec(10, 20, "LOC")
-        );
+                createLinkedHashMapFromSpanSpec(10, 20, "LOC"));
 
         // Convert using Jackson ObjectMapper (same as MToolCall does)
         var objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
         var typeFactory = objectMapper.getTypeFactory();
         var expectedType = typeFactory.constructCollectionType(List.class, SpanSpec.class);
-        List<SpanSpec> convertedSuggestions = objectMapper.convertValue(suggestionMaps, expectedType);
+        List<SpanSpec> convertedSuggestions = objectMapper.convertValue(suggestionMaps,
+                expectedType);
 
         // When - now this should work because we're converting properly
         var result = sut.createSpanSuggestions(context, null, "NamedEntity", convertedSuggestions);
@@ -375,7 +374,8 @@ class AnnotationToolLibraryTest
         assertThat(result.message()).contains("Created 2 suggestion(s)");
     }
 
-    private java.util.LinkedHashMap<String, Object> createLinkedHashMapFromSpanSpec(int begin, int end, String label)
+    private java.util.LinkedHashMap<String, Object> createLinkedHashMapFromSpanSpec(int begin,
+            int end, String label)
     {
         var map = new java.util.LinkedHashMap<String, Object>();
         map.put("begin", begin);

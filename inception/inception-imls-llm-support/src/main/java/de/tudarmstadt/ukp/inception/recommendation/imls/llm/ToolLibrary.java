@@ -28,9 +28,9 @@ public interface ToolLibrary
     extends Extension<Project>
 {
     /**
-     * Provides system prompts that should be included in the assistant's system messages when
-     * tools are enabled. This allows tool libraries to provide context about how to use the tools
-     * and information about the current project (e.g., annotation schema).
+     * Provides system prompts that should be included in the assistant's system messages when tools
+     * are enabled. This allows tool libraries to provide context about how to use the tools and
+     * information about the current project (e.g., annotation schema).
      * 
      * @param aProject
      *            the project context
