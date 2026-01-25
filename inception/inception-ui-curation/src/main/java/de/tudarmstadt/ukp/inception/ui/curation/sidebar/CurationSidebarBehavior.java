@@ -109,14 +109,6 @@ public class CurationSidebarBehavior
         var doc = aEvent.getDocument();
         var project = doc.getProject();
 
-        // If the curation sidebar is not enabled, then we can stop the curation session on the
-        // annotation page to avoid rendering curation suggestions if the curation session has been
-        // enabled due to visiting the new curation page
-        if (page instanceof AnnotationPage && !curationSidebarProperties.isEnabled()) {
-            curationSidebarService.closeSession(sessionOwner, project.getId());
-            return;
-        }
-
         var params = page.getPageParameters();
         var dataOwner = aEvent.getDocumentOwner();
 
