@@ -19,7 +19,5 @@ package de.tudarmstadt.ukp.inception.curation.sidebar;
 
 public interface CurationSidebarProperties
 {
-    boolean isEnabled();
-
     boolean isOwnUserCurationTargetEnabled();
 }

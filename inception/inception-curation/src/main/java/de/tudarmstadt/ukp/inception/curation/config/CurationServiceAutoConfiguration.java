@@ -50,7 +50,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 @Configuration
-@EnableConfigurationProperties(CurationSidebarPropertiesImpl.class)
+@EnableConfigurationProperties({ CurationSidebarPropertiesImpl.class })
 public class CurationServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;

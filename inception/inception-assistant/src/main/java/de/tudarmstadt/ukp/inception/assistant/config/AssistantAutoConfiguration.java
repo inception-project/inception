@@ -17,8 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.config;
 
+import static de.tudarmstadt.ukp.inception.websocket.config.MessageExpressionAuthorizationManager.expression;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
+
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -57,6 +64,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibraryExtension
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.websocket.security.StompSecurityConfigurer;
 
 @ConditionalOnWebApplication
 @Configuration
@@ -65,6 +73,8 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
         AssistantDocumentIndexPropertiesImpl.class, })
 public class AssistantAutoConfiguration
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     @Bean
     public AssistantService assistantService(SessionRegistry aSessionRegistry,
             SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
@@ -159,5 +169,18 @@ public class AssistantAutoConfiguration
     public AssistantRecommenderFactory assistantRecommenderFactory()
     {
         return new AssistantRecommenderFactory();
+    }
+
+    @Bean
+    public StompSecurityConfigurer assistantWebsocketSecurity()
+    {
+        return (aBuilder, aMAH) -> {
+            LOG.debug("Configuring websocket security for assistant controller");
+
+            aBuilder.simpDestMatchers(
+                    "/*/assistant" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}")
+                    .access(expression(aMAH,
+                            "@projectAccess.canAccessProject(#" + PARAM_PROJECT + ")"));
+        };
     }
 }

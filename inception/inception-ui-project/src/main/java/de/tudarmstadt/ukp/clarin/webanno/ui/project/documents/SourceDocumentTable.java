@@ -73,6 +73,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
+import de.tudarmstadt.ukp.inception.support.wicket.EmptyStateToolbar;
 import de.tudarmstadt.ukp.inception.support.wicket.PipedStreamResource;
 import de.tudarmstadt.ukp.inception.support.wicket.SymbolLambdaColumn;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
@@ -143,6 +144,8 @@ public class SourceDocumentTable
         table.setOutputMarkupId(true);
         table.addTopToolbar(new AjaxNavigationToolbar(table));
         table.addTopToolbar(new AjaxFallbackHeadersToolbar<>(table, dataProvider));
+        table.addBottomToolbar(new EmptyStateToolbar(table,
+                new ResourceModel("sourceDocumentTable.no-records-found")));
         queue(table);
 
         nameFilter = new TextField<>(CID_NAME_FILTER,

@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayer
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.LinkedHashSet;
 
 import org.apache.uima.UIMAFramework;
@@ -30,17 +30,18 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.util.CasCreationUtils;
 import org.apache.wicket.validation.ValidationError;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
@@ -68,8 +69,7 @@ import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoCon
 @DataJpaTest(showSql = false, //
         properties = { //
                 "recommender.enabled=false", //
-                "spring.main.banner-mode=off", //
-                "repository.path=" + AnnotationSchemaServiceImplTest.TEST_OUTPUT_FOLDER })
+                "spring.main.banner-mode=off" })
 @EntityScan({ //
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
@@ -85,7 +85,13 @@ class AnnotationSchemaServiceImplTest
 {
     private static final String TAG_NOT_IN_LIST = "TAG-NOT-IN-LIST";
 
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/AnnotationSchemaServiceImplTest";
+    static @TempDir Path tempFolder;
+
+    @DynamicPropertySource
+    static void registerDynamicProperties(DynamicPropertyRegistry registry)
+    {
+        registry.add("repository.path", () -> tempFolder.toAbsolutePath().toString());
+    }
 
     private @MockitoBean DocumentService documentService;
     private @MockitoBean DocumentImportExportService documentImportExportService;
@@ -96,12 +102,6 @@ class AnnotationSchemaServiceImplTest
 
     private User annotator1;
     private Project project;
-
-    @BeforeAll
-    public static void setupClass()
-    {
-        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
-    }
 
     @BeforeEach
     public void setup() throws Exception

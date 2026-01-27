@@ -29,7 +29,6 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
@@ -92,8 +91,7 @@ public class CurationSidebarFactory
     @Override
     public boolean accepts(AnnotationPageBase aContext)
     {
-        if ((aContext instanceof AnnotationPage && curationSidebarProperties.isEnabled())
-                || aContext instanceof CurationPage) {
+        if (aContext instanceof CurationPage) {
             var state = aContext.getModelObject();
             var sessionOwner = userService.getCurrentUsername();
             var isCurator = projectService.hasRole(state.getUser(), state.getProject(), CURATOR);
