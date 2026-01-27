@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.curation.settings;
 
 import static de.tudarmstadt.ukp.inception.curation.settings.CurationManagerPrefs.KEY_CURATION_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs.KEY_CURATION_SIDEBAR_MANAGER_PREFS;
-import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 
 import org.apache.wicket.MarkupContainer;
@@ -85,7 +84,6 @@ public class CurationProjectSettingsPanel
 
         form.add(new CheckBox("autoMergeCurationSidebar") //
                 .setModel(curationSidebarPrefs.bind("autoMergeCurationSidebar")) //
-                .add(visibleWhen(curationSidebarProperties::isEnabled)) //
                 .setOutputMarkupPlaceholderTag(true));
 
         form.add(new DropDownChoice<CurationPageType>("curationPageType") //

@@ -259,6 +259,13 @@ public class CurationSidebar
                 getModelObject().getProject().getId());
     }
 
+    /**
+     * @deprecated Curation is a permanent feature on the curation page, so it no longer needs to be
+     *             startable/stoppable as it way on the annotation page. We keep this only as long
+     *             until we have resolved how to deal with changing the curation target without
+     *             creating inconsistencies.
+     */
+    @Deprecated
     private void actionStartSession(AjaxRequestTarget aTarget, Form<?> form)
     {
         var sessionOwner = userRepository.getCurrentUsername();
@@ -278,6 +285,13 @@ public class CurationSidebar
         getAnnotationPage().actionLoadDocument(aTarget);
     }
 
+    /**
+     * @deprecated Curation is a permanent feature on the curation page, so it no longer needs to be
+     *             startable/stoppable as it way on the annotation page. We keep this only as long
+     *             until we have resolved how to deal with changing the curation target without
+     *             creating inconsistencies.
+     */
+    @Deprecated
     private void actionStopSession(AjaxRequestTarget aTarget)
     {
         var state = getModelObject();

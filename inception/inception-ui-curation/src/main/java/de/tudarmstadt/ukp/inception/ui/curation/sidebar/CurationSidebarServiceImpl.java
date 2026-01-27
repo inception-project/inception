@@ -336,6 +336,7 @@ public class CurationSidebarServiceImpl
     }
 
     @Override
+    @Deprecated
     public boolean existsSession(String aSessionOwner, long aProjectId)
     {
         synchronized (sessions) {
@@ -344,6 +345,7 @@ public class CurationSidebarServiceImpl
     }
 
     @Override
+    @Deprecated
     public void startSession(String aSessionOwner, Project aProject, boolean aOwnDocument)
     {
         synchronized (sessions) {
@@ -353,6 +355,7 @@ public class CurationSidebarServiceImpl
     }
 
     @Override
+    @Deprecated
     public void closeSession(String aSessionOwner, long aProjectId)
     {
         synchronized (sessions) {
