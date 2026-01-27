@@ -73,8 +73,12 @@ public class WebsocketSecurityConfig
             // messages other than MESSAGE,SUBSCRIBE are allowed for authenticated users
             .nullDestMatcher().authenticated() //
             .simpSubscribeDestMatchers("/user/queue/errors*").hasRole("USER")
-            .simpSubscribeDestMatchers("/*/scheduler/user").hasRole("USER")
-            .simpSubscribeDestMatchers("/*/scheduler" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}")
+            .simpSubscribeDestMatchers( //
+                    "/user/queue/scheduler/user", //
+                    "/app/scheduler/user").hasRole("USER")
+            .simpSubscribeDestMatchers( //
+                    "/app/scheduler" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}",
+                    "/topic/scheduler" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}")
                 .access(expression(mah, "@projectAccess.canManageProject(#" + PARAM_PROJECT + ")"))
             .simpSubscribeDestMatchers("/*" + NS_PROJECT + "/{" + PARAM_PROJECT + "}/exports")
                 .access(expression(mah, "@projectAccess.canManageProject(#" + PARAM_PROJECT + ")"))
