@@ -17,8 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.config;
 
+import static de.tudarmstadt.ukp.inception.websocket.config.MessageExpressionAuthorizationManager.expression;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_USER;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_USER;
+
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -60,6 +69,7 @@ import de.tudarmstadt.ukp.inception.recommendation.sidebar.llm.InteractiveRecomm
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.websocket.security.StompSecurityConfigurer;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
@@ -72,6 +82,8 @@ import jakarta.persistence.PersistenceContext;
 @ConditionalOnProperty(prefix = "recommender", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class RecommenderServiceAutoConfiguration
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private @PersistenceContext EntityManager entityManager;
 
     @Bean
@@ -215,5 +227,20 @@ public class RecommenderServiceAutoConfiguration
             @Lazy @Autowired(required = false) List<SuggestionSupport> aExtensions)
     {
         return new SuggestionSupportRegistryImpl(aExtensions);
+    }
+
+    @Bean
+    public StompSecurityConfigurer recommenderWebsocketSecurity()
+    {
+        return (aBuilder, aMAH) -> {
+            LOG.debug("Configuring websocket security for recommender controller");
+
+            final var recommenderEventsTopic = "/*" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT
+                    + "}" + TOPIC_ELEMENT_USER + "{" + PARAM_USER + "}/**";
+
+            aBuilder.simpSubscribeDestMatchers(recommenderEventsTopic)
+                    .access(expression(aMAH, "@projectAccess.canAccessProject(#" + PARAM_PROJECT
+                            + ") and " + "@userAccess.isUser(#" + PARAM_USER + ")"));
+        };
     }
 }

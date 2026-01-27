@@ -17,6 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling.config;
 
+import static de.tudarmstadt.ukp.inception.websocket.config.MessageExpressionAuthorizationManager.expression;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
+
+import java.lang.invoke.MethodHandles;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -29,11 +37,14 @@ import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingServiceImpl;
 import de.tudarmstadt.ukp.inception.scheduling.TaskAccess;
 import de.tudarmstadt.ukp.inception.scheduling.TaskAccessImpl;
+import de.tudarmstadt.ukp.inception.websocket.security.StompSecurityConfigurer;
 
 @Configuration
 @EnableConfigurationProperties({ SchedulingProperties.class })
 public class SchedulingServiceAutoConfiguration
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     @Bean
     public SchedulingService schedulingService(ApplicationContext aApplicationContext,
             SchedulingProperties aConfig, SessionRegistry aSessionRegistry)
@@ -45,5 +56,24 @@ public class SchedulingServiceAutoConfiguration
     public TaskAccess taskAccess(ProjectService aProjectService, UserDao aUserService)
     {
         return new TaskAccessImpl(aProjectService, aUserService);
+    }
+
+    @Bean
+    public StompSecurityConfigurer schedulerWebsocketSecurity()
+    {
+        return (aBuilder, aMAH) -> {
+            LOG.debug("Configuring websocket security for scheduler controller");
+
+            aBuilder.simpSubscribeDestMatchers( //
+                    "/user/queue/scheduler/user", //
+                    "/app/scheduler/user") //
+                    .hasRole("USER");
+
+            aBuilder.simpSubscribeDestMatchers( //
+                    "/app/scheduler" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}",
+                    "/topic/scheduler" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}")
+                    .access(expression(aMAH,
+                            "@projectAccess.canManageProject(#" + PARAM_PROJECT + ")"));
+        };
     }
 }
