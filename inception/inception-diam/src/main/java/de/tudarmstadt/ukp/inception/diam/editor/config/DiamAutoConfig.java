@@ -17,8 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.config;
 
+import static de.tudarmstadt.ukp.inception.websocket.config.MessageExpressionAuthorizationManager.expression;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_DOCUMENT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_USER;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_DOCUMENT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_USER;
+
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,10 +70,13 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.websocket.security.StompSecurityConfigurer;
 
 @Configuration
 public class DiamAutoConfig
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     @Bean
     public EditorAjaxRequestHandlerExtensionPoint editorAjaxRequestHandlerExtensionPoint(
             @Lazy @Autowired(required = false) List<EditorAjaxRequestHandler> aExtensions)
@@ -196,5 +210,25 @@ public class DiamAutoConfig
             CreateRelationAnnotationHandler aCreateRelationAnnotationHandler)
     {
         return new LinkToContextMenuItem(aSchemaService, aCreateRelationAnnotationHandler);
+    }
+
+    @Bean
+    public StompSecurityConfigurer annotationEditorWebsocketSecurity()
+    {
+        return (aBuilder, aMAH) -> {
+            LOG.debug("Configuring websocket security for annotation editor controller");
+
+            final var annotationEditorTopic = "/*" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT
+                    + "}" + TOPIC_ELEMENT_DOCUMENT + "{" + PARAM_DOCUMENT + "}" + TOPIC_ELEMENT_USER
+                    + "{" + PARAM_USER + "}/**";
+
+            aBuilder.simpSubscribeDestMatchers(annotationEditorTopic)
+                    .access(expression(aMAH, "@documentAccess.canViewAnnotationDocument(#"
+                            + PARAM_PROJECT + ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ")"));
+
+            aBuilder.simpMessageDestMatchers(annotationEditorTopic)
+                    .access(expression(aMAH, "@documentAccess.canEditAnnotationDocument(#"
+                            + PARAM_PROJECT + ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ")"));
+        };
     }
 }
