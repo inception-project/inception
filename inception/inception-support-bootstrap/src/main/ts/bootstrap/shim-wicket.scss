@@ -32,3 +32,9 @@ a.tree-junction {
 .tree-branch .tree-node {
   white-space: nowrap;
 }
+
+table {
+  .headers {
+    height: 1px; // Hack to prevent headers from growing when we set the table height
+  }
+}
