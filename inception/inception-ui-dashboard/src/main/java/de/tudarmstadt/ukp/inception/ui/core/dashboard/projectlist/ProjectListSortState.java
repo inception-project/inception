@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 
@@ -35,7 +37,8 @@ public class ProjectListSortState
         strategy = ProjectListSortStrategy.RECENTLY_UPDATED;
     }
 
-    public ProjectListSortState(ProjectListSortStrategy aKey)
+    @JsonCreator
+    public ProjectListSortState(@JsonProperty("strategy") ProjectListSortStrategy aKey)
     {
         strategy = aKey;
     }
