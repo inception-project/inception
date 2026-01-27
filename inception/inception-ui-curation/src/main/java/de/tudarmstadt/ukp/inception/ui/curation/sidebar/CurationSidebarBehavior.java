@@ -204,12 +204,12 @@ public class CurationSidebarBehavior
         if (curationTargetOwnParameterValue.isEmpty()) {
             return;
         }
-        
+
         // Stop/starting session to set the target parameter
         curationSidebarService.closeSession(aSessionOwner, project.getId());
         curationSidebarService.startSession(aSessionOwner, project,
                 curationTargetOwnParameterValue.toBoolean(false));
-        
+
         LOG.trace("Removing session control parameters and reloading (redirect)");
         aParams.remove(PARAM_CURATION_TARGET_OWN);
         setProjectPageParameter(aParams, project);
