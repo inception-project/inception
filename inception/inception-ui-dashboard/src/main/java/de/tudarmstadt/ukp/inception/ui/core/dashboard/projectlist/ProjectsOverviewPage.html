@@ -103,32 +103,38 @@
             </div>
             <div wicket:id="projects" class="flex-content list-group-flush list-group border-0">
               <div wicket:id="project" class="list-group-item">
-                <div class="d-flex">
+                <div class="d-flex flex-row">
                   <input wicket:id="selected" type="checkbox" class="me-3 align-self-center form-check-input fs-4"/>
                   <span wicket:id="stateIcon" class="state-icon text-secondary fs-3 me-3"/>
                   <div class="flex-grow-1 d-flex flex-column">
-                    <div>
-                      <a wicket:id="projectLink" class="text-decoration-none">
-                        <wicket:container wicket:id="name"/>
-                      </a>
+                    <div class="d-flex flex-row">
+                      <div class="flex-grow-1">
+                        <div class="float-end">
+                          <div wicket:id="stats"/>
+                          <div class="d-flex flex-nowrap flex-row-reverse">
+                            <span wicket:id="role" class="badge bg-secondary ms-1"><wicket:container wicket:id="label"/></span>
+                          </div>
+                        </div>
+                        <div>
+                          <a wicket:id="projectLink" class="text-decoration-none">
+                            <wicket:container wicket:id="name"/>
+                          </a>
+                        </div>
+                        <div class="list-group-item-text text-muted">
+                          <small><wicket:container wicket:id="description"/></small>
+                        </div>
+                      </div>
                     </div>
-                    <div class="list-group-item-text text-muted">
-                      <small><wicket:container wicket:id="description"/></small>
-                    </div>
-                  </div>
-                  <div class="d-flex flex-column text-end">
-                    <div wicket:id="stats"/>
-                    <div class="d-flex flex-nowrap flex-row-reverse">
-                      <span wicket:id="role" class="badge bg-secondary ms-1"><wicket:container wicket:id="label"/></span>
-                    </div>
-                    <div class="text-nowrap mt-auto">
-                      <small class="text-muted" wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></small>
-                      <small class="text-muted ms-4" wicket:enclosure="updated">Updated: <wicket:container wicket:id="updated"/></small>
-                      <small class="text-muted ms-4" >Manager: 
-                        <wicket:container wicket:id="primeManager"/>
-                        <span wicket:id="otherManagers"/>
-                      </small>
-                      <small class="text-muted ms-4" wicket:enclosure="id">ID: <wicket:container wicket:id="id"/></small>
+                    <div class="text-end">
+                      <div class="text-nowrap mt-auto">
+                        <small class="text-muted" wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></small>
+                        <small class="text-muted ms-4" wicket:enclosure="updated">Updated: <wicket:container wicket:id="updated"/></small>
+                        <small class="text-muted ms-4" >Manager: 
+                          <wicket:container wicket:id="primeManager"/>
+                          <span wicket:id="otherManagers"/>
+                        </small>
+                        <small class="text-muted ms-4" wicket:enclosure="id">ID: <wicket:container wicket:id="id"/></small>
+                      </div>
                     </div>
                   </div>
                   <div wicket:id="actionDropdown" class="d-flex">
