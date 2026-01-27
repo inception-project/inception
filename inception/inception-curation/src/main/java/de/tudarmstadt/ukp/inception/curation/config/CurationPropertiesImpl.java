@@ -15,26 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.inception.curation.config;
 
-a.tree-junction {
-	text-decoration: none;
-}
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
-.modal-dialog .modal-dialog-content {
-  font-size: initial;
-}
+/**
+ * <p>
+ * This class is exposed as a Spring Component via {@link CurationServiceAutoConfiguration}.
+ * </p>
+ */
+@ConfigurationProperties("curation")
+public class CurationPropertiesImpl
+    implements CurationProperties
+{
+    private boolean legacyCuratableDocumentsStrategy = false;
 
-.dialog-theme-default .modal-dialog-overlay {
-  // z-index 1020 is in Bootstrap's .sticky-top and we need to be above that
-  z-index: 1030;
-}
+    @Override
+    public boolean isLegacyCuratableDocumentsStrategy()
+    {
+        return legacyCuratableDocumentsStrategy;
+    }
 
-.tree-branch .tree-node {
-  white-space: nowrap;
-}
-
-table {
-  .headers {
-    height: 1px; // Hack to prevent headers from growing when we set the table height
-  }
+    public void setLegacyCuratableDocumentsStrategy(boolean aLegacyCuratableDocumentsStrategy)
+    {
+        legacyCuratableDocumentsStrategy = aLegacyCuratableDocumentsStrategy;
+    }
 }
