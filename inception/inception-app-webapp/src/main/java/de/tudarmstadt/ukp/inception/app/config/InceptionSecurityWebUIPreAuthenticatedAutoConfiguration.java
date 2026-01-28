@@ -53,7 +53,6 @@ public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
         aHttp
             .rememberMe()
             .and()
-            .csrf().disable()
             .addFilterBefore(aFilter, RequestHeaderAuthenticationFilter.class);
         
         var authorizations = aHttp.authorizeHttpRequests();
