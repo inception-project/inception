@@ -30,7 +30,6 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.SecurityFilterChain;
@@ -52,23 +51,21 @@ public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
             ShibbolethRequestHeaderAuthenticationFilter aFilter, SessionRegistry aSessionRegistry)
         throws Exception
     {
-        aHttp.rememberMe(Customizer.withDefaults())
+        aHttp.rememberMe(Customizer.withDefaults()) //
 
-                .csrf(AbstractHttpConfigurer::disable)
+                .addFilterBefore(aFilter, RequestHeaderAuthenticationFilter.class) //
 
-                .addFilterBefore(aFilter, RequestHeaderAuthenticationFilter.class)
-
-                .authorizeHttpRequests(auth -> {
-                    accessToStaticResources(auth);
-                    accessToRemoteApiAndSwagger(auth);
-                    accessToApplication(auth);
-                    auth.anyRequest().denyAll();
-                })
+                .authorizeHttpRequests(auth -> { //
+                    accessToStaticResources(auth); //
+                    accessToRemoteApiAndSwagger(auth); //
+                    accessToApplication(auth); //
+                    auth.anyRequest().denyAll(); //
+                }) //
 
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
+                        .authenticationEntryPoint(new Http403ForbiddenEntryPoint())) //
 
-                .headers(headers -> headers.frameOptions(FrameOptionsConfig::sameOrigin))
+                .headers(headers -> headers.frameOptions(FrameOptionsConfig::sameOrigin)) //
 
                 .sessionManagement(
                         session -> session.maximumSessions(-1).sessionRegistry(aSessionRegistry));
