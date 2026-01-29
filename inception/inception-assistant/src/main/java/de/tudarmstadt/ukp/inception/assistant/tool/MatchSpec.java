@@ -17,9 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.tool;
 
-public class SpanSpec
-{
-    public int begin;
-    public int end;
-    public String label;
-}
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+@JsonPropertyOrder({ "left", "text", "right", "label" })
+public record MatchSpec(
+        @JsonPropertyDescription("disambiguating context after text (if necessary)") String before,
+        @JsonPropertyDescription("text to which label applies") String text,
+        @JsonPropertyDescription("disambiguating context before text (if necessary)") String after,
+        @JsonPropertyDescription("the label") String label)
+{}

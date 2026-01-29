@@ -17,15 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.tool;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.assistant.AssistantPredictionSources.ASSISTANT_SOURCE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.NEW_ID;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolStatusResponse.success;
+import static java.util.Collections.emptyList;
+import static org.apache.wicket.util.lang.Objects.defaultIfNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -33,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.assistant.CommandDispatcher;
 import de.tudarmstadt.ukp.inception.assistant.model.MRefreshCommand;
 import de.tudarmstadt.ukp.inception.assistant.recommender.AssistantRecommenderFactory;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
@@ -45,6 +51,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibrary;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolParam;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolStatusResponse;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public class AnnotationToolLibrary
     implements ToolLibrary
@@ -58,14 +65,17 @@ public class AnnotationToolLibrary
 
     private final RecommendationService recommendationService;
     private final AnnotationSchemaService schemaService;
+    private final DocumentService documentService;
     private final UserDao userService;
 
     public AnnotationToolLibrary(RecommendationService aRecommendationService,
-            AnnotationSchemaService aSchemaService, UserDao aUserService)
+            AnnotationSchemaService aSchemaService, UserDao aUserService,
+            DocumentService aDocumentService)
     {
         recommendationService = aRecommendationService;
         schemaService = aSchemaService;
         userService = aUserService;
+        documentService = aDocumentService;
     }
 
     @Override
@@ -147,8 +157,11 @@ public class AnnotationToolLibrary
             CommandDispatcher aCommandDispatcher, //
             @ToolParam(value = "layer", description = "Name of the annotation layer") //
             String aLayerName, //
-            @ToolParam(value = "suggestions", description = "List of span suggestions with begin/end offsets and labels") //
-            List<SpanSpec> aSuggestions)
+            @ToolParam(value = "suggestions", description = //
+            "List of span suggestions with the fields `text`, `left` (for left context), " //
+                    + "`right` (for right context) and `label`. " //
+                    + "Use the context only for ambiguous entites, otherwise leave it empty.") //
+            List<MatchSpec> aSuggestions)
         throws IOException
     {
         var sessionOwner = userService.getCurrentUser();
@@ -174,19 +187,32 @@ public class AnnotationToolLibrary
         // Create new Predictions (copy predecessor to inherit existing suggestions)
         var predictions = predecessor != null ? new Predictions(predecessor)
                 : new Predictions(sessionOwner, sessionOwner.getUsername(), project);
+        if (predecessor != null) {
+            predictions.inheritSuggestions(predecessor.getPredictionsByDocument(document.getId()));
+        }
+
+        String documentText;
+        try (var session = CasStorageSession.openNested()) {
+            var cas = documentService.createOrReadInitialCas(document, AUTO_CAS_UPGRADE,
+                    SHARED_READ_ONLY_ACCESS);
+            documentText = cas.getDocumentText();
+        }
 
         // Build new suggestions
         var newSuggestions = new ArrayList<AnnotationSuggestion>();
         for (var spec : aSuggestions) {
-            var suggestion = SpanSuggestion.builder() //
-                    .withId(NEW_ID) //
-                    .withGeneration(predictions.getGeneration()) //
-                    .withRecommender(recommender) //
-                    .withDocument(document) //
-                    .withPosition(new Offset(spec.begin, spec.end)) //
-                    .withLabel(spec.label) //
-                    .build();
-            newSuggestions.add(suggestion);
+            var ranges = findTextWithStepwiseContext(documentText, spec, 3);
+
+            for (var range : ranges) {
+                newSuggestions.add(SpanSuggestion.builder() //
+                        .withId(NEW_ID) //
+                        .withGeneration(predictions.getGeneration()) //
+                        .withRecommender(recommender) //
+                        .withDocument(document) //
+                        .withPosition(new Offset(range.getBegin(), range.getEnd())) //
+                        .withLabel(spec.label()) //
+                        .build());
+            }
         }
 
         // Add new suggestions to predictions
@@ -241,5 +267,144 @@ public class AnnotationToolLibrary
                 .build();
         recommendationService.createOrUpdateRecommender(recommender);
         return recommender;
+    }
+
+    /**
+     * Finds text using stepwise context expansion.
+     * 
+     * @param aDocument
+     *            The full text.
+     * @param aMatch
+     *            The span information.
+     * @param aStepSize
+     *            Number of characters to expand context by in each iteration (e.g., 3).
+     * @return List of matching ranges.
+     */
+    static List<Range> findTextWithStepwiseContext(String aDocument, MatchSpec aMatch,
+            int aStepSize)
+    {
+        var text = aMatch.text();
+
+        // 1. Input Validation
+        if (aDocument == null || text == null || text.isEmpty()) {
+            return emptyList();
+        }
+
+        var leftContext = defaultIfNull(aMatch.before(), "");
+        var rightContext = defaultIfNull(aMatch.after(), "");
+        var stepSize = Math.max(aStepSize, 1);
+
+        // 2. Find all initial raw candidates
+        var candidates = new ArrayList<Integer>();
+        int index = aDocument.indexOf(text);
+        while (index >= 0) {
+            candidates.add(index);
+            index = aDocument.indexOf(text, index + 1);
+        }
+
+        if (candidates.isEmpty()) {
+            return emptyList();
+        }
+        if (candidates.size() == 1) {
+            return toRanges(candidates, text.length());
+        }
+
+        // 3. Stepwise Disambiguation Loop
+        int maxLen = Math.max(leftContext.length(), rightContext.length());
+        int currentLen = stepSize;
+
+        // Loop while we have >1 candidate AND we haven't exhausted matchable context
+        // We use a 'do-while' logic or check 'currentLen' logic.
+        // We must ensure we run at least once if there is context,
+        // and we continue until context is exhausted or candidates == 1.
+
+        while (candidates.size() > 1) {
+
+            // Check if we have exceeded both contexts.
+            // However, we must allow the loop to run even if currentLen > maxLen
+            // IF the previous iteration was < maxLen (to catch the final tail).
+            // A simpler check: if the previous iteration already used the full context, stop.
+            // Here, we simply cap matching at the string length.
+
+            boolean contextExhausted = (currentLen - stepSize) >= maxLen;
+            if (contextExhausted) {
+                break;
+            }
+
+            // Determine partial context strings
+            // Left context: We want the *end* of the string (immediate left).
+            // e.g., if Left="Hello World", len=3, we want "rld".
+            String partialLeft = "";
+            if (!leftContext.isEmpty()) {
+                int startIdx = Math.max(0, leftContext.length() - currentLen);
+                partialLeft = leftContext.substring(startIdx);
+            }
+
+            // Right context: We want the *start* of the string (immediate right).
+            // e.g., if Right="Hello World", len=3, we want "Hel".
+            String partialRight = "";
+            if (!rightContext.isEmpty()) {
+                int endIdx = Math.min(rightContext.length(), currentLen);
+                partialRight = rightContext.substring(0, endIdx);
+            }
+
+            // Filter candidates
+            var nextCandidates = new ArrayList<Integer>();
+            for (int start : candidates) {
+                if (matchesContext(aDocument, start, text.length(), partialLeft, partialRight)) {
+                    nextCandidates.add(start);
+                }
+            }
+
+            // If filtering killed all matches, it means the provided context
+            // doesn't match the document. We usually return the last valid set (candidates)
+            // or empty. Strict logic implies empty.
+            if (nextCandidates.isEmpty()) {
+                return emptyList();
+            }
+
+            candidates = nextCandidates;
+            currentLen += stepSize;
+        }
+
+        return toRanges(candidates, text.length());
+    }
+
+    static boolean matchesContext(String aText, int aStart, int aLength, String aLeft,
+            String aRight)
+    {
+        // Check Left
+        if (!aLeft.isEmpty()) {
+            int docLeftStart = aStart - aLeft.length();
+            if (docLeftStart < 0) {
+                return false; // Out of bounds
+            }
+            if (!aText.substring(docLeftStart, aStart).equals(aLeft)) {
+                return false;
+            }
+        }
+
+        // Check Right
+        if (!aRight.isEmpty()) {
+            int docRightStart = aStart + aLength;
+            int docRightEnd = docRightStart + aRight.length();
+            if (docRightEnd > aText.length()) {
+                return false; // Out of bounds
+            }
+            if (!aText.substring(docRightStart, docRightEnd).equals(aRight)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    static List<Range> toRanges(List<Integer> aStarts, int aLen)
+    {
+        var list = new ArrayList<Range>();
+        for (int s : aStarts) {
+            list.add(new Range(s, s + aLen));
+        }
+        return list;
     }
 }
