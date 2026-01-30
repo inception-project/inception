@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.KEY_RECOMMENDER_GENERAL_SETTINGS;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommenderPredictionSources.RECOMMENDER_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
@@ -225,7 +226,7 @@ public class RecommendationSidebar
     private void actionShowLog(AjaxRequestTarget aTarget)
     {
         var messages = recommendationService.getLog(userRepository.getCurrentUsername(),
-                getModelObject().getProject());
+                getModelObject().getProject(), RECOMMENDER_SOURCE);
         logDialog.setModel(new ListModel<LogMessageGroup>(messages));
         logDialog.show(aTarget);
     }

@@ -23,9 +23,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.assistant.CommandDispatcher;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationEditorContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolUtils;
 
@@ -40,15 +42,22 @@ public record MToolCall(String actor, @JsonIgnore Object instance, @JsonIgnore M
     }
 
     public Object invoke(String aSessionOwner, Project aProject, SourceDocument aDocument,
-            String aDataOwner)
+            String aDataOwner, CommandDispatcher aCommandDispatcher)
         throws Exception
     {
+        var objectMapper = new ObjectMapper();
         var params = new ArrayList<Object>();
         for (var param : method().getParameters()) {
             if (ToolUtils.isParameter(param)) {
                 var paramName = ToolUtils.getParameterName(param);
                 var paramValue = arguments().get(paramName);
-                params.add(paramValue);
+
+                // Convert parameter value to the expected type using Jackson
+                // This handles LinkedHashMap -> POJO and List<LinkedHashMap> -> List<POJO>
+                var expectedType = objectMapper.getTypeFactory()
+                        .constructType(param.getParameterizedType());
+                var convertedValue = objectMapper.convertValue(paramValue, expectedType);
+                params.add(convertedValue);
                 continue;
             }
 
@@ -59,6 +68,9 @@ public record MToolCall(String actor, @JsonIgnore Object instance, @JsonIgnore M
                         .withDocument(aDocument) //
                         .withSessionOwner(aSessionOwner) //
                         .build());
+            }
+            else if (param.getType().isAssignableFrom(CommandDispatcher.class)) {
+                params.add(aCommandDispatcher);
             }
             else if (param.getType().isAssignableFrom(Project.class)) {
                 params.add(aProject);

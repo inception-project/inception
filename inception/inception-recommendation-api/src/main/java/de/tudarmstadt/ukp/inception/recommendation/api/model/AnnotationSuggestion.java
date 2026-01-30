@@ -287,6 +287,8 @@ public abstract class AnnotationSuggestion
 
     public VID getVID()
     {
+        // We could add the source as EXTENSION_ID into the payload VID
+        // Btw. we also seem to have layer and recommender ID redundantly here in both VIDs...!
         var payload = new VID(layerId, (int) recommenderId, id).toString();
         return new VID(EXTENSION_ID, layerId, (int) recommenderId, id, payload);
     }

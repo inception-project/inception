@@ -45,6 +45,21 @@ public class OllamaFunctionParameters
         properties.putAll(builder.properties);
     }
 
+    public String getType()
+    {
+        return type;
+    }
+
+    public List<String> getRequired()
+    {
+        return required;
+    }
+
+    public Map<String, ObjectNode> getProperties()
+    {
+        return properties;
+    }
+
     public static Builder builder()
     {
         return new Builder();

@@ -15,11 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.model;
+package de.tudarmstadt.ukp.inception.assistant;
 
-public sealed interface MCommandMessage
-    extends MMessage
-    permits MClearCommand, MRefreshCommand
+import de.tudarmstadt.ukp.inception.assistant.model.MCommandMessage;
+
+/**
+ * Interface for dispatching command messages from tools to the frontend. Tools can use this to
+ * trigger UI updates or other commands without needing to know about the underlying WebSocket or
+ * messaging infrastructure.
+ */
+public interface CommandDispatcher
 {
-
+    /**
+     * Dispatch a command message to the frontend.
+     * 
+     * @param aCommand
+     *            the command message to dispatch
+     */
+    void dispatch(MCommandMessage aCommand);
 }

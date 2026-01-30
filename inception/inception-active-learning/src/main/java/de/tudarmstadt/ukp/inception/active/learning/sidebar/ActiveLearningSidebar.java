@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.KEY_RECOMMENDER_GENERAL_SETTINGS;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommenderPredictionSources.RECOMMENDER_SOURCE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
@@ -218,7 +219,8 @@ public class ActiveLearningSidebar
         // suggestions have completely disappeared (e.g. after a system restart)
         var state = getModelObject();
         var predictions = state.getProject() != null
-                ? recommendationService.getPredictions(state.getUser(), state.getProject())
+                ? recommendationService.getPredictions(state.getUser(), state.getProject(),
+                        RECOMMENDER_SOURCE)
                 : null;
         if (aAnnotationPage.getMetaData(CURRENT_AL_USER_STATE) == null || predictions == null) {
             var alState = new ActiveLearningUserState();
@@ -672,7 +674,7 @@ public class ActiveLearningSidebar
 
         if (tagList.size() > 0) {
             var predictions = recommendationService.getPredictions(state.getUser(),
-                    state.getProject());
+                    state.getProject(), RECOMMENDER_SOURCE);
             // get all the predictions
             var alternativeSuggestions = predictions.getAlternativeSuggestions(aSuggestion);
 
@@ -751,7 +753,8 @@ public class ActiveLearningSidebar
         var dataOwner = state.getUser();
         var document = documentService.getSourceDocument(state.getProject().getId(),
                 suggestion.getDocumentId());
-        var predictions = recommendationService.getPredictions(dataOwner, project);
+        var predictions = recommendationService.getPredictions(dataOwner, project,
+                RECOMMENDER_SOURCE);
         activeLearningService.acceptSpanSuggestion(document, state.getUser(), predictions,
                 suggestion, editor.getModelObject().value);
 
@@ -856,7 +859,8 @@ public class ActiveLearningSidebar
             LOG.trace("Not clearing and jumping");
         }
 
-        var alternativeSuggestions = recommendationService.getPredictions(dataOwner, project)
+        var alternativeSuggestions = recommendationService
+                .getPredictions(dataOwner, project, RECOMMENDER_SOURCE)
                 .getAlternativeSuggestions(suggestion);
         applicationEventPublisherHolder.get()
                 .publishEvent(new ActiveLearningSuggestionOfferedEvent(this, document, suggestion,
@@ -1269,7 +1273,8 @@ public class ActiveLearningSidebar
         try {
             var sessionOwner = userService.getCurrentUsername();
             var dataOwner = getModelObject().getUser();
-            var predictions = recommendationService.getPredictions(dataOwner, aLayer.getProject());
+            var predictions = recommendationService.getPredictions(dataOwner, aLayer.getProject(),
+                    RECOMMENDER_SOURCE);
 
             if (predictions == null) {
                 return;
@@ -1305,7 +1310,7 @@ public class ActiveLearningSidebar
         var eventState = aEvent.getAnnotatorState();
 
         var predictions = recommendationService.getPredictions(annotatorState.getUser(),
-                annotatorState.getProject());
+                annotatorState.getProject(), RECOMMENDER_SOURCE);
 
         if (alStateModel.getObject().isSessionActive()
                 && eventState.getUser().equals(annotatorState.getUser())
@@ -1355,7 +1360,8 @@ public class ActiveLearningSidebar
         LOG.trace("onRecommendationAcceptEvent()");
 
         var state = getModelObject();
-        var predictions = recommendationService.getPredictions(state.getUser(), state.getProject());
+        var predictions = recommendationService.getPredictions(state.getUser(), state.getProject(),
+                RECOMMENDER_SOURCE);
         var doc = state.getDocument();
         var vid = VID.parse(aEvent.getSuggestionVid().getExtensionPayload());
 

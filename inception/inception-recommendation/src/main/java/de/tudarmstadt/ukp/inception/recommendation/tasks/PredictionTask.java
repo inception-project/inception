@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AU
 import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.containsXmlDocumentStructure;
 import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.removeXmlDocumentStructure;
 import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.transferXmlDocumentStructure;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommenderPredictionSources.RECOMMENDER_SOURCE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCapability.PREDICTION_USES_TEXT_ONLY;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask.ReconciliationOption.KEEP_EXISTING;
@@ -156,7 +157,8 @@ public class PredictionTask
             logPredictionComplete(predictions, startTime);
 
             if (!isolated) {
-                recommendationService.putIncomingPredictions(sessionOwner, project, predictions);
+                recommendationService.putIncomingPredictions(sessionOwner, project,
+                        RECOMMENDER_SOURCE, predictions);
 
                 if (predictions.hasNewSuggestions()) {
                     logNewPredictionsAvailable(project, sessionOwner);
@@ -327,12 +329,12 @@ public class PredictionTask
         }
 
         var incomingPredictions = recommendationService.getIncomingPredictions(sessionOwner,
-                project);
+                project, RECOMMENDER_SOURCE);
         if (incomingPredictions != null) {
             return incomingPredictions;
         }
 
-        return recommendationService.getPredictions(sessionOwner, project);
+        return recommendationService.getPredictions(sessionOwner, project, RECOMMENDER_SOURCE);
     }
 
     /**

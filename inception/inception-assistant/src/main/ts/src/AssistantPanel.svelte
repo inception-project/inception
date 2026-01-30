@@ -218,11 +218,17 @@
             onCallResponse(incomingMessage);
         } else if (type === "clearCmd") {
             onClearCommand();
+        } else if (type === "refreshCmd") {
+            onRefreshCommand();
         }
     }
 
     function onClearCommand() {
         messages = [];
+    }
+
+    function onRefreshCommand() {
+        ajaxClient.refreshAnnotations();
     }
 
     function onTextMessage(msg: MTextMessage) {

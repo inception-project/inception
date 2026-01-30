@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommenderPredictionSources.RECOMMENDER_SOURCE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode.ON_FIRST_ACCESS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AUTO_ACCEPT;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
@@ -24,6 +25,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.Optional.empty;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -49,6 +51,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -103,6 +106,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionsSource;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -122,6 +126,7 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.NonTrainableRecommender
 import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -217,33 +222,63 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public Predictions getPredictions(String aSessionOwner, Project aProject)
+    public Predictions getPredictions(String aSessionOwner, Project aProject,
+            PredictionsSource aSource)
     {
         var state = getState(aSessionOwner, aProject);
-        return state.getActivePredictions();
+        return state.getActivePredictions().get(aSource);
     }
 
     @Override
-    public Predictions getPredictions(User aSessionOwner, Project aProject)
+    public Map<PredictionsSource, Predictions> getPredictions(User aSessionOwner, Project aProject)
     {
         var state = getState(aSessionOwner.getUsername(), aProject);
         return state.getActivePredictions();
     }
 
     @Override
-    public Predictions getIncomingPredictions(User aSessionOwner, Project aProject)
+    public Predictions getPredictions(User aSessionOwner, Project aProject,
+            PredictionsSource aSource)
     {
         var state = getState(aSessionOwner.getUsername(), aProject);
-        return state.getIncomingPredictions();
+        return state.getActivePredictions().get(aSource);
+    }
+
+    @Override
+    public Optional<Pair<Predictions, AnnotationSuggestion>> getSuggestionByVID(User aSessionOwner,
+            SourceDocument aDocument, VID aVID)
+    {
+        var predictions = getPredictions(aSessionOwner, aDocument.getProject());
+
+        if (predictions == null) {
+            return Optional.empty();
+        }
+
+        for (var preds : predictions.values()) {
+            var maybePrediction = preds.getPredictionByVID(aDocument, aVID);
+            if (maybePrediction.isPresent()) {
+                return Optional.of(Pair.of(preds, maybePrediction.get()));
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public Predictions getIncomingPredictions(User aSessionOwner, Project aProject,
+            PredictionsSource aSource)
+    {
+        var state = getState(aSessionOwner.getUsername(), aProject);
+        return state.getIncomingPredictions().get(aSource);
     }
 
     @Override
     public void putIncomingPredictions(User aSessionOwner, Project aProject,
-            Predictions aPredictions)
+            PredictionsSource aSource, Predictions aPredictions)
     {
         var state = getState(aSessionOwner.getUsername(), aProject);
         synchronized (state) {
-            state.setIncomingPredictions(aPredictions);
+            state.setIncomingPredictions(aSource, aPredictions);
         }
     }
 
@@ -501,7 +536,8 @@ public class RecommendationServiceImpl
 
         var dataOwner = aEvent.getDocumentOwner();
         var doc = aEvent.getDocument();
-        var predictions = getState(sessionOwnerName, project).getActivePredictions();
+        var predictions = getState(sessionOwnerName, project).getActivePredictions()
+                .get(RECOMMENDER_SOURCE);
 
         var sessionOwner = userRepository.get(sessionOwnerName);
         if (sessionOwner == null) {
@@ -643,7 +679,7 @@ public class RecommendationServiceImpl
             return;
         }
 
-        var predictions = getPredictions(aSessionOwner, aDocument.getProject());
+        var predictions = getPredictions(aSessionOwner, aDocument.getProject(), RECOMMENDER_SOURCE);
         if (predictions == null || predictions.isEmpty()) {
             LOG.trace("Not auto-accepting because no predictions are available");
             return;
@@ -1106,10 +1142,13 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public List<LogMessageGroup> getLog(String aSessionOwner, Project aProject)
+    public List<LogMessageGroup> getLog(String aSessionOwner, Project aProject,
+            PredictionsSource aSource)
     {
-        var activePredictions = getState(aSessionOwner, aProject).getActivePredictions();
-        var incomingPredictions = getState(aSessionOwner, aProject).getIncomingPredictions();
+        var activePredictions = getState(aSessionOwner, aProject).getActivePredictions()
+                .get(aSource);
+        var incomingPredictions = getState(aSessionOwner, aProject).getIncomingPredictions()
+                .get(aSource);
 
         var messageSets = new ArrayList<LogMessageGroup>();
 
@@ -1295,6 +1334,18 @@ public class RecommendationServiceImpl
         }
     }
 
+    private void removePredictions(PredictionsSource aSource, Recommender aRecommender)
+    {
+        Validate.notNull(aRecommender, "Recommender must be specified");
+
+        synchronized (states) {
+            states.entrySet().stream()
+                    .filter(entry -> Objects.equals(aRecommender.getProject().getId(),
+                            entry.getKey().projectId()))
+                    .forEach(entry -> entry.getValue().removePredictions(aSource, aRecommender));
+        }
+    }
+
     @Override
     public boolean switchPredictions(String aSessionOwner, Project aProject)
     {
@@ -1458,8 +1509,8 @@ public class RecommendationServiceImpl
 
         private MultiValuedMap<AnnotationLayer, EvaluatedRecommender> evaluatedRecommenders;
         private Map<Recommender, RecommenderContext> contexts;
-        private Predictions activePredictions;
-        private Predictions incomingPredictions;
+        private Map<PredictionsSource, Predictions> activePredictions;
+        private Map<PredictionsSource, Predictions> incomingPredictions;
         private Map<AnnotationLayer, List<LearningRecord>> learningRecords;
         private int predictionsSinceLastEvaluation;
         private int predictionsUntilNextEvaluation;
@@ -1470,14 +1521,16 @@ public class RecommendationServiceImpl
             evaluatedRecommenders = new HashSetValuedHashMap<>();
             contexts = new ConcurrentHashMap<>();
             learningRecords = new ConcurrentHashMap<>();
+            activePredictions = new ConcurrentHashMap<>();
+            incomingPredictions = new ConcurrentHashMap<>();
         }
 
         public void reset()
         {
             evaluatedRecommenders = new HashSetValuedHashMap<>();
             contexts = new ConcurrentHashMap<>();
-            activePredictions = null;
-            incomingPredictions = null;
+            activePredictions = new ConcurrentHashMap<>();
+            incomingPredictions = new ConcurrentHashMap<>();
             learningRecords = new ConcurrentHashMap<>();
             predictionsSinceLastEvaluation = 0;
             predictionsUntilNextEvaluation = 0;
@@ -1546,21 +1599,22 @@ public class RecommendationServiceImpl
             evaluatedRecommenders = aEvaluatedRecommenders;
         }
 
-        public Predictions getActivePredictions()
+        public Map<PredictionsSource, Predictions> getActivePredictions()
         {
-            return activePredictions;
+            return unmodifiableMap(new HashMap<>(activePredictions));
         }
 
-        public void setIncomingPredictions(Predictions aIncomingPredictions)
+        public void setIncomingPredictions(PredictionsSource aSource,
+                Predictions aIncomingPredictions)
         {
             Validate.notNull(aIncomingPredictions, "Predictions must be specified");
 
-            incomingPredictions = aIncomingPredictions;
+            incomingPredictions.put(aSource, aIncomingPredictions);
         }
 
-        public Predictions getIncomingPredictions()
+        public Map<PredictionsSource, Predictions> getIncomingPredictions()
         {
-            return incomingPredictions;
+            return unmodifiableMap(new HashMap<>(incomingPredictions));
         }
 
         public boolean switchPredictions()
@@ -1584,12 +1638,15 @@ public class RecommendationServiceImpl
                 }
             }
 
-            if (incomingPredictions == null) {
+            if (incomingPredictions == null || incomingPredictions.isEmpty()) {
                 return false;
             }
 
-            activePredictions = incomingPredictions;
-            incomingPredictions = null;
+            // Merge each source's incoming predictions into active
+            for (var entry : incomingPredictions.entrySet()) {
+                activePredictions.put(entry.getKey(), entry.getValue());
+            }
+            incomingPredictions.clear();
 
             if (requestCycle != null) {
                 requestCycle.setMetaData(PredictionSwitchPerformedKey.INSTANCE, true);
@@ -1621,14 +1678,27 @@ public class RecommendationServiceImpl
 
         public void removePredictions(Recommender aRecommender)
         {
+            var sources = new HashSet<PredictionsSource>();
+            sources.addAll(incomingPredictions.keySet());
+            sources.addAll(activePredictions.keySet());
+
+            for (var source : sources) {
+                removePredictions(source, aRecommender);
+            }
+        }
+
+        public void removePredictions(PredictionsSource aSource, Recommender aRecommender)
+        {
             // Remove incoming predictions
-            if (incomingPredictions != null) {
-                incomingPredictions.removePredictions(aRecommender.getId());
+            var incPredictions = incomingPredictions.get(aSource);
+            if (incPredictions != null) {
+                incPredictions.removePredictions(aRecommender.getId());
             }
 
             // Remove active predictions
-            if (activePredictions != null) {
-                activePredictions.removePredictions(aRecommender.getId());
+            var actPredictions = activePredictions.get(aSource);
+            if (actPredictions != null) {
+                actPredictions.removePredictions(aRecommender.getId());
             }
 
             // Remove trainedModel

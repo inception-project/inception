@@ -19,8 +19,10 @@ package de.tudarmstadt.ukp.inception.recommendation.api;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -34,6 +36,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionsSource;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -43,6 +46,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentG
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessageGroup;
 
@@ -123,13 +127,29 @@ public interface RecommendationService
 
     Preferences getPreferences(User aSessionOwner, Project aProject);
 
-    Predictions getPredictions(User aSessionOwner, Project aProject);
+    Map<PredictionsSource, Predictions> getPredictions(User aSessionOwner, Project aProject);
 
-    Predictions getPredictions(String aSessionOwner, Project aProject);
+    Predictions getPredictions(User aSessionOwner, Project aProject, PredictionsSource aSource);
 
-    Predictions getIncomingPredictions(User aSessionOwner, Project aProject);
+    Predictions getPredictions(String aSessionOwner, Project aProject, PredictionsSource aSource);
 
-    void putIncomingPredictions(User aSessionOwner, Project aProject, Predictions aPredictions);
+    /**
+     * @param aSessionOwner
+     * @param aDocument
+     *            the source document
+     * @param aVID
+     *            the annotation ID
+     * @return the first prediction that matches recommendationId and recommenderId in the given
+     *         document.
+     */
+    Optional<Pair<Predictions, AnnotationSuggestion>> getSuggestionByVID(User aSessionOwner,
+            SourceDocument aDocument, VID aVID);
+
+    Predictions getIncomingPredictions(User aSessionOwner, Project aProject,
+            PredictionsSource aSource);
+
+    void putIncomingPredictions(User aSessionOwner, Project aProject, PredictionsSource aSource,
+            Predictions aPredictions);
 
     /**
      * Replace the current predictions with the pending predictions if any are available.
@@ -315,7 +335,7 @@ public interface RecommendationService
     void setPredictForAllDocuments(String aSessionOwner, Project aProject,
             boolean aPredictForAllDocuments);
 
-    List<LogMessageGroup> getLog(String aSessionOwner, Project aProject);
+    List<LogMessageGroup> getLog(String aSessionOwner, Project aProject, PredictionsSource aSource);
 
     /**
      * @return the total amount of enabled recommenders

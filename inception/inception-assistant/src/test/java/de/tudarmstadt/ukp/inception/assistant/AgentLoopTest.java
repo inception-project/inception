@@ -129,7 +129,7 @@ class AgentLoopTest
         assertThat(toolCall.method().getName()).isEqualTo("getTime");
 
         // Invoke the tool and verify result structure
-        var result = toolCall.invoke("integration-test", null, null, null);
+        var result = toolCall.invoke("integration-test", null, null, null, null);
         assertThat(result).isInstanceOf(Map.class);
 
         @SuppressWarnings("unchecked")

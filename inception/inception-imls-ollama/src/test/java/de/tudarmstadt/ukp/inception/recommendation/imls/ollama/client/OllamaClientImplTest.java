@@ -52,6 +52,8 @@ import tools.jackson.databind.node.JsonNodeFactory;
 
 class OllamaClientImplTest
 {
+    private static final String DEFAULT_MODEL = "ministral-3:8b";
+
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private OllamaClientImpl sut = new OllamaClientImpl();
@@ -66,7 +68,7 @@ class OllamaClientImplTest
     void testStream() throws Exception
     {
         var request = OllamaGenerateRequest.builder() //
-                .withModel("mistral") //
+                .withModel(DEFAULT_MODEL) //
                 .withPrompt("Tell me a joke.") //
                 .withStream(true) //
                 .build();
@@ -78,7 +80,7 @@ class OllamaClientImplTest
     void testStreamWithCallback() throws Exception
     {
         var request = OllamaGenerateRequest.builder() //
-                .withModel("mistral") //
+                .withModel(DEFAULT_MODEL) //
                 .withPrompt("Tell me a joke.") //
                 .withStream(true) //
                 .build();
@@ -95,7 +97,7 @@ class OllamaClientImplTest
     void testChatStreamWithCallback() throws Exception
     {
         var request = OllamaChatRequest.builder() //
-                .withModel("mistral") //
+                .withModel(DEFAULT_MODEL) //
                 .withMessages( //
                         new OllamaChatMessage("system",
                                 "You are Donald Duck and end each sentence with 'quack'."),
@@ -115,7 +117,7 @@ class OllamaClientImplTest
     void testNonStream() throws Exception
     {
         var response = sut.generate(DEFAULT_OLLAMA_URL, OllamaGenerateRequest.builder() //
-                .withModel("mistral") //
+                .withModel(DEFAULT_MODEL) //
                 .withPrompt("Tell me a joke.") //
                 .withStream(false) //
                 .build());
@@ -126,7 +128,7 @@ class OllamaClientImplTest
     void testJson() throws Exception
     {
         var response = sut.generate(DEFAULT_OLLAMA_URL, OllamaGenerateRequest.builder() //
-                .withModel("mistral") //
+                .withModel(DEFAULT_MODEL) //
                 .withPrompt("Generate a JSON map with the key/value pairs `a = 1` and `b = 2`") //
                 .withStream(false) //
                 .withFormat(JsonNodeFactory.instance.textNode("json")) //
@@ -145,7 +147,7 @@ class OllamaClientImplTest
     void testShowModel() throws Exception
     {
         var response = sut.getModelInfo(DEFAULT_OLLAMA_URL,
-                OllamaShowRequest.builder().withModel("gemma3").build());
+                OllamaShowRequest.builder().withModel(DEFAULT_MODEL).build());
         LOG.info("Response: [{}]", response);
     }
 
@@ -166,8 +168,7 @@ class OllamaClientImplTest
                 .build();
 
         var call = OllamaChatRequest.builder() //
-                // .withModel("phi4-mini") //
-                .withModel("llama3.2") //
+                .withModel(DEFAULT_MODEL) //
                 .withMessages(new OllamaChatMessage("user", "What is the weather in Toronto?")) //
                 .withStream(false) //
                 // .withFormat(JsonNodeFactory.instance.textNode("json")) //
@@ -191,13 +192,64 @@ class OllamaClientImplTest
         }
     }
 
-    static List<OllamaTag> models() throws IOException
+    static List<OllamaTag> functionCallModels() throws IOException
     {
         var sut = new OllamaClientImpl();
-        return sut.listModels(DEFAULT_OLLAMA_URL);
+        var allModels = sut.listModels(DEFAULT_OLLAMA_URL);
+
+        return allModels.stream() //
+                .filter(model -> {
+                    try {
+                        var modelInfo = sut.getModelInfo(DEFAULT_OLLAMA_URL, //
+                                OllamaShowRequest.builder().withModel(model.name()).build());
+                        return modelInfo.capabilities() != null
+                                && modelInfo.capabilities().contains("tools");
+                    }
+                    catch (IOException e) {
+                        LOG.warn("Failed to get model info for {}: {}", model.name(),
+                                e.getMessage());
+                        return false;
+                    }
+                }) //
+                .toList();
     }
 
-    @MethodSource("models")
+    static class SimpleToolService
+    {
+        @Tool(value = "greet", actor = "Greeter", description = "Greets a person by name")
+        public String greet(@ToolParam(value = "name", description = "Person's name") String aName)
+        {
+            return "Hello, " + aName;
+        }
+    }
+
+    static class ComplexToolService
+    {
+        @Tool(value = "create_annotation", description = "Creates annotation from spec")
+        public String createAnnotation( //
+                @ToolParam(value = "spec", description = "Annotation specification") //
+                AnnotationSpec aSpec)
+        {
+            return "Created annotation at " + aSpec.begin + "-" + aSpec.end;
+        }
+
+        @Tool(value = "create_multiple", description = "Creates multiple annotations")
+        public String createMultipleAnnotations( //
+                @ToolParam(value = "specs", description = "List of annotation specifications") //
+                List<AnnotationSpec> aSpecs)
+        {
+            return "Created " + aSpecs.size() + " annotations";
+        }
+    }
+
+    public static class AnnotationSpec
+    {
+        public int begin;
+        public int end;
+        public String label;
+    }
+
+    @MethodSource("functionCallModels")
     @ParameterizedTest
     void testFunctionCallReflection(OllamaTag aModel) throws Exception
     {
