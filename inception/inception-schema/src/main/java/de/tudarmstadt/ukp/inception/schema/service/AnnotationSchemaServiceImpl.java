@@ -101,6 +101,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation;
@@ -768,6 +769,10 @@ public class AnnotationSchemaServiceImpl
     public List<AnnotationLayer> listAttachedRelationLayers(AnnotationLayer aLayer)
     {
         Objects.requireNonNull(aLayer, "Parameter [layer] must be specified");
+
+        if (!SpanLayerSupport.TYPE.equals(aLayer.getType())) {
+            return emptyList();
+        }
 
         var cb = entityManager.getCriteriaBuilder();
         var cq = cb.createQuery(AnnotationLayer.class);
