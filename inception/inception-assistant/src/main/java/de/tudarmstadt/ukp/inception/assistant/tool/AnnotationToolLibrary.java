@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.assistant.AssistantPredictionSources.ASSISTANT_SOURCE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.NEW_ID;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolStatusResponse.success;
 import static java.util.Collections.emptyList;
 import static org.apache.wicket.util.lang.Objects.defaultIfNull;
 
@@ -36,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.assistant.CommandDispatcher;
+import de.tudarmstadt.ukp.inception.assistant.model.MCallResponse;
 import de.tudarmstadt.ukp.inception.assistant.model.MRefreshCommand;
 import de.tudarmstadt.ukp.inception.assistant.recommender.AssistantRecommenderFactory;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -49,7 +49,6 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationEditorCont
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.Tool;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibrary;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolParam;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolStatusResponse;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.uima.Range;
 
@@ -152,15 +151,15 @@ public class AnnotationToolLibrary
             value = "create_span_suggestions", //
             actor = "AI Assistant", //
             description = CREATE_SPAN_SUGGESTIONS_DESCRIPTION)
-    public ToolStatusResponse createSpanSuggestions( //
+    public MCallResponse.Builder<?> createSpanSuggestions( //
             AnnotationEditorContext aContext, //
             CommandDispatcher aCommandDispatcher, //
             @ToolParam(value = "layer", description = "Name of the annotation layer") //
             String aLayerName, //
             @ToolParam(value = "suggestions", description = //
-            "List of span suggestions with the fields `text`, `left` (for left context), " //
-                    + "`right` (for right context) and `label`. " //
-                    + "Use the context only for ambiguous entites, otherwise leave it empty.") //
+            "List of span suggestions with the fields `text`, `before` (for context before), " //
+                    + "`after` (for context after) and `label`. " //
+                    + "Use the context only is text is ambiguous, otherwise leave it empty.") //
             List<MatchSpec> aSuggestions)
         throws IOException
     {
@@ -171,7 +170,8 @@ public class AnnotationToolLibrary
         // Find the layer
         var layer = schemaService.findLayer(project, aLayerName);
         if (layer == null) {
-            return ToolStatusResponse.error("Layer '" + aLayerName + "' not found in project");
+            return MCallResponse.builder(String.class)
+                    .withPayload("Layer [" + aLayerName + "] not found in project");
         }
 
         // Get or create the assistant recommender for this layer
@@ -198,10 +198,15 @@ public class AnnotationToolLibrary
             documentText = cas.getDocumentText();
         }
 
-        // Build new suggestions
+        // Build new suggestions and track failures
         var newSuggestions = new ArrayList<AnnotationSuggestion>();
+        var failedSpecs = new ArrayList<MatchSpec>();
         for (var spec : aSuggestions) {
             var ranges = findTextWithStepwiseContext(documentText, spec, 3);
+
+            if (ranges.isEmpty()) {
+                failedSpecs.add(spec);
+            }
 
             for (var range : ranges) {
                 newSuggestions.add(SpanSuggestion.builder() //
@@ -230,8 +235,32 @@ public class AnnotationToolLibrary
             aCommandDispatcher.dispatch(new MRefreshCommand());
         }
 
-        return success(
-                "Created " + aSuggestions.size() + " suggestion(s) on layer '" + aLayerName + "'");
+        // Build detailed status message
+        var message = new StringBuilder();
+        message.append("Processed ").append(aSuggestions.size()).append(" spec(s): ");
+        message.append(newSuggestions.size()).append(" suggestion(s) created");
+
+        if (!failedSpecs.isEmpty()) {
+            message.append(", ").append(failedSpecs.size()).append(" spec(s) failed to match");
+            message.append(".\n\nFailed specs (no matches found):");
+            for (var spec : failedSpecs) {
+                message.append("\n- text: \"").append(spec.text()).append("\"");
+                if (!spec.before().isEmpty()) {
+                    message.append(", before: \"").append(spec.before()).append("\"");
+                }
+                if (!spec.after().isEmpty()) {
+                    message.append(", after: \"").append(spec.after()).append("\"");
+                }
+                message.append(", label: \"").append(spec.label()).append("\"");
+            }
+            message.append("\n\nNote: Specs may fail due to: word boundary violations, ")
+                    .append("whitespace differences (normalized), missing punctuation in context, ")
+                    .append("or text not present in document.");
+        }
+
+        return MCallResponse.builder(String.class) //
+                .withActor("Annotated " + aSuggestions.size() + " spans")
+                .withPayload(message.toString());
     }
 
     private synchronized Recommender getOrCreateAssistantRecommender(Project aProject,
@@ -294,42 +323,97 @@ public class AnnotationToolLibrary
         var rightContext = defaultIfNull(aMatch.after(), "");
         var stepSize = Math.max(aStepSize, 1);
 
-        // 2. Find all initial raw candidates
-        var candidates = new ArrayList<Integer>();
-        int index = aDocument.indexOf(text);
-        while (index >= 0) {
-            candidates.add(index);
-            index = aDocument.indexOf(text, index + 1);
+        // 2. Find all initial raw candidates with whitespace normalization and word boundaries
+        var candidateRanges = new ArrayList<Range>();
+
+        // Normalize the search text (collapse multiple spaces to single space)
+        var normalizedText = text.replaceAll("\\s+", " ");
+
+        // Search through the document
+        int docIndex = 0;
+        while (docIndex < aDocument.length()) {
+            // Find potential match position
+            int startPos = aDocument.indexOf(normalizedText.charAt(0), docIndex);
+            if (startPos < 0) {
+                break;
+            }
+
+            // Check if this could be a word boundary match
+            // Must be at start of document or preceded by non-word character
+            boolean validStart = startPos == 0
+                    || !Character.isLetterOrDigit(aDocument.charAt(startPos - 1));
+
+            if (validStart) {
+                // Try to match the normalized text with whitespace normalization
+                int textIdx = 0;
+                int matchIdx = startPos;
+                boolean matched = true;
+
+                while (textIdx < normalizedText.length() && matchIdx < aDocument.length()) {
+                    char textChar = normalizedText.charAt(textIdx);
+                    char docChar = aDocument.charAt(matchIdx);
+
+                    if (Character.isWhitespace(textChar)) {
+                        // Text expects whitespace - consume all whitespace in document
+                        if (!Character.isWhitespace(docChar)) {
+                            matched = false;
+                            break;
+                        }
+                        // Skip all consecutive whitespace in both text and document
+                        while (textIdx < normalizedText.length()
+                                && Character.isWhitespace(normalizedText.charAt(textIdx))) {
+                            textIdx++;
+                        }
+                        while (matchIdx < aDocument.length()
+                                && Character.isWhitespace(aDocument.charAt(matchIdx))) {
+                            matchIdx++;
+                        }
+                    }
+                    else {
+                        // Regular character - must match exactly
+                        if (textChar != docChar) {
+                            matched = false;
+                            break;
+                        }
+                        textIdx++;
+                        matchIdx++;
+                    }
+                }
+
+                if (matched && textIdx == normalizedText.length()) {
+                    // Check word boundary at end
+                    boolean validEnd = matchIdx >= aDocument.length()
+                            || !Character.isLetterOrDigit(aDocument.charAt(matchIdx));
+
+                    if (validEnd) {
+                        candidateRanges.add(new Range(startPos, matchIdx));
+                    }
+                }
+            }
+
+            docIndex = startPos + 1;
         }
 
-        if (candidates.isEmpty()) {
+        if (candidateRanges.isEmpty()) {
             return emptyList();
         }
-        if (candidates.size() == 1) {
-            return toRanges(candidates, text.length());
+
+        // If no context provided, return all candidates
+        if (leftContext.isEmpty() && rightContext.isEmpty()) {
+            return candidateRanges;
         }
+
+        // If we have context, we need to filter even if there's only one candidate
+        // (that candidate might not match the context)
 
         // 3. Stepwise Disambiguation Loop
         int maxLen = Math.max(leftContext.length(), rightContext.length());
         int currentLen = stepSize;
 
-        // Loop while we have >1 candidate AND we haven't exhausted matchable context
-        // We use a 'do-while' logic or check 'currentLen' logic.
-        // We must ensure we run at least once if there is context,
-        // and we continue until context is exhausted or candidates == 1.
+        // Loop while we have candidates AND we haven't exhausted matchable context
+        // Continue until all context has been checked or we've filtered down to final matches
 
-        while (candidates.size() > 1) {
-
-            // Check if we have exceeded both contexts.
-            // However, we must allow the loop to run even if currentLen > maxLen
-            // IF the previous iteration was < maxLen (to catch the final tail).
-            // A simpler check: if the previous iteration already used the full context, stop.
-            // Here, we simply cap matching at the string length.
-
-            boolean contextExhausted = (currentLen - stepSize) >= maxLen;
-            if (contextExhausted) {
-                break;
-            }
+        while (!candidateRanges.isEmpty()) {
 
             // Determine partial context strings
             // Left context: We want the *end* of the string (immediate left).
@@ -349,62 +433,138 @@ public class AnnotationToolLibrary
             }
 
             // Filter candidates
-            var nextCandidates = new ArrayList<Integer>();
-            for (int start : candidates) {
-                if (matchesContext(aDocument, start, text.length(), partialLeft, partialRight)) {
-                    nextCandidates.add(start);
+            var nextCandidates = new ArrayList<Range>();
+            for (Range range : candidateRanges) {
+                if (matchesContext(aDocument, range.getBegin(), range.getEnd() - range.getBegin(),
+                        partialLeft, partialRight)) {
+                    nextCandidates.add(range);
                 }
             }
 
-            // If filtering killed all matches, it means the provided context
-            // doesn't match the document. We usually return the last valid set (candidates)
-            // or empty. Strict logic implies empty.
-            if (nextCandidates.isEmpty()) {
-                return emptyList();
-            }
-
-            candidates = nextCandidates;
+            candidateRanges = nextCandidates;
             currentLen += stepSize;
+
+            // If we've checked all the context, stop
+            if (currentLen > maxLen && maxLen > 0) {
+                break;
+            }
         }
 
-        return toRanges(candidates, text.length());
+        return candidateRanges;
     }
 
     static boolean matchesContext(String aText, int aStart, int aLength, String aLeft,
             String aRight)
     {
-        // Check Left
+        // Check Left Context
         if (!aLeft.isEmpty()) {
-            int docLeftStart = aStart - aLeft.length();
-            if (docLeftStart < 0) {
-                return false; // Out of bounds
+            // Normalize whitespace within the context (collapse consecutive whitespace to single
+            // space)
+            var normalizedLeft = aLeft.replaceAll("\\s+", " ").trim();
+
+            // Skip any whitespace at the boundary between context and match
+            int contextEnd = aStart;
+            while (contextEnd > 0 && Character.isWhitespace(aText.charAt(contextEnd - 1))) {
+                contextEnd--;
             }
-            if (!aText.substring(docLeftStart, aStart).equals(aLeft)) {
-                return false;
+
+            // Find the actual length of context in the document
+            int actualLeftLength = findActualContextLength(aText, contextEnd, normalizedLeft, true);
+            if (actualLeftLength < 0) {
+                return false; // Context doesn't match
             }
         }
 
-        // Check Right
+        // Check Right Context
         if (!aRight.isEmpty()) {
-            int docRightStart = aStart + aLength;
-            int docRightEnd = docRightStart + aRight.length();
-            if (docRightEnd > aText.length()) {
-                return false; // Out of bounds
+            // Normalize whitespace within the context (collapse consecutive whitespace to single
+            // space)
+            var normalizedRight = aRight.replaceAll("\\s+", " ").trim();
+
+            // Skip any whitespace at the boundary between match and context
+            int contextStart = aStart + aLength;
+            while (contextStart < aText.length()
+                    && Character.isWhitespace(aText.charAt(contextStart))) {
+                contextStart++;
             }
-            if (!aText.substring(docRightStart, docRightEnd).equals(aRight)) {
-                return false;
+
+            // Find the actual length of context in the document
+            int actualRightLength = findActualContextLength(aText, contextStart, normalizedRight,
+                    false);
+            if (actualRightLength < 0) {
+                return false; // Context doesn't match
             }
         }
 
         return true;
     }
 
-    static List<Range> toRanges(List<Integer> aStarts, int aLen)
+    /**
+     * Finds the actual length in the document that corresponds to the normalized context string,
+     * accounting for whitespace variations.
+     * 
+     * @param aText
+     *            the document text
+     * @param aPosition
+     *            the position in the document (for left context: end position where context ends,
+     *            for right context: start position where context begins)
+     * @param aNormalizedContext
+     *            the normalized context string to match
+     * @param aIsLeftContext
+     *            true if matching left context (backwards), false for right context (forwards)
+     * @return the actual number of characters in the document that match the context, or -1 if no
+     *         match
+     */
+    private static int findActualContextLength(String aText, int aPosition,
+            String aNormalizedContext, boolean aIsLeftContext)
     {
-        var list = new ArrayList<Range>();
-        for (int s : aStarts) {
-            list.add(new Range(s, s + aLen));
+        int textIdx = aIsLeftContext ? aNormalizedContext.length() - 1 : 0;
+        int docIdx = aIsLeftContext ? aPosition - 1 : aPosition;
+        int direction = aIsLeftContext ? -1 : 1;
+        int startDocIdx = docIdx;
+
+        while (textIdx >= 0 && textIdx < aNormalizedContext.length()) {
+            if (docIdx < 0 || docIdx >= aText.length()) {
+                return -1; // Out of bounds - no match
+            }
+
+            char textChar = aNormalizedContext.charAt(textIdx);
+            char docChar = aText.charAt(docIdx);
+
+            if (Character.isWhitespace(textChar)) {
+                // Context expects whitespace - consume all whitespace in document
+                if (!Character.isWhitespace(docChar)) {
+                    return -1; // Expected whitespace but found non-whitespace
+                }
+                // Skip all consecutive whitespace in both context and document
+                while (textIdx >= 0 && textIdx < aNormalizedContext.length()
+                        && Character.isWhitespace(aNormalizedContext.charAt(textIdx))) {
+                    textIdx += direction;
+                }
+                while (docIdx >= 0 && docIdx < aText.length()
+                        && Character.isWhitespace(aText.charAt(docIdx))) {
+                    docIdx += direction;
+                }
+            }
+            else {
+                // Regular character - must match exactly
+                if (textChar != docChar) {
+                    return -1; // Character mismatch
+                }
+                textIdx += direction;
+                docIdx += direction;
+            }
         }
-        return list;
+
+        // Check if we consumed all of the context string
+        boolean fullyMatched = aIsLeftContext ? textIdx < 0
+                : textIdx >= aNormalizedContext.length();
+
+        if (!fullyMatched) {
+            return -1;
+        }
+
+        // Calculate actual length consumed in document
+        return aIsLeftContext ? (startDocIdx - docIdx) : (docIdx - startDocIdx);
     }
 }

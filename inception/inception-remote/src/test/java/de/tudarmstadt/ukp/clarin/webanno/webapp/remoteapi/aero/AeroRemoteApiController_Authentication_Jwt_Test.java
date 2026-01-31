@@ -76,7 +76,8 @@ import io.jsonwebtoken.Jwts;
                 "remote-api.http-basic.enabled=false", //
                 "remote-api.oauth2.enabled=true", //
                 "remote-api.oauth2.user-name-attribute=preferred-username", //
-                "remote-api.oauth2.realm=" + AeroRemoteApiController_Authentication_Jwt_Test.REALM })
+                "remote-api.oauth2.realm="
+                        + AeroRemoteApiController_Authentication_Jwt_Test.REALM })
 @EnableAutoConfiguration( //
         exclude = { //
                 DashboardAutoConfiguration.class, //
