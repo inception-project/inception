@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.inception.assistant.AssistantPredictionSources.
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.NEW_ID;
 import static java.lang.Character.isWhitespace;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.util.lang.Objects.defaultIfNull;
 
 import java.io.IOException;
@@ -57,10 +58,12 @@ public class AnnotationToolLibrary
     implements ToolLibrary
 {
     private static final String CREATE_SPAN_SUGGESTIONS_DESCRIPTION = """
-            Creates span annotation suggestions at specified character offsets in the CURRENT DOCUMENT \
-            being edited. Suggestions appear in the editor for the user to review and accept or reject. \
-            Use this when the user asks you to annotate, mark, or identify entities, mentions, or spans \
-            of text. The layer name must match one of the available annotation layers in the project schema.
+            Creates span annotation suggestions.
+            Suggestions appear in the editor for the user to review and accept or reject. \
+            Use this when the user asks you to annotate, mark, or identify entities, mentions, or spans of text.
+
+            Omit the parameter `document` unless the user explicitly asks for a specific document.
+            The parameter `layer` name must match one of the available annotation layers in the project schema.
             """;
 
     private final RecommendationService recommendationService;
@@ -155,6 +158,7 @@ public class AnnotationToolLibrary
     public MCallResponse.Builder<?> createSpanSuggestions( //
             AnnotationEditorContext aContext, //
             CommandDispatcher aCommandDispatcher, //
+            @ToolParam(value = "document", description = "Name of the document to read (optional)") String aDocumentName,
             @ToolParam(value = "layer", description = "Name of the annotation layer") //
             String aLayerName, //
             @ToolParam(value = "suggestions", description = //
@@ -166,7 +170,23 @@ public class AnnotationToolLibrary
     {
         var sessionOwner = userService.getCurrentUser();
         var project = aContext.getProject();
+
         var document = aContext.getDocument();
+
+        if (isNotBlank(aDocumentName)) {
+            var documents = documentService.listAnnotatableDocuments(project, sessionOwner);
+            var maybeDocument = documents.keySet().stream() //
+                    .filter(d -> d.getName().equals(aDocumentName)) //
+                    .findFirst();
+
+            // Safeguard to ensure the session owner has access to the document
+            if (maybeDocument.isEmpty()) {
+                return MCallResponse.builder(String.class).withPayload(
+                        "Error: Document [" + aDocumentName + "] does not exist in the project.");
+            }
+
+            document = maybeDocument.get();
+        }
 
         // Find the layer
         var layer = schemaService.findLayer(project, aLayerName);

@@ -135,10 +135,11 @@ public class DocumentsToolLibrary
                     .withPayload("Error: The 'endLine' parameter must be >= 1.");
         }
 
+        var project = aContext.getProject();
+
         var startLine = Math.min(aStartLine, aEndLine);
         var endLine = Math.max(aStartLine, aEndLine);
 
-        var project = aContext.getProject();
         var sessionOwner = userService.get(aContext.getSessionOwner());
         var documents = documentService.listAnnotatableDocuments(project, sessionOwner);
 
