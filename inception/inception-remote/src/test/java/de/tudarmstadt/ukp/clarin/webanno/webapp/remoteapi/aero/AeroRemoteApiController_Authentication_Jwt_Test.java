@@ -92,14 +92,6 @@ class AeroRemoteApiController_Authentication_Jwt_Test
 {
     static final String REALM = "test";
 
-    static @TempDir Path tempFolder;
-
-    @DynamicPropertySource
-    static void registerDynamicProperties(DynamicPropertyRegistry registry)
-    {
-        registry.add("repository.path", () -> tempFolder.toAbsolutePath().toString());
-    }
-
     private static final long EXPIRATIONTIME = 864_000_000; // 10 days
     private static final String TOKEN_PREFIX = "Bearer ";
     private static final String HEADER_STRING = "Authorization";
@@ -115,6 +107,14 @@ class AeroRemoteApiController_Authentication_Jwt_Test
     private static User remoteApiAdminUser;
     private static User remoteApiNormalUser;
     private static User nonRemoteNormalUser;
+
+    static @TempDir Path tempFolder;
+
+    @DynamicPropertySource
+    static void registerDynamicProperties(DynamicPropertyRegistry registry)
+    {
+        registry.add("repository.path", () -> tempFolder.toAbsolutePath().toString());
+    }
 
     @BeforeEach
     void setup() throws Exception
