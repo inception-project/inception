@@ -31,6 +31,7 @@ public class AssistantPropertiesImpl
     private String url = "http://localhost:11434";
     private String nickname = "INCEpTION";
     private String apiKey = null;
+    private boolean summarizeThoughts = false;
 
     private final AssistantChatPropertiesImpl chat = new AssistantChatPropertiesImpl();
     private final AssistantEmbeddingPropertiesImpl embedding = new AssistantEmbeddingPropertiesImpl();
@@ -63,6 +64,16 @@ public class AssistantPropertiesImpl
     public void setNickname(String aNickname)
     {
         nickname = aNickname;
+    }
+
+    public void setSummarizeThoughts(boolean aSummarizeThoughts)
+    {
+        summarizeThoughts = aSummarizeThoughts;
+    }
+
+    public boolean isSummarizeThoughts()
+    {
+        return summarizeThoughts;
     }
 
     @Override

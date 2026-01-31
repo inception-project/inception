@@ -55,6 +55,7 @@
 
     interface MTextMessage extends MChatMessage {
         thinking: string;
+        thinkingSummary: string;
         content: string;
         done: boolean;
 
@@ -88,6 +89,7 @@
 
     let socket: WebSocket = null;
     let stompClient: Client = null;
+    // svelte-ignore state_referenced_locally
     let ajaxClient = factory().createAjaxClient(ajaxEndpointUrl);
     let connected = false;
     let subscription = null;
@@ -282,6 +284,7 @@
                 ...messages[index],
                 content: (messages[index].content || "") + (msg.content || ""),
                 thinking: (messages[index].thinking || "") + (msg.thinking || ""),
+                thinkingSummary: (messages[index].thinkingSummary || "") + (msg.thinkingSummary || ""),
                 references: [
                     ...(messages[index].references || []),
                     ...(msg.references || []).filter(
@@ -633,7 +636,11 @@
                 {#if thinking}
                     <div class="message-thinking">
                         <div class="message-thinking-header" onclick={() => toggleCollapseThinking(message)} role="button" tabindex="0">
-                            Thinking...
+                            {#if message.thinkingSummary}
+                                {message.thinkingSummary}
+                            {:else}
+                                Thinking<span class:dots={!message.done}></span>
+                            {/if}
                         </div>
                         {#if !message.thinkingCollapsed}
                             <div class="message-thinking-body">
@@ -866,8 +873,6 @@
                 display: inline;
                 cursor: pointer;
                 font-size: 0.8em;
-                border-radius: 0.5em;
-                border: 1px solid var(--bs-border-color-translucent);
                 padding: 0.05em 0.3em;
             }
 

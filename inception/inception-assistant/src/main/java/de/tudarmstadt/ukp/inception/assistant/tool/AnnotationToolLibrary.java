@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.assistant.AssistantPredictionSources.ASSISTANT_SOURCE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.NEW_ID;
+import static java.lang.Character.isWhitespace;
 import static java.util.Collections.emptyList;
 import static org.apache.wicket.util.lang.Objects.defaultIfNull;
 
@@ -353,19 +354,19 @@ public class AnnotationToolLibrary
                     char textChar = normalizedText.charAt(textIdx);
                     char docChar = aDocument.charAt(matchIdx);
 
-                    if (Character.isWhitespace(textChar)) {
+                    if (isWhitespace(textChar)) {
                         // Text expects whitespace - consume all whitespace in document
-                        if (!Character.isWhitespace(docChar)) {
+                        if (!isWhitespace(docChar)) {
                             matched = false;
                             break;
                         }
                         // Skip all consecutive whitespace in both text and document
                         while (textIdx < normalizedText.length()
-                                && Character.isWhitespace(normalizedText.charAt(textIdx))) {
+                                && isWhitespace(normalizedText.charAt(textIdx))) {
                             textIdx++;
                         }
                         while (matchIdx < aDocument.length()
-                                && Character.isWhitespace(aDocument.charAt(matchIdx))) {
+                                && isWhitespace(aDocument.charAt(matchIdx))) {
                             matchIdx++;
                         }
                     }
@@ -464,7 +465,7 @@ public class AnnotationToolLibrary
 
             // Skip any whitespace at the boundary between context and match
             int contextEnd = aStart;
-            while (contextEnd > 0 && Character.isWhitespace(aText.charAt(contextEnd - 1))) {
+            while (contextEnd > 0 && isWhitespace(aText.charAt(contextEnd - 1))) {
                 contextEnd--;
             }
 
@@ -483,8 +484,7 @@ public class AnnotationToolLibrary
 
             // Skip any whitespace at the boundary between match and context
             int contextStart = aStart + aLength;
-            while (contextStart < aText.length()
-                    && Character.isWhitespace(aText.charAt(contextStart))) {
+            while (contextStart < aText.length() && isWhitespace(aText.charAt(contextStart))) {
                 contextStart++;
             }
 
@@ -531,18 +531,18 @@ public class AnnotationToolLibrary
             char textChar = aNormalizedContext.charAt(textIdx);
             char docChar = aText.charAt(docIdx);
 
-            if (Character.isWhitespace(textChar)) {
+            if (isWhitespace(textChar)) {
                 // Context expects whitespace - consume all whitespace in document
-                if (!Character.isWhitespace(docChar)) {
+                if (!isWhitespace(docChar)) {
                     return -1; // Expected whitespace but found non-whitespace
                 }
                 // Skip all consecutive whitespace in both context and document
                 while (textIdx >= 0 && textIdx < aNormalizedContext.length()
-                        && Character.isWhitespace(aNormalizedContext.charAt(textIdx))) {
+                        && isWhitespace(aNormalizedContext.charAt(textIdx))) {
                     textIdx += direction;
                 }
                 while (docIdx >= 0 && docIdx < aText.length()
-                        && Character.isWhitespace(aText.charAt(docIdx))) {
+                        && isWhitespace(aText.charAt(docIdx))) {
                     docIdx += direction;
                 }
             }

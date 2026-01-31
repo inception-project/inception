@@ -70,6 +70,7 @@ public record MTextMessage( //
         String actor, //
         @JsonInclude(NON_NULL) String content, //
         @JsonInclude(NON_NULL) String thinking, //
+        @JsonInclude(NON_NULL) String thinkingSummary, //
         boolean done, //
         boolean internal, //
         boolean ephemeral, //
@@ -84,9 +85,9 @@ public record MTextMessage( //
     private MTextMessage(Builder aBuilder)
     {
         this(aBuilder.id, aBuilder.role, aBuilder.actor, aBuilder.content, aBuilder.thinking,
-                aBuilder.done, aBuilder.internal, aBuilder.ephemeral, aBuilder.performance,
-                aBuilder.references.values().stream().toList(), aBuilder.toolCalls,
-                aBuilder.context);
+                aBuilder.thinkingSummary, aBuilder.done, aBuilder.internal, aBuilder.ephemeral,
+                aBuilder.performance, aBuilder.references.values().stream().toList(),
+                aBuilder.toolCalls, aBuilder.context);
     }
 
     public MTextMessage append(MTextMessage aMessage)
@@ -131,9 +132,17 @@ public record MTextMessage( //
             tnk.append(aMessage.thinking());
         }
 
+        var tnkSum = new StringBuilder();
+        if (thinkingSummary() != null) {
+            tnkSum.append(thinkingSummary());
+        }
+        if (aMessage.thinkingSummary() != null) {
+            tnkSum.append(aMessage.thinkingSummary());
+        }
+
         return new MTextMessage(id(), role(), actor(), msg.toString(), tnk.toString(),
-                aMessage.done(), internal(), ephemeral(), perf, refs.values().stream().toList(),
-                toolCalls(), context());
+                tnkSum.toString(), aMessage.done(), internal(), ephemeral(), perf,
+                refs.values().stream().toList(), toolCalls(), context());
     }
 
     public MTextMessage appendReferences(List<MReference> aReferences)
@@ -148,15 +157,22 @@ public record MTextMessage( //
         }
         aReferences.forEach(r -> refs.put(r.id(), r));
 
-        return new MTextMessage(id(), role(), actor(), content(), thinking(), done(), internal(),
-                ephemeral(), performance(), refs.values().stream().toList(), toolCalls(),
+        return new MTextMessage(id(), role(), actor(), content(), thinking(), thinkingSummary(),
+                done(), internal(), ephemeral(), performance(), refs.values().stream().toList(),
+                toolCalls(), context());
+    }
+
+    public MTextMessage withThinkingSummary(String aThinkingSummary)
+    {
+        return new MTextMessage(id(), role(), actor(), content(), thinking(), aThinkingSummary,
+                done(), internal(), ephemeral(), performance(), emptyList(), toolCalls(),
                 context());
     }
 
     public MTextMessage withoutContent()
     {
-        return new MTextMessage(id(), role(), actor(), "", "", done(), internal(), ephemeral(),
-                performance(), emptyList(), toolCalls(), context());
+        return new MTextMessage(id(), role(), actor(), "", "", thinkingSummary(), done(),
+                internal(), ephemeral(), performance(), emptyList(), toolCalls(), context());
     }
 
     @JsonProperty(MMessage.TYPE_FIELD)
@@ -183,6 +199,7 @@ public record MTextMessage( //
         private String role;
         private String content;
         private String thinking;
+        private String thinkingSummary;
         private boolean done = true;
         private boolean internal = false;
         private boolean ephemeral = false;
@@ -252,6 +269,12 @@ public record MTextMessage( //
         public Builder withThinking(String aThinking)
         {
             thinking = aThinking;
+            return this;
+        }
+
+        public Builder withThinkingSummary(String aThinkingSummary)
+        {
+            thinkingSummary = aThinkingSummary;
             return this;
         }
 

@@ -85,7 +85,7 @@ class AgentLoopTest
                 .withActor("tester") //
                 .build());
 
-        var response = sut.chat(input, null);
+        var response = sut.turn(input, null);
 
         LOG.debug(response.toString());
 
@@ -111,7 +111,7 @@ class AgentLoopTest
                 .build());
 
         // Execute
-        var response = sut.chat(input, null);
+        var response = sut.turn(input, null);
 
         LOG.debug("Response: {}", response.toString());
 

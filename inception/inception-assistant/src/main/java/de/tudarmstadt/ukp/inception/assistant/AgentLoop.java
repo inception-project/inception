@@ -23,12 +23,15 @@ import static de.tudarmstadt.ukp.inception.assistant.config.AssistantChatPropert
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.ASSISTANT;
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.TOOL;
+import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.USER;
 import static java.lang.Math.floorDiv;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Arrays.asList;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -52,6 +55,7 @@ import com.knuddels.jtokkit.api.Encoding;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.assistant.config.AssistantChatProperties;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.model.MCallResponse;
 import de.tudarmstadt.ukp.inception.assistant.model.MChatMessage;
@@ -211,26 +215,17 @@ public class AgentLoop
     public MChatResponse chat(List<? extends MChatMessage> aMessages)
         throws IOException, ToolNotFoundException
     {
-        return chat(aMessages, null);
+        return turn(aMessages, null);
     }
 
-    MChatResponse chat(List<? extends MChatMessage> aMessages, UUID aResponseId)
+    MChatResponse turn(List<? extends MChatMessage> aMessages, UUID aResponseId)
         throws IOException, ToolNotFoundException
     {
         var responseId = aResponseId != null ? aResponseId : UUID.randomUUID();
         var chatProperties = properties.getChat();
-        var requestBuilder = OllamaChatRequest.builder() //
-                .withApiKey(properties.getApiKey()) //
-                .withModel(chatProperties.getModel()) //
-                .withStream(true) //
-                .withMessages(aMessages.stream() //
-                        .map(this::toOllama) //
-                        .toList()) //
-                .withOption(OllamaOptions.NUM_CTX, chatProperties.getContextLength()) //
-                .withOption(OllamaOptions.TOP_P, chatProperties.getTopP()) //
-                .withOption(OllamaOptions.TOP_K, chatProperties.getTopK()) //
-                .withOption(OllamaOptions.REPEAT_PENALTY, chatProperties.getRepeatPenalty()) //
-                .withOption(OllamaOptions.TEMPERATURE, chatProperties.getTemperature());
+
+        var requestBuilder = buildRequest(aMessages, chatProperties) //
+                .withStream(true);
 
         if (isToolCallingEnabled() && chatProperties.getCapabilities().contains(CAP_TOOLS)
                 && !tools.isEmpty()) {
@@ -289,20 +284,62 @@ public class AgentLoop
         }
 
         // Send a final and complete message also including final metrics
-        return MChatResponse.builder() //
-                .withMessage(newMessage(responseId) //
-                        .withContent(response.getMessage().content()) //
-                        .withThinking(response.getMessage().thinking()) //
-                        .withPerformance(MPerformanceMetrics.builder() //
-                                .withDelay(firstTokenTime.get() - startTime) //
-                                .withDuration(endTime - firstTokenTime.get()) //
-                                .withTokens(tokens) //
-                                .build()) //
-                        // Include all references in the final message again just to be sure
-                        .withReferences(references.values()) //
-                        .withToolCalls(toolCalls) //
+        var responseMessageBuilder = newMessage(responseId) //
+                .withContent(response.getMessage().content()) //
+                .withThinking(response.getMessage().thinking()) //
+                .withPerformance(MPerformanceMetrics.builder() //
+                        .withDelay(firstTokenTime.get() - startTime) //
+                        .withDuration(endTime - firstTokenTime.get()) //
+                        .withTokens(tokens) //
                         .build()) //
+                // Include all references in the final message again just to be sure
+                .withReferences(references.values()) //
+                .withToolCalls(toolCalls);
+
+        return MChatResponse.builder() //
+                .withMessage(responseMessageBuilder.build()) //
                 .build();
+    }
+
+    private String summarizeThinking(MChatMessage aMessage)
+    {
+        var prompt = """
+                Role: You are a technical labeler. Your job is to summarize a block of AI reasoning into a single, punchy "Action Header."
+
+                Input: A raw text block of an AI's internal thought process.
+                Output: A single phrase (2-4 words) summarizing the primary cognitive action taken in that block.
+
+                Constraints:
+                1. Format: [Past Tense Verb] + [Noun/Object]
+                2. Length: Maximum 5 words.
+                3. Tone: Professional, clinical, and precise.
+                4. Output specific text ONLY. No explanations, no quotes.
+
+                Examples:
+                - "I need to look at the user's history to see if they mentioned Python before..." -> Label: Checked user context
+                - "The search results are contradictory. Source A says X, but Source B says Y..." -> Label: Evaluated conflicting data
+                - "Okay, the user wants a poem. I should focus on AABB rhyme scheme..." -> Label: Planned creative approach
+                - "Wait, I made a mistake in the calculation. 5*5 is 25, not 20." -> Label: Corrected calculation error
+
+                Task:
+                Label the following thought block:
+                """;
+
+        try {
+            var message = MTextMessage.builder() //
+                    .withRole(USER) //
+                    .withContent(prompt + "\"\"\"\n" + aMessage.thinking() + "\n\"\"\"\n") //
+                    .build();
+            var summaryRequest = buildRequest(asList(message), properties.getChat());
+            var summaryResponse = ollamaClient.chat(properties.getUrl(), summaryRequest.build());
+
+            return summaryResponse.getMessage().content();
+        }
+        catch (IOException e) {
+            LOG.error("Unable to summarize thinking", e);
+        }
+
+        return "";
     }
 
     private OllamaChatMessage toOllama(MChatMessage aMsg)
@@ -335,19 +372,10 @@ public class AgentLoop
 
         var responseId = UUID.randomUUID();
         var chatProperties = properties.getChat();
-        var requestBuilder = OllamaChatRequest.builder() //
-                .withApiKey(properties.getApiKey()) //
-                .withModel(chatProperties.getModel()) //
-                .withStream(false) //
-                .withMessages(aMessages.stream() //
-                        .map(this::toOllama) //
-                        .toList()) //
+
+        var requestBuilder = buildRequest(aMessages, chatProperties) //
                 .withFormat(JSONUtil.adaptJackson2To3(schema)) //
-                .withOption(OllamaOptions.NUM_CTX, chatProperties.getContextLength()) //
-                .withOption(OllamaOptions.TOP_P, chatProperties.getTopP()) //
-                .withOption(OllamaOptions.TOP_K, chatProperties.getTopK()) //
-                .withOption(OllamaOptions.REPEAT_PENALTY, chatProperties.getRepeatPenalty()) //
-                .withOption(OllamaOptions.TEMPERATURE, chatProperties.getTemperature());
+                .withStream(false);
 
         var references = new LinkedHashMap<String, MReference>();
         aMessages.stream() //
@@ -378,14 +406,36 @@ public class AgentLoop
                 .build();
     }
 
+    private OllamaChatRequest.Builder buildRequest(List<? extends MChatMessage> aMessages,
+            AssistantChatProperties chatProperties)
+    {
+        var requestBuilder = OllamaChatRequest.builder() //
+                .withApiKey(properties.getApiKey()) //
+                .withModel(chatProperties.getModel()) //
+                .withMessages(aMessages.stream() //
+                        .map(this::toOllama) //
+                        .toList()) //
+                .withOption(OllamaOptions.NUM_CTX, chatProperties.getContextLength()) //
+                .withOption(OllamaOptions.TOP_P, chatProperties.getTopP()) //
+                .withOption(OllamaOptions.TOP_K, chatProperties.getTopK()) //
+                .withOption(OllamaOptions.REPEAT_PENALTY, chatProperties.getRepeatPenalty()) //
+                .withOption(OllamaOptions.TEMPERATURE, chatProperties.getTemperature());
+        return requestBuilder;
+    }
+
     private void recordAndStreamMessage(UUID aResponseId, MChatMessage aMessage)
     {
+        var message = aMessage;
+        if (properties.isSummarizeThoughts() && message instanceof MTextMessage textMessage
+                && textMessage.done() && isNotBlank(textMessage.thinking())) {
+            message = textMessage.withThinkingSummary(summarizeThinking(aMessage));
+        }
+
         memory.recordMessage(aMessage);
 
         if (messageStreamHandler != null) {
             // When the message is done, we send it without content because the content
             // should already have been streamed before. So we only send the final "done" signal.
-            var message = aMessage;
             if (message instanceof MTextMessage textMessage && textMessage.done()) {
                 message = textMessage.withoutContent();
             }
@@ -491,12 +541,9 @@ public class AgentLoop
                     getEphemeralMessages(), conversationMessages, headMessage,
                     properties.getChat().getContextLength());
 
-            LOG.debug("Selected {} of {} to be included in the context window",
-                    recentConversation.size(), memory.getMessages().size());
-
             MChatResponse response;
             try {
-                response = chat(recentConversation, responseId);
+                response = turn(recentConversation, responseId);
             }
             catch (ToolNotFoundException e) {
                 repeat = true;
@@ -646,7 +693,7 @@ public class AgentLoop
         var allMessages = new ArrayList<>(headMessages);
         allMessages.addAll(tailMessages);
 
-        LOG.trace(
+        LOG.debug(
                 "Reduced from {} to {} messages with a total of {} / {} tokens (system: {}, ephemeral: {}, recent: {} )",
                 totalMessages, headMessages.size() + tailMessages.size(), allTokens, limit,
                 systemTokens, ephemeralTokens, recentTokens);
