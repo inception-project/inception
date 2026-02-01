@@ -135,6 +135,7 @@ public interface RecommendationService
 
     /**
      * @param aSessionOwner
+     *            the owner of the session.
      * @param aDocument
      *            the source document
      * @param aVID

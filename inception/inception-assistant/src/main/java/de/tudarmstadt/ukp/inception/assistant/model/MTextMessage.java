@@ -165,14 +165,14 @@ public record MTextMessage( //
     public MTextMessage withThinkingSummary(String aThinkingSummary)
     {
         return new MTextMessage(id(), role(), actor(), content(), thinking(), aThinkingSummary,
-                done(), internal(), ephemeral(), performance(), emptyList(), toolCalls(),
+                done(), internal(), ephemeral(), performance(), references(), toolCalls(),
                 context());
     }
 
     public MTextMessage withoutContent()
     {
         return new MTextMessage(id(), role(), actor(), "", "", thinkingSummary(), done(),
-                internal(), ephemeral(), performance(), references(), toolCalls(), context());
+                internal(), ephemeral(), performance(), emptyList(), toolCalls(), context());
     }
 
     @JsonProperty(MMessage.TYPE_FIELD)

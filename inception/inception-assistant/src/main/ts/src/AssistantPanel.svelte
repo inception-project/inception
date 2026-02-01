@@ -230,7 +230,9 @@
     }
 
     function onRefreshCommand() {
-        ajaxClient.refreshAnnotations();
+        ajaxClient.refreshAnnotations().catch((error) => {
+            console.error("Failed to refresh annotations", error);
+        });
     }
 
     function onTextMessage(msg: MTextMessage) {

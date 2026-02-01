@@ -189,6 +189,10 @@ public class DocumentMetadataAnnotationSelectionPanel
                     state.getDocument(), aItem.vid);
 
             if (maybeSuggestion.isEmpty()) {
+                if (aTarget != null) {
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                }
+                error("Suggestion no longer available, please refresh.");
                 return;
             }
 

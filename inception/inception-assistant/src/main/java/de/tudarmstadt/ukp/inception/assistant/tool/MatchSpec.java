@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.assistant.tool;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-@JsonPropertyOrder({ "left", "text", "right", "label" })
+@JsonPropertyOrder({ "before", "text", "after", "label" })
 public record MatchSpec(
         @JsonPropertyDescription("disambiguating context before text (if necessary)") String before,
         @JsonPropertyDescription("text to which label applies") String text,

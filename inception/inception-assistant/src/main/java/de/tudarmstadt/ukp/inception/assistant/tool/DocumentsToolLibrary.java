@@ -127,12 +127,12 @@ public class DocumentsToolLibrary
     {
         if (aStartLine < 1) {
             return MCallResponse.builder(String.class)
-                    .withPayload("Error: The 'startLine' parameter must be >= 1.");
+                    .withPayload("Error: The 'start_line' parameter must be >= 1.");
         }
 
         if (aEndLine < 1) {
             return MCallResponse.builder(String.class)
-                    .withPayload("Error: The 'endLine' parameter must be >= 1.");
+                    .withPayload("Error: The 'end_line' parameter must be >= 1.");
         }
 
         var project = aContext.getProject();
