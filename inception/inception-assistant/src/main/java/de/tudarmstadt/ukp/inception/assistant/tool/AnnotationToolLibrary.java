@@ -306,7 +306,15 @@ public class AnnotationToolLibrary
 
         // Create new recommender (first use in this project)
         var features = schemaService.listSupportedFeatures(aLayer);
-        var feature = features.isEmpty() ? null : features.get(0);
+
+        // FIXME: This is not the greatest design. Probably we should allow the feature in
+        // recommenders to be nullable. But let's look into that later.
+        if (features.isEmpty()) {
+            throw new IllegalStateException(
+                    "Project must have at least one layer with one feature.");
+        }
+
+        var feature = features.get(0);
         var recommender = Recommender.builder() //
                 .withProject(aProject) //
                 .withLayer(aLayer) //

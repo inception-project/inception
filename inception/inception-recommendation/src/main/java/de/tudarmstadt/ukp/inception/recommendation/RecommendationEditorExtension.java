@@ -288,12 +288,6 @@ public class RecommendationEditorExtension
     {
         var sessionOwner = userService.getCurrentUser();
 
-        var predictions = recommendationService.getPredictions(aUser, aDocument.getProject());
-
-        if (predictions == null) {
-            return null;
-        }
-
         var suggestionVid = VID.parse(aVid.getExtensionPayload());
         var maybeSuggestion = recommendationService.getSuggestionByVID(sessionOwner, aDocument,
                 suggestionVid);

@@ -24,7 +24,6 @@ import java.io.IOException;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationEditorContext;
@@ -61,17 +60,15 @@ public class RecommenderToolLibrary
     private final RecommendationService recommendationService;
     private final UserDao userService;
     private final SchedulingService schedulingService;
-    private final AssistantService assistantService;
 
     public RecommenderToolLibrary(RecommendationService aRecommendationService,
             UserDao aUserService, DocumentAccess aDocumentAccess,
-            SchedulingService aSchedulingService, AssistantService aAssistantService)
+            SchedulingService aSchedulingService)
     {
         recommendationService = aRecommendationService;
         userService = aUserService;
         documentAccess = aDocumentAccess;
         schedulingService = aSchedulingService;
-        assistantService = aAssistantService;
     }
 
     @Override

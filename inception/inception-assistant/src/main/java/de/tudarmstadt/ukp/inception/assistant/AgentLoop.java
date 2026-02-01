@@ -431,7 +431,7 @@ public class AgentLoop
             message = textMessage.withThinkingSummary(summarizeThinking(aMessage));
         }
 
-        memory.recordMessage(aMessage);
+        memory.recordMessage(message);
 
         if (messageStreamHandler != null) {
             // When the message is done, we send it without content because the content
