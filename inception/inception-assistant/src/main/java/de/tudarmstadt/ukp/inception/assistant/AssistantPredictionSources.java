@@ -15,11 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.model;
+package de.tudarmstadt.ukp.inception.assistant;
 
-public sealed interface MCommandMessage
-    extends MMessage
-    permits MClearCommand, MRefreshCommand
+import de.tudarmstadt.ukp.inception.recommendation.api.model.PredictionsSource;
+
+public enum AssistantPredictionSources
+    implements PredictionsSource
 {
-
+    ASSISTANT_SOURCE;
 }

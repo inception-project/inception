@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryServiceImpl;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingService;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingServiceImpl;
+import de.tudarmstadt.ukp.inception.assistant.recommender.AssistantRecommenderFactory;
 import de.tudarmstadt.ukp.inception.assistant.retriever.CurrentDateRetriever;
 import de.tudarmstadt.ukp.inception.assistant.retriever.Retriever;
 import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPoint;
@@ -162,6 +163,12 @@ public class AssistantAutoConfiguration
             RepositoryProperties aRepositoryProperties)
     {
         return new AssistantIndexFootprintProvider(aRepositoryProperties);
+    }
+
+    @Bean
+    public AssistantRecommenderFactory assistantRecommenderFactory()
+    {
+        return new AssistantRecommenderFactory();
     }
 
     @Bean

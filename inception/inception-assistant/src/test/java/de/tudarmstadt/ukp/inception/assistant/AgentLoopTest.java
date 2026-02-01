@@ -85,7 +85,7 @@ class AgentLoopTest
                 .withActor("tester") //
                 .build());
 
-        var response = sut.chat(input, null);
+        var response = sut.turn(input, null);
 
         LOG.debug(response.toString());
 
@@ -111,7 +111,7 @@ class AgentLoopTest
                 .build());
 
         // Execute
-        var response = sut.chat(input, null);
+        var response = sut.turn(input, null);
 
         LOG.debug("Response: {}", response.toString());
 
@@ -129,7 +129,7 @@ class AgentLoopTest
         assertThat(toolCall.method().getName()).isEqualTo("getTime");
 
         // Invoke the tool and verify result structure
-        var result = toolCall.invoke("integration-test", null, null, null);
+        var result = toolCall.invoke("integration-test", null, null, null, null);
         assertThat(result).isInstanceOf(Map.class);
 
         @SuppressWarnings("unchecked")

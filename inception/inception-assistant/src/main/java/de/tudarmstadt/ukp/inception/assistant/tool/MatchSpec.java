@@ -15,11 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.assistant.model;
+package de.tudarmstadt.ukp.inception.assistant.tool;
 
-public sealed interface MCommandMessage
-    extends MMessage
-    permits MClearCommand, MRefreshCommand
-{
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-}
+@JsonPropertyOrder({ "before", "text", "after", "label" })
+public record MatchSpec(
+        @JsonPropertyDescription("disambiguating context before text (if necessary)") String before,
+        @JsonPropertyDescription("text to which label applies") String text,
+        @JsonPropertyDescription("disambiguating context after text (if necessary)") String after,
+        @JsonPropertyDescription("the label") String label)
+{}

@@ -20,11 +20,11 @@ package de.tudarmstadt.ukp.inception.assistant.tool;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static java.lang.String.join;
+import static org.apache.commons.lang3.ArrayUtils.subarray;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 import java.io.IOException;
 import java.util.Map;
-
-import org.apache.commons.lang3.ArrayUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -41,12 +41,17 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolParam;
 public class DocumentsToolLibrary
     implements ToolLibrary
 {
+    private static final String GET_CURRENT_DOCUMENT_TOOL_DESCRIPTION = """
+            Get the name of the current document.
+            """;
+
     private static final String LIST_DOCUMENTS_TOOL_DESCRIPTION = """
-            Provides a list of the documents in the project.
+            List the documents in the project.
             """;
 
     private static final String READ_DOCUMENT_TOOL_DESCRIPTION = """
-            Allows to read a document from the project.
+            Read lines from a document.
+            Omit the parameter `document` unless the user explicitly asks for a specific document.
             """;
 
     private final DocumentService documentService;
@@ -71,6 +76,20 @@ public class DocumentsToolLibrary
     }
 
     @Tool( //
+            value = "get_current_document", //
+            actor = "Get current document", //
+            description = GET_CURRENT_DOCUMENT_TOOL_DESCRIPTION)
+    public MCallResponse.Builder<?> getCurrentDocument( //
+            AnnotationEditorContext aContext)
+        throws IOException
+    {
+        Builder<Map<String, Object>> callResponse = MCallResponse.builder();
+        callResponse.withPayload(Map.of( //
+                "document_name", aContext.getDocument().getName()));
+        return callResponse;
+    }
+
+    @Tool( //
             value = "list_documents", //
             actor = "List documents", //
             description = LIST_DOCUMENTS_TOOL_DESCRIPTION)
@@ -89,6 +108,7 @@ public class DocumentsToolLibrary
 
         Builder<Map<String, Object>> callResponse = MCallResponse.builder();
         callResponse.withPayload(Map.of( //
+                "current_document", aContext.getDocument().getName(), //
                 "document_count", payload.size(), //
                 "documents", payload));
         return callResponse;
@@ -100,48 +120,54 @@ public class DocumentsToolLibrary
             description = READ_DOCUMENT_TOOL_DESCRIPTION)
     public MCallResponse.Builder<String> readDocument( //
             AnnotationEditorContext aContext,
-            @ToolParam(value = "document", description = "Name of the document to read.") String aDocument,
-            @ToolParam(value = "startLine", description = "First line to read (1-indexed)") int aStartLine,
-            @ToolParam(value = "endLine", description = "Last line to read (1-indexed)") int aEndLine)
+            @ToolParam(value = "document", description = "Name of the document to read (optional)") String aDocumentName,
+            @ToolParam(value = "start_line", description = "First line to read (1-indexed)") int aStartLine,
+            @ToolParam(value = "end_line", description = "Last line to read (1-indexed)") int aEndLine)
         throws IOException
     {
         if (aStartLine < 1) {
             return MCallResponse.builder(String.class)
-                    .withPayload("Error: The 'startLine' parameter must be >= 1.");
+                    .withPayload("Error: The 'start_line' parameter must be >= 1.");
         }
 
         if (aEndLine < 1) {
             return MCallResponse.builder(String.class)
-                    .withPayload("Error: The 'endLine' parameter must be >= 1.");
+                    .withPayload("Error: The 'end_line' parameter must be >= 1.");
         }
+
+        var project = aContext.getProject();
 
         var startLine = Math.min(aStartLine, aEndLine);
         var endLine = Math.max(aStartLine, aEndLine);
 
-        var project = aContext.getProject();
         var sessionOwner = userService.get(aContext.getSessionOwner());
         var documents = documentService.listAnnotatableDocuments(project, sessionOwner);
 
-        var document = documents.keySet().stream().filter(d -> d.getName().equals(aDocument))
+        var docName = defaultIfBlank(aDocumentName, aContext.getDocument().getName());
+
+        var doc = documents.keySet().stream() //
+                .filter(d -> d.getName().equals(docName)) //
                 .findFirst();
 
         // Safeguard to ensure the session owner has access to the document
-        if (document.isEmpty()) {
+        if (doc.isEmpty()) {
             return MCallResponse.builder(String.class).withPayload(
-                    "Error: Document '" + aDocument + "' does not exist in the project.");
+                    "Error: Document [" + docName + "] does not exist in the project.");
         }
 
         try (var session = CasStorageSession.openNested()) {
-            var cas = documentService.createOrReadInitialCas(document.get(), AUTO_CAS_UPGRADE,
+            var cas = documentService.createOrReadInitialCas(doc.get(), AUTO_CAS_UPGRADE,
                     SHARED_READ_ONLY_ACCESS);
             var lines = cas.getDocumentText().split("\\r?\\n|\\r");
-            lines = ArrayUtils.subarray(lines, startLine - 1, endLine);
+            var totalLines = lines.length;
+            lines = subarray(lines, startLine - 1, endLine);
             return MCallResponse.builder(String.class) //
-                    .withActor("Read " + aDocument + " (lines " + startLine + "-"
-                            + (startLine + lines.length - 1) + ")")
+                    .withActor("Read " + docName + " (lines " + startLine + "-"
+                            + (startLine + lines.length - 1) + " of " + totalLines + ")")
                     .withPayload("---\n" + //
-                            "startLine: " + startLine + "\n" + //
-                            "endLine: " + (startLine + lines.length - 1) + "\n" + //
+                            "total_lines: " + totalLines + "\n" + //
+                            "start_line: " + startLine + "\n" + //
+                            "end_line: " + (startLine + lines.length - 1) + "\n" + //
                             "---\n" + //
                             join("\n", lines));
         }

@@ -43,6 +43,11 @@ CAUTION: Experimental feature.
 | The by which the assistant should identify itself.
 | `INCEpTION`
 | `Dominick`
+
+| `assistant.summarize-thoughts`
+| Whether an extra LLM call should be made to generate a summary line for thinking sections.
+| `false`
+| `true`
 |===
 
 .Settings related to the assistant chat functionality

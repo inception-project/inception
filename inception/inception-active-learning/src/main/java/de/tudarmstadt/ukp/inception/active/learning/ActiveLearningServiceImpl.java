@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.active.learning;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommenderPredictionSources.RECOMMENDER_SOURCE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.AL_SIDEBAR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.CORRECTED;
@@ -102,7 +103,8 @@ public class ActiveLearningServiceImpl
     @Override
     public List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aUser, AnnotationLayer aLayer)
     {
-        var predictions = recommendationService.getPredictions(aUser, aLayer.getProject());
+        var predictions = recommendationService.getPredictions(aUser, aLayer.getProject(),
+                RECOMMENDER_SOURCE);
 
         if (predictions == null) {
             return emptyList();
@@ -251,7 +253,7 @@ public class ActiveLearningServiceImpl
         // Send an application event indicating if the user has accepted/skipped/corrected/rejected
         // the suggestion
         var alternativeSuggestions = recommendationService
-                .getPredictions(aDataOwner, feature.getProject())
+                .getPredictions(aDataOwner, feature.getProject(), RECOMMENDER_SOURCE)
                 .getPredictionsByTokenAndFeature(suggestionWithUserSelectedLabel.getDocumentId(),
                         feature.getLayer(), suggestionWithUserSelectedLabel.getBegin(),
                         suggestionWithUserSelectedLabel.getEnd(),
@@ -300,7 +302,7 @@ public class ActiveLearningServiceImpl
         // Send an application event indicating if the user has accepted/skipped/corrected/rejected
         // the suggestion
         var alternativeSuggestions = recommendationService
-                .getPredictions(aDataOwner, aLayer.getProject())
+                .getPredictions(aDataOwner, aLayer.getProject(), RECOMMENDER_SOURCE)
                 .getPredictionsByTokenAndFeature(aSuggestion.getDocumentId(), aLayer,
                         aSuggestion.getBegin(), aSuggestion.getEnd(), aSuggestion.getFeature());
         applicationEventPublisher.publishEvent(new ActiveLearningRecommendationEvent(this, document,
@@ -322,7 +324,7 @@ public class ActiveLearningServiceImpl
         // Send an application event indicating if the user has accepted/skipped/corrected/rejected
         // the suggestion
         var alternativeSuggestions = recommendationService
-                .getPredictions(aDataOwner, aLayer.getProject())
+                .getPredictions(aDataOwner, aLayer.getProject(), RECOMMENDER_SOURCE)
                 .getPredictionsByTokenAndFeature(aSuggestion.getDocumentId(), aLayer,
                         aSuggestion.getBegin(), aSuggestion.getEnd(), aSuggestion.getFeature());
         applicationEventPublisher.publishEvent(new ActiveLearningRecommendationEvent(this, document,
