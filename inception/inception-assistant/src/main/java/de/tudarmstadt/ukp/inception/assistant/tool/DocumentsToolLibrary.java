@@ -159,12 +159,13 @@ public class DocumentsToolLibrary
             var cas = documentService.createOrReadInitialCas(doc.get(), AUTO_CAS_UPGRADE,
                     SHARED_READ_ONLY_ACCESS);
             var lines = cas.getDocumentText().split("\\r?\\n|\\r");
+            var totalLines = lines.length;
             lines = subarray(lines, startLine - 1, endLine);
             return MCallResponse.builder(String.class) //
                     .withActor("Read " + docName + " (lines " + startLine + "-"
-                            + (startLine + lines.length - 1) + " of " + lines.length + ")")
+                            + (startLine + lines.length - 1) + " of " + totalLines + ")")
                     .withPayload("---\n" + //
-                            "total_lines: " + lines.length + "\n" + //
+                            "total_lines: " + totalLines + "\n" + //
                             "start_line: " + startLine + "\n" + //
                             "end_line: " + (startLine + lines.length - 1) + "\n" + //
                             "---\n" + //

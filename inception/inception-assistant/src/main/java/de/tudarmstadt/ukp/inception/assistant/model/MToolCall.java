@@ -23,18 +23,17 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.assistant.CommandDispatcher;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationEditorContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolUtils;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public record MToolCall(String actor, @JsonIgnore Object instance, @JsonIgnore Method method,
         @JsonIgnore boolean stop, String name, Map<String, Object> arguments)
 {
-
     private MToolCall(Builder builder)
     {
         this(builder.actor, builder.instance, builder.method, builder.stop, builder.name,
@@ -45,7 +44,7 @@ public record MToolCall(String actor, @JsonIgnore Object instance, @JsonIgnore M
             String aDataOwner, CommandDispatcher aCommandDispatcher)
         throws Exception
     {
-        var objectMapper = new ObjectMapper();
+        var mapper = JSONUtil.getObjectMapper();
         var params = new ArrayList<Object>();
         for (var param : method().getParameters()) {
             if (ToolUtils.isParameter(param)) {
@@ -54,9 +53,9 @@ public record MToolCall(String actor, @JsonIgnore Object instance, @JsonIgnore M
 
                 // Convert parameter value to the expected type using Jackson
                 // This handles LinkedHashMap -> POJO and List<LinkedHashMap> -> List<POJO>
-                var expectedType = objectMapper.getTypeFactory()
+                var expectedType = mapper.getTypeFactory()
                         .constructType(param.getParameterizedType());
-                var convertedValue = objectMapper.convertValue(paramValue, expectedType);
+                var convertedValue = mapper.convertValue(paramValue, expectedType);
                 params.add(convertedValue);
                 continue;
             }

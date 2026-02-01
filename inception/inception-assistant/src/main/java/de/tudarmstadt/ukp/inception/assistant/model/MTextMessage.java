@@ -172,7 +172,7 @@ public record MTextMessage( //
     public MTextMessage withoutContent()
     {
         return new MTextMessage(id(), role(), actor(), "", "", thinkingSummary(), done(),
-                internal(), ephemeral(), performance(), emptyList(), toolCalls(), context());
+                internal(), ephemeral(), performance(), references(), toolCalls(), context());
     }
 
     @JsonProperty(MMessage.TYPE_FIELD)

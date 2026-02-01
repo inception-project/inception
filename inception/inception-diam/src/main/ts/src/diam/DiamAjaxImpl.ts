@@ -284,7 +284,7 @@ export class DiamAjaxImpl implements DiamAjax {
         eh: [() => {
           DiamAjaxImpl.clearResult(token)
 
-          reject(new Error('Unable to load annotation'))
+          reject(new Error('Unable to refresh annotation'))
         }]
       })
     })

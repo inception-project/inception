@@ -71,6 +71,7 @@ public class AssistantPropertiesImpl
         summarizeThoughts = aSummarizeThoughts;
     }
 
+    @Override
     public boolean isSummarizeThoughts()
     {
         return summarizeThoughts;

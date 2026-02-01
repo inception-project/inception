@@ -86,25 +86,6 @@ public class RecommenderToolLibrary
         return true;
     }
 
-    /**
-     * @deprecated Just for testing the refresh mechanism - this should be removed again.
-     */
-    @SuppressWarnings("javadoc")
-    @Deprecated
-    @Tool( //
-            value = "refresh", //
-            actor = "Annotation editor", //
-            description = "Reload the currently visible annotations and show and pending annotation suggestions.")
-    public ToolStatusResponse refreshs( //
-            AnnotationEditorContext aContext, //
-            @ToolParam(value = "task_description", description = PARAM_TASK_DESCRIPTION) //
-            String aTaskDescription)
-        throws IOException
-    {
-        assistantService.refreshAnnotations(aContext.getSessionOwner(), aContext.getProject());
-        return success("Annotation editor refreshed");
-    }
-
     @Tool( //
             value = "annotate", //
             actor = "Recommender tool", //

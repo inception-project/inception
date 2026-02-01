@@ -52,7 +52,7 @@ public class RefreshHandler
             return new DefaultAjaxResponse();
         }
         catch (Exception e) {
-            return handleError("Unable to load annotations", e);
+            return handleError("Unable to refresh annotations", e);
         }
     }
 }
