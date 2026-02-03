@@ -622,6 +622,7 @@ export class ApacheAnnotatorVisualizer {
 
   private clearScrollMarkers () {
     if (this.removeScrollMarkersTimeout) {
+      this.scrolling = false
       this.cancelScheduled(this.removeScrollMarkersTimeout)
       this.removeScrollMarkersTimeout = undefined
       this.removeScrollMarkers.forEach(remove => remove())
@@ -706,16 +707,17 @@ export class ApacheAnnotatorVisualizer {
       var scrollIntoViewFunc = () => { 
         finalScrollTarget.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'nearest' })
         if (this.removeScrollMarkers.length > 0) {
-          this.schedule(SCROLL_ITERATION_MS, scrollIntoViewFunc)
+          this.removeScrollMarkersTimeout = this.schedule(SCROLL_ITERATION_MS, scrollIntoViewFunc)
         }
         
         const wrapper = this.root.closest('.i7n-wrapper')
-        const scrollTop =wrapper?.scrollTop || this.root.scrollTop || 0
+        const scrollTop = wrapper?.scrollTop || this.root.scrollTop || 0
         if (scrollTop === this.lastScrollTop) {
           this.scrollToComplete(args.pingRanges)
         }
         else {
           this.lastScrollTop = scrollTop
+          this.removeScrollMarkersTimeout = this.schedule(SCROLL_ITERATION_MS, scrollIntoViewFunc)
         }
       }
 
