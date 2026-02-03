@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
+import static java.lang.Math.max;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import org.apache.uima.cas.CAS;
@@ -40,25 +41,38 @@ public abstract class PagingStrategy_ImplBase
     public void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, VRange aPingRange,
             FocusPosition aPos)
     {
+        var units = units(aCas);
+
+        // Find the unit for the given offset, with fallback handling
+        var unitContainingOffset = units.stream() //
+                .filter(u -> u.getBegin() <= aOffset && aOffset <= u.getEnd()) //
+                .findFirst();
+
+        var unit = unitContainingOffset.or(() -> {
+            // If no unit contains offset, find unit before or after
+            var unitBefore = units.stream() //
+                    .filter(u -> u.getEnd() <= aOffset) //
+                    .reduce((first, second) -> second); // Get last unit before offset
+
+            if (unitBefore.isPresent()) {
+                return unitBefore;
+            }
+
+            // No unit before, use first unit (offset is before all units)
+            return units.stream().findFirst();
+        }).orElseThrow(() -> new IllegalArgumentException("No units available in document"));
+
         switch (aPos) {
         case TOP: {
-            aState.setPageBegin(aCas, aOffset);
+            aState.setPageBegin(aCas, unit.getBegin());
             fireScrollToEvent(aOffset, aPingRange, aPos);
             break;
         }
         case CENTERED: {
-            // Find the unit containing the given offset
-            var units = units(aCas);
-            var unit = units.stream() //
-                    .filter(u -> u.getBegin() <= aOffset && aOffset <= u.getEnd()) //
-                    .findFirst() //
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "No unit contains character offset [" + aOffset + "]"));
-
             // How many rows to display before the unit such that the unit is centered?
             var rowsInPageBeforeUnit = aState.getPreferences().getWindowSize() / 2;
             // The -1 below is because unit.getIndex() is 1-based
-            var firstUnit = units.get(Math.max(0, unit.getIndex() - rowsInPageBeforeUnit - 1));
+            var firstUnit = units.get(max(0, unit.getIndex() - rowsInPageBeforeUnit - 1));
 
             aState.setPageBegin(aCas, firstUnit.getBegin());
             aState.setFocusUnitIndex(unit.getIndex());
