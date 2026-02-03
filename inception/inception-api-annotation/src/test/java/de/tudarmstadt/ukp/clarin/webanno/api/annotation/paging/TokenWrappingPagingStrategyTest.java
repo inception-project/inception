@@ -25,6 +25,8 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.jcas.JCas;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -32,12 +34,19 @@ import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 
 public class TokenWrappingPagingStrategyTest
 {
+    private JCas jcas;
+
+    @BeforeEach
+    void setup() throws Exception
+    {
+        jcas = JCasFactory.createJCas();
+    }
+
     @Test
     public void thatMultipleConsecutiveLineBreaksWork() throws Exception
     {
         var sut = new TokenWrappingPagingStrategy(120);
 
-        var jcas = JCasFactory.createJCas();
         var builder = new JCasBuilder(jcas);
         builder.add("See-", Token.class);
         builder.add("\n");
@@ -60,7 +69,6 @@ public class TokenWrappingPagingStrategyTest
     {
         var sut = new TokenWrappingPagingStrategy(10);
 
-        var jcas = JCasFactory.createJCas();
         var builder = new JCasBuilder(jcas);
         builder.add(repeat("a", 20), Token.class);
         builder.add("\n");
@@ -97,7 +105,6 @@ public class TokenWrappingPagingStrategyTest
     {
         var sut = new TokenWrappingPagingStrategy(11);
 
-        var jcas = JCasFactory.createJCas();
         var builder = new JCasBuilder(jcas);
         for (int n = 0; n < 10; n++) {
             builder.add(repeat("a", 3), Token.class);
@@ -122,7 +129,6 @@ public class TokenWrappingPagingStrategyTest
     {
         var sut = new TokenWrappingPagingStrategy(10);
 
-        var jcas = JCasFactory.createJCas();
         var builder = new JCasBuilder(jcas);
         var i = 1;
         for (var sep : LINE_SEPARATORS) {
@@ -154,7 +160,6 @@ public class TokenWrappingPagingStrategyTest
     {
         var sut = new TokenWrappingPagingStrategy(10);
 
-        var jcas = JCasFactory.createJCas();
         var builder = new JCasBuilder(jcas);
         builder.add(repeat("a", 3), Token.class);
         builder.add(CR);
@@ -165,5 +170,147 @@ public class TokenWrappingPagingStrategyTest
                 .extracting(u -> jcas.getDocumentText().substring(u.getBegin(), u.getEnd()))
                 .containsExactly( //
                         "aaa");
+    }
+
+    @Test
+    void testEmptyDocument() throws Exception
+    {
+        var sut = new TokenWrappingPagingStrategy(10);
+
+        jcas.setDocumentText("");
+
+        assertThat(sut.units(jcas.getCas())).isEmpty();
+    }
+
+    @Test
+    void testNoTokens() throws Exception
+    {
+        var sut = new TokenWrappingPagingStrategy(10);
+
+        jcas.setDocumentText("Some text without tokens");
+
+        assertThat(sut.units(jcas.getCas())).isEmpty();
+    }
+
+    @Test
+    void testSingleToken() throws Exception
+    {
+        var sut = new TokenWrappingPagingStrategy(10);
+
+        var builder = new JCasBuilder(jcas);
+        builder.add("token", Token.class);
+        builder.close();
+
+        assertThat(sut.units(jcas.getCas()))
+                .extracting(u -> jcas.getDocumentText().substring(u.getBegin(), u.getEnd()))
+                .containsExactly("token");
+    }
+
+    @Test
+    void testTokenLongerThanMaxLineLength() throws Exception
+    {
+        var sut = new TokenWrappingPagingStrategy(10);
+
+        var builder = new JCasBuilder(jcas);
+        builder.add(repeat("a", 25), Token.class);
+        builder.add(" ");
+        builder.add("b", Token.class);
+        builder.close();
+
+        assertThat(sut.units(jcas.getCas()))
+                .extracting(u -> jcas.getDocumentText().substring(u.getBegin(), u.getEnd()))
+                .containsExactly( //
+                        repeat("a", 25), //
+                        "b");
+    }
+
+    @Test
+    void testUnitsIgnoresIndexParameters() throws Exception
+    {
+        var sut = new TokenWrappingPagingStrategy(10);
+
+        var builder = new JCasBuilder(jcas);
+        builder.add("aaa", Token.class);
+        builder.add(" ");
+        builder.add("bbb", Token.class);
+        builder.add(" ");
+        builder.add("ccc", Token.class);
+        builder.add("\n");
+        builder.add("ddd", Token.class);
+        builder.add(" ");
+        builder.add("eee", Token.class);
+        builder.close();
+
+        var allUnits = sut.units(jcas.getCas());
+        var rangeUnits = sut.units(jcas.getCas(), 2, 3);
+
+        // TokenWrappingPagingStrategy doesn't filter by index parameters
+        assertThat(rangeUnits).isEqualTo(allUnits);
+    }
+
+    @Test
+    void testUnitCount() throws Exception
+    {
+        var sut = new TokenWrappingPagingStrategy(10);
+
+        var builder = new JCasBuilder(jcas);
+        builder.add("aaa", Token.class);
+        builder.add(" ");
+        builder.add("bbb", Token.class);
+        builder.add("\n");
+        builder.add("ccc", Token.class);
+        builder.close();
+
+        var count = sut.unitCount(jcas.getCas());
+        var units = sut.units(jcas.getCas());
+
+        assertThat(count).isEqualTo(units.size());
+    }
+
+    @Test
+    void testTokensWithGaps() throws Exception
+    {
+        var sut = new TokenWrappingPagingStrategy(20);
+
+        jcas.setDocumentText("aaa   bbb   ccc");
+        new Token(jcas, 0, 3).addToIndexes();
+        new Token(jcas, 6, 9).addToIndexes();
+        new Token(jcas, 12, 15).addToIndexes();
+
+        assertThat(sut.units(jcas.getCas()))
+                .extracting(u -> jcas.getDocumentText().substring(u.getBegin(), u.getEnd()))
+                .containsExactly("aaa   bbb   ccc");
+    }
+
+    @Test
+    void testUnitIndexesStartAtOne() throws Exception
+    {
+        var sut = new TokenWrappingPagingStrategy(10);
+
+        var builder = new JCasBuilder(jcas);
+        builder.add("aaa", Token.class);
+        builder.add("\n");
+        builder.add("bbb", Token.class);
+        builder.close();
+
+        assertThat(sut.units(jcas.getCas())).extracting(Unit::getIndex).allMatch(idx -> idx >= 1);
+    }
+
+    @Test
+    void testMultipleTokensOnSameLine() throws Exception
+    {
+        var sut = new TokenWrappingPagingStrategy(20);
+
+        var builder = new JCasBuilder(jcas);
+        builder.add("word1", Token.class);
+        builder.add(" ");
+        builder.add("word2", Token.class);
+        builder.add(" ");
+        builder.add("word3", Token.class);
+        builder.close();
+
+        assertThat(sut.units(jcas.getCas()))
+                .extracting(u -> jcas.getDocumentText().substring(u.getBegin(), u.getEnd()))
+                .containsExactly("word1 word2 word3");
     }
 }

@@ -110,6 +110,8 @@ public class CasMergeTestBase
     protected AnnotationLayer multiValSpan;
     protected AnnotationFeature multiValSpanF1;
     protected AnnotationFeature multiValSpanF2;
+    protected AnnotationLayer featurelessRelLayer;
+    protected AnnotationLayer featurelessSpanLayer;
     protected SourceDocument document;
     protected AnnotationLayer documentLabelLayer;
     protected AnnotationFeature documentLabelLayerFeature;
@@ -122,6 +124,10 @@ public class CasMergeTestBase
             "webanno.custom.Multivalrel", "Dependent", "Governor", "rel1", "rel2");
     protected static final SpanDiffAdapter MULTIVALSPAN_DIFF_ADAPTER = new SpanDiffAdapterImpl(
             "webanno.custom.Multivalspan", "f1", "f2");
+    protected static final RelationDiffAdapter FEATURELESS_REL_DIFF_ADAPTER = new RelationDiffAdapterImpl(
+            "webanno.custom.FeaturelessRelation", "Dependent", "Governor");
+    protected static final SpanDiffAdapter FEATURELESS_SPAN_DIFF_ADAPTER = new SpanDiffAdapterImpl(
+            "webanno.custom.FeaturelessSpan");
 
     @BeforeEach
     public void setup() throws Exception
@@ -330,6 +336,18 @@ public class CasMergeTestBase
         multiValRelRel2.setVisible(true);
         multiValRelRel2.setCuratable(true);
 
+        // Custom featureless relation type for testing (no features)
+        featurelessRelLayer = new AnnotationLayer("webanno.custom.FeaturelessRelation",
+                "FeaturelessRelation", RelationLayerSupport.TYPE, project, true, SINGLE_TOKEN,
+                OVERLAP_ONLY);
+        featurelessRelLayer.setAttachType(null); // Featureless relations don't need attach type
+        featurelessRelLayer.setAttachFeature(null); // Featureless relations don't need attach
+                                                    // feature
+
+        // Custom featureless span type for testing (no features)
+        featurelessSpanLayer = new AnnotationLayer("webanno.custom.FeaturelessSpan",
+                "FeaturelessSpan", SpanLayerSupport.TYPE, project, true, TOKENS, OVERLAP_ONLY);
+
         documentLabelLayer = AnnotationLayer.builder() //
                 .withName(DOCUMENT_LABEL_TYPE) //
                 .withType(DocumentMetadataLayerSupport.TYPE) // )
@@ -375,6 +393,12 @@ public class CasMergeTestBase
                     if (type.equals("webanno.custom.Multivalspan")) {
                         return multiValSpan;
                     }
+                    if (type.equals("webanno.custom.FeaturelessRelation")) {
+                        return featurelessRelLayer;
+                    }
+                    if (type.equals("webanno.custom.FeaturelessSpan")) {
+                        return featurelessSpanLayer;
+                    }
                     throw new IllegalStateException("Unknown layer type: " + type);
                 });
 
@@ -411,6 +435,12 @@ public class CasMergeTestBase
                     }
                     if (type.getName().equals("webanno.custom.Multivalspan")) {
                         return asList(multiValSpanF1, multiValSpanF2);
+                    }
+                    if (type.getName().equals("webanno.custom.FeaturelessRelation")) {
+                        return asList(); // Featureless - no features
+                    }
+                    if (type.getName().equals("webanno.custom.FeaturelessSpan")) {
+                        return asList(); // Featureless - no features
                     }
                     throw new IllegalStateException("Unknown layer type: " + type.getName());
                 });
