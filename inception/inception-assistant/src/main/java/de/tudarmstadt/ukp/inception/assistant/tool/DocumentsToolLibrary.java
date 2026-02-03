@@ -98,7 +98,7 @@ public class DocumentsToolLibrary
         throws IOException
     {
         var project = aContext.getProject();
-        var sessionOwner = userService.get(aContext.getSessionOwner());
+        var sessionOwner = aContext.getSessionOwner();
         var documents = documentService.listAnnotatableDocuments(project, sessionOwner);
 
         var payload = documents.keySet().stream() //
@@ -140,7 +140,7 @@ public class DocumentsToolLibrary
         var startLine = Math.min(aStartLine, aEndLine);
         var endLine = Math.max(aStartLine, aEndLine);
 
-        var sessionOwner = userService.get(aContext.getSessionOwner());
+        var sessionOwner = aContext.getSessionOwner();
         var documents = documentService.listAnnotatableDocuments(project, sessionOwner);
 
         var docName = defaultIfBlank(aDocumentName, aContext.getDocument().getName());

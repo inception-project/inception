@@ -28,3 +28,4 @@ local/
 .asciidoctorconfig.adoc
 outdated-packages-report.txt
 outdated-packages-summary.txt
+PLAN.md

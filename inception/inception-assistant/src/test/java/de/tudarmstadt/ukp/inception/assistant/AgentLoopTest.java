@@ -37,6 +37,7 @@ import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.Encoding;
 import com.knuddels.jtokkit.api.EncodingRegistry;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantDocumentIndexPropertiesImpl;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantPropertiesImpl;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
@@ -54,6 +55,7 @@ class AgentLoopTest
     private AssistantPropertiesImpl props;
     private Memory memory;
     private Encoding encoding;
+    private User user;
 
     @BeforeAll
     static void checkIfOllamaIsRunning()
@@ -72,12 +74,14 @@ class AgentLoopTest
                 .orElseThrow(() -> new IllegalStateException("Unknown encoding"));
 
         memory = new Memory();
+
+        user = User.builder().withUsername("integration-test").build();
     }
 
     @Test
     void chatAgainstOllama() throws Exception
     {
-        var sut = new AgentLoop(props, client, "integration-test", null, memory, encoding);
+        var sut = new AgentLoop(props, client, user, null, memory, encoding);
 
         var input = List.of(MTextMessage.builder() //
                 .withContent("Hello") //
@@ -99,7 +103,7 @@ class AgentLoopTest
     {
         // Setup AgentLoop with ClockToolLibrary
         props.getChat().setCapabilities(Set.of("tools"));
-        var sut = new AgentLoop(props, client, "integration-test", null, memory, encoding);
+        var sut = new AgentLoop(props, client, user, null, memory, encoding);
         sut.addToolLibrary(new ClockToolLibrary());
         sut.setToolCallingEnabled(true);
 
@@ -129,7 +133,7 @@ class AgentLoopTest
         assertThat(toolCall.method().getName()).isEqualTo("getTime");
 
         // Invoke the tool and verify result structure
-        var result = toolCall.invoke("integration-test", null, null, null, null);
+        var result = toolCall.invoke(user, null, null, null, null);
         assertThat(result).isInstanceOf(Map.class);
 
         @SuppressWarnings("unchecked")
@@ -158,7 +162,7 @@ class AgentLoopTest
                 .withActor("tester") //
                 .build();
 
-        var sut = new AgentLoop(props, client, "integration-test", null, memory, encoding);
+        var sut = new AgentLoop(props, client, user, null, memory, encoding);
 
         sut.loop(null, "integration-test", message);
 

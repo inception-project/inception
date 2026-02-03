@@ -111,13 +111,14 @@ public class CheckAnnotationTask
             }
 
             var inquiryMsgId = UUID.randomUUID();
-            var sessionOwner = getSessionOwner().get().getUsername();
-            assistantService.dispatchMessage(sessionOwner, getProject(), MTextMessage.builder() //
-                    .withId(inquiryMsgId) //
-                    .withActor(getSessionOwner().get().getUiName()) //
-                    .withRole(USER) //
-                    .notDone() //
-                    .build());
+            var sessionOwner = getSessionOwner().get();
+            assistantService.dispatchMessage(sessionOwner.getUsername(), getProject(),
+                    MTextMessage.builder() //
+                            .withId(inquiryMsgId) //
+                            .withActor(getSessionOwner().get().getUiName()) //
+                            .withRole(USER) //
+                            .notDone() //
+                            .build());
 
             var instance = annotationToJson(ann, contextSentence);
 

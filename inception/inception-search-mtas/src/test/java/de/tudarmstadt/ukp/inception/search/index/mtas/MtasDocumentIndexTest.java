@@ -31,7 +31,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasBuilder;
@@ -96,7 +95,6 @@ import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoCon
 import de.tudarmstadt.ukp.inception.search.LayerStatistics;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
-import de.tudarmstadt.ukp.inception.search.StatisticsResult;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
@@ -335,7 +333,7 @@ class MtasDocumentIndexTest
                 aUser);
 
         // Write annotated CAS to annotated document
-        try (CasStorageSession casStorageSession = CasStorageSession.open()) {
+        try (var casStorageSession = CasStorageSession.open()) {
             LOG.info("Writing annotated document using documentService.writeAnnotationCas");
             documentService.writeAnnotationCas(jCas.getCas(), annotationDocument);
         }
@@ -688,7 +686,7 @@ class MtasDocumentIndexTest
         var statsResults = searchService.getProjectStatistics(user, project, minTokenPerDoc,
                 maxTokenPerDoc, features);
 
-        Map<String, LayerStatistics> expectedResults = new HashMap<String, LayerStatistics>();
+        var expectedResults = new HashMap<String, LayerStatistics>();
 
         var expectedNamedEntity = new LayerStatistics(2.0, 2.0, 0.0, 1.0, 1.0, Math.pow(2, 0.5),
                 2.0, 2.0, 0.0, 1.0, 1.0, Math.pow(2, 0.5), 2.0);
@@ -711,9 +709,9 @@ class MtasDocumentIndexTest
         assertThat(statsResults.getResults()).containsAllEntriesOf(expectedResults);
 
         // Check query-based statistics
-        String query = "moon";
+        var query = "moon";
 
-        StatisticsResult queryStatsResults = searchService.getQueryStatistics(user, project, query,
+        var queryStatsResults = searchService.getQueryStatistics(user, project, query,
                 minTokenPerDoc, maxTokenPerDoc, features);
 
         var expected = new HashMap<String, LayerStatistics>();

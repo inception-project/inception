@@ -208,14 +208,14 @@ public class AssistantServiceImpl
     }
 
     @Override
-    public MTextMessage processInternalMessageSync(String aSessionOwner, Project aProject,
+    public MTextMessage processInternalMessageSync(User aSessionOwner, Project aProject,
             MTextMessage aMessage)
         throws IOException
     {
         Validate.isTrue(aMessage.internal());
 
         try {
-            var memory = memoryManager.getMemory(aSessionOwner, aProject);
+            var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
             var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
                     getEncoding());
             assistant.setSystemMessages(generateSystemMessages(aProject));
@@ -237,17 +237,17 @@ public class AssistantServiceImpl
     }
 
     @Override
-    public <T> MCallResponse<T> processInternalCallSync(String aSessionOwner, Project aProject,
+    public <T> MCallResponse<T> processInternalCallSync(User aSessionOwner, Project aProject,
             Class<T> aType, MTextMessage aMessage)
         throws IOException
     {
         Validate.isTrue(aMessage.internal());
 
-        var memory = memoryManager.getMemory(aSessionOwner, aProject);
+        var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
 
         if (memory.isDebugMode()) {
             memory.recordMessage(aMessage);
-            dispatchMessage(aSessionOwner, aProject, aMessage);
+            dispatchMessage(aSessionOwner.getUsername(), aProject, aMessage);
         }
 
         var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
@@ -256,7 +256,7 @@ public class AssistantServiceImpl
         assistant.setMessageStreamHandler(this::handleStreamedMessageFragment);
         var result = assistant.call(aType, asList(aMessage));
 
-        if (isDebugMode(aSessionOwner, aProject)) {
+        if (isDebugMode(aSessionOwner.getUsername(), aProject)) {
             var resultMessage = MTextMessage.builder() //
                     .withRole(SYSTEM).internal().ephemeral() //
                     .withActor(aMessage.actor()) //
@@ -264,18 +264,18 @@ public class AssistantServiceImpl
                     .withPerformance(result.performance()) //
                     .build();
             memory.recordMessage(resultMessage);
-            dispatchMessage(aSessionOwner, aProject, resultMessage);
+            dispatchMessage(aSessionOwner.getUsername(), aProject, resultMessage);
         }
 
         return result;
     }
 
     @Override
-    public void processInternalMessage(String aSessionOwner, Project aProject,
+    public void processInternalMessage(User aSessionOwner, Project aProject,
             SourceDocument aDocument, String aDataOwner, MTextMessage aMessage,
             MTextMessage... aContextMessages)
     {
-        var memory = memoryManager.getMemory(aSessionOwner, aProject);
+        var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
         var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
                 getEncoding());
         assistant.setIgnoreMemory(true);
@@ -288,22 +288,22 @@ public class AssistantServiceImpl
             assistant.loop(aDocument, aDataOwner, aMessage);
         }
         catch (Exception e) {
-            handleAsyncException(aSessionOwner, aProject, e);
+            handleAsyncException(aSessionOwner.getUsername(), aProject, e);
         }
     }
 
     @Override
-    public void processUserMessage(String aSessionOwner, Project aProject, SourceDocument aDocument,
+    public void processUserMessage(User aSessionOwner, Project aProject, SourceDocument aDocument,
             String aDataOwner, MTextMessage aMessage)
     {
-        var memory = memoryManager.getMemory(aSessionOwner, aProject);
+        var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
         var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
                 getEncoding());
         assistant.setSystemMessages(generateSystemMessages(aProject));
         assistant.setEphemeralMessages(generateEphemeralMessages(aProject, aMessage));
         assistant.setMessageStreamHandler(this::handleStreamedMessageFragment);
-        assistant
-                .setCommandDispatcher(command -> dispatchMessage(aSessionOwner, aProject, command));
+        assistant.setCommandDispatcher(
+                command -> dispatchMessage(aSessionOwner.getUsername(), aProject, command));
 
         toolLibraryExtensionPoint.getExtensions(aProject).forEach(toolLibrary -> {
             assistant.addToolLibrary(toolLibrary);
@@ -313,7 +313,7 @@ public class AssistantServiceImpl
             assistant.loop(aDocument, aDataOwner, aMessage);
         }
         catch (Exception e) {
-            handleAsyncException(aSessionOwner, aProject, e);
+            handleAsyncException(aSessionOwner.getUsername(), aProject, e);
         }
     }
 

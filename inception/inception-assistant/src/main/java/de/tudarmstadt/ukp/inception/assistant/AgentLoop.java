@@ -55,6 +55,7 @@ import com.knuddels.jtokkit.api.Encoding;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantChatProperties;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.model.MCallResponse;
@@ -100,7 +101,7 @@ public class AgentLoop
 
     private final AssistantProperties properties;
     private final OllamaClient ollamaClient;
-    private final String sessionOwner;
+    private final User sessionOwner;
     private final Project project;
     private final List<ToolLibrary> tools = new ArrayList<>();
     private final Memory memory;
@@ -127,7 +128,7 @@ public class AgentLoop
     }
 
     public AgentLoop(AssistantProperties aProperties, OllamaClient aOllamaClient,
-            String aSessionOwner, Project aProject, Memory aMemory, Encoding aEncoding)
+            User aSessionOwner, Project aProject, Memory aMemory, Encoding aEncoding)
     {
         properties = aProperties;
         ollamaClient = aOllamaClient;
@@ -178,7 +179,8 @@ public class AgentLoop
         memory.recordMessage(aMessage);
 
         if (messageStreamHandler != null) {
-            messageStreamHandler.handleMessage(sessionOwner, project, UUID.randomUUID(), aMessage);
+            messageStreamHandler.handleMessage(sessionOwner.getUsername(), project,
+                    UUID.randomUUID(), aMessage);
         }
     }
 
@@ -207,7 +209,7 @@ public class AgentLoop
         return project;
     }
 
-    public String getSessionOwner()
+    public User getSessionOwner()
     {
         return sessionOwner;
     }
@@ -439,7 +441,8 @@ public class AgentLoop
             if (message instanceof MTextMessage textMessage && textMessage.done()) {
                 message = textMessage.withoutContent();
             }
-            messageStreamHandler.handleMessage(sessionOwner, project, aResponseId, message);
+            messageStreamHandler.handleMessage(sessionOwner.getUsername(), project, aResponseId,
+                    message);
         }
     }
 
@@ -466,7 +469,7 @@ public class AgentLoop
                 .withRole(ASSISTANT);
     }
 
-    MChatMessage callTool(String aSessionOwner, Project aProject, SourceDocument aDocument,
+    MChatMessage callTool(User aSessionOwner, Project aProject, SourceDocument aDocument,
             String aDataOwner, MChatMessage aContext, MToolCall call)
     {
         try {

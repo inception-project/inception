@@ -73,7 +73,6 @@ import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAut
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.config.ToolLibraryAutoConfiguration;
-import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.test.websocket.WebSocketStompTestClient;
@@ -93,7 +92,6 @@ import jakarta.persistence.EntityManager;
 @SpringBootApplication( //
         exclude = { //
                 AssistantToolsAutoConfiguration.class, //
-                SearchServiceAutoConfiguration.class, //
                 WorkloadManagementAutoConfiguration.class })
 @ImportAutoConfiguration({ //
         EventLoggingAutoConfiguration.class, //
