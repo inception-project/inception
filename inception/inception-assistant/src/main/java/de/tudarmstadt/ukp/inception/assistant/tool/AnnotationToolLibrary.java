@@ -266,10 +266,10 @@ public class AnnotationToolLibrary
             message.append(".\n\nFailed specs (no matches found):");
             for (var spec : failedSpecs) {
                 message.append("\n- text: \"").append(spec.text()).append("\"");
-                if (!spec.before().isEmpty()) {
+                if (isNotBlank(spec.before())) {
                     message.append(", before: \"").append(spec.before()).append("\"");
                 }
-                if (!spec.after().isEmpty()) {
+                if (isNotBlank(spec.after())) {
                     message.append(", after: \"").append(spec.after()).append("\"");
                 }
                 message.append(", label: \"").append(spec.label()).append("\"");
@@ -280,7 +280,7 @@ public class AnnotationToolLibrary
         }
 
         return MCallResponse.builder(String.class) //
-                .withActor("Annotated " + aSuggestions.size() + " spans")
+                .withActor("Annotated " + newSuggestions.size() + " spans")
                 .withPayload(message.toString());
     }
 

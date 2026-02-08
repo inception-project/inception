@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.assistant.CommandDispatcher;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationEditorContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolUtils;
@@ -40,7 +41,7 @@ public record MToolCall(String actor, @JsonIgnore Object instance, @JsonIgnore M
                 new LinkedHashMap<>(builder.arguments));
     }
 
-    public Object invoke(String aSessionOwner, Project aProject, SourceDocument aDocument,
+    public Object invoke(User aSessionOwner, Project aProject, SourceDocument aDocument,
             String aDataOwner, CommandDispatcher aCommandDispatcher)
         throws Exception
     {

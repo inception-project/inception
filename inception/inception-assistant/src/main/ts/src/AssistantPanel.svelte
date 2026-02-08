@@ -437,7 +437,10 @@
 
         for (let refNum in usedReferences) {
             const reference = usedReferences[refNum];
-            text += `\n[^${refNum}]: ${reference.documentName} (score: ${reference.score.toFixed(4)})`;
+            text += `\n[^${refNum}]: ${reference.documentName}`
+            if (Number.isFinite(reference.score)) {
+                text += ` (score: ${reference.score.toFixed(4)})`;
+            }
         }
 
         navigator.clipboard.writeText(text).then(
@@ -528,7 +531,12 @@
                 const refNum = message.references.findIndex(refSelector) + 1;
 
                 if (reference) {
-                    return `${dots}<span class="reference badge rounded-pill text-bg-secondary mx-1" data-msg="${message.id}" data-ref="${reference.id}" title="${escapeXML(reference.documentName)} (score: ${reference.score.toFixed(4)})">${refNum}</span>`;
+                    const hasValidScore = Number.isFinite(reference.score);
+                    const title = hasValidScore 
+                        ? `${escapeXML(reference.documentName)} (score: ${reference.score.toFixed(4)})`
+                        : escapeXML(reference.documentName);
+                    
+                    return `${dots}<span class="reference badge rounded-pill text-bg-secondary mx-1" data-msg="${message.id}" data-ref="${reference.id}" title="${title}">${refNum}</span>`;
                 }
 
                 return match;

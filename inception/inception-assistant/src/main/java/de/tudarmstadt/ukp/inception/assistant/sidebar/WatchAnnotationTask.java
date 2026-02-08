@@ -120,9 +120,8 @@ public class WatchAnnotationTask
                             "```")) //
                     .build();
 
-            var checkResult = assistantService.processInternalCallSync(
-                    getSessionOwner().get().getUsername(), getProject(), BooleanQuestion.class,
-                    checkQuestion);
+            var checkResult = assistantService.processInternalCallSync(getSessionOwner().get(),
+                    getProject(), BooleanQuestion.class, checkQuestion);
 
             if (checkResult.payload().answer()) {
                 return;
@@ -142,8 +141,8 @@ public class WatchAnnotationTask
                             "```")) //
                     .build();
 
-            assistantService.processInternalMessage(getSessionOwner().get().getUsername(),
-                    getProject(), document, dataOwner, inquiryContext);
+            assistantService.processInternalMessage(getSessionOwner().get(), getProject(), document,
+                    dataOwner, inquiryContext);
         }
     }
 
