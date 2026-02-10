@@ -37,5 +37,10 @@ The current draft specification of the format is available link:https://github.c
 | yes
 | yes
 | All built-in and custom layers
+
+| link:https://github.com/apache/uima-uimaj-io-jsoncas/blob/main/SPECIFICATION.adoc[UIMA CAS JSON 0.4.0 (XML/PDF structure)] (`jsoncas-struct`)
+| no
+| yes
+| All built-in and custom layers
 |====
 
