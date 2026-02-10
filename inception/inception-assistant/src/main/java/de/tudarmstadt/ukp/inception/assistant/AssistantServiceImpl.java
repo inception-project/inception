@@ -22,14 +22,12 @@ import static de.tudarmstadt.ukp.inception.assistant.config.AssistantChatPropert
 import static de.tudarmstadt.ukp.inception.assistant.config.AssistantChatProperties.CAP_TOOLS;
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonString;
-import static java.lang.Math.floorDiv;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -356,8 +354,12 @@ public class AssistantServiceImpl
                 "You are a helpful assistant within the annotation tool INCEpTION.",
                 "INCEpTION always refers to the annotation tool, never anything else such as the movie.",
                 "Do not include references to INCEpTION unless the user explicitly asks about the environment itself.",
-                "When reasoning, you must explicitly state the exact name of the tool you intend to call. "
-                        + "Do not say 'I will read the file'. Say 'I will call read_document to read the file'.");
+                "Format your responses using markdown.",
+                "DO NOT use markdown tables because the chat window is rather narrow and tables are hard to read."
+        // "When reasoning, you must explicitly state the exact name of the tool you intend to call.
+        // "
+        // + "Do not say 'I will read the file'. Say 'I will call read_document to read the file'."
+        );
 
         // If you use information from the user manual in your response, prepend it with
         // "According to the user manual".
@@ -388,95 +390,6 @@ public class AssistantServiceImpl
                 .withRole(SYSTEM).internal().ephemeral() //
                 .withContent(join("\n\n", primeDirectives)) //
                 .build());
-    }
-
-    private List<MChatMessage> limitConversationToContextLength(List<MTextMessage> aSystemMessages,
-            List<? extends MChatMessage> aEphemeralMessages,
-            List<? extends MChatMessage> aRecentMessages, MTextMessage aLatestUserMessage,
-            int aContextLength)
-        throws IOException
-    {
-        var encoding = getEncoding();
-        var limit = floorDiv(aContextLength * 90, 100);
-
-        var headMessages = new ArrayList<MChatMessage>();
-        var tailMessages = new LinkedList<MChatMessage>();
-
-        var totalMessages = aSystemMessages.size() + aEphemeralMessages.size()
-                + aRecentMessages.size() + 1;
-        var allTokens = 0;
-        var systemTokens = 0;
-        var recentTokens = 0;
-        var ephemeralTokens = 0;
-
-        // System prompts from the start as context limit allows
-        var systemMsgIterator = aSystemMessages.iterator();
-
-        while (systemMsgIterator.hasNext() && allTokens < limit) {
-            var msg = systemMsgIterator.next();
-            if (SYSTEM.equals(msg.role())) {
-                var msgTokens = encoding.countTokensOrdinary(msg.content());
-                if (allTokens + msgTokens > limit) {
-                    LOG.trace("System message exceeds remaining token limit ({}): [{}]", msgTokens,
-                            msg.content());
-                    continue;
-                }
-
-                allTokens += msgTokens;
-                systemTokens += msgTokens;
-                headMessages.add(msg);
-            }
-        }
-
-        // Unconditionally the latest user message
-        if (aLatestUserMessage != null) {
-            var latestUserMsgTokens = encoding.countTokensOrdinary(aLatestUserMessage.content());
-            recentTokens += latestUserMsgTokens;
-            allTokens += latestUserMsgTokens;
-            tailMessages.addLast(aLatestUserMessage);
-        }
-
-        // Add ephemeral messages as context limit allows
-        var ephemeralMsgIterator = aEphemeralMessages.listIterator(aEphemeralMessages.size());
-        while (ephemeralMsgIterator.hasPrevious() && allTokens < limit) {
-            var msg = ephemeralMsgIterator.previous();
-            var textRepresentation = msg.textRepresentation();
-            var msgTokens = encoding.countTokensOrdinary(textRepresentation);
-            if (allTokens + msgTokens > limit) {
-                LOG.trace("Ephemeral message exceeds remaining token limit ({}): [{}]", msgTokens,
-                        textRepresentation);
-                continue;
-            }
-
-            allTokens += msgTokens;
-            ephemeralTokens += msgTokens;
-            tailMessages.addFirst(msg);
-        }
-
-        // Add most recent user/assistant conversation as context limit allows
-        var recentMsgIterator = aRecentMessages.listIterator(aRecentMessages.size());
-        while (recentMsgIterator.hasPrevious() && allTokens < limit) {
-            var msg = recentMsgIterator.previous();
-            var textRepresentation = msg.textRepresentation();
-            var msgTokens = encoding.countTokensOrdinary(textRepresentation);
-            if (allTokens + msgTokens > limit) {
-                break;
-            }
-
-            allTokens += msgTokens;
-            recentTokens += msgTokens;
-            tailMessages.addFirst(msg);
-        }
-
-        var allMessages = new ArrayList<>(headMessages);
-        allMessages.addAll(tailMessages);
-
-        LOG.trace(
-                "Reduced from {} to {} messages with a total of {} / {} tokens (system: {}, ephemeral: {}, recent: {} )",
-                totalMessages, headMessages.size() + tailMessages.size(), allTokens, limit,
-                systemTokens, ephemeralTokens, recentTokens);
-
-        return allMessages;
     }
 
     @SuppressWarnings({ "unchecked" })

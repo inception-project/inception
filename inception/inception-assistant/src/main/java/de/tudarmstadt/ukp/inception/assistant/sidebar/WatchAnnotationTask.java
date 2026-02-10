@@ -26,10 +26,8 @@ import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonStr
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static java.lang.String.join;
 import static java.util.Objects.requireNonNull;
-import static org.apache.commons.lang3.StringUtils.normalizeSpace;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.Objects;
 
 import org.apache.commons.lang3.Validate;
@@ -148,27 +146,9 @@ public class WatchAnnotationTask
 
     private String annotationToJson(Annotation aAnnotation, Annotation aContext) throws IOException
     {
-        var instance = new LinkedHashMap<String, Object>();
-
-        instance.put("span", normalizeSpace(aAnnotation.getCoveredText()));
-
-        var docText = aAnnotation.getCAS().getDocumentText();
-        var context = docText.substring(aContext.getBegin(), aAnnotation.getBegin()) //
-                + " <span> " //
-                + aAnnotation.getCoveredText() //
-                + " </span> " //
-                + docText.substring(aAnnotation.getEnd(), aContext.getEnd());
-        instance.put("context", normalizeSpace(context));
-
         var adapter = schemaService.findAdapter(getProject(), aAnnotation);
-        var attributes = new LinkedHashMap<String, String>();
-        for (var feature : adapter.listFeatures()) {
-            attributes.put(normalizeSpace(feature.getUiName()),
-                    normalizeSpace(adapter.getFeatureValue(feature, aAnnotation)));
-        }
-        instance.put("annotation", attributes);
-
-        return toPrettyJsonString(instance);
+        var obj = adapter.annotationAsObject(aAnnotation, aContext);
+        return toPrettyJsonString(obj);
     }
 
     private static record BooleanQuestion(@JsonProperty(required = true) boolean answer) {};

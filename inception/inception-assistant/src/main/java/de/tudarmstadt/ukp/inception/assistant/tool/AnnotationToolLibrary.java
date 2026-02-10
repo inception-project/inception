@@ -21,8 +21,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.assistant.AssistantPredictionSources.ASSISTANT_SOURCE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.NEW_ID;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonString;
 import static java.lang.Character.isWhitespace;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.String.join;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.util.lang.Objects.defaultIfNull;
 
@@ -30,14 +35,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
+
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.assistant.CommandDispatcher;
 import de.tudarmstadt.ukp.inception.assistant.model.MCallResponse;
+import de.tudarmstadt.ukp.inception.assistant.model.MReference;
 import de.tudarmstadt.ukp.inception.assistant.model.MRefreshCommand;
 import de.tudarmstadt.ukp.inception.assistant.recommender.AssistantRecommenderFactory;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -61,6 +73,15 @@ public class AnnotationToolLibrary
             Creates span annotation suggestions.
             Suggestions appear in the editor for the user to review and accept or reject. \
             Use this when the user asks you to annotate, mark, or identify entities, mentions, or spans of text.
+
+            Omit the parameter `document` unless the user explicitly asks for a specific document.
+            The parameter `layer` name must match one of the available annotation layers in the project schema.
+            """;
+
+    private static final String READ_ANNOTATIONS_DESCRIPTION = """
+            Reads annotations.
+            Use this when you need to read existing annotations, e.g. when you need examples for few-shot in-context learning.
+            You can read at most 100 annotations at a time.
 
             Omit the parameter `document` unless the user explicitly asks for a specific document.
             The parameter `layer` name must match one of the available annotation layers in the project schema.
@@ -152,6 +173,103 @@ public class AnnotationToolLibrary
     }
 
     @Tool( //
+            value = "read_annotations", //
+            actor = "Read annotations", //
+            description = READ_ANNOTATIONS_DESCRIPTION)
+    public MCallResponse.Builder<String> readAnnotations( //
+            AnnotationEditorContext aContext,
+            @ToolParam(value = "document", description = "Name of the document (optional)") String aDocumentName,
+            @ToolParam(value = "layer", description = "Name of the annotation layer") String aLayer, //
+            @ToolParam(value = "feature", description = "Name of the annotation feature (optional)") String aFeatureName,
+            @ToolParam(value = "start_index", description = "First annotation to read (1-based)") int aStartIndex,
+            @ToolParam(value = "end_index", description = "Last annotation to read (1-based)") int aEndIndex)
+        throws IOException
+    {
+        if (aStartIndex < 1) {
+            return MCallResponse.builder(String.class)
+                    .withPayload("Error: The 'start_line' parameter must be >= 1.");
+        }
+
+        if (aEndIndex < 1) {
+            return MCallResponse.builder(String.class)
+                    .withPayload("Error: The 'end_line' parameter must be >= 1.");
+        }
+
+        var project = aContext.getProject();
+
+        var sessionOwner = aContext.getSessionOwner();
+        var documents = documentService.listAnnotatableDocuments(project, sessionOwner);
+
+        var docName = defaultIfBlank(aDocumentName, aContext.getDocument().getName());
+
+        var doc = documents.keySet().stream() //
+                .filter(d -> d.getName().equals(docName)) //
+                .findFirst();
+
+        // Safeguard to ensure the session owner has access to the document
+        if (doc.isEmpty()) {
+            return MCallResponse.builder(String.class).withPayload(
+                    "Error: Document [" + docName + "] does not exist in the project.");
+        }
+
+        var layer = schemaService.findLayer(project, aLayer);
+        var adapter = schemaService.getAdapter(layer);
+
+        try (var session = CasStorageSession.openNested()) {
+            var cas = documentService.readAnnotationCas(doc.get(),
+                    AnnotationSet.forUser(aContext.getDataOwner()), AUTO_CAS_UPGRADE,
+                    SHARED_READ_ONLY_ACCESS);
+            var type = adapter.getAnnotationType(cas);
+            var annotations = type.map(t -> cas.<Annotation> select(t).asList())
+                    .orElse(emptyList());
+            var totalAnnotations = annotations.size();
+            var startIndex = max(0, min(aStartIndex - 1, totalAnnotations));
+            var endIndex = max(startIndex, min(aEndIndex, totalAnnotations));
+            if ((endIndex - startIndex + 1) > 100) {
+                endIndex = startIndex + 100 - 1;
+            }
+            annotations = annotations.subList(startIndex, endIndex);
+
+            var rendered = new ArrayList<String>();
+            var references = new ArrayList<MReference>();
+            for (var ann : annotations) {
+                var contextSentence = cas.select(Sentence.class).covering(ann).nullOK().get();
+                var ctx = contextSentence != null ? (AnnotationFS) contextSentence : ann;
+
+                var ref = MReference.builder() //
+                        .withId(UUID.randomUUID().toString().substring(0, 8)) //
+                        .withDocumentId(doc.get().getId()) //
+                        .withDocumentName(doc.get().getName()) //
+                        .withBegin(ann.getBegin()) //
+                        .withEnd(ann.getEnd()) //
+                        .build();
+
+                var repr = adapter.annotationAsObject(ann, ctx);
+                repr.setId(ref.toString());
+
+                if (isNotBlank(aFeatureName)) {
+                    repr.keepFeatureValues(aFeatureName);
+                }
+
+                rendered.add(toPrettyJsonString(repr));
+                references.add(ref);
+
+            }
+
+            return MCallResponse.builder(String.class) //
+                    .withActor("Read " + layer.getUiName() + " (" + (startIndex + 1) + "-"
+                            + (startIndex + annotations.size()) + " of " + totalAnnotations + ")")
+                    .withReferences(references) //
+                    .withPayload("---\n" + //
+                            "total_annotations: " + totalAnnotations + "\n" + //
+                            "start_index: " + (startIndex + 1) + "\n" + //
+                            "end_index: " + (startIndex + annotations.size()) + "\n" + //
+                            "---\n" + //
+                            join("\n", rendered));
+        }
+    }
+
+    @Tool( //
             value = "create_span_suggestions", //
             actor = "AI Assistant", //
             description = CREATE_SPAN_SUGGESTIONS_DESCRIPTION)
@@ -161,6 +279,7 @@ public class AnnotationToolLibrary
             @ToolParam(value = "document", description = "Name of the document to read (optional)") String aDocumentName,
             @ToolParam(value = "layer", description = "Name of the annotation layer") //
             String aLayerName, //
+            @ToolParam(value = "feature", description = "Name of the annotation feature") String aFeatureName,
             @ToolParam(value = "suggestions", description = //
             "List of span suggestions with the fields `text`, `before` (for context before), " //
                     + "`after` (for context after) and `label`. " //
@@ -197,6 +316,14 @@ public class AnnotationToolLibrary
 
         // Get or create the assistant recommender for this layer
         var recommender = getOrCreateAssistantRecommender(project, layer);
+
+        // Resolve the requested feature (mandatory)
+        var maybeFeature = schemaService.getFeature(layer.getId(), aFeatureName);
+        if (maybeFeature.isEmpty()) {
+            return MCallResponse.builder(String.class).withPayload(
+                    "Feature [" + aFeatureName + "] not found in layer [" + aLayerName + "]");
+        }
+        var feature = maybeFeature.get();
 
         // Get predecessor predictions for inheritance
         var activePredictions = recommendationService.getPredictions(sessionOwner, project,
@@ -235,6 +362,7 @@ public class AnnotationToolLibrary
                         .withGeneration(predictions.getGeneration()) //
                         .withRecommender(recommender) //
                         .withDocument(document) //
+                        .withFeature(feature) //
                         .withPosition(new Offset(range.getBegin(), range.getEnd())) //
                         .withLabel(spec.label()) //
                         .build());
@@ -350,7 +478,7 @@ public class AnnotationToolLibrary
 
         var leftContext = defaultIfNull(aMatch.before(), "");
         var rightContext = defaultIfNull(aMatch.after(), "");
-        var stepSize = Math.max(aStepSize, 1);
+        var stepSize = max(aStepSize, 1);
 
         // 2. Find all initial raw candidates with whitespace normalization and word boundaries
         var candidateRanges = new ArrayList<Range>();
@@ -436,7 +564,7 @@ public class AnnotationToolLibrary
         // (that candidate might not match the context)
 
         // 3. Stepwise Disambiguation Loop
-        int maxLen = Math.max(leftContext.length(), rightContext.length());
+        int maxLen = max(leftContext.length(), rightContext.length());
         int currentLen = stepSize;
 
         // Loop while we have candidates AND we haven't exhausted matchable context
@@ -449,7 +577,7 @@ public class AnnotationToolLibrary
             // e.g., if Left="Hello World", len=3, we want "rld".
             String partialLeft = "";
             if (!leftContext.isEmpty()) {
-                int startIdx = Math.max(0, leftContext.length() - currentLen);
+                int startIdx = max(0, leftContext.length() - currentLen);
                 partialLeft = leftContext.substring(startIdx);
             }
 
@@ -457,7 +585,7 @@ public class AnnotationToolLibrary
             // e.g., if Right="Hello World", len=3, we want "Hel".
             String partialRight = "";
             if (!rightContext.isEmpty()) {
-                int endIdx = Math.min(rightContext.length(), currentLen);
+                int endIdx = min(rightContext.length(), currentLen);
                 partialRight = rightContext.substring(0, endIdx);
             }
 
