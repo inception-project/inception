@@ -35,7 +35,6 @@ import org.springframework.security.saml2.provider.service.authentication.OpenSa
 import org.springframework.security.saml2.provider.service.metadata.OpenSaml5MetadataResolver;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.web.DefaultRelyingPartyRegistrationResolver;
-import org.springframework.security.saml2.provider.service.web.RelyingPartyRegistrationResolver;
 import org.springframework.security.saml2.provider.service.web.Saml2MetadataFilter;
 import org.springframework.security.saml2.provider.service.web.authentication.Saml2WebSsoAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -100,10 +99,10 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
         }
 
         if (aRelyingPartyRegistrationRepository.isPresent()) {
-            RelyingPartyRegistrationResolver relyingPartyRegistrationResolver = //
+            var relyingPartyRegistrationResolver = //
                     new DefaultRelyingPartyRegistrationResolver(
                             aRelyingPartyRegistrationRepository.get());
-            Saml2MetadataFilter filter = new Saml2MetadataFilter(relyingPartyRegistrationResolver,
+            var filter = new Saml2MetadataFilter(relyingPartyRegistrationResolver,
                     new OpenSaml5MetadataResolver());
             aHttp.addFilterBefore(filter, Saml2WebSsoAuthenticationFilter.class);
 
