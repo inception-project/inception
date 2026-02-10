@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.assistant.tool;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.join;
 import static org.apache.commons.lang3.ArrayUtils.subarray;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
@@ -41,6 +43,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolParam;
 public class DocumentsToolLibrary
     implements ToolLibrary
 {
+    private static final int READ_DOCUMENT_CHARACTER_LIMIT = 64_000;
+
     private static final String GET_CURRENT_DOCUMENT_TOOL_DESCRIPTION = """
             Get the name of the current document.
             """;
@@ -51,6 +55,8 @@ public class DocumentsToolLibrary
 
     private static final String READ_DOCUMENT_TOOL_DESCRIPTION = """
             Read lines from a document.
+            You can read at most 200 lines at a time.
+
             Omit the parameter `document` unless the user explicitly asks for a specific document.
             """;
 
@@ -121,8 +127,8 @@ public class DocumentsToolLibrary
     public MCallResponse.Builder<String> readDocument( //
             AnnotationEditorContext aContext,
             @ToolParam(value = "document", description = "Name of the document to read (optional)") String aDocumentName,
-            @ToolParam(value = "start_line", description = "First line to read (1-indexed)") int aStartLine,
-            @ToolParam(value = "end_line", description = "Last line to read (1-indexed)") int aEndLine)
+            @ToolParam(value = "start_line", description = "First line to read (1-based)") int aStartLine,
+            @ToolParam(value = "end_line", description = "Last line to read (1-based)") int aEndLine)
         throws IOException
     {
         if (aStartLine < 1) {
@@ -137,8 +143,12 @@ public class DocumentsToolLibrary
 
         var project = aContext.getProject();
 
-        var startLine = Math.min(aStartLine, aEndLine);
-        var endLine = Math.max(aStartLine, aEndLine);
+        var startLine = min(aStartLine, aEndLine);
+        var endLine = max(aStartLine, aEndLine);
+
+        if (endLine - startLine + 1 > 200) {
+            endLine = startLine + 200 - 1;
+        }
 
         var sessionOwner = aContext.getSessionOwner();
         var documents = documentService.listAnnotatableDocuments(project, sessionOwner);
@@ -161,6 +171,11 @@ public class DocumentsToolLibrary
             var lines = cas.getDocumentText().split("\\r?\\n|\\r");
             var totalLines = lines.length;
             lines = subarray(lines, startLine - 1, endLine);
+            var joinedLines = join("\n", lines);
+            if (joinedLines.length() > READ_DOCUMENT_CHARACTER_LIMIT) {
+                joinedLines = "ERROR: Selected lines exceed the limit of "
+                        + READ_DOCUMENT_CHARACTER_LIMIT + " characters. Try reading fewer lines.";
+            }
             return MCallResponse.builder(String.class) //
                     .withActor("Read " + docName + " (lines " + startLine + "-"
                             + (startLine + lines.length - 1) + " of " + totalLines + ")")
@@ -169,7 +184,7 @@ public class DocumentsToolLibrary
                             "start_line: " + startLine + "\n" + //
                             "end_line: " + (startLine + lines.length - 1) + "\n" + //
                             "---\n" + //
-                            join("\n", lines));
+                            joinedLines);
         }
     }
 }

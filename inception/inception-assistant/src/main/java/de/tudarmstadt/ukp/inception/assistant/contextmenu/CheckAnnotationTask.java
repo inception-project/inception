@@ -27,11 +27,8 @@ import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonStr
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static java.lang.String.join;
 import static java.util.Objects.requireNonNull;
-import static org.apache.commons.lang3.StringUtils.normalizeSpace;
-import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -167,33 +164,9 @@ public class CheckAnnotationTask
 
     private String annotationToJson(Annotation aAnnotation, Annotation aContext) throws IOException
     {
-        var instance = new LinkedHashMap<String, Object>();
-
-        instance.put("span", normalizeSpace(aAnnotation.getCoveredText()));
-
-        var docText = aAnnotation.getCAS().getDocumentText();
-        var context = docText.substring(aContext.getBegin(), aAnnotation.getBegin()) //
-                + " <span> " //
-                + aAnnotation.getCoveredText() //
-                + " </span> " //
-                + docText.substring(aAnnotation.getEnd(), aContext.getEnd());
-        instance.put("context", normalizeSpace(context));
-
         var adapter = schemaService.findAdapter(getProject(), aAnnotation);
-        var attributes = new LinkedHashMap<String, Object>();
-        for (var feature : adapter.listFeatures()) {
-            if (TYPE_NAME_BOOLEAN.equals(feature.getType())) {
-                attributes.put(normalizeSpace(feature.getUiName()),
-                        adapter.getFeatureValue(feature, aAnnotation));
-                continue;
-            }
-
-            attributes.put(normalizeSpace(feature.getUiName()),
-                    normalizeSpace(adapter.renderFeatureValue(aAnnotation, feature.getName())));
-        }
-        instance.put("annotation", attributes);
-
-        return toPrettyJsonString(instance);
+        var obj = adapter.annotationAsObject(aAnnotation, aContext);
+        return toPrettyJsonString(obj);
     }
 
     public static Builder<Builder<?>> builder()

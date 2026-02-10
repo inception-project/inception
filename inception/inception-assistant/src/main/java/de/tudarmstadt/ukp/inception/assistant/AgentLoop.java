@@ -81,7 +81,7 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 /**
  * The {@code AgentLoop} class manages the main interaction loop for an AI agent within the
  * assistant framework. It coordinates the flow of messages between the user, the agent, and
- * external tools, handling the lifecycle of agent interactions.
+ * external tools, handling the life-cycle of agent interactions.
  */
 public class AgentLoop
 {
@@ -606,8 +606,7 @@ public class AgentLoop
                 recordAndSendMessage(MTextMessage.builder() //
                         .withId(responseId) // if null builder sets ID
                         .withRole(ASSISTANT) //
-                        .withContent(
-                                "The assistant has worked on this for a while. Should it continue?") //
+                        .withContent("I have worked on this for a while. Should I continue?") //
                         .build());
             }
         }
