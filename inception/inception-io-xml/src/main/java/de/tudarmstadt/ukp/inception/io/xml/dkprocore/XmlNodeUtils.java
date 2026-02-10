@@ -54,8 +54,13 @@ import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
 
-public class XmlNodeUtils
+public final class XmlNodeUtils
 {
+    private XmlNodeUtils()
+    {
+        // No instances
+    }
+
     public static boolean hasAttributeWithValue(XmlElement e, String aAttribute, String aValue)
     {
         return getAttributeValue(e, aAttribute).map(v -> aValue.equals(v)).orElse(false);

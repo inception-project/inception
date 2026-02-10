@@ -49,5 +49,10 @@ The format can be processed in Java using the link:https://github.com/apache/uim
 | yes
 | yes
 | All built-in and custom layers
+
+| link:https://uima.apache.org/d/uimaj-current/references.html#ugr.ref.xmi[UIMA CAS XMI (XML 1.0 + PDF/XML structure)] (`xmi-struct`)
+| no
+| yes
+| All built-in and custom layers
 |====
 

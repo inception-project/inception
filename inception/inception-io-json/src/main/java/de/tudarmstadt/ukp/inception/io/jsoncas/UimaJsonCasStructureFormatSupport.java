@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.io.xmi;
+package de.tudarmstadt.ukp.inception.io.jsoncas;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.inception.io.xmi.PdfVModelUtils.containsPdfDocumentStructure;
-import static de.tudarmstadt.ukp.inception.io.xmi.PdfVModelUtils.transferPdfDocumentStructure;
+import static de.tudarmstadt.ukp.inception.io.jsoncas.PdfVModelUtils.containsPdfDocumentStructure;
+import static de.tudarmstadt.ukp.inception.io.jsoncas.PdfVModelUtils.transferPdfDocumentStructure;
 import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.containsXmlDocumentStructure;
 import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.transferXmlDocumentStructure;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createCasCopy;
@@ -35,34 +35,22 @@ import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.dkpro.core.io.xmi.XmiWriter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsAutoConfiguration;
-import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link UimaFormatsAutoConfiguration#xmiXmlStructureFormatSupport}.
- * </p>
- */
-public class XmiXmlStructureFormatSupport
+public class UimaJsonCasStructureFormatSupport
     implements FormatSupport
 {
-    public static final String ID = "xmi-struct";
-    public static final String NAME = "UIMA CAS XMI (XML 1.0 + XML/PDF structure)";
+    public static final String ID = "jsoncas-struct";
+    public static final String NAME = "UIMA CAS JSON 0.4.0 (XML/PDF structure)";
 
-    private final XmiFormatProperties properties;
     private final DocumentService documentService;
 
-    public XmiXmlStructureFormatSupport(XmiFormatProperties aProperties,
-            DocumentService aDocumentService)
+    public UimaJsonCasStructureFormatSupport(DocumentService aDocumentService)
     {
-        properties = aProperties;
         documentService = aDocumentService;
     }
 
@@ -121,10 +109,6 @@ public class XmiXmlStructureFormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription( //
-                XmiWriter.class, aTSD, //
-                XmiWriter.PARAM_VERSION, "1.0", //
-                XmiWriter.PARAM_SANITIZE_ILLEGAL_CHARACTERS,
-                properties.isSanitizeIllegalCharacters());
+        return createEngineDescription(UimaJsonCasWriter.class, aTSD);
     }
 }
