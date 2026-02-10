@@ -134,9 +134,13 @@ data in a particular format. The **feature flag** column shows which flags you c
 | `dkpro-core-uima-inline-xml`
 | `format.uima-inline-xml.enabled`
 
-| <<sect_formats_uimajson>>
+| <<sect_formats_uimajson,UIMA CAS JSON 0.4.0>>
 | `jsoncas`
 | `format.json-cas.enabled`
+
+| <<sect_formats_uimajson,UIMA CAS JSON 0.4.0 (XML/PDF structure)>>
+| `jsoncas-struct`
+| `format.json-cas-struct.enabled`
 
 | <<sect_formats_uimajson_legacy>>
 | `json`
@@ -153,6 +157,10 @@ data in a particular format. The **feature flag** column shows which flags you c
 | <<sect_formats_uimaxmi,UIMA XMI CAS (XML 1.1)>>
 | `xmi-xml1.1`
 | `format.uima-xmi-xml1_1.enabled`
+
+| <<sect_formats_uimaxmi,UIMA XMI CAS (XML 1.0 + PDF/XML structure)>>
+| `xmi-struct`
+| `format.uima-xmi-struct.enabled`
 
 | <<sect_formats_webannotsv1>>
 | `tsv`

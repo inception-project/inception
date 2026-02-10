@@ -35,6 +35,8 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AnyRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.preauth.ShibbolethRequestHeaderAuthenticationFilter;
@@ -51,24 +53,44 @@ public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
             ShibbolethRequestHeaderAuthenticationFilter aFilter, SessionRegistry aSessionRegistry)
         throws Exception
     {
+        aHttp.csrf(csrf -> {
+            // Instead of disabling the Spring CSRF filter, we just disable the CSRF validation for
+            // the Wicket UI (Wicket has its own CSRF mechanism). This way, Spring will still
+            // populate the CSRF token attribute in the request which we will need later when we
+            // need to provide the token to the JavaScript code in the browser to make callbacks to
+            // Spring MVC controllers.
+            csrf.requireCsrfProtectionMatcher(
+                    new NegatedRequestMatcher(AnyRequestMatcher.INSTANCE));
+        });
+        aHttp.headers(headers -> {
+            headers.frameOptions(frameOptions -> {
+                frameOptions.sameOrigin();
+            });
+        });
+
         aHttp.rememberMe(Customizer.withDefaults()) //
+                .addFilterBefore(aFilter, RequestHeaderAuthenticationFilter.class);
 
-                .addFilterBefore(aFilter, RequestHeaderAuthenticationFilter.class) //
+        aHttp.authorizeHttpRequests(authz -> {
+            accessToStaticResources(authz);
+            accessToRemoteApiAndSwagger(authz);
+            accessToApplication(authz);
+            authz.anyRequest().denyAll();
+        });
 
-                .authorizeHttpRequests(auth -> { //
-                    accessToStaticResources(auth); //
-                    accessToRemoteApiAndSwagger(auth); //
-                    accessToApplication(auth); //
-                    auth.anyRequest().denyAll(); //
-                }) //
+        aHttp.exceptionHandling(
+                exception -> exception.authenticationEntryPoint(new Http403ForbiddenEntryPoint()))
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(new Http403ForbiddenEntryPoint())) //
-
-                .headers(headers -> headers.frameOptions(FrameOptionsConfig::sameOrigin)) //
-
-                .sessionManagement(
-                        session -> session.maximumSessions(-1).sessionRegistry(aSessionRegistry));
+        aHttp.sessionManagement(session -> session
+                // Configuring an unlimited session per-user maximum as a side-effect registers
+                // the ConcurrentSessionFilter which checks for valid sessions in the session
+                // registry. This allows us to indirectly invalidate a server session by marking
+                // its Spring-security registration as invalid and have Spring Security in turn
+                // mark the server session as invalid on the next request. This is used e.g. to
+                // force-sign-out users that are being deleted.
+                .maximumSessions(-1) //
+                .sessionRegistry(aSessionRegistry));
 
         return aHttp.build();
     }
