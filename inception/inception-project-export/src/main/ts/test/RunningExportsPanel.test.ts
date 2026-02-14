@@ -15,7 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { it, expect } from 'vitest'
+import { it, expect, vi } from 'vitest'
+
+// Prevent real WebSocket connections in tests
+globalThis.WebSocket = class {
+  constructor() {}
+  close() {}
+}
+
+// Mock @stomp/stompjs so the component won't activate real STOMP websockets
+vi.mock('@stomp/stompjs', () => {
+  class Client {
+    activate() {}
+    deactivate() {}
+    subscribe() {}
+    publish() {}
+  }
+  return {
+    Client,
+    Stomp: {
+      over: () => new Client()
+    },
+    IFrame: class {}
+  }
+})
+
 import RunningExportsPanel from '../src/RunningExportsPanel.svelte'
 import { render } from '@testing-library/svelte'
 

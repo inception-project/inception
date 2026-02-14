@@ -15,7 +15,7 @@
   },
   "scripts": {
     "build": "node build.mjs",
-    "test": "vitest run --reporter=junit --outputFile=\"../../../target/surefire-reports/vitest-test-report.xml\""
+    "test": "vitest run --reporter=default --reporter=junit --outputFile=\"../../../target/surefire-reports/vitest-test-report.xml\""
   },
   "dependencies": {
     "@stomp/stompjs": "${stomp-stompjs.version}",

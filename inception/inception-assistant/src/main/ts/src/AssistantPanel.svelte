@@ -19,55 +19,21 @@
 
     import { onMount, onDestroy } from "svelte";
     import { Client, Stomp, type IFrame } from "@stomp/stompjs";
-    import { marked } from "marked";
     import { factory } from "@inception-project/inception-diam";
-    import DOMPurify from "dompurify";
     import { assistantState } from "./AssistantState.svelte";
-
-    interface MPerformanceMetrics {
-        duration: number;
-        tokens: number;
-    }
-
-    interface MReference {
-        id: string;
-        counter: number;
-        documentId: number;
-        documentName: string;
-        begin: number;
-        end: number;
-        score: number;
-    }
-
-    interface MChatMessage {
-        id: string;
-        role: string;
-        actor?: string;
-        internal: boolean;
-        performance?: MPerformanceMetrics;
-        context?: string;
-        references?: MReference[];
-
-        // Frontend only
-        collapsed?: boolean;
-        collapsible?: boolean;
-    }
-
-    interface MTextMessage extends MChatMessage {
-        thinking: string;
-        thinkingSummary: string;
-        content: string;
-        done: boolean;
-
-        // Frontend only
-        thinkingCollapsed?: boolean;
-    }
-
-    interface MCallResponse extends MChatMessage {
-        toolName: string;
-        arguments: any;
-        payload: any;
-    }
+    import { SpeechManager } from "./AssistantPanelSpeech";
+    import { refIdReplacementPattern, docIdReplacementPattern } from "./AssistantPanelReferences";
+    import { buildGroups, renderThinking, renderContent } from "./AssistantPanelMessages";
+    import type {
+        MPerformanceMetrics,
+        MReference,
+        MChatMessage,
+        MTextMessage,
+        MCallResponse,
+        MGroupItem,
+        MGroupGroup,
+        MGroupSingle,
+    } from "./AssistantPanelModels";
 
     interface Props {
         ajaxEndpointUrl?: string;
@@ -102,23 +68,30 @@
     let messageInput;
     let waitingForResponse = $state(false);
 
-    let speechAvailable = "speechSynthesis" in window;
-    let utteranceBuffer = "";
-    let utteranceQueue: SpeechSynthesisUtterance[] = [];
-    let isSpeaking = false;
-
-    // Our canonical reference format
-    const refIdReplacementPattern = /\s*{{ref::([\w-]+)}}(\.*)/g
-
-    // Some models (deepseek-r1) can't be bothered to properly use our reference syntax
-    // and keep referring to documents using the "Document XXXXXXXX" syntax...
-    const docIdReplacementPattern = /\s*[Dd]ocument[\s,]+([0-9a-f]{8})(\.*)/g
-
-    marked.setOptions({
-        breaks: true,
-        gfm: true,
-        async: false,
+    // Grouping state: keep collapsed state per group id
+    let groupCollapsed: Record<string, boolean> = $state({});
+    let grouped: MGroupItem[] = $derived.by(() => {
+        const result = buildGroups(messages);
+        console.debug('[assistant] Grouped updated:', result.length, 'items');
+        return result;
     });
+
+    function isGroupCollapsed(id) {
+        return groupCollapsed[id] ?? true;
+    }
+
+    function toggleGroup(id) {
+        console.debug(`[assistant] toggleGroup called with id: ${id}`);
+        const newVal = !isGroupCollapsed(id);
+        console.debug(`[assistant] toggleGroup: ${id} => ${newVal}, current state:`, groupCollapsed);
+        groupCollapsed[id] = newVal;
+        groupCollapsed = { ...groupCollapsed };
+        console.debug(`[assistant] toggleGroup: after update:`, groupCollapsed);
+    }
+
+    const speechManager = new SpeechManager(() => assistantState.speechSynthesisEnabled);
+    let speechAvailable = speechManager.isAvailable();
+
 
     const userPreferencesKey = "assistant/general";
     const defaultPreferences = {
@@ -141,7 +114,7 @@
 
     $effect(() => {
         if (!assistantState.speechSynthesisEnabled) {
-            speechSynthesis.cancel;
+            speechManager.cancel();
         }
     })    
 
@@ -192,18 +165,21 @@
     export function onMessage(msg) {
         if (!document.body.contains(element)) {
             console.debug(
-                "Element is not part of the DOM anymore. Disconnecting and suiciding.",
+                "[assistant] Element is not part of the DOM anymore. Disconnecting and suiciding.",
             );
             disconnect();
             return;
         }
 
+        console.debug('[assistant] onMessage received:', msg);
         var msgBody = JSON.parse(msg.body);
+        console.debug('[assistant] Parsed message body:', msgBody);
 
         if (!(msgBody instanceof Array)) {
             msgBody = [msgBody];
         }
 
+        console.debug('[assistant] Processing', msgBody.length, 'messages');
         msgBody.forEach((incomingMessage) => {
             dispatchMessage(incomingMessage);
         });
@@ -212,7 +188,7 @@
     function dispatchMessage(incomingMessage: any) {
         const type = incomingMessage["@type"];
         console.log(
-            `Received message of type ${type} with id ${incomingMessage.id}`,
+            `[assistant] Received message of type ${type} with id ${incomingMessage.id}`,
         );
         if (type === "textMessage") {
             onTextMessage(incomingMessage);
@@ -236,16 +212,18 @@
     }
 
     function onTextMessage(msg: MTextMessage) {
+        console.debug('[assistant] onTextMessage called with:', msg);
         if (waitingForResponse && msg.role === "assistant" && !msg.internal) {
             waitingForResponse = false;
         }
 
         const index = messages.findIndex((message) => message.id === msg.id);
+        console.debug('[assistant] Message index in array:', index, 'total messages:', messages.length);
 
         // If message is new, add it
         if (index === -1) {
             console.log(
-                `Starting message ${msg.id} with message fragment: ${msg.thinking || msg.content}`,
+                `[assistant] Starting message ${msg.id} with message fragment: ${msg.thinking || msg.content}`,
             );
             if (msg.context) {
                 // Insert before the message with id == msg.context
@@ -265,20 +243,22 @@
                 messages = [...messages, initMessage(msg)];
             }
 
+            console.debug('[assistant] Added new message. Total messages now:', messages.length);
+
             if (
                 msg.role == "assistant" &&
                 msg.content &&
                 !msg.internal &&
                 !msg.done
             ) {
-                utteranceBuffer = msg.content;
+                speechManager.initializeBuffer(msg.content);
             }
             return;
         }
 
         // Merge with existing message
         console.log(
-            `Merging message ${msg.id} with message fragment: ${msg.thinking || msg.content}`,
+            `[assistant] Merging message ${msg.id} with message fragment: ${msg.thinking || msg.content}`,
         );
         messages = [
             ...messages.slice(0, index),
@@ -305,7 +285,7 @@
             msg.content &&
             !msg.internal
         ) {
-            speak(msg);
+            speechManager.speak(msg);
         }
 
         if (msg.role == "assistant" && msg.done) {
@@ -338,68 +318,6 @@
                 // If no context id also just append
             messages = [...messages, initMessage(msg)];
         }
-    }
-
-    function speak(msg: MTextMessage) {
-        utteranceBuffer += msg.content;
-
-        // Remove references (we don't want to speak them)
-        utteranceBuffer = utteranceBuffer.replace(/{{ref::([\w-]+)}}/g, "");
-
-        if (msg.done) {
-            enqueueUtterance(utteranceBuffer);
-            utteranceBuffer = "";
-            return;
-        }
-
-        // Speak when sentence seems complete (we don't handle abbreviations)
-        const trimmedBuffer = utteranceBuffer.trimEnd()
-        const lastChar = trimmedBuffer.charAt(trimmedBuffer.length - 1);
-        // console.log(`Checking if utterance ending in [${lastChar}] is complete: [${utteranceBuffer}]`);
-        if ([".", "!", "?", ":", ";"].includes(lastChar)) {
-            // console.log(`Enqueuing utterance at sentence end: [${utteranceBuffer}]`);
-            enqueueUtterance(utteranceBuffer);
-            utteranceBuffer = "";
-        } else {
-            // Speak line by line
-            let lineBreak = utteranceBuffer.indexOf("\n");
-            if (lineBreak > 0) {
-                // console.log(`Enqueuing utterance at line end: [${utteranceBuffer}]`);
-                enqueueUtterance(utteranceBuffer.substring(0, lineBreak));
-                utteranceBuffer = utteranceBuffer.substring(lineBreak);
-            }
-        }
-    }
-
-    function enqueueUtterance(text: string) {
-        if (!assistantState.speechSynthesisEnabled) {
-            return;
-        }
-
-        utteranceQueue.push(new SpeechSynthesisUtterance(text));
-        processUtteranceQueue();
-    }
-
-    function processUtteranceQueue() {
-        if (isSpeaking) {
-            console.log("Speech synthesis is already in progress.");
-            return;
-        }
-
-        if (utteranceQueue.length === 0) {
-            console.log("Speech synthesis queue is empty.");
-            return;
-        }
-
-        const utterance = utteranceQueue.shift();
-        isSpeaking = true;
-        speechSynthesis.speak(utterance);
-        console.log("Speaking: " + utterance.text);
-
-        utterance.onend = () => {
-            isSpeaking = false;
-            processUtteranceQueue();
-        };
     }
 
     function toggleSpeechSynthesis() {
@@ -468,40 +386,6 @@
         }
     });
 
-    function renderThinking(message: MTextMessage) {
-        if (!message?.thinking) {
-            return "";
-        }
-
-        const trimmedMessage = message.thinking.replace(/{{ref::[\w-]*}?$/, "");
-
-        const rawHtml = marked(trimmedMessage) as string;
-        var pureHtml = DOMPurify.sanitize(rawHtml, { RETURN_DOM: false });
-
-        // Replace all references with the respective reference link
-        pureHtml = replaceReferencesWithHtmlLinks(message, pureHtml, refIdReplacementPattern);
-        pureHtml = replaceReferencesWithHtmlLinks(message, pureHtml, docIdReplacementPattern);
-
-        return pureHtml;
-    }
-
-    function renderContent(message: MTextMessage) {
-        if (!message?.content) {
-            return "";
-        }
-
-        const trimmedMessage = message.content.replace(/{{ref::[\w-]*}?$/, "");
-
-        const rawHtml = marked(trimmedMessage) as string;
-        var pureHtml = DOMPurify.sanitize(rawHtml, { RETURN_DOM: false });
-
-        // Replace all references with the respective reference link
-        pureHtml = replaceReferencesWithHtmlLinks(message, pureHtml, refIdReplacementPattern);
-        pureHtml = replaceReferencesWithHtmlLinks(message, pureHtml, docIdReplacementPattern);
-
-        return pureHtml;
-    }
-
     function renderCallArguments(message: MCallResponse) {
         if (!message?.arguments) {
             return "no arguments";
@@ -522,54 +406,10 @@
         return JSON.stringify(message.payload, null, 2);
     }
 
-    function replaceReferencesWithHtmlLinks(message, text, pattern) {
-        return text.replace(
-            pattern,
-            (match: string, refId: string, dots: string) => {
-                const refSelector = (ref) => ref.id === refId;
-                const reference = message.references.find(refSelector);
-                const refNum = message.references.findIndex(refSelector) + 1;
-
-                if (reference) {
-                    const hasValidScore = Number.isFinite(reference.score);
-                    const title = hasValidScore 
-                        ? `${escapeXML(reference.documentName)} (score: ${reference.score.toFixed(4)})`
-                        : escapeXML(reference.documentName);
-                    
-                    return `${dots}<span class="reference badge rounded-pill text-bg-secondary mx-1" data-msg="${message.id}" data-ref="${reference.id}" title="${title}">${refNum}</span>`;
-                }
-
-                return match;
-            },
-        );
-    }
-
-    function escapeXML(str) {
-        return str.replace(/[<>&'"]/g, (char) => {
-            switch (char) {
-                case "<":
-                    return "&lt;";
-                case ">":
-                    return "&gt;";
-                case "&":
-                    return "&amp;";
-                case "'":
-                    return "&apos;";
-                case '"':
-                    return "&quot;";
-                default:
-                    return char;
-            }
-        });
-    }
-
     function sendMessage(message: string, inputElement: HTMLInputElement) {
         if (stompClient && stompClient.connected) {
             // Cancel current speech synthesis and clear the utterance queue
-            speechSynthesis.cancel();
-            utteranceQueue = [];
-            utteranceBuffer = "";
-            isSpeaking = false;
+            speechManager.cancel();
 
             stompClient.publish({
                 destination: "/app" + topicChannel,
@@ -631,115 +471,334 @@
         bind:this={chatContainer}
         onscroll={handleScroll}
     >
-        {#each messages as message}
-            {@const thinking = renderThinking(message)}
+        {#each grouped as item}
+            {#if item.type === 'single'}
+                {@const message = item.message}
+                {@const thinking = renderThinking(message)}
 
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-            <div
-                class="message"
-                data-id={message.id}
-                data-role={message.role}
-                data-internal={message.internal}
-                tabIndex={message.internal ? 0 : undefined}
-            >
-                {#if thinking}
-                    <div class="message-thinking">
-                        <div class="message-thinking-header" onclick={() => toggleCollapseThinking(message)} role="button" tabindex="0">
-                            {#if message.thinkingSummary}
-                                {message.thinkingSummary}
-                            {:else}
-                                Thinking<span class:dots={!message.done}></span>
-                            {/if}
-                        </div>
-                        {#if !message.thinkingCollapsed}
-                            <div class="message-thinking-body">
-                                {@html thinking}
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+                <div
+                    class="message"
+                    data-id={message.id}
+                    data-role={message.role}
+                    data-internal={message.internal}
+                    tabIndex={message.internal ? 0 : undefined}
+                >
+                    {#if thinking}
+                        <div class="message-thinking">
+                            <div class="message-thinking-header" onclick={() => toggleCollapseThinking(message)} role="button" tabindex="0">
+                                {#if message.thinkingSummary}
+                                    {message.thinkingSummary}
+                                {:else}
+                                    Thinking<span class:dots={!message.done}></span>
+                                {/if}
                             </div>
-                        {/if}
-                    </div>
-                {/if}
-
-                {#if message.content || message.role !== "assistant"}
-                    <div class="message-frame">
-                        <div
-                            class="message-header text-body-secondary"
-                            onclick={message.collapsible ? () => toggleCollapse(message) : null}
-                            role={message.collapsible ? "button" : undefined}
-                        >
-                            {#if message.role === "assistant"}
-                                <i class="fas fa-robot me-1" title="Assistant message"></i>
-                            {:else if message.role === "user"}
-                                <i class="fas fa-user me-1" title="User message"></i>
-                            {:else if message.role === "system"}
-                                <i class="fas fa-cog me-1" title="System message"></i>
-                            {/if}
-                            {message.actor ? message.actor : message.role}
-                            {#if !message.collapsible}
-                                <!-- svelte-ignore a11y_consider_explicit_label -->
-                                <button
-                                    class="btn btn-sm btn-link text-body-secondary float-end fw-lighter p-0 copy-button"
-                                    onclick={() => copyToClipboard(message)}
-                                >
-                                    <i class="far fa-copy" title="Copy message"></i>
-                                </button>
-                            {/if}
-                            {#if message.internal}
-                                <span
-                                    class="mx-2 text-body-secondary float-end fw-lighter"
-                                >
-                                    <i class="fas fa-info" title="Internal message"></i>
-                                </span>
+                            {#if !message.thinkingCollapsed}
+                                <div class="message-thinking-body">
+                                    {@html thinking}
+                                </div>
                             {/if}
                         </div>
+                    {/if}
 
-                        <!-- svelte-ignore a11y_no_static_element_interactions -->
-                        {#if !message.collapsed}
-                            {#if message["@type"] === "textMessage"}
-                                <!-- svelte-ignore a11y_no_static_element_interactions -->
-                                {#if message.content}
-                                    <div
-                                        class="message-body"
-                                        class:dots={!message.done}
-                                        onclick={handleClick}
+                    {#if message.content || message.role !== "assistant"}
+                        <div class="message-frame">
+                            <div
+                                class="message-header text-body-secondary"
+                                onclick={message.collapsible ? () => toggleCollapse(message) : null}
+                                role={message.collapsible ? "button" : undefined}
+                            >
+                                {#if message.role === "assistant"}
+                                    <i class="fas fa-robot me-1" title="Assistant message"></i>
+                                {:else if message.role === "user"}
+                                    <i class="fas fa-user me-1" title="User message"></i>
+                                {:else if message.role === "system"}
+                                    <i class="fas fa-cog me-1" title="System message"></i>
+                                {/if}
+                                {message.actor ? message.actor : message.role}
+                                {#if !message.collapsible}
+                                    <!-- svelte-ignore a11y_consider_explicit_label -->
+                                    <button
+                                        class="btn btn-sm btn-link text-body-secondary float-end fw-lighter p-0 copy-button"
+                                        onclick={() => copyToClipboard(message)}
                                     >
-                                        {@html renderContent(message)}
+                                        <i class="far fa-copy" title="Copy message"></i>
+                                    </button>
+                                {/if}
+                                {#if message.internal}
+                                    <span
+                                        class="mx-2 text-body-secondary float-end fw-lighter"
+                                    >
+                                        <i class="fas fa-info" title="Internal message"></i>
+                                    </span>
+                                {/if}
+                            </div>
+
+                            <!-- svelte-ignore a11y_no_static_element_interactions -->
+                            {#if !message.collapsed}
+                                {#if message["@type"] === "textMessage"}
+                                    <!-- svelte-ignore a11y_no_static_element_interactions -->
+                                    {#if message.content}
+                                        <div
+                                            class="message-body"
+                                            class:dots={!message.done}
+                                            onclick={handleClick}
+                                        >
+                                            {@html renderContent(message)}
+                                        </div>
+                                    {/if}
+                                {:else if message["@type"] === "callResponse"}
+                                    <div class="message-body">
+                                        <strong>Called tool: {message.toolName}</strong>
+                                        <div>{renderCallArguments(message)}</div>
+                                        <div class="call-payload">{renderCallPayload(message)}</div>
+                                    </div>
+                                {:else}
+                                    <div class="message-body">
+                                        Unknown message type: {message["@type"]}
                                     </div>
                                 {/if}
-                            {:else if message["@type"] === "callResponse"}
-                                <div class="message-body">
-                                    <strong>Called tool: {message.toolName}</strong>
-                                    <div>{renderCallArguments(message)}</div>
-                                    <div class="call-payload">{renderCallPayload(message)}</div>
-                                </div>
+                            {/if}
+                        </div>
+                    {/if}
+
+                    {#if message.performance && (((message.content || message.role !== "assistant") && !message.collapsed) || (thinking && !message.thinkingCollapsed)) }
+                        <div class="message-footer fw-ligher">
+                            <small
+                                ><i class="fas fa-pause me-1"></i>{(message.performance
+                                    .delay / 1000).toFixed(2)}s</small
+                            >
+                            <small
+                                ><i class="far fa-clock ms-2 me-1"></i>{(message.performance
+                                    .duration / 1000).toFixed(2)}s</small
+                            >
+                            <small
+                                ><i class="fas fa-stream ms-2 me-1"></i>{(
+                                    message.performance.tokens /
+                                    (message.performance.duration / 1000)
+                                ).toFixed(2)}t/s</small
+                            >
+                        </div>
+                    {/if}
+                </div>
+            {:else}
+                <div class="message-group">
+                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                    <div class="message-group-header" onclick={() => toggleGroup(item.id)} role="button" tabindex="0">
+                        {#if !(item.lastMessage && item.lastMessage["@type"] === "textMessage" && item.lastMessage.done && item.lastMessage.content && item.lastMessage.content.toString().trim().length > 0)}
+                            <div class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></div>
+                            {#if item.lastCompletedThinkingMessage}
+                                {#if item.lastCompletedThinkingMessage.thinkingSummary}
+                                    {item.lastCompletedThinkingMessage.thinkingSummary}
+                                {:else}
+                                    {@html item.lastCompletedThinkingHtml}
+                                {/if}
+                            {:else if item.activeThinkingMessage?.thinkingSummary}
+                                {item.activeThinkingMessage.thinkingSummary}
                             {:else}
-                                <div class="message-body">
-                                    Unknown message type: {message["@type"]}
-                                </div>
+                                Working<span class:dots={!item.activeThinkingMessage?.done}></span>
+                            {/if}
+                        {:else}
+                            <i class="fa-solid fa-check me-1"></i>
+                            {#if item.lastCompletedThinkingMessage}
+                                {#if item.lastCompletedThinkingMessage.thinkingSummary}
+                                    {item.lastCompletedThinkingMessage.thinkingSummary}
+                                {:else}
+                                    {@html item.lastCompletedThinkingHtml}
+                                {/if}
+                            {:else}
+                                {item.messages[0].actor ? item.messages[0].actor : item.messages[0].role} group ({item.messages.length})
                             {/if}
                         {/if}
                     </div>
-                {/if}
 
-                {#if message.performance && (((message.content || message.role !== "assistant") && !message.collapsed) || (thinking && !message.thinkingCollapsed)) }
-                    <div class="message-footer fw-ligher">
-                        <small
-                            ><i class="fas fa-pause me-1"></i>{(message.performance
-                                .delay / 1000).toFixed(2)}s</small
+                    {#if item.lastHasThinkingAndContent && isGroupCollapsed(item.id)}
+                        <!-- Show the last message's content while group is collapsed -->
+                        <div
+                            class="message"
+                            data-id={item.lastMessage.id}
+                            data-role={item.lastMessage.role}
+                            data-internal={item.lastMessage.internal}
+                            tabIndex={item.lastMessage.internal ? 0 : undefined}
                         >
-                        <small
-                            ><i class="far fa-clock ms-2 me-1"></i>{(message.performance
-                                .duration / 1000).toFixed(2)}s</small
-                        >
-                        <small
-                            ><i class="fas fa-stream ms-2 me-1"></i>{(
-                                message.performance.tokens /
-                                (message.performance.duration / 1000)
-                            ).toFixed(2)}t/s</small
-                        >
-                    </div>
-                {/if}
-            </div>
+                            {#if item.lastMessage.content || item.lastMessage.role !== "assistant"}
+                                <div class="message-frame">
+                                    <div
+                                        class="message-header text-body-secondary"
+                                        onclick={item.lastMessage.collapsible ? () => toggleCollapse(item.lastMessage) : null}
+                                        role={item.lastMessage.collapsible ? "button" : undefined}
+                                    >
+                                        {#if item.lastMessage.role === "assistant"}
+                                            <i class="fas fa-robot me-1" title="Assistant message"></i>
+                                        {:else if item.lastMessage.role === "user"}
+                                            <i class="fas fa-user me-1" title="User message"></i>
+                                        {:else if item.lastMessage.role === "system"}
+                                            <i class="fas fa-cog me-1" title="System message"></i>
+                                        {/if}
+                                        {item.lastMessage.actor ? item.lastMessage.actor : item.lastMessage.role}
+                                        {#if !item.lastMessage.collapsible}
+                                            <button
+                                                class="btn btn-sm btn-link text-body-secondary float-end fw-lighter p-0 copy-button"
+                                                onclick={() => copyToClipboard(item.lastMessage)}
+                                            >
+                                                <i class="far fa-copy" title="Copy message"></i>
+                                            </button>
+                                        {/if}
+                                        {#if item.lastMessage.internal}
+                                            <span
+                                                class="mx-2 text-body-secondary float-end fw-lighter"
+                                            >
+                                                <i class="fas fa-info" title="Internal message"></i>
+                                            </span>
+                                        {/if}
+                                    </div>
+
+                                    {#if !item.lastMessage.collapsed}
+                                        <div
+                                            class="message-body"
+                                            class:dots={!item.lastMessage.done}
+                                            onclick={handleClick}
+                                        >
+                                            {@html item.lastContentHtml}
+                                        </div>
+                                    {/if}
+                                </div>
+                            {/if}
+
+                            {#if item.lastMessage.performance && (((item.lastMessage.content || item.lastMessage.role !== "assistant") && !item.lastMessage.collapsed) || (item.activeThinkingHtml && item.activeThinkingMessage && !item.activeThinkingMessage.thinkingCollapsed)) }
+                                <div class="message-footer fw-ligher">
+                                    <small
+                                        ><i class="fas fa-pause me-1"></i>{(item.lastMessage.performance
+                                            .delay / 1000).toFixed(2)}s</small
+                                    >
+                                    <small
+                                        ><i class="far fa-clock ms-2 me-1"></i>{(item.lastMessage.performance
+                                            .duration / 1000).toFixed(2)}s</small
+                                    >
+                                    <small
+                                        ><i class="fas fa-stream ms-2 me-1"></i>{(
+                                            item.lastMessage.performance.tokens /
+                                            (item.lastMessage.performance.duration / 1000)
+                                        ).toFixed(2)}t/s</small
+                                    >
+                                </div>
+                            {/if}
+                        </div>
+                    {/if}
+
+                    {#if !isGroupCollapsed(item.id)}
+                        {#each item.messages as message}
+                            {@const thinking = renderThinking(message)}
+
+                            <div
+                                class="message"
+                                data-id={message.id}
+                                data-role={message.role}
+                                data-internal={message.internal}
+                                tabIndex={message.internal ? 0 : undefined}
+                            >
+                                {#if thinking}
+                                    <div class="message-thinking">
+                                        <div class="message-thinking-header" onclick={() => toggleCollapseThinking(message)} role="button" tabindex="0">
+                                            {#if message.thinkingSummary}
+                                                {message.thinkingSummary}
+                                            {:else}
+                                                Thinking<span class:dots={!message.done}></span>
+                                            {/if}
+                                        </div>
+                                        {#if !message.thinkingCollapsed}
+                                            <div class="message-thinking-body">
+                                                {@html thinking}
+                                            </div>
+                                        {/if}
+                                    </div>
+                                {/if}
+
+                                {#if message.content || message.role !== "assistant"}
+                                    <div class="message-frame">
+                                        <div
+                                            class="message-header text-body-secondary"
+                                            onclick={message.collapsible ? () => toggleCollapse(message) : null}
+                                            role={message.collapsible ? "button" : undefined}
+                                        >
+                                            {#if message.role === "assistant"}
+                                                <i class="fas fa-robot me-1" title="Assistant message"></i>
+                                            {:else if message.role === "user"}
+                                                <i class="fas fa-user me-1" title="User message"></i>
+                                            {:else if message.role === "system"}
+                                                <i class="fas fa-cog me-1" title="System message"></i>
+                                            {/if}
+                                            {message.actor ? message.actor : message.role}
+                                            {#if !message.collapsible}
+                                                <!-- svelte-ignore a11y_consider_explicit_label -->
+                                                <button
+                                                    class="btn btn-sm btn-link text-body-secondary float-end fw-lighter p-0 copy-button"
+                                                    onclick={() => copyToClipboard(message)}
+                                                >
+                                                    <i class="far fa-copy" title="Copy message"></i>
+                                                </button>
+                                            {/if}
+                                            {#if message.internal}
+                                                <span
+                                                    class="mx-2 text-body-secondary float-end fw-lighter"
+                                                >
+                                                    <i class="fas fa-info" title="Internal message"></i>
+                                                </span>
+                                            {/if}
+                                        </div>
+
+                                        <!-- svelte-ignore a11y_no_static_element_interactions -->
+                                        {#if !message.collapsed}
+                                            {#if message["@type"] === "textMessage"}
+                                                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                                                {#if message.content}
+                                                    <div
+                                                        class="message-body"
+                                                        class:dots={!message.done}
+                                                        onclick={handleClick}
+                                                    >
+                                                        {@html renderContent(message)}
+                                                    </div>
+                                                {/if}
+                                            {:else if message["@type"] === "callResponse"}
+                                                <div class="message-body">
+                                                    <strong>Called tool: {message.toolName}</strong>
+                                                    <div>{renderCallArguments(message)}</div>
+                                                    <div class="call-payload">{renderCallPayload(message)}</div>
+                                                </div>
+                                            {:else}
+                                                <div class="message-body">
+                                                    Unknown message type: {message["@type"]}
+                                                </div>
+                                            {/if}
+                                        {/if}
+                                    </div>
+                                {/if}
+
+                                {#if message.performance && (((message.content || message.role !== "assistant") && !message.collapsed) || (thinking && !message.thinkingCollapsed)) }
+                                    <div class="message-footer fw-ligher">
+                                        <small
+                                            ><i class="fas fa-pause me-1"></i>{(message.performance
+                                                .delay / 1000).toFixed(2)}s</small
+                                        >
+                                        <small
+                                            ><i class="far fa-clock ms-2 me-1"></i>{(message.performance
+                                                .duration / 1000).toFixed(2)}s</small
+                                        >
+                                        <small
+                                            ><i class="fas fa-stream ms-2 me-1"></i>{(
+                                                message.performance.tokens /
+                                                (message.performance.duration / 1000)
+                                            ).toFixed(2)}t/s</small
+                                        >
+                                    </div>
+                                {/if}
+                            </div>
+                        {/each}
+                    {/if}
+                </div>
+            {/if}
         {/each}
         {#if waitingForResponse}
             <div class="message" data-role="assistant">
@@ -799,6 +858,14 @@
         content: "";
         display: inline-block;
         animation: dots 1.5s steps(1, end) infinite;
+    }
+
+    .message-group {
+        .message-group-header {
+            display: block;
+            font-size: smaller;
+            color: var(--bs-body-color-secondary);
+        }
     }
 
     .message {

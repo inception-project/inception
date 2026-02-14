@@ -64,7 +64,7 @@ public abstract class RecommendationEngineFactoryImplBase<T>
         try {
             traits = fromJsonString((Class<T>) createTraits().getClass(), aRecommender.getTraits());
         }
-        catch (IOException e) {
+        catch (Exception e) {
             LOG.error("Error while reading traits", e);
         }
 
@@ -79,7 +79,7 @@ public abstract class RecommendationEngineFactoryImplBase<T>
     public void writeTraits(Recommender aRecommender, T aTraits)
     {
         try {
-            String json = toJsonString(aTraits);
+            var json = toJsonString(aTraits);
             aRecommender.setTraits(json);
         }
         catch (IOException e) {

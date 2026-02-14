@@ -21,6 +21,7 @@ import static com.nimbusds.jose.JOSEObjectType.JWT;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static java.lang.System.getProperty;
 import static java.lang.System.setProperty;
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -70,37 +71,40 @@ public class InceptionRemoteApiJwtIntegrationTest
 
     static final String SUB = UUID.randomUUID().toString();
 
-    static String oldServerPort;
     static @TempDir Path appHome;
     static MockOAuth2Server oauth2Server;
     static ConfigurableApplicationContext context;
+    static String oldHeadless;
     static HttpClient client;
     static UserDao userService;
 
     @BeforeAll
     static void setup()
     {
-        oldServerPort = System.setProperty("server.port", "0");
-
         oauth2Server = new MockOAuth2Server();
         oauth2Server.start();
 
         var issuerUrl = oauth2Server.url(ISSUER_ID).toString();
 
-        setProperty("spring.main.banner-mode", "off");
+        oldHeadless = getProperty("java.awt.headless");
         setProperty("java.awt.headless", "true");
-        setProperty("database.url", "jdbc:hsqldb:mem:testdb;hsqldb.tx=mvcc");
-        setProperty("spring.jpa.hibernate.ddl-auto", "create-drop");
-        setProperty("inception.home", appHome.toString());
-        setProperty("remote-api.enabled", "true");
-        setProperty("remote-api.oauth2.enabled", "true");
-        setProperty("remote-api.oauth2.realm", CLIENT_ID);
-        setProperty("remote-api.oauth2.user-name-attribute", PREFERRED_USERNAME_CLAIM);
-        setProperty("spring.security.oauth2.resourceserver.jwt.issuer-uri", issuerUrl);
-        // setProperty("logging.level.org.springframework.security", "TRACE");
+
+        var properties = new java.util.Properties();
+        properties.setProperty("server.port", "0");
+        properties.setProperty("spring.main.banner-mode", "off");
+        properties.setProperty("database.url", "jdbc:hsqldb:mem:testdb;hsqldb.tx=mvcc");
+        properties.setProperty("spring.jpa.hibernate.ddl-auto", "create-drop");
+        properties.setProperty("inception.home", appHome.toString());
+        properties.setProperty("remote-api.enabled", "true");
+        properties.setProperty("remote-api.oauth2.enabled", "true");
+        properties.setProperty("remote-api.oauth2.realm", CLIENT_ID);
+        properties.setProperty("remote-api.oauth2.user-name-attribute", PREFERRED_USERNAME_CLAIM);
+        properties.setProperty("spring.security.oauth2.resourceserver.jwt.issuer-uri", issuerUrl);
+        // properties.setProperty("logging.level.org.springframework.security", "TRACE");
 
         context = INCEpTION.start( //
                 new String[] {}, //
+                properties, //
                 INCEpTION.class, //
                 LongTimeoutJwtConfig.class);
 
@@ -120,16 +124,15 @@ public class InceptionRemoteApiJwtIntegrationTest
     @AfterAll
     static void teardown()
     {
-        if (oldServerPort == null) {
-            System.getProperties().remove("server.port");
-
-        }
-        else {
-            System.setProperty("server.port", oldServerPort);
-        }
         context.close();
         oauth2Server.shutdown();
         LogManager.shutdown();
+        if (oldHeadless == null) {
+            System.getProperties().remove("java.awt.headless");
+        }
+        else {
+            setProperty("java.awt.headless", oldHeadless);
+        }
     }
 
     @Test

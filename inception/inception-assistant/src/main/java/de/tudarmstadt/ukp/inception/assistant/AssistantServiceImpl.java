@@ -355,7 +355,9 @@ public class AssistantServiceImpl
                 "INCEpTION always refers to the annotation tool, never anything else such as the movie.",
                 "Do not include references to INCEpTION unless the user explicitly asks about the environment itself.",
                 "Format your responses using markdown.",
-                "DO NOT use markdown tables because the chat window is rather narrow and tables are hard to read."
+                "DO NOT use markdown tables because the chat window is rather narrow and tables are hard to read.",
+                "When the user asks a question, it is safe to assume it is about the documents in the project, "
+                        + "unless specified otherwise."
         // "When reasoning, you must explicitly state the exact name of the tool you intend to call.
         // "
         // + "Do not say 'I will read the file'. Say 'I will call read_document to read the file'."

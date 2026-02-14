@@ -38,9 +38,25 @@ TS_MODULES="
 ./inception-ui-search/src/main/ts
 ./inception-ui-scheduling/src/main/ts
 ./inception-assistant/src/main/ts
+./inception-workload/src/main/ts
 "
 
+TARGET_MODULE="$1"
+
+if [ -n "$TARGET_MODULE" ]; then
+  echo "Running only for module: $TARGET_MODULE"
+fi
+
+MATCHED=0
+
 for module in $TS_MODULES ; do
+  if [ -n "$TARGET_MODULE" ]; then
+    if ! echo "$module" | grep -q "$TARGET_MODULE"; then
+      continue
+    fi
+    MATCHED=1
+  fi
+
   pushd "$module"
   echo "PWD: $(pwd)"
   rm -f ../ts_template/package-lock.json
@@ -77,3 +93,8 @@ for module in $TS_MODULES ; do
   popd
 done
 
+if [ -n "$TARGET_MODULE" ] && [ "$MATCHED" -eq 0 ]; then
+  echo "ERROR: module '$TARGET_MODULE' not found in TS_MODULES" >&2
+  exit 2
+fi
+cat 
