@@ -15,25 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { it, expect } from 'vitest'
-import { AnnotatedText, Span, Comment } from '../../../src/model'
-import { CompactComment, unpackCompactComments } from '../../../src/model/compact_v2/CompactComment'
+import { it, expect } from 'vitest';
+import { AnnotatedText, Span, Comment } from '../../../src/model';
+import {
+    CompactComment,
+    unpackCompactComments,
+} from '../../../src/model/compact_v2/CompactComment';
 
 it('Unpacking works', async () => {
-  const doc = new AnnotatedText()
-  const ann = new Span({ vid: 'T1', layer: undefined, offsets: [[0, 1]] })
-  doc.addAnnotation(ann)
-  const input : CompactComment[] = [
-    ['info comment 1'],
-    ['info comment 2', 'I'],
-    ['error comment', 'E']
-  ]
+    const doc = new AnnotatedText();
+    const ann = new Span({ vid: 'T1', layer: undefined, offsets: [[0, 1]] });
+    doc.addAnnotation(ann);
+    const input: CompactComment[] = [
+        ['info comment 1'],
+        ['info comment 2', 'I'],
+        ['error comment', 'E'],
+    ];
 
-  const result = unpackCompactComments(doc, ann, input)
+    const result = unpackCompactComments(doc, ann, input);
 
-  expect(result).to.deep.equal([
-    new Comment({ targetId: 'T1', target: ann, type: 'info', comment: 'info comment 1' }),
-    new Comment({ targetId: 'T1', target: ann, type: 'info', comment: 'info comment 2' }),
-    new Comment({ targetId: 'T1', target: ann, type: 'error', comment: 'error comment' })
-  ])
-})
+    expect(result).to.deep.equal([
+        new Comment({ targetId: 'T1', target: ann, type: 'info', comment: 'info comment 1' }),
+        new Comment({ targetId: 'T1', target: ann, type: 'info', comment: 'info comment 2' }),
+        new Comment({ targetId: 'T1', target: ann, type: 'error', comment: 'error comment' }),
+    ]);
+});

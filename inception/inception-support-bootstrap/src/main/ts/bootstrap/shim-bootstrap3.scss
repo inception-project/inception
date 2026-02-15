@@ -18,27 +18,27 @@
 
 // Fix that hidden-xs is missing in Bootstrap File Input
 .hidden-xs {
-	@extend .d-none;
+    @extend .d-none;
 }
 
 .hidden {
-	@extend .d-none;
+    @extend .d-none;
 }
 
 // Patch some font-awesome icons into the glyphicon CSS namespace, in particular for the
 // BootstrapFileInput
 .glyphicon {
-	font-family: 'Font Awesome 5 Free';
-	font-weight: 900;
-	font-style: normal;
-}
-	
-// Original: .fa-folder-open  
-.glyphicon-folder-open:before {
-	content: "\f07c"; 
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    font-style: normal;
 }
 
-// Original: .fa-times  
+// Original: .fa-folder-open
+.glyphicon-folder-open:before {
+    content: '\f07c';
+}
+
+// Original: .fa-times
 .glyphicon-ban-circle:before {
-	content: "\f00d";
+    content: '\f00d';
 }

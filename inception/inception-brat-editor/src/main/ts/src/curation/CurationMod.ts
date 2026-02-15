@@ -15,92 +15,98 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Dispatcher } from '../dispatcher/Dispatcher'
-import { DocumentData } from '../visualizer/DocumentData'
-import { DiamAjax } from '@inception-project/inception-js-api'
+import { Dispatcher } from '../dispatcher/Dispatcher';
+import { DocumentData } from '../visualizer/DocumentData';
+import { DiamAjax } from '@inception-project/inception-js-api';
 
 export class CurationMod {
-  private data: DocumentData
-  private dispatcher: Dispatcher
-  private ajax: DiamAjax
+    private data: DocumentData;
+    private dispatcher: Dispatcher;
+    private ajax: DiamAjax;
 
-  constructor (dispatcher: Dispatcher, ajax: DiamAjax) {
-    this.dispatcher = dispatcher
+    constructor(dispatcher: Dispatcher, ajax: DiamAjax) {
+        this.dispatcher = dispatcher;
 
-    dispatcher
-      .on('click', this, this.onClick)
-      .on('dataReady', this, this.rememberData)
-      .on('contextmenu', this, this.contextMenu)
-  }
-
-  // send click to server
-  onClick (evt: MouseEvent) {
-    const target = evt.target as HTMLElement;
-
-    // if clicked on a span, send ajax call to server
-    const type = target.getAttribute('data-arc-role');
-    if (type) {
-      const originSpanId = target.getAttribute('data-arc-origin');
-      const targetSpanId = target.getAttribute('data-arc-target');
-      this.dispatcher.post('ajax', [{
-        action: 'selectArcForMerge',
-        originSpanId,
-        targetSpanId,
-        id: target.getAttribute('data-arc-ed'),
-        type
-      }]);
+        dispatcher
+            .on('click', this, this.onClick)
+            .on('dataReady', this, this.rememberData)
+            .on('contextmenu', this, this.contextMenu);
     }
 
-    const spanId = target.getAttribute('data-span-id');
-    if (spanId) {
-      const editedSpan = this.data.spans[spanId];
-      this.dispatcher.post('ajax', [{
-        action: 'selectSpanForMerge',
-        id: spanId,
-        type: editedSpan.type
-      }]);
-    }
-  }
+    // send click to server
+    onClick(evt: MouseEvent) {
+        const target = evt.target as HTMLElement;
 
-  contextMenu(evt: MouseEvent) {
-    // If the user shift-right-clicks, open the normal browser context menu. This is useful
-    // e.g. during debugging / developing
-    if (evt.shiftKey) {
-      return;
+        // if clicked on a span, send ajax call to server
+        const type = target.getAttribute('data-arc-role');
+        if (type) {
+            const originSpanId = target.getAttribute('data-arc-origin');
+            const targetSpanId = target.getAttribute('data-arc-target');
+            this.dispatcher.post('ajax', [
+                {
+                    action: 'selectArcForMerge',
+                    originSpanId,
+                    targetSpanId,
+                    id: target.getAttribute('data-arc-ed'),
+                    type,
+                },
+            ]);
+        }
+
+        const spanId = target.getAttribute('data-span-id');
+        if (spanId) {
+            const editedSpan = this.data.spans[spanId];
+            this.dispatcher.post('ajax', [
+                {
+                    action: 'selectSpanForMerge',
+                    id: spanId,
+                    type: editedSpan.type,
+                },
+            ]);
+        }
     }
 
-    const target = evt.target as HTMLElement;
-    let id: string | undefined;
-    let type: string | undefined;
+    contextMenu(evt: MouseEvent) {
+        // If the user shift-right-clicks, open the normal browser context menu. This is useful
+        // e.g. during debugging / developing
+        if (evt.shiftKey) {
+            return;
+        }
 
-    if (target.getAttribute('data-arc-ed')) {
-      id = target.getAttribute('data-arc-ed')!;
-      type = target.getAttribute('data-arc-role')!;
+        const target = evt.target as HTMLElement;
+        let id: string | undefined;
+        let type: string | undefined;
+
+        if (target.getAttribute('data-arc-ed')) {
+            id = target.getAttribute('data-arc-ed')!;
+            type = target.getAttribute('data-arc-role')!;
+        }
+
+        if (target.getAttribute('data-span-id')) {
+            id = target.getAttribute('data-span-id')!;
+            type = this.data.spans[id].type;
+        }
+
+        if (id) {
+            evt.preventDefault();
+            this.dispatcher.post('ajax', [
+                {
+                    action: 'contextMenu',
+                    id,
+                    type,
+                    clientX: evt.clientX,
+                    clientY: evt.clientY,
+                },
+            ]);
+        }
     }
 
-    if (target.getAttribute('data-span-id')) {
-      id = target.getAttribute('data-span-id')!;
-      type = this.data.spans[id].type;
+    /**
+     * Remember data at initialization
+     */
+    rememberData(data: DocumentData) {
+        if (data && !data.exception) {
+            this.data = data;
+        }
     }
-
-    if (id) {
-      evt.preventDefault();
-      this.dispatcher.post('ajax', [{
-        action: 'contextMenu',
-        id,
-        type,
-        clientX: evt.clientX,
-        clientY: evt.clientY
-      }]);
-    }
-  }
-
-  /**
-   * Remember data at initialization
-   */
-  rememberData (data: DocumentData) {
-    if (data && !data.exception) {
-      this.data = data
-    }
-  }
 }

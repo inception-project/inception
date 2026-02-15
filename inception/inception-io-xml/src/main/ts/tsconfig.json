@@ -4,11 +4,7 @@
     "verbatimModuleSyntax": true,
     "target": "esnext", // Use latest type features (optional chaining, etc.)
     "module": "esnext", // Avoid legacy module resolution stuff
-    "moduleResolution": "bundler",  // Match how esbuild resolves modules
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ES2019"
-    ]
+    "moduleResolution": "bundler", // Match how esbuild resolves modules
+    "lib": ["DOM", "DOM.Iterable", "ES2019"]
   }
 }

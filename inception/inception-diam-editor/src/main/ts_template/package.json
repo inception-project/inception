@@ -6,7 +6,9 @@
   "homepage": "https://github.com/inception-project/inception#readme",
   "scripts": {
     "build": "node build.mjs",
-    "test": ""
+    "test": "",
+    "format": "prettier --write \"**/*.{js,ts,json,css,scss,md,html}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,json,css,scss,md,html}\""
   },
   "repository": {
     "type": "git",
@@ -31,6 +33,9 @@
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
     "neostandard": "${neostandard.version}",
     "eslint-plugin-svelte": "${eslint-plugin-svelte.version}",
+    "prettier": "${prettier.version}",
+    "prettier-plugin-svelte": "${prettier-plugin-svelte.version}",
+    "eslint-config-prettier": "${eslint-config-prettier.version}",
     "fs-extra": "${fs-extra.version}",
     "sass": "${sass.version}",
     "svelte": "${svelte.version}",

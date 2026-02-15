@@ -17,7 +17,7 @@
  */
 
 export const stateStore = $state({
-  groupingMode: 'by-label',
-  sortByScore: true,
-  recommendationsFirst: false
-})
+    groupingMode: 'by-label',
+    sortByScore: true,
+    recommendationsFirst: false,
+});

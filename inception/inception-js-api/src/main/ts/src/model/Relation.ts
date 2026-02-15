@@ -15,29 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Annotation, VID, Argument, Layer, Comment, AnnotatedText } from '.'
+import { Annotation, VID, Argument, Layer, Comment, AnnotatedText } from '.';
 
 export class Relation implements Annotation {
-  document: AnnotatedText
-  layer: Layer
-  vid: VID
-  color?: string
-  label?: string
-  score?: number
-  hideScore: boolean
-  comments?: Comment[]
-  arguments: Array<Argument>
+    document: AnnotatedText;
+    layer: Layer;
+    vid: VID;
+    color?: string;
+    label?: string;
+    score?: number;
+    hideScore: boolean;
+    comments?: Comment[];
+    arguments: Array<Argument>;
 
-  constructor (other?: Relation) {
-    if (other) {
-      this.document = other.document
-      this.layer = other.layer
-      this.vid = other.vid
-      this.color = other.color
-      this.label = other.label
-      this.comments = other.comments
-      this.arguments = other.arguments
-      this.hideScore = other.hideScore
+    constructor(other?: Relation) {
+        if (other) {
+            this.document = other.document;
+            this.layer = other.layer;
+            this.vid = other.vid;
+            this.color = other.color;
+            this.label = other.label;
+            this.comments = other.comments;
+            this.arguments = other.arguments;
+            this.hideScore = other.hideScore;
+        }
     }
-  }
 }

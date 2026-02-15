@@ -15,31 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { CompactComment } from '.'
+import { CompactComment } from '.';
 
 export interface CompactAnnotationAttributes {
-  /**
-   * Label (optional)
-   */
-  l: string
+    /**
+     * Label (optional)
+     */
+    l: string;
 
-  /**
-   * Color (optional)
-   */
-  c: string
+    /**
+     * Color (optional)
+     */
+    c: string;
 
-  /**
-   * Comments (optional)
-   */
-  cm: CompactComment[]
+    /**
+     * Comments (optional)
+     */
+    cm: CompactComment[];
 
-  /**
-   * Score (optional)
-   */
-  s: number
+    /**
+     * Score (optional)
+     */
+    s: number;
 
-  /**
-   * Hide score (optional)
-   */
-  hs: number
+    /**
+     * Hide score (optional)
+     */
+    hs: number;
 }

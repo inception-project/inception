@@ -18,15 +18,11 @@
 /*
  * Helper functions for grouping and rendering assistant messages.
  */
-import { marked } from "marked";
-import DOMPurify from "dompurify";
-import { replaceReferencesWithHtmlLinks } from "./AssistantPanelReferences";
-import type {
-    MTextMessage,
-    MChatMessage,
-    MGroupItem,
-} from "./AssistantPanelModels";
-import { isTextMessage, isGroupableMessage } from "./AssistantPanelModels";
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+import { replaceReferencesWithHtmlLinks } from './AssistantPanelReferences';
+import type { MTextMessage, MChatMessage, MGroupItem } from './AssistantPanelModels';
+import { isTextMessage, isGroupableMessage } from './AssistantPanelModels';
 
 // Configure marked consistently for these rendering helpers
 marked.setOptions({
@@ -37,10 +33,10 @@ marked.setOptions({
 
 export function renderThinking(message: MTextMessage): string {
     if (!message?.thinking) {
-        return "";
+        return '';
     }
 
-    const trimmedMessage = message.thinking.replace(/{{ref::[\w-]*}?$/, "");
+    const trimmedMessage = message.thinking.replace(/{{ref::[\w-]*}?$/, '');
 
     const rawHtml = marked(trimmedMessage) as string;
     const pureHtml = DOMPurify.sanitize(rawHtml, { RETURN_DOM: false });
@@ -51,10 +47,10 @@ export function renderThinking(message: MTextMessage): string {
 
 export function renderContent(message: MTextMessage): string {
     if (!message?.content) {
-        return "";
+        return '';
     }
 
-    const trimmedMessage = message.content.replace(/{{ref::[\w-]*}?$/, "");
+    const trimmedMessage = message.content.replace(/{{ref::[\w-]*}?$/, '');
 
     const rawHtml = marked(trimmedMessage) as string;
     const pureHtml = DOMPurify.sanitize(rawHtml, { RETURN_DOM: false });
@@ -90,16 +86,18 @@ export function buildGroups(messages: MChatMessage[]): MGroupItem[] {
         }
         const lastAsText = isTextMessage(last) ? last : null;
         groups.push({
-            type: "group",
+            type: 'group',
             messages: temp.slice(),
             id,
             lastMessage: last,
             lastHasThinkingAndContent: !!lastAsText?.thinking && !!lastAsText?.content,
             activeThinkingMessage: activeThinking,
-            activeThinkingHtml: activeThinking ? renderThinking(activeThinking) : "",
+            activeThinkingHtml: activeThinking ? renderThinking(activeThinking) : '',
             lastCompletedThinkingMessage: lastCompletedThinking,
-            lastCompletedThinkingHtml: lastCompletedThinking ? renderThinking(lastCompletedThinking) : "",
-            lastContentHtml: lastAsText ? renderContent(lastAsText) : "",
+            lastCompletedThinkingHtml: lastCompletedThinking
+                ? renderThinking(lastCompletedThinking)
+                : '',
+            lastContentHtml: lastAsText ? renderContent(lastAsText) : '',
         });
         temp = [];
     };

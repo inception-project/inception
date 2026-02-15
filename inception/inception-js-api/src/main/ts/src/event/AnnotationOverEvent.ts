@@ -16,18 +16,18 @@
  * limitations under the License.
  */
 
-import { Annotation } from '../model'
+import { Annotation } from '../model';
 
-const eventType = 'i7n-annotation-over'
+const eventType = 'i7n-annotation-over';
 export class AnnotationOverEvent extends Event {
-  static eventType = eventType
+    static eventType = eventType;
 
-  originalEvent: Event
-  annotation: Annotation
+    originalEvent: Event;
+    annotation: Annotation;
 
-  constructor (annotation: Annotation, originalEvent: Event) {
-    super(eventType, { bubbles: true })
-    this.originalEvent = originalEvent
-    this.annotation = annotation
-  }
+    constructor(annotation: Annotation, originalEvent: Event) {
+        super(eventType, { bubbles: true });
+        this.originalEvent = originalEvent;
+        this.annotation = annotation;
+    }
 }

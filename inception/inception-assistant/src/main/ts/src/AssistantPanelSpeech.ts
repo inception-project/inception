@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
-import type { MTextMessage } from "./AssistantPanelModels";
-import { stripRefs } from "./AssistantPanelReferences";
-import { marked } from "marked";
+import type { MTextMessage } from './AssistantPanelModels';
+import { stripRefs } from './AssistantPanelReferences';
+import { marked } from 'marked';
 
 /**
  * Convert Markdown to plain text using a lightweight marked renderer.
@@ -31,21 +31,21 @@ export function stripMarkdown(text: string): string {
     // If running in a browser or jsdom-like environment, convert HTML to a
     // DOM fragment and use its textContent for accurate whitespace handling.
     try {
-        if (typeof document !== "undefined" && typeof document.createRange === "function") {
+        if (typeof document !== 'undefined' && typeof document.createRange === 'function') {
             const frag = document.createRange().createContextualFragment(html);
-            const txt = frag.textContent || "";
-            return txt.replace(/\s+/g, " ").trim();
+            const txt = frag.textContent || '';
+            return txt.replace(/\s+/g, ' ').trim();
         }
     } catch (e) {
         // Log the exception before falling back so we have visibility in browsers
         // or test environments when DOM parsing fails.
         // eslint-disable-next-line no-console
-        console.warn("stripMarkdown: DOM parsing failed, falling back to tag-stripping.", e);
+        console.warn('stripMarkdown: DOM parsing failed, falling back to tag-stripping.', e);
     }
 
     // Fallback: strip tags from HTML
-    let out = html.replace(/<[^>]*>/g, "");
-    out = out.replace(/\s+/g, " ").trim();
+    let out = html.replace(/<[^>]*>/g, '');
+    out = out.replace(/\s+/g, ' ').trim();
     return out;
 }
 
@@ -58,7 +58,7 @@ export class SpeechManager {
     // create an utterance. Name `utteranceBuffer` kept for familiarity; it
     // contains the unstripped (raw) content until `stripRefs()` is applied
     // right before enqueuing.
-    private utteranceBuffer = "";
+    private utteranceBuffer = '';
     private utteranceQueue: SpeechSynthesisUtterance[] = [];
     private isSpeaking = false;
     private enabled: () => boolean;
@@ -71,7 +71,7 @@ export class SpeechManager {
      * Check if speech synthesis is available in the browser.
      */
     isAvailable(): boolean {
-        return "speechSynthesis" in window;
+        return 'speechSynthesis' in window;
     }
 
     /**
@@ -84,7 +84,7 @@ export class SpeechManager {
 
         if (msg.done) {
             this.enqueueUtterance(this.utteranceBuffer);
-            this.utteranceBuffer = "";
+            this.utteranceBuffer = '';
             return;
         }
 
@@ -95,25 +95,25 @@ export class SpeechManager {
         // Markdown/formatting characters (e.g. '*', '_', '`', closing parens,
         // quotes) so that constructs like '*Yes.*' are recognized as ending
         // with '.' rather than '*'.
-        const formattingTrail = new Set(["*", "_", "`", '"', "'", "’", ")", "]", "}"]);
+        const formattingTrail = new Set(['*', '_', '`', '"', "'", '’', ')', ']', '}']);
         let i = trimmedRaw.length - 1;
         while (i >= 0 && formattingTrail.has(trimmedRaw.charAt(i))) {
             i--;
         }
-        const lastChar = i >= 0 ? trimmedRaw.charAt(i) : "";
+        const lastChar = i >= 0 ? trimmedRaw.charAt(i) : '';
 
-        if ([".", "!", "?", ";", ":"].includes(lastChar)) {
+        if (['.', '!', '?', ';', ':'].includes(lastChar)) {
             // Detect unfinished reference markers in the raw (pre-stripped) buffer
             const hasUnclosedRef = /{{[^}]*$/.test(this.utteranceBuffer);
-            if (lastChar === ":" && hasUnclosedRef) {
+            if (lastChar === ':' && hasUnclosedRef) {
                 // Defer speaking until the reference is complete
             } else {
                 this.enqueueUtterance(this.utteranceBuffer);
-                this.utteranceBuffer = "";
+                this.utteranceBuffer = '';
             }
         } else {
             // Speak line by line using the raw buffer
-            const lineBreak = this.utteranceBuffer.indexOf("\n");
+            const lineBreak = this.utteranceBuffer.indexOf('\n');
             if (lineBreak > 0) {
                 const segment = this.utteranceBuffer.substring(0, lineBreak + 1);
                 this.enqueueUtterance(segment);
@@ -136,7 +136,7 @@ export class SpeechManager {
     cancel(): void {
         speechSynthesis.cancel();
         this.utteranceQueue = [];
-        this.utteranceBuffer = "";
+        this.utteranceBuffer = '';
         this.isSpeaking = false;
     }
 
@@ -154,12 +154,12 @@ export class SpeechManager {
 
     private processUtteranceQueue(): void {
         if (this.isSpeaking) {
-            console.debug("Speech synthesis is already in progress.");
+            console.debug('Speech synthesis is already in progress.');
             return;
         }
 
         if (this.utteranceQueue.length === 0) {
-            console.debug("Speech synthesis queue is empty.");
+            console.debug('Speech synthesis queue is empty.');
             return;
         }
 
@@ -174,7 +174,7 @@ export class SpeechManager {
             this.processUtteranceQueue();
         };
 
-        console.info("Speaking: " + utterance.text);
+        console.info('Speaking: ' + utterance.text);
         speechSynthesis.speak(utterance);
     }
 }

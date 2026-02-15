@@ -38,15 +38,15 @@
  * SOFTWARE.
  */
 
-import { Arc } from './Arc'
-import { Chunk } from './Chunk'
-import { EventDesc } from './EventDesc'
-import { Fragment } from './Fragment'
-import { Sizes } from './Sizes'
-import { Entity } from './Entity'
-import { Text as SVGText } from '@svgdotjs/svg.js'
-import { Comment } from './Comment'
-import { VID } from '../protocol/Protocol'
+import { Arc } from './Arc';
+import { Chunk } from './Chunk';
+import { EventDesc } from './EventDesc';
+import { Fragment } from './Fragment';
+import { Sizes } from './Sizes';
+import { Entity } from './Entity';
+import { Text as SVGText } from '@svgdotjs/svg.js';
+import { Comment } from './Comment';
+import { VID } from '../protocol/Protocol';
 
 /**
  * Document data prepared for rendering. The JSON data we get from the server is converted into
@@ -54,26 +54,26 @@ import { VID } from '../protocol/Protocol'
  * which doesn't yet create the actual SVG representation.
  */
 export class DocumentData {
-  text: string
-  chunks: Array<Chunk> = []
-  spans: Record<VID, Entity> = {}
-  arcById: Record<VID, Arc> = {}
-  arcs: Array<Arc> = []
-  eventDescs: Record<VID, EventDesc> = {}
-  sentComment: Record<number, Comment> = {}
-  markedSent: Record<number, boolean> = {}
-  /**
-   * Template SVG text elements. Clone these and fill in any missing information (translate, fill)
-   * before adding them to the SVG.
-   */
-  spanAnnTexts: Record<string, SVGText> = {}
-  towers: Record<string, Fragment[]> = {}
-  spanDrawOrderPermutation: Array<string> = []
-  sizes: Sizes
-  exception = false
+    text: string;
+    chunks: Array<Chunk> = [];
+    spans: Record<VID, Entity> = {};
+    arcById: Record<VID, Arc> = {};
+    arcs: Array<Arc> = [];
+    eventDescs: Record<VID, EventDesc> = {};
+    sentComment: Record<number, Comment> = {};
+    markedSent: Record<number, boolean> = {};
+    /**
+     * Template SVG text elements. Clone these and fill in any missing information (translate, fill)
+     * before adding them to the SVG.
+     */
+    spanAnnTexts: Record<string, SVGText> = {};
+    towers: Record<string, Fragment[]> = {};
+    spanDrawOrderPermutation: Array<string> = [];
+    sizes: Sizes;
+    exception = false;
 
-  constructor (text: string) {
-    this.text = text
-    // Object.seal(this)
-  }
+    constructor(text: string) {
+        this.text = text;
+        // Object.seal(this)
+    }
 }

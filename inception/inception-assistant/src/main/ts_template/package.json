@@ -9,8 +9,8 @@
   "scripts": {
     "build": "node build.mjs",
     "test": "vitest run --reporter=default --reporter=junit --outputFile=\"../../../target/surefire-reports/vitest-test-report.xml\"",
-    "format": "prettier --write \"**/*.{js,ts,svelte,css,scss,json,md,html}\"",
-    "format:check": "prettier --check \"**/*.{js,ts,svelte,css,scss,json,md,html}\""
+    "format": "prettier --write \"**/*.{js,ts,svelte,css,scss,json}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,svelte,css,scss,json}\""
   },
   "repository": {
     "type": "git",
@@ -37,7 +37,7 @@
     "esbuild-svelte": "${esbuild-svelte.version}",
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
-    "neostandard": "${neostandard.version}",
+    "eslint-config-prettier": "${eslint-config-prettier.version}",
     "eslint-plugin-import": "${eslint-plugin-import.version}",
     "eslint-plugin-n": "${eslint-plugin-n.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
@@ -46,9 +46,9 @@
     "jsdom": "${jsdom.version}",
     "jsdom-global": "${jsdom-global.version}",
     "marked": "${marked.version}",
+    "neostandard": "${neostandard.version}",
     "prettier": "${prettier.version}",
     "prettier-plugin-svelte": "${prettier-plugin-svelte.version}",
-    "eslint-plugin-svelte": "${eslint-plugin-svelte.version}",
     "sass": "${sass.version}",
     "svelte": "${svelte.version}",
     "svelte-preprocess": "${svelte-preprocess.version}",

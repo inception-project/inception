@@ -38,110 +38,122 @@
  * SOFTWARE.
  */
 
-import { Dispatcher } from '../dispatcher/Dispatcher'
+import { Dispatcher } from '../dispatcher/Dispatcher';
 
-declare let Wicket
+declare let Wicket;
 
 // vim:set ft=javascript ts=2 sw=2 sts=2 cindent:
 export class Ajax {
-  private pending = 0
-  private count = 0
-  private pendingList = {}
-  private dispatcher: Dispatcher
-  private ajaxUrl: string
+    private pending = 0;
+    private count = 0;
+    private pendingList = {};
+    private dispatcher: Dispatcher;
+    private ajaxUrl: string;
 
-  // We attach the JSON send back from the server to this HTML element
-  // because we cannot directly pass it from Wicket to the caller in ajax.js.
-  private wicketId: string
+    // We attach the JSON send back from the server to this HTML element
+    // because we cannot directly pass it from Wicket to the caller in ajax.js.
+    private wicketId: string;
 
-  constructor (dispatcher: Dispatcher, wicketId: string, ajaxUrl: string) {
-    console.debug('Setting up brat ajax module...')
+    constructor(dispatcher: Dispatcher, wicketId: string, ajaxUrl: string) {
+        console.debug('Setting up brat ajax module...');
 
-    this.dispatcher = dispatcher
-    this.ajaxUrl = ajaxUrl
-    this.wicketId = wicketId
-    dispatcher
-      .on('isReloadOkay', this, this.isReloadOkay)
-      .on('ajax', this, this.ajaxCall)
-  }
-
-  // merge data will get merged into the response data
-  // before calling the callback
-  ajaxCall (data, callback: Function, merge) {
-    merge = merge || {}
-    this.pending++
-    const id = this.count++
-
-    // special value: `merge.keep = true` prevents obsolescence
-    this.pendingList[id] = merge.keep || false
-    delete merge.keep
-
-    // If no protocol version is explicitly set, set it to current
-    if (data.protocol === undefined) {
-      // TODO: Extract the protocol version somewhere global
-      data.protocol = 1
+        this.dispatcher = dispatcher;
+        this.ajaxUrl = ajaxUrl;
+        this.wicketId = wicketId;
+        dispatcher.on('isReloadOkay', this, this.isReloadOkay).on('ajax', this, this.ajaxCall);
     }
 
-    // WEBANNO EXTENSION BEGIN
-    Wicket.Ajax.ajax({
-      m: 'POST',
-      c: this.wicketId,
-      u: this.ajaxUrl,
-      ep: data,
-      // success
-      sh: [() => {
-        let response
-        if (Wicket.$(this.wicketId) !== null) {
-          response = Wicket.$(this.wicketId).temp
-          delete Wicket.$(this.wicketId).temp
+    // merge data will get merged into the response data
+    // before calling the callback
+    ajaxCall(data, callback: Function, merge) {
+        merge = merge || {};
+        this.pending++;
+        const id = this.count++;
+
+        // special value: `merge.keep = true` prevents obsolescence
+        this.pendingList[id] = merge.keep || false;
+        delete merge.keep;
+
+        // If no protocol version is explicitly set, set it to current
+        if (data.protocol === undefined) {
+            // TODO: Extract the protocol version somewhere global
+            data.protocol = 1;
         }
 
-        if (response === undefined) {
-          console.log('Server response did not contain brat data - ignoring')
-          // This is likely a wicket ajax-redirect and nothing that relates to brat.
-          // We simply ignore this.
-          return
-        }
-        // WEBANNO EXTENSION END
-
-        this.pending--
-
-        // If no exception is set, verify the server results
-        if (response.exception === undefined && response.action !== data.action) {
-          console.error(`Action ${data.action} returned the results of action ${response.action}`)
-          response.exception = true
-          this.dispatcher.post('messages', [[[`Protocol error: Action ${data.action} returned the results of action ${response.action} maybe the server is unable to run, please run tools/troubleshooting.sh from your installation to diagnose it`, 'error', -1]]])
-        }
-
-        // If the request is obsolete, do nothing; if not...
-        if (Object.prototype.hasOwnProperty.call(this.pendingList, id)) {
-          this.dispatcher.post('messages', [response.messages])
-          delete this.pendingList[id]
-          if (response.exception === true) {
-            // if .exception is just Boolean true, do not process the callback;
-          } else if (callback) {
-            // if it is anything else, the callback is responsible for handling it
-            $.extend(response, merge)
-            this.dispatcher.postAsync(callback, [response])
-          }
-        }
         // WEBANNO EXTENSION BEGIN
-      }],
-      // error
-      fh: [() => {
-        this.pending--
-        // TODO find some way or access or pass on the response, textStatus and errorThrown from BratAnnotator or Wicket.
-        // In the original ajax.js, these are parameters to the error callback.
-        //            dispatcher.post('messages', [[['Error: Action' + data.action + ' failed on error ' + response.statusText, 'error']]]);
-        //            console.error(textStatus + ':', errorThrown, response);
-      }]
-    })
-    // WEBANNO EXTENSION END
-    return id
-  }
+        Wicket.Ajax.ajax({
+            m: 'POST',
+            c: this.wicketId,
+            u: this.ajaxUrl,
+            ep: data,
+            // success
+            sh: [
+                () => {
+                    let response;
+                    if (Wicket.$(this.wicketId) !== null) {
+                        response = Wicket.$(this.wicketId).temp;
+                        delete Wicket.$(this.wicketId).temp;
+                    }
 
-  isReloadOkay () : boolean {
-    // do not reload while data is pending
-    return this.pending === 0
-  }
+                    if (response === undefined) {
+                        console.log('Server response did not contain brat data - ignoring');
+                        // This is likely a wicket ajax-redirect and nothing that relates to brat.
+                        // We simply ignore this.
+                        return;
+                    }
+                    // WEBANNO EXTENSION END
+
+                    this.pending--;
+
+                    // If no exception is set, verify the server results
+                    if (response.exception === undefined && response.action !== data.action) {
+                        console.error(
+                            `Action ${data.action} returned the results of action ${response.action}`
+                        );
+                        response.exception = true;
+                        this.dispatcher.post('messages', [
+                            [
+                                [
+                                    `Protocol error: Action ${data.action} returned the results of action ${response.action} maybe the server is unable to run, please run tools/troubleshooting.sh from your installation to diagnose it`,
+                                    'error',
+                                    -1,
+                                ],
+                            ],
+                        ]);
+                    }
+
+                    // If the request is obsolete, do nothing; if not...
+                    if (Object.prototype.hasOwnProperty.call(this.pendingList, id)) {
+                        this.dispatcher.post('messages', [response.messages]);
+                        delete this.pendingList[id];
+                        if (response.exception === true) {
+                            // if .exception is just Boolean true, do not process the callback;
+                        } else if (callback) {
+                            // if it is anything else, the callback is responsible for handling it
+                            $.extend(response, merge);
+                            this.dispatcher.postAsync(callback, [response]);
+                        }
+                    }
+                    // WEBANNO EXTENSION BEGIN
+                },
+            ],
+            // error
+            fh: [
+                () => {
+                    this.pending--;
+                    // TODO find some way or access or pass on the response, textStatus and errorThrown from BratAnnotator or Wicket.
+                    // In the original ajax.js, these are parameters to the error callback.
+                    //            dispatcher.post('messages', [[['Error: Action' + data.action + ' failed on error ' + response.statusText, 'error']]]);
+                    //            console.error(textStatus + ':', errorThrown, response);
+                },
+            ],
+        });
+        // WEBANNO EXTENSION END
+        return id;
+    }
+
+    isReloadOkay(): boolean {
+        // do not reload while data is pending
+        return this.pending === 0;
+    }
 }

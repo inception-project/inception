@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { CompactAnnotationAttributes } from './CompactAnnotationAttributes'
+import { CompactAnnotationAttributes } from './CompactAnnotationAttributes';
 
 export type CompactClippingStatus = undefined | 's' | 'e' | 'se';
 
 export interface CompactSpanAttributes extends CompactAnnotationAttributes {
-  /**
-   * Clipping status (optional)
-   */
-  cl: CompactClippingStatus
+    /**
+     * Clipping status (optional)
+     */
+    cl: CompactClippingStatus;
 }

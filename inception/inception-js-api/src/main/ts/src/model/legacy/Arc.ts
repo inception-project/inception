@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Annotation, VID } from '..'
+import { Annotation, VID } from '..';
 
 export interface Arc extends Annotation {
-    source: VID
-    target: VID
+    source: VID;
+    target: VID;
 }

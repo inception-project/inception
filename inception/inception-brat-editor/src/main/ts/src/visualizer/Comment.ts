@@ -1,4 +1,4 @@
-import { VID } from "@inception-project/inception-js-api"
+import { VID } from '@inception-project/inception-js-api';
 
 /*
  * ## INCEpTION ##
@@ -40,11 +40,11 @@ import { VID } from "@inception-project/inception-js-api"
  * SOFTWARE.
  */
 export class Comment {
-  id: VID = undefined
-  text: string = undefined
-  type: string = undefined
+    id: VID = undefined;
+    text: string = undefined;
+    type: string = undefined;
 
-  constructor () {
-    Object.seal(this)
-  }
+    constructor() {
+        Object.seal(this);
+    }
 }

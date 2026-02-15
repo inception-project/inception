@@ -15,16 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { DiamWebsocketImpl } from './DiamWebsocketImpl'
-import { DiamAjaxImpl } from './DiamAjaxImpl'
-import { DiamAjaxConnectOptions, DiamClientFactory } from '@inception-project/inception-js-api'
+import { DiamWebsocketImpl } from './DiamWebsocketImpl';
+import { DiamAjaxImpl } from './DiamAjaxImpl';
+import { DiamAjaxConnectOptions, DiamClientFactory } from '@inception-project/inception-js-api';
 
 export class DiamClientFactoryImpl implements DiamClientFactory {
-  createWebsocketClient () : DiamWebsocketImpl {
-    return new DiamWebsocketImpl()
-  }
+    createWebsocketClient(): DiamWebsocketImpl {
+        return new DiamWebsocketImpl();
+    }
 
-  createAjaxClient (options: string | DiamAjaxConnectOptions) : DiamAjaxImpl {
-    return new DiamAjaxImpl(options)
-  }
+    createAjaxClient(options: string | DiamAjaxConnectOptions): DiamAjaxImpl {
+        return new DiamAjaxImpl(options);
+    }
 }

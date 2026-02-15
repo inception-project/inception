@@ -20,29 +20,29 @@
  * Shared reference handling utilities for AssistantPanel.
  */
 
-import type { MChatMessage, MReference } from "./AssistantPanelModels";
+import type { MChatMessage, MReference } from './AssistantPanelModels';
 
 export const refIdReplacementPattern = /\s*{{ref::([\w-]+)}}(\.*)/g;
 export const docIdReplacementPattern = /\s*[Dd]ocument[\s,]+([0-9a-f]{8})(\.*)/g;
 
 export function stripRefs(text: string): string {
     if (!text) return text;
-    return text.replace(refIdReplacementPattern, "").replace(docIdReplacementPattern, "");
+    return text.replace(refIdReplacementPattern, '').replace(docIdReplacementPattern, '');
 }
 
 function escapeXML(str: string): string {
     return str.replace(/[<>&'"]/g, (char) => {
         switch (char) {
-            case "<":
-                return "&lt;";
-            case ">":
-                return "&gt;";
-            case "&":
-                return "&amp;";
+            case '<':
+                return '&lt;';
+            case '>':
+                return '&gt;';
+            case '&':
+                return '&amp;';
             case "'":
-                return "&apos;";
+                return '&apos;';
             case '"':
-                return "&quot;";
+                return '&quot;';
             default:
                 return char;
         }
@@ -60,7 +60,11 @@ export function formatReferenceTitle(reference: MReference): string {
  * Replace references in HTML text with badge links for the UI.
  * If `pattern` is omitted, both id-refs and document refs are processed.
  */
-export function replaceReferencesWithHtmlLinks(message: MChatMessage, text: string, pattern?: RegExp): string {
+export function replaceReferencesWithHtmlLinks(
+    message: MChatMessage,
+    text: string,
+    pattern?: RegExp
+): string {
     if (!text) return text;
 
     const applyPattern = (pat: RegExp, src: string) =>
@@ -75,7 +79,7 @@ export function replaceReferencesWithHtmlLinks(message: MChatMessage, text: stri
             }
 
             // If reference doesn't exist, filter it out (keep only the dots if any)
-            return dots || "";
+            return dots || '';
         });
 
     if (pattern) {
@@ -88,16 +92,18 @@ export function replaceReferencesWithHtmlLinks(message: MChatMessage, text: stri
     return out;
 }
 
-export function findReferencesInText(text: string): Array<{ type: "ref" | "doc"; id: string; match: string }> {
-    const results: Array<{ type: "ref" | "doc"; id: string; match: string }> = [];
+export function findReferencesInText(
+    text: string
+): Array<{ type: 'ref' | 'doc'; id: string; match: string }> {
+    const results: Array<{ type: 'ref' | 'doc'; id: string; match: string }> = [];
     let m: RegExpExecArray | null;
     const r1 = new RegExp(refIdReplacementPattern);
     while ((m = r1.exec(text))) {
-        results.push({ type: "ref", id: m[1], match: m[0] });
+        results.push({ type: 'ref', id: m[1], match: m[0] });
     }
     const r2 = new RegExp(docIdReplacementPattern);
     while ((m = r2.exec(text))) {
-        results.push({ type: "doc", id: m[1], match: m[0] });
+        results.push({ type: 'doc', id: m[1], match: m[0] });
     }
     return results;
 }

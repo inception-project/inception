@@ -16,250 +16,372 @@
  * limitations under the License.
  */
 
-html, body {
-//  font-family: 'Open Sans', Frutiger, Calibri, 'Myriad Pro', Myriad, sans-serif;
-  min-height: 100%;
-  max-height: 100%;
-  height: 100%;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+html,
+body {
+    //  font-family: 'Open Sans', Frutiger, Calibri, 'Myriad Pro', Myriad, sans-serif;
+    min-height: 100%;
+    max-height: 100%;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .page-header {
-  margin: 0px;
-  padding: 0px;
-  flex: none;
-  position: relative;
-  z-index: 2000; // Display above modal dialogs (1000)
+    margin: 0px;
+    padding: 0px;
+    flex: none;
+    position: relative;
+    z-index: 2000; // Display above modal dialogs (1000)
 }
 
 .page-content {
-  flex: 1;
-  height: 100%;
-  width: 100%;
+    flex: 1;
+    height: 100%;
+    width: 100%;
 }
 
 .page-footer {
-  flex: none;
-  min-height: $page-footer-height; 
-  height: $page-footer-height;
-  padding-top: 2px; 
-  margin-bottom: 3px; 
-  text-align: center; 
-  font-size: $font-size-sm; 
-  padding-left: ceil(calc($grid-gutter-width / 2));
-  padding-right: ceil(calc($grid-gutter-width / 2));
-  color: $card-color;
-  background-color: $card-bg;
-  border-color: $card-border-color;
-  border-top: 1px solid;
-  z-index: 10000; // Display above modal dialogs (1000) and above sidebar (9999)
+    flex: none;
+    min-height: $page-footer-height;
+    height: $page-footer-height;
+    padding-top: 2px;
+    margin-bottom: 3px;
+    text-align: center;
+    font-size: $font-size-sm;
+    padding-left: ceil(calc($grid-gutter-width / 2));
+    padding-right: ceil(calc($grid-gutter-width / 2));
+    color: $card-color;
+    background-color: $card-bg;
+    border-color: $card-border-color;
+    border-top: 1px solid;
+    z-index: 10000; // Display above modal dialogs (1000) and above sidebar (9999)
 
-  a, a:hover, a:focus {
-    color: var(--bs-body-color);
-  }
+    a,
+    a:hover,
+    a:focus {
+        color: var(--bs-body-color);
+    }
 }
 
 .feedback-panel {
-  position: fixed;
-  bottom: $page-footer-height;
-  z-index: 10010;
-  min-width: 30%;
-  max-height: calc(calc(100vh - $page-footer-height - $page-header-height));
-  overflow: auto;
- 
-  ul.feedbackPanel {
-    list-style:none;
-  }
+    position: fixed;
+    bottom: $page-footer-height;
+    z-index: 10010;
+    min-width: 30%;
+    max-height: calc(calc(100vh - $page-footer-height - $page-header-height));
+    overflow: auto;
 
-  .alert {
-    padding-top: 5px;
-    padding-bottom: 5px;
-    margin-bottom: 10px;
-  }  
+    ul.feedbackPanel {
+        list-style: none;
+    }
 
-  .btn-close {
-    padding-top: 20px;
-    padding-bottom: 0px;
-    margin-bottom: 0px;
-  }
+    .alert {
+        padding-top: 5px;
+        padding-bottom: 5px;
+        margin-bottom: 10px;
+    }
+
+    .btn-close {
+        padding-top: 20px;
+        padding-bottom: 0px;
+        margin-bottom: 0px;
+    }
 }
 
 .nav-pills img {
-  padding-right: 15px;
+    padding-right: 15px;
 }
 
 .page-content > .row {
-  margin-right: 0px;
-  margin-left: 0px;
+    margin-right: 0px;
+    margin-left: 0px;
 }
 
 /* Allow text in non-editable span values in forms to break. Maintain minimal height. */
 span.form-control {
-  word-wrap: break-word;
-  height: auto;
-  min-height: $input-height;
+    word-wrap: break-word;
+    height: auto;
+    min-height: $input-height;
 }
 
 /* Fix header font in Wicket modal windows */
 .w_caption h3 {
-  font-size: 18px;
+    font-size: 18px;
 }
 
 .w_content_container .fluid-container {
-  margin-left: 15px;
-  margin-right: 15px;
+    margin-left: 15px;
+    margin-right: 15px;
 }
 
 .vert-aligned {
-  vertical-align: middle !important;
+    vertical-align: middle !important;
 }
 
 /* Facilitate Wicket modal windows with fixed button bar at the bottom */
-.w_flex .w_content_container { overflow: hidden !important; }
-.w_flex .w_content_container > div { height: 100%; }
-.w_flex .w_flex_container { display: flex; flex-direction: column; height: 100%; }
-.w_flex .w_flex_content { flex: 1; overflow: auto; padding-top: 15px; padding-bottom: 15px; }
-.w_flex .w_flex_footer { flex: none; } 
-
+.w_flex .w_content_container {
+    overflow: hidden !important;
+}
+.w_flex .w_content_container > div {
+    height: 100%;
+}
+.w_flex .w_flex_container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.w_flex .w_flex_content {
+    flex: 1;
+    overflow: auto;
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+.w_flex .w_flex_footer {
+    flex: none;
+}
 
 .min-content-height {
-  min-height: -moz-min-content;
-  min-height: -webkit-min-content;
-  min-height: min-content;
+    min-height: -moz-min-content;
+    min-height: -webkit-min-content;
+    min-height: min-content;
 }
 
 .notice-container {
-  position: absolute;
-  bottom: 20px;
+    position: absolute;
+    bottom: 20px;
 }
 
 /* Flex layout helpers as CSS classes - order matters! */
-.flex-h-container { display: flex; flex-direction: row; }
-.flex-h-container.flex-gutter > * { margin-left: ceil(calc($grid-gutter-width / 2)) }
-.flex-h-container.flex-no-gutter > .panel { margin-bottom: 0px; }
-.flex-h-container.flex-gutter > .panel { margin-bottom: 0px; }
-.flex-h-container.flex-gutter > *:last-child { margin-right: ceil(calc($grid-gutter-width / 2)) }
-.flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > *:first-child { margin-left: 0px; }
-.flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > *:last-child { margin-right: 0px; }
-.flex-h-container.flex-no-initial-gutter > *:first-child { margin-left: 0px; }
-.flex-h-container.flex-only-internal-gutter > *:first-child { margin-left: 0px; }
-.flex-h-container.flex-only-internal-gutter > *:last-child { margin-right: 0px; }
+.flex-h-container {
+    display: flex;
+    flex-direction: row;
+}
+.flex-h-container.flex-gutter > * {
+    margin-left: ceil(calc($grid-gutter-width / 2));
+}
+.flex-h-container.flex-no-gutter > .panel {
+    margin-bottom: 0px;
+}
+.flex-h-container.flex-gutter > .panel {
+    margin-bottom: 0px;
+}
+.flex-h-container.flex-gutter > *:last-child {
+    margin-right: ceil(calc($grid-gutter-width / 2));
+}
+.flex-h-container.flex-gutter
+    > .flex-v-container.flex-gutter
+    > .flex-h-container.flex-gutter
+    > *:first-child {
+    margin-left: 0px;
+}
+.flex-h-container.flex-gutter
+    > .flex-v-container.flex-gutter
+    > .flex-h-container.flex-gutter
+    > *:last-child {
+    margin-right: 0px;
+}
+.flex-h-container.flex-no-initial-gutter > *:first-child {
+    margin-left: 0px;
+}
+.flex-h-container.flex-only-internal-gutter > *:first-child {
+    margin-left: 0px;
+}
+.flex-h-container.flex-only-internal-gutter > *:last-child {
+    margin-right: 0px;
+}
 
-.flex-v-container.flex-no-gutter > .panel { margin-bottom: 0px; } /* Has to be first here! */
-.flex-v-container.flex-gutter > .panel { margin-bottom: 0px; } /* Has to be first here! */
-.flex-v-container { display: flex; flex-direction: column; }
-.flex-v-container.flex-gutter > * { margin-top: (calc($grid-gutter-width / 2)) }
-.flex-v-container.flex-gutter > *:last-child { margin-bottom: ceil(calc($grid-gutter-width / 2)) }
-.flex-v-container.flex-gutter > .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > *:first-child { margin-top: 0px; }
-.flex-v-container.flex-gutter > .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > *:last-child { margin-bottom: 0px; }
-.flex-v-container.flex-only-internal-gutter > *:first-child { margin-top: 0px; }
-.flex-v-container.flex-only-internal-gutter > *:last-child { margin-bottom: 0px; }
+.flex-v-container.flex-no-gutter > .panel {
+    margin-bottom: 0px;
+} /* Has to be first here! */
+.flex-v-container.flex-gutter > .panel {
+    margin-bottom: 0px;
+} /* Has to be first here! */
+.flex-v-container {
+    display: flex;
+    flex-direction: column;
+}
+.flex-v-container.flex-gutter > * {
+    margin-top: (calc($grid-gutter-width / 2));
+}
+.flex-v-container.flex-gutter > *:last-child {
+    margin-bottom: ceil(calc($grid-gutter-width / 2));
+}
+.flex-v-container.flex-gutter
+    > .flex-h-container.flex-gutter
+    > .flex-v-container.flex-gutter
+    > *:first-child {
+    margin-top: 0px;
+}
+.flex-v-container.flex-gutter
+    > .flex-h-container.flex-gutter
+    > .flex-v-container.flex-gutter
+    > *:last-child {
+    margin-bottom: 0px;
+}
+.flex-v-container.flex-only-internal-gutter > *:first-child {
+    margin-top: 0px;
+}
+.flex-v-container.flex-only-internal-gutter > *:last-child {
+    margin-bottom: 0px;
+}
 
-.flex-centered { align-items: center; }
-.flex-centered > * { margin: 0px; }
+.flex-centered {
+    align-items: center;
+}
+.flex-centered > * {
+    margin: 0px;
+}
 
-.flex-static-item { flex: none !important; }
-.flex-growing-item { flex: 1; }
-.flex-sidebar { flex-basis: 20%; flex-grow: 0; flex-shrink: 0; min-width: 0px; }
-.flex-content { flex: 1; }
-.flex-content .scrolling { flex-basis: 0; }
+.flex-static-item {
+    flex: none !important;
+}
+.flex-growing-item {
+    flex: 1;
+}
+.flex-sidebar {
+    flex-basis: 20%;
+    flex-grow: 0;
+    flex-shrink: 0;
+    min-width: 0px;
+}
+.flex-content {
+    flex: 1;
+}
+.flex-content .scrolling {
+    flex-basis: 0;
+}
 
-.flex-tile-container { display: flex; flex-flow: row wrap; }
-.flex-tile { box-sizing: border-box; flex: 1; flex-basis: 30em; }
+.flex-tile-container {
+    display: flex;
+    flex-flow: row wrap;
+}
+.flex-tile {
+    box-sizing: border-box;
+    flex: 1;
+    flex-basis: 30em;
+}
 
-.no-scrolling { overflow: unset !important; } 
-.scrolling { overflow: auto; }
-.v-scrolling { overflow-y: auto; }
-.h-scrolling { overflow-x: auto; }
+.no-scrolling {
+    overflow: unset !important;
+}
+.scrolling {
+    overflow: auto;
+}
+.v-scrolling {
+    overflow-y: auto;
+}
+.h-scrolling {
+    overflow-x: auto;
+}
 
 /* Helpers for content which has a hard adjusting to its parents dimensions or which tries to
    control its parents dimensions but shouldn't, e.g SVG or multi-select*/
-.fit-child-snug { position: relative; min-height: 6em; }
-.fit-child-snug > * { position: absolute; left: 0px; right: 0px; top: 0px; bottom: 0px; resize: none; border: none; }
-.fit-child-loose { position: relative; min-height: 6em; }
-.fit-child-loose > * { position: absolute; left: 5px; right: 5px; top: 5px; bottom: 5px; resize: none; }
+.fit-child-snug {
+    position: relative;
+    min-height: 6em;
+}
+.fit-child-snug > * {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    resize: none;
+    border: none;
+}
+.fit-child-loose {
+    position: relative;
+    min-height: 6em;
+}
+.fit-child-loose > * {
+    position: absolute;
+    left: 5px;
+    right: 5px;
+    top: 5px;
+    bottom: 5px;
+    resize: none;
+}
 
 /* style for the warning popover in the page footer */
 .dev-warnings {
-  .alert {
-    padding: 0px 5px 0px 5px;
-    border: none;
-    color: yellow;
-    background-color: red;
-  }
-  
- .popover-content ul {
-    padding-left: 18px;
-  }
-  
-  a, a:hover, a:focus {
-    color: yellow;
-  }
+    .alert {
+        padding: 0px 5px 0px 5px;
+        border: none;
+        color: yellow;
+        background-color: red;
+    }
+
+    .popover-content ul {
+        padding-left: 18px;
+    }
+
+    a,
+    a:hover,
+    a:focus {
+        color: yellow;
+    }
 }
 
 /* Fixes to brat CSS */
 #commentpopup {
-  text-align: initial;
+    text-align: initial;
 }
 
 /* Class for disabled links (doesn't really disable the link, but it looks like it)*/
 a.disabled {
-  pointer-events: none;
-  cursor: default;
+    pointer-events: none;
+    cursor: default;
 }
 
-
 .no-data-notice {
-  @extend .text-muted;
-  background-color: $card-cap-bg;
-  display: flex;
-  justify-content: center; 
-  align-items: center;
-  min-height: 5rem;
-  text-align: center;
+    @extend .text-muted;
+    background-color: $card-cap-bg;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 5rem;
+    text-align: center;
 }
 
 .card-body {
-  .no-data-notice {
-    margin-left: -$card-spacer-x !important;
-    margin-right: -$card-spacer-x !important;
-    margin-top: -$card-spacer-y !important;
-    margin-bottom: -$card-spacer-y !important;
-    padding: $card-spacer-x !important;
-  }
+    .no-data-notice {
+        margin-left: -$card-spacer-x !important;
+        margin-right: -$card-spacer-x !important;
+        margin-top: -$card-spacer-y !important;
+        margin-bottom: -$card-spacer-y !important;
+        padding: $card-spacer-x !important;
+    }
 }
-
 
 // Make the JQuery context menu fit in nicely with the rest of the theme instead of showing up in
 // bright orange
 .ui-menu {
-  text-align: left;
-  
-  .ui-menu-item {
-    .ui-menu-item-wrapper.ui-state-active {
-      color: $component-active-color;
-      background-color: $component-active-bg;
-      background-image: none;
-      font-weight: normal;
+    text-align: left;
+
+    .ui-menu-item {
+        .ui-menu-item-wrapper.ui-state-active {
+            color: $component-active-color;
+            background-color: $component-active-bg;
+            background-image: none;
+            font-weight: normal;
+        }
     }
-  }
 }
 
 .context-menu {
-  z-index: 999;
+    z-index: 999;
 }
 
 // A class for something that needs to be there in order to get events but should not actually be
 // visible to the user (i.e. use no space)
 .there-but-not-visible {
-  width: 1px; 
-  height: 1px; 
-  overflow: hidden; 
-  opacity: 0; 
-  margin-top: -1px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+    margin-top: -1px;
 }
 
 /* -------------------------------------------------------------------------------------------------
@@ -267,10 +389,10 @@ a.disabled {
  */
 
 label.required {
-  &:after {
-    color: var(--bs-secondary-color) !important;
-    content: "*" !important;
-  }
+    &:after {
+        color: var(--bs-secondary-color) !important;
+        content: '*' !important;
+    }
 }
 
 /* -------------------------------------------------------------------------------------------------
@@ -278,18 +400,18 @@ label.required {
  */
 
 #spinner {
-  display: none;
-  position: fixed;
-  right:10px;
-  top: 55px;
-  z-index:9999;
+    display: none;
+    position: fixed;
+    right: 10px;
+    top: 55px;
+    z-index: 9999;
 }
 
 /* -------------------------------------------------------------------------------------------------
  * Menu
  */
 .locationbar {
-    text-align: left; 
+    text-align: left;
     /*color: maroon;*/
     padding-left: 1em;
     padding-right: 1em;
@@ -301,16 +423,16 @@ label.required {
  */
 
 /* Use for a horizontal list of icons */
-ul.horizontal{
-    margin:0px;
-    padding:0px;
+ul.horizontal {
+    margin: 0px;
+    padding: 0px;
 }
 
-ul.horizontal li{
-    margin-left:0.5em;
-    margin-right:0.5em;
-    display:inline-block;
-    text-align:center;
+ul.horizontal li {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    display: inline-block;
+    text-align: center;
 }
 
 a.menulink {
@@ -318,7 +440,7 @@ a.menulink {
 }
 
 a.menulink > span {
-  font-size: 120%;
+    font-size: 120%;
     text-decoration: none;
     color: white;
     display: table-cell;
@@ -327,39 +449,38 @@ a.menulink > span {
     padding-right: 1em;
 }
 
-
 /* -------------------------------------------------------------------------------------------------
  * Tab panel left
  */
 div.left-tabpanel {
-  display: flex;
+    display: flex;
 }
 
 div.left-tabpanel div.tab-row {
-  flex: none;
-  width: 39px;
-  background-color: #f5f5f5;
-  border: 1px solid #ddd;  
-  
-  display: flex;
-  flex-direction: column;
+    flex: none;
+    width: 39px;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+
+    display: flex;
+    flex-direction: column;
 }
 
 div.left-tabpanel div.tab-row ul {
-  display: block;
-  padding: 0px;
-  margin: 0px;
+    display: block;
+    padding: 0px;
+    margin: 0px;
 }
 
 div.left-tabpanel .tab-panel {
-  flex: 1;
-  min-width: 0px;
-  display: flex;
+    flex: 1;
+    min-width: 0px;
+    display: flex;
 }
 
 div.left-tabpanel div.tab-row li {
-  width: 100%;
-  display: block;
+    width: 100%;
+    display: block;
 }
 
 div.left-tabpanel div.tab-row li img {
@@ -370,121 +491,124 @@ div.left-tabpanel div.tab-row li img {
 div.left-tabpanel div.tab-row a:link,
 div.left-tabpanel div.tab-row a:visited {
     display: block;
-    background:#f3f3f3;
+    background: #f3f3f3;
     padding: 0px;
     margin: 0px;
-    text-decoration:none;
-    color:#666;
+    text-decoration: none;
+    color: #666;
 }
 
 div.left-tabpanel div.tab-row li.selected a:link,
 div.left-tabpanel div.tab-row a:visited.active {
-    background:#fff;
-    color:#000;
+    background: #fff;
+    color: #000;
 }
 
 div.left-tabpanel div.tab-row a:hover {
-    background:#fff;
+    background: #fff;
 }
 
 /* Remove left border from panel so it attaches nicely to the sidebar controls */
 .left-tabpanel > .tab-panel > .flex-v-container > .panel,
 .left-tabpanel > .tab-panel > .flex-h-container > .panel {
-  border-top-left-radius: 0px;
-  border-bottom-left-radius:  0px;
-  border-left: none;
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    border-left: none;
 }
 
 .radio-button-group {
-  .radio-button label {
-    border-radius: 0px 0px 0px 0px;
-    border-bottom-width: 0px;
-  }
+    .radio-button label {
+        border-radius: 0px 0px 0px 0px;
+        border-bottom-width: 0px;
+    }
 
-  .radio-button:first-child label {
-    border-radius: $btn-border-radius $btn-border-radius 0px 0px;
-  }
+    .radio-button:first-child label {
+        border-radius: $btn-border-radius $btn-border-radius 0px 0px;
+    }
 
-  .radio-button:last-child label {
-    border-radius: 0px 0px $btn-border-radius $btn-border-radius;
-    border-bottom-width: 1px;
-  }
+    .radio-button:last-child label {
+        border-radius: 0px 0px $btn-border-radius $btn-border-radius;
+        border-bottom-width: 1px;
+    }
 
-  .radio-button:first-child:last-child label {
-    border-radius: $btn-border-radius;
-    border-bottom-width: 1px;
-  }
+    .radio-button:first-child:last-child label {
+        border-radius: $btn-border-radius;
+        border-bottom-width: 1px;
+    }
 }
 
 .radio-button {
-  input[type="radio"] {
-    opacity: 0;
-    position: fixed;
-    width: 0;
-  }
-
-  label {
-    @extend .btn;
-    text-align: left;
-    --bs-btn-border-color: var(--bs-primary);
-    --bs-btn-hover-border-color: var(--bs-primary);
-    --bs-btn-hover-bg: var(--bs-list-group-action-hover-bg);
-  }
-
-  input[type="radio"]:checked ~ * {
-    color: $component-active-color;
-  }
-
-  input[type="radio"]:checked + label {
-    @include box-shadow($btn-active-box-shadow);
-    background: $component-active-bg;
-    
-    &:focus {
-      @include box-shadow($btn-focus-box-shadow, $btn-active-box-shadow);
+    input[type='radio'] {
+        opacity: 0;
+        position: fixed;
+        width: 0;
     }
-  }
 
-  input[type="radio"]:focus + label {
-    outline: 0;
-    box-shadow: $btn-focus-box-shadow;
-  }
+    label {
+        @extend .btn;
+        text-align: left;
+        --bs-btn-border-color: var(--bs-primary);
+        --bs-btn-hover-border-color: var(--bs-primary);
+        --bs-btn-hover-bg: var(--bs-list-group-action-hover-bg);
+    }
+
+    input[type='radio']:checked ~ * {
+        color: $component-active-color;
+    }
+
+    input[type='radio']:checked + label {
+        @include box-shadow($btn-active-box-shadow);
+        background: $component-active-bg;
+
+        &:focus {
+            @include box-shadow($btn-focus-box-shadow, $btn-active-box-shadow);
+        }
+    }
+
+    input[type='radio']:focus + label {
+        outline: 0;
+        box-shadow: $btn-focus-box-shadow;
+    }
 }
 
 .vw-50 {
-  width: 50vw;
+    width: 50vw;
 }
 
 .w-min-220px {
-  min-width: 220px;
+    min-width: 220px;
 }
 
 .w-min-440px {
-  min-width: 440px;
+    min-width: 440px;
 }
 
 .h-max-400px {
-  max-height: 440px;
+    max-height: 440px;
 }
 
 @for $i from 1 through 10 {
-  @media only screen and (min-height: #{$i * 200}px) {
-    .dropdown-menu { max-height: #{$i * 100}px; overflow-y: auto; }
-  }   
+    @media only screen and (min-height: #{$i * 200}px) {
+        .dropdown-menu {
+            max-height: #{$i * 100}px;
+            overflow-y: auto;
+        }
+    }
 }
 
 .form-row {
-  @extend .mb-2;
+    @extend .mb-2;
 }
 
 .above-modal {
-  z-index: 30000;
+    z-index: 30000;
 }
 
 .btn-inline {
-  font-size: 80%;
-  padding: 1px 4px;
+    font-size: 80%;
+    padding: 1px 4px;
 }
 
 .text-pre-wrap {
-  white-space: pre-wrap;
+    white-space: pre-wrap;
 }

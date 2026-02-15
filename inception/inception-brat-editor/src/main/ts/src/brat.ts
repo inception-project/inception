@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { BratEditorFactory } from './BratEditorFactory'
+import { BratEditorFactory } from './BratEditorFactory';
 
-const INSTANCE = new BratEditorFactory()
+const INSTANCE = new BratEditorFactory();
 
-export function factory (): BratEditorFactory {
-  return INSTANCE
+export function factory(): BratEditorFactory {
+    return INSTANCE;
 }

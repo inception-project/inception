@@ -17,13 +17,13 @@
      * limitations under the License.
      */
 
-    import { onMount, onDestroy } from "svelte";
-    import { Client, Stomp, type IFrame } from "@stomp/stompjs";
-    import { factory } from "@inception-project/inception-diam";
-    import { assistantState } from "./AssistantState.svelte";
-    import { SpeechManager } from "./AssistantPanelSpeech";
-    import { refIdReplacementPattern, docIdReplacementPattern } from "./AssistantPanelReferences";
-    import { buildGroups, renderThinking, renderContent } from "./AssistantPanelMessages";
+    import { onMount, onDestroy } from 'svelte';
+    import { Client, Stomp, type IFrame } from '@stomp/stompjs';
+    import { factory } from '@inception-project/inception-diam';
+    import { assistantState } from './AssistantState.svelte';
+    import { SpeechManager } from './AssistantPanelSpeech';
+    import { refIdReplacementPattern, docIdReplacementPattern } from './AssistantPanelReferences';
+    import { buildGroups, renderThinking, renderContent } from './AssistantPanelMessages';
     import type {
         MPerformanceMetrics,
         MReference,
@@ -33,7 +33,7 @@
         MGroupItem,
         MGroupGroup,
         MGroupSingle,
-    } from "./AssistantPanelModels";
+    } from './AssistantPanelModels';
 
     interface Props {
         ajaxEndpointUrl?: string;
@@ -44,14 +44,8 @@
         documentId: number;
     }
 
-    let {
-        ajaxEndpointUrl,
-        wsEndpointUrl,
-        csrfToken,
-        topicChannel,
-        dataOwner,
-        documentId
-    }: Props = $props();
+    let { ajaxEndpointUrl, wsEndpointUrl, csrfToken, topicChannel, dataOwner, documentId }: Props =
+        $props();
 
     let socket: WebSocket = null;
     let stompClient: Client = null;
@@ -64,7 +58,7 @@
     let chatContainer = null;
     let autoScroll = true;
 
-    let messages : MChatMessage[] = $state([]);
+    let messages: MChatMessage[] = $state([]);
     let messageInput;
     let waitingForResponse = $state(false);
 
@@ -83,7 +77,10 @@
     function toggleGroup(id) {
         console.debug(`[assistant] toggleGroup called with id: ${id}`);
         const newVal = !isGroupCollapsed(id);
-        console.debug(`[assistant] toggleGroup: ${id} => ${newVal}, current state:`, groupCollapsed);
+        console.debug(
+            `[assistant] toggleGroup: ${id} => ${newVal}, current state:`,
+            groupCollapsed
+        );
         groupCollapsed[id] = newVal;
         groupCollapsed = { ...groupCollapsed };
         console.debug(`[assistant] toggleGroup: after update:`, groupCollapsed);
@@ -92,8 +89,7 @@
     const speechManager = new SpeechManager(() => assistantState.speechSynthesisEnabled);
     let speechAvailable = speechManager.isAvailable();
 
-
-    const userPreferencesKey = "assistant/general";
+    const userPreferencesKey = 'assistant/general';
     const defaultPreferences = {
         speechSynthesisEnabled: false,
     };
@@ -101,13 +97,13 @@
 
     ajaxClient.loadPreferences(userPreferencesKey).then((p) => {
         preferences = Object.assign(preferences, defaultPreferences, p);
-        console.log("Loaded preferences", preferences);
+        console.log('Loaded preferences', preferences);
 
-        assistantState.speechSynthesisEnabled = 
+        assistantState.speechSynthesisEnabled =
             preferences.speechSynthesisEnabled ?? defaultPreferences.speechSynthesisEnabled;
     });
 
-    $effect(() => { 
+    $effect(() => {
         preferences.speechSynthesisEnabled = assistantState.speechSynthesisEnabled;
         ajaxClient.savePreferences(userPreferencesKey, preferences);
     });
@@ -116,20 +112,18 @@
         if (!assistantState.speechSynthesisEnabled) {
             speechManager.cancel();
         }
-    })    
+    });
 
     export function connect(): void {
         if (connected) return;
 
-        let protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         let wsEndpoint = new URL(wsEndpointUrl);
         wsEndpoint.protocol = protocol;
 
-        stompClient = Stomp.over(
-            () => (socket = new WebSocket(wsEndpoint.toString())),
-        );
+        stompClient = Stomp.over(() => (socket = new WebSocket(wsEndpoint.toString())));
         stompClient.connectHeaders = {
-            "X-CSRF-TOKEN": csrfToken,
+            'X-CSRF-TOKEN': csrfToken,
         };
         stompClient.onConnect = () => onConnect();
         stompClient.onStompError = handleBrokerError;
@@ -138,16 +132,11 @@
 
     export function onConnect() {
         connected = true;
-        subscription = stompClient.subscribe(
-            "/user/queue/errors",
-            function (msg) {
-                console.error(
-                    "Websocket server error: " + JSON.stringify(msg.body),
-                );
-            },
-        );
-        stompClient.subscribe("/app" + topicChannel, (msg) => onMessage(msg));
-        stompClient.subscribe("/topic" + topicChannel, (msg) => onMessage(msg));
+        subscription = stompClient.subscribe('/user/queue/errors', function (msg) {
+            console.error('Websocket server error: ' + JSON.stringify(msg.body));
+        });
+        stompClient.subscribe('/app' + topicChannel, (msg) => onMessage(msg));
+        stompClient.subscribe('/topic' + topicChannel, (msg) => onMessage(msg));
     }
 
     export function disconnect() {
@@ -158,14 +147,14 @@
     }
 
     function handleBrokerError(receipt: IFrame) {
-        console.log("Broker reported error: " + receipt.headers.message);
-        console.log("Additional details: " + receipt.body);
+        console.log('Broker reported error: ' + receipt.headers.message);
+        console.log('Additional details: ' + receipt.body);
     }
 
     export function onMessage(msg) {
         if (!document.body.contains(element)) {
             console.debug(
-                "[assistant] Element is not part of the DOM anymore. Disconnecting and suiciding.",
+                '[assistant] Element is not part of the DOM anymore. Disconnecting and suiciding.'
             );
             disconnect();
             return;
@@ -186,17 +175,15 @@
     }
 
     function dispatchMessage(incomingMessage: any) {
-        const type = incomingMessage["@type"];
-        console.log(
-            `[assistant] Received message of type ${type} with id ${incomingMessage.id}`,
-        );
-        if (type === "textMessage") {
+        const type = incomingMessage['@type'];
+        console.log(`[assistant] Received message of type ${type} with id ${incomingMessage.id}`);
+        if (type === 'textMessage') {
             onTextMessage(incomingMessage);
-        } else if (type === "callResponse") {
+        } else if (type === 'callResponse') {
             onCallResponse(incomingMessage);
-        } else if (type === "clearCmd") {
+        } else if (type === 'clearCmd') {
             onClearCommand();
-        } else if (type === "refreshCmd") {
+        } else if (type === 'refreshCmd') {
             onRefreshCommand();
         }
     }
@@ -207,23 +194,28 @@
 
     function onRefreshCommand() {
         ajaxClient.refreshAnnotations().catch((error) => {
-            console.error("Failed to refresh annotations", error);
+            console.error('Failed to refresh annotations', error);
         });
     }
 
     function onTextMessage(msg: MTextMessage) {
         console.debug('[assistant] onTextMessage called with:', msg);
-        if (waitingForResponse && msg.role === "assistant" && !msg.internal) {
+        if (waitingForResponse && msg.role === 'assistant' && !msg.internal) {
             waitingForResponse = false;
         }
 
         const index = messages.findIndex((message) => message.id === msg.id);
-        console.debug('[assistant] Message index in array:', index, 'total messages:', messages.length);
+        console.debug(
+            '[assistant] Message index in array:',
+            index,
+            'total messages:',
+            messages.length
+        );
 
         // If message is new, add it
         if (index === -1) {
             console.log(
-                `[assistant] Starting message ${msg.id} with message fragment: ${msg.thinking || msg.content}`,
+                `[assistant] Starting message ${msg.id} with message fragment: ${msg.thinking || msg.content}`
             );
             if (msg.context) {
                 // Insert before the message with id == msg.context
@@ -239,18 +231,13 @@
                     messages = [...messages, initMessage(msg)];
                 }
             } else {
-                    // If no context id also just append
+                // If no context id also just append
                 messages = [...messages, initMessage(msg)];
             }
 
             console.debug('[assistant] Added new message. Total messages now:', messages.length);
 
-            if (
-                msg.role == "assistant" &&
-                msg.content &&
-                !msg.internal &&
-                !msg.done
-            ) {
+            if (msg.role == 'assistant' && msg.content && !msg.internal && !msg.done) {
                 speechManager.initializeBuffer(msg.content);
             }
             return;
@@ -258,20 +245,24 @@
 
         // Merge with existing message
         console.log(
-            `[assistant] Merging message ${msg.id} with message fragment: ${msg.thinking || msg.content}`,
+            `[assistant] Merging message ${msg.id} with message fragment: ${msg.thinking || msg.content}`
         );
         messages = [
             ...messages.slice(0, index),
             {
                 ...messages[index],
-                content: (messages[index].content || "") + (msg.content || ""),
-                thinking: (messages[index].thinking || "") + (msg.thinking || ""),
-                thinkingSummary: (messages[index].thinkingSummary || "") + (msg.thinkingSummary || ""),
+                content: (messages[index].content || '') + (msg.content || ''),
+                thinking: (messages[index].thinking || '') + (msg.thinking || ''),
+                thinkingSummary:
+                    (messages[index].thinkingSummary || '') + (msg.thinkingSummary || ''),
                 references: [
                     ...(messages[index].references || []),
                     ...(msg.references || []).filter(
-                        (newRef) => !(messages[index].references || []).some((existingRef) => existingRef.id === newRef.id)
-                    )
+                        (newRef) =>
+                            !(messages[index].references || []).some(
+                                (existingRef) => existingRef.id === newRef.id
+                            )
+                    ),
                 ],
                 performance: msg.performance,
                 done: msg.done,
@@ -279,23 +270,18 @@
             ...messages.slice(index + 1),
         ];
 
-        if (
-            speechAvailable &&
-            msg.role == "assistant" &&
-            msg.content &&
-            !msg.internal
-        ) {
+        if (speechAvailable && msg.role == 'assistant' && msg.content && !msg.internal) {
             speechManager.speak(msg);
         }
 
-        if (msg.role == "assistant" && msg.done) {
+        if (msg.role == 'assistant' && msg.done) {
             waitingForResponse = false;
         }
     }
 
     function initMessage(msg: MChatMessage) {
-        const collapsed = !!msg.internal || (msg.role !== "user" && msg.role !== "assistant");
-        const collapsible = msg.internal || (msg.role !== "user" && msg.role !== "assistant");
+        const collapsed = !!msg.internal || (msg.role !== 'user' && msg.role !== 'assistant');
+        const collapsible = msg.internal || (msg.role !== 'user' && msg.role !== 'assistant');
         const thinkingCollapsed = true;
         return { ...msg, collapsed, collapsible, thinkingCollapsed };
     }
@@ -315,13 +301,13 @@
                 messages = [...messages, initMessage(msg)];
             }
         } else {
-                // If no context id also just append
+            // If no context id also just append
             messages = [...messages, initMessage(msg)];
         }
     }
 
     function toggleSpeechSynthesis() {
-        assistantState.speechSynthesisEnabled = !assistantState.speechSynthesisEnabled
+        assistantState.speechSynthesisEnabled = !assistantState.speechSynthesisEnabled;
     }
 
     function handleScroll() {
@@ -346,16 +332,16 @@
                 }
 
                 return match;
-            },
+            }
         );
 
         if (Object.keys(usedReferences).length > 0) {
-            text += "\n\nReferences:";
+            text += '\n\nReferences:';
         }
 
         for (let refNum in usedReferences) {
             const reference = usedReferences[refNum];
-            text += `\n[^${refNum}]: ${reference.documentName}`
+            text += `\n[^${refNum}]: ${reference.documentName}`;
             if (Number.isFinite(reference.score)) {
                 text += ` (score: ${reference.score.toFixed(4)})`;
             }
@@ -363,10 +349,10 @@
 
         navigator.clipboard.writeText(text).then(
             () => {
-                console.log("Copied to clipboard successfully!");
+                console.log('Copied to clipboard successfully!');
             },
             (err) => {
-                console.error("Could not copy text: ", err);
+                console.error('Could not copy text: ', err);
             }
         );
     }
@@ -388,7 +374,7 @@
 
     function renderCallArguments(message: MCallResponse) {
         if (!message?.arguments) {
-            return "no arguments";
+            return 'no arguments';
         }
 
         return JSON.stringify(message.arguments, null, 2);
@@ -396,10 +382,10 @@
 
     function renderCallPayload(message: MCallResponse) {
         if (!message?.payload) {
-            return "no payload";
+            return 'no payload';
         }
 
-        if (typeof message.payload === "string") {
+        if (typeof message.payload === 'string') {
             return message.payload;
         }
 
@@ -412,49 +398,46 @@
             speechManager.cancel();
 
             stompClient.publish({
-                destination: "/app" + topicChannel,
+                destination: '/app' + topicChannel,
                 headers: {
                     user: dataOwner,
-                    document: documentId
+                    document: documentId,
                 },
                 body: message,
             });
-            inputElement.value = "";
+            inputElement.value = '';
             waitingForResponse = true;
             autoScroll = true;
         }
     }
 
     function handleKeyDown(event) {
-        if (event.key === "Enter") {
+        if (event.key === 'Enter') {
             sendMessage(event.target.value, event.target);
-            messageInput.value = "";
+            messageInput.value = '';
         }
     }
 
     function toggleCollapse(message: MChatMessage) {
         messages = messages.map((m) =>
-            m.id === message.id ? { ...m, collapsed: !m.collapsed } : m,
+            m.id === message.id ? { ...m, collapsed: !m.collapsed } : m
         );
     }
 
     function toggleCollapseThinking(message: MChatMessage) {
         messages = messages.map((m) =>
-            m.id === message.id ? { ...m, thinkingCollapsed: !m.thinkingCollapsed } : m,
+            m.id === message.id ? { ...m, thinkingCollapsed: !m.thinkingCollapsed } : m
         );
     }
 
-
     function handleClick(event) {
         const target = event.target;
-        const msgId = target.getAttribute("data-msg");
-        const refId = target.getAttribute("data-ref");
+        const msgId = target.getAttribute('data-msg');
+        const refId = target.getAttribute('data-ref');
         if (msgId && refId) {
             event.preventDefault();
             const message = messages.find((msg) => msg.id === msgId);
-            const reference = message.references.find(
-                (ref) => ref.id === refId,
-            );
+            const reference = message.references.find((ref) => ref.id === refId);
             if (reference) {
                 ajaxClient.scrollTo({
                     docId: reference.documentId,
@@ -466,11 +449,7 @@
 </script>
 
 <div bind:this={element} class="d-flex flex-column flex-content chat">
-    <div
-        class="scrolling flex-content px-3 py-1"
-        bind:this={chatContainer}
-        onscroll={handleScroll}
-    >
+    <div class="scrolling flex-content px-3 py-1" bind:this={chatContainer} onscroll={handleScroll}>
         {#each grouped as item}
             {#if item.type === 'single'}
                 {@const message = item.message}
@@ -487,7 +466,12 @@
                 >
                     {#if thinking}
                         <div class="message-thinking">
-                            <div class="message-thinking-header" onclick={() => toggleCollapseThinking(message)} role="button" tabindex="0">
+                            <div
+                                class="message-thinking-header"
+                                onclick={() => toggleCollapseThinking(message)}
+                                role="button"
+                                tabindex="0"
+                            >
                                 {#if message.thinkingSummary}
                                     {message.thinkingSummary}
                                 {:else}
@@ -502,18 +486,18 @@
                         </div>
                     {/if}
 
-                    {#if message.content || message.role !== "assistant"}
+                    {#if message.content || message.role !== 'assistant'}
                         <div class="message-frame">
                             <div
                                 class="message-header text-body-secondary"
                                 onclick={message.collapsible ? () => toggleCollapse(message) : null}
-                                role={message.collapsible ? "button" : undefined}
+                                role={message.collapsible ? 'button' : undefined}
                             >
-                                {#if message.role === "assistant"}
+                                {#if message.role === 'assistant'}
                                     <i class="fas fa-robot me-1" title="Assistant message"></i>
-                                {:else if message.role === "user"}
+                                {:else if message.role === 'user'}
                                     <i class="fas fa-user me-1" title="User message"></i>
-                                {:else if message.role === "system"}
+                                {:else if message.role === 'system'}
                                     <i class="fas fa-cog me-1" title="System message"></i>
                                 {/if}
                                 {message.actor ? message.actor : message.role}
@@ -527,9 +511,7 @@
                                     </button>
                                 {/if}
                                 {#if message.internal}
-                                    <span
-                                        class="mx-2 text-body-secondary float-end fw-lighter"
-                                    >
+                                    <span class="mx-2 text-body-secondary float-end fw-lighter">
                                         <i class="fas fa-info" title="Internal message"></i>
                                     </span>
                                 {/if}
@@ -537,7 +519,7 @@
 
                             <!-- svelte-ignore a11y_no_static_element_interactions -->
                             {#if !message.collapsed}
-                                {#if message["@type"] === "textMessage"}
+                                {#if message['@type'] === 'textMessage'}
                                     <!-- svelte-ignore a11y_no_static_element_interactions -->
                                     {#if message.content}
                                         <div
@@ -548,7 +530,7 @@
                                             {@html renderContent(message)}
                                         </div>
                                     {/if}
-                                {:else if message["@type"] === "callResponse"}
+                                {:else if message['@type'] === 'callResponse'}
                                     <div class="message-body">
                                         <strong>Called tool: {message.toolName}</strong>
                                         <div>{renderCallArguments(message)}</div>
@@ -556,22 +538,24 @@
                                     </div>
                                 {:else}
                                     <div class="message-body">
-                                        Unknown message type: {message["@type"]}
+                                        Unknown message type: {message['@type']}
                                     </div>
                                 {/if}
                             {/if}
                         </div>
                     {/if}
 
-                    {#if message.performance && (((message.content || message.role !== "assistant") && !message.collapsed) || (thinking && !message.thinkingCollapsed)) }
+                    {#if message.performance && (((message.content || message.role !== 'assistant') && !message.collapsed) || (thinking && !message.thinkingCollapsed))}
                         <div class="message-footer fw-ligher">
                             <small
-                                ><i class="fas fa-pause me-1"></i>{(message.performance
-                                    .delay / 1000).toFixed(2)}s</small
+                                ><i class="fas fa-pause me-1"></i>{(
+                                    message.performance.delay / 1000
+                                ).toFixed(2)}s</small
                             >
                             <small
-                                ><i class="far fa-clock ms-2 me-1"></i>{(message.performance
-                                    .duration / 1000).toFixed(2)}s</small
+                                ><i class="far fa-clock ms-2 me-1"></i>{(
+                                    message.performance.duration / 1000
+                                ).toFixed(2)}s</small
                             >
                             <small
                                 ><i class="fas fa-stream ms-2 me-1"></i>{(
@@ -585,9 +569,20 @@
             {:else}
                 <div class="message-group">
                     <!-- svelte-ignore a11y_click_events_have_key_events -->
-                    <div class="message-group-header" onclick={() => toggleGroup(item.id)} role="button" tabindex="0">
-                        {#if !(item.lastMessage && item.lastMessage["@type"] === "textMessage" && item.lastMessage.done && item.lastMessage.content && item.lastMessage.content.toString().trim().length > 0)}
-                            <div class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></div>
+                    <div
+                        class="message-group-header"
+                        onclick={() => toggleGroup(item.id)}
+                        role="button"
+                        tabindex="0"
+                    >
+                        {#if !(item.lastMessage && item.lastMessage['@type'] === 'textMessage' && item.lastMessage.done && item.lastMessage.content && item.lastMessage.content
+                                .toString()
+                                .trim().length > 0)}
+                            <div
+                                class="spinner-border spinner-border-sm me-1"
+                                role="status"
+                                aria-hidden="true"
+                            ></div>
                             {#if item.lastCompletedThinkingMessage}
                                 {#if item.lastCompletedThinkingMessage.thinkingSummary}
                                     {item.lastCompletedThinkingMessage.thinkingSummary}
@@ -608,7 +603,9 @@
                                     {@html item.lastCompletedThinkingHtml}
                                 {/if}
                             {:else}
-                                {item.messages[0].actor ? item.messages[0].actor : item.messages[0].role} group ({item.messages.length})
+                                {item.messages[0].actor
+                                    ? item.messages[0].actor
+                                    : item.messages[0].role} group ({item.messages.length})
                             {/if}
                         {/if}
                     </div>
@@ -622,21 +619,26 @@
                             data-internal={item.lastMessage.internal}
                             tabIndex={item.lastMessage.internal ? 0 : undefined}
                         >
-                            {#if item.lastMessage.content || item.lastMessage.role !== "assistant"}
+                            {#if item.lastMessage.content || item.lastMessage.role !== 'assistant'}
                                 <div class="message-frame">
                                     <div
                                         class="message-header text-body-secondary"
-                                        onclick={item.lastMessage.collapsible ? () => toggleCollapse(item.lastMessage) : null}
-                                        role={item.lastMessage.collapsible ? "button" : undefined}
+                                        onclick={item.lastMessage.collapsible
+                                            ? () => toggleCollapse(item.lastMessage)
+                                            : null}
+                                        role={item.lastMessage.collapsible ? 'button' : undefined}
                                     >
-                                        {#if item.lastMessage.role === "assistant"}
-                                            <i class="fas fa-robot me-1" title="Assistant message"></i>
-                                        {:else if item.lastMessage.role === "user"}
+                                        {#if item.lastMessage.role === 'assistant'}
+                                            <i class="fas fa-robot me-1" title="Assistant message"
+                                            ></i>
+                                        {:else if item.lastMessage.role === 'user'}
                                             <i class="fas fa-user me-1" title="User message"></i>
-                                        {:else if item.lastMessage.role === "system"}
+                                        {:else if item.lastMessage.role === 'system'}
                                             <i class="fas fa-cog me-1" title="System message"></i>
                                         {/if}
-                                        {item.lastMessage.actor ? item.lastMessage.actor : item.lastMessage.role}
+                                        {item.lastMessage.actor
+                                            ? item.lastMessage.actor
+                                            : item.lastMessage.role}
                                         {#if !item.lastMessage.collapsible}
                                             <button
                                                 class="btn btn-sm btn-link text-body-secondary float-end fw-lighter p-0 copy-button"
@@ -666,15 +668,17 @@
                                 </div>
                             {/if}
 
-                            {#if item.lastMessage.performance && (((item.lastMessage.content || item.lastMessage.role !== "assistant") && !item.lastMessage.collapsed) || (item.activeThinkingHtml && item.activeThinkingMessage && !item.activeThinkingMessage.thinkingCollapsed)) }
+                            {#if item.lastMessage.performance && (((item.lastMessage.content || item.lastMessage.role !== 'assistant') && !item.lastMessage.collapsed) || (item.activeThinkingHtml && item.activeThinkingMessage && !item.activeThinkingMessage.thinkingCollapsed))}
                                 <div class="message-footer fw-ligher">
                                     <small
-                                        ><i class="fas fa-pause me-1"></i>{(item.lastMessage.performance
-                                            .delay / 1000).toFixed(2)}s</small
+                                        ><i class="fas fa-pause me-1"></i>{(
+                                            item.lastMessage.performance.delay / 1000
+                                        ).toFixed(2)}s</small
                                     >
                                     <small
-                                        ><i class="far fa-clock ms-2 me-1"></i>{(item.lastMessage.performance
-                                            .duration / 1000).toFixed(2)}s</small
+                                        ><i class="far fa-clock ms-2 me-1"></i>{(
+                                            item.lastMessage.performance.duration / 1000
+                                        ).toFixed(2)}s</small
                                     >
                                     <small
                                         ><i class="fas fa-stream ms-2 me-1"></i>{(
@@ -700,7 +704,12 @@
                             >
                                 {#if thinking}
                                     <div class="message-thinking">
-                                        <div class="message-thinking-header" onclick={() => toggleCollapseThinking(message)} role="button" tabindex="0">
+                                        <div
+                                            class="message-thinking-header"
+                                            onclick={() => toggleCollapseThinking(message)}
+                                            role="button"
+                                            tabindex="0"
+                                        >
                                             {#if message.thinkingSummary}
                                                 {message.thinkingSummary}
                                             {:else}
@@ -715,19 +724,26 @@
                                     </div>
                                 {/if}
 
-                                {#if message.content || message.role !== "assistant"}
+                                {#if message.content || message.role !== 'assistant'}
                                     <div class="message-frame">
                                         <div
                                             class="message-header text-body-secondary"
-                                            onclick={message.collapsible ? () => toggleCollapse(message) : null}
-                                            role={message.collapsible ? "button" : undefined}
+                                            onclick={message.collapsible
+                                                ? () => toggleCollapse(message)
+                                                : null}
+                                            role={message.collapsible ? 'button' : undefined}
                                         >
-                                            {#if message.role === "assistant"}
-                                                <i class="fas fa-robot me-1" title="Assistant message"></i>
-                                            {:else if message.role === "user"}
-                                                <i class="fas fa-user me-1" title="User message"></i>
-                                            {:else if message.role === "system"}
-                                                <i class="fas fa-cog me-1" title="System message"></i>
+                                            {#if message.role === 'assistant'}
+                                                <i
+                                                    class="fas fa-robot me-1"
+                                                    title="Assistant message"
+                                                ></i>
+                                            {:else if message.role === 'user'}
+                                                <i class="fas fa-user me-1" title="User message"
+                                                ></i>
+                                            {:else if message.role === 'system'}
+                                                <i class="fas fa-cog me-1" title="System message"
+                                                ></i>
                                             {/if}
                                             {message.actor ? message.actor : message.role}
                                             {#if !message.collapsible}
@@ -743,14 +759,15 @@
                                                 <span
                                                     class="mx-2 text-body-secondary float-end fw-lighter"
                                                 >
-                                                    <i class="fas fa-info" title="Internal message"></i>
+                                                    <i class="fas fa-info" title="Internal message"
+                                                    ></i>
                                                 </span>
                                             {/if}
                                         </div>
 
                                         <!-- svelte-ignore a11y_no_static_element_interactions -->
                                         {#if !message.collapsed}
-                                            {#if message["@type"] === "textMessage"}
+                                            {#if message['@type'] === 'textMessage'}
                                                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                                                 {#if message.content}
                                                     <div
@@ -761,30 +778,34 @@
                                                         {@html renderContent(message)}
                                                     </div>
                                                 {/if}
-                                            {:else if message["@type"] === "callResponse"}
+                                            {:else if message['@type'] === 'callResponse'}
                                                 <div class="message-body">
                                                     <strong>Called tool: {message.toolName}</strong>
                                                     <div>{renderCallArguments(message)}</div>
-                                                    <div class="call-payload">{renderCallPayload(message)}</div>
+                                                    <div class="call-payload">
+                                                        {renderCallPayload(message)}
+                                                    </div>
                                                 </div>
                                             {:else}
                                                 <div class="message-body">
-                                                    Unknown message type: {message["@type"]}
+                                                    Unknown message type: {message['@type']}
                                                 </div>
                                             {/if}
                                         {/if}
                                     </div>
                                 {/if}
 
-                                {#if message.performance && (((message.content || message.role !== "assistant") && !message.collapsed) || (thinking && !message.thinkingCollapsed)) }
+                                {#if message.performance && (((message.content || message.role !== 'assistant') && !message.collapsed) || (thinking && !message.thinkingCollapsed))}
                                     <div class="message-footer fw-ligher">
                                         <small
-                                            ><i class="fas fa-pause me-1"></i>{(message.performance
-                                                .delay / 1000).toFixed(2)}s</small
+                                            ><i class="fas fa-pause me-1"></i>{(
+                                                message.performance.delay / 1000
+                                            ).toFixed(2)}s</small
                                         >
                                         <small
-                                            ><i class="far fa-clock ms-2 me-1"></i>{(message.performance
-                                                .duration / 1000).toFixed(2)}s</small
+                                            ><i class="far fa-clock ms-2 me-1"></i>{(
+                                                message.performance.duration / 1000
+                                            ).toFixed(2)}s</small
                                         >
                                         <small
                                             ><i class="fas fa-stream ms-2 me-1"></i>{(
@@ -840,22 +861,22 @@
     @keyframes dots {
         0%,
         20% {
-            content: "";
+            content: '';
         }
         40% {
-            content: ".";
+            content: '.';
         }
         60% {
-            content: "..";
+            content: '..';
         }
         80%,
         100% {
-            content: "...";
+            content: '...';
         }
     }
 
     .dots::after {
-        content: "";
+        content: '';
         display: inline-block;
         animation: dots 1.5s steps(1, end) infinite;
     }
@@ -978,21 +999,21 @@
             border-radius: 0.25em;
             padding: 5px;
             margin: 3px 0;
-        }   
+        }
 
-        &[data-role="user"] {
+        &[data-role='user'] {
             .message-frame {
                 background-color: var(--bs-info-bg-subtle);
             }
         }
 
-        &[data-role="assistant"] {
+        &[data-role='assistant'] {
             .message-frame {
                 background-color: var(--bs-success-bg-subtle);
             }
         }
 
-        &[data-role="tool"] {
+        &[data-role='tool'] {
             .message-body {
                 word-break: break-word;
             }
@@ -1004,8 +1025,7 @@
             overflow: auto;
         }
 
-
-        &[data-internal="true"] {
+        &[data-internal='true'] {
             background-color: var(--bs-tertiary-bg);
             padding: 4px 8px;
 
@@ -1032,11 +1052,11 @@
         }
 
         .copy-button {
-            visibility: hidden
+            visibility: hidden;
         }
 
         &:hover .copy-button {
-            visibility: visible
+            visibility: visible;
         }
     }
 </style>

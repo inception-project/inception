@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { describe, it, expect } from 'vitest'
-import { INSTANCE as Util } from '../../src/util/Util'
+import { describe, it, expect } from 'vitest';
+import { INSTANCE as Util } from '../../src/util/Util';
 
 describe('Util', () => {
-  it('escapeHTML', async () => {
-    expect(Util.escapeHTML(null)).to.be.null
-    expect(Util.escapeHTML('this & that')).to.equal('this &amp; that')
-  })
-})
+    it('escapeHTML', async () => {
+        expect(Util.escapeHTML(null)).to.be.null;
+        expect(Util.escapeHTML('this & that')).to.equal('this &amp; that');
+    });
+});

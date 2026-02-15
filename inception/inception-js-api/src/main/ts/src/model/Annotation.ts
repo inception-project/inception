@@ -15,37 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { VID, Comment, Layer, AnnotatedText } from '.'
+import { VID, Comment, Layer, AnnotatedText } from '.';
 
 export interface Annotation {
-    document: AnnotatedText
+    document: AnnotatedText;
 
-    layer: Layer
+    layer: Layer;
 
-    vid: VID
+    vid: VID;
 
     /**
      * Color (optional)
      */
-    color?: string
+    color?: string;
 
     /**
      * Label (optional)
      */
-    label?: string
+    label?: string;
 
     /**
      * Score (optional)
      */
-    score?: number
+    score?: number;
 
     /**
      * Whether to display the score in the UI or not.
      */
-    hideScore: boolean
+    hideScore: boolean;
 
     /**
      * Comments
      */
-    comments?: Comment[]
+    comments?: Comment[];
 }

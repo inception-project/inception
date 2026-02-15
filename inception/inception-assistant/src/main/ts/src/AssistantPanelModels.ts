@@ -65,12 +65,12 @@ export interface MCallResponse extends MChatMessage {
 
 // Group item types for rendering grouped messages in the UI
 export interface MGroupSingle {
-    type: "single";
+    type: 'single';
     message: MChatMessage;
 }
 
 export interface MGroupGroup {
-    type: "group";
+    type: 'group';
     messages: MChatMessage[];
     id: string;
     lastMessage: MChatMessage;
@@ -98,19 +98,17 @@ export function isGroupableMessage(m: MChatMessage): boolean {
     if (isTextMessage(m) && m.thinking) {
         return true;
     }
-    
+
     // Call responses and error envelope types are groupable
-    if (m['@type'] === 'callResponse' || 
-        m['@type'] === 'error' || 
-        m['@type'] === 'errorMessage') {
+    if (m['@type'] === 'callResponse' || m['@type'] === 'error' || m['@type'] === 'errorMessage') {
         return true;
     }
-    
+
     // System messages with actor 'Error' are groupable so that tool errors
     // are shown as part of the running group instead of terminating it
     if (m.role === 'system' && m.actor === 'Error') {
         return true;
     }
-    
+
     return false;
 }
