@@ -27,6 +27,7 @@ import static org.springframework.boot.WebApplicationType.SERVLET;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 
@@ -144,8 +145,8 @@ public class INCEpTION
     /**
      * Called when deployed using the internal server with custom properties.
      */
-    protected static ConfigurableApplicationContext start(String[] args,
-            java.util.Properties aProperties, Class<?>... aSources)
+    protected static ConfigurableApplicationContext start(String[] args, Properties aProperties,
+            Class<?>... aSources)
     {
         var builder = new SpringApplicationBuilder();
 
@@ -154,12 +155,12 @@ public class INCEpTION
 
         // Signal that we may need the shutdown dialog
         builder.properties("running.from.commandline=true");
-        
+
         // Add custom properties
         if (aProperties != null) {
             builder.properties(aProperties);
         }
-        
+
         builder.profiles(DeploymentModeService.PROFILE_INTERNAL_SERVER);
 
         Optional<SplashWindow> splash;
