@@ -50,13 +50,27 @@ public class SearchToolLibrary
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final String TOOL_DESCRIPTION = """
-            Retrieves context from the project documents.
-            Use when the user requests information.
-            Returns a list of text snippets relevant to the specified topic.
+    private static final String SEARCH_DESCRIPTION = """
+            The primary search tool.
+            Retrieves text snippets by combining semantic understanding (concepts) with keyword matching.
+            Use this as the default for most user queries.
+            It balances finding exact terminology with understanding the intent behind the query.
+            Returns a list of document snippets with provenance and a combined relevance score.
             """;
-    private static final String PARAM_QUERY_DESCRIPTION = """
-            Describes the information or topic the user is interested in.
+
+    private static final String SEMANTIC_SEARCH_DESCRIPTION = """
+            Retrieves snippets based purely on meaning and vector similarity, ignoring specific wording.
+            Use this ONLY when:
+            1) The user uses vague, abstract, or high-level descriptive language, or
+            2) The user specifically asks to find 'similar concepts' regardless of keywords.
+            Do not use for specific IDs or proper nouns.
+            """;
+
+    private static final String KEYWORD_SEARCH_DESCRIPTION = """
+            Retrieves snippets based on exact lexical matching. Use this ONLY when:
+            1) The user searches for a specific ID, code, proper noun, or unique acronym, or
+            2) The user explicitly requests an exact phrase match.
+            Constraint: Do not use Boolean operators (AND/OR); simply provide the key terms.
             """;
 
     private static final String INSTRUCTIONS = """
@@ -111,12 +125,54 @@ public class SearchToolLibrary
     }
 
     @Tool( //
+            value = "search", //
+            actor = "Search", //
+            description = SEARCH_DESCRIPTION)
+    public MCallResponse.Builder<?> hybridSearch( //
+            Project aProject, //
+            @ToolParam(value = "query", description = "Keywords and concepts to search for") //
+            String aTopic)
+        throws IOException
+    {
+        var result = documentQueryService.hybridQuery(aProject, aTopic,
+                properties.getDocumentIndex().getMaxChunks());
+
+        List<Chunk> chunks = result != null ? result.matches() : emptyList();
+
+        var references = new LinkedHashMap<Chunk, MReference>();
+        var chunkTexts = new ArrayList<Map<String, String>>();
+        for (var chunk : chunks) {
+            var ref = chunk.toReference();
+            references.put(chunk, ref);
+
+            var data = new LinkedHashMap<String, String>();
+            data.put("id", ref.toString());
+            data.put("source", chunk.text());
+            chunkTexts.add(data);
+        }
+
+        if (chunkTexts.isEmpty()) {
+            return MCallResponse.builder(String.class) //
+                    .withActor("Searching (hybrid): " + aTopic) //
+                    .withPayload("The search has yielded no results.");
+        }
+
+        Builder<Map<String, Serializable>> callResponse = MCallResponse.builder();
+        callResponse.withActor("Searching (hybrid): " + aTopic);
+        callResponse.withReferences(references.values());
+        callResponse.withPayload(Map.of( //
+                "matches", chunkTexts, //
+                "truncated", result != null ? result.truncated().orElse(false) : false));
+        return callResponse;
+    }
+
+    @Tool( //
             value = "semantic_search", //
             actor = "Semantic search", //
-            description = TOOL_DESCRIPTION)
+            description = SEMANTIC_SEARCH_DESCRIPTION)
     public MCallResponse.Builder<?> semanticSearch( //
             Project aProject, //
-            @ToolParam(value = "query", description = PARAM_QUERY_DESCRIPTION) //
+            @ToolParam(value = "query", description = "Topics or concepts to search for") //
             String aTopic)
         throws IOException
     {
@@ -156,10 +212,10 @@ public class SearchToolLibrary
     @Tool( //
             value = "keyword_search", //
             actor = "Keyword search", //
-            description = TOOL_DESCRIPTION)
+            description = KEYWORD_SEARCH_DESCRIPTION)
     public MCallResponse.Builder<?> keywordSearch( //
             AnnotationEditorContext aContext, //
-            @ToolParam(value = "query", description = PARAM_QUERY_DESCRIPTION) //
+            @ToolParam(value = "query", description = "Keywords to search for") //
             String aQuery,
             @ToolParam(value = "from", description = "Index of first result (1-based)") //
             Integer aFrom, //

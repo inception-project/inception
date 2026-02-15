@@ -64,7 +64,7 @@ export function buildGroups(messages: MChatMessage[]): MGroupItem[] {
     const groups: MGroupItem[] = [];
     let temp: MChatMessage[] = [];
 
-    const flushTemp = () => {
+    const flushTemp = (closed: boolean = false) => {
         if (temp.length === 0) return;
         // Use only the first message ID to keep the group ID stable during streaming
         const id = temp[0].id;
@@ -98,6 +98,9 @@ export function buildGroups(messages: MChatMessage[]): MGroupItem[] {
                 ? renderThinking(lastCompletedThinking)
                 : '',
             lastContentHtml: lastAsText ? renderContent(lastAsText) : '',
+            // mark whether this group was closed by encountering a non-groupable
+            // message. A closed group can be shown as completed in the UI.
+            closed: closed,
         });
         temp = [];
     };
@@ -105,7 +108,9 @@ export function buildGroups(messages: MChatMessage[]): MGroupItem[] {
     for (const m of messages) {
         if (m.role === 'user') {
             // do not group user messages: flush any pending group and emit a single
-            flushTemp();
+            // mark the group as closed because encountering a user message ends
+            // the running/grouping sequence.
+            flushTemp(true);
             console.debug('[assistant] Adding user message as single:', m.id);
             groups.push({ type: 'single', message: m });
             continue;
@@ -115,15 +120,18 @@ export function buildGroups(messages: MChatMessage[]): MGroupItem[] {
             console.debug('[assistant] Message is groupable:', m.id, m);
             temp.push(m);
         } else {
-            // Flush any pending groupable messages first
-            flushTemp();
+            // Flush any pending groupable messages first. This non-groupable
+            // message terminates the current group (closed=true).
+            flushTemp(true);
             // Non-groupable messages are shown directly (not collapsible)
             console.debug('[assistant] Adding non-groupable message as single:', m.id, m);
             groups.push({ type: 'single', message: m });
         }
     }
 
-    flushTemp();
+    // Final flush at end-of-input: do not mark as closed since no terminating
+    // non-groupable message was seen after the buffered group.
+    flushTemp(false);
     console.debug('[assistant] buildGroups result:', groups.length, 'groups', groups);
     return groups;
 }

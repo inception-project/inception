@@ -575,9 +575,7 @@
                         role="button"
                         tabindex="0"
                     >
-                        {#if !(item.lastMessage && item.lastMessage['@type'] === 'textMessage' && item.lastMessage.done && item.lastMessage.content && item.lastMessage.content
-                                .toString()
-                                .trim().length > 0)}
+                        {#if !item.closed}
                             <div
                                 class="spinner-border spinner-border-sm me-1"
                                 role="status"
