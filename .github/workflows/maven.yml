@@ -37,13 +37,11 @@ jobs:
           archive.ics.uci.edu:80
           auth.docker.io:443
           build.shibboleth.net:443
-          centralus.data.mcr.microsoft.com:443
           download.eclipse.org:443
-          eastus.data.mcr.microsoft.com:443
           github.com:443
           hosted-compute-watchdog-prod-eus-01.githubapp.com:443
           hosted-compute-watchdog-prod-eus-02.githubapp.com:443
-          mcr.microsoft.com:443
+          maven-central.storage-download.googleapis.com:443
           nodejs.org:443
           oss.sonatype.org:443
           production.cloudflare.docker.com:443
@@ -52,10 +50,10 @@ jobs:
           repo.maven.apache.org:443
           repo.spring.io:443
           repo1.maven.org:443
-          westus.data.mcr.microsoft.com:443
-          westus2.data.mcr.microsoft.com:443
           www.ims.uni-stuttgart.de:443
           zoidberg.ukp.informatik.tu-darmstadt.de:443
+          mcr.microsoft.com:443
+          *.data.mcr.microsoft.com:443
 
     - name: Checkout repository
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2

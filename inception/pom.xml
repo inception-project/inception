@@ -779,6 +779,7 @@
                     <exclude>doc/*.json</exclude>
                     <exclude>licenses/**/*</exclude>
                     <exclude>**/mocha-test-report.xml</exclude>
+                    <exclude>**/src/main/ts/node_modules/**/*</exclude>
                   </excludes>
                 </configuration>
               </execution>

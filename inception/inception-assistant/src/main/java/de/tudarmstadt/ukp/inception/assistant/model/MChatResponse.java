@@ -19,18 +19,10 @@ package de.tudarmstadt.ukp.inception.assistant.model;
 
 public record MChatResponse(MTextMessage message) {
 
-    // static final String TYPE_TEXT_MESSAGE = "toolOfferResponse";
-
     private MChatResponse(Builder aBuilder)
     {
         this(aBuilder.message);
     }
-
-    // @JsonProperty(MMessage.TYPE_FIELD)
-    // public String getType()
-    // {
-    // return TYPE_TEXT_MESSAGE;
-    // }
 
     public static Builder builder()
     {

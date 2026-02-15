@@ -412,7 +412,6 @@
               <arguments>run build</arguments>
             </configuration>
           </execution>
-          <!--
           <execution>
             <id>npm test</id>
             <goals>
@@ -424,7 +423,6 @@
               <arguments>run test</arguments>
             </configuration>
           </execution>
-          -->
         </executions>
       </plugin>
     </plugins>

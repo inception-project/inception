@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.model.MCallResponse;
 import de.tudarmstadt.ukp.inception.assistant.model.MChatMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MChatResponse;
+import de.tudarmstadt.ukp.inception.assistant.model.MErrorMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MPerformanceMetrics;
 import de.tudarmstadt.ukp.inception.assistant.model.MReference;
@@ -544,49 +545,49 @@ public class AgentLoop
                     getEphemeralMessages(), conversationMessages, headMessage,
                     properties.getChat().getContextLength());
 
-            MChatResponse response;
+            MChatResponse response = null;
             try {
                 response = turn(recentConversation, responseId);
             }
             catch (ToolNotFoundException e) {
                 repeat = true;
-                response = MChatResponse.builder() //
-                        .withMessage(MTextMessage.builder() //
-                                .withId(responseId) // if null builder sets ID
-                                .withActor("Error") //
-                                .withRole(SYSTEM) //
-                                .withContent("Error: " + e.getMessage()) //
-                                .build())
-                        .build();
+                recordAndStreamMessage(responseId, MErrorMessage.builder() //
+                        .withId(responseId) // reuse pending message UUID
+                        .withContent("Error: " + e.getMessage()) //
+                        .build());
+                responseId = null;
             }
 
-            // If the message we started rendering has no content yet, we re-use the message ID
-            // for the next message.
-            if (isBlank(response.message().content()) && response.message().toolCalls().isEmpty()) {
-                responseId = response.message().id();
-            }
-            else {
-                // If we have any accumulated references from the tool calls, we need
-                // to inject them here so they get stored/dispatched
-                var msg = response.message();
-                msg = msg.appendReferences(accumulatedReferences);
+            if (response != null) {
+                // If the message we started rendering has no content yet, we re-use the message ID
+                // for the next message.
+                if (isBlank(response.message().content())
+                        && response.message().toolCalls().isEmpty()) {
+                    responseId = response.message().id();
+                }
+                else {
+                    // If we have any accumulated references from the tool calls, we need
+                    // to inject them here so they get stored/dispatched
+                    var msg = response.message();
+                    msg = msg.appendReferences(accumulatedReferences);
 
-                // Recording final message without content because the content has already
-                // been streamed before. This is really only to mark the message as done.
-                recordAndStreamMessage(responseId, msg);
-                accumulatedReferences.clear();
-            }
-
-            if (!response.message().toolCalls().isEmpty()) {
-                for (var call : response.message().toolCalls()) {
-                    var msg = callTool(sessionOwner, project, aDocument, aDataOwner,
-                            response.message(), call);
-                    if (msg.references() != null) {
-                        accumulatedReferences.addAll(msg.references());
-                    }
-
+                    // Recording final message without content because the content has already
+                    // been streamed before. This is really only to mark the message as done.
                     recordAndStreamMessage(responseId, msg);
-                    repeat |= !call.stop();
+                    accumulatedReferences.clear();
+                }
+
+                if (!response.message().toolCalls().isEmpty()) {
+                    for (var call : response.message().toolCalls()) {
+                        var msg = callTool(sessionOwner, project, aDocument, aDataOwner,
+                                response.message(), call);
+                        if (msg.references() != null) {
+                            accumulatedReferences.addAll(msg.references());
+                        }
+
+                        recordAndStreamMessage(responseId, msg);
+                        repeat |= !call.stop();
+                    }
                 }
             }
 
