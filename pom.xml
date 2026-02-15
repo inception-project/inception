@@ -205,7 +205,7 @@
     <eslint.version>9.39.2</eslint.version>
     <neostandard.version>0.12.2</neostandard.version>
     <eslint-plugin-import.version>2.32.0</eslint-plugin-import.version>
-    <eslint-plugin-n.version>17.23.2</eslint-plugin-n.version>
+    <eslint-plugin-n.version>17.24.0</eslint-plugin-n.version>
     <eslint-config-prettier.version>^9.1.2</eslint-config-prettier.version>
     <eslint-plugin-promise.version>^7.2.1</eslint-plugin-promise.version>
     <eslint-plugin-svelte.version>3.15.0</eslint-plugin-svelte.version>
@@ -225,10 +225,10 @@
     <recogitojs.version>1.8.4</recogitojs.version>
     <recogito-connections.version>0.1.11</recogito-connections.version>
     <recogito-client-core.version>1.7.9</recogito-client-core.version>
-    <rollup.version>4.55.1</rollup.version>
+    <rollup.version>4.57.1</rollup.version>
     <sass.version>^1.75.0</sass.version>
     <stomp-stompjs.version>^7.2.1</stomp-stompjs.version>
-    <svelte.version>5.51.0</svelte.version>
+    <svelte.version>5.51.2</svelte.version>
     <svelte-preprocess.version>^6.0.3</svelte-preprocess.version>
     <sveltejs-vite-plugin-svelte.version>^6.2.1</sveltejs-vite-plugin-svelte.version>
     <svgdotjs-svg-js.version>^3.2.4</svgdotjs-svg-js.version>
