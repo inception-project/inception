@@ -124,7 +124,7 @@ public class SearchToolLibrary
                 properties.getDocumentIndex().getMaxChunks(),
                 properties.getDocumentIndex().getMinScore());
 
-        List<Chunk> chunks = result != null ? result.matches() : List.<Chunk> of();
+        List<Chunk> chunks = result != null ? result.matches() : emptyList();
 
         var references = new LinkedHashMap<Chunk, MReference>();
         var chunkTexts = new ArrayList<Map<String, String>>();

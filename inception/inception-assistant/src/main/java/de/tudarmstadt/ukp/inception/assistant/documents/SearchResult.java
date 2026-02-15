@@ -33,8 +33,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public record SearchResult(List<Chunk> matches, OptionalInt totalMatches,
         Optional<Boolean> truncated)
 {
-    private static final SearchResult EMPTY_RESULT = builder().withTotalMatches(0)
-            .withTruncated(false).build();
+    private static final SearchResult EMPTY_RESULT = builder() //
+            .withTotalMatches(0) //
+            .withTruncated(false) //
+            .build();
 
     @JsonCreator
     public SearchResult(@JsonProperty("matches") List<Chunk> matches,

@@ -158,12 +158,21 @@ public class DocumentQueryServiceImpl
             var query = new KnnFloatVectorQuery(FIELD_EMBEDDING, queryEmbedding, aTopN + 1);
             var result = searcher.search(query, aTopN + 1);
 
-            var truncated = result.scoreDocs.length > aTopN;
-
             var documentNameCache = new HashMap<Long, String>();
             var chunks = new ArrayList<Chunk>();
+            var chunksAboveThreshold = 0;
             for (var scoreDoc : result.scoreDocs) {
-                if (scoreDoc.score >= aScoreThreshold && chunks.size() < aTopN) {
+                if (scoreDoc.score < aScoreThreshold) {
+                    if (LOG.isTraceEnabled()) {
+                        var doc = reader.storedFields().document(scoreDoc.doc);
+                        LOG.trace("Score {} too low: [{}]", scoreDoc.score, doc.get(FIELD_TEXT));
+                    }
+                    continue;
+                }
+
+                chunksAboveThreshold++;
+
+                if (chunks.size() < aTopN) {
                     var doc = reader.storedFields().document(scoreDoc.doc);
                     var docId = doc.getField(FIELD_SOURCE_DOC_ID).numericValue().longValue();
                     var docName = getDocumentName(aProject, documentNameCache, docId);
@@ -179,12 +188,9 @@ public class DocumentQueryServiceImpl
                     LOG.trace("Score {} above threshold: [{}]", scoreDoc.score,
                             doc.get(FIELD_TEXT));
                 }
-                else if (LOG.isTraceEnabled()) {
-                    var doc = reader.storedFields().document(scoreDoc.doc);
-                    LOG.trace("Score {} too low: [{}]", scoreDoc.score, doc.get(FIELD_TEXT));
-                }
             }
 
+            var truncated = chunksAboveThreshold > aTopN;
             var totalMatches = truncated ? -1 : chunks.size();
             return SearchResult.builder() //
                     .withMatches(chunks) //
@@ -260,11 +266,8 @@ public class DocumentQueryServiceImpl
             var knnTop = searcher.search(knn, candidateK);
 
             if (knnTop.scoreDocs.length == 0) {
-                return SearchResult.builder().withMatches(emptyList()).withTotalMatches(0)
-                        .withTruncated(false).build();
+                return SearchResult.emptyResult();
             }
-
-            var totalMatches = knnTop.scoreDocs.length;
 
             // parse lexical query (escape because atm we do not want to explain operators to LLM)
             var analyzer = new StandardAnalyzer();
@@ -273,8 +276,8 @@ public class DocumentQueryServiceImpl
             var lexQuery = sqp.parse(QueryParser.escape(aQuery));
 
             // gather scores and combine
-            double maxSem = 0.0;
-            double maxLex = 0.0;
+            double maxSem = 0.0d;
+            double maxLex = 0.0d;
             var candidates = new ArrayList<Candidate>();
             for (var sd : knnTop.scoreDocs) {
                 var sem = sd.score;
@@ -282,7 +285,7 @@ public class DocumentQueryServiceImpl
                     maxSem = sem;
                 }
                 var expl = searcher.explain(lexQuery, sd.doc);
-                var lex = expl == null ? 0.0 : expl.getValue().doubleValue();
+                var lex = expl == null ? 0.0d : expl.getValue().doubleValue();
                 if (lex > maxLex) {
                     maxLex = lex;
                 }
@@ -290,16 +293,16 @@ public class DocumentQueryServiceImpl
             }
 
             // normalize and combine
-            double wSem = 0.7;
-            double wLex = 0.3;
+            double wSem = 0.7d;
+            double wLex = 0.3d;
 
             var scored = new ArrayList<Scored>();
             for (var c : candidates) {
                 var docId = c.doc();
                 var sem = c.sem();
                 var lex = c.lex();
-                var nSem = maxSem > 0 ? sem / maxSem : 0.0;
-                var nLex = maxLex > 0 ? lex / maxLex : 0.0;
+                var nSem = maxSem > 0 ? sem / maxSem : 0.0d;
+                var nLex = maxLex > 0 ? lex / maxLex : 0.0d;
                 var combined = wSem * nSem + wLex * nLex;
                 scored.add(new Scored(docId, combined));
             }
@@ -331,8 +334,11 @@ public class DocumentQueryServiceImpl
 
             var truncated = chunks.size() >= aTopN;
             var reportedTotal = truncated ? -1 : chunks.size();
-            return SearchResult.builder().withMatches(chunks).withTotalMatches(reportedTotal)
-                    .withTruncated(truncated).build();
+            return SearchResult.builder() //
+                    .withMatches(chunks) //
+                    .withTotalMatches(reportedTotal) //
+                    .withTruncated(truncated) //
+                    .build();
         });
     }
 
