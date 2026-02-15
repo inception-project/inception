@@ -15,19 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.pdfeditor2.visual;
+package de.tudarmstadt.ukp.inception.io.pdf.visual.model;
 
-import java.io.IOException;
+import java.io.Serializable;
+import java.util.List;
 
-import de.tudarmstadt.ukp.inception.io.pdf.visual.model.VModel;
-import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import tools.jackson.databind.annotation.JsonSerialize;
 
-public class VModelJsonSerializer
-    implements VModelSerializer
+@JsonSerialize
+public class VModel
+    implements Serializable
 {
-    @Override
-    public String serialize(VModel aModel) throws IOException
+    private static final long serialVersionUID = 3356809962076534278L;
+    private final List<VPage> pages;
+
+    public VModel(List<VPage> aPages)
     {
-        return JSONUtil.toJsonString(aModel);
+        pages = aPages;
+    }
+
+    public List<VPage> getPages()
+    {
+        return pages;
     }
 }

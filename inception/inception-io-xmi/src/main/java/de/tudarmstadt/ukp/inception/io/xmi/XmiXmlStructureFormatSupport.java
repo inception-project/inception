@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.io.xmi;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.inception.io.xmi.PdfVModelUtils.containsPdfDocumentStructure;
-import static de.tudarmstadt.ukp.inception.io.xmi.PdfVModelUtils.transferPdfDocumentStructure;
+import static de.tudarmstadt.ukp.inception.io.pdf.visual.PdfVModelUtils.containsPdfDocumentStructure;
+import static de.tudarmstadt.ukp.inception.io.pdf.visual.PdfVModelUtils.transferPdfDocumentStructure;
 import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.containsXmlDocumentStructure;
 import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.transferXmlDocumentStructure;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createCasCopy;
