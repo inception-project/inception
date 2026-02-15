@@ -80,6 +80,10 @@ export interface MGroupGroup {
     lastContentHtml: string;
     lastCompletedThinkingMessage?: MTextMessage | null;
     lastCompletedThinkingHtml?: string;
+    // Frontend only: whether the group was closed by encountering a non-groupable
+    // message (e.g. a plain content message). If true the group should be
+    // considered finished and can show a completion checkmark.
+    closed?: boolean;
 }
 
 export type MGroupItem = MGroupSingle | MGroupGroup;

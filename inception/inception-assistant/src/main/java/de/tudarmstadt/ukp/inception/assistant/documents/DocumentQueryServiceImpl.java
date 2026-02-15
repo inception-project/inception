@@ -140,6 +140,28 @@ public class DocumentQueryServiceImpl
         }
     }
 
+    /**
+     * Semantic query using vector similarity (KNN) against document embeddings.
+     *
+     * <p>
+     * When to prefer this method:
+     * <ul>
+     * <li>Prefer {@code semanticQuery} when you want concept-level or paraphrase-style matches that
+     * go beyond exact lexical overlap.</li>
+     * <li>Do not use this method if you require strict lexical matching or operator-based queries;
+     * use {@link #keywordQuery} for that.</li>
+     * </ul>
+     *
+     * @param aProject
+     *            project to search
+     * @param aQuery
+     *            query string to embed
+     * @param aTopN
+     *            maximum number of results to return
+     * @param aScoreThreshold
+     *            minimum semantic score required for a candidate to be included in the results
+     * @return a {@link SearchResult} with semantic matches
+     */
     @Override
     public SearchResult semanticQuery(Project aProject, String aQuery, int aTopN,
             double aScoreThreshold)
@@ -200,6 +222,26 @@ public class DocumentQueryServiceImpl
         });
     }
 
+    /**
+     * Keyword (lexical) query parsed with a {@link StandardAnalyzer} and {@link SimpleQueryParser}.
+     *
+     * <p>
+     * When to prefer this method:
+     * <ul>
+     * <li>Prefer {@code keywordQuery} when you need exact term matching, operator support, or
+     * deterministic lexical scores without embeddings.</li>
+     * <li>For fuzzy/conceptual matches, use {@link #semanticQuery}; for a blend of both, use
+     * {@link #hybridQuery}.</li>
+     * </ul>
+     *
+     * @param aProject
+     *            project to search
+     * @param aQuery
+     *            user query string
+     * @param aTopN
+     *            maximum number of results to return
+     * @return a {@link SearchResult} with lexical matches
+     */
     @Override
     public SearchResult keywordQuery(Project aProject, String aQuery, int aTopN)
     {
@@ -245,6 +287,29 @@ public class DocumentQueryServiceImpl
         });
     }
 
+    /**
+     * Hybrid query combining semantic (vector) and lexical (keyword) signals.
+     *
+     * <p>
+     * When to prefer this method:
+     * <ul>
+     * <li>Prefer {@code hybridQuery} when you want the recall benefits of semantic (embedding)
+     * matching but also require lexical relevance to boost precision.</li>
+     * <li>Use {@link #semanticQuery} when you only need semantic similarity (e.g., paraphrase or
+     * concept-level matching) and lexical matches are not important.</li>
+     * <li>Use {@link #keywordQuery} when you need exact or purely lexical term matching and
+     * deterministic keyword scoring without embeddings.</li>
+     * </ul>
+     *
+     * @param aProject
+     *            project to search
+     * @param aQuery
+     *            user query string
+     * @param aTopN
+     *            maximum number of results to return
+     * @return a {@link SearchResult} containing ranked chunks, the truncation flag and a total
+     *         match count (may be -1 when truncated)
+     */
     @Override
     public SearchResult hybridQuery(Project aProject, String aQuery, int aTopN)
     {
