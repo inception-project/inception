@@ -38,9 +38,9 @@ public class ProjectListSortState
     }
 
     @JsonCreator
-    public ProjectListSortState(@JsonProperty("strategy") ProjectListSortStrategy aKey)
+    public ProjectListSortState(@JsonProperty("strategy") ProjectListSortStrategy aStrategy)
     {
-        strategy = aKey;
+        strategy = aStrategy;
     }
 
     @Override
