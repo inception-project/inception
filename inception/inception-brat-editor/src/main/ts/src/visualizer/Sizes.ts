@@ -1,4 +1,4 @@
-import { Measurements } from './Measurements'
+import { Measurements } from './Measurements';
 
 /*
  * ## INCEpTION ##
@@ -40,14 +40,14 @@ import { Measurements } from './Measurements'
  * SOFTWARE.
  */
 export class Sizes {
-  texts: Measurements
-  fragments: Measurements
-  arcs: Measurements
+    texts: Measurements;
+    fragments: Measurements;
+    arcs: Measurements;
 
-  constructor (texts: Measurements, arcSizes: Measurements, fragments: Measurements) {
-    this.texts = texts
-    this.arcs = arcSizes
-    this.fragments = fragments
-    Object.seal(this)
-  }
+    constructor(texts: Measurements, arcSizes: Measurements, fragments: Measurements) {
+        this.texts = texts;
+        this.arcs = arcSizes;
+        this.fragments = fragments;
+        Object.seal(this);
+    }
 }

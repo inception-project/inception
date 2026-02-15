@@ -35,16 +35,18 @@
 
 // Calculate the scrollbar width dynamically!
 
-let cachedScrollBarWidth: number | undefined
+let cachedScrollBarWidth: number | undefined;
 
-export function scrollbarWidth (): number {
-  if (cachedScrollBarWidth !== undefined) {
-    return cachedScrollBarWidth
-  }
+export function scrollbarWidth(): number {
+    if (cachedScrollBarWidth !== undefined) {
+        return cachedScrollBarWidth;
+    }
 
-  const parent = $('<div style="position: absolute; top: -200px; width:50px;height:50px;overflow:auto"><div/></div>').appendTo('body')
-  const child = parent.children()
-  cachedScrollBarWidth = child.innerWidth() - child.height(99).innerWidth()
-  parent.remove()
-  return cachedScrollBarWidth
+    const parent = $(
+        '<div style="position: absolute; top: -200px; width:50px;height:50px;overflow:auto"><div/></div>'
+    ).appendTo('body');
+    const child = parent.children();
+    cachedScrollBarWidth = child.innerWidth() - child.height(99).innerWidth();
+    parent.remove();
+    return cachedScrollBarWidth;
 }

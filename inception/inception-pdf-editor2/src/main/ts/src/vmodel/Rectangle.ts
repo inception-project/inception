@@ -16,48 +16,49 @@
  * limitations under the License.
  */
 
-import { Point } from './Point'
+import { Point } from './Point';
 
 export class Rectangle {
-  p: number
-  x: number
-  y: number
-  w: number
-  h: number
+    p: number;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
 
-  constructor (aRectangle: {p: number, x: number, y: number, w: number, h: number}) {
-    this.p = aRectangle.p
-    this.x = aRectangle.x
-    this.y = aRectangle.y
-    this.w = aRectangle.w
-    this.h = aRectangle.h
-  }
+    constructor(aRectangle: { p: number; x: number; y: number; w: number; h: number }) {
+        this.p = aRectangle.p;
+        this.x = aRectangle.x;
+        this.y = aRectangle.y;
+        this.w = aRectangle.w;
+        this.h = aRectangle.h;
+    }
 
-  contains (aP: Point): boolean {
-    return this.x <= aP.x && aP.x <= (this.x + this.w) &&
-        this.y <= aP.y && aP.y <= (this.y + this.h)
-  }
+    contains(aP: Point): boolean {
+        return (
+            this.x <= aP.x && aP.x <= this.x + this.w && this.y <= aP.y && aP.y <= this.y + this.h
+        );
+    }
 
-  setPosition (p: {top: number, bottom: number, left: number, right: number}) {
-    this.y = p.top
-    this.h = p.bottom - p.top
-    this.x = p.left
-    this.w = p.right - p.left
-  }
+    setPosition(p: { top: number; bottom: number; left: number; right: number }) {
+        this.y = p.top;
+        this.h = p.bottom - p.top;
+        this.x = p.left;
+        this.w = p.right - p.left;
+    }
 
-  get top () : number {
-    return this.y
-  }
+    get top(): number {
+        return this.y;
+    }
 
-  get bottom () : number {
-    return this.y + this.h
-  }
+    get bottom(): number {
+        return this.y + this.h;
+    }
 
-  get left () : number {
-    return this.x
-  }
+    get left(): number {
+        return this.x;
+    }
 
-  get right () : number {
-    return this.x + this.w
-  }
+    get right(): number {
+        return this.x + this.w;
+    }
 }

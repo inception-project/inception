@@ -39,14 +39,14 @@
  */
 
 export class Measurements {
-  widths: Record<string, number>
-  height: number
-  y: number
+    widths: Record<string, number>;
+    height: number;
+    y: number;
 
-  constructor (widths: Record<string, number>, height: number, y: number) {
-    this.widths = widths
-    this.height = height
-    this.y = y
-    Object.seal(this)
-  }
+    constructor(widths: Record<string, number>, height: number, y: number) {
+        this.widths = widths;
+        this.height = height;
+        this.y = y;
+        Object.seal(this);
+    }
 }

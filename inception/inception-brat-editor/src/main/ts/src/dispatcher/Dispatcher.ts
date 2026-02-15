@@ -38,97 +38,131 @@
  * SOFTWARE.
  */
 
-export type Message = 'dispatchAsynchError' | 'collectionLoaded' | 'requestRenderData' | 'messages'
-  | 'startedRendering' | 'doneRendering' | 'dataReady'
-  | 'ajax' | 'acceptButtonClicked' | 'rejectButtonClicked' | 'rerender'
-  | 'svgWidth' | 'configurationUpdated' | 'newSourceData' | 'init' | 'click'
-  | 'contextmenu' | 'isReloadOkay' | 'spanAndAttributeTypesLoaded'
-  | 'keydown' | 'dragstart' | 'mousedown' | 'mouseup' | 'mousemove'
-  | 'resize' | 'displaySpanButtons' | 'configurationChanged'
-  | 'mouseover' | 'mouseout' | 'dblclick' | 'keypress' | 'touchstart' | 'touchend'
-  | 'collectionChanged' | 'renderData' | 'renderDataPatch' | 'triggerRender'
-  | 'resetData' | 'abbrevs' | 'textBackgrounds' | 'layoutDensity' | 'loadAnnotations'
-  | 'selectionStarted' | 'selectionEnded';
+export type Message =
+    | 'dispatchAsynchError'
+    | 'collectionLoaded'
+    | 'requestRenderData'
+    | 'messages'
+    | 'startedRendering'
+    | 'doneRendering'
+    | 'dataReady'
+    | 'ajax'
+    | 'acceptButtonClicked'
+    | 'rejectButtonClicked'
+    | 'rerender'
+    | 'svgWidth'
+    | 'configurationUpdated'
+    | 'newSourceData'
+    | 'init'
+    | 'click'
+    | 'contextmenu'
+    | 'isReloadOkay'
+    | 'spanAndAttributeTypesLoaded'
+    | 'keydown'
+    | 'dragstart'
+    | 'mousedown'
+    | 'mouseup'
+    | 'mousemove'
+    | 'resize'
+    | 'displaySpanButtons'
+    | 'configurationChanged'
+    | 'mouseover'
+    | 'mouseout'
+    | 'dblclick'
+    | 'keypress'
+    | 'touchstart'
+    | 'touchend'
+    | 'collectionChanged'
+    | 'renderData'
+    | 'renderDataPatch'
+    | 'triggerRender'
+    | 'resetData'
+    | 'abbrevs'
+    | 'textBackgrounds'
+    | 'layoutDensity'
+    | 'loadAnnotations'
+    | 'selectionStarted'
+    | 'selectionEnded';
 
 export class Dispatcher {
-  table : Record<string, [Object, Function][]> = {}
+    table: Record<string, [Object, Function][]> = {};
 
-  on (message: Message, host: Object, handler: Function) {
-    if (this.table[message] === undefined) {
-      this.table[message] = []
-    }
-    this.table[message].push([host, handler])
-    return this
-  }
-
-  // Notify listeners that we encountered an error in an asynch call
-  inAsynchError = false // To avoid error avalanches
-  handleAsynchError (e) {
-    if (!this.inAsynchError) {
-      this.inAsynchError = true
-      // TODO: Hook printout into dispatch elsewhere?
-      console.warn('Handled async error:', e)
-      this.post('dispatchAsynchError', [e])
-      this.inAsynchError = false
-    } else {
-      console.warn('Dropped asynch error:', e)
-    }
-  }
-
-  postAsync (callback: Function | Message, args?) {
-    if (args === undefined) {
-      args = []
-    }
-
-    setTimeout(() => {
-      try {
-        if (typeof (callback) === 'function') {
-          (callback as Function)(...args)
-        } else {
-          this.post(callback as Message, args)
+    on(message: Message, host: Object, handler: Function) {
+        if (this.table[message] === undefined) {
+            this.table[message] = [];
         }
-      } catch (e) {
-        this.handleAsynchError(e)
-      }
-    }, 0)
-  }
-
-  post (message: Message, args?, returnType?: 'any' | 'all') {
-    // console.trace(`brat dispacher processing ${message}`)
-
-    if (args === undefined) {
-      args = []
+        this.table[message].push([host, handler]);
+        return this;
     }
 
-    const results : unknown[] = []
+    // Notify listeners that we encountered an error in an asynch call
+    inAsynchError = false; // To avoid error avalanches
+    handleAsynchError(e) {
+        if (!this.inAsynchError) {
+            this.inAsynchError = true;
+            // TODO: Hook printout into dispatch elsewhere?
+            console.warn('Handled async error:', e);
+            this.post('dispatchAsynchError', [e]);
+            this.inAsynchError = false;
+        } else {
+            console.warn('Dropped asynch error:', e);
+        }
+    }
 
-    // a proper message, propagate to all interested parties
-    const todo = this.table[message]
-    if (todo !== undefined) {
-      for (const [host, handler] of todo) {
-        results.push(handler.apply(host, args))
-      }
-      /* DEBUG
+    postAsync(callback: Function | Message, args?) {
+        if (args === undefined) {
+            args = [];
+        }
+
+        setTimeout(() => {
+            try {
+                if (typeof callback === 'function') {
+                    (callback as Function)(...args);
+                } else {
+                    this.post(callback as Message, args);
+                }
+            } catch (e) {
+                this.handleAsynchError(e);
+            }
+        }, 0);
+    }
+
+    post(message: Message, args?, returnType?: 'any' | 'all') {
+        // console.trace(`brat dispacher processing ${message}`)
+
+        if (args === undefined) {
+            args = [];
+        }
+
+        const results: unknown[] = [];
+
+        // a proper message, propagate to all interested parties
+        const todo = this.table[message];
+        if (todo !== undefined) {
+            for (const [host, handler] of todo) {
+                results.push(handler.apply(host, args));
+            }
+            /* DEBUG
                 } else {
                   console.warn('Message ' + message + ' has no subscribers.'); // DEBUG
       */
-    }
+        }
 
-    if (returnType === 'any') {
-      let i = results.length
-      while (i--) {
-        if (results[i] !== false) return results[i]
-      }
-      return false
-    }
+        if (returnType === 'any') {
+            let i = results.length;
+            while (i--) {
+                if (results[i] !== false) return results[i];
+            }
+            return false;
+        }
 
-    if (returnType === 'all') {
-      let i = results.length
-      while (i--) {
-        if (results[i] === false) return results[i]
-      }
-    }
+        if (returnType === 'all') {
+            let i = results.length;
+            while (i--) {
+                if (results[i] === false) return results[i];
+            }
+        }
 
-    return results
-  }
+        return results;
+    }
 }

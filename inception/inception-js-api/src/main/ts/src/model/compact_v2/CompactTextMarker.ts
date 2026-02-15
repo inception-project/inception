@@ -15,16 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TextMarker, Offsets } from '..'
+import { TextMarker, Offsets } from '..';
 
-export type CompactTextMarker = [
-  type: string,
-  offsets: Array<Offsets>
-]
+export type CompactTextMarker = [type: string, offsets: Array<Offsets>];
 
-export function unpackCompactTextMarker (raw: CompactTextMarker): TextMarker {
-  const cooked = new TextMarker()
-  cooked.type = raw[0]
-  cooked.offsets = raw[1]
-  return cooked
+export function unpackCompactTextMarker(raw: CompactTextMarker): TextMarker {
+    const cooked = new TextMarker();
+    cooked.type = raw[0];
+    cooked.offsets = raw[1];
+    return cooked;
 }

@@ -15,23 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { VID, Annotation } from '.'
+import { VID, Annotation } from '.';
 
 /**
  * Represents a comment on an annotation
  */
 export class Comment {
-  targetId: VID
-  target?: Annotation
-  type: 'error' | 'info'
-  comment: string
+    targetId: VID;
+    target?: Annotation;
+    type: 'error' | 'info';
+    comment: string;
 
-  constructor (other?: Comment) {
-    if (other) {
-      this.targetId = other.targetId
-      this.target = other.target
-      this.type = other.type
-      this.comment = other.comment
+    constructor(other?: Comment) {
+        if (other) {
+            this.targetId = other.targetId;
+            this.target = other.target;
+            this.type = other.type;
+            this.comment = other.comment;
+        }
     }
-  }
 }

@@ -17,11 +17,11 @@
  */
 //import './src/style/InceptionEditorColors.scss'
 
-export * from './src/diam'
-export * from './src/editor'
-export * from './src/model'
-export * from './src/event'
-export * from './src/model/compact'
-export * from './src/util'
+export * from './src/diam';
+export * from './src/editor';
+export * from './src/model';
+export * from './src/event';
+export * from './src/model/compact';
+export * from './src/util';
 
-export { unpackCompactAnnotatedText as unpackCompactAnnotatedTextV2 } from './src/model/compact_v2/CompactAnnotatedText'
+export { unpackCompactAnnotatedText as unpackCompactAnnotatedTextV2 } from './src/model/compact_v2/CompactAnnotatedText';

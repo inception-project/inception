@@ -15,16 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { VID, AnnotationMarker } from '..'
+import { VID, AnnotationMarker } from '..';
 
-export type CompactAnnotationMarker = [
-  type: string,
-  vid: Array<VID>
-]
+export type CompactAnnotationMarker = [type: string, vid: Array<VID>];
 
-export function unpackCompactAnnotationMarker (raw: CompactAnnotationMarker): AnnotationMarker {
-  const cooked = new AnnotationMarker()
-  cooked.type = raw[0]
-  cooked.vid = raw[1]
-  return cooked
+export function unpackCompactAnnotationMarker(raw: CompactAnnotationMarker): AnnotationMarker {
+    const cooked = new AnnotationMarker();
+    cooked.type = raw[0];
+    cooked.vid = raw[1];
+    return cooked;
 }

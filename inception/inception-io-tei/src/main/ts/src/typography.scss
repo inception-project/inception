@@ -17,126 +17,128 @@
  */
 // https://www.deutschestextarchiv.de/doku/basisformat/typogrAllg.html
 TEI {
-  i {
-    font-style: italic;
-  }
+    i {
+        font-style: italic;
+    }
 
-  b, hi[rend='bold'] {
-    font-weight: bold;
-  }
+    b,
+    hi[rend='bold'] {
+        font-weight: bold;
+    }
 
-  ex {
-    font-style: oblique;
-  }
+    ex {
+        font-style: oblique;
+    }
 
-  milestone[rendition='#hr'] {
-    display: block;
-    border-top: 1px solid black;
-    margin-top: 1em;
-    margin-bottom: 1em;
-  }
+    milestone[rendition='#hr'] {
+        display: block;
+        border-top: 1px solid black;
+        margin-top: 1em;
+        margin-bottom: 1em;
+    }
 
-  hi[rendition='#aq'] {
-    font-family: sans-serif;
-  }
+    hi[rendition='#aq'] {
+        font-family: sans-serif;
+    }
 
-  // https://www.deutschestextarchiv.de/doku/basisformat/fettdruck.html
-  hi[rendition='#b'] {
-    font-weight: bold;
-  }
+    // https://www.deutschestextarchiv.de/doku/basisformat/fettdruck.html
+    hi[rendition='#b'] {
+        font-weight: bold;
+    }
 
-  hi[rendition='#blue'] {
-    color: blue;
-  }
+    hi[rendition='#blue'] {
+        color: blue;
+    }
 
-  hi[rendition='#c'] {
-    display: block;
-    text-align: center;
-  }
+    hi[rendition='#c'] {
+        display: block;
+        text-align: center;
+    }
 
-  hi[rendition='#et'] {
-    display: block;
-    margin-left: 2em;
-    text-indent: 0;
-  }
+    hi[rendition='#et'] {
+        display: block;
+        margin-left: 2em;
+        text-indent: 0;
+    }
 
-  hi[rendition='#et2'] {
-    display: block;
-    margin-left: 4em;
-    text-indent: 0;
-  }
+    hi[rendition='#et2'] {
+        display: block;
+        margin-left: 4em;
+        text-indent: 0;
+    }
 
-  hi[rendition='#et3'] {
-    display: block;
-    margin-left: 6em;
-    text-indent: 0;
-  }
+    hi[rendition='#et3'] {
+        display: block;
+        margin-left: 6em;
+        text-indent: 0;
+    }
 
-  hi[rendition='#f'] {
-    border: 1px dotted silver;
-  }
+    hi[rendition='#f'] {
+        border: 1px dotted silver;
+    }
 
-  hi[rendition='#fr'] {
-    border: 1px dotted silver;
-  }
+    hi[rendition='#fr'] {
+        border: 1px dotted silver;
+    }
 
-  hi[rendition='#g'] {
-    letter-spacing: 0.125em;
-  }
+    hi[rendition='#g'] {
+        letter-spacing: 0.125em;
+    }
 
-  hi[rendition='#i'] {
-    font-style: italic;
-  }
+    hi[rendition='#i'] {
+        font-style: italic;
+    }
 
-  hi[rendition='#in'] {
-    font-size: 150%;
-  }
+    hi[rendition='#in'] {
+        font-size: 150%;
+    }
 
-  hi[rendition='#k'] {
-    font-variant: small-caps;
-  }
+    hi[rendition='#k'] {
+        font-variant: small-caps;
+    }
 
-  hi[rendition='#larger'] {
-    font-size: larger;
-  }
+    hi[rendition='#larger'] {
+        font-size: larger;
+    }
 
-  hi[rendition='#red'], hi[rend='red'] {
-    color: red;
-  }
+    hi[rendition='#red'],
+    hi[rend='red'] {
+        color: red;
+    }
 
-  hi[rendition='#right'] {
-    display: block;
-    text-align: right;
-  }
+    hi[rendition='#right'] {
+        display: block;
+        text-align: right;
+    }
 
-  hi[rendition='#s'] {
-    text-decoration: line-through;
-  }
+    hi[rendition='#s'] {
+        text-decoration: line-through;
+    }
 
-  hi[rendition='#smaller'] {
-    font-size: smaller;
-  }
+    hi[rendition='#smaller'] {
+        font-size: smaller;
+    }
 
-  hi[rendition='#sub'] {
-    vertical-align: sub;
-    font-size: .7em;
-  }
+    hi[rendition='#sub'] {
+        vertical-align: sub;
+        font-size: 0.7em;
+    }
 
-  hi[rendition='#sup'] {
-    vertical-align: super;
-    font-size: .7em;
-  }
+    hi[rendition='#sup'] {
+        vertical-align: super;
+        font-size: 0.7em;
+    }
 
-  hi[rendition='#u'] {
-    text-decoration: underline;
-  }
+    hi[rendition='#u'] {
+        text-decoration: underline;
+    }
 
-  hi[rendition='#uu'] {
-    border-bottom: double 3px #000;
-  }
+    hi[rendition='#uu'] {
+        border-bottom: double 3px #000;
+    }
 
-  hi[type='dropcap'] {
-    font-size: 1.5em;
-    font-weight: bold;
-  }
+    hi[type='dropcap'] {
+        font-size: 1.5em;
+        font-weight: bold;
+    }
 }

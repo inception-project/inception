@@ -15,20 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets } from '../Offsets'
-import { VID } from '../VID'
-import { CompactAnnotationMarker } from './CompactAnnotationMarker'
-import { CompactRelation } from './CompactRelation'
-import { CompactSpan } from './CompactSpan'
-import { CompactTextMarker } from './CompactTextMarker'
+import { Offsets } from '../Offsets';
+import { VID } from '../VID';
+import { CompactAnnotationMarker } from './CompactAnnotationMarker';
+import { CompactRelation } from './CompactRelation';
+import { CompactSpan } from './CompactSpan';
+import { CompactTextMarker } from './CompactTextMarker';
 
 export interface CompactAnnotatedText {
-  text?: string;
-  window: Offsets;
-  relations?: Array<CompactRelation>;
-  spans?: Array<CompactSpan>;
-  annotationMarkers?: Array<CompactAnnotationMarker>;
-  textMarkers?: Array<CompactTextMarker>;
+    text?: string;
+    window: Offsets;
+    relations?: Array<CompactRelation>;
+    spans?: Array<CompactSpan>;
+    annotationMarkers?: Array<CompactAnnotationMarker>;
+    textMarkers?: Array<CompactTextMarker>;
 }
 
 /**
@@ -38,19 +38,19 @@ export interface CompactAnnotatedText {
  * @param markerList a list of {@link CompactAnnotationMarker}s
  * @returns the map
  */
-export function makeMarkerMap<T> (markerList: T[] | undefined): Map<VID, Array<T>> {
-  const markerMap = new Map<VID, Array<T>>()
-  if (markerList) {
-    markerList.forEach(marker => {
-      marker[1].forEach(vid => {
-        let ms = markerMap.get(vid)
-        if (!ms) {
-          ms = []
-          markerMap.set(vid, ms)
-        }
-        ms.push(marker)
-      })
-    })
-  }
-  return markerMap
+export function makeMarkerMap<T>(markerList: T[] | undefined): Map<VID, Array<T>> {
+    const markerMap = new Map<VID, Array<T>>();
+    if (markerList) {
+        markerList.forEach((marker) => {
+            marker[1].forEach((vid) => {
+                let ms = markerMap.get(vid);
+                if (!ms) {
+                    ms = [];
+                    markerMap.set(vid, ms);
+                }
+                ms.push(marker);
+            });
+        });
+    }
+    return markerMap;
 }

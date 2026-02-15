@@ -20,6 +20,7 @@
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
     "neostandard": "${neostandard.version}",
     "prettier": "${prettier.version}",
+    "prettier-plugin-svelte": "${prettier-plugin-svelte.version}",
     "sass": "${sass.version}"
   }
 }
