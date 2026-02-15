@@ -17,5 +17,5 @@
  */
 
 export const assistantState = $state({
-  speechSynthesisEnabled: false
-})
+    speechSynthesisEnabled: false,
+});

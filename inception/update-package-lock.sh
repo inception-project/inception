@@ -56,8 +56,9 @@ for module in $TS_MODULES ; do
     MATCHED=1
   fi
 
-  pushd "$module"
-  echo "PWD: $(pwd)"
+  echo "🧹 Cleaning up generated files in $module"
+  pushd "$module" >/dev/null 2>&1
+  # echo "PWD: $(pwd)"
   rm -f ../ts_template/package-lock.json
   rm -f package-lock.json
   rm -f package.json
@@ -67,33 +68,36 @@ for module in $TS_MODULES ; do
   cp ../../../../inception-build/src/main/resources/inception/eslint.config.mjs eslint.config.mjs
   cp ../../../../inception-build/src/main/resources/inception/vite.config.js vite.config.js
   cp ../../../../inception-build/src/main/resources/inception/tsconfig.json tsconfig.json
-  popd
+  popd >/dev/null 2>&1
 
-  pushd "$module/../../.."
-  ${MVN} clean generate-resources -Dnpm-install-command=install -Dts-link-phase=generate-resources
+  echo "🔄 Building module $module to update package-lock.json"
+  pushd "$module/../../.." >/dev/null 2>&1
+  ${MVN} clean generate-resources -q -Dnpm-install-command=install -Dts-link-phase=generate-resources
   
   ORIG_VERSION=$(${MVN} help:evaluate -Dexpression=project.version -q -DforceStdout)
   SEMVER="$(echo "$ORIG_VERSION" | cut -d'-' -f1).0-SNAPSHOT"
-  echo "$ORIG_VERSION -> $SEMVER"
+  echo "ℹ️ Setting version $ORIG_VERSION -> $SEMVER"
 
   ARTIFACT_ID=$(${MVN} help:evaluate -Dexpression=project.artifactId -q -DforceStdout)
-  echo "$ARTIFACT_ID"
-  popd
+  # echo "$ARTIFACT_ID"
+  popd >/dev/null 2>&1
   
-  pushd "$module"
+  echo "🔎 Auditing and updating package-lock.json for module $module"
+  pushd "$module" >/dev/null 2>&1
   npm install npm-audit-resolver
   npm exec -- resolve-audit
-  popd
+  popd >/dev/null 2>&1
   
-  pushd "$module"
+  echo "📦 Updating template package-lock.json for module $module"
+  pushd "$module" >/dev/null 2>&1
   cp package-lock.json ../ts_template/package-lock.json
   sed -i '' "s/${SEMVER}/\${semver}/g" ../ts_template/package-lock.json
   sed -i '' "s/${ARTIFACT_ID}/\${project.artifactId}/g" ../ts_template/package-lock.json
-  popd
+  popd >/dev/null 2>&1
 done
 
 if [ -n "$TARGET_MODULE" ] && [ "$MATCHED" -eq 0 ]; then
   echo "ERROR: module '$TARGET_MODULE' not found in TS_MODULES" >&2
   exit 2
 fi
-cat 
+

@@ -45,8 +45,16 @@ describe('AssistantPanelMessages.buildGroups', () => {
     });
 
     it('identifies active and last completed thinking when active thinking exists', () => {
-        const m1 = textMessage('t1', { thinking: 'first', thinkingSummary: 'first sum', done: true });
-        const m2 = textMessage('t2', { thinking: 'second', thinkingSummary: 'second sum', done: false });
+        const m1 = textMessage('t1', {
+            thinking: 'first',
+            thinkingSummary: 'first sum',
+            done: true,
+        });
+        const m2 = textMessage('t2', {
+            thinking: 'second',
+            thinkingSummary: 'second sum',
+            done: false,
+        });
         const m3 = { id: 'c1', role: 'assistant', internal: false, content: 'final' } as any;
 
         const groups = buildGroups([m1, m2, m3]);
@@ -64,7 +72,11 @@ describe('AssistantPanelMessages.buildGroups', () => {
     });
 
     it('separates non-groupable text messages from groupable ones', () => {
-        const m1 = textMessage('t1', { thinking: 'first', thinkingSummary: 'first sum', done: true });
+        const m1 = textMessage('t1', {
+            thinking: 'first',
+            thinkingSummary: 'first sum',
+            done: true,
+        });
         const m2 = { id: 'c1', role: 'assistant', internal: false, content: 'final' } as any;
 
         const groups = buildGroups([m1, m2]);
@@ -78,9 +90,23 @@ describe('AssistantPanelMessages.buildGroups', () => {
     });
 
     it('includes system Error messages in the running group (do not terminate group)', () => {
-        const m1 = textMessage('t1', { thinking: 'first', thinkingSummary: 'first sum', done: true });
-        const m2 = textMessage('t2', { thinking: 'second', thinkingSummary: 'second sum', done: false });
-        const err = { id: 'e1', role: 'system', actor: 'Error', content: 'Error: There is no tool named `find`.', done: true } as any;
+        const m1 = textMessage('t1', {
+            thinking: 'first',
+            thinkingSummary: 'first sum',
+            done: true,
+        });
+        const m2 = textMessage('t2', {
+            thinking: 'second',
+            thinkingSummary: 'second sum',
+            done: false,
+        });
+        const err = {
+            id: 'e1',
+            role: 'system',
+            actor: 'Error',
+            content: 'Error: There is no tool named `find`.',
+            done: true,
+        } as any;
         const groups = buildGroups([m1, m2, err]);
         expect(groups.length).toBe(1);
         const g = groups[0] as any;

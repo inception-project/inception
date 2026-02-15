@@ -9,13 +9,18 @@
     "url": "https://github.com/inception-project/issues"
   },
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "format": "prettier --write \"**/*.{js,ts,css,scss,json,md,html}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,css,scss,json,md,html}\""
   },
   "devDependencies": {
-    "cross-env": "${cross-env.version}",
     "bootstrap": "${bootstrap.version}",
+    "cross-env": "${cross-env.version}",
     "esbuild": "${esbuild.version}",
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
+    "eslint-config-prettier": "${eslint-config-prettier.version}",
+    "prettier": "${prettier.version}",
+    "prettier-plugin-svelte": "${prettier-plugin-svelte.version}",
     "sass": "${sass.version}"
   }
 }
