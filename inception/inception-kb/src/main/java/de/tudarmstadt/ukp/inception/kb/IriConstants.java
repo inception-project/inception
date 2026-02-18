@@ -48,6 +48,7 @@ public class IriConstants
     public static final String PREFIX_MWAPI = "https://www.mediawiki.org/ontology#API/";
     public static final String PREFIX_STARDOG = "tag:stardog:api:search:";
     public static final String PREFIX_BLAZEGRAPH = "http://www.bigdata.com/rdf/search#";
+    public static final String PREFIX_GRAPHDB = "http://www.ontotext.com/";
 
     public static final String UKP_WIKIDATA_SPARQL_ENDPOINT = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
     public static final Set<String> IMPLICIT_NAMESPACES = Set.of(RDF.NAMESPACE, RDFS.NAMESPACE,
@@ -90,6 +91,7 @@ public class IriConstants
     public static final IRI FTS_WIKIDATA;
     public static final IRI FTS_STARDOG;
     public static final IRI FTS_BLAZEGRAPH;
+    public static final IRI FTS_GRAPHDB;
     public static final IRI FTS_NONE;
 
     public static final List<IRI> CLASS_IRIS;
@@ -121,6 +123,7 @@ public class IriConstants
         FTS_WIKIDATA = vf.createIRI(PREFIX_MWAPI, "search");
         FTS_STARDOG = vf.createIRI(PREFIX_STARDOG, "textMatch");
         FTS_BLAZEGRAPH = vf.createIRI(PREFIX_BLAZEGRAPH, "search");
+        FTS_GRAPHDB = vf.createIRI(PREFIX_GRAPHDB, "fts");
         FTS_NONE = vf.createIRI("FTS:NONE");
 
         CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS, SKOS.CONCEPT);
@@ -145,6 +148,10 @@ public class IriConstants
 
         if (FTS_BLAZEGRAPH.stringValue().equals(aFTS)) {
             return "Blazegraph DB";
+        }
+
+        if (FTS_GRAPHDB.stringValue().equals(aFTS)) {
+            return "GraphDB";
         }
 
         if (FTS_VIRTUOSO.stringValue().equals(aFTS)) {
