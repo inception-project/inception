@@ -204,6 +204,7 @@
     <esbuild-svelte.version>0.9.4</esbuild-svelte.version>
     <eslint.version>9.39.2</eslint.version>
     <neostandard.version>0.12.2</neostandard.version>
+    <echarts.version>^6.0.0</echarts.version>
     <eslint-plugin-import.version>2.32.0</eslint-plugin-import.version>
     <eslint-plugin-n.version>17.24.0</eslint-plugin-n.version>
     <eslint-config-prettier.version>^9.1.2</eslint-config-prettier.version>

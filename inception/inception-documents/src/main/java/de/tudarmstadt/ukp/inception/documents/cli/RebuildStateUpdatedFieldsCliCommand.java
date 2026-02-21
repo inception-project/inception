@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.documents.cli;
 
 import static java.util.Arrays.asList;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -110,7 +111,7 @@ public class RebuildStateUpdatedFieldsCliCommand
                         }
 
                         projectService.updateProjectStateUpdatedDirectly(project.getId(),
-                                event.getCreated());
+                                Date.from(event.getCreated()));
                         projectsUpdated.add(project.getId());
                     }
 
@@ -131,7 +132,7 @@ public class RebuildStateUpdatedFieldsCliCommand
                         }
 
                         documentService.updateSourceDocumentStateUpdatedDirectly(srcDoc.getId(),
-                                event.getCreated());
+                                Date.from(event.getCreated()));
                         sourceDocumentUpdated.add(srcDoc.getId());
                     }
 
@@ -153,7 +154,7 @@ public class RebuildStateUpdatedFieldsCliCommand
                         }
 
                         documentService.updateAnnotationDocumentStateUpdatedDirectly(annDoc.getId(),
-                                event.getCreated());
+                                Date.from(event.getCreated()));
                         annotationDocumentUpdated.add(annDoc.getId());
                     }
                 }

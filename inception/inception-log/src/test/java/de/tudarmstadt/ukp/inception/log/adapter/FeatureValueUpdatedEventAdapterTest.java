@@ -25,7 +25,6 @@ import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
-import java.util.Date;
 
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
@@ -69,7 +68,7 @@ public class FeatureValueUpdatedEventAdapterTest
 
         var loggedEvent = (LoggedEventEntity) sut.toLoggedEvent(event);
         loggedEvent.setId(1l);
-        loggedEvent.setCreated(Date.from(Instant.ofEpochMilli(1234567l)));
+        loggedEvent.setCreated(Instant.ofEpochMilli(1234567l));
 
         var exportedEvent = ExportedLoggedEvent.fromLoggedEvent(doc.getName(), loggedEvent);
 

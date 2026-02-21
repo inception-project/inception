@@ -17,9 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.documents.api;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
+
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 
 public final class SourceDocumentStateStats
     implements Serializable
@@ -96,6 +105,17 @@ public final class SourceDocumentStateStats
     public double getCurationsFinishedPerc()
     {
         return total > 0 ? (double) curationsFinished / total * 100 : 0;
+    }
+
+    public Map<SourceDocumentState, Long> toMap()
+    {
+        var map = new HashMap<SourceDocumentState, Long>();
+        map.put(NEW, annotationsNew);
+        map.put(ANNOTATION_IN_PROGRESS, annotationsInProgress);
+        map.put(ANNOTATION_FINISHED, annotationsFinished);
+        map.put(CURATION_IN_PROGRESS, curationsInProgress);
+        map.put(CURATION_FINISHED, curationsFinished);
+        return map;
     }
 
     public ProjectState getProjectState()
