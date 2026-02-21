@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log.model;
 
-import java.util.Date;
+import java.time.Instant;
 
 import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
 import jakarta.persistence.Column;
@@ -40,7 +40,7 @@ public class LoggedEventEntity
     private String event;
 
     @Column(nullable = false)
-    private Date created;
+    private Instant created;
 
     /**
      * The user who triggered the event. Can be different from the annotator to whom the related
@@ -85,12 +85,12 @@ public class LoggedEventEntity
     }
 
     @Override
-    public Date getCreated()
+    public Instant getCreated()
     {
         return created;
     }
 
-    public void setCreated(Date aCreated)
+    public void setCreated(Instant aCreated)
     {
         created = aCreated;
     }

@@ -129,7 +129,7 @@ public class ExportedLoggedEvent
     {
         ExportedLoggedEvent exportedEvent = new ExportedLoggedEvent();
         exportedEvent.setId(event.getId());
-        exportedEvent.setCreated(event.getCreated());
+        exportedEvent.setCreated(Date.from(event.getCreated()));
         exportedEvent.setDocumentName(documentName);
         exportedEvent.setEvent(event.getEvent());
         exportedEvent.setAnnotator(event.getAnnotator());

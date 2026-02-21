@@ -20,10 +20,12 @@ package de.tudarmstadt.ukp.inception.log.api;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.function.FailableConsumer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.log.api.model.SummarizedLoggedEvent;
 import de.tudarmstadt.ukp.inception.log.api.model.UserSessionStats;
@@ -58,4 +60,24 @@ public interface EventRepository
             Instant aFrom, Instant aTo);
 
     UserSessionStats getAggregateSessionDuration(String aSessionOwner);
+
+    /**
+     * Calculates historical document state counts backwards from current state to the specified
+     * time using backwards replay of events. Returns one data point per day where counts changed.
+     *
+     * @param aProject
+     *            the project
+     * @param aCurrentStats
+     *            current document state counts (starting point for backwards calculation)
+     * @param aFrom
+     *            earliest time to calculate backwards to
+     * @return list of historical state snapshots, ordered oldest-first
+     */
+    List<DocumentStateSnapshot> calculateHistoricalDocumentStates(Project aProject,
+            Map<SourceDocumentState, Long> aCurrentStats, Instant aFrom);
+
+    /**
+     * Represents document state counts at a specific point in time.
+     */
+    record DocumentStateSnapshot(Instant day, Map<SourceDocumentState, Integer> counts) {}
 }

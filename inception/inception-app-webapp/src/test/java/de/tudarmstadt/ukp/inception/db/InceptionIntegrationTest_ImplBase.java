@@ -261,7 +261,7 @@ public abstract class InceptionIntegrationTest_ImplBase
             // apply timestamps with slightly different resolution. The important thing is that
             // the timestamp was propagated from the event, not that it matches exactly down to
             // the millisecond.
-            var expectedInstant = eventsCreated.get(0).getCreated().toInstant();
+            var expectedInstant = eventsCreated.get(0).getCreated();
             var actualInstant = projectAfter.getStateUpdated().toInstant();
             var deltaMillis = Math.abs(Duration.between(expectedInstant, actualInstant).toMillis());
             assertThat(deltaMillis).as("Timestamp difference (ms)").isLessThanOrEqualTo(200);

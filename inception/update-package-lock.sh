@@ -38,6 +38,7 @@ TS_MODULES="
 ./inception-ui-search/src/main/ts
 ./inception-ui-scheduling/src/main/ts
 ./inception-assistant/src/main/ts
+./inception-workload/src/main/ts
 "
 
 TARGET_MODULE="$1"
@@ -84,6 +85,7 @@ for module in $TS_MODULES ; do
   
   echo "🔎 Auditing and updating package-lock.json for module $module"
   pushd "$module" >/dev/null 2>&1
+  npm audit --fix
   npm install npm-audit-resolver
   npm exec -- resolve-audit
   popd >/dev/null 2>&1

@@ -133,6 +133,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -166,6 +167,9 @@ import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentM
 import de.tudarmstadt.ukp.inception.workload.matrix.service.MatrixWorkloadService;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.task.RecalculateProjectStateTask;
+import de.tudarmstadt.ukp.inception.workload.ui.ProjectDocumentStatsPanel;
+import de.tudarmstadt.ukp.inception.workload.ui.ProjectProgressDialogContentPanel;
 import de.tudarmstadt.ukp.inception.workload.ui.ResetAnnotationDocumentConfirmationDialogContentPanel;
 import de.tudarmstadt.ukp.inception.workload.ui.ResetCurationConfirmationDialogContentPanel;
 
@@ -190,6 +194,7 @@ public class MatrixWorkloadManagementPage
     private @SpringBean MatrixWorkloadService matrixWorkloadService;
     private @SpringBean DocumentImportExportService documentImportExportService;
     private @SpringBean RepositoryProperties repositoryProperties;
+    private @SpringBean SchedulingService schedulingService;
 
     private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> documentMatrix;
     private LambdaAjaxLink toggleBulkChange;
@@ -352,10 +357,13 @@ public class MatrixWorkloadManagementPage
         projectDocumentStatsPanel = new ProjectDocumentStatsPanel("stats", stats);
         projectDocumentStatsPanel.setOutputMarkupId(true);
         add(projectDocumentStatsPanel);
+
         stateIcon = new SymbolLabel("stateIcon",
                 stats.map(SourceDocumentStateStats::getProjectState));
         stateIcon.setOutputMarkupId(true);
         add(stateIcon);
+
+        add(new LambdaAjaxLink("openProgress", this::actionOpenProgress));
     }
 
     private boolean onlyCurationCellsSelected()
@@ -1008,6 +1016,13 @@ public class MatrixWorkloadManagementPage
         }
     }
 
+    private void actionOpenProgress(AjaxRequestTarget aTarget)
+    {
+        var dialogContent = new ProjectProgressDialogContentPanel(ModalDialog.CONTENT_ID,
+                getProjectModel());
+        modalDialog.open(dialogContent, aTarget);
+    }
+
     private void actionApplyFilter(AjaxRequestTarget aTarget)
     {
         aTarget.add(documentMatrix);
@@ -1016,6 +1031,11 @@ public class MatrixWorkloadManagementPage
     private void actionRefresh(AjaxRequestTarget aTarget)
     {
         selectedUsers.getObject().clear();
+
+        schedulingService.executeSync(RecalculateProjectStateTask.builder() //
+                .withProject(getProject()) //
+                .withTrigger("Workload configuration changed") //
+                .build());
 
         var newMatrix = createDocumentMatrix("documentMatrix", bulkChangeMode);
         documentMatrix.replaceWith(newMatrix);
