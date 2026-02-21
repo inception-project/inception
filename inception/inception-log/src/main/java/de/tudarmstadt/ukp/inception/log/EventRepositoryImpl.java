@@ -420,7 +420,7 @@ public class EventRepositoryImpl
                     && "DocumentStateChangedEvent".equals(event.getEvent())) {
                 try {
                     var details = fromJsonString(StateChangeDetails.class, event.getDetails());
-                    return SourceDocumentState.valueOf(details.getState());
+                    return SourceDocumentState.fromString(details.getState());
                 }
                 catch (Exception e) {
                     LOG.warn("Failed to parse state for removed document", e);
