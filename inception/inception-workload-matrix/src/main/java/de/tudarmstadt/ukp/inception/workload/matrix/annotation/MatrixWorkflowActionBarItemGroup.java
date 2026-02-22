@@ -32,6 +32,7 @@ import static wicket.contrib.input.events.key.KeyType.Ctrl;
 import static wicket.contrib.input.events.key.KeyType.End;
 
 import java.io.IOException;
+import java.util.Set;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -144,6 +145,14 @@ public class MatrixWorkflowActionBarItemGroup
         if (projectService.hasRole(userRepository.getCurrentUsername(), state.getProject(),
                 CURATOR)) {
             return true;
+        }
+
+        // Check latest state of the document
+        var srcDoc = state.getDocument();
+        srcDoc = documentService.getSourceDocument(srcDoc.getProject().getId(), srcDoc.getId());
+        if (Set.of(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(srcDoc.getState())) {
+            // Annotators may not re-open documents once curation has started
+            return false;
         }
 
         return traits.getObject().isReopenableByAnnotator();
