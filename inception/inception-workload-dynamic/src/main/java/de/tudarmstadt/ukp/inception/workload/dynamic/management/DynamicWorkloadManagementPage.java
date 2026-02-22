@@ -68,6 +68,7 @@ import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
@@ -98,6 +99,7 @@ import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentStateFilter
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.bootstrap.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
@@ -106,6 +108,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
+import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
 import de.tudarmstadt.ukp.inception.support.wicket.SymbolLambdaColumn;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.AnnotatorColumn;
@@ -121,6 +124,8 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.WorkflowType;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.ui.ProjectDocumentStatsPanel;
+import de.tudarmstadt.ukp.inception.workload.ui.ProjectProgressDialogContentPanel;
 import de.tudarmstadt.ukp.inception.workload.ui.ResetAnnotationDocumentConfirmationDialogContentPanel;
 
 /**
@@ -166,7 +171,7 @@ public class DynamicWorkloadManagementPage
     private DataTable<AnnotationQueueItem, AnnotationQueueSortKeys> table;
 
     // Modal dialog
-    private ModalDialog dialog;
+    private ModalDialog modalDialog;
     private ChallengeResponseDialog resetDocumentDialog;
     private ContextMenu contextMenu;
 
@@ -179,6 +184,10 @@ public class DynamicWorkloadManagementPage
     private @SpringBean DynamicWorkloadExtension dynamicWorkloadExtension;
     private @SpringBean WorkflowExtensionPoint workflowExtensionPoint;
     private @SpringBean(name = "dynamicWorkloadManagementPageMenuItem") ProjectMenuItem pageMenuItem;
+
+    private SymbolLabel stateIcon;
+    private ProjectDocumentStatsPanel projectDocumentStatsPanel;
+    private LoadableDetachableModel<SourceDocumentStateStats> stats;
 
     public DynamicWorkloadManagementPage(final PageParameters aPageParameters)
     {
@@ -239,11 +248,23 @@ public class DynamicWorkloadManagementPage
         add(createSettingsForm());
         add(new LambdaAjaxLink("refresh", this::actionRefresh));
 
-        dialog = new BootstrapModalDialog("modalDialog");
-        add(dialog);
+        modalDialog = new BootstrapModalDialog("modalDialog");
+        add(modalDialog);
 
         add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog"));
         add(contextMenu = new ContextMenu("contextMenu"));
+
+        add(new LambdaAjaxLink("openProgress", this::actionOpenProgress));
+
+        stats = LoadableDetachableModel.of(() -> dataProvider.getStats());
+        projectDocumentStatsPanel = new ProjectDocumentStatsPanel("stats", stats);
+        projectDocumentStatsPanel.setOutputMarkupId(true);
+        add(projectDocumentStatsPanel);
+
+        stateIcon = new SymbolLabel("stateIcon",
+                stats.map(SourceDocumentStateStats::getProjectState));
+        stateIcon.setOutputMarkupId(true);
+        add(stateIcon);
     }
 
     /**
@@ -589,6 +610,13 @@ public class DynamicWorkloadManagementPage
         updateTable(aTarget);
     }
 
+    private void actionOpenProgress(AjaxRequestTarget aTarget)
+    {
+        var dialogContent = new ProjectProgressDialogContentPanel(ModalDialog.CONTENT_ID,
+                getProjectModel());
+        modalDialog.open(dialogContent, aTarget);
+    }
+
     private void actionAssignDocument(AjaxRequestTarget aAjaxRequestTarget, Form<?> aForm)
         throws IOException
     {
@@ -679,7 +707,7 @@ public class DynamicWorkloadManagementPage
     {
         var annDoc = documentService.getAnnotationDocument(aEvent.getSourceDocument(),
                 aEvent.getUser());
-        dialog.open(new AnnotatorCommentDialogPanel(ModalDialog.CONTENT_ID, Model.of(annDoc)),
+        modalDialog.open(new AnnotatorCommentDialogPanel(ModalDialog.CONTENT_ID, Model.of(annDoc)),
                 aEvent.getTarget());
     }
 
@@ -725,7 +753,7 @@ public class DynamicWorkloadManagementPage
             updateTable(_target);
         });
 
-        dialog.open(dialogContent, aTarget);
+        modalDialog.open(dialogContent, aTarget);
     }
 
     private void actionTouchAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,

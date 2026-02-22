@@ -12,12 +12,15 @@
     "format:check": "prettier --check \"**/*.{js,ts,svelte,css,scss,json}\""
   },
   "external": {},
+  "overrides": {
+    "minimatch": "${minimatch.version}"
+  },
   "devDependencies": {
     "@inception-project/inception-support-bootstrap": "${semver}",
     "bootstrap": "${bootstrap.version}",
     "eslint": "${eslint.version}",
     "eslint-config-prettier": "${eslint-config-prettier.version}",
-    "eslint-plugin-import": "${eslint-plugin-import.version}",
+    "eslint-plugin-import-x": "${eslint-plugin-import-x.version}",
     "eslint-plugin-n": "${eslint-plugin-n.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
     "eslint-plugin-svelte": "${eslint-plugin-svelte.version}",

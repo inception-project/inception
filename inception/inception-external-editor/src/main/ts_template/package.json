@@ -9,6 +9,9 @@
     "format": "prettier --write \"**/*.{js,ts,json,css,scss,md,html}\"",
     "format:check": "prettier --check \"**/*.{js,ts,json,css,scss,md,html}\""
   },
+  "overrides": {
+    "minimatch": "${minimatch.version}"
+  },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
     "@inception-project/inception-diam": "${semver}"
@@ -19,7 +22,7 @@
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
     "neostandard": "${neostandard.version}",
-    "eslint-plugin-import": "${eslint-plugin-import.version}",
+    "eslint-plugin-import-x": "${eslint-plugin-import-x.version}",
     "eslint-plugin-n": "${eslint-plugin-n.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
     "typescript": "${typescript.version}",

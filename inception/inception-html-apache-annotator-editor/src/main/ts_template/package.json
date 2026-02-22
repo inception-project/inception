@@ -13,6 +13,9 @@
     "format": "prettier --write \"**/*.{js,ts,svelte,css,scss,json}\"",
     "format:check": "prettier --check \"**/*.{js,ts,svelte,css,scss,json}\""
   },
+  "overrides": {
+    "minimatch": "${minimatch.version}"
+  },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
     "apache-annotator": "${apache-annotator.version}",
@@ -25,7 +28,7 @@
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
     "eslint-config-prettier": "${eslint-config-prettier.version}",
-    "eslint-plugin-import": "${eslint-plugin-import.version}",
+    "eslint-plugin-import-x": "${eslint-plugin-import-x.version}",
     "eslint-plugin-n": "${eslint-plugin-n.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
     "eslint-plugin-svelte": "${eslint-plugin-svelte.version}",
