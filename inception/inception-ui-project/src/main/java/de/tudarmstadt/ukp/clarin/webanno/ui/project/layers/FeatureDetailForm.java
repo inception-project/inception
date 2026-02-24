@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.Strings.CS;
 import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
 import static org.apache.uima.cas.CAS.TYPE_NAME_DOUBLE;
 import static org.apache.uima.cas.CAS.TYPE_NAME_FLOAT;
@@ -142,7 +143,8 @@ public class FeatureDetailForm
             var type = FeatureDetailForm.this.getModelObject().getType();
             var requiredMandatory = asList(TYPE_NAME_INTEGER, TYPE_NAME_FLOAT, TYPE_NAME_DOUBLE,
                     TYPE_NAME_BOOLEAN).contains(type);
-            var requiredOptional = asList(TYPE_NAME_STRING_ARRAY, TYPE_NAME_STRING).contains(type);
+            var requiredOptional = asList(TYPE_NAME_STRING_ARRAY, TYPE_NAME_STRING).contains(type)
+                    || CS.startsWith(type, "kb:");
             if (requiredMandatory) {
                 required.setModel(Model.of(true));
                 required.setEnabled(false);
