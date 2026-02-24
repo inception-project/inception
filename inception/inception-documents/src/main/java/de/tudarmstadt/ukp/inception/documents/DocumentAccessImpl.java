@@ -21,16 +21,19 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static org.apache.commons.collections4.CollectionUtils.containsAny;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -193,18 +196,28 @@ public class DocumentAccessImpl
 
             // Blocked or finished documents cannot be edited
             var dataOwnerSet = AnnotationSet.forUser(aDataOwner);
+            AnnotationDocument annDoc = null;
             if (documentService.existsAnnotationDocument(aDocument, dataOwnerSet)) {
-                var aDoc = documentService.getAnnotationDocument(aDocument, dataOwnerSet);
-                if (aDoc.getState() == AnnotationDocumentState.FINISHED) {
+                annDoc = documentService.getAnnotationDocument(aDocument, dataOwnerSet);
+                if (annDoc.getState() == AnnotationDocumentState.FINISHED) {
                     throw new AccessDeniedException("This document is already closed for user ["
                             + aDataOwner + "]. Please ask your "
                             + "project manager to re-open it via the monitoring page.");
                 }
 
-                if (aDoc.getState() == AnnotationDocumentState.IGNORE) {
+                if (annDoc.getState() == AnnotationDocumentState.IGNORE) {
                     throw new AccessDeniedException("This document is blocked for user ["
                             + aDataOwner + "]. Please ask your "
                             + "project manager if you believe this is wrong.");
+                }
+            }
+
+            // Annotators cannot start working if the document is already being curated or is done
+            if (annDoc == null || annDoc.getState() == AnnotationDocumentState.NEW) {
+                if (Set.of(CURATION_IN_PROGRESS, CURATION_FINISHED)
+                        .contains(aDocument.getState())) {
+                    throw new AccessDeniedException(
+                            "This document is already past the annotation stage.");
                 }
             }
 
