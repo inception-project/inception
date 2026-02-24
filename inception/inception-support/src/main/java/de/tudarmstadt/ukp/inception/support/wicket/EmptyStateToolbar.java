@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.support.wicket;
 
+import java.util.Set;
+
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractToolbar;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -30,17 +33,35 @@ public class EmptyStateToolbar
 {
     private static final long serialVersionUID = 1L;
 
-    public EmptyStateToolbar(final DataTable<?, ?> table, final IModel<String> messageModel)
+    public EmptyStateToolbar(final DataTable<?, ?> aTable, final IModel<String> aMessageModel)
     {
-        super(table);
+        super(aTable);
 
-        var label = new Label("msg", messageModel);
+        var label = new Label("msg", aMessageModel);
 
         var td = new WebMarkupContainer("td");
         td.add(AttributeModifier.replace("colspan",
-                LambdaModel.of(() -> String.valueOf(table.getColumns().size()))));
+                LambdaModel.of(() -> String.valueOf(aTable.getColumns().size()))));
         td.add(label);
         add(td);
+
+        aTable.add(new ClassAttributeModifier()
+        {
+            private static final long serialVersionUID = 4534226094224688646L;
+
+            @Override
+            protected Set<String> update(Set<String> aClasses)
+            {
+                if (getTable().getRowCount() == 0) {
+                    aClasses.add("h-100");
+                }
+                else {
+                    aClasses.remove("h-100");
+                }
+
+                return aClasses;
+            }
+        });
     }
 
     @Override
