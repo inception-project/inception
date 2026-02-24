@@ -28,6 +28,7 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -105,8 +106,8 @@ class DocumentAccessImplTest
         when(projectService.getProject(2L)).thenReturn(project);
         when(projectService.listRoles(project, user)).thenReturn(List.of(ANNOTATOR));
         when(documentService.getSourceDocument(project.getId(), 8L)).thenReturn(sourceDocument);
-        org.mockito.Mockito.lenient().when(documentService.existsAnnotationDocument(any(SourceDocument.class),
-            any(AnnotationSet.class))).thenReturn(true);
+        lenient().when(documentService.existsAnnotationDocument(any(SourceDocument.class),
+                any(AnnotationSet.class))).thenReturn(true);
         var aDoc = AnnotationDocument.builder() //
                 .withState(IGNORE) //
                 .build();
@@ -127,71 +128,73 @@ class DocumentAccessImplTest
                         .isInstanceOf(AccessDeniedException.class);
     }
 
-        @Test
-        void canEdit_annotator_curationInProgress_denied()
-        {
+    @Test
+    void canEdit_annotator_curationInProgress_denied()
+    {
         when(projectService.listRoles(project, user)).thenReturn(List.of(ANNOTATOR));
-            when(sourceDocument.getProject()).thenReturn(project);
-            when(sourceDocument.getState()).thenReturn(CURATION_IN_PROGRESS);
+        when(sourceDocument.getProject()).thenReturn(project);
+        when(sourceDocument.getState()).thenReturn(CURATION_IN_PROGRESS);
         when(documentService.existsAnnotationDocument(any(SourceDocument.class),
-            any(AnnotationSet.class))).thenReturn(false);
+                any(AnnotationSet.class))).thenReturn(false);
 
-        assertThatThrownBy(() -> sut.assertCanEditAnnotationDocument(user, sourceDocument,
-            user.getUsername())).isInstanceOf(AccessDeniedException.class);
-        }
+        assertThatThrownBy(
+                () -> sut.assertCanEditAnnotationDocument(user, sourceDocument, user.getUsername()))
+                        .isInstanceOf(AccessDeniedException.class);
+    }
 
-        @Test
-        void canEdit_annotator_curationFinished_denied()
-        {
+    @Test
+    void canEdit_annotator_curationFinished_denied()
+    {
         when(projectService.listRoles(project, user)).thenReturn(List.of(ANNOTATOR));
-            when(sourceDocument.getProject()).thenReturn(project);
-            when(sourceDocument.getState()).thenReturn(CURATION_FINISHED);
+        when(sourceDocument.getProject()).thenReturn(project);
+        when(sourceDocument.getState()).thenReturn(CURATION_FINISHED);
         when(documentService.existsAnnotationDocument(any(SourceDocument.class),
-            any(AnnotationSet.class))).thenReturn(false);
+                any(AnnotationSet.class))).thenReturn(false);
 
-        assertThatThrownBy(() -> sut.assertCanEditAnnotationDocument(user, sourceDocument,
-            user.getUsername())).isInstanceOf(AccessDeniedException.class);
-        }
+        assertThatThrownBy(
+                () -> sut.assertCanEditAnnotationDocument(user, sourceDocument, user.getUsername()))
+                        .isInstanceOf(AccessDeniedException.class);
+    }
 
-        @Test
-        void canEdit_annotator_reopened_duringCurationInProgress_allowed()
-        {
-            when(projectService.listRoles(project, user)).thenReturn(List.of(ANNOTATOR));
-            when(sourceDocument.getProject()).thenReturn(project);
-            when(sourceDocument.getState()).thenReturn(CURATION_IN_PROGRESS);
-            when(documentService.existsAnnotationDocument(any(SourceDocument.class),
+    @Test
+    void canEdit_annotator_reopened_duringCurationInProgress_allowed()
+    {
+        when(projectService.listRoles(project, user)).thenReturn(List.of(ANNOTATOR));
+        when(sourceDocument.getProject()).thenReturn(project);
+        when(sourceDocument.getState()).thenReturn(CURATION_IN_PROGRESS);
+        when(documentService.existsAnnotationDocument(any(SourceDocument.class),
                 any(AnnotationSet.class))).thenReturn(true);
 
-            var annDoc = AnnotationDocument.builder() //
-                    .withState(IN_PROGRESS) // reopened by manager
-                    .build();
+        var annDoc = AnnotationDocument.builder() //
+                .withState(IN_PROGRESS) // reopened by manager
+                .build();
 
-            org.mockito.Mockito.lenient().when(documentService.getAnnotationDocument(any(SourceDocument.class),
+        lenient().when(documentService.getAnnotationDocument(any(SourceDocument.class),
                 any(AnnotationSet.class))).thenReturn(annDoc);
 
-            // should not throw
-            sut.assertCanEditAnnotationDocument(user, sourceDocument, user.getUsername());
-        }
+        // should not throw
+        sut.assertCanEditAnnotationDocument(user, sourceDocument, user.getUsername());
+    }
 
-        @Test
-        void canEdit_annotator_reopened_duringCurationFinished_allowed()
-        {
-            when(projectService.listRoles(project, user)).thenReturn(List.of(ANNOTATOR));
-            when(sourceDocument.getProject()).thenReturn(project);
-            when(sourceDocument.getState()).thenReturn(CURATION_FINISHED);
-            org.mockito.Mockito.lenient().when(documentService.existsAnnotationDocument(any(SourceDocument.class),
+    @Test
+    void canEdit_annotator_reopened_duringCurationFinished_allowed()
+    {
+        when(projectService.listRoles(project, user)).thenReturn(List.of(ANNOTATOR));
+        when(sourceDocument.getProject()).thenReturn(project);
+        when(sourceDocument.getState()).thenReturn(CURATION_FINISHED);
+        lenient().when(documentService.existsAnnotationDocument(any(SourceDocument.class),
                 any(AnnotationSet.class))).thenReturn(true);
 
-            var annDoc = AnnotationDocument.builder() //
-                    .withState(IN_PROGRESS) // reopened by manager
-                    .build();
+        var annDoc = AnnotationDocument.builder() //
+                .withState(IN_PROGRESS) // reopened by manager
+                .build();
 
-            org.mockito.Mockito.lenient().when(documentService.getAnnotationDocument(any(SourceDocument.class),
+        lenient().when(documentService.getAnnotationDocument(any(SourceDocument.class),
                 any(AnnotationSet.class))).thenReturn(annDoc);
 
-            // should not throw
-            sut.assertCanEditAnnotationDocument(user, sourceDocument, user.getUsername());
-        }
+        // should not throw
+        sut.assertCanEditAnnotationDocument(user, sourceDocument, user.getUsername());
+    }
 
     @Test
     void canExport_projectNull_false()
