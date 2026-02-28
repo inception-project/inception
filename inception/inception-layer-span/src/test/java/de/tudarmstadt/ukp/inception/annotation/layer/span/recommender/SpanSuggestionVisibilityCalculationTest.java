@@ -410,6 +410,105 @@ public class SpanSuggestionVisibilityCalculationTest
                 .isTrue();
     }
 
+    @Test
+    void thatNoLabelSuggestionsForDifferentFeaturesAtSamePositionAreConflated() throws Exception
+    {
+        // A second feature on the same layer (simulating e.g. two separate bound recommenders,
+        // one per feature, or a universal extractor that iterates all features)
+        var featureB = AnnotationFeature.builder() //
+                .withId(99l) //
+                .withLayer(layer) //
+                .withName("anotherFeature") //
+                .withType(TYPE_NAME_STRING) //
+                .build();
+        doReturn(asList(feature, featureB)).when(annoService).listSupportedFeatures(layer);
+        doReturn(emptyList()).when(learningRecordService).listLearningRecords(TEST_USER, TEST_USER,
+                layer);
+
+        var rec1 = Recommender.builder().withId(1l).withName("Rec1").withLayer(layer)
+                .withFeature(feature).build();
+        var rec2 = Recommender.builder().withId(2l).withName("Rec2").withLayer(layer)
+                .withFeature(featureB).build();
+
+        // Both recommenders produce a no-label suggestion at the same position but for different
+        // features. Accepting either would create the same empty span annotation, so only one
+        // should be shown.
+        var suggestion1 = SpanSuggestion.builder() //
+                .withId(1) //
+                .withRecommender(rec1) //
+                .withDocument(doc) //
+                .withPosition(5, 10) //
+                .build();
+        var suggestion2 = SpanSuggestion.builder() //
+                .withId(2) //
+                .withRecommender(rec2) //
+                .withDocument(doc) //
+                .withPosition(5, 10) //
+                .build();
+        var suggestions = SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class,
+                asList(suggestion1, suggestion2));
+
+        var cas = JCasFactory.createText("Hello World", "de").getCas();
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                11);
+
+        assertThat(getVisibleSuggestions(suggestions)) //
+                .as("Only one no-label suggestion should be visible - they are equivalent") //
+                .hasSize(1);
+        assertThat(getInvisibleSuggestions(suggestions)) //
+                .as("The duplicate no-label suggestion should be hidden") //
+                .hasSize(1) //
+                .extracting(AnnotationSuggestion::getReasonForHiding) //
+                .extracting(String::trim) //
+                .containsExactly("duplicate");
+    }
+
+    @Test
+    void thatNoLabelSuggestionsForSameFeatureFromDifferentRecommendersAreNotConflated()
+        throws Exception
+    {
+        // Two recommenders both targeting the same feature - their no-label suggestions are in
+        // the same SuggestionGroup and must both remain visible so the lazy detail can show
+        // both recommenders and their scores.
+        doReturn(asList(feature)).when(annoService).listSupportedFeatures(layer);
+        doReturn(emptyList()).when(learningRecordService).listLearningRecords(TEST_USER, TEST_USER,
+                layer);
+
+        var rec1 = Recommender.builder().withId(1l).withName("Rec1").withLayer(layer)
+                .withFeature(feature).build();
+        var rec2 = Recommender.builder().withId(2l).withName("Rec2").withLayer(layer)
+                .withFeature(feature).build();
+
+        var suggestion1 = SpanSuggestion.builder() //
+                .withId(1) //
+                .withRecommender(rec1) //
+                .withDocument(doc) //
+                .withPosition(5, 10) //
+                .withScore(1.0) //
+                .build();
+        var suggestion2 = SpanSuggestion.builder() //
+                .withId(2) //
+                .withRecommender(rec2) //
+                .withDocument(doc) //
+                .withPosition(5, 10) //
+                .withScore(0.5) //
+                .build();
+        var suggestions = SuggestionDocumentGroup.groupsOfType(SpanSuggestion.class,
+                asList(suggestion1, suggestion2));
+
+        var cas = JCasFactory.createText("Hello World", "de").getCas();
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                11);
+
+        assertThat(getInvisibleSuggestions(suggestions)) //
+                .as("No suggestions should be hidden - same-feature duplicates are handled by "
+                        + "SuggestionGroup, not by FLAG_DUPLICATE") //
+                .isEmpty();
+        assertThat(getVisibleSuggestions(suggestions)) //
+                .as("Both suggestions should remain visible for lazy detail rendering") //
+                .hasSize(2);
+    }
+
     private CAS getTestCas() throws Exception
     {
         var text = "Dies ist ein Testtext, ach ist der schoen, der schoenste von allen  Testtexten.";

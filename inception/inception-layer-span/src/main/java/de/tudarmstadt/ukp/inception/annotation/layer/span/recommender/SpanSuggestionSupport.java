@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.annotation.layer.span.recommender;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_DUPLICATE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -32,6 +33,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -244,8 +246,8 @@ public class SpanSuggestionSupport
             if (feat == null) {
                 // The feature does not exist in the type system of the CAS. Probably it has not
                 // been upgraded to the latest version of the type system yet. If this is the case,
-                // we'll just skip.
-                return;
+                // we'll just skip this feature.
+                continue;
             }
 
             // Reduce the suggestions to the ones for the given feature. We can use the tree here
@@ -271,6 +273,29 @@ public class SpanSuggestionSupport
                     .forEach(suggestion -> hideSuggestionsRejectedOrSkipped(suggestion,
                             recordedAnnotations));
         }
+
+        // Cross-feature deduplication: when multiple recommenders target different features of
+        // the same layer and all produce no-label suggestions at the same position, each would
+        // create an identical empty annotation. Keep only the first visible one per position
+        // and hide the rest to avoid showing duplicate "(Span)" suggestion markers.
+        // Note: suggestions for the SAME feature from multiple recommenders are intentionally
+        // left alone here - the SuggestionGroup already conflates them, and both need to remain
+        // visible so the lazy detail can show all recommenders and their scores.
+        var firstFeaturePerOffset = new HashMap<Offset, String>();
+        suggestionsInWindow.stream() //
+                .flatMap(SuggestionGroup::stream) //
+                .filter(AnnotationSuggestion::isVisible) //
+                .filter(s -> s instanceof SpanSuggestion) //
+                .map(s -> (SpanSuggestion) s) //
+                .filter(s -> s.getLabel() == null) //
+                .forEach(s -> {
+                    var offset = new Offset(s.getBegin(), s.getEnd());
+                    var firstFeature = firstFeaturePerOffset.computeIfAbsent(offset,
+                            $ -> s.getFeature());
+                    if (!firstFeature.equals(s.getFeature())) {
+                        s.hide(FLAG_DUPLICATE);
+                    }
+                });
     }
 
     private void hideSpanSuggestionsThatOverlapWithAnnotations(
