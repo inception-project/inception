@@ -26,13 +26,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.util.FileSystemUtils;
 
 class InceptionHsqldbIntegrationTest
@@ -58,8 +55,6 @@ class InceptionHsqldbIntegrationTest
     }
 
     @Nested
-    @ContextConfiguration
-    @ExtendWith(SpringExtension.class)
     class SpringApplcationContext
         extends InceptionIntegrationTest_ImplBase
     {

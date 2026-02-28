@@ -159,8 +159,12 @@ public class OAuth2AdapterImpl
             denyAccessToDeactivatedUsers(u);
             denyAccessOfRealmsDoNotMatch(realm, u);
 
-            u.setRoles(getOAuth2UserRoles(u, user));
-            userRepository.update(u);
+            // Only sync roles from OAuth2 group mappings when the feature is enabled.
+            // Otherwise, manually assigned roles would be silently overwritten on every login.
+            if (oAuth2Properties.isEnabled()) {
+                u.setRoles(getOAuth2UserRoles(u, user));
+                userRepository.update(u);
+            }
 
             return u;
         }
@@ -215,6 +219,8 @@ public class OAuth2AdapterImpl
         var rawClaim = aOAuth2User.getAttribute(oAuth2Properties.getClaim());
 
         if (!(rawClaim instanceof Collection<?> oauth2groups) || oauth2groups.isEmpty()) {
+            LOG.warn("OAuth2 roles mapping is enabled, but user [{}] doesn't have any roles, "
+                    + "or the corresponding claim is empty", aUser.getUsername());
             throw new AccessDeniedException(
                     "OAuth2 roles mapping is enabled, but user [" + aUser.getUsername()
                             + "] doesn't have any roles, or the corresponding claim is empty");
@@ -223,9 +229,10 @@ public class OAuth2AdapterImpl
         oauth2groups.stream() //
                 .filter(String.class::isInstance) //
                 .map(String.class::cast) //
-                .forEach(group -> matchOauth2groupToRole(group, roles));
+                .forEach(group -> matchOAuth2GroupToRole(group, roles));
 
         if (roles.isEmpty()) {
+            LOG.warn("User [{}] doesn't belong to any role", aUser.getUsername());
             throw new AccessDeniedException(
                     "User [" + aUser.getUsername() + "] doesn't belong to any role");
         }
@@ -233,7 +240,7 @@ public class OAuth2AdapterImpl
         return roles;
     }
 
-    private void matchOauth2groupToRole(String aOAuth2Group, Set<Role> aUserRoles)
+    private void matchOAuth2GroupToRole(String aOAuth2Group, Set<Role> aUserRoles)
     {
         if (StringUtils.equals(aOAuth2Group, oAuth2Properties.getAdmin())) {
             aUserRoles.add(Role.ROLE_ADMIN);

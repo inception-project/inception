@@ -31,14 +31,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.client.RestClient;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -154,7 +158,7 @@ class OAuth2AdapterImplKeycloakTest
         var idTokenValue = (String) tokenResponse.get("id_token");
         var jwksUri = keycloak.getAuthServerUrl() + "/realms/" + REALM
                 + "/protocol/openid-connect/certs";
-        var jwt = org.springframework.security.oauth2.jwt.NimbusJwtDecoder //
+        var jwt = NimbusJwtDecoder //
                 .withJwkSetUri(jwksUri) //
                 .build() //
                 .decode(idTokenValue);
@@ -170,13 +174,19 @@ class OAuth2AdapterImplKeycloakTest
         var tokenUrl = keycloak.getAuthServerUrl() + "/realms/" + REALM
                 + "/protocol/openid-connect/token";
 
-        var restClient = org.springframework.web.client.RestClient.create();
+        var formParams = new LinkedMultiValueMap<String, String>();
+        formParams.add("grant_type", "password");
+        formParams.add("client_id", CLIENT_ID);
+        formParams.add("client_secret", CLIENT_SECRET);
+        formParams.add("username", aUsername);
+        formParams.add("password", aPassword);
+        formParams.add("scope", "openid");
+
+        var restClient = RestClient.create();
         return restClient.post() //
                 .uri(tokenUrl) //
-                .contentType(org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED) //
-                .body("grant_type=password&client_id=" + CLIENT_ID + "&client_secret="
-                        + CLIENT_SECRET + "&username=" + aUsername + "&password=" + aPassword
-                        + "&scope=openid") //
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED) //
+                .body(formParams) //
                 .retrieve() //
                 .body(Map.class);
     }

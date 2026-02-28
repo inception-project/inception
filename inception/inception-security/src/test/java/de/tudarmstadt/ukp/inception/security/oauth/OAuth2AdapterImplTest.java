@@ -229,7 +229,7 @@ class OAuth2AdapterImplTest
 
             Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
 
-            assertThat(roles).contains(Role.ROLE_ADMIN);
+            assertThat(roles).containsExactlyInAnyOrder(Role.ROLE_ADMIN);
         }
 
         @Test
@@ -241,7 +241,7 @@ class OAuth2AdapterImplTest
 
             Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
 
-            assertThat(roles).contains(Role.ROLE_USER);
+            assertThat(roles).containsExactlyInAnyOrder(Role.ROLE_USER);
         }
 
         @Test
@@ -253,7 +253,7 @@ class OAuth2AdapterImplTest
 
             Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
 
-            assertThat(roles).contains(Role.ROLE_PROJECT_CREATOR);
+            assertThat(roles).containsExactlyInAnyOrder(Role.ROLE_PROJECT_CREATOR);
         }
 
         @Test
@@ -265,7 +265,7 @@ class OAuth2AdapterImplTest
 
             Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
 
-            assertThat(roles).contains(Role.ROLE_REMOTE);
+            assertThat(roles).containsExactlyInAnyOrder(Role.ROLE_REMOTE);
         }
 
         @Test
@@ -273,8 +273,8 @@ class OAuth2AdapterImplTest
         {
             when(mockOAuth2User.getAttribute(anyString())).thenReturn(new ArrayList<String>());
 
-            assertThatExceptionOfType(AccessDeniedException.class)
-                    .isThrownBy(() -> sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User));
+            assertThatExceptionOfType(AccessDeniedException.class).isThrownBy(
+                    () -> sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User));
         }
 
         /**
@@ -292,7 +292,7 @@ class OAuth2AdapterImplTest
 
             Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
 
-            assertThat(roles).contains(Role.ROLE_ADMIN);
+            assertThat(roles).containsExactlyInAnyOrder(Role.ROLE_ADMIN);
         }
     }
 

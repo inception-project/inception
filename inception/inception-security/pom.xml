@@ -237,10 +237,6 @@
               <usedDependency>org.springframework:spring-jdbc</usedDependency>
             </usedDependencies>
             <ignoredNonTestScopedDependencies combine.children="append">
-              <!--
-                - dependency:analyze incorrectly reports spring-web as test-only but it is used
-                - in main sources (GenericFilterBean, HttpMethod)
-              -->
               <ignoredNonTestScopedDependency>org.springframework:spring-web</ignoredNonTestScopedDependency>
             </ignoredNonTestScopedDependencies>
           </configuration>
