@@ -75,7 +75,7 @@ class InceptionHsqldbIntegrationTest
             }
             else {
                 registry.add("inception.home", () -> tempDir.toString());
-  
+
             }
         }
 

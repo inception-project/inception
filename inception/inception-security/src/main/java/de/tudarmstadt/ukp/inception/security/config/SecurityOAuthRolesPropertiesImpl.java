@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.security.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties("security.oauth.roles")
+@ConfigurationProperties("security.oauth2.roles")
 public class SecurityOAuthRolesPropertiesImpl
     implements SecurityOAuthRolesProperties
 {

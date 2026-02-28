@@ -69,12 +69,12 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
         properties = { //
                 "spring.liquibase.enabled=false", //
                 "spring.main.banner-mode=off", //
-                "security.oauth.roles.enabled=true", //
-                "security.oauth.roles.claim=groups", //
-                "security.oauth.roles.admin=/INCEPTION_ADMIN", //
-                "security.oauth.roles.user=/INCEPTION_USER", //
-                "security.oauth.roles.project-creator=/INCEPTION_PROJECT_CREATOR", //
-                "security.oauth.roles.remote=/INCEPTION_REMOTE" })
+                "security.oauth2.roles.enabled=true", //
+                "security.oauth2.roles.claim=groups", //
+                "security.oauth2.roles.admin=/INCEPTION_ADMIN", //
+                "security.oauth2.roles.user=/INCEPTION_USER", //
+                "security.oauth2.roles.project-creator=/INCEPTION_PROJECT_CREATOR", //
+                "security.oauth2.roles.remote=/INCEPTION_REMOTE" })
 @ImportAutoConfiguration({ //
         SecurityAutoConfiguration.class, //
         InceptionSecurityAutoConfiguration.class })

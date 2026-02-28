@@ -47,7 +47,7 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 import net.minidev.json.JSONArray;
 
 /**
- * Integration tests for OAuth2 role mapping via the {@code security.oauth.roles.*} configuration.
+ * Integration tests for OAuth2 role mapping via the {@code security.oauth2.roles.*} configuration.
  * <p>
  * Unlike the unit tests in {@link OAuth2AdapterImplTest.RoleMapping}, these tests exercise the full
  * Spring-context wiring: properties are read from {@code @DataJpaTest} inline properties, bound to
@@ -66,12 +66,12 @@ import net.minidev.json.JSONArray;
         properties = { //
                 "spring.liquibase.enabled=false", //
                 "spring.main.banner-mode=off", //
-                "security.oauth.roles.enabled=true", //
-                "security.oauth.roles.claim=groups", //
-                "security.oauth.roles.admin=/INCEPTION_ADMIN", //
-                "security.oauth.roles.user=/INCEPTION_USER", //
-                "security.oauth.roles.project-creator=/INCEPTION_PROJECT_CREATOR", //
-                "security.oauth.roles.remote=/INCEPTION_REMOTE" })
+                "security.oauth2.roles.enabled=true", //
+                "security.oauth2.roles.claim=groups", //
+                "security.oauth2.roles.admin=/INCEPTION_ADMIN", //
+                "security.oauth2.roles.user=/INCEPTION_USER", //
+                "security.oauth2.roles.project-creator=/INCEPTION_PROJECT_CREATOR", //
+                "security.oauth2.roles.remote=/INCEPTION_REMOTE" })
 @ImportAutoConfiguration({ //
         SecurityAutoConfiguration.class, //
         InceptionSecurityAutoConfiguration.class })
