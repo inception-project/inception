@@ -22,8 +22,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -115,6 +118,48 @@ class DocumentAccessImplTest
                 any(AnnotationSet.class))).thenReturn(aDoc);
 
         assertThat(sut.canViewAnnotationDocument("alice", "2", 8L, "alice")).isFalse();
+    }
+
+    @Test
+    void assertCanEdit_curator_new_throws()
+    {
+        when(projectService.listRoles(project, user)).thenReturn(List.of(CURATOR));
+        when(sourceDocument.getProject()).thenReturn(project);
+        when(sourceDocument.getState()).thenReturn(NEW);
+        assertThatThrownBy(
+                () -> sut.assertCanEditAnnotationDocument(user, sourceDocument, CURATION_USER))
+                        .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void assertCanEdit_curator_annotationInProgress_throws()
+    {
+        when(projectService.listRoles(project, user)).thenReturn(List.of(CURATOR));
+        when(sourceDocument.getProject()).thenReturn(project);
+        when(sourceDocument.getState()).thenReturn(ANNOTATION_IN_PROGRESS);
+        assertThatThrownBy(
+                () -> sut.assertCanEditAnnotationDocument(user, sourceDocument, CURATION_USER))
+                        .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void assertCanEdit_curator_annotationFinished_granted()
+    {
+        when(projectService.listRoles(project, user)).thenReturn(List.of(CURATOR));
+        when(sourceDocument.getProject()).thenReturn(project);
+        when(sourceDocument.getState()).thenReturn(ANNOTATION_FINISHED);
+        // should not throw
+        sut.assertCanEditAnnotationDocument(user, sourceDocument, CURATION_USER);
+    }
+
+    @Test
+    void assertCanEdit_curator_curationInProgress_granted()
+    {
+        when(projectService.listRoles(project, user)).thenReturn(List.of(CURATOR));
+        when(sourceDocument.getProject()).thenReturn(project);
+        when(sourceDocument.getState()).thenReturn(CURATION_IN_PROGRESS);
+        // should not throw
+        sut.assertCanEditAnnotationDocument(user, sourceDocument, CURATION_USER);
     }
 
     @Test

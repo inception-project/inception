@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.documents;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
@@ -178,6 +179,14 @@ public class DocumentAccessImpl
                     throw new AccessDeniedException(
                             "Curation is already finished. You can put it back "
                                     + "into progress via the monitoring page.");
+                }
+
+                // Curation cannot begin until all annotations are finished
+                if (!Set.of(ANNOTATION_FINISHED, CURATION_IN_PROGRESS)
+                        .contains(aDocument.getState())) {
+                    throw new AccessDeniedException(
+                            "Annotations are not yet finished. Curation can only "
+                                    + "start once the document is in state ANNOTATION_FINISHED.");
                 }
 
                 return; // Access granted
