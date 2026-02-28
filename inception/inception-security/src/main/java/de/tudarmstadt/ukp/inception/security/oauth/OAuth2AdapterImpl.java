@@ -33,11 +33,11 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.validation.ValidationError;
-import org.springframework.security.access.AccessDeniedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ResolvableType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -203,8 +203,7 @@ public class OAuth2AdapterImpl
         return u;
     }
 
-    Set<Role> getOAuth2UserRoles(User aUser, OAuth2User aOAuth2User)
-        throws AccessDeniedException
+    Set<Role> getOAuth2UserRoles(User aUser, OAuth2User aOAuth2User) throws AccessDeniedException
     {
         Set<Role> roles = new HashSet<>();
 
@@ -216,9 +215,9 @@ public class OAuth2AdapterImpl
         List<String> oauth2groups = aOAuth2User.getAttribute(oAuth2Properties.getClaim());
 
         if (oauth2groups == null || oauth2groups.isEmpty()) {
-            throw new AccessDeniedException("OAuth2 roles mapping is enabled, but user ["
-                + aUser.getUsername()
-                + "] doesn't have any roles, or the corresponding claim is empty");
+            throw new AccessDeniedException(
+                    "OAuth2 roles mapping is enabled, but user [" + aUser.getUsername()
+                            + "] doesn't have any roles, or the corresponding claim is empty");
         }
 
         oauth2groups.forEach(group -> matchOauth2groupToRole(group, roles));

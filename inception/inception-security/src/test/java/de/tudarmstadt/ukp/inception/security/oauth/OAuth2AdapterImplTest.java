@@ -38,16 +38,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
@@ -67,7 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User_;
 import de.tudarmstadt.ukp.inception.security.config.SecurityOAuthRolesPropertiesImpl;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
-import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
+import net.minidev.json.JSONArray;
 
 @Transactional
 @ActiveProfiles(DeploymentModeService.PROFILE_AUTH_MODE_DATABASE)
@@ -283,22 +278,23 @@ class OAuth2AdapterImplTest
             assertThrows(AccessDeniedException.class,
                     () -> sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User));
         }
-    }
 
-    @SpringBootConfiguration
-    @AutoConfigurationPackage
-    public static class SpringConfig
-    {
-        @Bean
-        ApplicationContextProvider applicationContextProvider()
+        /**
+         * Nimbus JOSE+JWT parses JSON arrays into {@code net.minidev.json.JSONArray} for
+         * non-standard claims. This test verifies that role mapping works correctly when the
+         * {@code groups} claim attribute has that runtime type (as opposed to {@code List<String>}
+         * produced by a manually-constructed token in the other tests).
+         */
+        @Test
+        void thatRoleIsMappedWhenGroupsClaimTypeIsNimbusJSONArray()
         {
-            return new ApplicationContextProvider();
-        }
+            var groups = new JSONArray();
+            groups.add(OAUTH2_GROUP_ADMIN);
+            when(mockOAuth2User.getAttribute(anyString())).thenReturn(groups);
 
-        @Bean
-        AuthenticationEventPublisher authenticationEventPublisher()
-        {
-            return new DefaultAuthenticationEventPublisher();
+            Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
+
+            assertTrue(roles.contains(Role.ROLE_ADMIN));
         }
     }
 
