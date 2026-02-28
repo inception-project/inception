@@ -49,6 +49,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserAccess;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserAccessImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
+import de.tudarmstadt.ukp.inception.security.config.SecurityOAuthRolesProperties;
+import de.tudarmstadt.ukp.inception.security.config.SecurityOAuthRolesPropertiesImpl;
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2AdapterImpl;
 import de.tudarmstadt.ukp.inception.security.saml.Saml2Adapter;
@@ -63,7 +65,8 @@ import jakarta.servlet.ServletContext;
         LegacyLoginPropertiesImpl.class, //
         LoginPropertiesImpl.class, //
         SecurityPropertiesImpl.class, //
-        PreauthenticationPropertiesImpl.class })
+        PreauthenticationPropertiesImpl.class, //
+        SecurityOAuthRolesPropertiesImpl.class })
 public class SecurityAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
@@ -126,10 +129,11 @@ public class SecurityAutoConfiguration
     @Bean
     public OAuth2Adapter oAuth2Adapter(@Lazy UserDao aUserRepository,
             @Lazy OverridableUserDetailsManager aUserDetailsManager,
-            @Lazy Optional<ClientRegistrationRepository> aClientRegistrationRepository)
+            @Lazy Optional<ClientRegistrationRepository> aClientRegistrationRepository,
+            SecurityOAuthRolesProperties aOAuth2Properties)
     {
         return new OAuth2AdapterImpl(aUserRepository, aUserDetailsManager,
-                aClientRegistrationRepository);
+                aClientRegistrationRepository, aOAuth2Properties);
     }
 
     @Bean
