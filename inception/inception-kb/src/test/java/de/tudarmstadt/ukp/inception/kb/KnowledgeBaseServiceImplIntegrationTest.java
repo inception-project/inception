@@ -24,9 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.io.File;
@@ -457,7 +454,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         var id = savedConcept.getIdentifier();
         var savedConceptPrefix = id.substring(0, id.lastIndexOf("#") + 1);
-        assertEquals(customPrefix, savedConceptPrefix);
+        assertThat(savedConceptPrefix).isEqualTo(customPrefix);
     }
 
     @ParameterizedTest(name = "Reification = {0}")
@@ -793,7 +790,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         var id = savedProperty.getIdentifier();
         var savedPropertyPrefix = id.substring(0, id.lastIndexOf("#") + 1);
-        assertEquals(customPrefix, savedPropertyPrefix);
+        assertThat(savedPropertyPrefix).isEqualTo(customPrefix);
     }
 
     @ParameterizedTest(name = "Reification = {0}")
@@ -1105,7 +1102,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         var id = savedInstance.getIdentifier();
         var savedInstancePrefix = id.substring(0, id.lastIndexOf("#") + 1);
-        assertEquals(customPrefix, savedInstancePrefix);
+        assertThat(savedInstancePrefix).isEqualTo(customPrefix);
     }
 
     @ParameterizedTest(name = "Reification = {0}")
@@ -1767,7 +1764,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
             }
 
         });
-        assertTrue(result.size() >= 1);
+        assertThat(result.size()).isGreaterThanOrEqualTo(1);
 
     }
 
@@ -1789,7 +1786,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         KBStatement mockStatement = buildStatement(kb, concept.toKBHandle(), property,
                 "Test statement");
-        assertTrue(sut.exists(kb, mockStatement));
+        assertThat(sut.exists(kb, mockStatement)).isTrue();
     }
 
     @ParameterizedTest(name = "Reification = {0}")
@@ -1809,7 +1806,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         KBStatement mockStatement = buildStatement(kb, concept.toKBHandle(), property,
                 "Test statement");
-        assertFalse(sut.exists(kb, mockStatement));
+        assertThat(sut.exists(kb, mockStatement)).isFalse();
     }
 
     @ParameterizedTest(name = "Reification = {0}")

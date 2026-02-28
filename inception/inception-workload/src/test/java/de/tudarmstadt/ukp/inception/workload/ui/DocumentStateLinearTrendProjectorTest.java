@@ -23,7 +23,6 @@ import static java.time.ZoneOffset.UTC;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -62,11 +61,11 @@ public class DocumentStateLinearTrendProjectorTest
     public void testInsufficientHistoryReturnsEmpty()
     {
         var result = sut.generate(emptyList(), 5, null);
-        assertTrue(result.isEmpty());
+        assertThat(result).isEmpty();
 
         var single = asList(snapshot(0, ANNOTATION_FINISHED, 5));
         var result2 = sut.generate(single, 5, null);
-        assertTrue(result2.isEmpty());
+        assertThat(result2).isEmpty();
     }
 
     @Test

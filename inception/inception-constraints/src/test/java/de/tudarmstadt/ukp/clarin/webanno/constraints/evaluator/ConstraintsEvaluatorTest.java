@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsP
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import java.util.ArrayList;
@@ -283,7 +282,7 @@ class ConstraintsEvaluatorTest
 
         var expectedOutput = asList(new PossibleValue("det", false));
 
-        assertEquals(expectedOutput, possibleValues);
+        assertThat(possibleValues).isEqualTo(expectedOutput);
     }
 
     @Test
