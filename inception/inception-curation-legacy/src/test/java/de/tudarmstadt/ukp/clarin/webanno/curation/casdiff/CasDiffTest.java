@@ -48,7 +48,6 @@ import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -179,10 +178,6 @@ public class CasDiffTest
                 "casdiff/singleSpanDifference/user2.conll");
 
         var result = doDiff(asList(POS_DIFF_ADAPTER), casByUser).toResult();
-
-        assertEquals(1, result.size());
-        assertEquals(1, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
 
         assertThat(result.size()).isEqualTo(1);
         assertThat(result.getDifferingConfigurationSets()).hasSize(1);

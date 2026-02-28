@@ -23,7 +23,6 @@ import static org.apache.uima.fit.util.FSUtil.setFeature;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.toText;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -450,7 +449,7 @@ public abstract class WebAnnoTsv3WriterTestBase
     public void testSubMultiTokenSpanWithFeatureValue() throws Exception
     {
         JCas jcas = makeJCasOneSentence("aaaaaa bbbbbb cccccc");
-        assertEquals(asList("aaaaaa", "bbbbbb", "cccccc"), toText(select(jcas, Token.class)));
+        assertThat(toText(select(jcas, Token.class))).isEqualTo(asList("aaaaaa", "bbbbbb", "cccccc"));
 
         // @formatter:off
         //               1111111111 
@@ -497,7 +496,7 @@ public abstract class WebAnnoTsv3WriterTestBase
     public void testStackedSubMultiTokenSpanWithFeatureValue() throws Exception
     {
         JCas jcas = makeJCasOneSentence("aaaaaa bbbbbb cccccc");
-        assertEquals(asList("aaaaaa", "bbbbbb", "cccccc"), toText(select(jcas, Token.class)));
+        assertThat(toText(select(jcas, Token.class))).isEqualTo(asList("aaaaaa", "bbbbbb", "cccccc"));
 
         // @formatter:off
         //               1111111111 
@@ -1875,7 +1874,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class, Sentence.class);
         tb.buildTokens(jcas, "He loves her .\nShe loves him not .");
 
-        assertEquals(2, select(jcas, Sentence.class).size());
+        assertThat(select(jcas, Sentence.class)).hasSize(2);
 
         return jcas;
     }
