@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.within;
 
 import org.dkpro.statistics.agreement.unitizing.IUnitizingAnnotationStudy;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +49,7 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
     {
         var result = multiLinkWithRoleLabelDifferenceTest(sut);
 
-        assertEquals(0.0, result.getAgreement(), 0.00001d);
+        assertThat(result.getAgreement()).isCloseTo(0.0, within(0.00001d));
     }
 
     @Test
@@ -77,7 +77,7 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
 
         var result = twoWithoutLabelTest(sut, traits);
 
-        assertEquals(0.0, result.getAgreement(), 0.01);
+        assertThat(result.getAgreement()).isCloseTo(0.0, within(0.01));
     }
 
     @Test
@@ -85,7 +85,7 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
     {
         var result = fullSingleCategoryAgreementWithTagset(sut, traits);
 
-        assertEquals(1.0, result.getAgreement(), 0.01);
+        assertThat(result.getAgreement()).isCloseTo(1.0, within(0.01));
     }
 
     @Test
@@ -93,7 +93,7 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
     {
         var result = multiValueStringPartialAgreement(sut);
 
-        assertEquals(0.4893, result.getAgreement(), 0.001);
+        assertThat(result.getAgreement()).isCloseTo(0.4893, within(0.001));
     }
 
     @Test
@@ -101,6 +101,6 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
     {
         var result = selfOverlappingAgreement(sut);
 
-        assertEquals(0.6783, result.getAgreement(), 0.001);
+        assertThat(result.getAgreement()).isCloseTo(0.6783, within(0.001));
     }
 }
