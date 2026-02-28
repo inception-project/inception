@@ -75,10 +75,10 @@ public class SPARQLQueryBuilderRemoteServicesTest
         wikidata = buildSparqlRepository("https://query.wikidata.org/sparql");
         dbpedia = buildSparqlRepository("https://dbpedia.org/sparql");
         yago = buildSparqlRepository("https://yago-knowledge.org/sparql/query");
-        // Web: http://zbw.eu/beta/sparql-lab/?endpoint=http://zbw.eu/beta/sparql/stw/query
-        zbwStw = buildSparqlRepository("http://zbw.eu/beta/sparql/stw/query");
-        // Web: http://zbw.eu/beta/sparql-lab/?endpoint=http://zbw.eu/beta/sparql/gnd/query
-        zbwGnd = buildSparqlRepository("http://zbw.eu/beta/sparql/gnd/query");
+        // Web: https://zbw.eu/beta/sparql-lab/?endpoint=https://zbw.eu/beta/sparql/stw/query
+        zbwStw = buildSparqlRepository("https://zbw.eu/beta/sparql/stw/query");
+        // Web: https://zbw.eu/beta/sparql-lab/?endpoint=https://zbw.eu/beta/sparql/gnd/query
+        zbwGnd = buildSparqlRepository("https://zbw.eu/beta/sparql/gnd/query");
     }
 
     @BeforeEach
