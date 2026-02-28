@@ -219,7 +219,7 @@
     <jquery.version>3.7.1</jquery.version>
     <jquery-ui.version>1.14.2</jquery-ui.version>
     <marked.version>^17.0.1</marked.version>
-    <minimatch.version>10.2.2</minimatch.version>
+    <minimatch.version>10.2.4</minimatch.version>
     <pdfjs.version>5.4.449</pdfjs.version>
     <popperjs.version>2.11.8</popperjs.version>
     <prettier.version>^3.8.1</prettier.version>
@@ -227,10 +227,10 @@
     <recogitojs.version>1.8.4</recogitojs.version>
     <recogito-connections.version>0.1.11</recogito-connections.version>
     <recogito-client-core.version>1.7.9</recogito-client-core.version>
-    <rollup.version>4.57.1</rollup.version>
+    <rollup.version>^4.59.0</rollup.version>
     <sass.version>^1.75.0</sass.version>
     <stomp-stompjs.version>^7.2.1</stomp-stompjs.version>
-    <svelte.version>5.53.1</svelte.version>
+    <svelte.version>5.53.6</svelte.version>
     <svelte-preprocess.version>^6.0.3</svelte-preprocess.version>
     <sveltejs-vite-plugin-svelte.version>^6.2.1</sveltejs-vite-plugin-svelte.version>
     <svgdotjs-svg-js.version>^3.2.4</svgdotjs-svg-js.version>
@@ -238,8 +238,8 @@
     <temp-write.version>^6.0.0</temp-write.version>
     <testing-library-svelte.version>^5.2.7</testing-library-svelte.version>
     <typescript.version>^5.8.3</typescript.version>
-    <typescript-eslint-eslint-plugin.version>^8.30.1</typescript-eslint-eslint-plugin.version>
-    <typescript-eslint-parser.version>^8.30.1</typescript-eslint-parser.version>
+    <typescript-eslint-eslint-plugin.version>^8.56.1</typescript-eslint-eslint-plugin.version>
+    <typescript-eslint-parser.version>^8.56.1</typescript-eslint-parser.version>
     <types-events.version>^3.0.1</types-events.version>
     <types-jquery.version>^3.5.20</types-jquery.version>
     <types-stompjs.version>^2.3.5</types-stompjs.version>
