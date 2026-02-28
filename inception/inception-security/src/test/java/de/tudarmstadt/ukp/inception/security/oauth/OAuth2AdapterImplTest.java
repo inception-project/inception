@@ -22,8 +22,7 @@ import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNoException;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -231,7 +230,7 @@ class OAuth2AdapterImplTest
 
             Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
 
-            assertTrue(roles.contains(Role.ROLE_ADMIN));
+            assertThat(roles).contains(Role.ROLE_ADMIN);
         }
 
         @Test
@@ -243,7 +242,7 @@ class OAuth2AdapterImplTest
 
             Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
 
-            assertTrue(roles.contains(Role.ROLE_USER));
+            assertThat(roles).contains(Role.ROLE_USER);
         }
 
         @Test
@@ -255,7 +254,7 @@ class OAuth2AdapterImplTest
 
             Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
 
-            assertTrue(roles.contains(Role.ROLE_PROJECT_CREATOR));
+            assertThat(roles).contains(Role.ROLE_PROJECT_CREATOR);
         }
 
         @Test
@@ -267,7 +266,7 @@ class OAuth2AdapterImplTest
 
             Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
 
-            assertTrue(roles.contains(Role.ROLE_REMOTE));
+            assertThat(roles).contains(Role.ROLE_REMOTE);
         }
 
         @Test
@@ -275,8 +274,8 @@ class OAuth2AdapterImplTest
         {
             when(mockOAuth2User.getAttribute(anyString())).thenReturn(new ArrayList<String>());
 
-            assertThrows(AccessDeniedException.class,
-                    () -> sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User));
+            assertThatExceptionOfType(AccessDeniedException.class)
+                    .isThrownBy(() -> sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User));
         }
 
         /**
@@ -294,7 +293,7 @@ class OAuth2AdapterImplTest
 
             Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
 
-            assertTrue(roles.contains(Role.ROLE_ADMIN));
+            assertThat(roles).contains(Role.ROLE_ADMIN);
         }
     }
 

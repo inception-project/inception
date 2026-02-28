@@ -212,15 +212,18 @@ public class OAuth2AdapterImpl
             return roles;
         }
 
-        List<String> oauth2groups = aOAuth2User.getAttribute(oAuth2Properties.getClaim());
+        var rawClaim = aOAuth2User.getAttribute(oAuth2Properties.getClaim());
 
-        if (oauth2groups == null || oauth2groups.isEmpty()) {
+        if (!(rawClaim instanceof Collection<?> oauth2groups) || oauth2groups.isEmpty()) {
             throw new AccessDeniedException(
                     "OAuth2 roles mapping is enabled, but user [" + aUser.getUsername()
                             + "] doesn't have any roles, or the corresponding claim is empty");
         }
 
-        oauth2groups.forEach(group -> matchOauth2groupToRole(group, roles));
+        oauth2groups.stream() //
+                .filter(String.class::isInstance) //
+                .map(String.class::cast) //
+                .forEach(group -> matchOauth2groupToRole(group, roles));
 
         if (roles.isEmpty()) {
             throw new AccessDeniedException(
