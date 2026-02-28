@@ -25,11 +25,11 @@
 
 // Add a border around the select inputs to make them easier on the eyes
 .bootstrap-select {
-  .btn {
-    border-color: $input-border-color;
-  }
+    .btn {
+        border-color: $input-border-color;
+    }
 }
 
 .bootstrap-select.bs-container .dropdown-menu {
-  z-index: 21060 !important;
+    z-index: 21060 !important;
 }

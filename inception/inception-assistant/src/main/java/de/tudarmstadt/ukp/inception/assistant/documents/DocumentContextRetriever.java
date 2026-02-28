@@ -19,23 +19,14 @@ package de.tudarmstadt.ukp.inception.assistant.documents;
 
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
 import static java.util.Arrays.asList;
-import static java.util.Collections.sort;
-import static java.util.Comparator.comparing;
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.mapping;
-import static java.util.stream.Collectors.toCollection;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.uima.cas.text.AnnotationPredicates.overlapping;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,22 +102,21 @@ public class DocumentContextRetriever
 
     public List<Chunk> retrieve(Project aProject, String aQuery)
     {
-        var chunks = documentQueryService.query(aProject, aQuery,
+        var result = documentQueryService.semanticQuery(aProject, aQuery,
                 properties.getDocumentIndex().getMaxChunks(),
                 properties.getDocumentIndex().getMinScore());
-
-        return mergeOverlappingChunks(chunks);
+        return result != null ? result.matches() : emptyList();
     }
 
     @Override
     public List<MTextMessage> retrieve(Project aProject, MTextMessage aMessage)
     {
-        var chunks = retrieve(aProject, aMessage.message());
+        var chunks = retrieve(aProject, aMessage.content());
 
         var references = new LinkedHashMap<Chunk, MReference>();
         var body = new StringBuilder();
         for (var chunk : chunks) {
-            var ref = renderReference(chunk);
+            var ref = chunk.toReference();
             references.put(chunk, ref);
             renderChunkJson(body, chunk, ref);
         }
@@ -135,7 +125,7 @@ public class DocumentContextRetriever
             return asList(MTextMessage.builder() //
                     .withActor("Source context retriever") //
                     .withRole(SYSTEM).internal().ephemeral() //
-                    .withMessage(
+                    .withContent(
                             "The source context retriever found no relevant information in the documents of the current project.") //
                     .build());
         }
@@ -145,71 +135,9 @@ public class DocumentContextRetriever
                 .withRole(SYSTEM).internal().ephemeral() //
                 .withReferences(references.values());
 
-        msg.withMessage(body.toString());
+        msg.withContent(body.toString());
 
         return asList(msg.build());
-    }
-
-    public MReference renderReference(Chunk chunk)
-    {
-        return MReference.builder() //
-                // .withId(String.valueOf(references.size() + 1)) //
-                .withId(UUID.randomUUID().toString().substring(0, 8)) //
-                .withDocumentId(chunk.documentId()) //
-                .withDocumentName(chunk.documentName()) //
-                .withBegin(chunk.begin()) //
-                .withEnd(chunk.end()) //
-                .withScore(chunk.score()) //
-                .build();
-    }
-
-    private List<Chunk> mergeOverlappingChunks(List<Chunk> aChunks)
-    {
-        var chunksByDocument = aChunks.stream().collect(groupingBy(Chunk::documentId,
-                LinkedHashMap::new, mapping(identity(), toCollection(ArrayList::new))));
-
-        var mergedChunks = new ArrayList<Chunk>();
-        for (var docChunkSet : chunksByDocument.values()) {
-            mergedChunks.addAll(mergeOverlappingChunks(docChunkSet));
-        }
-
-        sort(mergedChunks, comparing(Chunk::score).reversed());
-
-        return mergedChunks;
-    }
-
-    /**
-     * @return list of overlapping chunks merged (as long as they are in the same section.
-     */
-    static List<Chunk> mergeOverlappingChunks(ArrayList<Chunk> aDocChunks)
-    {
-        if (aDocChunks.size() < 2) {
-            return aDocChunks;
-        }
-
-        sort(aDocChunks, comparing(Chunk::begin));
-
-        var mergedChunks = new ArrayList<Chunk>();
-        var docChunkIter = aDocChunks.iterator();
-        var prevChunk = docChunkIter.next();
-        while (docChunkIter.hasNext()) {
-            var chunk = docChunkIter.next();
-            if (overlapping(prevChunk.begin(), prevChunk.end(), chunk.begin(), chunk.end())
-                    && Objects.equals(prevChunk.section(), chunk.section())) {
-                prevChunk = prevChunk.merge(chunk);
-
-                if (!docChunkIter.hasNext()) {
-                    mergedChunks.add(prevChunk);
-                }
-            }
-            else {
-                prevChunk = chunk;
-
-                mergedChunks.add(prevChunk);
-            }
-        }
-
-        return mergedChunks;
     }
 
     public void renderChunkJson(StringBuilder body, Chunk chunk, MReference aReference)

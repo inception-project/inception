@@ -37,41 +37,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { ColorCode, RoleDto, VID } from '../protocol/Protocol'
-import { Arc } from './Arc'
-import { Comment } from './Comment'
-import { Role } from './Role'
+import { ColorCode, RoleDto, VID } from '../protocol/Protocol';
+import { Arc } from './Arc';
+import { Comment } from './Comment';
+import { Role } from './Role';
 
 export type GeneralEventType = string;
 
-export const EQUIV: GeneralEventType = 'equiv'
-export const RELATION: GeneralEventType = 'relation'
+export const EQUIV: GeneralEventType = 'equiv';
+export const RELATION: GeneralEventType = 'relation';
 
 /**
  * An n-ary relation which is used to represent either a simple relation (relation === true) or
  * an equivalence (equiv === true) or an event (equiv === false and relation === false).
  */
 export class EventDesc {
-  id: VID
-  triggerId: VID
-  roles: Array<Role> = []
-  equivArc: Arc
-  equiv = false
-  relation = false
-  leftSpans: Array<VID>
-  rightSpans: Array<VID>
-  annotatorNotes
-  comment: Comment
-  labelText: string
-  color: ColorCode
-  shadowClass: string
+    id: VID;
+    triggerId: VID;
+    roles: Array<Role> = [];
+    equivArc: Arc;
+    equiv = false;
+    relation = false;
+    leftSpans: Array<VID>;
+    rightSpans: Array<VID>;
+    annotatorNotes;
+    comment: Comment;
+    labelText: string;
+    color: ColorCode;
+    shadowClass: string;
 
-  constructor (id: VID, triggerId: VID, roles: Array<RoleDto>, generalType?: GeneralEventType) {
-    this.id = id
-    this.triggerId = triggerId
-    this.equiv = generalType === EQUIV
-    this.relation = generalType === RELATION
-    // Object.seal(this);
-    roles.map(role => this.roles.push({ type: role[0], targetId: role[1] }))
-  }
+    constructor(id: VID, triggerId: VID, roles: Array<RoleDto>, generalType?: GeneralEventType) {
+        this.id = id;
+        this.triggerId = triggerId;
+        this.equiv = generalType === EQUIV;
+        this.relation = generalType === RELATION;
+        // Object.seal(this);
+        roles.map((role) => this.roles.push({ type: role[0], targetId: role[1] }));
+    }
 }

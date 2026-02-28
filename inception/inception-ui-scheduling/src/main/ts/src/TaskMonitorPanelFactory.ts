@@ -19,17 +19,20 @@ import TaskMonitorPanel from './TaskMonitorPanel.svelte';
 import { mount, unmount } from 'svelte';
 
 export default class TaskMonitorPanelFactory {
-  static instance: any;
+    static instance: any;
 
-  constructor(args: any) {
-    TaskMonitorPanelFactory.instance = mount(TaskMonitorPanel, { target: args.target, props: args.props });
-  }
-
-  $destroy() {
-    const i = TaskMonitorPanelFactory.instance;
-    if (i) {
-      unmount(i);
-      TaskMonitorPanelFactory.instance = null;
+    constructor(args: any) {
+        TaskMonitorPanelFactory.instance = mount(TaskMonitorPanel, {
+            target: args.target,
+            props: args.props,
+        });
     }
-  }
+
+    $destroy() {
+        const i = TaskMonitorPanelFactory.instance;
+        if (i) {
+            unmount(i);
+            TaskMonitorPanelFactory.instance = null;
+        }
+    }
 }

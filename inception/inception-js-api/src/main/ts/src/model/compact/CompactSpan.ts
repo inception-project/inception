@@ -15,11 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Offsets, VID } from '..'
-import { CompactSpanAttributes } from './CompactSpanAttributes'
+import { Offsets, VID } from '..';
+import { CompactSpanAttributes } from './CompactSpanAttributes';
 
-export type CompactSpan = [
-  vid: VID,
-  offsets: Array<Offsets>,
-  attributes?: CompactSpanAttributes
-]
+export type CompactSpan = [vid: VID, offsets: Array<Offsets>, attributes?: CompactSpanAttributes];

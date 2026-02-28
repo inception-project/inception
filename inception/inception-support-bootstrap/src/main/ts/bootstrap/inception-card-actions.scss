@@ -21,24 +21,25 @@ $card-action-button-font-size: 70%;
 $card-action-button-padding: 1px 4px;
 
 .card-header {
-	.actions {
-		float: right;
-		
-		& > .btn, .btn-action {
-			font-size: $card-action-button-font-size;
-			padding: $card-action-button-padding;
-			
-			.btn-action-label {
-				display: inline;
-				@include media-breakpoint-down(lg) {
-					display: none !important;
-				}
-			}
-		}
-	}
+    .actions {
+        float: right;
 
-	// Add contrast to light buttons when displayed on card background
-	.btn-light {
-		background-color: $body-bg;
-	}
-}	
+        & > .btn,
+        .btn-action {
+            font-size: $card-action-button-font-size;
+            padding: $card-action-button-padding;
+
+            .btn-action-label {
+                display: inline;
+                @include media-breakpoint-down(lg) {
+                    display: none !important;
+                }
+            }
+        }
+    }
+
+    // Add contrast to light buttons when displayed on card background
+    .btn-light {
+        background-color: $body-bg;
+    }
+}

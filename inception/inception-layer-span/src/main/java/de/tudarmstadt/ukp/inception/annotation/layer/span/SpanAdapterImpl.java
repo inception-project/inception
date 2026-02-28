@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
+import static de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter.SpanOption.NO_TRIM;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
@@ -174,7 +175,7 @@ public class SpanAdapterImpl
         var type = CasUtil.getType(aCas, getAnnotationTypeName());
         var newAnnotation = (Annotation) aCas.createAnnotation(type, aBegin, aEnd);
 
-        if (asList(aOptions).contains(SpanOption.TRIM)) {
+        if (!asList(aOptions).contains(NO_TRIM)) {
             TrimUtils.trim(aCas.getDocumentText(), newAnnotation);
         }
 
@@ -212,7 +213,7 @@ public class SpanAdapterImpl
         aAnnotation.setBegin(aBegin);
         aAnnotation.setEnd(aEnd);
 
-        if (asList(aOptions).contains(SpanOption.TRIM)) {
+        if (!asList(aOptions).contains(NO_TRIM)) {
             TrimUtils.trim(aCas.getDocumentText(), (Annotation) aAnnotation);
         }
 

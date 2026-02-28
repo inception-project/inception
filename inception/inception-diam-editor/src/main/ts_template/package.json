@@ -6,7 +6,9 @@
   "homepage": "https://github.com/inception-project/inception#readme",
   "scripts": {
     "build": "node build.mjs",
-    "test": ""
+    "test": "",
+    "format": "prettier --write \"**/*.{js,ts,json,css,scss,md,html}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,json,css,scss,md,html}\""
   },
   "repository": {
     "type": "git",
@@ -14,6 +16,9 @@
   },
   "bugs": {
     "url": "https://github.com/inception-project/issues"
+  },
+  "overrides": {
+    "minimatch": "${minimatch.version}"
   },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
@@ -26,11 +31,14 @@
     "esbuild-svelte": "${esbuild-svelte.version}",
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
-    "eslint-plugin-import": "${eslint-plugin-import.version}",
+    "eslint-plugin-import-x": "${eslint-plugin-import-x.version}",
     "eslint-plugin-n": "${eslint-plugin-n.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
     "neostandard": "${neostandard.version}",
     "eslint-plugin-svelte": "${eslint-plugin-svelte.version}",
+    "prettier": "${prettier.version}",
+    "prettier-plugin-svelte": "${prettier-plugin-svelte.version}",
+    "eslint-config-prettier": "${eslint-config-prettier.version}",
     "fs-extra": "${fs-extra.version}",
     "sass": "${sass.version}",
     "svelte": "${svelte.version}",

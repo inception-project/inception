@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.config;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsUtil.formatShortcut;
 import static org.assertj.core.api.Assertions.assertThat;
 import static wicket.contrib.input.events.key.KeyType.Ctrl;
 import static wicket.contrib.input.events.key.KeyType.Page_down;
@@ -32,32 +33,30 @@ class KeyBindingsUtilTest
     @Test
     void testFormatShortcut_SingleKey()
     {
-        assertThat(KeyBindingsUtil.formatShortcut(new KeyType[] { Page_down }))
-                .isEqualTo("Page-down");
+        assertThat(formatShortcut(new KeyType[] { Page_down })).isEqualTo("Page-down");
     }
 
     @Test
     void testFormatShortcut_TwoKeys()
     {
-        assertThat(KeyBindingsUtil.formatShortcut(new KeyType[] { Ctrl, z })).isEqualTo("Ctrl+z");
+        assertThat(formatShortcut(new KeyType[] { Ctrl, z })).isEqualTo("Ctrl+z");
     }
 
     @Test
     void testFormatShortcut_ThreeKeys()
     {
-        assertThat(KeyBindingsUtil.formatShortcut(new KeyType[] { Shift, Ctrl, z }))
-                .isEqualTo("Shift+Ctrl+z");
+        assertThat(formatShortcut(new KeyType[] { Shift, Ctrl, z })).isEqualTo("Shift+Ctrl+z");
     }
 
     @Test
     void testFormatShortcut_EmptyArray()
     {
-        assertThat(KeyBindingsUtil.formatShortcut(new KeyType[] {})).isEmpty();
+        assertThat(formatShortcut(new KeyType[] {})).isEmpty();
     }
 
     @Test
     void testFormatShortcut_Null()
     {
-        assertThat(KeyBindingsUtil.formatShortcut(null)).isEmpty();
+        assertThat(formatShortcut((KeyCombo) null)).isEmpty();
     }
 }

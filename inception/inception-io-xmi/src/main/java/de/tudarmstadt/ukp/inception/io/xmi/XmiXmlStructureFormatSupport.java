@@ -19,10 +19,12 @@ package de.tudarmstadt.ukp.inception.io.xmi;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.inception.io.pdf.visual.PdfVModelUtils.containsPdfDocumentStructure;
+import static de.tudarmstadt.ukp.inception.io.pdf.visual.PdfVModelUtils.transferPdfDocumentStructure;
 import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.containsXmlDocumentStructure;
 import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.transferXmlDocumentStructure;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createCasCopy;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
-import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,10 +33,8 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.dkpro.core.io.xmi.XmiReader;
 import org.dkpro.core.io.xmi.XmiWriter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
@@ -43,7 +43,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
-import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 /**
  * <p>
@@ -54,8 +53,8 @@ import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 public class XmiXmlStructureFormatSupport
     implements FormatSupport
 {
-    public static final String ID = "xmi-xmlstruct";
-    public static final String NAME = "UIMA CAS XMI (XML 1.0 + XML structure)";
+    public static final String ID = "xmi-struct";
+    public static final String NAME = "UIMA CAS XMI (XML 1.0 + XML/PDF structure)";
 
     private final XmiFormatProperties properties;
     private final DocumentService documentService;
@@ -80,12 +79,6 @@ public class XmiXmlStructureFormatSupport
     }
 
     @Override
-    public boolean isReadable()
-    {
-        return true;
-    }
-
-    @Override
     public boolean isWritable()
     {
         return true;
@@ -104,11 +97,12 @@ public class XmiXmlStructureFormatSupport
     {
         var cas = aCas;
 
-        if (!containsXmlDocumentStructure(aCas)) {
+        if (!containsXmlDocumentStructure(aCas) || !containsPdfDocumentStructure(aCas)) {
             try {
-                cas = WebAnnoCasUtil.createCasCopy(aCas);
+                cas = createCasCopy(aCas);
                 var initialCas = documentService.createOrReadInitialCas(aDocument, AUTO_CAS_UPGRADE,
                         SHARED_READ_ONLY_ACCESS);
+                transferPdfDocumentStructure(cas, initialCas);
                 transferXmlDocumentStructure(cas, initialCas);
             }
             catch (ResourceInitializationException | AnalysisEngineProcessException e) {
@@ -120,16 +114,6 @@ public class XmiXmlStructureFormatSupport
         }
 
         return FormatSupport.super.write(aDocument, cas, aTargetFolder, aStripExtension);
-    }
-
-    @Override
-    public CollectionReaderDescription getReaderDescription(Project aProject,
-            TypeSystemDescription aTSD)
-        throws ResourceInitializationException
-    {
-        return createReaderDescription( //
-                XmiReader.class, //
-                XmiReader.PARAM_LENIENT, true);
     }
 
     @Override

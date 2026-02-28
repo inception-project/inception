@@ -17,7 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.schema.api.adapter;
 
+import static org.apache.commons.lang3.StringUtils.normalizeSpace;
+import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
+
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -274,4 +278,40 @@ public interface TypeAdapter
             FeatureStructure aFS2);
 
     boolean isSamePosition(FeatureStructure aFS1, FeatureStructure aFS2);
+
+    /**
+     * Produce a POJO representation for the given annotation including span, context and feature
+     * values. This is a convenience helper used by various assistant tasks to render annotations
+     * for LLM prompts.
+     */
+    default AnnotationRepresentation annotationAsObject(AnnotationFS aAnnotation,
+            AnnotationFS aContext)
+    {
+        var instance = new AnnotationRepresentation();
+
+        instance.setSpan(normalizeSpace(aAnnotation.getCoveredText()));
+
+        var docText = aAnnotation.getCAS().getDocumentText();
+        var context = docText.substring(aContext.getBegin(), aAnnotation.getBegin()) + " <span> "
+                + aAnnotation.getCoveredText() + " </span> "
+                + docText.substring(aAnnotation.getEnd(), aContext.getEnd());
+        instance.setContext(normalizeSpace(context));
+
+        var attributes = new LinkedHashMap<String, Object>();
+        for (var feature : listFeatures()) {
+            var featureName = normalizeSpace(feature.getUiName());
+            if (TYPE_NAME_BOOLEAN.equals(feature.getType())) {
+                attributes.put(featureName, getFeatureValue(feature, aAnnotation));
+                continue;
+            }
+
+            var featureValue = normalizeSpace(renderFeatureValue(aAnnotation, feature.getName()));
+            if (featureValue != null) {
+                attributes.put(featureName, featureValue);
+            }
+        }
+        instance.setFeatureValues(attributes);
+
+        return instance;
+    }
 }

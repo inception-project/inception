@@ -17,23 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public record MChatResponse(MTextMessage message, List<MToolCall> toolCalls) {
-
-    // static final String TYPE_TEXT_MESSAGE = "toolOfferResponse";
+public record MChatResponse(MTextMessage message) {
 
     private MChatResponse(Builder aBuilder)
     {
-        this(aBuilder.message, new ArrayList<>(aBuilder.toolCalls));
+        this(aBuilder.message);
     }
-
-    // @JsonProperty(MMessage.TYPE_FIELD)
-    // public String getType()
-    // {
-    // return TYPE_TEXT_MESSAGE;
-    // }
 
     public static Builder builder()
     {
@@ -43,7 +32,6 @@ public record MChatResponse(MTextMessage message, List<MToolCall> toolCalls) {
     public static final class Builder
     {
         private MTextMessage message;
-        private final List<MToolCall> toolCalls = new ArrayList<>();
 
         private Builder()
         {
@@ -52,15 +40,6 @@ public record MChatResponse(MTextMessage message, List<MToolCall> toolCalls) {
         public Builder withMessage(MTextMessage aMessage)
         {
             message = aMessage;
-            return this;
-        }
-
-        public Builder withToolCalls(List<MToolCall> aToolCalls)
-        {
-            toolCalls.clear();
-            if (aToolCalls != null) {
-                toolCalls.addAll(aToolCalls);
-            }
             return this;
         }
 

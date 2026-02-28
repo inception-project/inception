@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 export class Layer {
-  id: number
-  name: string
-  type: string
+    id: number;
+    name: string;
+    type: string;
 }

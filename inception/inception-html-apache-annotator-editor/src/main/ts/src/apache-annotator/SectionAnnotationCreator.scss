@@ -16,60 +16,68 @@
  * limitations under the License.
  */
 .iaa-section-control {
-  display: flex;
-  position: absolute;
-  top: 0px;
-  left: calc(1.0 * var(--vertical-tray-width-left) / 2 - var(--border-width));
-  margin: 0px;
-  padding: 0px;
-  line-height: 100%;
-  z-index: 10;
-  font-size: 16px;
-  line-height: 24px;
-  transition: transform 0.5s ease, color 0.5s ease;
-  color: gray;
+    display: flex;
+    position: absolute;
+    top: 0px;
+    left: calc(1 * var(--vertical-tray-width-left) / 2 - var(--border-width));
+    margin: 0px;
+    padding: 0px;
+    line-height: 100%;
+    z-index: 10;
+    font-size: 16px;
+    line-height: 24px;
+    transition:
+        transform 0.5s ease,
+        color 0.5s ease;
+    color: gray;
 
-  &:hover {
-    transform: scale(2, 2);
-    color: black;
-  }
+    &:hover {
+        transform: scale(2, 2);
+        color: black;
+    }
 }
 
 [data-iaa-section-control-hover] {
-  box-shadow: 0px 0px 10px 3px var(--i7n-focus-color) !important;
+    box-shadow: 0px 0px 10px 3px var(--i7n-focus-color) !important;
 
-  &:before {
-    animation: iaa-section-roll-in .5s;
-    font-size: 16px;
-    position: absolute;
-    display: inline-block;
-    margin: -8px;
-    left: calc(1.125 * var(--vertical-tray-width-left));
-    z-index: 10;
-    border: black solid 1px;
-    border-radius: 0.3em;
-    background-color: white;
-    color: black;
-    padding: 0.3em;
-    line-height: normal;
-    content: attr(data-iaa-section-type);
-  }
+    &:before {
+        animation: iaa-section-roll-in 0.5s;
+        font-size: 16px;
+        position: absolute;
+        display: inline-block;
+        margin: -8px;
+        left: calc(1.125 * var(--vertical-tray-width-left));
+        z-index: 10;
+        border: black solid 1px;
+        border-radius: 0.3em;
+        background-color: white;
+        color: black;
+        padding: 0.3em;
+        line-height: normal;
+        content: attr(data-iaa-section-type);
+    }
 }
 
 .iaa-preview-frame {
-  z-index: 20;
-  position: fixed;
-  height: 20%;
-  bottom: 0px;
-  left: 0px;
-  right: 0px;
-  width: 100%;
-  border: none;
-  border-top: 3px solid black;
-  background-color: white;
+    z-index: 20;
+    position: fixed;
+    height: 20%;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    width: 100%;
+    border: none;
+    border-top: 3px solid black;
+    background-color: white;
 }
 
 @keyframes iaa-section-roll-in {
-  from { opacity: 0; transform: translateX(-100%) }
-  to { opacity: 1; transform: translateX(0) }
+    from {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }

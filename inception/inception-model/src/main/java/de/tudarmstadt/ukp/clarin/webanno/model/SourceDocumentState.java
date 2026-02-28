@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.inception.support.db.PersistentEnum;
@@ -38,6 +39,7 @@ public enum SourceDocumentState
      * At least one annotation document has been created for the document
      */
     @JsonProperty("ANNOTATION_IN_PROGRESS")
+    @JsonAlias("ANNOTATION_INPROGRESS")
     ANNOTATION_IN_PROGRESS("ANNOTATION_INPROGRESS", "<i class=\"far fa-play-circle\"></i>",
             "#FFBF0080"),
 
@@ -53,6 +55,7 @@ public enum SourceDocumentState
      * modifications in annotation documents
      */
     @JsonProperty("CURATION_IN_PROGRESS")
+    @JsonAlias("CURATION_INPROGRESS")
     CURATION_IN_PROGRESS("CURATION_INPROGRESS", "<i class=\"fas fa-clipboard\"></i>", "#FF00BF80"),
 
     /**

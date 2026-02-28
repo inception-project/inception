@@ -15,12 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { VID } from '..'
+import { VID } from '..';
 
 /**
  * Represents the endpoint of an arc.
  */
-export type CompactArgument = [
-  target: VID,
-  label?: string
-]
+export type CompactArgument = [target: VID, label?: string];

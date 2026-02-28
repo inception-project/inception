@@ -38,11 +38,28 @@ TS_MODULES="
 ./inception-ui-search/src/main/ts
 ./inception-ui-scheduling/src/main/ts
 ./inception-assistant/src/main/ts
+./inception-workload/src/main/ts
 "
 
+TARGET_MODULE="$1"
+
+if [ -n "$TARGET_MODULE" ]; then
+  echo "Running only for module: $TARGET_MODULE"
+fi
+
+MATCHED=0
+
 for module in $TS_MODULES ; do
-  pushd "$module"
-  echo "PWD: $(pwd)"
+  if [ -n "$TARGET_MODULE" ]; then
+    if ! echo "$module" | grep -q "$TARGET_MODULE"; then
+      continue
+    fi
+    MATCHED=1
+  fi
+
+  echo "🧹 Cleaning up generated files in $module"
+  pushd "$module" >/dev/null 2>&1
+  # echo "PWD: $(pwd)"
   rm -f ../ts_template/package-lock.json
   rm -f package-lock.json
   rm -f package.json
@@ -52,28 +69,37 @@ for module in $TS_MODULES ; do
   cp ../../../../inception-build/src/main/resources/inception/eslint.config.mjs eslint.config.mjs
   cp ../../../../inception-build/src/main/resources/inception/vite.config.js vite.config.js
   cp ../../../../inception-build/src/main/resources/inception/tsconfig.json tsconfig.json
-  popd
+  popd >/dev/null 2>&1
 
-  pushd "$module/../../.."
-  ${MVN} clean generate-resources -Dnpm-install-command=install -Dts-link-phase=generate-resources
+  echo "🔄 Building module $module to update package-lock.json"
+  pushd "$module/../../.." >/dev/null 2>&1
+  ${MVN} clean generate-resources -q -Dnpm-install-command=install -Dts-link-phase=generate-resources
   
   ORIG_VERSION=$(${MVN} help:evaluate -Dexpression=project.version -q -DforceStdout)
   SEMVER="$(echo "$ORIG_VERSION" | cut -d'-' -f1).0-SNAPSHOT"
-  echo "$ORIG_VERSION -> $SEMVER"
+  echo "ℹ️ Setting version $ORIG_VERSION -> $SEMVER"
 
   ARTIFACT_ID=$(${MVN} help:evaluate -Dexpression=project.artifactId -q -DforceStdout)
-  echo "$ARTIFACT_ID"
-  popd
+  # echo "$ARTIFACT_ID"
+  popd >/dev/null 2>&1
   
-  pushd "$module"
+  echo "🔎 Auditing and updating package-lock.json for module $module"
+  pushd "$module" >/dev/null 2>&1
+  npm audit --fix
   npm install npm-audit-resolver
   npm exec -- resolve-audit
-  popd
+  popd >/dev/null 2>&1
   
-  pushd "$module"
+  echo "📦 Updating template package-lock.json for module $module"
+  pushd "$module" >/dev/null 2>&1
   cp package-lock.json ../ts_template/package-lock.json
   sed -i '' "s/${SEMVER}/\${semver}/g" ../ts_template/package-lock.json
   sed -i '' "s/${ARTIFACT_ID}/\${project.artifactId}/g" ../ts_template/package-lock.json
-  popd
+  popd >/dev/null 2>&1
 done
+
+if [ -n "$TARGET_MODULE" ] && [ "$MATCHED" -eq 0 ]; then
+  echo "ERROR: module '$TARGET_MODULE' not found in TS_MODULES" >&2
+  exit 2
+fi
 

@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { DiamClientFactoryImpl } from './diam/DiamClientFactoryImpl'
+import { DiamClientFactoryImpl } from './diam/DiamClientFactoryImpl';
 
-const FACTORY_INSTANCE = new DiamClientFactoryImpl()
+const FACTORY_INSTANCE = new DiamClientFactoryImpl();
 
-export function factory () : DiamClientFactoryImpl {
-  return FACTORY_INSTANCE
+export function factory(): DiamClientFactoryImpl {
+    return FACTORY_INSTANCE;
 }

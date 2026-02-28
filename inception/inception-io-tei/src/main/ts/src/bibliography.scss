@@ -16,56 +16,55 @@
  * limitations under the License.
  */
 @mixin m-join-children($separator, $margin: 0px) {
-  & > * {
-    &:not(:last-child) {
-      &:after {
-        display: inline-block;
-        content: $separator;
-        margin-right: $margin;
-      }
+    & > * {
+        &:not(:last-child) {
+            &:after {
+                display: inline-block;
+                content: $separator;
+                margin-right: $margin;
+            }
+        }
     }
-  }
 }
 
 TEI {
-  listBibl {
-    display: block;
+    listBibl {
+        display: block;
+
+        biblStruct {
+            display: list-item;
+            list-style-type: disc; // Remove default list bullet
+        }
+    }
 
     biblStruct {
-      display: list-item;
-      list-style-type: disc; // Remove default list bullet
+        display: block;
+        @include m-join-children('; ');
+
+        title {
+            display: inline;
+            font-weight: bold;
+        }
+
+        analytic {
+            @include m-join-children(', ');
+        }
+
+        persName {
+            @include m-join-children(' ', 0.25em);
+        }
     }
-  }
 
-  biblStruct {
-    display: block;
-    @include m-join-children("; ");
+    monogr {
+        @include m-join-children(', ');
 
-    title {
-      display: inline;
-      font-weight: bold;
+        title {
+            font-style: italic;
+            font-weight: inherit;
+        }
     }
 
-    analytic {
-      @include m-join-children(", ");
+    idno {
+        font-style: italic;
     }
-
-
-    persName {
-      @include m-join-children(" ", 0.25em);
-    }
-  }
-
-  monogr {
-    @include m-join-children(", ");
-
-    title {
-      font-style: italic;
-      font-weight: inherit;
-    }
-  }
-
-  idno {
-    font-style: italic;
-  }
 }

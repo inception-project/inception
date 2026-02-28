@@ -22,6 +22,7 @@ import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.assistant.model.MCallResponse;
 import de.tudarmstadt.ukp.inception.assistant.model.MChatMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MMessage;
@@ -31,17 +32,17 @@ public interface AssistantService
 {
     List<MChatMessage> getUserChatHistory(String aSessionOwner, Project aProject);
 
-    void processUserMessage(String aSessionOwner, Project aProject, SourceDocument aDocument,
+    void processUserMessage(User aSessionOwner, Project aProject, SourceDocument aDocument,
             String aDataOwner, MTextMessage aMessage);
 
-    void processInternalMessage(String aSessionOwner, Project aProject, SourceDocument aDocument,
+    void processInternalMessage(User aSessionOwner, Project aProject, SourceDocument aDocument,
             String aDataOwner, MTextMessage aMessage, MTextMessage... aContextMessages);
 
-    MTextMessage processInternalMessageSync(String aSessionOwner, Project aProject,
+    MTextMessage processInternalMessageSync(User aSessionOwner, Project aProject,
             MTextMessage aMessage)
         throws IOException;
 
-    <T> MCallResponse<T> processInternalCallSync(String aSessionOwner, Project aProject,
+    <T> MCallResponse<T> processInternalCallSync(User aSessionOwner, Project aProject,
             Class<T> aType, MTextMessage aMessage)
         throws IOException;
 
@@ -52,4 +53,6 @@ public interface AssistantService
     boolean isDebugMode(String aSessionOwner, Project aProject);
 
     void dispatchMessage(String aSessionOwner, Project aProject, MMessage aMessage);
+
+    void refreshAnnotations(String aSessionOwner, Project aProject);
 }

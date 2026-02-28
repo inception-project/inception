@@ -19,13 +19,14 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public class AnnotationEditorContext
 {
     private final Project project;
     private final SourceDocument document;
     private final String dataOwner;
-    private final String sessionOwner;
+    private final User sessionOwner;
 
     private AnnotationEditorContext(Builder aBuilder)
     {
@@ -40,7 +41,7 @@ public class AnnotationEditorContext
         return dataOwner;
     }
 
-    public String getSessionOwner()
+    public User getSessionOwner()
     {
         return sessionOwner;
     }
@@ -64,7 +65,7 @@ public class AnnotationEditorContext
     {
         private Project project;
         private SourceDocument document;
-        private String sessionOwner;
+        private User sessionOwner;
         private String dataOwner;
 
         private Builder()
@@ -90,7 +91,7 @@ public class AnnotationEditorContext
             return this;
         }
 
-        public Builder withSessionOwner(String aSessionOwner)
+        public Builder withSessionOwner(User aSessionOwner)
         {
             sessionOwner = aSessionOwner;
             return this;

@@ -19,17 +19,20 @@ import ActivityPanel from './ActivityPanel.svelte';
 import { mount, unmount } from 'svelte';
 
 export default class ActivityPanelFactory {
-  static instance: any;
+    static instance: any;
 
-  constructor(args: any) {
-    ActivityPanelFactory.instance = mount(ActivityPanel, { target: args.target, props: args.props });
-  }
-
-  $destroy() {
-    const i = ActivityPanelFactory.instance;
-    if (i) {
-      unmount(i);
-      ActivityPanelFactory.instance = null;
+    constructor(args: any) {
+        ActivityPanelFactory.instance = mount(ActivityPanel, {
+            target: args.target,
+            props: args.props,
+        });
     }
-  }
+
+    $destroy() {
+        const i = ActivityPanelFactory.instance;
+        if (i) {
+            unmount(i);
+            ActivityPanelFactory.instance = null;
+        }
+    }
 }

@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_security_authentication_oauth2]]
-= OAuth2 authentication
+= OAuth2/OIDC authentication
 
 {product-name} can authenticate a user against a OAuth2/OIDC-compatible identity provider. OAuth2/OIDC providers can be configured alongside the usual form-based login and SAML2. 
 It is **not** compatible with the <<sect_security_authentication_preauth,external pre-authentication>> and does not require setting the `auth.mode` property.

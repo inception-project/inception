@@ -19,84 +19,90 @@
 }
 
 TEI {
-  display: block;
-
-  text {
-    display: block;
-  }
-
-  front, back, body, div {
-    display: block;
-  }
-
-  titlePage, titlePart, byline, docImprint {
-    display: block;
-  }
-
-  figure {
-    display: block;
-  }
-  
-  p {
-    display: block;
-    margin-bottom: 0.3em;
-  }
-
-  // Page break
-  pb {
     display: block;
 
-    &::before {
-      margin-top: 2em;
-      clear: both;
-      display: block;
-      width: 100%;
-      border-top: lightgray 1px solid;
-      content: ' ';
+    text {
+        display: block;
     }
 
-    &::after {
-      clear: both;
-      float: right;
-      display: block;
-      text-align: right;
-      color: gray;
-      font-size: smaller;
-      background-color: lightgray;
-      padding-left: 0.25em;
-      padding-right: 0.25em;
-      margin-bottom: 0.25em;
-      border-radius: 0 0 0.5em 0.5em;
-      content: 'Page ' attr(n);
-    }
-  }
-
-  // Column break
-  cb {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-
-    &::before {
-      flex-grow: 1;
-      margin-top: 1em;
-      margin-top: 1em;
-      clear: both;
-      display: block;
-      border-top: lightgray 1px solid;
-      content: ' ';
+    front,
+    back,
+    body,
+    div {
+        display: block;
     }
 
-    &::after {
-      align-self: center;
-      color: gray;
-      background-color: white;
-      font-size: smaller;
-      content: 'Column ' attr(n);
-      position: absolute;
-      top: 0.3em;
-      padding-left: 1em;
-      padding-right: 1em;
+    titlePage,
+    titlePart,
+    byline,
+    docImprint {
+        display: block;
     }
-  }
+
+    figure {
+        display: block;
+    }
+
+    p {
+        display: block;
+        margin-bottom: 0.3em;
+    }
+
+    // Page break
+    pb {
+        display: block;
+
+        &::before {
+            margin-top: 2em;
+            clear: both;
+            display: block;
+            width: 100%;
+            border-top: lightgray 1px solid;
+            content: ' ';
+        }
+
+        &::after {
+            clear: both;
+            float: right;
+            display: block;
+            text-align: right;
+            color: gray;
+            font-size: smaller;
+            background-color: lightgray;
+            padding-left: 0.25em;
+            padding-right: 0.25em;
+            margin-bottom: 0.25em;
+            border-radius: 0 0 0.5em 0.5em;
+            content: 'Page ' attr(n);
+        }
+    }
+
+    // Column break
+    cb {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+
+        &::before {
+            flex-grow: 1;
+            margin-top: 1em;
+            margin-top: 1em;
+            clear: both;
+            display: block;
+            border-top: lightgray 1px solid;
+            content: ' ';
+        }
+
+        &::after {
+            align-self: center;
+            color: gray;
+            background-color: white;
+            font-size: smaller;
+            content: 'Column ' attr(n);
+            position: absolute;
+            top: 0.3em;
+            padding-left: 1em;
+            padding-right: 1em;
+        }
+    }
 }

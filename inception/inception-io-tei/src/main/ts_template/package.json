@@ -5,7 +5,9 @@
   "author": "INCEpTION Team",
   "license": "(MIT AND Apache-2.0)",
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "format": "prettier --write \"**/*.{js,ts,css,scss,json,md,html}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,css,scss,json,md,html}\""
   },
   "repository": {
     "type": "git",
@@ -14,18 +16,22 @@
   "bugs": {
     "url": "https://github.com/inception-project/issues"
   },
+  "overrides": {
+    "minimatch": "${minimatch.version}"
+  },
   "dependencies": {
   },
   "devDependencies": {
     "esbuild": "${esbuild.version}",
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
-    "neostandard": "${neostandard.version}",
-    "eslint-plugin-import": "${eslint-plugin-import.version}",
+    "eslint-config-prettier": "${eslint-config-prettier.version}",
+    "eslint-plugin-import-x": "${eslint-plugin-import-x.version}",
     "eslint-plugin-n": "${eslint-plugin-n.version}",
     "eslint-plugin-promise": "${eslint-plugin-promise.version}",
     "fs-extra": "${fs-extra.version}",
-    "typescript": "${typescript.version}",
+    "prettier": "${prettier.version}",
+    "prettier-plugin-svelte": "${prettier-plugin-svelte.version}",
     "sass": "${sass.version}",
     "temp-write": "${temp-write.version}",
     "@typescript-eslint/eslint-plugin": "${typescript-eslint-eslint-plugin.version}",
@@ -33,6 +39,7 @@
     "@types/events": "${types-events.version}",
     "@types/jquery": "${types-jquery.version}",
     "@types/urijs": "${types-urijs.version}",
+    "typescript": "${typescript.version}",
     "uuid": "${uuid.version}",
     "yargs": "${yargs.version}"
   }

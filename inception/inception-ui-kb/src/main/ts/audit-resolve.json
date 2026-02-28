@@ -1,0 +1,34 @@
+{
+  "decisions": {
+    "1113371|@typescript-eslint/eslint-plugin>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch": {
+      "decision": "postpone",
+      "madeAt": 1771696568487
+    },
+    "1113371|@typescript-eslint/type-utils>@typescript-eslint/typescript-estree>minimatch": {
+      "decision": "postpone",
+      "madeAt": 1771696568487
+    },
+    "1113371|eslint>@eslint/config-array>minimatch": {
+      "decision": "postpone",
+      "madeAt": 1771696568487
+    },
+    "1113371|eslint-plugin-import>minimatch": {
+      "decision": "postpone",
+      "madeAt": 1771696568487
+    },
+    "1113371|eslint-plugin-promise>eslint>@eslint/config-array>minimatch": {
+      "decision": "postpone",
+      "madeAt": 1771696568487
+    },
+    "1113371|neostandard>@stylistic/eslint-plugin>@typescript-eslint/utils>@typescript-eslint/typescript-estree>minimatch": {
+      "decision": "postpone",
+      "madeAt": 1771696568487
+    },
+    "1113371|typescript-eslint>@typescript-eslint/eslint-plugin>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch": {
+      "decision": "postpone",
+      "madeAt": 1771696568487
+    }
+  },
+  "rules": {},
+  "version": 1
+}

@@ -43,7 +43,9 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
+import static java.util.Comparator.comparing;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.csv.CSVFormat.EXCEL;
@@ -63,6 +65,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -130,6 +133,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -163,6 +167,9 @@ import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentM
 import de.tudarmstadt.ukp.inception.workload.matrix.service.MatrixWorkloadService;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.task.RecalculateProjectStateTask;
+import de.tudarmstadt.ukp.inception.workload.ui.ProjectDocumentStatsPanel;
+import de.tudarmstadt.ukp.inception.workload.ui.ProjectProgressDialogContentPanel;
 import de.tudarmstadt.ukp.inception.workload.ui.ResetAnnotationDocumentConfirmationDialogContentPanel;
 import de.tudarmstadt.ukp.inception.workload.ui.ResetCurationConfirmationDialogContentPanel;
 
@@ -187,6 +194,7 @@ public class MatrixWorkloadManagementPage
     private @SpringBean MatrixWorkloadService matrixWorkloadService;
     private @SpringBean DocumentImportExportService documentImportExportService;
     private @SpringBean RepositoryProperties repositoryProperties;
+    private @SpringBean SchedulingService schedulingService;
 
     private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> documentMatrix;
     private LambdaAjaxLink toggleBulkChange;
@@ -349,10 +357,13 @@ public class MatrixWorkloadManagementPage
         projectDocumentStatsPanel = new ProjectDocumentStatsPanel("stats", stats);
         projectDocumentStatsPanel.setOutputMarkupId(true);
         add(projectDocumentStatsPanel);
+
         stateIcon = new SymbolLabel("stateIcon",
                 stats.map(SourceDocumentStateStats::getProjectState));
         stateIcon.setOutputMarkupId(true);
         add(stateIcon);
+
+        add(new LambdaAjaxLink("openProgress", this::actionOpenProgress));
     }
 
     private boolean onlyCurationCellsSelected()
@@ -377,42 +388,75 @@ public class MatrixWorkloadManagementPage
 
     private IResourceStream exportWorkload()
     {
-        var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR).stream() //
-                .map(AnnotationSet::forUser) //
-                .sorted() //
-                .toList();
+        var users = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR);
+        var annotators = buildAnnotatorList(users);
 
         return new PipedStreamResource(os -> {
             try (var aOut = new CSVPrinter(new OutputStreamWriter(os, UTF_8), EXCEL)) {
-                var headers = new ArrayList<String>();
-                headers.add("document name");
-                headers.add("document state");
-                headers.add("curation state");
-                annotators.forEach(s -> headers.add(s.displayName()));
-
-                aOut.printRecord(headers);
-
                 var provider = documentMatrix.getDataProvider();
-                var i = provider.iterator(0, provider.size());
-                while (i.hasNext()) {
-                    var rowIn = i.next();
-                    var rowOut = new ArrayList<String>(headers.size());
-                    rowOut.add(rowIn.getSourceDocument().getName());
-                    rowOut.add(rowIn.getState().getId());
-                    rowOut.add(rowIn.getCurationState().getId());
-                    for (var annotator : annotators) {
-                        var annDoc = rowIn.getAnnotationDocument(annotator);
-                        if (annDoc != null) {
-                            rowOut.add(annDoc.getState().getId());
-                        }
-                        else {
-                            rowOut.add(AnnotationDocumentState.NEW.getId());
-                        }
-                    }
-                    aOut.printRecord(rowOut);
-                }
+                var documentRows = provider.iterator(0, provider.size());
+                exportWorkloadToCsv(aOut, annotators, documentRows);
             }
         }, MediaType.valueOf("text/csv"));
+    }
+
+    /**
+     * Builds a sorted list of AnnotationSet objects from a list of users.
+     * 
+     * @param users
+     *            the list of users to convert to AnnotationSets
+     * @return a list of AnnotationSets sorted by display name
+     */
+    static List<AnnotationSet> buildAnnotatorList(List<User> users)
+    {
+        return users.stream() //
+                .map(AnnotationSet::forUser) //
+                .sorted(comparing(AnnotationSet::displayName)) //
+                .toList();
+    }
+
+    /**
+     * Exports workload data to CSV format.
+     * 
+     * @param csvPrinter
+     *            the CSV printer to write to
+     * @param annotators
+     *            the list of annotators (as AnnotationSets) to include in the export
+     * @param documentRows
+     *            iterator over the document matrix rows to export
+     * @throws IOException
+     *             if an error occurs during CSV writing
+     */
+    static void exportWorkloadToCsv(CSVPrinter csvPrinter, List<AnnotationSet> annotators,
+            Iterator<? extends DocumentMatrixRow> documentRows)
+        throws IOException
+    {
+        // Write headers
+        var headers = new ArrayList<String>();
+        headers.add("document name");
+        headers.add("document state");
+        headers.add("curation state");
+        annotators.forEach(s -> headers.add(s.displayName()));
+        csvPrinter.printRecord(headers);
+
+        // Write data rows
+        while (documentRows.hasNext()) {
+            var row = documentRows.next();
+            var csvRow = new ArrayList<String>(headers.size());
+            csvRow.add(row.getSourceDocument().getName());
+            csvRow.add(row.getState().getId());
+            csvRow.add(row.getCurationState().getId());
+            for (var annotator : annotators) {
+                var annDoc = row.getAnnotationDocument(annotator);
+                if (annDoc != null) {
+                    csvRow.add(annDoc.getState().getId());
+                }
+                else {
+                    csvRow.add(AnnotationDocumentState.NEW.getId());
+                }
+            }
+            csvPrinter.printRecord(csvRow);
+        }
     }
 
     @OnEvent
@@ -481,7 +525,7 @@ public class MatrixWorkloadManagementPage
 
         var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR).stream() //
                 .map(AnnotationSet::forUser) //
-                .toList();
+                .collect(toCollection(ArrayList::new));
 
         if (isNotBlank(filter.getObject().getUserName())) {
             if (filter.getObject().isMatchUserNameAsRegex()) {
@@ -972,6 +1016,13 @@ public class MatrixWorkloadManagementPage
         }
     }
 
+    private void actionOpenProgress(AjaxRequestTarget aTarget)
+    {
+        var dialogContent = new ProjectProgressDialogContentPanel(ModalDialog.CONTENT_ID,
+                getProjectModel());
+        modalDialog.open(dialogContent, aTarget);
+    }
+
     private void actionApplyFilter(AjaxRequestTarget aTarget)
     {
         aTarget.add(documentMatrix);
@@ -980,6 +1031,11 @@ public class MatrixWorkloadManagementPage
     private void actionRefresh(AjaxRequestTarget aTarget)
     {
         selectedUsers.getObject().clear();
+
+        schedulingService.executeSync(RecalculateProjectStateTask.builder() //
+                .withProject(getProject()) //
+                .withTrigger("Workload configuration changed") //
+                .build());
 
         var newMatrix = createDocumentMatrix("documentMatrix", bulkChangeMode);
         documentMatrix.replaceWith(newMatrix);

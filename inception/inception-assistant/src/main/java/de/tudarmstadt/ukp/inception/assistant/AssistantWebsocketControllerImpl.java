@@ -104,7 +104,7 @@ public class AssistantWebsocketControllerImpl
         var message = MTextMessage.builder() //
                 .withActor(sessionOwner.getUiName()) //
                 .withRole(USER) //
-                .withMessage(aMessage) //
+                .withContent(aMessage) //
                 .build();
 
         try {
@@ -119,7 +119,7 @@ public class AssistantWebsocketControllerImpl
                 MDC.put(KEY_PROJECT_ID, String.valueOf(project.getId()));
             }
 
-            assistantService.processUserMessage(aPrincipal.getName(), project, document, dataOwner,
+            assistantService.processUserMessage(sessionOwner, project, document, dataOwner,
                     message);
         }
         finally {

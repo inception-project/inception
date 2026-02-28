@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 
@@ -35,7 +37,8 @@ public class PinState
         isPinned = true;
     }
 
-    public PinState(boolean aIsPinned)
+    @JsonCreator
+    public PinState(@JsonProperty("isPinned") boolean aIsPinned)
     {
         isPinned = aIsPinned;
     }

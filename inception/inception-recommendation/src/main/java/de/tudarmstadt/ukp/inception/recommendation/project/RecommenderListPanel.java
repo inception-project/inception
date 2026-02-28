@@ -89,8 +89,7 @@ public class RecommenderListPanel
         form.add(new CheckBox("showRecommendationsWhenViewingOtherUser") //
                 .setOutputMarkupId(true));
         form.add(new CheckBox("showRecommendationsWhenViewingCurationUser") //
-                .setOutputMarkupId(true) //
-                .setVisible(recommendationService.isCurationSidebarEnabled()));
+                .setOutputMarkupId(true));
         form.add(new CheckBox("annotatorAllowedToExportModel") //
                 .setOutputMarkupId(true));
         form.add(new LambdaAjaxButton<>("save", this::actionSaveSettings));

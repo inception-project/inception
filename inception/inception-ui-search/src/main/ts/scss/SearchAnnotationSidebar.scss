@@ -16,36 +16,36 @@
  * limitations under the License.
  */
 .search-sidebar {
-  .ssb-group-header-control {
-    text-align: center; 
-    width: 15%;
-    line-height: initial;
-    
-    label {
-      margin: 0px;
+    .ssb-group-header-control {
+        text-align: center;
+        width: 15%;
+        line-height: initial;
+
+        label {
+            margin: 0px;
+        }
     }
-  }
 
-  .ssb-group-header-title {
-    text-align: left; 
-    padding: 0px; 
-    width: 85%;
-    font-size: 75%;
-    line-height: initial;
-    vertical-align: middle;
-  }
-
-  .ssb-result-control {
-    padding: 0px;
-    text-align: center;
-    
-    label {
-      margin: 0px;
+    .ssb-group-header-title {
+        text-align: left;
+        padding: 0px;
+        width: 85%;
+        font-size: 75%;
+        line-height: initial;
+        vertical-align: middle;
     }
-  }
 
-  .ssb-result-text {
-    padding: 0px;
-    text-align: center; 
-  }
+    .ssb-result-control {
+        padding: 0px;
+        text-align: center;
+
+        label {
+            margin: 0px;
+        }
+    }
+
+    .ssb-result-text {
+        padding: 0px;
+        text-align: center;
+    }
 }

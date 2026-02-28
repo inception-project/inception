@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
+import static wicket.contrib.input.events.EventType.click;
+
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -38,8 +40,6 @@ import de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
-import wicket.contrib.input.events.EventType;
 
 public class DefaultPagingNavigator
     extends Panel
@@ -77,21 +77,15 @@ public class DefaultPagingNavigator
         form.add(gotoPageLink);
         add(form);
 
-        form.add(
-                new LambdaAjaxLink("showNext", t -> actionShowNextPage(t))
-                        .add(new InputBehavior(keyBindings.getNavigation().getNextPage(), //
-                                EventType.click))
-                        .add(AttributeModifier
-                                .append("title",
-                                        () -> " ("
-                                                + KeyBindingsUtil.formatShortcut(
-                                                        keyBindings.getNavigation().getNextPage())
-                                                + ")")));
+        form.add(new LambdaAjaxLink("showNext", t -> actionShowNextPage(t))
+                .add(keyBindings.getNavigation().getNextPage().toInputBehavior(click))
+                .add(AttributeModifier.append("title", () -> " ("
+                        + KeyBindingsUtil.formatShortcut(keyBindings.getNavigation().getNextPage())
+                        + ")")));
 
         form.add(
                 new LambdaAjaxLink("showPrevious", t -> actionShowPreviousPage(t))
-                        .add(new InputBehavior(keyBindings.getNavigation().getPreviousPage(), //
-                                EventType.click))
+                        .add(keyBindings.getNavigation().getPreviousPage().toInputBehavior(click))
                         .add(AttributeModifier.append("title",
                                 () -> " ("
                                         + KeyBindingsUtil.formatShortcut(
@@ -100,24 +94,18 @@ public class DefaultPagingNavigator
 
         form.add(
                 new LambdaAjaxLink("showFirst", t -> actionShowFirstPage(t))
-                        .add(new InputBehavior(keyBindings.getNavigation().getFirstPage(), //
-                                EventType.click))
+                        .add(keyBindings.getNavigation().getFirstPage().toInputBehavior(click))
                         .add(AttributeModifier.append("title",
                                 () -> " ("
                                         + KeyBindingsUtil.formatShortcut(
                                                 keyBindings.getNavigation().getFirstPage())
                                         + ")")));
 
-        form.add(
-                new LambdaAjaxLink("showLast", t -> actionShowLastPage(t))
-                        .add(new InputBehavior(keyBindings.getNavigation().getLastPage(), //
-                                EventType.click))
-                        .add(AttributeModifier
-                                .append("title",
-                                        () -> " ("
-                                                + KeyBindingsUtil.formatShortcut(
-                                                        keyBindings.getNavigation().getLastPage())
-                                                + ")")));
+        form.add(new LambdaAjaxLink("showLast", t -> actionShowLastPage(t))
+                .add(keyBindings.getNavigation().getLastPage().toInputBehavior(click))
+                .add(AttributeModifier.append("title", () -> " ("
+                        + KeyBindingsUtil.formatShortcut(keyBindings.getNavigation().getLastPage())
+                        + ")")));
 
         form.add(LambdaBehavior.visibleWhen(() -> !contentFitsFullyIntoVisibleWindow()));
     }

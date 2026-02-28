@@ -41,8 +41,6 @@
             <span wicket:id="stateIcon"/>
             <wicket:container wicket:id="name"/>
           </h1>
-          <div wicket:id="modalDialog"/>
-          <div wicket:id="contextMenu" style="width: 250px;"></div>
 
           <div class="d-flex align-items-center justify-content-between">
             <div class="me-4">
@@ -93,7 +91,13 @@
               </button>
             </div>
             
-            <div wicket:id="stats" />
+            <div class="d-flex flex-row">
+              <button wicket:id="openProgress" class="btn btn-action btn-secondary me-2">
+                <i class="fa-solid fa-chart-line me-2"></i>
+                <span class="d-none d-lg-inline">Progress</span>
+              </button>
+              <div wicket:id="stats" class="align-content-center"/>
+            </div>
           </div>
           
           <div class="flex-h-container flex-gutter flex-only-internal-gutter">
@@ -243,6 +247,9 @@
           </div>
         </div>
       </div>
+      
+      <div wicket:id="modalDialog"/>
+      <div wicket:id="contextMenu" style="width: 250px;"></div>
     </div>
   </wicket:extend>
 </body>

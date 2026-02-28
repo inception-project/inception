@@ -17,8 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.project.export.config;
 
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.MessageExpressionAuthorizationManager.expression;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
+
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -42,6 +49,7 @@ import de.tudarmstadt.ukp.inception.project.export.settings.ExportProjectSetting
 import de.tudarmstadt.ukp.inception.project.export.task.backup.BackupProjectExportExtension;
 import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportExtension;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.websocket.security.StompSecurityConfigurer;
 
 @Configuration
 @AutoConfigureAfter(name = {
@@ -49,6 +57,8 @@ import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 @ConditionalOnBean(ProjectService.class)
 public class ProjectExportServiceAutoConfiguration
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     @Bean
     public ProjectExportService projectExportService(ApplicationContext aApplicationContext,
             @Lazy @Autowired(required = false) List<ProjectExporter> aExporters,
@@ -95,5 +105,22 @@ public class ProjectExportServiceAutoConfiguration
             DocumentService aDocumentService)
     {
         return new CuratedDocumentsProjectExportExtension(aDocumentService);
+    }
+
+    @Bean
+    public StompSecurityConfigurer projectExportWebsocketSecurity()
+    {
+        return (aBuilder, aMAH) -> {
+            LOG.debug("Configuring websocket security for project export controller");
+
+            aBuilder.simpSubscribeDestMatchers(
+                    "/*" + NS_PROJECT + "/{" + PARAM_PROJECT + "}/exports")
+                    .access(expression(aMAH,
+                            "@projectAccess.canManageProject(#" + PARAM_PROJECT + ")"));
+
+            // permissions for export canceling are currently managed in the controller
+            aBuilder.simpMessageDestMatchers("/**/export/*/cancel") //
+                    .hasRole("USER");
+        };
     }
 }

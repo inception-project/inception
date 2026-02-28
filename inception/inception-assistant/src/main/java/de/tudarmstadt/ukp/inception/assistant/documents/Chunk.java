@@ -18,6 +18,9 @@
 package de.tudarmstadt.ukp.inception.assistant.documents;
 
 import java.util.Objects;
+import java.util.UUID;
+
+import de.tudarmstadt.ukp.inception.assistant.model.MReference;
 
 public record Chunk(long documentId, String documentName, String section, String text, int begin,
         int end, double score)
@@ -41,6 +44,19 @@ public record Chunk(long documentId, String documentName, String section, String
         var mEnd = Math.max(end, aChunk.end);
 
         return new Chunk(documentId, documentName, section, mText, mBegin, mEnd, mScore);
+    }
+
+    public MReference toReference()
+    {
+        return MReference.builder() //
+                // .withId(String.valueOf(references.size() + 1)) //
+                .withId(UUID.randomUUID().toString().substring(0, 8)) //
+                .withDocumentId(documentId()) //
+                .withDocumentName(documentName()) //
+                .withBegin(begin()) //
+                .withEnd(end()) //
+                .withScore(score()) //
+                .build();
     }
 
     public static Builder builder()

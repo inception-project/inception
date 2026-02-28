@@ -19,14 +19,9 @@ package de.tudarmstadt.ukp.inception.assistant.documents;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_BEGIN;
-import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_EMBEDDING;
-import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_END;
-import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_RANGE;
-import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SECTION;
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SOURCE_DOC_COMPLETE;
 import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_SOURCE_DOC_ID;
-import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService.FIELD_TEXT;
+import static de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryServiceImpl.makeDocument;
 import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_DOCUMENTS;
 import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_UNITS;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.CANCELLED;
@@ -34,8 +29,6 @@ import static java.lang.Math.floorDiv;
 import static java.time.Duration.ofSeconds;
 import static org.apache.commons.collections4.ListUtils.partition;
 import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
-import static org.apache.lucene.index.VectorSimilarityFunction.DOT_PRODUCT;
-import static org.apache.lucene.util.VectorUtil.l2normalize;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -45,8 +38,6 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.IntRange;
-import org.apache.lucene.document.KnnFloatVectorField;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.index.DirectoryReader;
@@ -218,6 +209,9 @@ public class UpdateDocumentIndexTask
                 }
             }
 
+            LOG.debug("{} - Indexed {} chunks in {} batches", aSourceDocument, chunks.size(),
+                    batches.size());
+
             markDocumentAsIndexed(aIndex, aSourceDocument);
         }
         catch (IOException e) {
@@ -246,16 +240,8 @@ public class UpdateDocumentIndexTask
                     abbreviateMiddle(chunk.text().replaceAll("\\s+", " "), " … ", 60));
         }
 
-        var doc = new Document();
-        var normalizedEmbedding = l2normalize(aEmbeddedChunks.getValue(), false);
-        doc.add(new KnnFloatVectorField(FIELD_EMBEDDING, normalizedEmbedding, DOT_PRODUCT));
-        doc.add(new IntRange(FIELD_RANGE, new int[] { chunk.begin() }, new int[] { chunk.end() }));
-        doc.add(new LongPoint(FIELD_SOURCE_DOC_ID, aSourceDocument.getId()));
-        doc.add(new StoredField(FIELD_SOURCE_DOC_ID, aSourceDocument.getId()));
-        doc.add(new StoredField(FIELD_SECTION, ""));
-        doc.add(new StoredField(FIELD_TEXT, chunk.text()));
-        doc.add(new StoredField(FIELD_BEGIN, chunk.begin()));
-        doc.add(new StoredField(FIELD_END, chunk.end()));
+        var doc = makeDocument(aSourceDocument.getId(), chunk.begin(), chunk.end(),
+                aEmbeddedChunks.getValue(), chunk.text());
         aIndex.getIndexWriter().addDocument(doc);
     }
 

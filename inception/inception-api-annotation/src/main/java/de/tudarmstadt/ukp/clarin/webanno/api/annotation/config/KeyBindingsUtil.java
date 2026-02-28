@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.config;
 
-import java.util.stream.Collectors;
+import static java.util.stream.Collectors.joining;
+
 import java.util.stream.Stream;
 
 import wicket.contrib.input.events.key.KeyType;
@@ -30,6 +31,11 @@ public class KeyBindingsUtil
     private KeyBindingsUtil()
     {
         // No instances
+    }
+
+    public static String formatShortcut(KeyCombo aCombo)
+    {
+        return formatShortcut(aCombo != null ? aCombo.getKeys() : null);
     }
 
     /**
@@ -55,6 +61,6 @@ public class KeyBindingsUtil
         return Stream.of(aKeys) //
                 .map(KeyType::name) //
                 .map(name -> name.replace("_", "-")) //
-                .collect(Collectors.joining("+"));
+                .collect(joining("+"));
     }
 }

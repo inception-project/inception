@@ -112,6 +112,20 @@ In this mode, you can find a **Curation sidebar** on the left side of the page.
 In this sidebar, you can configure which annotators you want to see in the document view.
 You can also restart the curation process for a document using the **Re-merge** button.
 
+// In this mode, you can select the target to which your curated annotations are added:
+// 
+// * **curation document**: this is also used as the target when curating on the curation page. If
+//  you choose this target, you will notice that the username in the info line above the annotation
+//  document changes to `CURATION_USER` while the curation session is in progress.
+// * **my document**: this option is available if the curator is also an annotator in the project. In
+//  this case, the annotators own document may be chosen as the curation target.
+
+// By setting the URL query parameter `curationTargetOwn=true`, the
+// curation target can be changed to the current users own document - if the user has the *annotator*
+// role in addition to the *curator* role.
+//
+// Example: `http://localhost:8080/p/PROJECT/curate/DOC-ID?curationTargetOwn=true`.
+
 [#merging-strategies]
 == Merging strategies
 

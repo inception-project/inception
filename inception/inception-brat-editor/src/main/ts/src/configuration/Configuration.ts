@@ -38,19 +38,19 @@
  * SOFTWARE.
  */
 export class Configuration {
-  abbrevsOn = true
-  textBackgrounds = 'striped'
-  svgWidth = '100%'
-  singleClickEdit = false
+    abbrevsOn = true;
+    textBackgrounds = 'striped';
+    svgWidth = '100%';
+    singleClickEdit = false;
 
-  visual = {
-    margin: { x: 2, y: 1 },
-    arcTextMargin: 1,
-    boxSpacing: 1,
-    curlyHeight: 4,
-    arcSpacing: 9, // 10;
-    arcStartHeight: 19 // 23; //25;
-  }
+    visual = {
+        margin: { x: 2, y: 1 },
+        arcTextMargin: 1,
+        boxSpacing: 1,
+        curlyHeight: 4,
+        arcSpacing: 9, // 10;
+        arcStartHeight: 19, // 23; //25;
+    };
 }
 
-export const INSTANCE = new Configuration()
+export const INSTANCE = new Configuration();

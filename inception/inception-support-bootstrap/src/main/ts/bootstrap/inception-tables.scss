@@ -16,55 +16,55 @@
  * limitations under the License.
  */
 
-th{
-    padding:3px;
+th {
+    padding: 3px;
 }
 
-tr.odd{
-    background:#EEEEEE;
+tr.odd {
+    background: #eeeeee;
 }
 
-tr.even{
-    background:#DDDDDD;
+tr.even {
+    background: #dddddd;
 }
 
-tr.odd:hover{
-    background:#CCCCAA;
+tr.odd:hover {
+    background: #ccccaa;
 }
 
-tr.even:hover{
-    background:#CCCCAA;
+tr.even:hover {
+    background: #ccccaa;
 }
 
 .headers,
 .headers th > a:link,
-.headers th > a:visited{
+.headers th > a:visited {
     --bs-table-color: var(--bs-light);
-    --bs-table-bg: #B90F22 !important;
-    background-color:#B90F22 !important;
-    color:white !important;
+    --bs-table-bg: #b90f22 !important;
+    background-color: #b90f22 !important;
+    color: white !important;
 }
 
 tr.headers th.wicket_orderDown > a::after {
-    font-family: "Font Awesome 5 Free";
-    content: "\f0dd";
+    font-family: 'Font Awesome 5 Free';
+    content: '\f0dd';
     display: inline-block;
     padding-left: 3px;
     font-weight: 900;
 }
 
 tr.headers th.wicket_orderUp > a::after {
-    font-family: "Font Awesome 5 Free";
-    content: "\f0de";
+    font-family: 'Font Awesome 5 Free';
+    content: '\f0de';
     display: inline-block;
     padding-left: 3px;
     font-weight: 900;
 }
 
-div.navigatorLabel{
-    float:left;
+div.navigatorLabel {
+    float: left;
 }
 
-div.navigator{
-    text-align:right;
+div.navigator {
+    text-align: right;
 }

@@ -229,7 +229,7 @@ public class OllamaClientImpl
 
         if (aRequest.isStream()) {
             finalResponse.setMessage(new OllamaChatMessage(finalResponse.getMessage().role(),
-                    content.toString().trim(), thinking.toString().trim(), null, toolCalls));
+                    content.toString().trim(), thinking.toString().trim(), toolCalls));
 
             if (LOG.isTraceEnabled()) {
                 var msg = new StringBuilder();

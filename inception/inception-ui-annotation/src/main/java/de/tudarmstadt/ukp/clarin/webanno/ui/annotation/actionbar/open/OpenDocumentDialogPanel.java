@@ -63,7 +63,6 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
-import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 
 /**
  * A panel used as Open dialog. It Lists all projects a user is member of for annotation/curation
@@ -102,7 +101,7 @@ public class OpenDocumentDialogPanel
         queue(userListChoice = createUserListChoice(CID_USER));
 
         queue(new LambdaAjaxLink(CID_CLOSE_DIALOG, this::actionCancel)
-                .add(new InputBehavior(keyBindings.getDialog().getCloseDialog(), click)));
+                .add(keyBindings.getDialog().getCloseDialog().toInputBehavior(click)));
 
         finishedDocumentsSkippedByNavigation = LambdaModel.of(
                 this::isFinishedDocumentsSkippedByNavigation,

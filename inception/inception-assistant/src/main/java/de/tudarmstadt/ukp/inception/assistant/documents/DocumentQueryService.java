@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.documents;
 
-import java.util.List;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface DocumentQueryService
@@ -35,7 +33,11 @@ public interface DocumentQueryService
     final String FIELD_BEGIN = "begin";
     final String FIELD_END = "end";
 
-    List<Chunk> query(Project aProject, String aQuery, int aTopN, double aScoreThreshold);
+    SearchResult semanticQuery(Project aProject, String aQuery, int aTopN, double aScoreThreshold);
+
+    SearchResult keywordQuery(Project aProject, String aQuery, int aTopN);
+
+    SearchResult hybridQuery(Project aProject, String aQuery, int aTopN);
 
     void rebuildIndexAsync(Project aProject);
 }

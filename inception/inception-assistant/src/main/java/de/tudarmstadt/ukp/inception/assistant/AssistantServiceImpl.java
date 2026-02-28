@@ -22,14 +22,12 @@ import static de.tudarmstadt.ukp.inception.assistant.config.AssistantChatPropert
 import static de.tudarmstadt.ukp.inception.assistant.config.AssistantChatProperties.CAP_TOOLS;
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonString;
-import static java.lang.Math.floorDiv;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -58,8 +56,9 @@ import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantPropertiesImpl.AssistantChatPropertiesImpl;
 import de.tudarmstadt.ukp.inception.assistant.model.MCallResponse;
 import de.tudarmstadt.ukp.inception.assistant.model.MChatMessage;
+import de.tudarmstadt.ukp.inception.assistant.model.MClearCommand;
 import de.tudarmstadt.ukp.inception.assistant.model.MMessage;
-import de.tudarmstadt.ukp.inception.assistant.model.MRemoveConversationCommand;
+import de.tudarmstadt.ukp.inception.assistant.model.MRefreshCommand;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPoint;
 import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceKey;
@@ -185,7 +184,13 @@ public class AssistantServiceImpl
     {
         memoryManager.clearMemories(aSessionOwner, aProject);
 
-        dispatchMessage(aSessionOwner, aProject, new MRemoveConversationCommand());
+        dispatchMessage(aSessionOwner, aProject, new MClearCommand());
+    }
+
+    @Override
+    public void refreshAnnotations(String aSessionOwner, Project aProject)
+    {
+        dispatchMessage(aSessionOwner, aProject, new MRefreshCommand());
     }
 
     @Override
@@ -201,14 +206,14 @@ public class AssistantServiceImpl
     }
 
     @Override
-    public MTextMessage processInternalMessageSync(String aSessionOwner, Project aProject,
+    public MTextMessage processInternalMessageSync(User aSessionOwner, Project aProject,
             MTextMessage aMessage)
         throws IOException
     {
         Validate.isTrue(aMessage.internal());
 
         try {
-            var memory = memoryManager.getMemory(aSessionOwner, aProject);
+            var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
             var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
                     getEncoding());
             assistant.setSystemMessages(generateSystemMessages(aProject));
@@ -230,17 +235,17 @@ public class AssistantServiceImpl
     }
 
     @Override
-    public <T> MCallResponse<T> processInternalCallSync(String aSessionOwner, Project aProject,
+    public <T> MCallResponse<T> processInternalCallSync(User aSessionOwner, Project aProject,
             Class<T> aType, MTextMessage aMessage)
         throws IOException
     {
         Validate.isTrue(aMessage.internal());
 
-        var memory = memoryManager.getMemory(aSessionOwner, aProject);
+        var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
 
         if (memory.isDebugMode()) {
             memory.recordMessage(aMessage);
-            dispatchMessage(aSessionOwner, aProject, aMessage);
+            dispatchMessage(aSessionOwner.getUsername(), aProject, aMessage);
         }
 
         var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
@@ -249,26 +254,26 @@ public class AssistantServiceImpl
         assistant.setMessageStreamHandler(this::handleStreamedMessageFragment);
         var result = assistant.call(aType, asList(aMessage));
 
-        if (isDebugMode(aSessionOwner, aProject)) {
+        if (isDebugMode(aSessionOwner.getUsername(), aProject)) {
             var resultMessage = MTextMessage.builder() //
                     .withRole(SYSTEM).internal().ephemeral() //
                     .withActor(aMessage.actor()) //
-                    .withMessage("```json\n" + toPrettyJsonString(result.payload()) + "\n```") //
+                    .withContent("```json\n" + toPrettyJsonString(result.payload()) + "\n```") //
                     .withPerformance(result.performance()) //
                     .build();
             memory.recordMessage(resultMessage);
-            dispatchMessage(aSessionOwner, aProject, resultMessage);
+            dispatchMessage(aSessionOwner.getUsername(), aProject, resultMessage);
         }
 
         return result;
     }
 
     @Override
-    public void processInternalMessage(String aSessionOwner, Project aProject,
+    public void processInternalMessage(User aSessionOwner, Project aProject,
             SourceDocument aDocument, String aDataOwner, MTextMessage aMessage,
             MTextMessage... aContextMessages)
     {
-        var memory = memoryManager.getMemory(aSessionOwner, aProject);
+        var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
         var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
                 getEncoding());
         assistant.setIgnoreMemory(true);
@@ -281,20 +286,22 @@ public class AssistantServiceImpl
             assistant.loop(aDocument, aDataOwner, aMessage);
         }
         catch (Exception e) {
-            handleAsyncException(aSessionOwner, aProject, e);
+            handleAsyncException(aSessionOwner.getUsername(), aProject, e);
         }
     }
 
     @Override
-    public void processUserMessage(String aSessionOwner, Project aProject, SourceDocument aDocument,
+    public void processUserMessage(User aSessionOwner, Project aProject, SourceDocument aDocument,
             String aDataOwner, MTextMessage aMessage)
     {
-        var memory = memoryManager.getMemory(aSessionOwner, aProject);
+        var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
         var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
                 getEncoding());
         assistant.setSystemMessages(generateSystemMessages(aProject));
         assistant.setEphemeralMessages(generateEphemeralMessages(aProject, aMessage));
         assistant.setMessageStreamHandler(this::handleStreamedMessageFragment);
+        assistant.setCommandDispatcher(
+                command -> dispatchMessage(aSessionOwner.getUsername(), aProject, command));
 
         toolLibraryExtensionPoint.getExtensions(aProject).forEach(toolLibrary -> {
             assistant.addToolLibrary(toolLibrary);
@@ -304,7 +311,7 @@ public class AssistantServiceImpl
             assistant.loop(aDocument, aDataOwner, aMessage);
         }
         catch (Exception e) {
-            handleAsyncException(aSessionOwner, aProject, e);
+            handleAsyncException(aSessionOwner.getUsername(), aProject, e);
         }
     }
 
@@ -316,7 +323,7 @@ public class AssistantServiceImpl
                 .withRole(SYSTEM) //
                 .internal() //
                 .ephemeral() //
-                .withMessage("Error: " + e.getMessage()) //
+                .withContent("Error: " + e.getMessage()) //
                 .build();
         memoryManager.getMemory(aSessionOwner, aProject).recordMessage(errorMessage);
         dispatchMessage(aSessionOwner, aProject, errorMessage);
@@ -337,13 +344,6 @@ public class AssistantServiceImpl
                 messages.addAll(retriever.retrieve(aProject, aMessage));
             }
         }
-        else {
-            messages.add(MTextMessage.builder() //
-                    .withRole(SYSTEM).internal().ephemeral() //
-                    .withMessage(
-                            "It is essential to follow the tool template instructions when calling a tool!") //
-                    .build());
-        }
 
         return messages;
     }
@@ -354,8 +354,14 @@ public class AssistantServiceImpl
                 "You are a helpful assistant within the annotation tool INCEpTION.",
                 "INCEpTION always refers to the annotation tool, never anything else such as the movie.",
                 "Do not include references to INCEpTION unless the user explicitly asks about the environment itself.",
-                "When reasoning, you must explicitly state the exact name of the tool you intend to call. "
-                        + "Do not say 'I will read the file'. Say 'I will call read_document to read the file'.");
+                "Format your responses using markdown.",
+                "DO NOT use markdown tables because the chat window is rather narrow and tables are hard to read.",
+                "When the user asks a question, it is safe to assume it is about the documents in the project, "
+                        + "unless specified otherwise."
+        // "When reasoning, you must explicitly state the exact name of the tool you intend to call.
+        // "
+        // + "Do not say 'I will read the file'. Say 'I will call read_document to read the file'."
+        );
 
         // If you use information from the user manual in your response, prepend it with
         // "According to the user manual".
@@ -369,7 +375,14 @@ public class AssistantServiceImpl
         var primeDirectives = new ArrayList<String>();
         primeDirectives.add(establishIdentity);
 
-        if (!properties.getChat().getCapabilities().contains(CAP_TOOLS)) {
+        if (properties.getChat().getCapabilities().contains(CAP_TOOLS)) {
+            // When tools are enabled, collect system prompts from tool libraries
+            for (var toolLibrary : toolLibraryExtensionPoint.getExtensions(aProject)) {
+                primeDirectives.addAll(toolLibrary.getSystemPrompts(aProject));
+            }
+        }
+        else {
+            // When tools are disabled, collect system prompts from retrievers
             for (var retriever : retrieverExtensionPoint.getExtensions(aProject)) {
                 primeDirectives.addAll(retriever.getSystemPrompts());
             }
@@ -377,97 +390,8 @@ public class AssistantServiceImpl
 
         return asList(MTextMessage.builder() //
                 .withRole(SYSTEM).internal().ephemeral() //
-                .withMessage(join("\n\n", primeDirectives)) //
+                .withContent(join("\n\n", primeDirectives)) //
                 .build());
-    }
-
-    private List<MChatMessage> limitConversationToContextLength(List<MTextMessage> aSystemMessages,
-            List<? extends MChatMessage> aEphemeralMessages,
-            List<? extends MChatMessage> aRecentMessages, MTextMessage aLatestUserMessage,
-            int aContextLength)
-        throws IOException
-    {
-        var encoding = getEncoding();
-        var limit = floorDiv(aContextLength * 90, 100);
-
-        var headMessages = new ArrayList<MChatMessage>();
-        var tailMessages = new LinkedList<MChatMessage>();
-
-        var totalMessages = aSystemMessages.size() + aEphemeralMessages.size()
-                + aRecentMessages.size() + 1;
-        var allTokens = 0;
-        var systemTokens = 0;
-        var recentTokens = 0;
-        var ephemeralTokens = 0;
-
-        // System prompts from the start as context limit allows
-        var systemMsgIterator = aSystemMessages.iterator();
-
-        while (systemMsgIterator.hasNext() && allTokens < limit) {
-            var msg = systemMsgIterator.next();
-            if (SYSTEM.equals(msg.role())) {
-                var msgTokens = encoding.countTokensOrdinary(msg.message());
-                if (allTokens + msgTokens > limit) {
-                    LOG.trace("System message exceeds remaining token limit ({}): [{}]", msgTokens,
-                            msg.message());
-                    continue;
-                }
-
-                allTokens += msgTokens;
-                systemTokens += msgTokens;
-                headMessages.add(msg);
-            }
-        }
-
-        // Unconditionally the latest user message
-        if (aLatestUserMessage != null) {
-            var latestUserMsgTokens = encoding.countTokensOrdinary(aLatestUserMessage.message());
-            recentTokens += latestUserMsgTokens;
-            allTokens += latestUserMsgTokens;
-            tailMessages.addLast(aLatestUserMessage);
-        }
-
-        // Add ephemeral messages as context limit allows
-        var ephemeralMsgIterator = aEphemeralMessages.listIterator(aEphemeralMessages.size());
-        while (ephemeralMsgIterator.hasPrevious() && allTokens < limit) {
-            var msg = ephemeralMsgIterator.previous();
-            var textRepresentation = msg.textRepresentation();
-            var msgTokens = encoding.countTokensOrdinary(textRepresentation);
-            if (allTokens + msgTokens > limit) {
-                LOG.trace("Ephemeral message exceeds remaining token limit ({}): [{}]", msgTokens,
-                        textRepresentation);
-                continue;
-            }
-
-            allTokens += msgTokens;
-            ephemeralTokens += msgTokens;
-            tailMessages.addFirst(msg);
-        }
-
-        // Add most recent user/assistant conversation as context limit allows
-        var recentMsgIterator = aRecentMessages.listIterator(aRecentMessages.size());
-        while (recentMsgIterator.hasPrevious() && allTokens < limit) {
-            var msg = recentMsgIterator.previous();
-            var textRepresentation = msg.textRepresentation();
-            var msgTokens = encoding.countTokensOrdinary(textRepresentation);
-            if (allTokens + msgTokens > limit) {
-                break;
-            }
-
-            allTokens += msgTokens;
-            recentTokens += msgTokens;
-            tailMessages.addFirst(msg);
-        }
-
-        var allMessages = new ArrayList<>(headMessages);
-        allMessages.addAll(tailMessages);
-
-        LOG.trace(
-                "Reduced from {} to {} messages with a total of {} / {} tokens (system: {}, ephemeral: {}, recent: {} )",
-                totalMessages, headMessages.size() + tailMessages.size(), allTokens, limit,
-                systemTokens, ephemeralTokens, recentTokens);
-
-        return allMessages;
     }
 
     @SuppressWarnings({ "unchecked" })
