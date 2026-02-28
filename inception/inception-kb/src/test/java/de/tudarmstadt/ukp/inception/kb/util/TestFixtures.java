@@ -246,7 +246,14 @@ public class TestFixtures
             var status = con.getResponseCode();
 
             if (status == HTTP_MOVED_TEMP || status == HTTP_MOVED_PERM) {
-                String location = con.getHeaderField("Location");
+                // Strip any query string from the Location header before recursing: the server
+                // may echo back the ?query= parameter we sent, and appending it again in the
+                // recursive call would result in "Multiple 'query=' parameters" errors.
+                var location = con.getHeaderField("Location");
+                var qIdx = location.indexOf('?');
+                if (qIdx >= 0) {
+                    location = location.substring(0, qIdx);
+                }
                 return isReachable(location);
             }
         }

@@ -144,6 +144,36 @@ wikidata:
   root-concepts:
     - http://www.wikidata.org/entity/Q35120
 
+#wikidata-qlever-demo:
+#  name: Wikidata (QLever Demo)
+#  type: REMOTE
+#  default-language: en
+#  base-prefix: http://www.wikidata.org/entity/
+#  access:
+#    access-url: https://qlever.dev/api/wikidata
+#    # full-text-search: https://www.mediawiki.org/ontology#API/search
+#  mapping:
+#    class: http://www.wikidata.org/entity/Q35120
+#    subclass-of: http://www.wikidata.org/prop/direct/P279
+#    instance-of: http://www.wikidata.org/prop/direct/P31
+#    label: http://www.w3.org/2000/01/rdf-schema#label
+#    property-type: http://www.wikidata.org/entity/Q18616576
+#    description: http://schema.org/description
+#    property-label: http://www.w3.org/2000/01/rdf-schema#label
+#    property-description: http://www.w3.org/2000/01/rdf-schema#comment
+#    subproperty-of: http://www.wikidata.org/prop/direct/P1647
+#    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
+#  info:
+#    description: |
+#      Wikidata is a free and open knowledge base and acts as central storage for the structured data
+#      of its Wikimedia sister projects including Wikipedia, Wikivoyage, Wikisource, and others.
+#      This copy is hosted at the University of Freiburg as part of the QLever demo.
+#    host-institution-name: "University of Freiburg: Algorithms and Data Structures Group"
+#    author-name: Wikidata editors
+#    website-url: https://github.com/ad-freiburg/qlever
+#  root-concepts:
+#    - http://www.wikidata.org/entity/Q35120
+
 yago:
   name: YAGO v4
   type: REMOTE
@@ -176,7 +206,7 @@ zbw-stw-economics:
   type: REMOTE
   default-language: en
   access:
-    access-url: http://zbw.eu/beta/sparql/stw/query
+    access-url: https://zbw.eu/beta/sparql/stw/query
     full-text-search: text:query
   mapping:
     class: http://www.w3.org/2004/02/skos/core#Concept
@@ -202,7 +232,7 @@ zbw-gnd:
   type: REMOTE
   default-language: en
   access:
-    access-url: http://zbw.eu/beta/sparql/gnd/query
+    access-url: https://zbw.eu/beta/sparql/gnd/query
     full-text-search: text:query
   mapping:
     class: http://www.w3.org/2002/07/owl#Class

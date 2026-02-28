@@ -257,7 +257,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         kb.setRootConcepts(asList(rootConcept1, rootConcept2));
         sut.updateKnowledgeBase(kb, sut.getNativeConfig());
 
-        KnowledgeBase savedKb = testEntityManager.find(KnowledgeBase.class, kb.getRepositoryId());
+        var savedKb = testEntityManager.find(KnowledgeBase.class, kb.getRepositoryId());
         assertThat(savedKb).as("Check that knowledge base was updated correctly")
                 .hasFieldOrPropertyWithValue("name", "New name")
                 .hasFieldOrPropertyWithValue("classIri", OWL.CLASS.stringValue())
