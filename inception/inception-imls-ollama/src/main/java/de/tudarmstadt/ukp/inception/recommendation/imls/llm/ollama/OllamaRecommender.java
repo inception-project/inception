@@ -28,8 +28,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatBasedLlmRecommenderImplBase;
@@ -89,7 +87,6 @@ public class OllamaRecommender
     }
 
     private JsonNode getResponseFormat(ResponseFormat aFormat, JsonNode aSchema)
-        throws JsonProcessingException
     {
         if (aSchema != null) {
             return aSchema;
