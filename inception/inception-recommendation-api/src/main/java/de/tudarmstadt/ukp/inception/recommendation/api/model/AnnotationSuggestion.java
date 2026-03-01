@@ -76,8 +76,16 @@ public abstract class AnnotationSuggestion
      */
     public static final int FLAG_TRANSIENT_CORRECTED = 1 << 5;
 
+    /**
+     * Suggestion is a no-label duplicate of another no-label suggestion for the same layer and
+     * position but a different feature. Since accepting any one of them creates the same empty
+     * annotation, all but one are suppressed.
+     */
+    public static final int FLAG_DUPLICATE = 1 << 6;
+
     public static final int FLAG_ALL = FLAG_OVERLAP | FLAG_SKIPPED | FLAG_REJECTED
-            | FLAG_TRANSIENT_ACCEPTED | FLAG_TRANSIENT_REJECTED | FLAG_TRANSIENT_CORRECTED;
+            | FLAG_TRANSIENT_ACCEPTED | FLAG_TRANSIENT_REJECTED | FLAG_TRANSIENT_CORRECTED
+            | FLAG_DUPLICATE;
 
     protected final int generation;
     protected final int id;
@@ -266,6 +274,9 @@ public abstract class AnnotationSuggestion
         }
         if ((hidingFlags & FLAG_TRANSIENT_CORRECTED) != 0) {
             sb.append("transient-corrected ");
+        }
+        if ((hidingFlags & FLAG_DUPLICATE) != 0) {
+            sb.append("duplicate ");
         }
         return sb.toString();
     }

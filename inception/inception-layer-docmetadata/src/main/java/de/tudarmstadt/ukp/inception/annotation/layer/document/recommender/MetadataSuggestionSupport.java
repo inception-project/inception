@@ -195,8 +195,8 @@ public class MetadataSuggestionSupport
             if (feat == null) {
                 // The feature does not exist in the type system of the CAS. Probably it has not
                 // been upgraded to the latest version of the type system yet. If this is the case,
-                // we'll just skip.
-                return;
+                // we'll just skip this feature.
+                continue;
             }
 
             // Reduce the suggestions to the ones for the given feature. We can use the tree here
