@@ -449,7 +449,8 @@ public abstract class WebAnnoTsv3WriterTestBase
     public void testSubMultiTokenSpanWithFeatureValue() throws Exception
     {
         JCas jcas = makeJCasOneSentence("aaaaaa bbbbbb cccccc");
-        assertThat(toText(select(jcas, Token.class))).isEqualTo(asList("aaaaaa", "bbbbbb", "cccccc"));
+        assertThat(toText(select(jcas, Token.class)))
+                .isEqualTo(asList("aaaaaa", "bbbbbb", "cccccc"));
 
         // @formatter:off
         //               1111111111 
@@ -496,7 +497,8 @@ public abstract class WebAnnoTsv3WriterTestBase
     public void testStackedSubMultiTokenSpanWithFeatureValue() throws Exception
     {
         JCas jcas = makeJCasOneSentence("aaaaaa bbbbbb cccccc");
-        assertThat(toText(select(jcas, Token.class))).isEqualTo(asList("aaaaaa", "bbbbbb", "cccccc"));
+        assertThat(toText(select(jcas, Token.class)))
+                .isEqualTo(asList("aaaaaa", "bbbbbb", "cccccc"));
 
         // @formatter:off
         //               1111111111 
