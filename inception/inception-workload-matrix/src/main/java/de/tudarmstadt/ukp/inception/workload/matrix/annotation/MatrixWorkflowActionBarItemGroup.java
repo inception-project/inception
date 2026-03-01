@@ -128,24 +128,31 @@ public class MatrixWorkflowActionBarItemGroup
 
     private LambdaAjaxLink createToggleDocumentStateLink(String aId)
     {
-        LambdaAjaxLink link;
-        if (reopenableByUser.getObject()) {
-            link = new LambdaAjaxLink(aId, this::actionToggleDocumentState);
-        }
-        else {
-            link = new LambdaAjaxLink(aId, this::actionRequestFinishDocumentConfirmation);
-        }
+        var link = new LambdaAjaxLink(aId, this::actionFinishOrReopen);
         link.setOutputMarkupId(true);
         link.add(enabledWhen(() -> page.isEditable() || reopenableByUser.getObject()));
         link.add(new InputBehavior(new KeyType[] { Ctrl, End }, click));
+
         var stateLabel = new Label("state");
         stateLabel.add(new CssClassNameModifier(LoadableDetachableModel.of(this::getStateClass)));
         stateLabel.add(AttributeModifier.replace("title", LoadableDetachableModel.of(() -> {
             var tooltip = this.getStateTooltip();
             return tooltip.wrapOnAssignment(stateLabel).getObject();
         })));
+
         link.add(stateLabel);
+
         return link;
+    }
+
+    private void actionFinishOrReopen(AjaxRequestTarget aTarget) throws AnnotationException, IOException
+    {
+        if (reopenableByUser.getObject()) {
+            actionToggleDocumentState(aTarget);
+        }
+        else {
+            actionRequestFinishDocumentConfirmation(aTarget);
+        }
     }
 
     private boolean isReopenableByUser()
@@ -164,6 +171,10 @@ public class MatrixWorkflowActionBarItemGroup
             return true;
         }
 
+        if (!traits.getObject().isReopenableByAnnotator()) {
+            return false;
+        }
+
         // Check latest state of the document
         srcDoc = documentService.getSourceDocument(srcDoc.getProject().getId(), srcDoc.getId());
         if (Set.of(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(srcDoc.getState())) {
@@ -171,7 +182,7 @@ public class MatrixWorkflowActionBarItemGroup
             return false;
         }
 
-        return traits.getObject().isReopenableByAnnotator();
+        return true;
     }
 
     protected AnnotationPageBase getAnnotationPage()
