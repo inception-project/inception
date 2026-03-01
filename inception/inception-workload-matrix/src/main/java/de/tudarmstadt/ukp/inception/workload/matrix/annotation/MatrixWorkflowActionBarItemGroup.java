@@ -87,6 +87,7 @@ public class MatrixWorkflowActionBarItemGroup
     private final AnnotationPageBase page;
     private final ModalDialog dialog;
     private final IModel<MatrixWorkloadTraits> traits;
+    private final LoadableDetachableModel<Boolean> reopenableByUser;
 
     public MatrixWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage)
     {
@@ -101,9 +102,19 @@ public class MatrixWorkflowActionBarItemGroup
         dialog = new BootstrapModalDialog("dialog");
         add(dialog);
 
+        reopenableByUser = LoadableDetachableModel.of(this::isReopenableByUser);
+
         add(createToggleDocumentStateLink("toggleDocumentState"));
 
         add(createResetDocumentLink("showResetDocumentDialog"));
+    }
+
+    @Override
+    protected void onDetach()
+    {
+        super.onDetach();
+        reopenableByUser.detach();
+        traits.detach();
     }
 
     private Component createResetDocumentLink(String aString)
@@ -118,14 +129,14 @@ public class MatrixWorkflowActionBarItemGroup
     private LambdaAjaxLink createToggleDocumentStateLink(String aId)
     {
         LambdaAjaxLink link;
-        if (isReopenableByUser()) {
+        if (reopenableByUser.getObject()) {
             link = new LambdaAjaxLink(aId, this::actionToggleDocumentState);
         }
         else {
             link = new LambdaAjaxLink(aId, this::actionRequestFinishDocumentConfirmation);
         }
         link.setOutputMarkupId(true);
-        link.add(enabledWhen(() -> page.isEditable() || isReopenableByUser()));
+        link.add(enabledWhen(() -> page.isEditable() || reopenableByUser.getObject()));
         link.add(new InputBehavior(new KeyType[] { Ctrl, End }, click));
         var stateLabel = new Label("state");
         stateLabel.add(new CssClassNameModifier(LoadableDetachableModel.of(this::getStateClass)));

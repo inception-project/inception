@@ -226,7 +226,10 @@ public class DocumentAccessImpl
                 if (Set.of(CURATION_IN_PROGRESS, CURATION_FINISHED)
                         .contains(aDocument.getState())) {
                     throw new AccessDeniedException(
-                            "This document is already past the annotation stage.");
+                            "This document is currently in curation and cannot be opened for "
+                                    + "annotation. Please ask your project manager or curator to "
+                                    + "reopen your annotation document via the monitoring/workload "
+                                    + "page.");
                 }
             }
 
