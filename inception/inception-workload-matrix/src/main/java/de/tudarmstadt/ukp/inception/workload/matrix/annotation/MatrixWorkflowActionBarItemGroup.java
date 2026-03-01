@@ -139,16 +139,21 @@ public class MatrixWorkflowActionBarItemGroup
 
     private boolean isReopenableByUser()
     {
+        var state = page.getModelObject();
+        var srcDoc = state.getDocument();
+
+        if (srcDoc == null) {
+            return false;
+        }
+
         // Curators can re-open documents anyway via the monitoring page, so we can always allow
         // the re-open documents here as well
-        var state = page.getModelObject();
         if (projectService.hasRole(userRepository.getCurrentUsername(), state.getProject(),
                 CURATOR)) {
             return true;
         }
 
         // Check latest state of the document
-        var srcDoc = state.getDocument();
         srcDoc = documentService.getSourceDocument(srcDoc.getProject().getId(), srcDoc.getId());
         if (Set.of(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(srcDoc.getState())) {
             // Annotators may not re-open documents once curation has started
