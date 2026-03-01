@@ -79,6 +79,8 @@
     <assertj.version>3.27.6</assertj.version>
     <xmlunit.version>2.11.0</xmlunit.version>
     <testcontainers.version>1.21.4</testcontainers.version>
+    <keycloak-admin-client.version>26.0.8</keycloak-admin-client.version>
+    <testcontainers-keycloak.version>4.1.1</testcontainers-keycloak.version>
 
     <awaitility.version>4.3.0</awaitility.version>
 

@@ -22,31 +22,35 @@ import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE;
 import static org.springframework.security.oauth2.core.OAuth2AccessToken.TokenType.BEARER;
 
+import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.authentication.AuthenticationEventPublisher;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.InceptionSecurityAutoConfiguration;
@@ -54,8 +58,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfigurati
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User_;
+import de.tudarmstadt.ukp.inception.security.config.SecurityOAuthRolesPropertiesImpl;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
-import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
+import net.minidev.json.JSONArray;
 
 @Transactional
 @ActiveProfiles(DeploymentModeService.PROFILE_AUTH_MODE_DATABASE)
@@ -184,20 +189,110 @@ class OAuth2AdapterImplTest
         assertThat(userService.list()).isEmpty();
     }
 
-    @SpringBootConfiguration
-    @AutoConfigurationPackage
-    public static class SpringConfig
+    @Nested
+    class RoleMapping
     {
-        @Bean
-        ApplicationContextProvider applicationContextProvider()
+        private static final String OAUTH2_GROUP_ADMIN = "/INCEPTION_ADMIN";
+        private static final String OAUTH2_GROUP_USER = "/INCEPTION_USER";
+        private static final String OAUTH2_GROUP_PROJECT_CREATOR = "/INCEPTION_PROJECT_CREATOR";
+        private static final String OAUTH2_GROUP_REMOTE = "/INCEPTION_REMOTE";
+
+        OAuth2AdapterImpl sutWithRoleMapping;
+        User testUser;
+        OAuth2User mockOAuth2User;
+
+        @BeforeEach
+        void setup()
         {
-            return new ApplicationContextProvider();
+            var props = new SecurityOAuthRolesPropertiesImpl();
+            props.setEnabled(true);
+            props.setClaim("groups");
+            props.setAdmin(OAUTH2_GROUP_ADMIN);
+            props.setUser(OAUTH2_GROUP_USER);
+            props.setProjectCreator(OAUTH2_GROUP_PROJECT_CREATOR);
+            props.setRemote(OAUTH2_GROUP_REMOTE);
+
+            sutWithRoleMapping = new OAuth2AdapterImpl(mock(UserDao.class),
+                    mock(OverridableUserDetailsManager.class), Optional.empty(), props);
+
+            testUser = new User();
+            testUser.setUsername(USERNAME);
+            mockOAuth2User = mock(OAuth2User.class);
         }
 
-        @Bean
-        AuthenticationEventPublisher authenticationEventPublisher()
+        @Test
+        void thatAdminRoleIsGivenIfMatchingGroupFound()
         {
-            return new DefaultAuthenticationEventPublisher();
+            var groups = new ArrayList<String>();
+            groups.add(OAUTH2_GROUP_ADMIN);
+            when(mockOAuth2User.getAttribute(anyString())).thenReturn(groups);
+
+            Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
+
+            assertThat(roles).containsExactlyInAnyOrder(Role.ROLE_ADMIN);
+        }
+
+        @Test
+        void thatUserRoleIsGivenIfMatchingGroupFound()
+        {
+            var groups = new ArrayList<String>();
+            groups.add(OAUTH2_GROUP_USER);
+            when(mockOAuth2User.getAttribute(anyString())).thenReturn(groups);
+
+            Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
+
+            assertThat(roles).containsExactlyInAnyOrder(Role.ROLE_USER);
+        }
+
+        @Test
+        void thatProjectCreatorRoleIsGivenIfMatchingGroupFound()
+        {
+            var groups = new ArrayList<String>();
+            groups.add(OAUTH2_GROUP_PROJECT_CREATOR);
+            when(mockOAuth2User.getAttribute(anyString())).thenReturn(groups);
+
+            Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
+
+            assertThat(roles).containsExactlyInAnyOrder(Role.ROLE_PROJECT_CREATOR);
+        }
+
+        @Test
+        void thatRemoteRoleIsGivenIfMatchingGroupFound()
+        {
+            var groups = new ArrayList<String>();
+            groups.add(OAUTH2_GROUP_REMOTE);
+            when(mockOAuth2User.getAttribute(anyString())).thenReturn(groups);
+
+            Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
+
+            assertThat(roles).containsExactlyInAnyOrder(Role.ROLE_REMOTE);
+        }
+
+        @Test
+        void thatAccessDeniedIfNoGroupMatchesAnyRole()
+        {
+            when(mockOAuth2User.getAttribute(anyString())).thenReturn(new ArrayList<String>());
+
+            assertThatExceptionOfType(AccessDeniedException.class).isThrownBy(
+                    () -> sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User));
+        }
+
+        /**
+         * Nimbus JOSE+JWT parses JSON arrays into {@code net.minidev.json.JSONArray} for
+         * non-standard claims. This test verifies that role mapping works correctly when the
+         * {@code groups} claim attribute has that runtime type (as opposed to {@code List<String>}
+         * produced by a manually-constructed token in the other tests).
+         */
+        @Test
+        void thatRoleIsMappedWhenGroupsClaimTypeIsNimbusJSONArray()
+        {
+            var groups = new JSONArray();
+            groups.add(OAUTH2_GROUP_ADMIN);
+            when(mockOAuth2User.getAttribute(anyString())).thenReturn(groups);
+
+            Set<Role> roles = sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User);
+
+            assertThat(roles).containsExactlyInAnyOrder(Role.ROLE_ADMIN);
         }
     }
 

@@ -189,6 +189,36 @@
       <artifactId>spring-boot-persistence</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.dasniko</groupId>
+      <artifactId>testcontainers-keycloak</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-admin-client</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-client-common-synced</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.minidev</groupId>
+      <artifactId>json-smart</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
+    </dependency>
   </dependencies>
   
   <build>
@@ -206,6 +236,9 @@
               -->
               <usedDependency>org.springframework:spring-jdbc</usedDependency>
             </usedDependencies>
+            <ignoredNonTestScopedDependencies combine.children="append">
+              <ignoredNonTestScopedDependency>org.springframework:spring-web</ignoredNonTestScopedDependency>
+            </ignoredNonTestScopedDependencies>
           </configuration>
         </plugin>
       </plugins>

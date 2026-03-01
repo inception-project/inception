@@ -25,15 +25,19 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ResolvableType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -55,8 +59,9 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.security.preauth.PreAuthUtils;
+import de.tudarmstadt.ukp.inception.security.config.SecurityOAuthRolesProperties;
 
 public class OAuth2AdapterImpl
     implements OAuth2Adapter
@@ -69,14 +74,17 @@ public class OAuth2AdapterImpl
     private final UserDao userRepository;
     private final OverridableUserDetailsManager userDetailsManager;
     private final Optional<ClientRegistrationRepository> clientRegistrationRepository;
+    private final SecurityOAuthRolesProperties oAuth2Properties;
 
     public OAuth2AdapterImpl(@Lazy UserDao aUserRepository,
             @Lazy OverridableUserDetailsManager aUserDetailsManager,
-            @Lazy Optional<ClientRegistrationRepository> aClientRegistrationRepository)
+            @Lazy Optional<ClientRegistrationRepository> aClientRegistrationRepository,
+            SecurityOAuthRolesProperties aOAuth2Properties)
     {
         userRepository = aUserRepository;
         userDetailsManager = aUserDetailsManager;
         clientRegistrationRepository = aClientRegistrationRepository;
+        oAuth2Properties = aOAuth2Properties;
     }
 
     @Override
@@ -150,6 +158,14 @@ public class OAuth2AdapterImpl
         if (u != null) {
             denyAccessToDeactivatedUsers(u);
             denyAccessOfRealmsDoNotMatch(realm, u);
+
+            // Only sync roles from OAuth2 group mappings when the feature is enabled.
+            // Otherwise, manually assigned roles would be silently overwritten on every login.
+            if (oAuth2Properties.isEnabled()) {
+                u.setRoles(getOAuth2UserRoles(u, user));
+                userRepository.update(u);
+            }
+
             return u;
         }
 
@@ -163,7 +179,8 @@ public class OAuth2AdapterImpl
         u.setPassword(NO_PASSWORD);
         u.setEnabled(true);
         u.setRealm(realm);
-        u.setRoles(PreAuthUtils.getPreAuthenticationNewUserRoles(u));
+
+        u.setRoles(getOAuth2UserRoles(u, user));
 
         String email = user.getAttribute("email");
         if (email != null) {
@@ -188,6 +205,58 @@ public class OAuth2AdapterImpl
         userRepository.create(u);
 
         return u;
+    }
+
+    Set<Role> getOAuth2UserRoles(User aUser, OAuth2User aOAuth2User) throws AccessDeniedException
+    {
+        Set<Role> roles = new HashSet<>();
+
+        if (!oAuth2Properties.isEnabled()) {
+            roles.add(Role.ROLE_USER);
+            return roles;
+        }
+
+        var rawClaim = aOAuth2User.getAttribute(oAuth2Properties.getClaim());
+
+        if (!(rawClaim instanceof Collection<?> oauth2groups) || oauth2groups.isEmpty()) {
+            LOG.warn("OAuth2 roles mapping is enabled, but user [{}] doesn't have any roles, "
+                    + "or the corresponding claim is empty", aUser.getUsername());
+            throw new AccessDeniedException(
+                    "OAuth2 roles mapping is enabled, but user [" + aUser.getUsername()
+                            + "] doesn't have any roles, or the corresponding claim is empty");
+        }
+
+        oauth2groups.stream() //
+                .filter(String.class::isInstance) //
+                .map(String.class::cast) //
+                .forEach(group -> matchOAuth2GroupToRole(group, roles));
+
+        if (roles.isEmpty()) {
+            LOG.warn("User [{}] doesn't belong to any role", aUser.getUsername());
+            throw new AccessDeniedException(
+                    "User [" + aUser.getUsername() + "] doesn't belong to any role");
+        }
+
+        return roles;
+    }
+
+    private void matchOAuth2GroupToRole(String aOAuth2Group, Set<Role> aUserRoles)
+    {
+        if (StringUtils.equals(aOAuth2Group, oAuth2Properties.getAdmin())) {
+            aUserRoles.add(Role.ROLE_ADMIN);
+        }
+
+        if (StringUtils.equals(aOAuth2Group, oAuth2Properties.getUser())) {
+            aUserRoles.add(Role.ROLE_USER);
+        }
+
+        if (StringUtils.equals(aOAuth2Group, oAuth2Properties.getProjectCreator())) {
+            aUserRoles.add(Role.ROLE_PROJECT_CREATOR);
+        }
+
+        if (StringUtils.equals(aOAuth2Group, oAuth2Properties.getRemote())) {
+            aUserRoles.add(Role.ROLE_REMOTE);
+        }
     }
 
     private void denyAccessToUsersWithIllegalUsername(String aUsername)

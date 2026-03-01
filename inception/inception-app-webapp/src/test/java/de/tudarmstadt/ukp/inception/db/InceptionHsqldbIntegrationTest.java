@@ -66,9 +66,11 @@ class InceptionHsqldbIntegrationTest
                 // a non-temporary folder on Windows because open files cannot be deleted.
                 STATIC_TEST_FOLDER.mkdirs();
                 registry.add("inception.home", () -> STATIC_TEST_FOLDER);
+
             }
             else {
                 registry.add("inception.home", () -> tempDir.toString());
+
             }
         }
 
