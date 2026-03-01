@@ -269,12 +269,27 @@ class OAuth2AdapterImplTest
         }
 
         @Test
-        void thatAccessDeniedIfNoGroupMatchesAnyRole()
+        void thatAccessDeniedIfGroupsClaimIsEmpty()
         {
             when(mockOAuth2User.getAttribute(anyString())).thenReturn(new ArrayList<String>());
 
-            assertThatExceptionOfType(AccessDeniedException.class).isThrownBy(
-                    () -> sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User));
+            assertThatExceptionOfType(AccessDeniedException.class)
+                    .isThrownBy(
+                            () -> sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User))
+                    .withMessageContaining("corresponding claim is empty");
+        }
+
+        @Test
+        void thatAccessDeniedIfNoGroupMatchesAnyRole()
+        {
+            var groups = new ArrayList<String>();
+            groups.add("/SOME_OTHER_GROUP");
+            when(mockOAuth2User.getAttribute(anyString())).thenReturn(groups);
+
+            assertThatExceptionOfType(AccessDeniedException.class)
+                    .isThrownBy(
+                            () -> sutWithRoleMapping.getOAuth2UserRoles(testUser, mockOAuth2User))
+                    .withMessageContaining("doesn't belong to any role");
         }
 
         /**
