@@ -232,17 +232,16 @@ public class KnowledgeBaseServiceRemoteTest
 
         // YAGO seems to have a problem atm 29-04-2023
         // kbList.add(TestConfiguration.fromProfile(PROFILES.get("yago"),
-        //         "http://yago-knowledge.org/resource/Elvis_Presley", maxResults));
+        // "http://yago-knowledge.org/resource/Elvis_Presley", maxResults));
 
         // zbw-stw-economics has no root-concepts defined in the profile, so we specify them here
         kbList.add(TestConfiguration.fromProfile(PROFILES.get("zbw-stw-economics"),
-                "http://zbw.eu/stw/thsys/71020", maxResults,
-                Set.of("http://zbw.eu/stw/thsys/a")));
+                "http://zbw.eu/stw/thsys/71020", maxResults, Set.of("http://zbw.eu/stw/thsys/a")));
 
         // Commenting this out for the moment because we expect that every ontology contains
         // property definitions. However, this one does not include any property definitions!
         // kbList.add(TestConfiguration.fromProfile(PROFILES.get("zbw-gnd"),
-        //         "...", maxResults));
+        // "...", maxResults));
 
         return kbList;
     }
@@ -289,15 +288,15 @@ public class KnowledgeBaseServiceRemoteTest
             parentChildIdentifier = aParentChildIdentifier;
         }
 
-        static TestConfiguration fromProfile(KnowledgeBaseProfile aProfile,
-                String aTestIdentifier, int aMaxResults)
+        static TestConfiguration fromProfile(KnowledgeBaseProfile aProfile, String aTestIdentifier,
+                int aMaxResults)
         {
             return fromProfile(aProfile, aTestIdentifier, aMaxResults,
                     new HashSet<>(aProfile.getRootConcepts()));
         }
 
-        static TestConfiguration fromProfile(KnowledgeBaseProfile aProfile,
-                String aTestIdentifier, int aMaxResults, Set<String> aExpectedRootConcepts)
+        static TestConfiguration fromProfile(KnowledgeBaseProfile aProfile, String aTestIdentifier,
+                int aMaxResults, Set<String> aExpectedRootConcepts)
         {
             var kb = new KnowledgeBase();
             kb.setName(aProfile.getName());
@@ -315,8 +314,8 @@ public class KnowledgeBaseServiceRemoteTest
             if (aProfile.getType() == LOCAL) {
                 accessUrl = accessUrl.replaceFirst("^classpath:", "");
             }
-            return new TestConfiguration(accessUrl, kb, aTestIdentifier,
-                    aExpectedRootConcepts, Map.of());
+            return new TestConfiguration(accessUrl, kb, aTestIdentifier, aExpectedRootConcepts,
+                    Map.of());
         }
 
         public KnowledgeBase getKnowledgeBase()
