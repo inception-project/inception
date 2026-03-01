@@ -23,7 +23,9 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;
+import static java.util.Comparator.comparingDouble;
 import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -52,7 +54,6 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.lang.Nullable;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -274,28 +275,64 @@ public class SpanSuggestionSupport
                             recordedAnnotations));
         }
 
-        // Cross-feature deduplication: when multiple recommenders target different features of
-        // the same layer and all produce no-label suggestions at the same position, each would
-        // create an identical empty annotation. Keep only the first visible one per position
-        // and hide the rest to avoid showing duplicate "(Span)" suggestion markers.
-        // Note: suggestions for the SAME feature from multiple recommenders are intentionally
-        // left alone here - the SuggestionGroup already conflates them, and both need to remain
-        // visible so the lazy detail can show all recommenders and their scores.
-        var firstFeaturePerOffset = new HashMap<Offset, String>();
+        hideRedundantNoLabelSpanSuggestions(suggestionsInWindow);
+    }
+
+    private <T extends AnnotationSuggestion> void hideRedundantNoLabelSpanSuggestions(
+            List<SuggestionGroup<T>> suggestionsInWindow)
+    {
+        // No-label deduplication:
+        //
+        // (1) If a recommender has any labeled suggestion at a given position (for any feature),
+        // its no-label suggestions there are redundant - the recommender made a specific
+        // prediction - and are hidden.
+        //
+        // (2) Otherwise, if a recommender has multiple no-label suggestions at the same position
+        // (e.g. a multi-feature extractor iterating all features), keep only the highest-scoring
+        // one and hide the rest. Suggestions from different recommenders each retain one
+        // representative so the lazy detail can show all recommenders and their scores.
+        record OffsetAndRecommender(int begin, int end, long recommenderId) {}
+
+        // Collect (offset, recommender) pairs that have at least one visible labeled suggestion
+        var offsetsWithLabeledSuggestion = suggestionsInWindow.stream() //
+                .flatMap(SuggestionGroup::stream) //
+                .filter(AnnotationSuggestion::isVisible) //
+                .filter(s -> s instanceof SpanSuggestion) //
+                .map(s -> (SpanSuggestion) s) //
+                .filter(s -> s.getLabel() != null) //
+                .map(s -> new OffsetAndRecommender(s.getBegin(), s.getEnd(), s.getRecommenderId())) //
+                .collect(toSet());
+
+        var noLabelByOffsetAndRecommender = new HashMap<OffsetAndRecommender, List<SpanSuggestion>>();
         suggestionsInWindow.stream() //
                 .flatMap(SuggestionGroup::stream) //
                 .filter(AnnotationSuggestion::isVisible) //
                 .filter(s -> s instanceof SpanSuggestion) //
                 .map(s -> (SpanSuggestion) s) //
                 .filter(s -> s.getLabel() == null) //
-                .forEach(s -> {
-                    var offset = new Offset(s.getBegin(), s.getEnd());
-                    var firstFeature = firstFeaturePerOffset.computeIfAbsent(offset,
-                            $ -> s.getFeature());
-                    if (!firstFeature.equals(s.getFeature())) {
-                        s.hide(FLAG_DUPLICATE);
-                    }
-                });
+                .forEach(s -> noLabelByOffsetAndRecommender //
+                        .computeIfAbsent(new OffsetAndRecommender(s.getBegin(), s.getEnd(),
+                                s.getRecommenderId()), $ -> new ArrayList<>()) //
+                        .add(s));
+        noLabelByOffsetAndRecommender.forEach((key, group) -> {
+            if (offsetsWithLabeledSuggestion.contains(key)) {
+                // The recommender made a prediction with label at this position - no-label
+                // suggestions are redundant regardless of which feature they target
+                group.forEach(s -> s.hide(FLAG_DUPLICATE));
+                return;
+            }
+
+            // No labeled suggestion: keep only the highest-scoring no-label per recommender
+            // (cross-feature dedup for multi-feature extractors)
+            if (group.size() > 1) {
+                var best = group.stream() //
+                        .max(comparingDouble(AnnotationSuggestion::getScore)) //
+                        .orElseThrow();
+                group.stream() //
+                        .filter(s -> s != best) //
+                        .forEach(s -> s.hide(FLAG_DUPLICATE));
+            }
+        });
     }
 
     private void hideSpanSuggestionsThatOverlapWithAnnotations(
@@ -422,7 +459,6 @@ public class SpanSuggestionSupport
                 .toList();
     }
 
-    @Nullable
     private Type getAnnotationType(CAS aCas, AnnotationLayer aLayer)
     {
         // NOTE: In order to avoid having to upgrade the "original CAS" in computePredictions,this
