@@ -45,6 +45,8 @@ In both cases, do not forget to save your changes by pressing the *Save* button.
 
 | `ROLE_ADMIN`
 | *Administrator.* Can manage users and has access to all other functionalities.
+  Note that `ROLE_ADMIN` does **not** imply `ROLE_USER`.
+  An administrator who also needs to use the application as a regular user must hold both roles.
 
 | `ROLE_REMOTE`
 | *Remote API access.* Can access the remote API.

@@ -55,3 +55,71 @@ If you want to try this with a local testing instance of Keycloak, you can do th
 When you restart {product-name} and access the login page now, it should offer a login option called
 *Keycloak*. You can change the label of that option by changing the 
 `security.oauth2.client.registration.inception-client-oauth.client-name` setting.
+
+[[sect_security_authentication_oauth2_role_mapping]]
+== Group-to-role mapping
+
+By default, every user that successfully authenticates via OAuth2/OIDC receives `ROLE_USER` and can
+log in. Additional {product-name} roles (`ROLE_ADMIN`, `ROLE_PROJECT_CREATOR`, `ROLE_REMOTE`) must
+then be assigned manually by an administrator inside the application.
+
+Alternatively, {product-name} can derive roles automatically from an OIDC token claim (typically
+named `groups`) by mapping group names to {product-name} roles. This is configured with the
+`security.oauth2.roles.*` properties.
+
+NOTE: When group-to-role mapping is disabled (the default), roles assigned manually by an
+      administrator are preserved across logins. Enabling group-to-role mapping means that roles
+      are re-derived from the OIDC token on every login, so any manually assigned roles will be
+      overwritten.
+
+.Group-to-role mapping properties
+[cols="2,1,3"]
+|===
+| Property | Default | Description
+
+| `security.oauth2.roles.enabled`
+| `false`
+| Set to `true` to activate group-to-role mapping. When disabled, all authenticated users receive `ROLE_USER` regardless of their group memberships.
+
+| `security.oauth2.roles.claim`
+| `groups`
+| Name of the OIDC token claim that contains the user's group memberships.
+
+| `security.oauth2.roles.admin`
+| (none)
+| Group name (or path) that grants `ROLE_ADMIN`.
+  Note that `ROLE_ADMIN` does **not** imply `ROLE_USER`.
+  An admin who also needs to use the application as a regular user must be placed in both the admin group and the user group.
+
+| `security.oauth2.roles.user`
+| (none)
+| Group name (or path) that grants `ROLE_USER`.
+
+| `security.oauth2.roles.project-creator`
+| (none)
+| Group name (or path) that grants `ROLE_PROJECT_CREATOR`.
+
+| `security.oauth2.roles.remote`
+| (none)
+| Group name (or path) that grants `ROLE_REMOTE`.
+|===
+
+NOTE: When `security.oauth2.roles.enabled=true` and a user's token does not match any configured
+group, login is denied with an access-denied error.
+
+The following example maps Keycloak group paths (which include a leading `/`) to {product-name}
+roles. The `groups` claim must be configured as a protocol mapper on the Keycloak client.
+
+.Example: Map Keycloak groups to {product-name} roles
+----
+security.oauth2.roles.enabled=true
+security.oauth2.roles.claim=groups
+security.oauth2.roles.admin=/INCEPTION_ADMIN
+security.oauth2.roles.user=/INCEPTION_USER
+security.oauth2.roles.project-creator=/INCEPTION_PROJECT_CREATOR
+security.oauth2.roles.remote=/INCEPTION_REMOTE
+----
+
+NOTE: Keycloak group claims use the full group path (e.g. `/INCEPTION_ADMIN`), not just the group
+      name. Other identity providers may use plain group names without the leading `/`. Check the
+      actual claim value in the token issued by your provider and set the properties accordingly.
