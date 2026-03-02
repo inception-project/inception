@@ -283,7 +283,7 @@ public class AnnotationToolLibrary
             @ToolParam(value = "suggestions", description = //
             "List of span suggestions with the fields `text`, `before` (for context before), " //
                     + "`after` (for context after) and `label`. " //
-                    + "Use the context only is text is ambiguous, otherwise leave it empty.") //
+                    + "Omit the`before` and `after` context if `text` is unambiguous.") //
             List<MatchSpec> aSuggestions)
         throws IOException
     {

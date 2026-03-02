@@ -74,7 +74,13 @@ export function buildGroups(messages: MChatMessage[]): MGroupItem[] {
         let lastCompletedThinking: MTextMessage | null = null;
         for (let i = temp.length - 1; i >= 0; i--) {
             const maybe = temp[i];
-            if (isTextMessage(maybe) && maybe.thinking) {
+            if (!isTextMessage(maybe)) continue;
+
+            if (maybe.content) {
+                closed = true; // if any content message is present, the group is considered closed
+            }
+
+            if (maybe.thinking) {
                 if (!activeThinking && !maybe.done) {
                     activeThinking = maybe;
                 }
@@ -113,6 +119,31 @@ export function buildGroups(messages: MChatMessage[]): MGroupItem[] {
             flushTemp(true);
             console.debug('[assistant] Adding user message as single:', m.id);
             groups.push({ type: 'single', message: m });
+            continue;
+        }
+
+        // If this is a text message that contains rendered content, treat it
+        // as a delimiter: flush any running group and show this message
+        // directly. This ensures that finalized content messages (e.g. full
+        // assistant replies) are not collapsed together with subsequent
+        // tool/call responses or streaming messages.
+        // Preserve system Error messages as groupable (they should be shown
+        // as part of the running group). Only treat plain text messages with
+        // content as delimiters when they are not system Error envelopes.
+        if (isTextMessage(m) && m.content && !(m.role === 'system' && m.actor === 'Error')) {
+            // If there is an active buffered group, append the content message
+            // to that group and flush afterwards so the content becomes the
+            // last element in the group. If there is no buffered group,
+            // behave as before and emit the content message as a single item.
+            if (temp.length > 0) {
+                console.debug('[assistant] Appending content message to running group and flushing:', m.id);
+                temp.push(m);
+                flushTemp(true);
+            } else {
+                flushTemp(true);
+                console.debug('[assistant] Adding content message as single:', m.id);
+                groups.push({ type: 'single', message: m });
+            }
             continue;
         }
 
