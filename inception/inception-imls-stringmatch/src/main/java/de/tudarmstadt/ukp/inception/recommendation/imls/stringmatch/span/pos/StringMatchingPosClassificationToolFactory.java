@@ -26,7 +26,7 @@ import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;

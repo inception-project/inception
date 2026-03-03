@@ -22,7 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize
 public class OAuthSessionImpl

@@ -27,6 +27,7 @@ import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.contentOf;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -35,12 +36,14 @@ import java.util.HashMap;
 import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.uima.cas.CAS;
+import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XWriter;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
+@Execution(CONCURRENT)
 public class CasMergeSuiteTest
     extends CasMergeTestBase
 {

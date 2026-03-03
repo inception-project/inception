@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.editor.state;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.wicket.event.Broadcast.BREADTH;
@@ -43,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -53,10 +53,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorStateMetaDataKey;
@@ -66,6 +65,7 @@ import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderSlotsEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerTypes;
 
 /**
  * Data model for annotation editors
@@ -162,7 +162,10 @@ public class AnnotatorStateImpl
     /**
      * The Mode of the current operations as either {@link Mode#ANNOTATION} or as
      * {@link Mode#CURATION}
+     * 
+     * @deprecated Should no longer be used
      */
+    @Deprecated
     private Mode mode;
 
     /**
@@ -203,9 +206,20 @@ public class AnnotatorStateImpl
 
     private Map<AnnotatorStateMetaDataKey<?>, Object> metaData = new HashMap<>();
 
+    private AnchoringMode anchoringMode;
+
+    /**
+     * @deprecated Use {@link #AnnotatorStateImpl()} instead.
+     */
+    @Deprecated
     public AnnotatorStateImpl(Mode aMode)
     {
         mode = aMode;
+    }
+
+    public AnnotatorStateImpl()
+    {
+        mode = Mode.ANNOTATION;
     }
 
     @Override
@@ -354,10 +368,9 @@ public class AnnotatorStateImpl
     @Override
     public void setPageBegin(CAS aCas, int aOffset)
     {
-        PagingStrategy ps = getPagingStrategy();
-
-        setVisibleUnits(ps.unitsStartingAtOffset(aCas, aOffset, getPreferences().getWindowSize()),
-                ps.unitCount(aCas));
+        var ps = getPagingStrategy();
+        var units = ps.unitsStartingAtOffset(aCas, aOffset, getPreferences().getWindowSize());
+        setVisibleUnits(units, ps.unitCount(aCas));
     }
 
     @Override
@@ -434,7 +447,7 @@ public class AnnotatorStateImpl
         // Make sure the currently selected layer is actually visible/exists
         if (!annotationLayers.contains(selectedAnnotationLayer)) {
             selectedAnnotationLayer = annotationLayers.stream() //
-                    .filter(layer -> layer.getType().equals(SPAN_TYPE)) //
+                    .filter(layer -> layer.getType().equals(LayerTypes.SPAN_LAYER_TYPE)) //
                     .findFirst() //
                     .orElse(null);
             defaultAnnotationLayer = selectedAnnotationLayer;
@@ -462,8 +475,8 @@ public class AnnotatorStateImpl
                 continue;
             }
 
-            if (layer.getType().equals(SpanLayerSupport.TYPE)
-                    || layer.getType().equals(ChainLayerSupport.TYPE)) {
+            if (layer.getType().equals(LayerTypes.SPAN_LAYER_TYPE)
+                    || layer.getType().equals(LayerTypes.CHAIN_LAYER_TYPE)) {
                 selectableLayers.add(layer);
             }
         }
@@ -815,6 +828,36 @@ public class AnnotatorStateImpl
             Page page = (Page) handler.get().getPage();
             page.send(page, BREADTH, new AnnotatorViewportChangedEvent(
                     requestCycle.find(AjaxRequestTarget.class).orElse(null)));
+        }
+    }
+
+    @Override
+    public AnchoringMode getAnchoringMode()
+    {
+        return anchoringMode;
+    }
+
+    @Override
+    public void setAnchoringMode(AnchoringMode aAnchoringMode)
+    {
+        anchoringMode = aAnchoringMode;
+    }
+
+    @Override
+    public void syncAnchoringModeToDefaultLayer(AnchoringModePrefs aAnchoringPrefs)
+    {
+        var defaultLayer = getDefaultAnnotationLayer();
+        if (defaultLayer == null) {
+            setAnchoringMode(null);
+            return;
+        }
+
+        var prefAnchoringMode = aAnchoringPrefs.getAnchoringMode(defaultLayer);
+        if (prefAnchoringMode.map(defaultLayer.getAnchoringMode()::allows).orElse(false)) {
+            prefAnchoringMode.ifPresent(this::setAnchoringMode);
+        }
+        else {
+            setAnchoringMode(defaultLayer.getAnchoringMode());
         }
     }
 }

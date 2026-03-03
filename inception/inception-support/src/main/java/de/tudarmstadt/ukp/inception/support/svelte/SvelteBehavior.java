@@ -28,7 +28,6 @@ import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.markup.head.CssReferenceHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
-import org.apache.wicket.request.IRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.resource.ResourceReferenceRequestHandler;
 import org.apache.wicket.request.resource.PackageResourceReference;
@@ -130,10 +129,10 @@ public class SvelteBehavior
 
     private CharSequence initScript(Component aComponent)
     {
-        IRequestHandler handler = new ResourceReferenceRequestHandler(jsRef);
-        String url = RequestCycle.get().urlFor(handler).toString();
+        var handler = new ResourceReferenceRequestHandler(jsRef);
+        var url = RequestCycle.get().urlFor(handler).toString();
 
-        Object model = host.getDefaultModelObject();
+        var model = host.getDefaultModelObject();
         String propsJson;
         try {
             propsJson = model != null ? toInterpretableJsonString(model) : "{}";
@@ -142,7 +141,7 @@ public class SvelteBehavior
             throw new RuntimeException(e);
         }
 
-        String id = aComponent.getMarkupId();
+        var id = aComponent.getMarkupId();
         return String.join("\n", //
                 "{", //
                 "  let element = document.getElementById('" + id + "');", //

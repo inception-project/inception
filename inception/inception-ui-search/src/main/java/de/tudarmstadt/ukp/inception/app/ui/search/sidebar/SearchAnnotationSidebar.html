@@ -25,10 +25,17 @@
         <wicket:message key="search"/>
         <div class="actions">
           <span wicket:id="limitedToCurrentDocument"/>
+          <span class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
+            <button class="btn btn-action btn-secondary dropdown-toggle flex-content" type="button" data-bs-toggle="dropdown" wicket:message="title:history">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </button>
+            <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 440px;">
+              <div wicket:id="history"/>
+            </div>
+          </span>
           <span class="dropdown" aria-haspopup="true" aria-expanded="false">
             <button class="btn btn-action btn-secondary dropdown-toggle flex-content" type="button" data-bs-toggle="dropdown" wicket:message="title:options">
-              <i class="fas fa-cog"></i>&nbsp;
-              <span class="d-none d-xxl-inline"><wicket:message key="options"/></span>
+              <i class="fas fa-cog"></i>
             </button>
             <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 440px;">
               <form wicket:id="searchOptionsForm">

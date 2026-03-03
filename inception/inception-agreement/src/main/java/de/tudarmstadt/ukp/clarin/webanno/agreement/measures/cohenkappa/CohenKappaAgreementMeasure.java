@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.cohenkappa;
 
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.CodingStudyUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toCollection;
 
@@ -34,18 +33,21 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreemen
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class CohenKappaAgreementMeasure
     extends CodingAgreementMeasure_ImplBase<DefaultAgreementTraits>
 {
     private final AnnotationSchemaService annotationService;
+    private final DiffAdapterRegistry diffAdapterRegistry;
 
     public CohenKappaAgreementMeasure(AnnotationFeature aFeature, DefaultAgreementTraits aTraits,
-            AnnotationSchemaService aAnnotationService)
+            AnnotationSchemaService aAnnotationService, DiffAdapterRegistry aDiffAdapterRegistry)
     {
         super(aFeature, aTraits);
         annotationService = aAnnotationService;
+        diffAdapterRegistry = aDiffAdapterRegistry;
     }
 
     @Override
@@ -53,7 +55,7 @@ public class CohenKappaAgreementMeasure
     {
         var feature = getFeature();
 
-        var adapters = getDiffAdapters(annotationService, asList(feature.getLayer()));
+        var adapters = diffAdapterRegistry.getDiffAdapters(asList(feature.getLayer()));
 
         var diff = doDiff(adapters, aCasMap);
 

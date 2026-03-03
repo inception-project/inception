@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.text;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -42,8 +41,8 @@ public class PretokenizedLineOrientedTextReaderTest
 
         reader.getNext(doc.getCas());
 
-        assertEquals(169, select(doc, Sentence.class).size());
-        assertEquals(1581, select(doc, Token.class).size());
+        assertThat(select(doc, Sentence.class)).hasSize(169);
+        assertThat(select(doc, Token.class)).hasSize(1581);
     }
 
     @Test

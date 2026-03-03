@@ -2,7 +2,7 @@
 name: "⚙️ Refactoring (for developers)" 
 about: Refactor the application
 type: "⚙️ Refactoring"
-labels: ["⚙️ Refactoring"]
+labels: []
 ---
 
 **Describe the refactoring action**

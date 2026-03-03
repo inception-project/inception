@@ -60,6 +60,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -77,6 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.project.api.event.PrepareProjectExportEvent;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
 import de.tudarmstadt.ukp.inception.project.export.task.backup.BackupProjectExportTask;
@@ -109,6 +111,7 @@ public class ProjectExportServiceImpl
     private final ScheduledExecutorService cleaningScheduler;
     private final ApplicationContext applicationContext;
     private final SchedulingService schedulingService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     private final List<ProjectExporter> exportersProxy;
     private List<ProjectExporter> exporters;
@@ -116,12 +119,14 @@ public class ProjectExportServiceImpl
     @Autowired
     public ProjectExportServiceImpl(ApplicationContext aApplicationContext,
             @Lazy @Autowired(required = false) List<ProjectExporter> aExporters,
-            @Autowired ProjectService aProjectService, SchedulingService aSchedulingService)
+            ProjectService aProjectService, SchedulingService aSchedulingService,
+            ApplicationEventPublisher aApplicationEventPublisher)
     {
         applicationContext = aApplicationContext;
         exportersProxy = aExporters;
         projectService = aProjectService;
         schedulingService = aSchedulingService;
+        applicationEventPublisher = aApplicationEventPublisher;
 
         taskExecutorService = Executors.newFixedThreadPool(4);
 
@@ -175,11 +180,11 @@ public class ProjectExportServiceImpl
     public File exportProject(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
         throws ProjectExportException, IOException, InterruptedException
     {
-        String filename = aRequest.getProject().getSlug();
+        var filename = aRequest.getProject().getSlug();
         // temp-file prefix must be at least 3 chars
         filename = StringUtils.rightPad(filename, 3, "_");
-        File projectZipFile = File.createTempFile(filename, ".zip");
-        boolean success = false;
+        var projectZipFile = File.createTempFile(filename, ".zip");
+        var success = false;
         try {
             exportProject(aRequest, aMonitor, projectZipFile);
             success = true;
@@ -192,13 +197,11 @@ public class ProjectExportServiceImpl
         }
     }
 
-    @Override
-    @Transactional
-    public void exportProject(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+    private void exportProject(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             File aProjectZipFile)
         throws ProjectExportException, IOException, InterruptedException
     {
-        boolean success = false;
+        var success = false;
         File exportTempDir = null;
         try (var logCtx = withProjectLogger(aRequest.getProject())) {
             // Directory to store source documents and annotation documents
@@ -243,6 +246,9 @@ public class ProjectExportServiceImpl
             ProjectExportTaskMonitor aMonitor, ZipOutputStream aZip)
         throws ProjectExportException, IOException, InterruptedException
     {
+        applicationEventPublisher
+                .publishEvent(new PrepareProjectExportEvent(this, aRequest.getProject()));
+
         var deque = new LinkedList<>(exporters);
         var exportersSeen = new HashSet<Class<? extends ProjectExporter>>();
         Set<ProjectExporter> exportersDeferred = SetUtils.newIdentityHashSet();

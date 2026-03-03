@@ -59,7 +59,7 @@ public class DefaultAnnotationSidebarStatePanel
 
         defaultTab = Model.of();
 
-        LambdaForm<Void> form = new LambdaForm<>("form");
+        var form = new LambdaForm<Void>("form");
 
         var description = new Label("description", defaultTab.map(SidebarHandle::getDescription));
         description.setOutputMarkupPlaceholderTag(true);
@@ -110,7 +110,7 @@ public class DefaultAnnotationSidebarStatePanel
 
     private List<SidebarHandle> listAvailableSidebars()
     {
-        return annotationSidebarRegistry.getSidebarFactories().stream() //
+        return annotationSidebarRegistry.getExtensions().stream() //
                 .map(SidebarHandle::new) //
                 .collect(toList());
     }

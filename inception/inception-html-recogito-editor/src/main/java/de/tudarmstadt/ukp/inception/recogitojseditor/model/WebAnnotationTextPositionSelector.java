@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recogitojseditor.model;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+@JsonPropertyOrder({ "start", "end" })
 public class WebAnnotationTextPositionSelector
     extends WebAnnotationSelector
 {

@@ -18,7 +18,8 @@
 
 package de.tudarmstadt.ukp.inception.curation.merge;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static de.tudarmstadt.ukp.inception.support.uima.FeatureStructureBuilder.buildFS;
 import static java.util.Arrays.asList;
@@ -40,6 +41,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.dkpro.core.io.conll.Conll2006Reader;
@@ -48,8 +50,8 @@ import org.dkpro.core.io.xmi.XmiReader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XReader;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 
 public class CurationTestUtils
 {
@@ -236,11 +238,11 @@ public class CurationTestUtils
             }
 
         }
-        else if (aType.equals(RELATION_TYPE)) {
+        else if (aType.equals(RelationLayerSupport.TYPE)) {
             var td = type.addType(aTypeName, "", CAS.TYPE_NAME_ANNOTATION);
 
-            td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", aAttacheType);
-            td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", aAttacheType);
+            td.addFeature(FEAT_REL_TARGET, "", aAttacheType);
+            td.addFeature(FEAT_REL_SOURCE, "", aAttacheType);
 
             for (var feature : aFeatures) {
                 td.addFeature(feature, "", "uima.cas.String");
@@ -274,9 +276,8 @@ public class CurationTestUtils
         var filler = new NamedEntity(aCas, aTargetBegin, aTargetEnd);
         filler.addToIndexes();
 
-        return buildFS(aCas.getCas(), LINK_TYPE) //
-                .withFeature(TARGET_FEATURE, filler) //
-                .buildAndAddToIndexes();
+        return linkTo(null, filler);
+
     }
 
     public static FeatureStructure makeLinkFS(JCas aCas, String aRole, int aTargetBegin,
@@ -285,9 +286,14 @@ public class CurationTestUtils
         var filler = new NamedEntity(aCas, aTargetBegin, aTargetEnd);
         filler.addToIndexes();
 
-        return buildFS(aCas.getCas(), LINK_TYPE) //
+        return linkTo(aRole, filler);
+    }
+
+    public static FeatureStructure linkTo(String aRole, Annotation aFiller)
+    {
+        return buildFS(aFiller.getJCas().getCas(), LINK_TYPE) //
                 .withFeature(ROLE_FEATURE, aRole) //
-                .withFeature(TARGET_FEATURE, filler) //
+                .withFeature(TARGET_FEATURE, aFiller) //
                 .buildAndAddToIndexes();
     }
 }

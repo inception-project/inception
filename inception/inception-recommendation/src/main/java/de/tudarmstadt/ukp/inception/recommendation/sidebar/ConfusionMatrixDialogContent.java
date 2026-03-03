@@ -57,11 +57,11 @@ public class ConfusionMatrixDialogContent
         var axes = confusionMatrixData.map(ConfusionMatrix::getLabels)
                 .map(label -> concat(Stream.of(""), label.stream()).collect(toList()));
 
-        queue(new Label("totalDatapoints", confusionMatrixData.map(ConfusionMatrix::getTotal)));
-        queue(new Label("datapointUnit", confusionMatrixData.map(ConfusionMatrix::getUnit)));
-        queue(new Label("ignoredLabels", aModel.map(EvaluationResult::getIgnoreLabels)
+        add(new Label("totalDatapoints", confusionMatrixData.map(ConfusionMatrix::getTotal)));
+        add(new Label("datapointUnit", confusionMatrixData.map(ConfusionMatrix::getUnit)));
+        add(new Label("ignoredLabels", aModel.map(EvaluationResult::getIgnoreLabels)
                 .map(labels -> labels.stream().collect(joining(", ")))));
-        queue(new LambdaAjaxLink("closeDialog", this::actionCloseDialog));
+        add(new LambdaAjaxLink("closeDialog", this::actionCloseDialog));
 
         rows = new DefaultRefreshingView<String>("rows", axes)
         {
@@ -81,34 +81,27 @@ public class ConfusionMatrixDialogContent
                         aCellItem.setRenderBodyOnly(true);
 
                         Fragment cell;
-                        // Header cell
+
                         if (aRowItem.getIndex() == 0 && aCellItem.getIndex() != 0) {
+                            // Horizontal headers
                             cell = new Fragment("cell", "th-column",
                                     ConfusionMatrixDialogContent.this);
-                        }
-                        else if (aRowItem.getIndex() != 0 && aCellItem.getIndex() == 0) {
-                            cell = new Fragment("cell", "th-row",
-                                    ConfusionMatrixDialogContent.this);
-                        }
-                        else if (aRowItem.getIndex() == 0 && aCellItem.getIndex() == 0) {
-                            cell = new Fragment("cell", "th", ConfusionMatrixDialogContent.this);
-                        }
-                        // Content cell
-                        else {
-                            cell = new Fragment("cell", "td", ConfusionMatrixDialogContent.this);
-                        }
-
-                        // Top-left cell
-                        // Horizontal headers
-                        if (aRowItem.getIndex() == 0 && aCellItem.getIndex() != 0) {
                             cell.add(new Label("label", aCellItem.getModel()));
                         }
-                        // Vertical headers
                         else if (aRowItem.getIndex() != 0 && aCellItem.getIndex() == 0) {
+                            // Vertical headers
+                            cell = new Fragment("cell", "th-row",
+                                    ConfusionMatrixDialogContent.this);
                             cell.add(new Label("label", aRowItem.getModel()));
                         }
+                        else if (aRowItem.getIndex() == 0 && aCellItem.getIndex() == 0) {
+                            // Top-left cell
+                            cell = new Fragment("cell", "th", ConfusionMatrixDialogContent.this);
+                        }
                         else {
-                            renderCell(confusionMatrixData, aRowItem, aCellItem, cell);
+                            // Content cell
+                            cell = new Fragment("cell", "td", ConfusionMatrixDialogContent.this);
+                            cell.add(renderCell(confusionMatrixData, aRowItem, aCellItem));
                         }
 
                         aCellItem.add(cell);
@@ -122,8 +115,8 @@ public class ConfusionMatrixDialogContent
         add(rows);
     }
 
-    private void renderCell(IModel<ConfusionMatrix> aModel, Item<String> aRowItem,
-            Item<String> aCellItem, Fragment aCell)
+    private WebMarkupContainer renderCell(IModel<ConfusionMatrix> aModel, Item<String> aRowItem,
+            Item<String> aCellItem)
     {
         var predicted = aCellItem.getModelObject();
         var gold = aRowItem.getModelObject();
@@ -139,14 +132,15 @@ public class ConfusionMatrixDialogContent
         else if (count.map(v -> v > 0).getObject()) {
             cellContent.add(AttributeAppender.append("class", "text-bg-danger"));
         }
-        aCell.queue(cellContent);
 
         var label = new Label("label", count);
         label.add(AttributeModifier.append("class", getModel() //
                 .map(EvaluationResult::getIgnoreLabels) //
                 .map(ignLabels -> ignLabels.contains(gold) && predicted.equals(gold)) //
                 .map(ignored -> ignored ? "text-muted" : "")));
-        aCell.queue(label);
+        cellContent.add(label);
+
+        return cellContent;
     }
 
     @SuppressWarnings("unchecked")

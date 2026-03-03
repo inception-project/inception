@@ -23,37 +23,40 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import de.tudarmstadt.ukp.inception.support.db.PersistentEnum;
+import de.tudarmstadt.ukp.inception.support.wicket.HasSymbol;
 
 /**
  * Variables for the different states of a {@link Project} workflow.
  */
 public enum ProjectState
-    implements PersistentEnum
+    implements PersistentEnum, HasSymbol
 {
     /**
      * All annotations of all documents are in state new.
      */
-    NEW("NEW", "black", false),
+    NEW("NEW", "<i class=\"far fa-circle\"></i>", "black", false),
 
     /**
      * At least one annotation document has been created for the document
      */
-    ANNOTATION_IN_PROGRESS("ANNOTATION_INPROGRESS", "black", false),
+    ANNOTATION_IN_PROGRESS("ANNOTATION_INPROGRESS", "<i class=\"far fa-play-circle\"></i>", "black",
+            false),
 
     /**
      * All annotations have marked their annotation document as finished
      */
-    ANNOTATION_FINISHED("ANNOTATION_FINISHED", "green", true),
+    ANNOTATION_FINISHED("ANNOTATION_FINISHED", "<i class=\"far fa-check-circle\"></i>", "green",
+            true),
 
     /**
      * Curation on at least one document has started.
      */
-    CURATION_IN_PROGRESS("CURATION_INPROGRESS", "blue", true),
+    CURATION_IN_PROGRESS("CURATION_INPROGRESS", "<i class=\"fas fa-clipboard\"></i>", "blue", true),
 
     /**
      * All documents have been curated
      */
-    CURATION_FINISHED("CURATION_FINISHED", "red", true);
+    CURATION_FINISHED("CURATION_FINISHED", "<i class=\"fas fa-clipboard-check\"></i>", "red", true);
 
     private static final List<ProjectState> ANNOTATION_FINAL_STATES;
 
@@ -64,6 +67,7 @@ public enum ProjectState
     }
 
     private final String id;
+    private final String symbol;
     private final String color;
 
     /**
@@ -71,9 +75,10 @@ public enum ProjectState
      */
     private final boolean annotationFinal;
 
-    ProjectState(String aId, String aColor, boolean aAnnotationFinal)
+    ProjectState(String aId, String aSymbol, String aColor, boolean aAnnotationFinal)
     {
         id = aId;
+        symbol = aSymbol;
         color = aColor;
         annotationFinal = aAnnotationFinal;
     }
@@ -113,5 +118,30 @@ public enum ProjectState
     public static List<ProjectState> annotationFinalStates()
     {
         return ANNOTATION_FINAL_STATES;
+    }
+
+    @Override
+    public String symbol()
+    {
+        return symbol;
+    }
+
+    public static ProjectState fromString(String aString)
+    {
+        try {
+            return valueOf(aString);
+        }
+        catch (IllegalArgumentException e) {
+            // Ignore
+        }
+
+        for (var v : values()) {
+            if (v.id.equals(aString)) {
+                return v;
+            }
+        }
+
+        throw new IllegalArgumentException(
+                "No enum constant or enum valid with id [" + aString + "]");
     }
 }

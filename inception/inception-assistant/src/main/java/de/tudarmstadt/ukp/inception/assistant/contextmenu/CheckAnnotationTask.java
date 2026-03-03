@@ -27,11 +27,8 @@ import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonStr
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static java.lang.String.join;
 import static java.util.Objects.requireNonNull;
-import static org.apache.commons.lang3.StringUtils.normalizeSpace;
-import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -40,6 +37,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
@@ -72,7 +70,7 @@ public class CheckAnnotationTask
     {
         super(aBuilder.withType(TYPE));
 
-        requireNonNull(getUser().orElse(null), "Session owner must be set");
+        requireNonNull(getSessionOwner().orElse(null), "Session owner must be set");
 
         document = aBuilder.document;
         dataOwner = aBuilder.dataOwner;
@@ -83,8 +81,8 @@ public class CheckAnnotationTask
     public MatchResult matches(Task aTask)
     {
         if (aTask instanceof WatchAnnotationTask) {
-            if (Objects.equals(getProject().getId(), aTask.getProject().getId())
-                    && Objects.equals(getUser().get(), aTask.getUser().orElse(null))) {
+            if (Objects.equals(getProject().getId(), aTask.getProject().getId()) && Objects
+                    .equals(getSessionOwner().get(), aTask.getSessionOwner().orElse(null))) {
                 return QUEUE_THIS;
             }
         }
@@ -96,8 +94,8 @@ public class CheckAnnotationTask
     public void execute() throws Exception
     {
         try (var session = CasStorageSession.open()) {
-            var cas = documentService.readAnnotationCas(document, dataOwner, AUTO_CAS_UPGRADE,
-                    SHARED_READ_ONLY_ACCESS);
+            var cas = documentService.readAnnotationCas(document, AnnotationSet.forUser(dataOwner),
+                    AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
 
             var ann = selectAnnotationByAddr(cas, annotation.getId());
             if (ann == null) {
@@ -110,20 +108,21 @@ public class CheckAnnotationTask
             }
 
             var inquiryMsgId = UUID.randomUUID();
-            var sessionOwner = getUser().get().getUsername();
-            assistantService.dispatchMessage(sessionOwner, getProject(), MTextMessage.builder() //
-                    .withId(inquiryMsgId) //
-                    .withActor(getUser().get().getUiName()) //
-                    .withRole(USER) //
-                    .notDone() //
-                    .build());
+            var sessionOwner = getSessionOwner().get();
+            assistantService.dispatchMessage(sessionOwner.getUsername(), getProject(),
+                    MTextMessage.builder() //
+                            .withId(inquiryMsgId) //
+                            .withActor(getSessionOwner().get().getUiName()) //
+                            .withRole(USER) //
+                            .notDone() //
+                            .build());
 
             var instance = annotationToJson(ann, contextSentence);
 
             var rewriteQuestionTask = MTextMessage.builder() //
                     .withActor(ACTOR) //
                     .withRole(USER).internal().ephemeral() //
-                    .withMessage(join("\n", //
+                    .withContent(join("\n", //
                             "Rewrite into a question about whether the annotation is correct with respect to the "
                                     + "span marked in the context.", //
                             "Do not answer the question yet.", //
@@ -139,7 +138,7 @@ public class CheckAnnotationTask
             var inquiryContext = MTextMessage.builder() //
                     .withActor(ACTOR) //
                     .withRole(SYSTEM).internal().ephemeral() //
-                    .withMessage(join("\n", //
+                    .withContent(join("\n", //
                             "The user will ask whether the following annotation is correct.", //
                             "Give one response per annotation.", //
                             "Start each response with yes, no, or unsure, then very briefly explain.", //
@@ -153,45 +152,21 @@ public class CheckAnnotationTask
 
             var inquiryTask = MTextMessage.builder() //
                     .withId(inquiryMsgId) //
-                    .withActor(getUser().get().getUiName()) //
+                    .withActor(getSessionOwner().get().getUiName()) //
                     .withRole(USER) //
-                    .withMessage(rewrittenQuestion.message()) //
+                    .withContent(rewrittenQuestion.content()) //
                     .build();
 
-            assistantService.processUserMessage(sessionOwner, getProject(), inquiryTask,
-                    inquiryContext);
+            assistantService.processInternalMessage(sessionOwner, getProject(), document, dataOwner,
+                    inquiryTask, inquiryContext);
         }
     }
 
     private String annotationToJson(Annotation aAnnotation, Annotation aContext) throws IOException
     {
-        var instance = new LinkedHashMap<String, Object>();
-
-        instance.put("span", normalizeSpace(aAnnotation.getCoveredText()));
-
-        var docText = aAnnotation.getCAS().getDocumentText();
-        var context = docText.substring(aContext.getBegin(), aAnnotation.getBegin()) //
-                + " <span> " //
-                + aAnnotation.getCoveredText() //
-                + " </span> " //
-                + docText.substring(aAnnotation.getEnd(), aContext.getEnd());
-        instance.put("context", normalizeSpace(context));
-
         var adapter = schemaService.findAdapter(getProject(), aAnnotation);
-        var attributes = new LinkedHashMap<String, Object>();
-        for (var feature : adapter.listFeatures()) {
-            if (TYPE_NAME_BOOLEAN.equals(feature.getType())) {
-                attributes.put(normalizeSpace(feature.getUiName()),
-                        adapter.getFeatureValue(feature, aAnnotation));
-                continue;
-            }
-
-            attributes.put(normalizeSpace(feature.getUiName()),
-                    normalizeSpace(adapter.renderFeatureValue(aAnnotation, feature.getName())));
-        }
-        instance.put("annotation", attributes);
-
-        return toPrettyJsonString(instance);
+        var obj = adapter.annotationAsObject(aAnnotation, aContext);
+        return toPrettyJsonString(obj);
     }
 
     public static Builder<Builder<?>> builder()

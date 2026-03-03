@@ -15,23 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- TEI {
-  figure {
-    display: block;
-    border: 1px solid black;
-    margin-bottom: 0.5em;
-    padding: 0.5em;
+TEI {
+    figure {
+        display: block;
+        border: 1px solid black;
+        margin-bottom: 0.5em;
+        padding: 0.5em;
 
-    head {
-      font-size: inherit;
+        head {
+            font-size: inherit;
+        }
+
+        label {
+        }
+
+        figDesc {
+        }
     }
-
-    label {
-
-    }
-
-    figDesc {
-
-    }
-  }
- }
+}

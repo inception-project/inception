@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.support;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -27,11 +29,17 @@ import java.util.List;
 public class WebAnnoConst
 {
     // Annotation types, for span or arc annotations.
+    @Deprecated
     public static final String POS = "pos";
+    @Deprecated
     public static final String NAMEDENTITY = "named entity";
+    @Deprecated
     public static final String DEPENDENCY = "dependency";
+    @Deprecated
     public static final String COREFERENCE = "coreference";
+    @Deprecated
     public static final String COREFRELTYPE = "coreference type";
+    @Deprecated
     public static final String LEMMA = "lemma";
 
     /**
@@ -64,35 +72,42 @@ public class WebAnnoConst
     @Deprecated
     public static final String CHAIN_TYPE = "chain";
 
+    /**
+     * @deprecated Use {@code ChainAdapter.ARC_LABEL_FEATURE}
+     */
+    @Deprecated
     public static final String COREFERENCE_RELATION_FEATURE = "referenceRelation";
-    public static final String COREFERENCE_TYPE_FEATURE = "referenceType";
 
-    public static final String COREFERENCE_LAYER = "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference";
-    public static final String DOCUMENT = "/document/";
+    /**
+     * @deprecated Use {@code ChainAdapter.SPAN_LABEL_FEATURE}
+     */
+    @Deprecated
+    public static final String COREFERENCE_TYPE_FEATURE = "referenceType";
 
     public static final String CURATION_USER = "CURATION_USER";
     public static final String INITIAL_CAS_PSEUDO_USER = "INITIAL_CAS";
 
-    public static final List<String> RESTRICTED_FEATURE_NAMES = new ArrayList<String>(Arrays.asList(
-            "address", "begin", "end", "coveredText", "booleanValue", "doubleValue", "byteValue",
-            "CAS", "CASImpl", "class", "featureValue", "floatValue", "longValue", "lowLevelCas",
-            "printRefs", "sofa", "stringValue", "type", "typeIndexId", "view"))
-    {
+    public static final List<String> RESTRICTED_FEATURE_NAMES = unmodifiableList(
+            new ArrayList<String>(asList("address", "begin", "end", "coveredText", "booleanValue",
+                    "doubleValue", "byteValue", "CAS", "CASImpl", "class", "featureValue",
+                    "floatValue", "longValue", "lowLevelCas", "printRefs", "sofa", "stringValue",
+                    "type", "typeIndexId", "view"))
+            {
 
-        private static final long serialVersionUID = -8547798549706734147L;
+                private static final long serialVersionUID = -8547798549706734147L;
 
-        // Implement case-insensitive string comparison
-        @Override
-        public boolean contains(Object o)
-        {
+                // Implement case-insensitive string comparison
+                @Override
+                public boolean contains(Object o)
+                {
 
-            String inputString = (String) o;
-            for (String s : this) {
-                if (inputString.equalsIgnoreCase(s)) {
-                    return true;
+                    String inputString = (String) o;
+                    for (String s : this) {
+                        if (inputString.equalsIgnoreCase(s)) {
+                            return true;
+                        }
+                    }
+                    return false;
                 }
-            }
-            return false;
-        }
-    };
+            });
 }

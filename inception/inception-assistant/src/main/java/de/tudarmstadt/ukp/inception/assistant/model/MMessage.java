@@ -22,13 +22,16 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import tools.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize
 @JsonTypeInfo(use = NAME, include = PROPERTY, property = MMessage.TYPE_FIELD)
 @JsonSubTypes({ //
         @JsonSubTypes.Type(value = MTextMessage.class), //
-        @JsonSubTypes.Type(value = MRemoveConversationCommand.class) //
+        @JsonSubTypes.Type(value = MCallResponse.class), //
+        @JsonSubTypes.Type(value = MRefreshCommand.class), //
+        @JsonSubTypes.Type(value = MClearCommand.class) //
 })
 public sealed interface MMessage
     permits MChatMessage, MCommandMessage

@@ -104,3 +104,15 @@ spring.security.saml2.relyingparty.registration.inception-client-saml.signing.cr
 spring.security.saml2.relyingparty.registration.inception-client-saml.signing.credentials[0].certificate-location=file:/srv/inception/inception-saml.crt
 ----
 
+== Troubleshooting
+
+Certain SAML IdPs like Microsoft Azure AD (Entra ID) may only offer HTTP POST binding for SAML responses.
+To allow these IdPs to work with {product-name}, you can add the following lines to your `settings.properties`:
+
+```
+server.servlet.session.cookie.same-site=none
+server.servlet.session.cookie.secure=true
+```
+
+Alternatively, consider using OAuth/OIDC (which does not require these settings to be made) or consider using a
+different IdP like e.g. Keycloak which supports HTTP Redirect binding for the SAML response.

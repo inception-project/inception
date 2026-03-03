@@ -21,7 +21,7 @@ Falko Helm [@Falko1]
 Jan-Christoph Klie [@jcklie]
 Jennifer Chen [@shinyichen]
 Michael Bugert
-Peter Jiang
+Yuehai Jiang
 Richard Eckart de Castilho <richard.eckart@gmail.com> [@reckart]
 Ryan Gabbard [@rgabbard]
 Torsten Dietl

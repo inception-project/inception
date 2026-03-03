@@ -37,21 +37,23 @@ import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
@@ -62,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.assistant.config.AssistantToolsAutoConfiguration;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
@@ -69,27 +72,29 @@ import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfigur
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.config.ToolLibraryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.test.websocket.WebSocketStompTestClient;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
+import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest( //
         webEnvironment = RANDOM_PORT, //
         properties = { //
+                "recommender.enabled=false", //
                 "server.address=127.0.0.1", //
                 "spring.main.banner-mode=off", //
                 "assistant.enabled=true", //
                 "websocket.enabled=true" })
 @SpringBootApplication( //
         exclude = { //
-                LiquibaseAutoConfiguration.class, //
-                SearchServiceAutoConfiguration.class, //
-                EventLoggingAutoConfiguration.class })
+                AssistantToolsAutoConfiguration.class, //
+                WorkloadManagementAutoConfiguration.class })
 @ImportAutoConfiguration({ //
+        EventLoggingAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
         WebsocketAutoConfiguration.class, //
         WebsocketSecurityConfig.class, //
@@ -97,6 +102,7 @@ import jakarta.persistence.EntityManager;
         CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
         CasDoctorAutoConfiguration.class, //
+        ToolLibraryAutoConfiguration.class, //
         DocumentImportExportServiceAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class })
 @EntityScan({ //
@@ -178,7 +184,7 @@ class AssistantServiceImplTest
 
         var message = MTextMessage.builder() //
                 .withRole("assistant") //
-                .withMessage("Test message") //
+                .withContent("Test message") //
                 .build();
 
         try (var client = new WebSocketStompTestClient(USER, PASS)) {
@@ -199,7 +205,7 @@ class AssistantServiceImplTest
 
         var message = MTextMessage.builder() //
                 .withRole("assistant") //
-                .withMessage("Test message") //
+                .withContent("Test message") //
                 .build();
 
         try (var client = new WebSocketStompTestClient(USER, PASS)) {
@@ -211,9 +217,16 @@ class AssistantServiceImplTest
         }
     }
 
-    @SpringBootConfiguration
+    @TestConfiguration
     public static class SpringConfig
     {
+        @Bean
+        public AuthenticationEventPublisher authenticationEventPublisher(
+                ApplicationEventPublisher publisher)
+        {
+            return new DefaultAuthenticationEventPublisher(publisher);
+        }
+
         @Bean
         public ChannelInterceptor csrfChannelInterceptor()
         {
@@ -231,10 +244,9 @@ class AssistantServiceImplTest
 
         @Bean
         public DaoAuthenticationProvider authenticationProvider(PasswordEncoder aEncoder,
-                @Lazy UserDetailsManager aUserDetailsManager)
+                @Lazy UserDetailsService aUserDetailsManager)
         {
-            var authProvider = new InceptionDaoAuthenticationProvider();
-            authProvider.setUserDetailsService(aUserDetailsManager);
+            var authProvider = new InceptionDaoAuthenticationProvider(aUserDetailsManager);
             authProvider.setPasswordEncoder(aEncoder);
             return authProvider;
         }

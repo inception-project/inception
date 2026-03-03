@@ -2,7 +2,7 @@
 name: "🐛 Bug report"
 about: Create a report to help us improve
 type: "🐛 Bug"
-labels: ["🐛 Bug", "Triage"]
+labels: ["Triage"]
 ---
 
 **Describe the bug**

@@ -55,7 +55,7 @@ In the folder where the **inception-doc/src/main/resources/META-INF/asciidoc/adm
 
     docker-compose -p inception up -d
     
-This starts an INCEpTION instance together with a MariaDB database.   
+This starts an INCEpTION instance together with a MariaDB database.
     
 To stop, call
 

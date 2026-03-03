@@ -23,14 +23,16 @@ import static org.apache.commons.lang3.StringUtils.removeStart;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import de.tudarmstadt.ukp.inception.support.json.NumericBooleanSerializer;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
  * This is not part of the original brat data model.
  */
 @JsonInclude(Include.NON_DEFAULT)
+@JsonPropertyOrder(value = { "l", "c", "h", "a", "cl", "s" })
 public class EntityAttributes
 {
     public static final String VALUE_CLIPPED_AT_START = "s";

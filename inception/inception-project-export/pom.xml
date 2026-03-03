@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>36.0-SNAPSHOT</version>
+    <version>40.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-project-export</artifactId>
   <name>INCEpTION - Core - Project export</name>
@@ -41,62 +41,77 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-model</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-project-api</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-websocket</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-documents-api</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-annotation-storage-api</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-schema-api</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-model-export</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-export-api</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api-formats</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-xmi</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-security</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-constraints</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-core</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-scheduling</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
@@ -124,12 +139,11 @@
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
 
-    <dependency>
+   <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
+    </dependency>    <dependency>
+      <groupId>tools.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
 
@@ -166,6 +180,10 @@
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-messaging</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>io.swagger.core.v3</groupId>
@@ -195,6 +213,11 @@
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-persistence</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
       <scope>test</scope>
     </dependency>
@@ -216,36 +239,49 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-project</artifactId>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-diag</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-diag-api</artifactId>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-annotation-storage</artifactId>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-export</artifactId>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-documents</artifactId>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-schema</artifactId>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-testing</artifactId>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

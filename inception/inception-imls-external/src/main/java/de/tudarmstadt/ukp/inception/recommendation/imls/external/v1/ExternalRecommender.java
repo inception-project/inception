@@ -23,6 +23,7 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
 import static org.apache.commons.lang3.StringUtils.appendIfMissing;
+import static org.apache.commons.lang3.Strings.CS;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.io.IOException;
@@ -75,8 +76,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.Pre
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.TrainingRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Document;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Metadata;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.IllegalXmlCharacterSanitizingContentHandler;
 
@@ -191,9 +192,11 @@ public class ExternalRecommender
             documents.add(buildDocument(cas));
         }
         trainingRequest.setDocuments(documents);
+        CharSequence[] suffixes = {};
 
         var request = HttpRequest.newBuilder() //
-                .uri(URI.create(appendIfMissing(traits.getRemoteUrl(), "/")).resolve("train")) //
+                .uri(URI.create(CS.appendIfMissing(traits.getRemoteUrl(), "/", suffixes))
+                        .resolve("train")) //
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //
                 .timeout(properties.getReadTimeout())
                 .POST(BodyPublishers.ofString(toJson(trainingRequest), UTF_8)).build();
@@ -206,13 +209,19 @@ public class ExternalRecommender
         // If the response indicates that the request was not successful,
         // then it does not make sense to go on and try to decode the XMI
         else if (response.statusCode() >= HTTP_BAD_REQUEST) {
-            var responseBody = getResponseBody(response);
-            var msg = format("Request was not successful: [%d] - [%s]", response.statusCode(),
-                    responseBody);
-            throw new RecommendationException(msg);
+            throw communicationFailedException(response);
         }
 
         aContext.put(KEY_TRAINING_COMPLETE, true);
+    }
+
+    private RecommendationException communicationFailedException(HttpResponse<String> response)
+    {
+        var responseBody = getResponseBody(response);
+        var msg = format("Request to external recommender failed: [%d] - [%s]",
+                response.statusCode(), responseBody);
+        var ex = new RecommendationException(msg);
+        return ex;
     }
 
     @Override
@@ -241,10 +250,7 @@ public class ExternalRecommender
         // If the response indicates that the request was not successful,
         // then it does not make sense to go on and try to decode the XMI
         if (response.statusCode() >= HTTP_BAD_REQUEST) {
-            var responseBody = getResponseBody(response);
-            var msg = format("Request was not successful: [%d] - [%s]", response.statusCode(),
-                    responseBody);
-            throw new RecommendationException(msg);
+            throw communicationFailedException(response);
         }
 
         var predictionResponse = deserializePredictionResponse(response);
@@ -269,7 +275,8 @@ public class ExternalRecommender
         var type = tsd.getType(layer.getName());
         type.setDescription(layer.getDescription());
 
-        stream(type.getFeatures()).filter(f -> f.getName().equals(feature.getName()))
+        stream(type.getFeatures()) //
+                .filter(f -> f.getName().equals(feature.getName())) //
                 .forEach(f -> f.setDescription(feature.getDescription()));
 
         try (var out = new StringWriter()) {
@@ -386,5 +393,11 @@ public class ExternalRecommender
     public TrainingCapability getTrainingCapability()
     {
         return traits.getTrainingCapability();
+    }
+
+    @Override
+    public boolean isUniveralExtraction()
+    {
+        return traits.isUniversalExtraction();
     }
 }

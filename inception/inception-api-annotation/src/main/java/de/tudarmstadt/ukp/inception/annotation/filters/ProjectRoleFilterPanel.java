@@ -27,7 +27,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.ResourceModel;
 
@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
 
 public class ProjectRoleFilterPanel
-    extends Panel
+    extends GenericPanel<List<PermissionLevel>>
 {
     private static final long serialVersionUID = 8632088780379498284L;
 
@@ -54,7 +54,7 @@ public class ProjectRoleFilterPanel
 
         setOutputMarkupId(true);
 
-        var listview = new ListView<>("stateFilter", asList(aStates))
+        var listview = new ListView<>("roleFilter", asList(aStates))
         {
             private static final long serialVersionUID = -2292408105823066466L;
 
@@ -62,7 +62,7 @@ public class ProjectRoleFilterPanel
             protected void populateItem(ListItem<PermissionLevel> aItem)
             {
                 var role = aItem.getModelObject();
-                LambdaAjaxLink link = new LambdaAjaxLink("stateFilterLink",
+                LambdaAjaxLink link = new LambdaAjaxLink("roleFilterLink",
                         (_target -> actionApplyStateFilter(_target, role)));
 
                 link.add(new SymbolLabel(MID_LABEL, aItem.getModel()));
@@ -77,20 +77,14 @@ public class ProjectRoleFilterPanel
         queue(listview);
     }
 
-    @SuppressWarnings("unchecked")
-    public IModel<List<PermissionLevel>> getModel()
-    {
-        return (IModel<List<PermissionLevel>>) getDefaultModel();
-    }
-
-    private void actionApplyStateFilter(AjaxRequestTarget aTarget, PermissionLevel aState)
+    private void actionApplyStateFilter(AjaxRequestTarget aTarget, PermissionLevel aRole)
     {
         List<PermissionLevel> selectedStates = getModel().getObject();
-        if (selectedStates.contains(aState)) {
-            selectedStates.remove(aState);
+        if (selectedStates.contains(aRole)) {
+            selectedStates.remove(aRole);
         }
         else {
-            selectedStates.add(aState);
+            selectedStates.add(aRole);
         }
 
         aTarget.add(this);

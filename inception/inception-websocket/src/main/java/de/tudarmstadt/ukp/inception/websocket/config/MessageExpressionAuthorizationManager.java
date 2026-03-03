@@ -25,8 +25,8 @@ import org.springframework.expression.Expression;
 import org.springframework.security.access.expression.ExpressionUtils;
 import org.springframework.security.access.expression.SecurityExpressionHandler;
 import org.springframework.security.authorization.AuthorizationDecision;
-import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.messaging.access.intercept.MessageAuthorizationContext;
 
@@ -34,7 +34,6 @@ public class MessageExpressionAuthorizationManager
     implements AuthorizationManager<MessageAuthorizationContext<?>>
 {
     private final SecurityExpressionHandler<MessageAuthorizationContext<?>> expressionHandler;
-
     private final Expression expression;
 
     public static MessageExpressionAuthorizationManager expression(
@@ -55,27 +54,11 @@ public class MessageExpressionAuthorizationManager
     }
 
     @Override
-    public void verify(Supplier<Authentication> aAuthentication,
+    public AuthorizationResult authorize(Supplier<? extends Authentication> aAuthentication,
             MessageAuthorizationContext<?> aObject)
     {
         var context = expressionHandler.createEvaluationContext(aAuthentication, aObject);
         var granted = ExpressionUtils.evaluateAsBoolean(expression, context);
-        if (!granted) {
-            throw new AuthorizationDeniedException("Access Denied");
-        }
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public AuthorizationDecision check(Supplier<Authentication> aAuthentication,
-            MessageAuthorizationContext<?> aObject)
-    {
-        try {
-            verify(aAuthentication, aObject);
-            return new AuthorizationDecision(true);
-        }
-        catch (AuthorizationDeniedException e) {
-            return new AuthorizationDecision(false);
-        }
+        return new AuthorizationDecision(granted);
     }
 }

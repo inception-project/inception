@@ -18,16 +18,23 @@
 package de.tudarmstadt.ukp.inception.assistant;
 
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.USER;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_PROJECT_ID;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_USERNAME;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_USER;
 
 import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -40,7 +47,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.assistant.model.MChatMessage;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.servlet.ServletContext;
 
@@ -53,41 +63,70 @@ public class AssistantWebsocketControllerImpl
 {
     private final AssistantService assistantService;
     private final ProjectService projectService;
+    private final DocumentService documentService;
     private final UserDao userService;
+    private final RepositoryProperties repositoryProperties;
 
     @Autowired
     public AssistantWebsocketControllerImpl(ServletContext aServletContext,
             SimpMessagingTemplate aMsgTemplate, AssistantService aAssistantService,
-            ProjectService aProjectService, UserDao aUserService)
+            ProjectService aProjectService, UserDao aUserService, DocumentService aDocumentService,
+            RepositoryProperties aRepositoryProperties)
     {
         assistantService = aAssistantService;
         projectService = aProjectService;
         userService = aUserService;
+        documentService = aDocumentService;
+        repositoryProperties = aRepositoryProperties;
     }
 
     @SubscribeMapping(PROJECT_ASSISTANT_TOPIC_TEMPLATE)
-    public List<MTextMessage> onSubscribeToAssistantMessages(
+    public List<MChatMessage> onSubscribeToAssistantMessages(
             SimpMessageHeaderAccessor aHeaderAccessor, Principal aPrincipal, //
             @DestinationVariable(PARAM_PROJECT) long aProjectId)
         throws IOException
     {
         var project = projectService.getProject(aProjectId);
-        return assistantService.getAllChatMessages(aPrincipal.getName(), project);
+        return assistantService.getUserChatHistory(aPrincipal.getName(), project);
     }
 
     @MessageMapping(PROJECT_ASSISTANT_TOPIC_TEMPLATE)
     public void onUserMessage(SimpMessageHeaderAccessor aHeaderAccessor, Principal aPrincipal, //
-            @DestinationVariable(PARAM_PROJECT) long aProjectId, @Payload String aMessage)
+            @DestinationVariable(PARAM_PROJECT) long aProjectId, //
+            @Header(PARAM_USER) String dataOwner, //
+            @Header(PARAM_DOCUMENT) long documentId, //
+            @Payload String aMessage)
         throws IOException
     {
         var project = projectService.getProject(aProjectId);
-        var user = userService.get(aPrincipal.getName());
+        var document = documentService.getSourceDocument(aProjectId, documentId);
+        var sessionOwner = userService.get(aPrincipal.getName());
         var message = MTextMessage.builder() //
-                .withActor(user.getUiName()) //
+                .withActor(sessionOwner.getUiName()) //
                 .withRole(USER) //
-                .withMessage(aMessage) //
+                .withContent(aMessage) //
                 .build();
-        assistantService.processUserMessage(aPrincipal.getName(), project, message);
+
+        try {
+            // We are in a new thread. Set up thread-specific MDC
+            if (repositoryProperties != null) {
+                MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+            }
+
+            MDC.put(KEY_USERNAME, sessionOwner.getUsername());
+
+            if (project != null) {
+                MDC.put(KEY_PROJECT_ID, String.valueOf(project.getId()));
+            }
+
+            assistantService.processUserMessage(sessionOwner, project, document, dataOwner,
+                    message);
+        }
+        finally {
+            MDC.remove(KEY_REPOSITORY_PATH);
+            MDC.remove(KEY_USERNAME);
+            MDC.remove(KEY_PROJECT_ID);
+        }
     }
 
     @SendTo(PROJECT_ASSISTANT_TOPIC_TEMPLATE)

@@ -21,7 +21,8 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
+
+import tools.jackson.databind.JsonNode;
 
 @JsonInclude(NON_NULL)
 public class AzureAiSchemaResponseDefinition

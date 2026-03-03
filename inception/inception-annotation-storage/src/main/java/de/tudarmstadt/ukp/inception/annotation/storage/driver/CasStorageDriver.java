@@ -25,29 +25,32 @@ import java.util.Optional;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageMetadata;
 
 public interface CasStorageDriver
 {
-    CAS readCas(SourceDocument aDocument, String aUser) throws IOException;
+    CAS readCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException;
 
-    void writeCas(SourceDocument aDocument, String aUser, CAS aCas) throws IOException;
+    void writeCas(SourceDocument aDocument, AnnotationSet aSet, CAS aCas) throws IOException;
 
-    void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream) throws IOException;
-
-    void importCas(SourceDocument aDocument, String aUser, InputStream aStream) throws IOException;
-
-    boolean deleteCas(SourceDocument aDocument, String aUser) throws IOException;
-
-    boolean existsCas(SourceDocument aDocument, String aUser) throws IOException;
-
-    Optional<CasStorageMetadata> getCasMetadata(SourceDocument aDocument, String aUser)
+    void exportCas(SourceDocument aDocument, AnnotationSet aSet, OutputStream aStream)
         throws IOException;
 
-    Optional<Long> verifyCasTimestamp(SourceDocument aDocument, String aUser,
+    void importCas(SourceDocument aDocument, AnnotationSet aSet, InputStream aStream)
+        throws IOException;
+
+    boolean deleteCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException;
+
+    boolean existsCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException;
+
+    Optional<CasStorageMetadata> getCasMetadata(SourceDocument aDocument, AnnotationSet aSet)
+        throws IOException;
+
+    Optional<Long> verifyCasTimestamp(SourceDocument aDocument, AnnotationSet aSet,
             long aExpectedTimeStamp, String aContextAction)
         throws IOException, ConcurentCasModificationException;
 
-    Optional<Long> getCasFileSize(SourceDocument aDocument, String aUser) throws IOException;
+    Optional<Long> getCasFileSize(SourceDocument aDocument, AnnotationSet aSet) throws IOException;
 }

@@ -21,9 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLFactory;
 
 public class YamlUtil
 {
@@ -51,15 +50,17 @@ public class YamlUtil
     public static String toYamlString(ObjectMapper aMapper, boolean aPretty, Object aObject)
         throws IOException
     {
-        StringWriter out = new StringWriter();
+        var out = new StringWriter();
 
-        JsonGenerator yamlGenerator = aMapper.getFactory().createGenerator(out);
-        // if (aPretty) {
-        // yamlGenerator.setPrettyPrinter(new DefaultPrettyPrinter()
-        // .withObjectIndenter(new DefaultIndenter().withLinefeed("\n")));
-        // }
+        try (var yamlGenerator = aMapper.createGenerator(out)) {
+            // if (aPretty) {
+            // yamlGenerator.setPrettyPrinter(new DefaultPrettyPrinter()
+            // .withObjectIndenter(new DefaultIndenter().withLinefeed("\n")));
+            // }
 
-        yamlGenerator.writeObject(aObject);
+            yamlGenerator.writePOJO(aObject);
+        }
+
         return out.toString();
     }
 }

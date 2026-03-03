@@ -2,7 +2,7 @@
 name: "⭐️ Enhancement (feature request)"
 about: Suggest a feature or improvement
 type: "⭐️ Enhancement"
-labels: ["⭐️ Enhancement"]
+labels: []
 ---
 
 **Is your feature request related to a problem? Please describe.**

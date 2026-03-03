@@ -41,6 +41,8 @@ public class InteractiveRecommenderSidebarPrefs
     private ExtractionMode lastExtractionModeUsed;
     private String lastPromptUsed;
 
+    private Boolean lastJustificationEnabled;
+
     public Long getLastRecommenderUsed()
     {
         return lastRecommenderUsed;
@@ -99,5 +101,15 @@ public class InteractiveRecommenderSidebarPrefs
     public void setLastPromptUsed(String aLastPromptUsed)
     {
         lastPromptUsed = aLastPromptUsed;
+    }
+
+    public void setLastJustificationEnabled(Boolean aJustificationEnabled)
+    {
+        lastJustificationEnabled = aJustificationEnabled;
+    }
+
+    public Boolean isLastJustificationEnabled()
+    {
+        return lastJustificationEnabled;
     }
 }

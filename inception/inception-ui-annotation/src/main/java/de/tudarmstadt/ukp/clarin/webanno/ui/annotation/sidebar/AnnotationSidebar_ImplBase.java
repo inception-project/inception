@@ -17,15 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
-import java.io.IOException;
-
-import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -85,15 +81,5 @@ public abstract class AnnotationSidebar_ImplBase
     public AnnotationPageBase2 getAnnotationPage()
     {
         return annotationPage;
-    }
-
-    /**
-     * Show the next document if it exists, starting in a certain begin offset
-     */
-    protected void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBegin, int aEnd)
-        throws IOException
-    {
-        getAnnotationPage().actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd);
     }
 }

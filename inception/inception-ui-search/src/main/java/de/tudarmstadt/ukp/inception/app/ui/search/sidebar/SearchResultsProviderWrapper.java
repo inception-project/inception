@@ -24,11 +24,6 @@ import java.util.List;
 import org.apache.wicket.markup.repeater.data.IDataProvider;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.ResultsGroup;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 
@@ -40,13 +35,11 @@ public class SearchResultsProviderWrapper
     private SearchResultsProvider searchResultsProvider;
     private List<ResultsGroup> resultGroups;
     private boolean groupingActivated;
-    private IModel<Boolean> lowLevelPaging;
+    private boolean lowLevelPaging;
 
-    public SearchResultsProviderWrapper(SearchResultsProvider aSearchResultsProvider,
-            IModel<Boolean> aLowLevelPaging)
+    public SearchResultsProviderWrapper(SearchResultsProvider aSearchResultsProvider)
     {
         searchResultsProvider = aSearchResultsProvider;
-        lowLevelPaging = aLowLevelPaging;
     }
 
     @Override
@@ -65,13 +58,13 @@ public class SearchResultsProviderWrapper
         }
 
         var subList = resultsGroupsSublist(first, count);
-        searchResultsProvider.getPagesCacheModel().getObject().putPage(first, count, subList);
+        searchResultsProvider.getCache().putPage(first, count, subList);
         return subList.iterator();
     }
 
     public boolean applyLowLevelPaging()
     {
-        return !groupingActivated && lowLevelPaging.getObject();
+        return !groupingActivated && lowLevelPaging;
     }
 
     /**
@@ -89,10 +82,12 @@ public class SearchResultsProviderWrapper
     {
         var resultsGroupsSubList = new ArrayList<ResultsGroup>();
         int counter = 0;
+
         for (var resultsGroup : resultGroups) {
             if (counter - first + 1 > count) {
                 break;
             }
+
             var sublist = new ArrayList<SearchResult>();
             for (var result : resultsGroup.getResults()) {
                 if (counter < first) {
@@ -105,12 +100,19 @@ public class SearchResultsProviderWrapper
                 sublist.add(result);
                 counter++;
             }
+
             if (!(counter <= first)) {
                 var group = new ResultsGroup(resultsGroup.getGroupKey(), sublist);
                 resultsGroupsSubList.add(group);
             }
         }
+
         return resultsGroupsSubList;
+    }
+
+    public boolean isEmpty()
+    {
+        return size() == 0;
     }
 
     @Override
@@ -135,23 +137,22 @@ public class SearchResultsProviderWrapper
         return -1;
     }
 
-    public void initializeQuery(User aUser, Project aProject, String aQuery,
-            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature)
+    public void initializeQuery(SearchRequest aRequest)
     {
-        searchResultsProvider.initializeQuery(aUser, aProject, aQuery, aDocument, aAnnotationLayer,
-                aAnnotationFeature);
+        lowLevelPaging = aRequest.lowLevelPaging();
+
+        searchResultsProvider.initializeQuery(aRequest);
 
         groupingActivated = !(searchResultsProvider.getAnnotationFeature() == null
                 && searchResultsProvider.getAnnotationLayer() == null);
 
         if (!applyLowLevelPaging()) {
-            resultGroups = getAllResults();
+            resultGroups = getGroupedResults();
         }
 
     }
 
-    public List<ResultsGroup> getAllResults()
+    public List<ResultsGroup> getGroupedResults()
     {
         var resultsIterator = searchResultsProvider.iterator(0, Long.MAX_VALUE);
         var resultsList = new ArrayList<ResultsGroup>();

@@ -17,11 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController.API_BASE;
+import static de.tudarmstadt.ukp.inception.remoteapi.Controller_ImplBase.API_BASE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -29,34 +28,37 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Date;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.util.FileSystemUtils;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import com.giffing.wicket.spring.boot.starter.WicketAutoConfiguration;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
@@ -74,23 +76,20 @@ import io.jsonwebtoken.Jwts;
                 "remote-api.http-basic.enabled=false", //
                 "remote-api.oauth2.enabled=true", //
                 "remote-api.oauth2.user-name-attribute=preferred-username", //
-                "remote-api.oauth2.realm=" + AeroRemoteApiController_Authentication_Jwt_Test.REALM, //
-                "repository.path="
-                        + AeroRemoteApiController_Authentication_Jwt_Test.TEST_OUTPUT_FOLDER })
+                "remote-api.oauth2.realm="
+                        + AeroRemoteApiController_Authentication_Jwt_Test.REALM })
 @EnableAutoConfiguration( //
         exclude = { //
-                LiquibaseAutoConfiguration.class, //
                 DashboardAutoConfiguration.class, //
-                EventLoggingAutoConfiguration.class, //
                 SearchServiceAutoConfiguration.class, //
                 WicketAutoConfiguration.class })
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //
         "de.tudarmstadt.ukp.clarin.webanno" })
 @TestMethodOrder(MethodOrderer.MethodName.class)
+@AutoConfigureTestRestTemplate
 class AeroRemoteApiController_Authentication_Jwt_Test
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Authentication_Jwt_Test";
     static final String REALM = "test";
 
     private static final long EXPIRATIONTIME = 864_000_000; // 10 days
@@ -109,10 +108,12 @@ class AeroRemoteApiController_Authentication_Jwt_Test
     private static User remoteApiNormalUser;
     private static User nonRemoteNormalUser;
 
-    @BeforeAll
-    static void setupClass()
+    static @TempDir Path tempFolder;
+
+    @DynamicPropertySource
+    static void registerDynamicProperties(DynamicPropertyRegistry registry)
     {
-        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
+        registry.add("repository.path", () -> tempFolder.toAbsolutePath().toString());
     }
 
     @BeforeEach
@@ -154,17 +155,17 @@ class AeroRemoteApiController_Authentication_Jwt_Test
         projectService.createProject(project);
 
         remoteApiAdminUser = new User("admin", ROLE_ADMIN, ROLE_REMOTE);
-        remoteApiAdminUser.setRealm(REALM_EXTERNAL_PREFIX + REALM);
+        remoteApiAdminUser.setRealm(Realm.REALM_EXTERNAL_PREFIX + REALM);
         remoteApiAdminUser.setPassword(password);
         userRepository.create(remoteApiAdminUser);
 
         remoteApiNormalUser = new User("user", ROLE_USER, ROLE_REMOTE);
-        remoteApiNormalUser.setRealm(REALM_EXTERNAL_PREFIX + REALM);
+        remoteApiNormalUser.setRealm(Realm.REALM_EXTERNAL_PREFIX + REALM);
         remoteApiNormalUser.setPassword(password);
         userRepository.create(remoteApiNormalUser);
 
         nonRemoteNormalUser = new User("non-remote-user", ROLE_USER);
-        nonRemoteNormalUser.setRealm(REALM_EXTERNAL_PREFIX + REALM);
+        nonRemoteNormalUser.setRealm(Realm.REALM_EXTERNAL_PREFIX + REALM);
         nonRemoteNormalUser.setPassword(password);
         userRepository.create(nonRemoteNormalUser);
     }
@@ -220,7 +221,11 @@ class AeroRemoteApiController_Authentication_Jwt_Test
     @SpringBootConfiguration
     public static class TestContext
     {
-        // All handled by auto-config
+        @Bean
+        AuthenticationEventPublisher authenticationEventPublisher()
+        {
+            return new DefaultAuthenticationEventPublisher();
+        }
 
         @Bean
         public ApplicationContextProvider applicationContextProvider()

@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public abstract class RecommendationEngine
 {
@@ -209,24 +209,24 @@ public abstract class RecommendationEngine
         return getPredictedType(aCas).getFeatureByBaseName(featureName);
     }
 
-    protected Feature getScoreFeature(CAS aCas)
+    public Feature getScoreFeature(CAS aCas)
     {
         return getPredictedType(aCas).getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_SUFFIX);
     }
 
-    protected Feature getScoreExplanationFeature(CAS aCas)
+    public Feature getScoreExplanationFeature(CAS aCas)
     {
         return getPredictedType(aCas)
                 .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
     }
 
-    protected Feature getCorrectionFeature(CAS aCas)
+    public Feature getCorrectionFeature(CAS aCas)
     {
         return getPredictedType(aCas)
                 .getFeatureByBaseName(featureName + FEATURE_NAME_CORRECTION_SUFFIX);
     }
 
-    protected Feature getCorrectionExplanationFeature(CAS aCas)
+    public Feature getCorrectionExplanationFeature(CAS aCas)
     {
         return getPredictedType(aCas)
                 .getFeatureByBaseName(featureName + FEATURE_NAME_CORRECTION_EXPLANATION_SUFFIX);
@@ -271,5 +271,14 @@ public abstract class RecommendationEngine
             List<TrainingInstance> aIncrementalTrainingData)
     {
         // Nothing do to
+    }
+
+    /**
+     * @return whether to extract all layers and features or just the one configured in the
+     *         recommender settings.
+     */
+    public boolean isUniveralExtraction()
+    {
+        return false;
     }
 }

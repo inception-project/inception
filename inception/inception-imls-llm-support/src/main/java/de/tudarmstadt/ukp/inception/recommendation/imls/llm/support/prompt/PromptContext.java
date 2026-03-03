@@ -22,7 +22,7 @@ import java.util.Map;
 
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public class PromptContext
 {

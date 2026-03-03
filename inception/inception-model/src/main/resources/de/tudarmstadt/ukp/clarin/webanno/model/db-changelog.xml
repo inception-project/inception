@@ -1232,7 +1232,14 @@
   <!--
    - https://github.com/inception-project/inception/issues/3080
    -->
-  <changeSet author="INCEpTION Team" id="20220528-1" runAlways="true">
+  <changeSet author="INCEpTION Team" id="20220528-1a" runAlways="true">
+    <preConditions onFail="CONTINUE">
+      <and>
+        <tableExists tableName="annotation_feature" />
+        <columnExists tableName="annotation_feature" columnName="type"/>
+        <columnExists tableName="annotation_feature" columnName="name"/>
+      </and>
+    </preConditions>
     <update tableName="annotation_feature">
       <column name="type" type="VARCHAR(255)" value="de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures"/>
       <where>name = 'morph' and type = 'de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma'</where>
@@ -1393,5 +1400,36 @@
   </changeSet>
   <changeSet author="INCEpTION Team" id="20240629-14-pg" dbms="postgresql">
     <sql>ALTER TABLE annotation_feature ALTER "curatable" TYPE BOOLEAN USING ("curatable"::int::bool)</sql>
+  </changeSet>
+ 
+  <changeSet author="INCEpTION Team" id="20251031-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="source_document" columnName="state_updated"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="source_document">
+      <column name="state_updated" type="datetime(6)"/>
+    </addColumn>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20251031-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_document" columnName="state_updated"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_document">
+      <column name="state_updated" type="datetime(6)"/>
+    </addColumn>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20251031-3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="project" columnName="state_updated"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="project">
+      <column name="state_updated" type="datetime(6)"/>
+    </addColumn>
   </changeSet>
 </databaseChangeLog>

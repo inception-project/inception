@@ -28,8 +28,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import tools.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.ser.std.ToStringSerializer;
 
 /**
  * Visual ID. An ID used in communication with the brat-based annotation editor.

@@ -24,6 +24,7 @@ import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.guidelines.GuidelinesService;
 import de.tudarmstadt.ukp.inception.guidelines.GuidelinesServiceImpl;
 import de.tudarmstadt.ukp.inception.guidelines.exporters.GuidelinesExporter;
+import de.tudarmstadt.ukp.inception.guidelines.settings.ProjectGuidelinesMenuItem;
 
 @Configuration
 public class GuidelinesServiceAutoConfiguration
@@ -38,5 +39,11 @@ public class GuidelinesServiceAutoConfiguration
     public GuidelinesExporter guidelinesExporter(GuidelinesService aGuidelinesService)
     {
         return new GuidelinesExporter(aGuidelinesService);
+    }
+
+    @Bean
+    public ProjectGuidelinesMenuItem projectGuidelinesMenuItem()
+    {
+        return new ProjectGuidelinesMenuItem();
     }
 }

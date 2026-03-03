@@ -36,4 +36,6 @@ public interface ExternalEditorProperties
     boolean isBlockVideo();
 
     Source getAllowVideoSource();
+
+    boolean isInterpretMarkdown();
 }

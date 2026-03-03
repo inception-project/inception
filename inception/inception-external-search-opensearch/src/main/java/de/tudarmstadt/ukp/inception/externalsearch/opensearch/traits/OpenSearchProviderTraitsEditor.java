@@ -58,7 +58,7 @@ public class OpenSearchProviderTraitsEditor
     private final DocumentRepository documentRepository;
     private final OpenSearchProviderTraits properties;
 
-    private AuthenticationTraitsEditor authenticationTraitsEditor;
+    private AuthenticationTraitsEditor<?> authenticationTraitsEditor;
 
     private final IModel<OpenSearchProviderTraits> model;
 
@@ -142,9 +142,9 @@ public class OpenSearchProviderTraitsEditor
         aTarget.add(authenticationTraitsEditor);
     }
 
-    private AuthenticationTraitsEditor updateAuthenticationPanel()
+    private AuthenticationTraitsEditor<?> updateAuthenticationPanel()
     {
-        AuthenticationTraitsEditor panel;
+        AuthenticationTraitsEditor<?> panel;
 
         OpenSearchProviderTraits traits = model.getObject();
         if (traits.getAuthenticationType() != null) {
@@ -172,7 +172,7 @@ public class OpenSearchProviderTraitsEditor
         if (authenticationTraitsEditor == null
                 || panel.getClass() != authenticationTraitsEditor.getClass()) {
             if (authenticationTraitsEditor != null) {
-                authenticationTraitsEditor = (AuthenticationTraitsEditor) authenticationTraitsEditor
+                authenticationTraitsEditor = (AuthenticationTraitsEditor<?>) authenticationTraitsEditor
                         .replaceWith(panel);
             }
             else {

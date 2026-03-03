@@ -47,12 +47,12 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 import de.tudarmstadt.ukp.inception.schema.api.feature.MaterializedLink;
 
-public class CasMergeLinkFeature
+class CasMergeLinkFeature
 {
     private static final Logger LOG = LoggerFactory.getLogger(CasMerge.class);
 
-    public static CasMergeOperationResult mergeSlotFeature(CasMergeContext aContext,
-            SourceDocument aDocument, String aUsername, AnnotationLayer aAnnotationLayer,
+    static CasMergeOperationResult mergeSlotFeature(CasMergeContext aContext,
+            SourceDocument aDocument, String aDataOwner, AnnotationLayer aAnnotationLayer,
             CAS aTargetCas, AnnotationFS aSourceFs, String aSourceFeature, int aSourceSlotIndex)
         throws AnnotationException
     {
@@ -72,8 +72,8 @@ public class CasMergeLinkFeature
 
         var targetLinkHost = findLinkHostInTargetCas(aTargetCas, aSourceFs, adapter, slotFeature,
                 sourceLink);
-        var targetLinkTarget = findLinkTargetInTargetCas(aTargetCas, aSourceFs, adapter, slotFeature,
-                sourceLink, aSourceSlotIndex, aContext);
+        var targetLinkTarget = findLinkTargetInTargetCas(aTargetCas, aSourceFs, adapter,
+                slotFeature, sourceLink, aSourceSlotIndex, aContext);
 
         List<LinkWithRoleModel> targetLinks = adapter.getFeatureValue(slotFeature, targetLinkHost);
 
@@ -117,7 +117,7 @@ public class CasMergeLinkFeature
             throw new AnnotationException("Feature [" + aSourceFeature + "] is not a slot feature");
         }
 
-        adapter.setFeatureValue(aDocument, aUsername, aTargetCas, getAddr(targetLinkHost),
+        adapter.setFeatureValue(aDocument, aDataOwner, aTargetCas, getAddr(targetLinkHost),
                 slotFeature, targetLinks);
 
         return new CasMergeOperationResult(UPDATED, getAddr(targetLinkHost));
@@ -134,9 +134,9 @@ public class CasMergeLinkFeature
         return null;
     }
 
-    private static AnnotationFS findLinkTargetInTargetCas(CAS aTargetCas,
-            AnnotationFS aSourceFS, TypeAdapter aAdapter, AnnotationFeature aSlotFeature,
-            LinkWithRoleModel aSourceLink, int aSourceSlotIndex, CasMergeContext aContext)
+    private static AnnotationFS findLinkTargetInTargetCas(CAS aTargetCas, AnnotationFS aSourceFS,
+            TypeAdapter aAdapter, AnnotationFeature aSlotFeature, LinkWithRoleModel aSourceLink,
+            int aSourceSlotIndex, CasMergeContext aContext)
         throws UnfulfilledPrerequisitesException
     {
         var sourceCas = aSourceFS.getCAS();
@@ -184,30 +184,30 @@ public class CasMergeLinkFeature
         // If there is more than one candidate, we need to find the best fit
         // First we look at the other features of the annotation. If any of these are different, we
         // discard the candidate.
-        var filteredCandidateJpsts = candidateTargetLinkTargets.stream() //
-                .filter(candidate -> aAdapter.countNonEqualFeatures(candidate, aSourceFS,
-                        (fs, f) -> f.getLinkMode() == LinkMode.NONE) == 0) //
+        var filteredTargetCandidates = candidateTargetLinkTargets.stream() //
+                .filter(candidate -> sourceLinkTargetAdapter.countNonEqualFeatures(candidate,
+                        sourceLinkTarget, (fs, f) -> f.getLinkMode() == LinkMode.NONE) == 0) //
                 .toList();
 
         // If there are none, well... return nothing
-        if (filteredCandidateJpsts.isEmpty()) {
+        if (filteredTargetCandidates.isEmpty()) {
             return empty();
         }
 
         // If there is exactly one, return that.
-        if (filteredCandidateJpsts.size() == 1) {
-            return Optional.of(filteredCandidateJpsts.get(0));
+        if (filteredTargetCandidates.size() == 1) {
+            return Optional.of(filteredTargetCandidates.get(0));
         }
 
         // Still more than one, then we need to look at the slots...
         var matSourceLinks = getMaterializedLinks(aAdapter, aSourceFS);
 
-        var filterestCandidateTargets2 = filteredCandidateJpsts.stream() //
+        var sortedTargetCandidates = filteredTargetCandidates.stream() //
                 .sorted(comparing(candidateTarget -> countLinkDifference(aAdapter, aSourceFS,
                         aSlotFeature, aSourceLink, matSourceLinks, candidateTarget)))
                 .toList();
 
-        return filterestCandidateTargets2.stream().findFirst();
+        return sortedTargetCandidates.stream().findFirst();
     }
 
     private static Annotation findLinkHostInTargetCas(CAS aTargetCas, AnnotationFS aSourceFs,

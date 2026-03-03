@@ -35,12 +35,44 @@ By default, Ollama runs on `http://localhost:11434/` and {product-name} uses thi
 
 If {product-name} can successfully connect to Ollama, the **model** combo-box will offer all models that are available on the respective endpoint. If you want to use a model that is not listed here, you first need to `ollama pull` it.
 
+If the option **interactive** is enabled, the recommender will be available on the annotation page in the interactive annotation sidebar.
+Most of the other options described below are then configurable in the sidebar and not be shown in the recommender settings.
+
+The option **Structured output supported** should be enabled if the model / LLM service you are using supports structured output.
+If structured output is supported, {product-name} will try to describe the expected responses, possible labels, etc. to the LLM using a JSON schema.
+If this option is not enabled, {product-name} will use a more generic prompt and try to interpret the LLMs response - which may or may not be successful.
+
 Now you can configure how to generate the prompts that are sent to Ollama and how to interpret its response using the following settings:
 
-* **Prompting mode:** here you can choose to generate one prompt **per sentence**, **per annotation** or **per document**.
-* **Response format:** here you can choose how to read the response from Ollama. The choice is between **default** (i.e. text) and a **JSON** format.
-* **Extraction mode:** here you can choose how interpret the response from Ollama. The availability of different extraction modes depends on the type of layer for which the recommender is configured. Choose **response as label** e.g. for classification or summarization tasks. It puts the response from the LLM directly into the feature that you configured the recommender to operate on. Choose **Mentions from JSON** (span layer) for information extraction tasks where you ask the LLM e.g. to identify and categorize certain types of entities in the text.
-*  **Prompt:** Here you can finally define the prompt that is sent to Ollama. The prompt should usually consist of an instruction and a piece of text to which the instruction is to be applied. Depending on the prompting mode, there are different variables that can be used in the prompt. The most important variable is `text` and it corresponds to the sentence text, annotated words or document text, depending on the prompting mode.
+* **Layer**: the layer to generat annotation suggestions for.
+* **Feature**: the feature to predict. 
+  If there is only one eligible feature in the layer, this this choice is not offered.
+* **Context**: the prompt is executed once for each context unit.
+* **Task**: the kind of task to be described in the prompt. 
+* **Justifications**: whether to generate justifications for the suggestions.
+  Note that enabling justifications will increase the time it takes to generate suggestions.
+* **Prompt**: the prompt that is sent to Ollama
+* **Keep**: whether to keep existing suggestion when new suggestions are generated.
 
-The recommender comes with several example configurations that you can choose from a drop-down field. 
+The **context** setting can assume various values:
+* **Per sentence**: the prompt is executed once for each sentence in the document.
+* **Per paragraph**: the prompt is executed once for each paragraph in the document.
+  This only works if the document format supports paragraphs (e.g. HTML).
+* **Per document**: the prompt is executed once for each sentence in the document.
 
+E.g. for mention annotation tasks, choosing **per paragraph** tends of offer a good balance between speed and quality.
+
+The **task** setting can assume various values:
+* **Identify mentions within context**: the LLM will be asked to identify words or phrases within the selected context units.
+* **Apply to context as a whole**: the LLM will asked to generate a response applying to each of the
+context units. This can be used e.g. for summarization tasks.
+
+When **justifications** are enabled, the LLM will be asked to provide a justification for each of the suggestions it generates.
+This is useful for understanding why the LLM made a certain suggestion and can help you to evaluate its quality.
+However, this will significantly increase the time it takes to generate suggestions.
+The justifications are shown as **score explanation** when you hover over the suggestion in the annotation editor.
+The generation of justifications is only possible if structured output support is enabled.
+
+Here you can finally define the prompt that is sent to Ollama.
+Typically, this is an instruction such as `Identify persons and places` or `Identify medications, drugs and dosages`.
+If the **feature** that is predicted has a tagset, the system will try to instruct the LLM to only use the tags available in the tagset provide the tagset and tag descriptions to the LLM.

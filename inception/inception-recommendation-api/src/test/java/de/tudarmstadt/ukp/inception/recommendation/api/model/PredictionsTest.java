@@ -81,8 +81,7 @@ class PredictionsTest
         sut.inheritSuggestions(generatePredictions(100, 1, 100));
         assertThat(sut.size()).isEqualTo(10000);
 
-        var groups = sut.getGroupedPredictions(SpanSuggestion.class, "doc10", layer, winBegin,
-                winEnd);
+        var groups = sut.getGroupedPredictions(SpanSuggestion.class, 10L, layer, winBegin, winEnd);
         assertThat(groups).isNotEmpty();
     }
 
@@ -97,7 +96,7 @@ class PredictionsTest
         var generatedPredictions = generatePredictions(10_000, 1, 1_000);
         sut.inheritSuggestions(generatedPredictions);
         var documents = generatedPredictions.stream() //
-                .map(AnnotationSuggestion::getDocumentName) //
+                .map(AnnotationSuggestion::getDocumentId) //
                 .distinct() //
                 .collect(toList());
 
@@ -114,28 +113,39 @@ class PredictionsTest
     @Test
     void thatIdsAreAssigned() throws Exception
     {
-        var doc = SourceDocument.builder().withName("doc").build();
+        var doc = SourceDocument.builder() //
+                .withId(1L) //
+                .withName("doc") //
+                .build();
         sut = new Predictions(user, user.getUsername(), project);
         sut.putSuggestions(1, 0, 0, asList( //
                 SpanSuggestion.builder() //
                         .withId(AnnotationSuggestion.NEW_ID) //
                         .withDocument(doc) //
+                        .withRecommenderId(1l) //
+                        .withRecommenderName("Recommender") //
+                        .withLayerId(1l) //
+                        .withFeature("feature") //
                         .build()));
 
-        assertThat(sut.getPredictionsByDocument(doc)) //
+        assertThat(sut.getSuggestionsByDocument(doc)) //
                 .extracting(AnnotationSuggestion::getId) //
                 .containsExactly(0);
 
-        var inheritedPredictions = sut.getPredictionsByDocument(doc);
+        var inheritedPredictions = sut.getSuggestionsByDocument(doc);
         sut = new Predictions(sut);
         sut.putSuggestions(1, 0, 0, asList( //
                 SpanSuggestion.builder() //
                         .withId(AnnotationSuggestion.NEW_ID) //
                         .withDocument(doc) //
+                        .withRecommenderId(1l) //
+                        .withRecommenderName("Recommender") //
+                        .withLayerId(1l) //
+                        .withFeature("feature") //
                         .build()));
         sut.inheritSuggestions(inheritedPredictions);
 
-        assertThat(sut.getPredictionsByDocument(doc)) //
+        assertThat(sut.getSuggestionsByDocument(doc)) //
                 .extracting(AnnotationSuggestion::getId) //
                 .containsExactlyInAnyOrder(0, 1);
     }
@@ -150,13 +160,20 @@ class PredictionsTest
         var tokens = cas.select(Token.class).asList();
 
         var result = new ArrayList<AnnotationSuggestion>();
-        for (var docId = 0l; docId < aDocs; docId++) {
-            var doc = SourceDocument.builder().withId(docId).withName("doc" + docId).build();
-            for (var recId = 0l; recId < aRecommenders; recId++) {
+        for (var docId = 1l; docId <= aDocs; docId++) {
+            var doc = SourceDocument.builder() //
+                    .withId(docId) //
+                    .withName("doc" + docId) //
+                    .build();
+            for (var recId = 1l; recId <= aRecommenders; recId++) {
                 var feature = AnnotationFeature.builder().withId(recId).withName("feat" + recId)
                         .build();
-                var rec = Recommender.builder().withId(recId).withName("rec" + recId)
-                        .withLayer(layer).withFeature(feature).build();
+                var rec = Recommender.builder() //
+                        .withId(recId) //
+                        .withName("rec" + recId) //
+                        .withLayer(layer) //
+                        .withFeature(feature) //
+                        .build();
                 for (int annId = 0; annId < aSuggestions; annId++) {
                     var label = labels.get(rng.nextInt(labels.size()));
                     var token = tokens.get(rng.nextInt(tokens.size()));

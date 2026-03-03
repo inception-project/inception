@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHAN
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -54,6 +55,7 @@ public class ChatGptInteractionPanel
     private static final String MID_EXTRACTION_MODE = "extractionMode";
     private static final String MID_PROMPTING_MODE = "promptingMode";
     private static final String MID_PROMPT_HINTS = "promptHints";
+    private static final String MID_JUSTIFICATION_ENABLED = "justificationEnabled";
 
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean RecommendationEngineFactory<ChatGptRecommenderTraits> toolFactory;
@@ -90,7 +92,7 @@ public class ChatGptInteractionPanel
                 _target -> applyPreset(form, presetSelect.getModelObject(), _target)));
         form.add(presetSelect);
 
-        form.add(new TextArea<String>(MID_PROMPT));
+        form.add(new TextArea<String>(MID_PROMPT).setOutputMarkupId(true));
 
         var markdownLabel = new MarkdownLabel(MID_PROMPT_HINTS,
                 LoadableDetachableModel.of(this::getPromptHints));
@@ -102,7 +104,10 @@ public class ChatGptInteractionPanel
                         _target -> _target.add(markdownLabel))));
 
         form.add(new ExtractionModeSelect(MID_EXTRACTION_MODE, traits.bind(MID_EXTRACTION_MODE),
-                getModel()));
+                getModel()).setOutputMarkupId(true));
+
+        form.add(new CheckBox(MID_JUSTIFICATION_ENABLED) //
+                .setOutputMarkupId(true));
 
         add(form);
     }

@@ -128,6 +128,8 @@ public interface KnowledgeBaseService
      */
     List<KnowledgeBase> getEnabledKnowledgeBases(Project aProject);
 
+    boolean hasMoreThanOneEnabledKnowledgeBases(Project aProject);
+
     RepositoryImplConfig getNativeConfig();
 
     RepositoryImplConfig getRemoteConfig(String url);

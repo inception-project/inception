@@ -16,9 +16,21 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style>
+    .cbx-active {
+      color: inherit !important;
+    }
+    .cbx-disabled {
+      color: inherit !important;
+    }
+  </style>
+</wicket:head>
 <wicket:panel xmlns:wicket="http://wicket.apache.org">
   <label class="cbx-label" wicket:for="checkbox">
     <input wicket:id="checkbox" type="checkbox" />
     <wicket:container wicket:id="postLabel"/>
   </label>
 </wicket:panel>
+</html>

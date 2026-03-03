@@ -42,7 +42,7 @@ public class WikiDataKnowledgeBaseInitializer
     implements KnowledgeBaseInitializer
 {
     private static final PackageResourceReference THUMBNAIL = new PackageResourceReference(
-            MethodHandles.lookup().lookupClass(), "WikiDataKnowledgeBaseInitializer.svg");
+            MethodHandles.lookup().lookupClass(), "Lexicon.svg");
 
     private final KnowledgeBaseService kbService;
     private final KnowledgeBaseProfile profile;

@@ -17,14 +17,24 @@
  */
 
 a.tree-junction {
-	text-decoration: none;
+    text-decoration: none;
 }
 
 .modal-dialog .modal-dialog-content {
-  font-size: initial;
+    font-size: initial;
 }
 
 .dialog-theme-default .modal-dialog-overlay {
-  // z-index 1020 is in Bootstrap's .sticky-top and we need to be above that
-  z-index: 1030;
+    // z-index 1020 is in Bootstrap's .sticky-top and we need to be above that
+    z-index: 1030;
+}
+
+.tree-branch .tree-node {
+    white-space: nowrap;
+}
+
+table {
+    .headers {
+        height: 1px; // Hack to prevent headers from growing when we set the table height
+    }
 }

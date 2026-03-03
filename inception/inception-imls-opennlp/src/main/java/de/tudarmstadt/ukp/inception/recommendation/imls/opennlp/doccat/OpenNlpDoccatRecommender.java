@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
-import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringAnnotations;
 import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_UNITS;
+import static de.tudarmstadt.ukp.inception.support.uima.Range.rangeCoveringAnnotations;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -53,8 +53,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 import opennlp.tools.doccat.DoccatFactory;
 import opennlp.tools.doccat.DoccatModel;
 import opennlp.tools.doccat.DocumentCategorizerME;

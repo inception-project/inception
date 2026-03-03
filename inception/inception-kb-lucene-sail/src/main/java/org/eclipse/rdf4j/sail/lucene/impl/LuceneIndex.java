@@ -412,7 +412,7 @@ public class LuceneIndex
                 List<Throwable> exceptions = new ArrayList<>();
                 try {
                     synchronized (oldmonitors) {
-                        if (oldmonitors.size() > 0) {
+                        if (!oldmonitors.isEmpty()) {
                             logger.warn(
                                     "LuceneSail: On shutdown {} IndexReaders were not closed. This is due to non-closed Query Iterators, which must be closed!",
                                     oldmonitors.size());
@@ -840,12 +840,25 @@ public class LuceneIndex
             highlighter = null;
         }
 
-        TopDocs docs;
-        if (subject != null) {
-            docs = search(subject, q);
+        int numDocs;
+
+        Integer specNumDocs = spec.getNumDocs();
+        if (specNumDocs != null) {
+            if (specNumDocs < 0) {
+                throw new IllegalArgumentException("numDocs must be >= 0");
+            }
+            numDocs = specNumDocs;
         }
         else {
-            docs = search(q);
+            numDocs = -1;
+        }
+
+        TopDocs docs;
+        if (subject != null) {
+            docs = search(subject, q, numDocs);
+        }
+        else {
+            docs = search(q, numDocs);
         }
         return Iterables.transform(Arrays.asList(docs.scoreDocs),
                 (ScoreDoc doc) -> new LuceneDocumentScore(doc, highlighter, LuceneIndex.this));
@@ -1087,13 +1100,28 @@ public class LuceneIndex
      */
     public synchronized TopDocs search(Resource resource, Query query) throws IOException
     {
+        return search(resource, query, -1);
+    }
+
+    /**
+     * Evaluates the given query only for the given resource.
+     *
+     * @param resource
+     * @param query
+     * @param numDocs
+     * @return top documents
+     * @throws IOException
+     */
+    public synchronized TopDocs search(Resource resource, Query query, int numDocs)
+        throws IOException
+    {
         // rewrite the query
         TermQuery idQuery = new TermQuery(
                 new Term(SearchFields.URI_FIELD_NAME, SearchFields.getResourceID(resource)));
         BooleanQuery.Builder combinedQuery = new BooleanQuery.Builder();
         combinedQuery.add(idQuery, Occur.MUST);
         combinedQuery.add(query, Occur.MUST);
-        return search(combinedQuery.build());
+        return search(combinedQuery.build(), numDocs);
     }
 
     /**
@@ -1105,14 +1133,35 @@ public class LuceneIndex
      */
     public synchronized TopDocs search(Query query) throws IOException
     {
-        int nDocs;
-        if (maxDocs > 0) {
-            nDocs = maxDocs;
+        return search(query, -1);
+    }
+
+    /**
+     * Evaluates the given query and returns the results as a TopDocs instance.
+     *
+     * @param query
+     * @param numDocs
+     * @return top documents
+     * @throws IOException
+     */
+    public synchronized TopDocs search(Query query, int numDocs) throws IOException
+    {
+        if (numDocs < -1) {
+            throw new IllegalArgumentException(
+                    "numDocs should be 0 or greater if defined by the user");
         }
-        else {
-            nDocs = Math.max(getIndexReader().numDocs(), 1);
+
+        int size = defaultNumDocs;
+        if (numDocs >= 0) {
+            // If the user has set numDocs we will use that. If it is 0 then the implementation may
+            // end up throwing an
+            // exception.
+            size = Math.min(maxDocs, numDocs);
         }
-        return getIndexSearcher().search(query, nDocs);
+        if (size < 0) {
+            size = Math.max(getIndexReader().numDocs(), 1);
+        }
+        return getIndexSearcher().search(query, size);
     }
 
     private QueryParser getQueryParser(IRI propertyURI)

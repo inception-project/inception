@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt;
 
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptingMode.PER_DOCUMENT;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptingMode.PER_PARAGRAPH;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptingMode.PER_SENTENCE;
 import static java.util.Arrays.asList;
 
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -45,6 +48,6 @@ public class PromptingModeSelect
         super.onInitialize();
 
         setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        setChoices(asList(PromptingMode.values()));
+        setChoices(asList(PER_SENTENCE, PER_PARAGRAPH, PER_DOCUMENT));
     }
 }

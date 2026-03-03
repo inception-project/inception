@@ -15,11 +15,7 @@
 // limitations under the License.
 
 [[sect_formats_htmldoc]]
-= 🧪 HTML
-
-====
-CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `format.html.enabled` to the `settings.properties` file.
-====
+= HTML
 
 Generic support for HTML documents. This format imports the entire HTML document structure and is
 able to retain it until export. None of the HTML elements are converted to editable annotations

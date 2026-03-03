@@ -20,7 +20,9 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.commons.lang3.StringUtils.appendIfMissing;
+import static java.util.stream.Collectors.joining;
+import static org.apache.commons.lang3.Strings.CS;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
 import java.io.ByteArrayInputStream;
@@ -38,13 +40,13 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import tools.jackson.databind.ObjectMapper;
 
 public class OllamaClientImpl
     implements OllamaClient
@@ -105,13 +107,21 @@ public class OllamaClientImpl
             Consumer<OllamaGenerateResponse> aCallback)
         throws IOException
     {
-        var request = HttpRequest.newBuilder() //
-                .uri(URI.create(appendIfMissing(aUrl, "/") + "api/generate")) //
-                .header(CONTENT_TYPE, APPLICATION_JSON)
-                .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
-                .build();
+        var requestPayload = JSONUtil.toJsonString(aRequest);
 
-        var rawResponse = sendRequest(request);
+        LOG.trace("Request: {}", requestPayload);
+
+        var request = HttpRequest.newBuilder() //
+                .uri(URI.create(CS.appendIfMissing(aUrl, "/") + "api/generate")) //
+                .header(CONTENT_TYPE, APPLICATION_JSON);
+
+        if (aRequest.getApiKey() != null) {
+            request.header(AUTHORIZATION, "Bearer " + aRequest.getApiKey());
+        }
+
+        request.POST(BodyPublishers.ofString(requestPayload, UTF_8));
+
+        var rawResponse = sendRequest(request.build());
 
         handleError(rawResponse);
 
@@ -144,6 +154,12 @@ public class OllamaClientImpl
     }
 
     @Override
+    public OllamaChatResponse chat(String aUrl, OllamaChatRequest aRequest) throws IOException
+    {
+        return chat(aUrl, aRequest, null);
+    }
+
+    @Override
     public OllamaChatResponse chat(String aUrl, OllamaChatRequest aRequest,
             Consumer<OllamaChatResponse> aCallback)
         throws IOException
@@ -155,19 +171,32 @@ public class OllamaClientImpl
         }
 
         var request = HttpRequest.newBuilder() //
-                .uri(URI.create(appendIfMissing(aUrl, "/") + "api/chat")) //
-                .header(CONTENT_TYPE, "application/json")
-                .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
-                .build();
+                .uri(URI.create(CS.appendIfMissing(aUrl, "/") + "api/chat")) //
+                .header(CONTENT_TYPE, "application/json");
 
-        var rawResponse = sendRequest(request);
+        if (aRequest.getApiKey() != null) {
+            request.header(AUTHORIZATION, "Bearer " + aRequest.getApiKey());
+        }
+
+        request.POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8));
+
+        var rawResponse = sendRequest(request.build());
 
         handleError(rawResponse);
 
-        var result = new StringBuilder();
+        var toolCalls = new ArrayList<OllamaToolCall>();
+        var thinking = new StringBuilder();
+        var content = new StringBuilder();
         OllamaChatResponse finalResponse = null;
         try (var is = rawResponse.body()) {
-            var iter = objectMapper.readerFor(OllamaChatResponse.class).readValues(is);
+            var theIs = is;
+            if (LOG.isTraceEnabled() && aRequest.isStream() == false) {
+                var responseBytes = is.readAllBytes();
+                LOG.trace("Recieved chat response: {}", new String(responseBytes, UTF_8));
+                theIs = new ByteArrayInputStream(responseBytes);
+            }
+
+            var iter = objectMapper.readerFor(OllamaChatResponse.class).readValues(theIs);
             while (iter.hasNext()) {
                 var response = (OllamaChatResponse) iter.nextValue();
 
@@ -176,7 +205,19 @@ public class OllamaClientImpl
                     finalResponse = response;
                 }
 
-                result.append(response.getMessage().content());
+                if (response.getMessage() != null) {
+                    if (response.getMessage().thinking() != null) {
+                        thinking.append(response.getMessage().thinking());
+                    }
+
+                    if (response.getMessage().content() != null) {
+                        content.append(response.getMessage().content());
+                    }
+
+                    if (response.getMessage().toolCalls() != null) {
+                        toolCalls.addAll(response.getMessage().toolCalls());
+                    }
+                }
 
                 if (aCallback != null) {
                     aCallback.accept(response);
@@ -188,11 +229,28 @@ public class OllamaClientImpl
             throw new IOException("Request returned without a response");
         }
 
-        finalResponse.setMessage(
-                new OllamaChatMessage(finalResponse.getMessage().role(), result.toString().trim()));
+        if (aRequest.isStream()) {
+            finalResponse.setMessage(new OllamaChatMessage(finalResponse.getMessage().role(),
+                    content.toString().trim(), thinking.toString().trim(), toolCalls));
 
-        LOG.trace("[{}] responds ({} ms): [{}]", aRequest.getModel(),
-                currentTimeMillis() - startTime, finalResponse.getMessage().content());
+            if (LOG.isTraceEnabled()) {
+                var msg = new StringBuilder();
+                if (StringUtils.isNotBlank(finalResponse.getMessage().thinking())) {
+                    msg.append("🤔 [");
+                    msg.append(finalResponse.getMessage().thinking());
+                    msg.append("] ");
+                }
+                msg.append("😀 [");
+                msg.append(finalResponse.getMessage().content());
+                msg.append("]");
+
+                LOG.trace("[{}] responds ({} ms): {} {}", aRequest.getModel(),
+                        currentTimeMillis() - startTime, msg,
+                        toolCalls.isEmpty() ? ""
+                                : toolCalls.stream().map(OllamaToolCall::toString)
+                                        .collect(joining(", ", "🔧 [", "]")));
+            }
+        }
 
         return finalResponse;
     }
@@ -202,7 +260,7 @@ public class OllamaClientImpl
         throws IOException
     {
         var request = HttpRequest.newBuilder() //
-                .uri(URI.create(appendIfMissing(aUrl, "/") + "api/embed")) //
+                .uri(URI.create(CS.appendIfMissing(aUrl, "/") + "api/embed")) //
                 .header(CONTENT_TYPE, "application/json")
                 .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
                 .build();
@@ -270,10 +328,10 @@ public class OllamaClientImpl
     }
 
     @Override
-    public List<OllamaModel> listModels(String aUrl) throws IOException
+    public List<OllamaTag> listModels(String aUrl) throws IOException
     {
         var request = HttpRequest.newBuilder() //
-                .uri(URI.create(appendIfMissing(aUrl, "/") + "api/tags")) //
+                .uri(URI.create(CS.appendIfMissing(aUrl, "/") + "api/tags")) //
                 .header(CONTENT_TYPE, APPLICATION_JSON).GET() //
                 .timeout(TIMEOUT) //
                 .build();
@@ -283,7 +341,31 @@ public class OllamaClientImpl
         handleError(response);
 
         try (var is = response.body()) {
-            return objectMapper.readValue(is, OllamaTagsResponse.class).getModels();
+            return objectMapper.readValue(is, OllamaTagsResponse.class).models();
+        }
+    }
+
+    @Override
+    public OllamaShowResponse getModelInfo(String aUrl, OllamaShowRequest aRequest)
+        throws IOException
+    {
+        var requestPayload = JSONUtil.toJsonString(aRequest);
+
+        var request = HttpRequest.newBuilder() //
+                .uri(URI.create(CS.appendIfMissing(aUrl, "/") + "api/show")) //
+                .header(CONTENT_TYPE, APPLICATION_JSON)
+                .POST(BodyPublishers.ofString(requestPayload, UTF_8));
+
+        if (aRequest.apiKey() != null) {
+            request.header(AUTHORIZATION, "Bearer " + aRequest.apiKey());
+        }
+
+        var response = sendRequest(request.build());
+
+        handleError(response);
+
+        try (var is = response.body()) {
+            return objectMapper.readValue(is, OllamaShowResponse.class);
         }
     }
 

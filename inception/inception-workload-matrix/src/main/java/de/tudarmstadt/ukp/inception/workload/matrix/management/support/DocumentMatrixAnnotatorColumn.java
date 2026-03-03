@@ -28,27 +28,28 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 
 public class DocumentMatrixAnnotatorColumn
     extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
 {
     private static final long serialVersionUID = 8324173231787296215L;
 
-    private IModel<Set<String>> selectedUsers;
-    private User user;
+    private IModel<Set<AnnotationSet>> selectedUsers;
+    private AnnotationSet annotationSet;
 
-    public DocumentMatrixAnnotatorColumn(User aUser, IModel<Set<String>> aSelectedUsers)
+    public DocumentMatrixAnnotatorColumn(AnnotationSet aAnnSet,
+            IModel<Set<AnnotationSet>> aSelectedSets)
     {
-        super(Model.of(aUser.getUiName()), annotatorSortKey(aUser.getUsername()),
-                row -> row.getAnnotationDocument(aUser.getUsername()));
-        user = aUser;
-        selectedUsers = aSelectedUsers;
+        super(Model.of(aAnnSet.displayName()), annotatorSortKey(aAnnSet),
+                row -> row.getAnnotationDocument(aAnnSet));
+        annotationSet = aAnnSet;
+        selectedUsers = aSelectedSets;
     }
 
-    public User getUser()
+    public AnnotationSet getAnnotationSet()
     {
-        return user;
+        return annotationSet;
     }
 
     @Override
@@ -60,6 +61,6 @@ public class DocumentMatrixAnnotatorColumn
                 aRowModel);
 
         aItem.add(new DocumentMatrixAnnotatorStateCell(aComponentId, aRowModel, annDocument,
-                selectedUsers, user));
+                selectedUsers, annotationSet));
     }
 }

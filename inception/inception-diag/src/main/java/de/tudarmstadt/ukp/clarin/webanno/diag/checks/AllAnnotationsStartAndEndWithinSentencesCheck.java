@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
-import static org.apache.commons.lang3.StringUtils.abbreviate;
+import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
+import static org.apache.commons.text.StringEscapeUtils.escapeJava;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
@@ -93,9 +94,9 @@ public class AllAnnotationsStartAndEndWithinSentencesCheck
                 }
 
                 aMessages.add(LogMessage.error(this, "[%s] [%s]@[%d-%d] %s outside any sentence",
-                        ann.getType().getName(), abbreviate(ann.getCoveredText(), "…", 10),
-                        ann.getBegin(), ann.getEnd(),
-                        String.join(" and ", outsides.toArray(String[]::new))));
+                        ann.getType().getName(),
+                        escapeJava(abbreviateMiddle(ann.getCoveredText(), "…", 20)), ann.getBegin(),
+                        ann.getEnd(), String.join(" and ", outsides.toArray(String[]::new))));
 
                 ok = false;
             }

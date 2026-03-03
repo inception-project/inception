@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClientBuilder;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandle;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.exists;
 import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.isReachable;
@@ -38,6 +39,7 @@ import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -251,6 +253,8 @@ public class SPARQLQueryBuilderLocalTestScenarios
                         SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_withLanguage_FTS_3),
                 new Scenario("testWithLabelStartingWith_withLanguage_FTS_4",
                         SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_withLanguage_FTS_4),
+                new Scenario("testWithLabelStartingWith_withLanguage_FTS_5",
+                        SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_withLanguage_FTS_5),
                 new Scenario("testWithLabelStartingWith_withLanguage_noFTS",
                         SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_withLanguage_noFTS),
                 new Scenario("testWithLabelContainingAnyOf_pets_ttl_noFTS",
@@ -287,6 +291,8 @@ public class SPARQLQueryBuilderLocalTestScenarios
                         SPARQLQueryBuilderLocalTestScenarios::thatLabelsAndDescriptionsWithLanguageArePreferred),
                 new Scenario("thatSearchOverMultipleLabelsWorks",
                         SPARQLQueryBuilderLocalTestScenarios::thatSearchOverMultipleLabelsWorks),
+                new Scenario("thatResolveMatchingPropertiesWorks",
+                        SPARQLQueryBuilderLocalTestScenarios::thatResolveMatchingPropertiesWorks),
                 new Scenario("thatMatchingAgainstAdditionalSearchPropertiesWorks",
                         SPARQLQueryBuilderLocalTestScenarios::thatMatchingAgainstAdditionalSearchPropertiesWorks),
                 new Scenario("thatMatchingAgainstAdditionalSearchPropertiesWorks2",
@@ -342,9 +348,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
                 new Scenario("thatItemQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults",
                         SPARQLQueryBuilderLocalTestScenarios::thatItemQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults),
                 new Scenario("testWithLabelStartingWith_OLIA",
-                        SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_OLIA)
-
-        );
+                        SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_OLIA));
     }
 
     static class Scenario
@@ -364,6 +368,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
     {
         var repo = new SPARQLRepository(aUrl);
         repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
+        repo.setAdditionalHttpHeaders(Map.of("User-Agent", "INCEpTION/0.0.1-SNAPSHOT"));
         repo.init();
         return repo;
     }
@@ -372,6 +377,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
     {
         var repo = new SPARQLRepository(aQueryUrl, aUpdateUrl);
         repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
+        repo.setAdditionalHttpHeaders(Map.of("User-Agent", "INCEpTION/0.0.1-SNAPSHOT"));
         repo.init();
         return repo;
     }
@@ -476,6 +482,24 @@ public class SPARQLQueryBuilderLocalTestScenarios
         }
     }
 
+    static void thatResolveMatchingPropertiesWorks(Repository aRepository, KnowledgeBase aKB)
+        throws Exception
+    {
+        aKB.setLabelIri("http://www.w3.org/2000/01/rdf-schema#prefLabel");
+        aKB.setAdditionalMatchingProperties(asList("http://www.w3.org/2000/01/rdf-schema#label"));
+
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
+                DATA_ADDITIONAL_SEARCH_PROPERTIES);
+
+        try (var conn = aRepository.getConnection()) {
+            var forItems = (SPARQLQueryBuilder) SPARQLQueryBuilder.forItems(aKB);
+            assertThat(forItems.resolvePrefLabelProperties(conn))
+                    .containsExactlyInAnyOrder("http://www.w3.org/2000/01/rdf-schema#prefLabel");
+            assertThat(forItems.resolveAdditionalMatchingProperties(conn))
+                    .containsExactlyInAnyOrder("http://www.w3.org/2000/01/rdf-schema#label");
+        }
+    }
+
     static void thatMatchingAgainstAdditionalSearchPropertiesWorks(Repository aRepository,
             KnowledgeBase aKB)
         throws Exception
@@ -486,7 +510,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_ADDITIONAL_SEARCH_PROPERTIES);
 
-        for (String term : asList("specimen", "sample", "instance", "case")) {
+        for (var term : asList("specimen", "sample", "instance", "case")) {
             var results = asHandles(aRepository, SPARQLQueryBuilder //
                     .forItems(aKB) //
                     .withLabelMatchingAnyOf(term) //
@@ -1270,6 +1294,38 @@ public class SPARQLQueryBuilderLocalTestScenarios
                         "description", "language")
                 .containsExactlyInAnyOrder(new KBHandle("http://example.org/#green-goblin",
                         "Green Goblin", null, "en"));
+    }
+
+    static void testWithLabelStartingWith_withLanguage_FTS_5(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
+    {
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
+
+        // language → expected UI label
+        var expectations = Map.of( //
+                "de", "Automobil", //
+                "en", "automobile", //
+                "fr", "automobile", //
+                "es", "automóvil", //
+                "it", "automobile", //
+                "pt", "automóvel", //
+                "nl", "auto");
+
+        expectations.forEach((language, expectedLabel) -> {
+            aKB.setDefaultLanguage(language);
+            aKB.setAdditionalLanguages(expectations.keySet().stream() //
+                    .filter(lang -> !language.equals(lang)) //
+                    .toList());
+
+            var results = asHandle(aRepository,
+                    SPARQLQueryBuilder.forItems(aKB).withLabelContainingAnyOf("auto"));
+
+            assertThat(results).as("Language: %s", language) //
+                    .extracting(KBHandle::getUiLabel) //
+                    .matches(expectedLabel::equals);
+        });
     }
 
     static void testWithLabelStartingWith_OLIA(Repository aRepository, KnowledgeBase aKB)

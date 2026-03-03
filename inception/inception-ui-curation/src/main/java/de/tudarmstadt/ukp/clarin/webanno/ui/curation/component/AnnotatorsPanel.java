@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ACCEPTED_BY_CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ANNOTATORS_AGREE;
@@ -28,8 +27,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.Anno
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -65,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -73,6 +71,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSe
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.AnnotationStateColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.merge.AlreadyMergedException;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
@@ -86,6 +86,7 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil;
+import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
@@ -121,6 +122,7 @@ public class AnnotatorsPanel
     private @SpringBean CurationRenderer curationRenderer;
     private @SpringBean BratSchemaGenerator bratSchemaGenerator;
     private @SpringBean AnnotationSchemaProperties annotationEditorProperties;
+    private @SpringBean DiffAdapterRegistry diffAdapterRegistry;
 
     public AnnotatorsPanel(String id, IModel<List<AnnotatorSegmentState>> aModel)
     {
@@ -263,11 +265,11 @@ public class AnnotatorsPanel
                 CasMergeOperationResult result;
 
                 switch (aLayer.getType()) {
-                case SPAN_TYPE:
+                case WebAnnoConst.SPAN_TYPE:
                     result = mergeSpan(casMerge, targetCas, sourceCas, new VID(ann),
                             sourceState.getDocument(), sourceState.getUser().getUsername(), aLayer);
                     break;
-                case RELATION_TYPE:
+                case RelationLayerSupport.TYPE:
                     result = mergeRelation(casMerge, targetCas, sourceCas, new VID(ann),
                             sourceState.getDocument(), sourceState.getUser().getUsername(), aLayer);
                     break;
@@ -379,7 +381,7 @@ public class AnnotatorsPanel
     private CAS readAnnotatorCas(AnnotatorSegmentState aSegment) throws IOException
     {
         return documentService.readAnnotationCas(aSegment.getAnnotatorState().getDocument(),
-                aSegment.getUser().getUsername());
+                AnnotationSet.forUser(aSegment.getUser()));
     }
 
     /**
@@ -445,7 +447,7 @@ public class AnnotatorsPanel
         // The source CASes from the annotators are all ready read-only / shared
         for (var user : curationDocumentService.listCuratableUsers(aDocument)) {
             casses.put(user.getUsername(),
-                    documentService.readAnnotationCas(aDocument, user.getUsername()));
+                    documentService.readAnnotationCas(aDocument, AnnotationSet.forUser(user)));
         }
 
         return casses;
@@ -454,7 +456,7 @@ public class AnnotatorsPanel
     private Map<String, Map<VID, AnnotationState>> calculateAnnotationStates(AnnotatorState aState,
             Map<String, CAS> aCasses)
     {
-        var adapters = getDiffAdapters(schemaService, aState.getAnnotationLayers());
+        var adapters = diffAdapterRegistry.getDiffAdapters(aState.getAnnotationLayers());
         var diff = doDiff(adapters, aCasses, aState.getWindowBeginOffset(),
                 aState.getWindowEndOffset()).toResult();
 

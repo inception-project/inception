@@ -45,9 +45,9 @@ public class SentenceOrientedPagingStrategy
     @Override
     public List<Unit> units(CAS aCas, int aFirstIndex, int aLastIndex)
     {
-        List<Unit> units = new ArrayList<>();
+        var units = new ArrayList<Unit>();
         int i = 1;
-        for (AnnotationFS sentence : selectSentences(aCas)) {
+        for (var sentence : selectSentences(aCas)) {
             if (i > aLastIndex) {
                 break;
             }

@@ -36,6 +36,7 @@ import org.apache.commons.lang3.Validate;
 import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
@@ -50,20 +51,26 @@ public class DocumentStorageServiceImpl
         repositoryProperties = aRepositoryProperties;
     }
 
-    private Path getSourceDocumentFolder(SourceDocument aDocument)
+    Path getSourceDocumentFolder(SourceDocument aDocument)
     {
         Validate.notNull(aDocument, "Parameter [sourceDocument] must be specified");
         Validate.notNull(aDocument.getProject().getId(),
                 "Source document's project must have an ID");
         Validate.notNull(aDocument.getId(), "Source document must have an ID");
 
+        return getDocumentsFolder(aDocument.getProject()) //
+                .resolve(Long.toString(aDocument.getId())) //
+                .resolve(SOURCE_FOLDER);
+    }
+
+    Path getDocumentsFolder(Project aProject)
+    {
         return repositoryProperties.getPath().toPath() //
                 .toAbsolutePath() //
                 .resolve(PROJECT_FOLDER) //
-                .resolve(Long.toString(aDocument.getProject().getId())) //
+                .resolve(Long.toString(aProject.getId())) //
                 .resolve(DOCUMENT_FOLDER)//
-                .resolve(Long.toString(aDocument.getId())) //
-                .resolve(SOURCE_FOLDER);
+        ;
     }
 
     @Override
@@ -73,6 +80,32 @@ public class DocumentStorageServiceImpl
 
         var path = getSourceDocumentFile(aDocument).toPath();
         return Files.exists(path);
+    }
+
+    @Override
+    public void renameSourceDocumentFile(SourceDocument aDocument, String aNewName)
+        throws IOException
+    {
+        Validate.notNull(aDocument, "Parameter [sourceDocument] must be specified");
+        Validate.notBlank(aNewName, "Parameter [newName] must be specified");
+
+        var oldFile = getSourceDocumentFile(aDocument);
+        if (!oldFile.exists()) {
+            throw new IllegalStateException("Source document file does not exist: " + oldFile);
+        }
+
+        var newFile = getSourceDocumentFolder(aDocument).resolve(aNewName).toFile();
+        if (newFile.exists()) {
+            throw new IllegalStateException("Target file already exists: " + newFile);
+        }
+
+        try {
+            Files.move(oldFile.toPath(), newFile.toPath());
+        }
+        catch (IOException e) {
+            throw new IOException("Failed to rename source document file from [" + oldFile.getName()
+                    + "] to [" + newFile.getName() + "]: " + e.getMessage(), e);
+        }
     }
 
     @Override

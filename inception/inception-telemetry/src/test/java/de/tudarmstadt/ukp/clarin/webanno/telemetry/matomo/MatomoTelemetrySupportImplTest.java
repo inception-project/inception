@@ -31,7 +31,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,12 +48,10 @@ import de.tudarmstadt.ukp.clarin.webanno.telemetry.config.MatomoTelemetryService
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.identity.InstanceIdentityService;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentMode;
-import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
 
-public class MatomoTelemetrySupportImplTest
+class MatomoTelemetrySupportImplTest
 {
     private MatomoTelemetrySupportImpl sut;
 
@@ -64,7 +61,7 @@ public class MatomoTelemetrySupportImplTest
     private TelemetrySettings telemetrySettings;
 
     @BeforeEach
-    public void setup() throws Exception
+    void setup() throws Exception
     {
         matomoServer = new MockWebServer();
         matomoServer.start();
@@ -76,25 +73,25 @@ public class MatomoTelemetrySupportImplTest
         properties.setSiteId(1);
 
         instanceId = UUID.randomUUID();
-        InstanceIdentityService identityService = mock(InstanceIdentityService.class);
+        var identityService = mock(InstanceIdentityService.class);
         when(identityService.getInstanceIdentity())
                 .thenReturn(new InstanceIdentity(instanceId.toString()));
 
         telemetrySettings = new TelemetrySettings();
         telemetrySettings.setVersion(CURRENT_SETTINGS_VERSION);
         telemetrySettings.setTraits("{\"enabled\": true}");
-        TelemetryService telemetryService = mock(TelemetryService.class);
+        var telemetryService = mock(TelemetryService.class);
         when(telemetryService.readSettings(any())).thenReturn(Optional.of(telemetrySettings));
         when(telemetryService.getDeploymentMode()).thenReturn(DeploymentMode.DESKTOP);
 
-        SessionRegistry sessionRegistry = mock(SessionRegistry.class);
+        var sessionRegistry = mock(SessionRegistry.class);
         when(sessionRegistry.getAllPrincipals()).thenReturn(asList("John", "Jane"));
         when(sessionRegistry.getAllSessions(any(), anyBoolean())).thenAnswer(invocation -> {
             Object principal = invocation.getArgument(0);
             return asList(new SessionInformation(principal, "deadbeef", new Date()));
         });
 
-        UserDao userService = mock(UserDao.class);
+        var userService = mock(UserDao.class);
         when(userService.listEnabledUsers()).thenReturn(asList(new User("John"), new User("Jane")));
 
         sut = new MatomoTelemetrySupportImpl(telemetryService, identityService, userService,
@@ -102,13 +99,13 @@ public class MatomoTelemetrySupportImplTest
     }
 
     @AfterEach
-    public void teardown() throws Exception
+    void teardown() throws Exception
     {
         matomoServer.shutdown();
     }
 
     @Test
-    public void thatAliveIsRecieved() throws Exception
+    void thatAliveIsRecieved() throws Exception
     {
         assertThat(sut.isEnabled()).isTrue();
 
@@ -116,8 +113,8 @@ public class MatomoTelemetrySupportImplTest
 
         sut.sendAlive();
 
-        RecordedRequest aliveNotification = matomoServer.takeRequest();
-        HttpUrl url = aliveNotification.getRequestUrl();
+        var aliveNotification = matomoServer.takeRequest();
+        var url = aliveNotification.getRequestUrl();
         assertThat(url.queryParameter("idsite")).isEqualTo(String.valueOf(properties.getSiteId()));
         assertThat(url.queryParameter("rec")).isEqualTo(String.valueOf(1));
         assertThat(url.queryParameter("apiv")).isEqualTo(String.valueOf(1));
@@ -128,7 +125,8 @@ public class MatomoTelemetrySupportImplTest
                 .isEqualTo(format("%016x", instanceId.getMostSignificantBits()));
         assertThat(url.queryParameter("ua")).isNotNull();
         assertThat(url.queryParameter("url")).isEqualTo("https://webanno.github.io/telemetry");
-        Map<?, ?> map = fromJsonString(HashMap.class, decode(url.queryParameter("_cvar"), UTF_8));
+
+        var map = fromJsonString(HashMap.class, decode(url.queryParameter("_cvar"), UTF_8));
         assertThat(map.get("1")).isEqualTo(asList("app", "app"));
         assertThat(map.get("2")).isEqualTo(asList("version", "unknown"));
         assertThat(map.get("3")).isEqualTo(asList("activeUsers", "2"));
@@ -137,7 +135,7 @@ public class MatomoTelemetrySupportImplTest
     }
 
     @Test
-    public void thatPingIsRecieved() throws Exception
+    void thatPingIsRecieved() throws Exception
     {
         assertThat(sut.isEnabled()).isTrue();
 
@@ -145,8 +143,8 @@ public class MatomoTelemetrySupportImplTest
 
         sut.sendPing();
 
-        RecordedRequest aliveNotification = matomoServer.takeRequest();
-        HttpUrl url = aliveNotification.getRequestUrl();
+        var aliveNotification = matomoServer.takeRequest();
+        var url = aliveNotification.getRequestUrl();
         assertThat(url.queryParameter("idsite")).isEqualTo(String.valueOf(properties.getSiteId()));
         assertThat(url.queryParameter("rec")).isEqualTo(String.valueOf(1));
         assertThat(url.queryParameter("apiv")).isEqualTo(String.valueOf(1));
@@ -157,7 +155,8 @@ public class MatomoTelemetrySupportImplTest
                 .isEqualTo(format("%016x", instanceId.getMostSignificantBits()));
         assertThat(url.queryParameter("ua")).isNotNull();
         assertThat(url.queryParameter("url")).isEqualTo("https://webanno.github.io/telemetry");
-        Map<?, ?> map = fromJsonString(HashMap.class, decode(url.queryParameter("_cvar"), UTF_8));
+
+        var map = fromJsonString(HashMap.class, decode(url.queryParameter("_cvar"), UTF_8));
         assertThat(map.get("1")).isEqualTo(asList("app", "app"));
         assertThat(map.get("2")).isEqualTo(asList("version", "unknown"));
         assertThat(map.get("3")).isEqualTo(asList("activeUsers", "2"));
@@ -166,7 +165,7 @@ public class MatomoTelemetrySupportImplTest
     }
 
     @Test
-    public void thatVersionMismatchDisablesTelemetry() throws Exception
+    void thatVersionMismatchDisablesTelemetry() throws Exception
     {
         assertThat(telemetrySettings.getVersion()).isEqualTo(CURRENT_SETTINGS_VERSION);
         assertThat(sut.isEnabled()).isTrue();

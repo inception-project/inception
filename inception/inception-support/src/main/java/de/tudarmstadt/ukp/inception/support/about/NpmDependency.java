@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.support.about.ApplicationInformation.
 import static de.tudarmstadt.ukp.inception.support.about.ApplicationInformation.normaliseSource;
 import static de.tudarmstadt.ukp.inception.support.about.ApplicationInformation.sourceFromPackageName;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.Strings.CS;
 
 import java.io.Serializable;
 import java.util.List;
@@ -135,7 +136,7 @@ public class NpmDependency
             @Override
             public String getName()
             {
-                if (StringUtils.contains(NpmDependency.this.getName(), "@")) {
+                if (CS.contains(NpmDependency.this.getName(), "@")) {
                     return StringUtils.substringBeforeLast(NpmDependency.this.getName(), "@");
                 }
 
@@ -145,7 +146,7 @@ public class NpmDependency
             @Override
             public String getVersion()
             {
-                if (StringUtils.contains(NpmDependency.this.getName(), "@")) {
+                if (CS.contains(NpmDependency.this.getName(), "@")) {
                     return StringUtils.substringAfterLast(NpmDependency.this.getName(), "@");
                 }
 

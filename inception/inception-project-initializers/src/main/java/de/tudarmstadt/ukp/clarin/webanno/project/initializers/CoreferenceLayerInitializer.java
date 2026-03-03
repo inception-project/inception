@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;

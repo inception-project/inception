@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation;
 
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.counting;
@@ -53,7 +53,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public class StringMatchingRelationRecommender
     extends RecommendationEngine

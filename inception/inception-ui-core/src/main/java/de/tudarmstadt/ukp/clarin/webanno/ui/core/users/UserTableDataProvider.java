@@ -27,26 +27,23 @@ import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOr
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-
 public class UserTableDataProvider
-    extends SortableDataProvider<User, UserTableSortKeys>
-    implements IFilterStateLocator<UserTableFilterState>, Serializable
+    extends SortableDataProvider<UserTableRow, UserTableSortKeys>
+    implements IFilterStateLocator<UserTableFilterState>, Serializable, Iterable<UserTableRow>
 {
     private static final long serialVersionUID = -8262950880527423715L;
 
     private UserTableFilterState filterState;
-    private IModel<List<User>> source;
-    private IModel<List<User>> data;
+    private IModel<List<UserTableRow>> source;
+    private IModel<List<UserTableRow>> data;
 
-    public UserTableDataProvider(IModel<List<User>> aUsers)
+    public UserTableDataProvider(IModel<List<UserTableRow>> aUsers)
     {
         source = aUsers;
         refresh();
@@ -64,7 +61,15 @@ public class UserTableDataProvider
     }
 
     @Override
-    public Iterator<? extends User> iterator(long aFirst, long aCount)
+    public Iterator<UserTableRow> iterator()
+    {
+        var filteredData = filter(data.getObject());
+        filteredData.sort(this::comparator);
+        return filteredData.iterator();
+    }
+
+    @Override
+    public Iterator<? extends UserTableRow> iterator(long aFirst, long aCount)
     {
         var filteredData = filter(data.getObject());
         filteredData.sort(this::comparator);
@@ -73,40 +78,40 @@ public class UserTableDataProvider
                 .iterator();
     }
 
-    private int comparator(User ob1, User ob2)
+    private int comparator(UserTableRow ob1, UserTableRow ob2)
     {
         var o1 = ob1;
         var o2 = ob2;
         int dir = getSort().isAscending() ? 1 : -1;
         switch (getSort().getProperty()) {
         case NAME:
-            return dir * compare(o1.getUsername(), o2.getUsername());
+            return dir * compare(o1.getUser().getUsername(), o2.getUser().getUsername());
         case UI_NAME:
-            return dir * compare(o1.getUiName(), o2.getUiName());
+            return dir * compare(o1.getUser().getUiName(), o2.getUser().getUiName());
         case CREATED:
-            return dir * compare(o1.getCreated(), o2.getCreated());
+            return dir * compare(o1.getUser().getCreated(), o2.getUser().getCreated());
         case LAST_LOGIN:
-            return dir * compare(o1.getLastLogin(), o2.getLastLogin());
+            return dir * compare(o1.getUser().getLastLogin(), o2.getUser().getLastLogin());
         default:
             return 0;
         }
     }
 
-    private List<User> filter(List<User> aData)
+    private List<UserTableRow> filter(List<UserTableRow> aData)
     {
-        Stream<User> userStream = aData.stream();
+        var userStream = aData.stream();
 
         // Filter by document name
         if (filterState.getUsername() != null) {
-            userStream = userStream
-                    .filter(user -> containsIgnoreCase(user.getUiName(), filterState.getUsername())
-                            || containsIgnoreCase(user.getUsername(), filterState.getUsername()));
+            userStream = userStream.filter(user -> containsIgnoreCase(user.getUser().getUiName(),
+                    filterState.getUsername())
+                    || containsIgnoreCase(user.getUser().getUsername(), filterState.getUsername()));
         }
 
         // Filter by document states
         if (isNotEmpty(filterState.getStates())) {
             userStream = userStream
-                    .filter(user -> filterState.getStates().contains(UserState.of(user)));
+                    .filter(user -> filterState.getStates().contains(UserState.of(user.getUser())));
         }
 
         return userStream.collect(toList());
@@ -119,7 +124,7 @@ public class UserTableDataProvider
     }
 
     @Override
-    public IModel<User> model(User aObject)
+    public IModel<UserTableRow> model(UserTableRow aObject)
     {
         return Model.of(aObject);
     }
@@ -136,7 +141,7 @@ public class UserTableDataProvider
         filterState = aState;
     }
 
-    public IModel<List<User>> getModel()
+    public IModel<List<UserTableRow>> getModel()
     {
         return data;
     }

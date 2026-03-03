@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.io.bioc.xml;
 
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer.isRelationLayer;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.A_ID;
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.A_KEY;
 import static de.tudarmstadt.ukp.inception.io.bioc.BioCComponent.A_LENGTH;
@@ -38,8 +40,6 @@ import static de.tudarmstadt.ukp.inception.io.bioc.xml.BioCXmlUtils.getChildLoca
 import static de.tudarmstadt.ukp.inception.io.bioc.xml.BioCXmlUtils.getChildTextElement;
 import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.getAttributeValue;
 import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.getMandatoryAttributeValue;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static java.lang.Integer.parseInt;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;

@@ -154,7 +154,7 @@ public class WeblichtChainServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsChain(Recommender aRecommender)
     {
         Validate.notNull(aRecommender, "Recommender must be specified");

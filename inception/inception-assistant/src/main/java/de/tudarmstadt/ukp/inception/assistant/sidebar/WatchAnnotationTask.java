@@ -26,10 +26,8 @@ import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonStr
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static java.lang.String.join;
 import static java.util.Objects.requireNonNull;
-import static org.apache.commons.lang3.StringUtils.normalizeSpace;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.Objects;
 
 import org.apache.commons.lang3.Validate;
@@ -39,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
@@ -69,7 +68,7 @@ public class WatchAnnotationTask
     {
         super(aBuilder.withType(TYPE));
 
-        requireNonNull(getUser().orElse(null), "Session owner must be set");
+        requireNonNull(getSessionOwner().orElse(null), "Session owner must be set");
 
         document = aBuilder.document;
         dataOwner = aBuilder.dataOwner;
@@ -80,8 +79,8 @@ public class WatchAnnotationTask
     public MatchResult matches(Task aTask)
     {
         if (aTask instanceof WatchAnnotationTask) {
-            if (Objects.equals(getProject().getId(), aTask.getProject().getId())
-                    && Objects.equals(getUser().get(), aTask.getUser().orElse(null))) {
+            if (Objects.equals(getProject().getId(), aTask.getProject().getId()) && Objects
+                    .equals(getSessionOwner().get(), aTask.getSessionOwner().orElse(null))) {
                 return QUEUE_THIS;
             }
         }
@@ -93,8 +92,8 @@ public class WatchAnnotationTask
     public void execute() throws Exception
     {
         try (var session = CasStorageSession.open()) {
-            var cas = documentService.readAnnotationCas(document, dataOwner, AUTO_CAS_UPGRADE,
-                    SHARED_READ_ONLY_ACCESS);
+            var cas = documentService.readAnnotationCas(document, AnnotationSet.forUser(dataOwner),
+                    AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
 
             var ann = selectAnnotationByAddr(cas, annotation.getId());
             if (ann == null) {
@@ -111,7 +110,7 @@ public class WatchAnnotationTask
             var checkQuestion = MTextMessage.builder() //
                     .withActor(ACTOR) //
                     .withRole(SYSTEM).internal().ephemeral() //
-                    .withMessage(join("\n", //
+                    .withContent(join("\n", //
                             "Is the following annotation correct or not. Answer true or false.", //
                             "\n", //
                             "```json", //
@@ -119,9 +118,8 @@ public class WatchAnnotationTask
                             "```")) //
                     .build();
 
-            var checkResult = assistantService.processInternalCallSync(
-                    getUser().get().getUsername(), getProject(), BooleanQuestion.class,
-                    checkQuestion);
+            var checkResult = assistantService.processInternalCallSync(getSessionOwner().get(),
+                    getProject(), BooleanQuestion.class, checkQuestion);
 
             if (checkResult.payload().answer()) {
                 return;
@@ -130,7 +128,7 @@ public class WatchAnnotationTask
             var inquiryContext = MTextMessage.builder() //
                     .withActor(ACTOR) //
                     .withRole(SYSTEM).internal().ephemeral() //
-                    .withMessage(join("\n", //
+                    .withContent(join("\n", //
                             "Your task is to advise the user about potential problems with the following annotation.", //
                             "Give one response per annotation.", //
                             "If expanding or reducing the span seems appropriate, mention that.", //
@@ -141,34 +139,16 @@ public class WatchAnnotationTask
                             "```")) //
                     .build();
 
-            assistantService.processAgentMessage(getUser().get().getUsername(), getProject(),
-                    inquiryContext);
+            assistantService.processInternalMessage(getSessionOwner().get(), getProject(), document,
+                    dataOwner, inquiryContext);
         }
     }
 
     private String annotationToJson(Annotation aAnnotation, Annotation aContext) throws IOException
     {
-        var instance = new LinkedHashMap<String, Object>();
-
-        instance.put("span", normalizeSpace(aAnnotation.getCoveredText()));
-
-        var docText = aAnnotation.getCAS().getDocumentText();
-        var context = docText.substring(aContext.getBegin(), aAnnotation.getBegin()) //
-                + " <span> " //
-                + aAnnotation.getCoveredText() //
-                + " </span> " //
-                + docText.substring(aAnnotation.getEnd(), aContext.getEnd());
-        instance.put("context", normalizeSpace(context));
-
         var adapter = schemaService.findAdapter(getProject(), aAnnotation);
-        var attributes = new LinkedHashMap<String, String>();
-        for (var feature : adapter.listFeatures()) {
-            attributes.put(normalizeSpace(feature.getUiName()),
-                    normalizeSpace(adapter.getFeatureValue(feature, aAnnotation)));
-        }
-        instance.put("annotation", attributes);
-
-        return toPrettyJsonString(instance);
+        var obj = adapter.annotationAsObject(aAnnotation, aContext);
+        return toPrettyJsonString(obj);
     }
 
     private static record BooleanQuestion(@JsonProperty(required = true) boolean answer) {};

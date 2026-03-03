@@ -93,7 +93,6 @@ public class CurationServiceImpl
 
     @SuppressWarnings({ "unchecked" })
     @Override
-    @Transactional
     public MergeStrategy getMergeStrategy(CurationWorkflow aCurationWorkflow)
     {
         var factory = getMergeStrategyFactory(aCurationWorkflow);
@@ -102,7 +101,6 @@ public class CurationServiceImpl
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    @Transactional
     public MergeStrategyFactory getMergeStrategyFactory(CurationWorkflow aCurationWorkflow)
     {
         return mergeStrategyFactoryExtensionPoint //

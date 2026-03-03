@@ -26,6 +26,11 @@ public record MReference(String id, long documentId, String documentName, int be
                 builder.score);
     }
 
+    public String toString()
+    {
+        return "{{ref::" + id + "}}";
+    }
+
     public static Builder builder()
     {
         return new Builder();

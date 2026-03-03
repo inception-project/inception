@@ -174,14 +174,14 @@ public class ImageFeatureSupport
     }
 
     @Override
-    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    public <V> V getNullFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         return null;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <V> V unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    public <V> V unwrapFeatureValue(AnnotationFeature aFeature, Object aValue)
     {
         return (V) aValue;
     }

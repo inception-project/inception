@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.security.saml;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.NO_PASSWORD;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.removeEnd;
@@ -38,12 +38,13 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticatedPrincipal;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider.ResponseToken;
+import org.springframework.security.saml2.provider.service.authentication.OpenSaml5AuthenticationProvider.ResponseToken;
 import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.security.preauth.PreAuthUtils;
@@ -122,7 +123,7 @@ public class Saml2AdapterImpl
     @Override
     public User loadSamlUser(String aUsername, String aRegistrationId)
     {
-        var realm = REALM_EXTERNAL_PREFIX + aRegistrationId;
+        var realm = Realm.REALM_EXTERNAL_PREFIX + aRegistrationId;
 
         denyAccessToUsersWithIllegalUsername(aUsername);
 
@@ -141,7 +142,7 @@ public class Saml2AdapterImpl
     {
         var u = new User();
         u.setUsername(username);
-        u.setPassword(UserDao.EMPTY_PASSWORD);
+        u.setPassword(NO_PASSWORD);
         u.setEnabled(true);
         u.setRealm(realm);
         u.setRoles(PreAuthUtils.getPreAuthenticationNewUserRoles(u));

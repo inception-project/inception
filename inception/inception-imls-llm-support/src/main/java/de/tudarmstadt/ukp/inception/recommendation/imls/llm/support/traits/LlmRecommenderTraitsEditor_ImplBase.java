@@ -72,10 +72,13 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
     private static final String MID_PROMPT = "prompt";
     private static final String MID_EXTRACTION_MODE = "extractionMode";
     private static final String MID_PROMPTING_MODE = "promptingMode";
+    private static final String MID_JUSTIFICATION_ENABLED = "justificationEnabled";
     private static final String MID_URL = "url";
     private static final String MID_MODEL = "model";
     private static final String MID_PRESET = "preset";
     private static final String MID_FORM = "form";
+    private static final String MID_INTERACTIVE = "interactive";
+    private static final String MID_STRUCTURED_OUTPUT_SUPPORTED = "structuredOutputSupported";
 
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean InteractiveRecommenderProperties properties;
@@ -86,7 +89,7 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
     private final IModel<List<OptionSetting>> optionSettings;
     private final IModel<List<Option<?>>> options;
 
-    private final AuthenticationTraitsEditor authenticationTraitsEditor;
+    private final AuthenticationTraitsEditor<?> authenticationTraitsEditor;
 
     public LlmRecommenderTraitsEditor_ImplBase(String aId, IModel<Recommender> aRecommender,
             IModel<List<Preset>> aPresets, IModel<List<Option<?>>> aOptions)
@@ -109,6 +112,7 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
             }
         };
         form.setOutputMarkupPlaceholderTag(true);
+        add(form);
 
         var modelsModel = LoadableDetachableModel.of(this::listModels);
         var model = new ComboBox<String>(MID_MODEL, modelsModel);
@@ -157,33 +161,37 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
                 _target -> applyPreset(form, presetSelect.getModelObject(), _target)));
         promptContainer.add(presetSelect);
 
-        promptContainer.add(new TextArea<String>(MID_PROMPT));
+        promptContainer.add(new TextArea<String>(MID_PROMPT).setOutputMarkupId(true));
+
         var markdownLabel = new MarkdownLabel(MID_PROMPT_HINTS,
                 LoadableDetachableModel.of(this::getPromptHints));
         markdownLabel.setOutputMarkupId(true);
         promptContainer.add(markdownLabel);
+
         promptContainer.add(new PromptingModeSelect(MID_PROMPTING_MODE)
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                         _target -> _target.add(markdownLabel))));
+
         promptContainer.add(new ExtractionModeSelect(MID_EXTRACTION_MODE,
-                traits.bind(MID_EXTRACTION_MODE), getModel()));
-        add(form);
+                traits.bind(MID_EXTRACTION_MODE), getModel()).setOutputMarkupId(true));
+
+        promptContainer.add(new CheckBox(MID_JUSTIFICATION_ENABLED) //
+                .setOutputMarkupId(true));
 
         authenticationTraitsEditor = createAuthenticationTraitsEditor("authentication");
         form.add(authenticationTraitsEditor);
 
-        form.add(new CheckBox("interactive") //
+        form.add(new CheckBox(MID_INTERACTIVE) //
                 .setOutputMarkupId(true) //
                 .add(visibleWhen(properties::isEnabled)) //
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                         $ -> $.add(promptContainer))));
 
-        form.add(new CheckBox("structuredOutputSupported") //
+        form.add(new CheckBox(MID_STRUCTURED_OUTPUT_SUPPORTED) //
                 .setOutputMarkupId(true));
-
     }
 
-    protected AuthenticationTraitsEditor createAuthenticationTraitsEditor(String aId)
+    protected AuthenticationTraitsEditor<?> createAuthenticationTraitsEditor(String aId)
     {
         var editor = new NoAuthenticationTraitsEditor(aId);
         editor.setVisible(false);

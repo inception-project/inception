@@ -182,4 +182,21 @@
   <changeSet author="INCEpTION Team" id="20220930-2-pg" dbms="postgresql">
     <sql>ALTER TABLE users ALTER "enabled" TYPE BOOLEAN USING ("enabled"::int::bool)</sql>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20250830-01" failOnError="false">
+    <dropUniqueConstraint tableName="users" constraintName="UK_realm_uiName" />
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20250830-02">
+    <addColumn tableName="users">
+      <column name="opt_unique_key" type="VARCHAR(255)">
+        <constraints nullable="true" />
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20250830-03">
+    <addUniqueConstraint tableName="users" columnNames="opt_unique_key"
+      constraintName="UK_users_opt_unique_key" />
+  </changeSet>
 </databaseChangeLog>

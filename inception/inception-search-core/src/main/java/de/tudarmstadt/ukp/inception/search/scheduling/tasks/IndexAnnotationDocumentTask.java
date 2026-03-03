@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
 import de.tudarmstadt.ukp.inception.scheduling.Progress;
@@ -78,8 +79,9 @@ public class IndexAnnotationDocumentTask
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             var aDoc = getAnnotationDocument();
-            var cas = documentService.readAnnotationCas(aDoc.getDocument(), aDoc.getUser(),
-                    AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+            var cas = documentService.readAnnotationCas(aDoc.getDocument(),
+                    AnnotationSet.forUser(aDoc.getUser()), AUTO_CAS_UPGRADE,
+                    SHARED_READ_ONLY_ACCESS);
             searchService.indexDocument(aDoc, WebAnnoCasUtil.casToByteArray(cas));
         }
         catch (IOException e) {

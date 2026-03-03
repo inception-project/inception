@@ -63,8 +63,7 @@ public class NopRenderer
     }
 
     @Override
-    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest, int aWindowBegin,
-            int aWindowEnd)
+    public List<Annotation> selectAnnotationsInWindow(RenderRequest aRequest)
     {
         return Collections.emptyList();
     }

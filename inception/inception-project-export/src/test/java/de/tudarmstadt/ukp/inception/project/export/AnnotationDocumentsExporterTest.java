@@ -125,10 +125,12 @@ public class AnnotationDocumentsExporterTest
     @Test
     void thatExportingAndImportingAgainWorks() throws Exception
     {
+        var annDocs = annotationDocuments(sourceProject);
         when(documentService.listAnnotationDocuments(any(Project.class))) //
-                .thenReturn(annotationDocuments(sourceProject));
+                .thenReturn(annDocs);
+        var srcDocs = sourceDocuments(sourceProject);
         when(documentService.listSourceDocuments(any(Project.class))) //
-                .thenReturn(sourceDocuments(sourceProject));
+                .thenReturn(srcDocs);
         when(documentService.existsCas(any())) //
                 .thenReturn(true);
         when(userService.get(any(String.class)))
@@ -149,7 +151,7 @@ public class AnnotationDocumentsExporterTest
         // Import the project again
         reset(documentService);
         when(documentService.listSourceDocuments(any(Project.class))) //
-                .thenReturn(sourceDocuments(targetProject));
+                .thenReturn(srcDocs);
 
         var captor = ArgumentCaptor.forClass(AnnotationDocument.class);
         when(documentService.createOrUpdateAnnotationDocument(captor.capture())).thenReturn(null);
@@ -160,8 +162,9 @@ public class AnnotationDocumentsExporterTest
         }
 
         assertThat(captor.getAllValues()) //
-                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id", "project") //
-                .containsExactlyElementsOf(annotationDocuments(targetProject));
+                .usingRecursiveComparison() //
+                .ignoringFields("id", "project", "document.stateUpdated") //
+                .isEqualTo(annDocs);
 
         assertThat(tempFolder) //
                 .isDirectoryRecursivelyContaining(

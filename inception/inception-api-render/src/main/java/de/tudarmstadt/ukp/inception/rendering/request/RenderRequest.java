@@ -17,8 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.request;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 
@@ -48,26 +54,30 @@ public class RenderRequest
     private final boolean longArcs;
     private final List<AnnotationLayer> allLayers;
     private final List<AnnotationLayer> visibleLayers;
+    private final Set<Long> hiddenFeatures;
+    private final Map<Long, Set<String>> hiddenFeatureValues;
     private final CAS cas;
     private final ColoringStrategy coloringStrategyOverride;
 
     private RenderRequest(Builder builder)
     {
-        this.windowBeginOffset = builder.windowBeginOffset;
-        this.windowEndOffset = builder.windowEndOffset;
-        this.includeText = builder.includeText;
-        this.clipSpans = builder.clipSpans;
-        this.clipArcs = builder.clipArcs;
-        this.longArcs = builder.longArcs;
-        this.state = builder.state;
-        this.constraints = builder.constraints;
-        this.sourceDocument = builder.sourceDocument;
-        this.annotationUser = builder.annotationUser;
-        this.cas = builder.cas;
-        this.allLayers = builder.allLayers;
-        this.visibleLayers = builder.visibleLayers;
-        this.coloringStrategyOverride = builder.coloringStrategyOverride;
-        this.sessionOwner = builder.sessionOwner;
+        windowBeginOffset = builder.windowBeginOffset;
+        windowEndOffset = builder.windowEndOffset;
+        includeText = builder.includeText;
+        clipSpans = builder.clipSpans;
+        clipArcs = builder.clipArcs;
+        longArcs = builder.longArcs;
+        state = builder.state;
+        constraints = builder.constraints;
+        sourceDocument = builder.sourceDocument;
+        annotationUser = builder.annotationUser;
+        cas = builder.cas;
+        allLayers = builder.allLayers;
+        visibleLayers = builder.visibleLayers;
+        coloringStrategyOverride = builder.coloringStrategyOverride;
+        sessionOwner = builder.sessionOwner;
+        hiddenFeatures = builder.hiddenFeatures;
+        hiddenFeatureValues = builder.hiddenFeatureValues;
     }
 
     public Optional<ColoringStrategy> getColoringStrategyOverride()
@@ -135,6 +145,20 @@ public class RenderRequest
         return visibleLayers;
     }
 
+    public Set<Long> getHiddenFeatures()
+    {
+        return hiddenFeatures;
+    }
+
+    /**
+     * @return a map of hidden feature values with the key being the feature name and the value
+     *         being the hidden values.
+     */
+    public Map<Long, Set<String>> getHiddenFeatureValues()
+    {
+        return hiddenFeatureValues;
+    }
+
     /**
      * @deprecated We want to minimize the state information carried around in the render request,
      *             so better not use the full annotator state and instead add relevant information
@@ -175,8 +199,10 @@ public class RenderRequest
         private User annotationUser;
         private User sessionOwner;
         private CAS cas;
-        private List<AnnotationLayer> allLayers;
-        private List<AnnotationLayer> visibleLayers;
+        private final List<AnnotationLayer> allLayers = new ArrayList<>();
+        private final List<AnnotationLayer> visibleLayers = new ArrayList<>();
+        private final Set<Long> hiddenFeatures = new HashSet<>();
+        private final Map<Long, Set<String>> hiddenFeatureValues = new HashMap<>();
         private ColoringStrategy coloringStrategyOverride;
         private ParsedConstraints constraints;
 
@@ -205,8 +231,10 @@ public class RenderRequest
         public Builder withState(AnnotatorState aState)
         {
             state = aState;
-            allLayers = aState.getAllAnnotationLayers();
-            visibleLayers = aState.getAnnotationLayers();
+            withAllLayers(aState.getAllAnnotationLayers());
+            withVisibleLayers(aState.getAnnotationLayers());
+            withHiddenFeatures(aState.getPreferences().getHiddenAnnotationFeatureIds());
+            withHiddenFeatureValues(aState.getPreferences().getHiddenTags());
             sourceDocument = state.getDocument();
             annotationUser = state.getUser();
             constraints = state.getConstraints();
@@ -257,15 +285,39 @@ public class RenderRequest
             return this;
         }
 
-        public Builder withAllLayers(List<AnnotationLayer> aLayers)
+        public Builder withAllLayers(Collection<AnnotationLayer> aLayers)
         {
-            allLayers = aLayers;
+            allLayers.clear();
+            if (aLayers != null) {
+                allLayers.addAll(aLayers);
+            }
             return this;
         }
 
-        public Builder withVisibleLayers(List<AnnotationLayer> aLayers)
+        public Builder withVisibleLayers(Collection<AnnotationLayer> aLayers)
         {
-            visibleLayers = aLayers;
+            visibleLayers.clear();
+            if (aLayers != null) {
+                visibleLayers.addAll(aLayers);
+            }
+            return this;
+        }
+
+        public Builder withHiddenFeatureValues(Map<Long, Set<String>> aTags)
+        {
+            hiddenFeatureValues.clear();
+            if (aTags != null) {
+                hiddenFeatureValues.putAll(aTags);
+            }
+            return this;
+        }
+
+        public Builder withHiddenFeatures(Collection<Long> aFeatureIds)
+        {
+            hiddenFeatures.clear();
+            if (aFeatureIds != null) {
+                hiddenFeatures.addAll(aFeatureIds);
+            }
             return this;
         }
 

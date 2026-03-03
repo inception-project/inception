@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.project.initializers.basic;
 
-import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import java.io.IOException;
@@ -32,7 +32,6 @@ import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.project.api.FeatureInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
@@ -97,11 +96,7 @@ public class CommentFeatureInitializer
     @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        return asList(
-                // Because locks to token boundaries
-                TokenLayerInitializer.class, //
-                // Tagsets
-                BasicSpanTagSetInitializer.class);
+        return emptyList();
     }
 
     @Override

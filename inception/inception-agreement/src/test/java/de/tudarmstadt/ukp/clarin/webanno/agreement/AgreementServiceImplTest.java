@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.CodingStudyUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.NER_DIFF_ADAPTER;
+import static de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffAdapterImpl.NER_DIFF_ADAPTER;
 import static java.util.Arrays.asList;
 import static org.apache.commons.csv.CSVFormat.RFC4180;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,7 +35,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementServiceImpl;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder;
 
@@ -91,7 +90,7 @@ class AgreementServiceImplTest
 
         assertThat(generateReport(userCount, data).lines()).contains( //
                 "SpanPosition,,,de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity,"
-                        + "value,8-12 [John],STACKED,\"LOC, PER\",<no annotation>");
+                        + "value,8-12 [John],STACKED,\"LOC, PER\",ORG");
     }
 
     @SuppressWarnings("unchecked")

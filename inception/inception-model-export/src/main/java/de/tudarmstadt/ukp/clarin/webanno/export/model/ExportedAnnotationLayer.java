@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -91,8 +92,8 @@ public class ExportedAnnotationLayer
     @JsonProperty("multiple_tokens")
     private boolean multipleTokens;
 
-    @JsonProperty("project_name")
-    private String projectName;
+    @JsonIgnore
+    private Long projectId;
 
     @JsonProperty("linked_list_behavior")
     private boolean linkedListBehavior;
@@ -315,14 +316,14 @@ public class ExportedAnnotationLayer
         this.attachFeature = attachFeature;
     }
 
-    public String isProjectName()
+    public Long getProjectId()
     {
-        return projectName;
+        return projectId;
     }
 
-    public void setProjectName(String projectName)
+    public void setProjectId(Long aProjectId)
     {
-        this.projectName = projectName;
+        this.projectId = aProjectId;
     }
 
     public boolean isLinkedListBehavior()
@@ -372,13 +373,20 @@ public class ExportedAnnotationLayer
             return false;
         }
         ExportedAnnotationLayer castOther = (ExportedAnnotationLayer) other;
-        return new EqualsBuilder().append(name, castOther.name).append(type, castOther.type)
-                .append(projectName, castOther.projectName).isEquals();
+        return new EqualsBuilder() //
+                .append(name, castOther.name) //
+                .append(type, castOther.type) //
+                .append(projectId, castOther.projectId) //
+                .isEquals();
     }
 
     @Override
     public int hashCode()
     {
-        return new HashCodeBuilder().append(name).append(type).append(projectName).toHashCode();
+        return new HashCodeBuilder() //
+                .append(name) //
+                .append(type) //
+                .append(projectId) //
+                .toHashCode();
     }
 }

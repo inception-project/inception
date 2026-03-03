@@ -53,6 +53,8 @@ public class LlmRecommenderTraits
 
     private boolean interactive;
 
+    private boolean justificationEnabled;
+
     private AuthenticationTraits authentication;
 
     public String getUrl()
@@ -144,5 +146,15 @@ public class LlmRecommenderTraits
     public void setStructuredOutputSupported(boolean aStructuredOutputSupported)
     {
         structuredOutputSupported = aStructuredOutputSupported;
+    }
+
+    public boolean isJustificationEnabled()
+    {
+        return justificationEnabled;
+    }
+
+    public void setJustificationEnabled(boolean aJustificationEnabled)
+    {
+        justificationEnabled = aJustificationEnabled;
     }
 }

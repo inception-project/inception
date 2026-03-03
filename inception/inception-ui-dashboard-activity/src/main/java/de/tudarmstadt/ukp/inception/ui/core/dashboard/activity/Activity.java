@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
 
 class Activity
 {
@@ -45,7 +45,7 @@ class Activity
         documentName = aDocument.getName();
         user = aEvent.getUser();
         annotator = aEvent.getAnnotator();
-        timestamp = aEvent.getCreated().getTime();
+        timestamp = aEvent.getCreated().toEpochMilli();
         link = aLink;
         type = CURATION_USER.equals(aEvent.getAnnotator()) ? "Curation" : "Annotation";
     }

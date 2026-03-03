@@ -15,37 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { VPage } from './VPage'
+import { VPage } from './VPage';
 
-export type JsonVGlyph = [
-  begin: number,
-  end: number,
-  glyph: string,
-  base: number,
-  extent: number
-]
+export type JsonVGlyph = [begin: number, end: number, glyph: string, base: number, extent: number];
 
 export type JsonVChunk = [
-  dir: number,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  glyphs: JsonVGlyph[]
-]
+    dir: number,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    glyphs: JsonVGlyph[],
+];
 
-export type JsonVPage = [
-  page: number,
-  begin: number,
-  end: number,
-  chunks: JsonVChunk[]
-]
+export type JsonVPage = [page: number, begin: number, end: number, chunks: JsonVChunk[]];
 
 interface JsonVModel {
-  pages : JsonVPage[];
+    pages: JsonVPage[];
 }
 
-export function deserializeVModelFromJson (vModel: string) : VPage[] {
-  const jsonVModel = JSON.parse(vModel) as JsonVModel
-  return jsonVModel.pages.map(p => new VPage(p))
+export function deserializeVModelFromJson(vModel: string): VPage[] {
+    const jsonVModel = JSON.parse(vModel) as JsonVModel;
+    return jsonVModel.pages.map((p) => new VPage(p));
 }

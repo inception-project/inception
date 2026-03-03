@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.schema.exporters;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl.RESERVED_USERNAMES;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.ANNOTATION_FOLDER;
@@ -73,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationDocument
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -142,8 +144,9 @@ public class AnnotationDocumentExporter
 
         for (var annotationDocument : documentService.listAnnotationDocuments(aProject)) {
             var exAnnotationDocument = new ExportedAnnotationDocument();
-            exAnnotationDocument.setName(annotationDocument.getName());
+            exAnnotationDocument.setName(annotationDocument.getDocument().getName());
             exAnnotationDocument.setState(annotationDocument.getState());
+            exAnnotationDocument.setStateUpdated(annotationDocument.getStateUpdated());
             exAnnotationDocument.setAnnotatorState(annotationDocument.getAnnotatorState());
             exAnnotationDocument.setAnnotatorComment(annotationDocument.getAnnotatorComment());
             exAnnotationDocument.setUser(annotationDocument.getUser());
@@ -220,10 +223,10 @@ public class AnnotationDocumentExporter
                     documentService.createOrReadInitialCas(srcDoc);
                 }
 
-                ProjectExporter.writeEntry(aStage,
-                        ANNOTATION_CAS_FOLDER + srcDoc.getName() + "/" + INITIAL_CAS_PSEUDO_USER
-                                + ".ser",
-                        os -> documentService.exportCas(srcDoc, INITIAL_CAS_PSEUDO_USER, os));
+                ProjectExporter.writeEntry(
+                        aStage, ANNOTATION_CAS_FOLDER + srcDoc.getName() + "/"
+                                + INITIAL_CAS_PSEUDO_USER + ".ser",
+                        os -> documentService.exportCas(srcDoc, INITIAL_SET, os));
 
                 if (format != null) {
                     exportAdditionalFormat(aStage, bulkOperationContext, srcDoc, format,
@@ -249,7 +252,8 @@ public class AnnotationDocumentExporter
 
                         ProjectExporter.writeEntry(aStage, ANNOTATION_CAS_FOLDER + srcDoc.getName()
                                 + "/" + annDoc.getUser() + ".ser", os -> {
-                                    documentService.exportCas(srcDoc, annDoc.getUser(), os);
+                                    documentService.exportCas(srcDoc,
+                                            AnnotationSet.forUser(annDoc.getUser()), os);
                                 });
 
                         if (format != null) {
@@ -302,7 +306,7 @@ public class AnnotationDocumentExporter
             }
         }
         catch (UIMAException e) {
-            throw new ProjectExportException("Error exporting annotations of " + srcDoc.getName()
+            throw new ProjectExportException("Error exporting annotations of " + srcDoc
                     + " for user [" + aUsername + "] as [" + format.getName() + "]: "
                     + ExceptionUtils.getRootCauseMessage(e), e);
         }
@@ -347,15 +351,18 @@ public class AnnotationDocumentExporter
         throws IOException
     {
         for (var exAnnotationDocument : aExProject.getAnnotationDocuments()) {
+            var sourceDocumentName = exAnnotationDocument.getName();
+            var sourceDocument = aNameToDoc.get(sourceDocumentName);
             var annotationDocument = new AnnotationDocument();
-            annotationDocument.setName(exAnnotationDocument.getName());
+            annotationDocument.setDocument(sourceDocument);
+            annotationDocument.setProject(aProject);
+            annotationDocument.setName(sourceDocumentName);
             annotationDocument.setState(exAnnotationDocument.getState());
+            annotationDocument.setStateUpdated(exAnnotationDocument.getStateUpdated());
             annotationDocument.setAnnotatorState(exAnnotationDocument.getAnnotatorState());
             annotationDocument.setAnnotatorComment(exAnnotationDocument.getAnnotatorComment());
-            annotationDocument.setProject(aProject);
             annotationDocument.setUser(exAnnotationDocument.getUser());
             annotationDocument.setTimestamp(exAnnotationDocument.getTimestamp());
-            annotationDocument.setDocument(aNameToDoc.get(exAnnotationDocument.getName()));
             annotationDocument.setSentenceAccessed(exAnnotationDocument.getSentenceAccessed());
             annotationDocument.setCreated(exAnnotationDocument.getCreated());
             annotationDocument.setUpdated(exAnnotationDocument.getUpdated());

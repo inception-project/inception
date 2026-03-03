@@ -29,11 +29,11 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.log.EventLoggingListener;
-import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.EventRepositoryImpl;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistryImpl;
+import de.tudarmstadt.ukp.inception.log.api.EventRepository;
 import de.tudarmstadt.ukp.inception.log.exporter.LoggedEventExporter;
 import jakarta.persistence.EntityManager;
 
@@ -63,14 +63,14 @@ public class EventLoggingAutoConfiguration
     // pending events would have been flushed which would create an exception.
     @ConditionalOnWebApplication
     @Bean
-    public EventLoggingListener eventLoggingListener(EventRepository aRepo,
+    public EventLoggingListener eventLoggingListener(EventRepositoryImpl aRepo,
             EventLoggingAdapterRegistry aAdapterRegistry, EventLoggingProperties aProperties)
     {
         return new EventLoggingListener(aRepo, aProperties, aAdapterRegistry);
     }
 
     @Bean
-    public LoggedEventExporter loggedEventExporter(EventRepository aEventRepository,
+    public LoggedEventExporter loggedEventExporter(EventRepositoryImpl aEventRepository,
             DocumentService aDocumentService)
     {
         return new LoggedEventExporter(aEventRepository, aDocumentService);

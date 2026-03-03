@@ -17,35 +17,42 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.docnav;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationNavigationUserPrefs.KEY_ANNOTATION_NAVIGATION_USER_PREFS;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static wicket.contrib.input.events.EventType.click;
-import static wicket.contrib.input.events.key.KeyType.Page_down;
-import static wicket.contrib.input.events.key.KeyType.Page_up;
-import static wicket.contrib.input.events.key.KeyType.Shift;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentDialog;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.OpenDocumentDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
-import wicket.contrib.input.events.key.KeyType;
+import jakarta.persistence.NoResultException;
 
 public class DocumentNavigator
     extends Panel
 {
     private static final long serialVersionUID = 7061696472939390003L;
 
+    private @SpringBean KeyBindingsProperties keyBindings;
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userService;
     private @SpringBean DocumentAccess documentAccess;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean PreferencesService preferencesService;
 
     private AnnotationPageBase page;
 
@@ -58,10 +65,20 @@ public class DocumentNavigator
         page = aPage;
 
         add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
-                .add(new InputBehavior(new KeyType[] { Shift, Page_up }, click)));
+                .add(keyBindings.getNavigation().getPreviousDocument().toInputBehavior(click)).add(
+                        AttributeModifier.append("title",
+                                () -> " ("
+                                        + KeyBindingsUtil.formatShortcut(
+                                                keyBindings.getNavigation().getPreviousDocument())
+                                        + ")")));
 
         add(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
-                .add(new InputBehavior(new KeyType[] { Shift, Page_down }, click)));
+                .add(keyBindings.getNavigation().getNextDocument().toInputBehavior(click)).add(
+                        AttributeModifier.append("title",
+                                () -> " ("
+                                        + KeyBindingsUtil.formatShortcut(
+                                                keyBindings.getNavigation().getNextDocument())
+                                        + ")")));
 
         add(new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
 
@@ -84,13 +101,39 @@ public class DocumentNavigator
      */
     public void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
-        var documentChanged = page.getModelObject().moveToPreviousDocument(page.getListOfDocs());
-        if (!documentChanged) {
-            info("There is no previous document");
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return;
+        var sessionOwner = userService.getCurrentUser();
+        var state = page.getModelObject();
+        var aDocuments = page.getListOfDocs();
+
+        var prefs = preferencesService.loadTraitsForUserAndProject(
+                KEY_ANNOTATION_NAVIGATION_USER_PREFS, sessionOwner, state.getProject());
+
+        // Index of the current source document in the list
+        var currentDocumentIndex = aDocuments.indexOf(state.getDocument());
+
+        while (true) {
+            // If the first document
+            if (currentDocumentIndex <= 0) {
+                if (prefs.isFinishedDocumentsSkippedByNavigation()) {
+                    info("There is no previous unfinished document. Use the Open Document dialog to select finished documents.");
+                }
+                else {
+                    info("There is no previous document.");
+                }
+                aTarget.addChildren(getPage(), IFeedback.class);
+                return;
+            }
+
+            currentDocumentIndex--;
+
+            var newDocument = aDocuments.get(currentDocumentIndex);
+
+            if (!prefs.isFinishedDocumentsSkippedByNavigation() || !isTerminal(newDocument)) {
+                state.setDocument(aDocuments.get(currentDocumentIndex), aDocuments);
+                page.actionLoadDocument(aTarget);
+                break;
+            }
         }
-        page.actionLoadDocument(aTarget);
     }
 
     /**
@@ -101,13 +144,51 @@ public class DocumentNavigator
      */
     public void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
-        var documentChanged = page.getModelObject().moveToNextDocument(page.getListOfDocs());
-        if (!documentChanged) {
-            info("There is no next document");
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return;
+        var sessionOwner = userService.getCurrentUser();
+        var state = page.getModelObject();
+        var aDocuments = page.getListOfDocs();
+
+        var prefs = preferencesService.loadTraitsForUserAndProject(
+                KEY_ANNOTATION_NAVIGATION_USER_PREFS, sessionOwner, state.getProject());
+
+        // Index of the current source document in the list
+        var currentDocumentIndex = aDocuments.indexOf(state.getDocument());
+
+        while (true) {
+            // If the last document
+            if (currentDocumentIndex < 0 || currentDocumentIndex >= aDocuments.size() - 1) {
+                if (prefs.isFinishedDocumentsSkippedByNavigation()) {
+                    info("There is no next unfinished document. Use the Open Document dialog to select finished documents.");
+                }
+                else {
+                    info("There is no next document.");
+                }
+                aTarget.addChildren(getPage(), IFeedback.class);
+                return;
+            }
+
+            currentDocumentIndex++;
+
+            var newDocument = aDocuments.get(currentDocumentIndex);
+            if (!prefs.isFinishedDocumentsSkippedByNavigation() || !isTerminal(newDocument)) {
+                state.setDocument(aDocuments.get(currentDocumentIndex), aDocuments);
+                page.actionLoadDocument(aTarget);
+                break;
+            }
         }
-        page.actionLoadDocument(aTarget);
+    }
+
+    private boolean isTerminal(SourceDocument aDocument)
+    {
+        var state = page.getModelObject();
+        var dataOwner = state.getUser();
+        try {
+            var annDoc = documentService.getAnnotationDocument(aDocument, dataOwner);
+            return annDoc.getState().isTerminal();
+        }
+        catch (NoResultException e) {
+            return AnnotationDocumentState.NEW.isTerminal();
+        }
     }
 
     public void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)

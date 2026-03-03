@@ -27,19 +27,17 @@ import static org.springframework.boot.WebApplicationType.SERVLET;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 
-import org.dkpro.core.api.resources.ResourceObjectProviderBase;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.springframework.boot.Banner;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -56,12 +54,10 @@ import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
  */
 // @formatter:off
 @SpringBootApplication(
-        scanBasePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE },
-        exclude = { ElasticsearchRestClientAutoConfiguration.class} )
+        scanBasePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @AutoConfigurationPackage(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EntityScan(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EnableAsync
-@EnableCaching
 @EnableMethodSecurity(prePostEnabled = true)
 //@formatter:on
 public class INCEpTION
@@ -76,7 +72,7 @@ public class INCEpTION
     @Override
     protected SpringApplicationBuilder createSpringApplicationBuilder()
     {
-        SpringApplicationBuilder builder = super.createSpringApplicationBuilder();
+        var builder = super.createSpringApplicationBuilder();
         builder.properties("running.from.commandline=false");
         builder.profiles(DeploymentModeService.PROFILE_EXTERNAL_SERVER);
         builder.profiles(DeploymentModeService.PROFILE_APPLICATION_MODE);
@@ -113,7 +109,7 @@ public class INCEpTION
         System.setProperty(ALWAYS_HOLD_ONTO_FSS, "true");
 
         // We do not want DKPro Core to try and auto-download anything
-        System.setProperty(ResourceObjectProviderBase.PROP_REPO_OFFLINE, "true");
+        System.setProperty("dkpro.model.repository.offline", "true");
 
         try {
             new EmbeddedDatabaseBackupHandler().maybeBackupEmbeddedDatabase();
@@ -147,17 +143,24 @@ public class INCEpTION
     }
 
     /**
-     * Called when deployed using the internal server.
+     * Called when deployed using the internal server with custom properties.
      */
-    protected static ConfigurableApplicationContext start(String[] args, Class<?>... aSources)
+    protected static ConfigurableApplicationContext start(String[] args, Properties aProperties,
+            Class<?>... aSources)
     {
-        SpringApplicationBuilder builder = new SpringApplicationBuilder();
+        var builder = new SpringApplicationBuilder();
 
         // Add the main application as the root Spring context
         builder.sources(aSources);
 
         // Signal that we may need the shutdown dialog
         builder.properties("running.from.commandline=true");
+
+        // Add custom properties
+        if (aProperties != null) {
+            builder.properties(aProperties);
+        }
+
         builder.profiles(DeploymentModeService.PROFILE_INTERNAL_SERVER);
 
         Optional<SplashWindow> splash;
@@ -185,6 +188,14 @@ public class INCEpTION
         var context = builder.run(args);
 
         return context;
+    }
+
+    /**
+     * Called when deployed using the internal server.
+     */
+    protected static ConfigurableApplicationContext start(String[] args, Class<?>... aSources)
+    {
+        return start(args, null, aSources);
     }
 
     private static boolean isCliCommandMode(String[] args)

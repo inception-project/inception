@@ -39,6 +39,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -59,11 +60,6 @@ public class CurationSidebarBehavior
 
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
-    private static final String STAY = "stay";
-    private static final String OFF = "off";
-    private static final String ON = "on";
-
-    private static final String PARAM_CURATION_SESSION = "curationSession";
     private static final String PARAM_CURATION_TARGET_OWN = "curationTargetOwn";
 
     private @SpringBean DocumentService documentService;
@@ -107,14 +103,6 @@ public class CurationSidebarBehavior
         var sessionOwner = userService.getCurrentUsername();
         var doc = aEvent.getDocument();
         var project = doc.getProject();
-
-        // If the curation sidebar is not enabled, then we can stop the curation session on the
-        // annotation page to avoid rendering curation suggestions if the curation session has been
-        // enabled due to visiting the new curation page
-        if (page instanceof AnnotationPage && !curationSidebarProperties.isEnabled()) {
-            curationSidebarService.closeSession(sessionOwner, project.getId());
-            return;
-        }
 
         var params = page.getPageParameters();
         var dataOwner = aEvent.getDocumentOwner();
@@ -160,7 +148,7 @@ public class CurationSidebarBehavior
                 // currently see a good way to avoid this duplication. At least we only do it twice
                 // if an initial merge is required.
                 documentService.readAnnotationCas(state.getDocument(),
-                        state.getUser().getUsername(), FORCE_CAS_UPGRADE);
+                        AnnotationSet.forUser(state.getUser()), FORCE_CAS_UPGRADE);
                 var selectedUsers = curationSidebarService.getSelectedUsers(sessionOwner,
                         project.getId());
 
@@ -212,36 +200,18 @@ public class CurationSidebarBehavior
     {
         var project = aDoc.getProject();
 
-        var curationSessionParameterValue = aParams.get(PARAM_CURATION_SESSION);
-        if (curationSessionParameterValue.isEmpty()) {
+        var curationTargetOwnParameterValue = aParams.get(PARAM_CURATION_TARGET_OWN);
+        if (curationTargetOwnParameterValue.isEmpty()) {
             return;
         }
 
-        switch (curationSessionParameterValue.toString(STAY)) {
-        case ON:
-            LOG.trace("Checking if to start curation session");
-            // Start a new session or switch to new curation target
-            var curationTargetOwnParameterValue = aParams.get(PARAM_CURATION_TARGET_OWN);
-            if (!isSessionActive(project) || !curationTargetOwnParameterValue.isEmpty()) {
-                curationSidebarService.startSession(aSessionOwner, project,
-                        curationTargetOwnParameterValue.toBoolean(false));
-            }
-            break;
-        case OFF:
-            LOG.trace("Checking if to stop curation session");
-            if (isSessionActive(project)) {
-                curationSidebarService.closeSession(aSessionOwner, project.getId());
-            }
-            break;
-        default:
-            // Ignore
-            LOG.trace("No change in curation session state requested [{}]",
-                    curationSessionParameterValue);
-        }
+        // Stop/starting session to set the target parameter
+        curationSidebarService.closeSession(aSessionOwner, project.getId());
+        curationSidebarService.startSession(aSessionOwner, project,
+                curationTargetOwnParameterValue.toBoolean(false));
 
         LOG.trace("Removing session control parameters and reloading (redirect)");
         aParams.remove(PARAM_CURATION_TARGET_OWN);
-        aParams.remove(PARAM_CURATION_SESSION);
         setProjectPageParameter(aParams, project);
         aParams.set(AnnotationPage.PAGE_PARAM_DOCUMENT, aDoc.getId());
         // We need to do a redirect here to discard the arguments from the URL.

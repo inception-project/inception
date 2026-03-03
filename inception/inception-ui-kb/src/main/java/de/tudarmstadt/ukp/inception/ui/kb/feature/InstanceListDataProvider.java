@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static de.tudarmstadt.ukp.inception.ui.kb.feature.InstanceListSortKeys.LABEL;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
 
 import java.io.Serializable;
@@ -27,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.Strings;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.model.IModel;
@@ -90,7 +90,7 @@ public class InstanceListDataProvider
         // Filter by project name
         if (filterState.getUiLabel() != null) {
             dataStream = dataStream
-                    .filter($ -> containsIgnoreCase($.getUiLabel(), filterState.getUiLabel()));
+                    .filter($ -> Strings.CI.contains($.getUiLabel(), filterState.getUiLabel()));
         }
 
         return dataStream.collect(toList());

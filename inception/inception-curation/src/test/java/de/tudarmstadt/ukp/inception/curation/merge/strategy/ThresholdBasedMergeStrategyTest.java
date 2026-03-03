@@ -28,9 +28,9 @@ import org.junit.jupiter.api.Test;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanPosition;
 
 class ThresholdBasedMergeStrategyTest
 {

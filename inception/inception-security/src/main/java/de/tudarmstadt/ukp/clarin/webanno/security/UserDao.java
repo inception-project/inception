@@ -38,12 +38,10 @@ public interface UserDao
 
     static final String ADMIN_DEFAULT_USERNAME = "admin";
 
+    @Deprecated
     static final String EMPTY_PASSWORD = "";
 
-    static final String REALM_GLOBAL = null;
-    static final String REALM_PROJECT_PREFIX = "project:";
-    static final String REALM_EXTERNAL_PREFIX = "external:";
-    static final String REALM_PREAUTH = "preauth";
+    static final String NO_PASSWORD = null;
 
     User getCurrentUser();
 
@@ -102,6 +100,8 @@ public interface UserDao
 
     List<User> listAllUsersFromRealm(String aString);
 
+    List<User> listAllUsersFromRealm(Realm aRealm);
+
     /**
      * get a {@link User} using a username
      * 
@@ -114,6 +114,10 @@ public interface UserDao
     User getUserOrCurationUser(String aUsername);
 
     User getCurationUser();
+
+    User getInitialCasUser();
+
+    User getUserByRealmAndUiName(Realm aRealm, String aUiName);
 
     User getUserByRealmAndUiName(String aRealm, String aUiName);
 
@@ -195,8 +199,6 @@ public interface UserDao
 
     List<ValidationError> validateUiName(String aName);
 
-    boolean userHasNoPassword(User aUser);
-
     /**
      * Users that are bound to a project (i.e. the realm is set) or which are external users (i.e.
      * they have an empty password) cannot change their password.
@@ -212,4 +214,14 @@ public interface UserDao
     boolean isEmpty();
 
     boolean isAdminAccountRecoveryMode();
+
+    static boolean userHasNoPassword(User aUser)
+    {
+        return isNoOrEmptyPassword(aUser.getPassword());
+    }
+
+    static boolean isNoOrEmptyPassword(String aPassword)
+    {
+        return LegacyEmptyPasswordChecker.isEmptyOrNull(aPassword);
+    }
 }

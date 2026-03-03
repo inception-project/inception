@@ -25,25 +25,25 @@ import static java.util.Comparator.comparing;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-import java.io.File;
 import java.lang.invoke.MethodHandles;
+import java.nio.file.Path;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
@@ -58,20 +58,21 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.exporters.AnnotationDocumentExporter;
 
 @EnableAutoConfiguration
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
+@DataJpaTest(showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "workload.matrix.enabled=true", //
-                "repository.path=" + MatrixWorkloadServiceImplIntegrationTest.TEST_OUTPUT_FOLDER })
+                "workload.matrix.enabled=true" })
 @EntityScan({ //
         "de.tudarmstadt.ukp.clarin.webanno.security.model", //
         "de.tudarmstadt.ukp.clarin.webanno.model" })
 @Import({ //
+        EventLoggingAutoConfiguration.class, //
         ConstraintsServiceAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
@@ -82,7 +83,13 @@ class MatrixWorkloadServiceImplIntegrationTest
 {
     static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/MatrixWorkloadServiceImplIntegrationTest";
+    static @TempDir Path tempFolder;
+
+    @DynamicPropertySource
+    static void registerDynamicProperties(DynamicPropertyRegistry registry)
+    {
+        registry.add("repository.path", () -> tempFolder.toAbsolutePath().toString());
+    }
 
     private @MockitoBean AnnotationDocumentExporter annotationDocumentExporter;
     private @MockitoBean CasStorageService casStorageService;
@@ -103,12 +110,6 @@ class MatrixWorkloadServiceImplIntegrationTest
     private SourceDocument doc1;
     private SourceDocument doc2;
     private SourceDocument doc3;
-
-    @BeforeAll
-    public static void setupClass()
-    {
-        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
-    }
 
     @BeforeEach
     void setup() throws Exception
@@ -197,13 +198,17 @@ class MatrixWorkloadServiceImplIntegrationTest
     @Test
     void testAssignWithTakenDocuments()
     {
-        var annDoc1 = new AnnotationDocument("user3", doc1);
-        annDoc1.setState(IN_PROGRESS);
-        documentService.createOrUpdateAnnotationDocument(annDoc1);
+        documentService.createOrUpdateAnnotationDocument(AnnotationDocument.builder() //
+                .withUser("user3") //
+                .forDocument(doc1) //
+                .withState(IN_PROGRESS) //
+                .build());
 
-        var annDoc2 = new AnnotationDocument("user1", doc2);
-        annDoc2.setState(FINISHED);
-        documentService.createOrUpdateAnnotationDocument(annDoc2);
+        documentService.createOrUpdateAnnotationDocument(AnnotationDocument.builder() //
+                .withUser("user1") //
+                .forDocument(doc2) //
+                .withState(FINISHED) //
+                .build());
 
         sut.assignWorkload(project, 2, true);
 
@@ -245,7 +250,7 @@ class MatrixWorkloadServiceImplIntegrationTest
     @Test
     void testAssignWorkloadMoreAnnotatorsThanAvailable()
     {
-        var annotators = projectService.listProjectUsersWithPermissions(project, ANNOTATOR);
+        var annotators = projectService.listUsersWithRoleInProject(project, ANNOTATOR);
 
         sut.assignWorkload(project, annotators.size() + 1, true);
 

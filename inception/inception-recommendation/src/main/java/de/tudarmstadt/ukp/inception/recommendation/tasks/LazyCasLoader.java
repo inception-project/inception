@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -91,7 +92,8 @@ public class LazyCasLoader
     {
         var casses = new ArrayList<TrainingDocument>();
 
-        var allDocuments = documentService.listAllDocuments(project, dataOwner);
+        var allDocuments = documentService.listAllDocuments(project,
+                AnnotationSet.forUser(dataOwner));
         for (var entry : allDocuments.entrySet()) {
             var sourceDocument = entry.getKey();
             var annotationDocument = entry.getValue();
@@ -136,17 +138,17 @@ public class LazyCasLoader
     private class TrainingDocument
     {
         private final SourceDocument document;
-        private final String user;
+        private final AnnotationSet set;
         private final AnnotationDocumentState state;
 
         private boolean attemptedLoading = false;
         private CAS _cas;
 
-        TrainingDocument(SourceDocument aDocument, String aAnnotator,
+        TrainingDocument(SourceDocument aDocument, String aDataOwner,
                 AnnotationDocumentState aState)
         {
             document = aDocument;
-            user = aAnnotator;
+            set = AnnotationSet.forUser(aDataOwner);
             state = aState;
         }
 
@@ -160,7 +162,7 @@ public class LazyCasLoader
             try {
                 // During training, we should not have to modify the CASes... right? Fingers
                 // crossed.
-                _cas = documentService.readAnnotationCas(document, user, AUTO_CAS_UPGRADE,
+                _cas = documentService.readAnnotationCas(document, set, AUTO_CAS_UPGRADE,
                         SHARED_READ_ONLY_ACCESS);
             }
             catch (IOException e) {
@@ -174,7 +176,7 @@ public class LazyCasLoader
         public String toString()
         {
             return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE)
-                    .append("document", document).append("user", user).append("state", state)
+                    .append("document", document).append("user", set).append("state", state)
                     .toString();
         }
     }

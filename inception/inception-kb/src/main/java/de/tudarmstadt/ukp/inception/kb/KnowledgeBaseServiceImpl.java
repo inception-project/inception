@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClien
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.skipCertificateChecks;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DEFAULT_LIMIT;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.PROP_VERSION;
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getVersionProperties;
 import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -30,11 +32,13 @@ import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.move;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Collections.emptySet;
+import static java.util.Locale.ROOT;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static org.apache.commons.lang3.Strings.CS;
 import static org.apache.commons.lang3.reflect.FieldUtils.readField;
 import static org.apache.commons.lang3.reflect.FieldUtils.writeField;
 import static org.eclipse.rdf4j.repository.manager.LocalRepositoryManager.REPOSITORIES_DIR;
@@ -49,9 +53,9 @@ import java.io.OutputStream;
 import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -88,7 +92,6 @@ import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
-import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.SailException;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
@@ -110,6 +113,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpHeaders;
@@ -173,6 +177,9 @@ public class KnowledgeBaseServiceImpl
 
     private final LoadingCache<QueryKey, List<KBHandle>> queryCache;
     private final MemoryOAuthSessionRepository<KnowledgeBase> oAuthSessionRepository;
+
+    @Value("spring.application.name")
+    private String applicationName;
 
     @Autowired
     public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
@@ -401,8 +408,8 @@ public class KnowledgeBaseServiceImpl
         }
     }
 
-    @Transactional
     @Override
+    @Transactional(readOnly = true)
     public boolean knowledgeBaseExists(Project project, String kbName)
     {
         var query = entityManager.createNamedQuery("KnowledgeBase.getByName");
@@ -491,6 +498,17 @@ public class KnowledgeBaseServiceImpl
         return query.getResultList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasMoreThanOneEnabledKnowledgeBases(Project aProject)
+    {
+        var countQuery = entityManager.createQuery(
+                "SELECT COUNT(kb) FROM KnowledgeBase kb WHERE kb.project = :project AND kb.enabled = true",
+                Long.class);
+        countQuery.setParameter("project", aProject);
+        return countQuery.getSingleResult() > 1;
+    }
+
     @Transactional
     @Override
     public void removeKnowledgeBase(KnowledgeBase aKB)
@@ -541,6 +559,10 @@ public class KnowledgeBaseServiceImpl
 
         if (repo instanceof SPARQLRepository sparqlRepo) {
             var sparqlRepoConfig = (SPARQLRepositoryConfig) getKnowledgeBaseConfig(kb);
+
+            addAdditionalHeaders(sparqlRepo, Map.of("User-Agent", applicationName + "/"
+                    + getVersionProperties().getProperty(PROP_VERSION, "unknown")));
+
             applyBasicHttpAuthenticationConfigurationFromUrl(sparqlRepoConfig, sparqlRepo);
             var traits = readTraits(kb);
 
@@ -554,6 +576,9 @@ public class KnowledgeBaseServiceImpl
                     applyOAuthConfiguration(kb, sparqlRepo, traits);
                     break;
                 }
+                default:
+                    // Do nothing
+                    break;
                 }
             }
         }
@@ -624,8 +649,21 @@ public class KnowledgeBaseServiceImpl
             throw new IllegalStateException(e);
         }
 
-        var headers = Map.of(HttpHeaders.AUTHORIZATION, "Bearer " + session.getAccessToken());
-        sparqlRepo.setAdditionalHttpHeaders(headers);
+        addAdditionalHeaders(sparqlRepo,
+                Map.of(HttpHeaders.AUTHORIZATION, "Bearer " + session.getAccessToken()));
+    }
+
+    private void addAdditionalHeaders(SPARQLRepository aSparqlRepo, Map<String, String> aHeaders)
+    {
+        var existingHeaders = aSparqlRepo.getAdditionalHttpHeaders();
+        var newHeaders = new LinkedHashMap<String, String>();
+        if (existingHeaders != null) {
+            newHeaders.putAll(existingHeaders);
+        }
+        if (aHeaders != null) {
+            newHeaders.putAll(aHeaders);
+        }
+        aSparqlRepo.setAdditionalHttpHeaders(newHeaders);
     }
 
     private void applyBasicHttpAuthenticationConfigurationFromUrl(
@@ -675,7 +713,7 @@ public class KnowledgeBaseServiceImpl
             // Detect the file format
             var format = Rio.getParserFormatForFileName(aFilename).orElse(RDFXML);
 
-            String lowerCaseFilename = aFilename.toLowerCase(Locale.ROOT);
+            var lowerCaseFilename = aFilename.toLowerCase(ROOT);
             if (lowerCaseFilename.endsWith(".obo") || lowerCaseFilename.endsWith(".obo.gz")) {
                 try {
                     resource = transduceOboToOwlFunctionalSyntax(is);
@@ -693,7 +731,7 @@ public class KnowledgeBaseServiceImpl
                 // If the RDF file contains relative URLs, then they probably start with a hash.
                 // To avoid having two hashes here, we drop the hash from the base prefix configured
                 // by the user.
-                String prefix = StringUtils.removeEnd(kb.getBasePrefix(), "#");
+                var prefix = CS.removeEnd(kb.getBasePrefix(), "#");
                 conn.add(is, prefix, format);
             }
         }
@@ -738,7 +776,7 @@ public class KnowledgeBaseServiceImpl
             return;
         }
         try (var conn = getConnection(kb)) {
-            RDFWriter rdfWriter = Rio.createWriter(format, os);
+            var rdfWriter = Rio.createWriter(format, os);
             conn.export(rdfWriter);
         }
     }
@@ -1598,7 +1636,8 @@ public class KnowledgeBaseServiceImpl
 
         var luceneSail = (LuceneSail) sail;
         try (var conn = getConnection(aKB)) {
-            luceneSail.reindex();
+            ReindexingUtils.reindex(luceneSail);
+            // luceneSail.reindex();
             conn.commit();
         }
         catch (SailException e) {
@@ -1613,7 +1652,8 @@ public class KnowledgeBaseServiceImpl
 
                 // Only try to rebuild once - so no recursion here!
                 try (var conn = getConnection(aKB)) {
-                    luceneSail.reindex();
+                    ReindexingUtils.reindex(luceneSail);
+                    // luceneSail.reindex();
                     conn.commit();
                 }
             }
@@ -1720,8 +1760,11 @@ public class KnowledgeBaseServiceImpl
             }
 
             QueryKey castOther = (QueryKey) other;
-            return new EqualsBuilder().append(kb, castOther.kb).append(all, castOther.all)
-                    .append(query, castOther.query).isEquals();
+            return new EqualsBuilder() //
+                    .append(kb, castOther.kb) //
+                    .append(all, castOther.all) //
+                    .append(query, castOther.query) //
+                    .isEquals();
         }
 
         @Override

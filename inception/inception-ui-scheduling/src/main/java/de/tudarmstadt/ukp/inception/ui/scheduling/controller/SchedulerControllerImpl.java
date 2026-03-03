@@ -26,9 +26,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccess;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.project.api.ProjectAccess;
 import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;

@@ -18,16 +18,18 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.users;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static java.util.Collections.emptySet;
+import static java.util.Comparator.comparing;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.util.CollectionModel;
@@ -40,8 +42,10 @@ import org.wicketstuff.kendo.ui.renderer.ChoiceRenderer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -53,6 +57,8 @@ class UserSelectionPanel
 {
     private static final long serialVersionUID = -9151455840010092452L;
 
+    private static final String MID_DIALOG = "dialog";
+
     private @SpringBean ProjectService projectRepository;
     private @SpringBean UserDao userRepository;
     private @SpringBean UserSelectionPanelConfiguration config;
@@ -63,6 +69,7 @@ class UserSelectionPanel
     private OverviewListChoice<ProjectUserPermissions> overviewList;
     private MultiSelect<User> usersToAdd;
     private Map<String, User> recentUsers;
+    private final BootstrapModalDialog dialog;
 
     public UserSelectionPanel(String id, IModel<Project> aProject,
             IModel<ProjectUserPermissions> aUser)
@@ -71,20 +78,25 @@ class UserSelectionPanel
 
         setOutputMarkupId(true);
 
+        dialog = new BootstrapModalDialog(MID_DIALOG);
+        dialog.trapFocus();
+        queue(dialog);
+
         projectModel = aProject;
         userModel = aUser;
         recentUsers = new HashMap<>();
 
         overviewList = new OverviewListChoice<>("user");
-        overviewList
-                .setChoiceRenderer(new ProjectUserPermissionChoiceRenderer().setShowRoles(true));
+        overviewList.setChoiceRenderer(new ProjectUserPermissionChoiceRenderer() //
+                .setShowRoles(true) //
+                .setMarkProjectBoundUsers(true));
         overviewList.setModel(userModel);
-        overviewList.setChoices(this::listUsersWithPermissions);
+        overviewList.setChoices(this::listProjectRelevantUsers);
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
 
-        IModel<Collection<User>> usersToAddModel = new CollectionModel<>(new ArrayList<>());
-        Form<Collection<User>> form = new Form<>("form", usersToAddModel);
+        var usersToAddModel = new CollectionModel<>(new ArrayList<User>());
+        var form = new Form<>("form", usersToAddModel);
         add(form);
 
         var userRenderer = new ChoiceRenderer<User>("username")
@@ -102,7 +114,7 @@ class UserSelectionPanel
                     builder.append(")");
                 }
 
-                String text = builder.toString();
+                var text = builder.toString();
                 recentUsers.put(text, user);
                 return text;
             };
@@ -131,12 +143,12 @@ class UserSelectionPanel
             @Override
             public List<User> getChoices(String aInput)
             {
-                List<User> result = new ArrayList<>();
+                var result = new ArrayList<User>();
 
                 if (config.isHideUsers()) {
                     // only offer the user matching what the input entered into the field
                     if (isNotBlank(aInput)) {
-                        User user = userRepository.get(aInput);
+                        var user = userRepository.get(aInput);
                         if (user != null) {
                             result.add(user);
                         }
@@ -144,15 +156,30 @@ class UserSelectionPanel
                 }
                 else {
                     // offer all enabled users matching the input
-                    userRepository.listEnabledUsers().stream()
-                            .filter(user -> aInput == null || user.getUsername().contains(aInput)
+                    var currentProjectRealm = projectRepository.getRealm(projectModel.getObject());
+                    userRepository.listEnabledUsers().stream() //
+                            .filter(user -> {
+                                var userRealm = user.getRealm();
+
+                                if (userRealm == null) {
+                                    return true;
+                                }
+
+                                // Project-bound users from other projects cannot be added
+                                if (Realm.isProjectRealm(userRealm)
+                                        && !currentProjectRealm.getId().equals(userRealm)) {
+                                    return false;
+                                }
+
+                                return true;
+                            }).filter(user -> aInput == null || user.getUsername().contains(aInput)
                                     || user.getUiName().contains(aInput))
                             .forEach(result::add);
                 }
 
                 if (!result.isEmpty()) {
                     result.removeAll(projectRepository
-                            .listProjectUsersWithPermissions(projectModel.getObject()));
+                            .listUsersWithAnyRoleInProject(projectModel.getObject()));
                 }
 
                 return result;
@@ -166,13 +193,13 @@ class UserSelectionPanel
                     return;
                 }
 
-                final String[] values = this.getInputAsArray();
+                var values = this.getInputAsArray();
                 if (values == null) {
                     return;
                 }
 
                 List<User> result = new ArrayList<>();
-                for (String value : values) {
+                for (var value : values) {
                     if (isBlank(value)) {
                         continue;
                     }
@@ -190,17 +217,42 @@ class UserSelectionPanel
         };
         usersToAdd.setModel(usersToAddModel);
         form.add(usersToAdd);
+
         form.add(new LambdaAjaxButton<>("add", this::actionAdd));
+        form.add(new LambdaAjaxButton<>("new", this::actionNew));
     }
 
-    private List<ProjectUserPermissions> listUsersWithPermissions()
+    private List<ProjectUserPermissions> listProjectRelevantUsers()
     {
-        return projectRepository.listProjectUserPermissions(projectModel.getObject());
+        var project = projectModel.getObject();
+
+        var userMap = new HashMap<String, ProjectUserPermissions>();
+
+        projectRepository.listProjectUserPermissions(project)
+                .forEach(u -> userMap.put(u.getUsername(), u));
+
+        var boundUsers = projectRepository.listProjectBoundUsers(project);
+        for (var boundUser : boundUsers) {
+            if (!userMap.containsKey(boundUser.getUsername())) {
+                userMap.put(boundUser.getUsername(), new ProjectUserPermissions(project,
+                        boundUser.getUsername(), boundUser, emptySet()));
+            }
+        }
+
+        return userMap.values().stream() //
+                .sorted(comparing(u -> u.getUser().map(User::getUsername).orElse(u.getUsername())))
+                .toList();
+    }
+
+    private void actionNew(AjaxRequestTarget aTarget, Form<List<User>> aForm)
+    {
+        dialog.open(new AddProjectUserPanel(ModalDialog.CONTENT_ID, projectModel, userModel),
+                aTarget);
     }
 
     private void actionAdd(AjaxRequestTarget aTarget, Form<List<User>> aForm)
     {
-        for (User user : aForm.getModelObject()) {
+        for (var user : aForm.getModelObject()) {
             projectRepository.assignRole(projectModel.getObject(), user, ANNOTATOR);
         }
 

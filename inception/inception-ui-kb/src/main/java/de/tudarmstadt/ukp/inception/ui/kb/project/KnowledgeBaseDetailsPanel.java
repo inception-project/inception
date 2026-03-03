@@ -89,7 +89,7 @@ public class KnowledgeBaseDetailsPanel
         if (kbw.getKb().getType() == REMOTE) {
             var cfg = kbService.getKnowledgeBaseConfig(kbw.getKb());
             if (cfg != null) {
-                String url = ((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl();
+                var url = ((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl();
                 kbw.setUrl(url);
             }
             else {

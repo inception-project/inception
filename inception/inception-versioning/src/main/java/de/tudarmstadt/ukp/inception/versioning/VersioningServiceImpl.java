@@ -19,20 +19,17 @@ package de.tudarmstadt.ukp.inception.versioning;
 
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.lang.invoke.MethodHandles;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.SerialFormat;
 import org.apache.uima.util.CasIOUtils;
 import org.eclipse.jgit.api.Git;
@@ -41,7 +38,6 @@ import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
@@ -50,12 +46,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
@@ -64,17 +57,17 @@ import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration;
 
 /**
  * <p>
- * This class is exposed as a Spring Component via
- * {@link de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration} ()}.
+ * This class is exposed as a Spring Component via {@link VersioningServiceAutoConfiguration}
  * </p>
  */
 public class VersioningServiceImpl
     implements VersioningService
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static final String REPO_NAME = "git-backup";
     public static final String LAYERS = "layers.json";
@@ -86,7 +79,6 @@ public class VersioningServiceImpl
     private final CasStorageService casStorageService;
     private final UserDao userDao;
 
-    @Autowired
     public VersioningServiceImpl(RepositoryProperties aRepoProperties,
             AnnotationSchemaService aAnnotationService, DocumentService aDocumentService,
             CurationDocumentService aCurationDocumentService, CasStorageService aCasStorageService,
@@ -104,13 +96,12 @@ public class VersioningServiceImpl
     @Transactional
     public void onBeforeProjectRemovedEvent(BeforeProjectRemovedEvent aEvent)
     {
-        Project project = aEvent.getProject();
+        var project = aEvent.getProject();
 
         if (repoExists(project)) {
-            File repoPath = getRepoDir(project);
-            log.info(
-                    "Removing git repository for [{}]({}) at [{}] because project is being removed",
-                    project.getName(), project.getId(), repoPath);
+            var repoPath = getRepoDir(project);
+            LOG.info("Removing git repository for {} at [{}] because project is being removed",
+                    project, repoPath);
             FileSystemUtils.deleteRecursively(repoPath);
         }
     }
@@ -119,57 +110,56 @@ public class VersioningServiceImpl
     public void snapshotCompleteProject(Project aProject, String aCommitMessage)
         throws IOException, GitAPIException
     {
-        File repoDir = getRepoDir(aProject);
-        Path documentDir = repoDir.toPath().resolve(DOCUMENT_FOLDER);
+        var repoDir = getRepoDir(aProject);
+        var documentDir = repoDir.toPath().resolve(DOCUMENT_FOLDER);
 
-        Git git = Git.open(repoDir);
+        var git = Git.open(repoDir);
 
         // Dump layers
-        File layersJsonFile = new File(repoDir, LAYERS);
+        var layersJsonFile = new File(repoDir, LAYERS);
         dumpLayers(layersJsonFile, aProject);
         git.add().addFilepattern(LAYERS).call();
 
-        for (SourceDocument sourceDocument : documentService.listSourceDocuments(aProject)) {
-            Path sourceDir = documentDir.resolve(sourceDocument.getName());
+        for (var sourceDocument : documentService.listSourceDocuments(aProject)) {
+            var sourceDir = documentDir.resolve(sourceDocument.getName());
 
             Files.createDirectories(sourceDir);
 
             // Dump source documents
-            Path sourceDocumentPath = sourceDir.resolve("source.xmi");
-            try (CasStorageSession session = CasStorageSession.openNested();
-                    OutputStream out = Files.newOutputStream(sourceDocumentPath)) {
-                CAS cas = documentService.createOrReadInitialCas(sourceDocument);
+            var sourceDocumentPath = sourceDir.resolve("source.xmi");
+            try (var session = CasStorageSession.openNested();
+                    var out = Files.newOutputStream(sourceDocumentPath)) {
+                var cas = documentService.createOrReadInitialCas(sourceDocument);
                 CasIOUtils.save(WebAnnoCasUtil.getRealCas(cas), out, SerialFormat.XMI);
             }
 
             // Dump initial cas
-            Path initialCasPath = sourceDir.resolve("initial.xmi");
-            try (CasStorageSession session = CasStorageSession.openNested();
-                    OutputStream out = Files.newOutputStream(initialCasPath)) {
-                CAS cas = documentService.createOrReadInitialCas(sourceDocument);
+            var initialCasPath = sourceDir.resolve("initial.xmi");
+            try (var session = CasStorageSession.openNested();
+                    var out = Files.newOutputStream(initialCasPath)) {
+                var cas = documentService.createOrReadInitialCas(sourceDocument);
                 CasIOUtils.save(WebAnnoCasUtil.getRealCas(cas), out, SerialFormat.XMI);
             }
 
             // Dump curation cas
-            Path curationCasPath = sourceDir.resolve("curation.xmi");
-            try (CasStorageSession session = CasStorageSession.openNested();
-                    OutputStream out = Files.newOutputStream(curationCasPath)) {
+            var curationCasPath = sourceDir.resolve("curation.xmi");
+            try (var session = CasStorageSession.openNested();
+                    var out = Files.newOutputStream(curationCasPath)) {
                 if (curationDocumentService.existsCurationCas(sourceDocument)) {
-                    CAS cas = curationDocumentService.readCurationCas(sourceDocument);
+                    var cas = curationDocumentService.readCurationCas(sourceDocument);
                     CasIOUtils.save(WebAnnoCasUtil.getRealCas(cas), out, SerialFormat.XMI);
                 }
             }
 
             // Dump annotation documents
-            for (AnnotationDocument annotationDocument : documentService
-                    .listAnnotationDocuments(sourceDocument)) {
+            for (var annotationDocument : documentService.listAnnotationDocuments(sourceDocument)) {
 
-                String userName = annotationDocument.getUser();
-                Path annotationDocumentPath = sourceDir.resolve(userName + ".xmi");
+                var set = AnnotationSet.forUser(annotationDocument.getUser());
+                var annotationDocumentPath = sourceDir.resolve(set + ".xmi");
 
-                try (CasStorageSession session = CasStorageSession.openNested();
-                        OutputStream out = Files.newOutputStream(annotationDocumentPath)) {
-                    CAS cas = casStorageService.readCas(annotationDocument.getDocument(), userName);
+                try (var session = CasStorageSession.openNested();
+                        var out = Files.newOutputStream(annotationDocumentPath)) {
+                    var cas = casStorageService.readCas(annotationDocument.getDocument(), set);
                     CasIOUtils.save(WebAnnoCasUtil.getRealCas(cas), out, SerialFormat.XMI);
                 }
             }
@@ -184,7 +174,7 @@ public class VersioningServiceImpl
     @Override
     public void labelCurrentVersion(Project aProject, String aLabel)
     {
-
+        // FIXME: Needs to be implemented
     }
 
     @Override
@@ -201,17 +191,16 @@ public class VersioningServiceImpl
     @Override
     public void initializeRepo(Project aProject) throws GitAPIException
     {
-        File repoDir = getRepoDir(aProject);
-        log.info("Creating git repository for project [{}]({}) at [{}]", aProject.getName(),
-                aProject.getId(), repoDir);
+        var repoDir = getRepoDir(aProject);
+        LOG.info("Creating git repository for project {} at [{}]", aProject, repoDir);
         Git.init().setDirectory(repoDir).call();
     }
 
     @Override
     public boolean repoExists(Project aProject)
     {
-        File repoDir = getRepoDir(aProject);
-        File gitDir = repoDir.toPath().resolve(".git").toFile();
+        var repoDir = getRepoDir(aProject);
+        var gitDir = repoDir.toPath().resolve(".git").toFile();
 
         return repoDir.isDirectory() && gitDir.isDirectory();
     }
@@ -219,10 +208,10 @@ public class VersioningServiceImpl
     @Override
     public Optional<String> getRemote(Project aProject) throws IOException, GitAPIException
     {
-        File repoDir = getRepoDir(aProject);
-        Git git = Git.open(repoDir);
+        var repoDir = getRepoDir(aProject);
+        var git = Git.open(repoDir);
 
-        String url = git.getRepository().getConfig().getString("remote", "origin", "url");
+        var url = git.getRepository().getConfig().getString("remote", "origin", "url");
 
         return Optional.ofNullable(url);
     }
@@ -231,8 +220,8 @@ public class VersioningServiceImpl
     public void setRemote(Project aProject, String aValue)
         throws IOException, GitAPIException, URISyntaxException
     {
-        File repoDir = getRepoDir(aProject);
-        Git git = Git.open(repoDir);
+        var repoDir = getRepoDir(aProject);
+        var git = Git.open(repoDir);
 
         git.remoteSetUrl().setRemoteName("origin").setRemoteUri(new URIish(aValue)).call();
     }
@@ -240,8 +229,8 @@ public class VersioningServiceImpl
     @Override
     public void pushToOrigin(Project aProject) throws IOException, GitAPIException
     {
-        File repoDir = getRepoDir(aProject);
-        Git git = Git.open(repoDir);
+        var repoDir = getRepoDir(aProject);
+        var git = Git.open(repoDir);
 
         git.push().setRemote("origin").add("master").call();
     }
@@ -250,8 +239,8 @@ public class VersioningServiceImpl
     public void pushToOrigin(Project aProject, String aUsername, String aPassword)
         throws IOException, GitAPIException
     {
-        File repoDir = getRepoDir(aProject);
-        Git git = Git.open(repoDir);
+        var repoDir = getRepoDir(aProject);
+        var git = Git.open(repoDir);
 
         git.push() //
                 .setRemote("origin") //
@@ -263,11 +252,11 @@ public class VersioningServiceImpl
 
     private void commit(Git aGit, String aMessage) throws GitAPIException
     {
-        User user = userDao.getCurrentUser();
+        var user = userDao.getCurrentUser();
 
-        String userName = user.getUsername();
-        String email = user.getEmail();
-        if (StringUtils.isBlank(email)) {
+        var userName = user.getUsername();
+        var email = user.getEmail();
+        if (isBlank(email)) {
             email = userName + "@" + "inception";
         }
 
@@ -280,26 +269,26 @@ public class VersioningServiceImpl
 
     private void dumpLayers(File aFile, Project aProject) throws IOException
     {
-        List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
+        var exLayers = new ArrayList<ExportedAnnotationLayer>();
+        for (var layer : annotationService.listAnnotationLayer(aProject)) {
 
-            ExportedAnnotationLayer exMainLayer = LayerImportExportUtils.exportLayerDetails(null,
-                    null, layer, annotationService);
+            var exMainLayer = LayerImportExportUtils.exportLayerDetails(null, null, layer,
+                    annotationService);
             exLayers.add(exMainLayer);
 
             // If the layer is attached to another layer, then we also have to export
             // that, otherwise we would be missing it during re-import.
             if (layer.getAttachType() != null) {
-                AnnotationLayer attachLayer = layer.getAttachType();
-                ExportedAnnotationLayer exAttachLayer = LayerImportExportUtils
-                        .exportLayerDetails(null, null, attachLayer, annotationService);
+                var attachLayer = layer.getAttachType();
+                var exAttachLayer = LayerImportExportUtils.exportLayerDetails(null, null,
+                        attachLayer, annotationService);
                 exMainLayer.setAttachType(
                         new ExportedAnnotationLayerReference(exAttachLayer.getName()));
                 exLayers.add(exAttachLayer);
             }
         }
 
-        String json = JSONUtil.toPrettyJsonString(exLayers);
-        Files.write(aFile.toPath(), json.getBytes(StandardCharsets.UTF_8));
+        var json = JSONUtil.toPrettyJsonString(exLayers);
+        Files.write(aFile.toPath(), json.getBytes(UTF_8));
     }
 }

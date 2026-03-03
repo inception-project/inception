@@ -73,8 +73,8 @@ public interface AnnotationEditorExtension
         // Do nothing by default
     }
 
-    default List<VLazyDetailGroup> lookupLazyDetails(SourceDocument aDocument, User aUser, CAS aCas,
-            VID aVid, AnnotationLayer aLayer)
+    default List<VLazyDetailGroup> lookupLazyDetails(SourceDocument aDocument, User aDataOwner,
+            CAS aCas, VID aVid, AnnotationLayer aLayer)
     {
         return Collections.emptyList();
     }

@@ -23,7 +23,6 @@ package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
-import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_FEATURE_SENTENCE;
 import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_FEATURE_TOKEN;
 import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_LAYER_SEGMENTATION;
@@ -134,8 +133,6 @@ import mtas.search.spans.util.MtasSpanQuery;
 public class MtasDocumentIndex
     implements PhysicalIndex
 {
-    private static final String INDEX = "indexMtas";
-
     /**
      * Constant for the field which carries the unique identifier for the index document consisting:
      * {@code [sourceDocumentId]/[annotationDocumentId]}
@@ -173,20 +170,45 @@ public class MtasDocumentIndex
 
     private static final String EMPTY_FEATURE_VALUE_KEY = "<Empty>";
 
+    /**
+     * Characters that need to be escaped in CQL queries. Note: Backslash must be first to avoid
+     * double-escaping.
+     */
+    static final String[] CHARS_TO_ESCAPE = { "\\", "(", ")", "{", "}", "<", ">", "[", "]", "&",
+            "#", ".", "+", "*", "?", "|", "^", "$" };
+
+    /**
+     * Characters that trigger CQL mode detection in queries. If any of these characters are
+     * present, the query is treated as CQL and returned unchanged.
+     */
+    static final String[] CQL_TRIGGER_CHARS = { "\"", "[", "]", "<", ">" };
+
+    /**
+     * Escaped versions of the characters in {@link #CHARS_TO_ESCAPE}.
+     */
+    private static final String[] ESCAPED_CHARS;
+
+    static {
+        ESCAPED_CHARS = new String[CHARS_TO_ESCAPE.length];
+        for (var i = 0; i < CHARS_TO_ESCAPE.length; i++) {
+            ESCAPED_CHARS[i] = "\\" + CHARS_TO_ESCAPE[i];
+        }
+    }
+
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
     private final FeatureSupportRegistry featureSupportRegistry;
     private final DocumentService documentService;
     private final Project project;
-    private final File repositoryDir;
+    private final File indexDir;
     private final ScheduledExecutorService schedulerService;
 
     private IndexWriter _indexWriter;
     private ReferenceManager<IndexSearcher> _searcherManager;
     private ScheduledFuture<?> _commitFuture;
 
-    public MtasDocumentIndex(Project aProject, DocumentService aDocumentService, String aDir,
+    public MtasDocumentIndex(Project aProject, DocumentService aDocumentService, File aIndexDir,
             FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry)
     {
@@ -194,7 +216,7 @@ public class MtasDocumentIndex
         project = aProject;
         featureIndexingSupportRegistry = aFeatureIndexingSupportRegistry;
         featureSupportRegistry = aFeatureSupportRegistry;
-        repositoryDir = new File(aDir);
+        indexDir = aIndexDir;
 
         schedulerService = new ScheduledThreadPoolExecutor(0);
     }
@@ -250,12 +272,12 @@ public class MtasDocumentIndex
         var analyzer = new PerFieldAnalyzerWrapper(new StandardAnalyzer(), analyzerPerField);
 
         // Build IndexWriter
-        FileUtils.forceMkdir(getIndexDir());
+        FileUtils.forceMkdir(indexDir);
         var config = new IndexWriterConfig(analyzer);
         config.setCodec(Codec.forName(MTAS_CODEC_NAME));
 
         @SuppressWarnings("resource")
-        var indexWriter = new IndexWriter(FSDirectory.open(getIndexDir().toPath()), config);
+        var indexWriter = new IndexWriter(FSDirectory.open(indexDir.toPath()), config);
 
         // Initialize the index
         try {
@@ -406,17 +428,18 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public Map<String, List<SearchResult>> executeQuery(SearchQueryRequest aRequest)
+    public Map<String, List<SearchResult>> executeQuery(SearchQueryRequest aRequest,
+            AnnotationSearchState aPrefs)
         throws IOException, ExecutionException
     {
-        return _executeQuery(this::doQuery, aRequest);
+        return _executeQuery(this::doQuery, aRequest, aPrefs);
     }
 
     @Override
-    public long numberOfQueryResults(SearchQueryRequest aRequest)
+    public long numberOfQueryResults(SearchQueryRequest aRequest, AnnotationSearchState aPrefs)
         throws ExecutionException, IOException
     {
-        return _executeQuery(this::doCountResults, aRequest);
+        return _executeQuery(this::doCountResults, aRequest, aPrefs);
     }
 
     @Override
@@ -685,19 +708,22 @@ public class MtasDocumentIndex
         }
     }
 
-    private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest)
+    private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest,
+            AnnotationSearchState aPrefs)
         throws IOException, ExecutionException
     {
-        LOG.debug("Executing query [{}] on index [{}]", aRequest, getIndexDir());
+        LOG.debug("Executing query [{}] on index [{}]", aRequest, indexDir);
 
-        ensureAllIsCommitted();
+        if (aRequest.isCommitRequired()) {
+            ensureAllIsCommitted();
+        }
 
-        final MtasSpanQuery mtasSpanQuery;
+        final MtasSpanQuery query;
         try {
-            var modifiedQuery = preprocessQuery(aRequest.getQuery(), aRequest.getSearchSettings());
+            var modifiedQuery = preprocessQuery(aRequest.getQuery(), aPrefs);
             try (var reader = new StringReader(modifiedQuery)) {
                 var parser = new MtasCQLParser(reader);
-                mtasSpanQuery = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
+                query = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
             }
         }
         catch (ParseException | Error e) {
@@ -711,7 +737,7 @@ public class MtasDocumentIndex
         IndexSearcher searcher = null;
         try {
             searcher = getSearcherManager().acquire();
-            return aRunner.run(searcher, aRequest, mtasSpanQuery);
+            return aRunner.run(searcher, aRequest, query);
         }
         catch (Exception e) {
             throw new ExecutionException("Unable to execute query [" + aRequest.getQuery() + "]",
@@ -727,11 +753,13 @@ public class MtasDocumentIndex
         }
     }
 
-    private String preprocessQuery(String aQuery, AnnotationSearchState aPrefs)
+    static String preprocessQuery(String aQuery, AnnotationSearchState aPrefs)
     {
-        if (aQuery.contains("\"") || aQuery.contains("[") || aQuery.contains("]")
-                || aQuery.contains("<") || aQuery.contains(">")) {
-            return aQuery;
+        // Check if query contains CQL syntax markers
+        for (var cqlChar : CQL_TRIGGER_CHARS) {
+            if (aQuery.contains(cqlChar)) {
+                return aQuery;
+            }
         }
 
         // Convert raw words query to a Mtas CQP query
@@ -739,6 +767,7 @@ public class MtasDocumentIndex
         var words = BreakIterator.getWordInstance();
         words.setText(aQuery);
 
+        var addedWord = false;
         int start = words.first();
         int end = words.next();
         while (end != BreakIterator.DONE) {
@@ -749,22 +778,18 @@ public class MtasDocumentIndex
             }
 
             if (!word.trim().isEmpty()) {
-                word = word.replace("&", "\\&");
-                word = word.replace("(", "\\(");
-                word = word.replace(")", "\\)");
-                word = word.replace("#", "\\#");
-                word = word.replace("{", "\\{");
-                word = word.replace("}", "\\}");
-                word = word.replace("<", "\\<");
-                word = word.replace(">", "\\>");
+                // Add space before word if we already added a word
+                if (addedWord) {
+                    result += " ";
+                }
+                // Escape special CQL/regex characters
+                word = StringUtils.replaceEach(word, CHARS_TO_ESCAPE, ESCAPED_CHARS);
                 // Add the word to the query
                 result += "\"" + word + "\"";
+                addedWord = true;
             }
             start = end;
             end = words.next();
-            if (end != BreakIterator.DONE) {
-                result += " ";
-            }
         }
 
         return result;
@@ -959,7 +984,7 @@ public class MtasDocumentIndex
             SearchQueryRequest aRequest, MtasSpanQuery aQuery)
         throws IOException
     {
-        var results = new LinkedHashMap<String, List<SearchResult>>();
+        var resultsByDocument = new LinkedHashMap<String, List<SearchResult>>();
 
         var leafReaderContextIterator = sortLeaves(aSearcher.getIndexReader().leaves(), aSearcher,
                 aQuery).listIterator();
@@ -1145,12 +1170,12 @@ public class MtasDocumentIndex
                                 var featureValues = featureValuesAtMatch(tokens, matchStart,
                                         matchEnd, groupingLayer, groupingFeature);
                                 for (var featureValue : featureValues) {
-                                    addToResults(results, featureValue, result);
+                                    addToResults(resultsByDocument, featureValue, result);
                                 }
                             }
                             else {
                                 // if no annotation feature is specified group by document title
-                                addToResults(results, result.getDocumentTitle(), result);
+                                addToResults(resultsByDocument, result.getDocumentTitle(), result);
                             }
                         }
                     }
@@ -1161,26 +1186,20 @@ public class MtasDocumentIndex
             }
         }
 
-        var sortedResults = new LinkedHashMap<String, List<SearchResult>>();
-        var sortedKeys = results.keySet().stream().sorted().toList();
-        for (var key : sortedKeys) {
-            sortedResults.put(key, results.get(key));
+        var sortedResultsByDocument = new LinkedHashMap<String, List<SearchResult>>();
+        var sortedDocuments = resultsByDocument.keySet().stream().sorted().toList();
+        for (var document : sortedDocuments) {
+            sortedResultsByDocument.put(document, resultsByDocument.get(document));
         }
 
-        return sortedResults;
+        return sortedResultsByDocument;
     }
 
     private void addToResults(Map<String, List<SearchResult>> aResultsMap, String aKey,
             SearchResult aSearchResult)
     {
-        if (aResultsMap.containsKey(aKey)) {
-            aResultsMap.get(aKey).add(aSearchResult);
-        }
-        else {
-            List<SearchResult> searchResultsForKey = new ArrayList<>();
-            searchResultsForKey.add(aSearchResult);
-            aResultsMap.put(aKey, searchResultsForKey);
-        }
+        var results = aResultsMap.computeIfAbsent(aKey, $ -> new ArrayList<SearchResult>());
+        results.add(aSearchResult);
     }
 
     private List<String> featureValuesAtMatch(List<MtasTokenString> aTokens, int aMatchStart,
@@ -1428,16 +1447,6 @@ public class MtasDocumentIndex
         scheduleCommit();
     }
 
-    /**
-     * Returns a File object corresponding to the project's index folder
-     * 
-     * @return File object corresponding to project's index folder
-     */
-    private File getIndexDir()
-    {
-        return new File(repositoryDir, "/" + PROJECT_FOLDER + "/" + project.getId() + "/" + INDEX);
-    }
-
     @Override
     public synchronized void delete() throws IOException
     {
@@ -1446,16 +1455,15 @@ public class MtasDocumentIndex
         }
 
         // Delete the index directory
-        deleteDirectory(getIndexDir());
+        deleteDirectory(indexDir);
 
-        LOG.debug("Index for project [{}]({}) has been deleted", project.getName(),
-                project.getId());
+        LOG.debug("Index for project {} has been deleted", project);
     }
 
     @Override
     public boolean isCreated()
     {
-        return getIndexDir().isDirectory();
+        return indexDir.isDirectory();
     }
 
     @Override
@@ -1510,7 +1518,7 @@ public class MtasDocumentIndex
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this).append("project", project).append("path", getIndexDir())
+        return new ToStringBuilder(this).append("project", project).append("path", indexDir)
                 .toString();
     }
 

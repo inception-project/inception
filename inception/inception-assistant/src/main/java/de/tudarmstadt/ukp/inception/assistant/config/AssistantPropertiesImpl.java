@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.config;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -26,17 +30,29 @@ public class AssistantPropertiesImpl
 {
     private String url = "http://localhost:11434";
     private String nickname = "INCEpTION";
+    private String apiKey = null;
+    private boolean summarizeThoughts = false;
 
-    private final AssistantChatProperties chat = new AssistantChatPropertiesImpl();
-    private final AssistantEmbeddingProperties embedding = new AssistantEmbeddingPropertiesImpl();
+    private final AssistantChatPropertiesImpl chat = new AssistantChatPropertiesImpl();
+    private final AssistantEmbeddingPropertiesImpl embedding = new AssistantEmbeddingPropertiesImpl();
     private final AssitantUserGuidePropertiesImpl userGuide = new AssitantUserGuidePropertiesImpl();
-    private final AssistantToolPropertiesImpl tool = new AssistantToolPropertiesImpl();
     private final AssistantDocumentIndexProperties documentIndex;
 
     @Autowired
     public AssistantPropertiesImpl(AssistantDocumentIndexProperties aDocumentIndex)
     {
         documentIndex = aDocumentIndex;
+    }
+
+    public void setApiKey(String aApiKey)
+    {
+        apiKey = aApiKey;
+    }
+
+    @Override
+    public String getApiKey()
+    {
+        return apiKey;
     }
 
     @Override
@@ -48,6 +64,17 @@ public class AssistantPropertiesImpl
     public void setNickname(String aNickname)
     {
         nickname = aNickname;
+    }
+
+    public void setSummarizeThoughts(boolean aSummarizeThoughts)
+    {
+        summarizeThoughts = aSummarizeThoughts;
+    }
+
+    @Override
+    public boolean isSummarizeThoughts()
+    {
+        return summarizeThoughts;
     }
 
     @Override
@@ -62,26 +89,21 @@ public class AssistantPropertiesImpl
     }
 
     @Override
-    public AssistantChatProperties getChat()
+    public AssistantChatPropertiesImpl getChat()
     {
         return chat;
     }
 
     @Override
-    public AssistantEmbeddingProperties getEmbedding()
+    public AssistantEmbeddingPropertiesImpl getEmbedding()
     {
         return embedding;
     }
 
     @Override
-    public AssitantUserGuideProperties getUserGuide()
+    public AssitantUserGuidePropertiesImpl getUserGuide()
     {
         return userGuide;
-    }
-
-    public AssistantToolPropertiesImpl getTool()
-    {
-        return tool;
     }
 
     @Override
@@ -135,12 +157,31 @@ public class AssistantPropertiesImpl
         implements AssistantChatProperties
     {
         private String model = "llama3.2";
+        private final Set<String> capabilities = new HashSet<>();
         private String encoding = "cl100k_base";
-        private int contextLength = 4096;
+        private int contextLength = AUTO_DETECT;
         private double topP = 0.3;
         private int topK = 25;
         private double repeatPenalty = 1.1;
         private double temperature = 0.1;
+
+        {
+            capabilities.add(AUTO_DETECT_CAPABILITIES);
+        }
+
+        public void setCapabilities(Collection<String> aCapabilities)
+        {
+            capabilities.clear();
+            if (aCapabilities != null) {
+                capabilities.addAll(aCapabilities);
+            }
+        }
+
+        @Override
+        public Set<String> getCapabilities()
+        {
+            return capabilities;
+        }
 
         @Override
         public String getModel()
@@ -296,23 +337,6 @@ public class AssistantPropertiesImpl
         public void setDimension(int aDimension)
         {
             dimension = aDimension;
-        }
-    }
-
-    public static class AssistantToolPropertiesImpl
-        implements AssistantToolProperties
-    {
-        private String model = "granite3-dense";
-
-        @Override
-        public String getModel()
-        {
-            return model;
-        }
-
-        public void setModel(String aModel)
-        {
-            model = aModel;
         }
     }
 }

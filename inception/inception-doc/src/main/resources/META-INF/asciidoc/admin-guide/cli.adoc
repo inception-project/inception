@@ -1,0 +1,80 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Command Line Interface
+
+{product-name} has a command line interface (CLI) that allows administrators to perform various tasks directly from the terminal. 
+This guide provides an overview of the available commands and their usage.
+
+== Accessing the CLI
+
+To access the {product-name} CLI, you can just add command line arguments to the Java command that starts {product-name}.
+For example:
+
+----
+$ java -Dinception.home="/srv/inception" -jar inception-app-webapp-{revnumber}-standalone.jar --help
+----
+
+If you are using Docker, you can pass the command line arguments via the `APP_ARGS` environment variable.
+For example:
+
+----
+$ docker run -e APP_ARGS="--help" inception/inception:{revnumber}
+----
+
+Note that if you usually pass other parameters startup, make sure you also pass them when you want to use the CLI - in particular the `inception.home` system property, database-related properties/variables or volume mounts.
+
+== User Management Commands
+
+This commands are used to for user-related tasks.
+They start with the `users` keyword followed by the name of a subcommmand.
+
+=== `users migrate-preauthenticated-users`
+Migrates all users that do not have a password and that do not have `ROLE_REMOTE` to the `preauth` realm.
+This command should be run once after upgrading from  a version <25.0 to a version >=25.0 or higher on instances that use external pre-authentication.
+
+.Parameters
+[options="header"]
+|===
+| Parameter | Description
+| `--dry-run` | If set, the command only simulates the migration without making any changes.
+|===
+
+== Search Index Commands
+
+=== `search reindex``
+
+Rebuilds the indexes of all projects.
+
+.Parameters
+[options="header"]
+|===
+| Parameter | Description
+| `--project-slug` | Re-index only the given project
+|===
+
+== Miscellaneous Commands
+
+=== `rebuild-state-updated`
+
+Rebuilds the `state updated` timestamps of projects and the source documents and annotation documents within them.
+
+.Parameters
+[options="header"]
+|===
+| Parameter | Description
+| `--project-slug` | Re-build only the given project
+|===

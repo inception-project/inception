@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.startsWith;
+import static org.apache.commons.lang3.Strings.CS;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,10 +91,10 @@ public class ManageUsersPage
 
     private void checkAccess(final PageParameters aPageParameters)
     {
-        String username = aPageParameters.get(PARAM_USER).toOptionalString();
+        var username = aPageParameters.get(PARAM_USER).toOptionalString();
 
-        User currentUser = userService.getCurrentUser();
-        User userToOpen = isBlank(username) ? currentUser : userService.get(username);
+        var currentUser = userService.getCurrentUser();
+        var userToOpen = isBlank(username) ? currentUser : userService.get(username);
 
         // Admins can manage any user
         if (userService.isCurrentUserAdmin()) {
@@ -160,13 +160,15 @@ public class ManageUsersPage
 
         userService.listRealms().stream() //
                 .map(_id -> {
-                    if (startsWith(_id, REALM_PROJECT_PREFIX)) {
+                    final CharSequence str = _id;
+                    if (CS.startsWith(str, REALM_PROJECT_PREFIX)) {
                         return projectService.getRealm(_id);
                     }
                     else {
                         return new Realm(_id);
                     }
-                }).forEach(realms::add);
+                }) //
+                .forEach(realms::add);
 
         // Add the realms from the external authentication providers. Note that multiple providers
         // might use the same registration. E.g. the SAML IdP might be registered as an OAuth and
@@ -188,11 +190,12 @@ public class ManageUsersPage
                 .collect(toList());
     }
 
-    private List<User> listUsers()
+    private List<UserTableRow> listUsers()
     {
         return userService.list().stream() //
                 .filter(u -> Objects.equals(u.getRealm(), realm.getModelObject().getId())) //
-                .collect(toList());
+                .map(UserTableRow::new) //
+                .toList();
     }
 
     @OnEvent
@@ -218,7 +221,7 @@ public class ManageUsersPage
 
     private void actionCreate(AjaxRequestTarget aTarget)
     {
-        User user = new User();
+        var user = new User();
         user.setEnabled(true);
         user.setRoles(Set.of(ROLE_USER));
         selectedUser.setObject(user);

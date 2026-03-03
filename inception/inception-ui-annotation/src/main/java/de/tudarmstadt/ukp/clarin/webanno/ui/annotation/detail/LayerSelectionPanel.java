@@ -18,10 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.handleException;
+import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs.KEY_ANCHORING_MODE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Collections.emptyList;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
@@ -35,9 +39,11 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.DefaultLayerChangedEvent;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
@@ -53,11 +59,14 @@ public class LayerSelectionPanel
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserPreferencesService userPreferencesService;
-    private @SpringBean UserDao userDao;
+    private @SpringBean UserDao userService;
     private @SpringBean AnnotationSchemaProperties annotationEditorProperties;
+    private @SpringBean PreferencesService preferencesService;
 
     private final Label relationHint;
     private final DropDownChoice<AnnotationLayer> layerSelector;
+    private final AnchoringModePanel anchoringModePanel;
+    private final IModel<List<AnchoringMode>> allowedAnchoringModes;
 
     public LayerSelectionPanel(String aId, IModel<AnnotatorState> aModel)
     {
@@ -65,14 +74,37 @@ public class LayerSelectionPanel
 
         setOutputMarkupPlaceholderTag(true);
 
-        add(relationHint = createRelationHint());
-        add(layerSelector = createDefaultAnnotationLayerSelector());
         // Visible if there is more than one selectable layer and if the document is editable
         // (meaning we need to be able to change the layer)
-        add(visibleWhen(() -> layerSelector.getChoicesModel() //
+        add(layerSelector = createDefaultAnnotationLayerSelector());
+        layerSelector.add(visibleWhen(() -> layerSelector.getChoicesModel() //
                 .map(layerChoices -> layerChoices.size() > 1) //
-                .orElse(false).getObject() //
-                && getEditorPage().isEditable()));
+                .orElse(false).getObject()));
+        add(relationHint = createRelationHint());
+        relationHint.add(visibleWhen(() -> layerSelector.getChoicesModel() //
+                .map(layerChoices -> layerChoices.size() > 1) //
+                .orElse(false).getObject()));
+
+        add(visibleWhen(() -> getEditorPage().isEditable()));
+
+        allowedAnchoringModes = Model.ofList(emptyList());
+
+        anchoringModePanel = new AnchoringModePanel("anchoringMode", null, allowedAnchoringModes) //
+                .onApplied(this::actionApplyAnchoringMode);
+        add(anchoringModePanel);
+    }
+
+    @Override
+    protected void onConfigure()
+    {
+        super.onConfigure();
+
+        if (getModel().map(AnnotatorState::getDefaultAnnotationLayer).isPresent().getObject()) {
+            allowedAnchoringModes.setObject(Stream.of(AnchoringMode.values()) //
+                    .filter(getModel().getObject().getDefaultAnnotationLayer()
+                            .getAnchoringMode()::allows) //
+                    .toList());
+        }
     }
 
     public AnnotationPageBase getEditorPage()
@@ -120,17 +152,28 @@ public class LayerSelectionPanel
 
     private void actionChangeDefaultLayer(AjaxRequestTarget aTarget)
     {
+        var sessionOwner = userService.getCurrentUser();
         var state = getModelObject();
+        var currentDefaultLayer = state.getDefaultAnnotationLayer();
 
-        aTarget.add(relationHint);
+        aTarget.add(relationHint, anchoringModePanel);
 
         send(this, BUBBLE, new DefaultLayerChangedEvent(layerSelector.getModelObject()));
 
         // Save the currently selected layer as a user preference so it is remains active when a
         // user leaves the application and later comes back to continue annotating
-        long prevDefaultLayer = state.getPreferences().getDefaultLayer();
-        if (state.getDefaultAnnotationLayer() != null) {
+        var prevDefaultLayer = state.getPreferences().getDefaultLayer();
+        if (currentDefaultLayer != null) {
             state.getPreferences().setDefaultLayer(state.getDefaultAnnotationLayer().getId());
+
+            // Load the remembered anchoring mode preference or apply the default layer preference
+            var anchoringPrefs = preferencesService.loadTraitsForUserAndProject(KEY_ANCHORING_MODE,
+                    sessionOwner, state.getProject());
+            state.syncAnchoringModeToDefaultLayer(anchoringPrefs);
+
+            allowedAnchoringModes.setObject(Stream.of(AnchoringMode.values()) //
+                    .filter(currentDefaultLayer.getAnchoringMode()::allows) //
+                    .toList());
         }
         else {
             state.getPreferences().setDefaultLayer(-1);
@@ -139,11 +182,23 @@ public class LayerSelectionPanel
         if (prevDefaultLayer != state.getPreferences().getDefaultLayer()) {
             try {
                 userPreferencesService.savePreferences(state.getProject(),
-                        userDao.getCurrentUsername(), state.getMode(), state.getPreferences());
+                        userService.getCurrentUsername(), state.getMode(), state.getPreferences());
             }
             catch (IOException e) {
                 handleException(this, aTarget, e);
             }
         }
+    }
+
+    private void actionApplyAnchoringMode(AjaxRequestTarget Target, AnchoringMode aMode)
+    {
+        var state = getModelObject();
+        var sessionOwner = userService.getCurrentUser();
+
+        var anchoringPrefs = preferencesService.loadTraitsForUserAndProject(KEY_ANCHORING_MODE,
+                sessionOwner, state.getProject());
+        anchoringPrefs.setAnchoringModes(layerSelector.getModelObject(), aMode);
+        preferencesService.saveTraitsForUserAndProject(KEY_ANCHORING_MODE, sessionOwner,
+                state.getProject(), anchoringPrefs);
     }
 }

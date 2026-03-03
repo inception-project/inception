@@ -54,8 +54,13 @@ import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
 
-public class XmlNodeUtils
+public final class XmlNodeUtils
 {
+    private XmlNodeUtils()
+    {
+        // No instances
+    }
+
     public static boolean hasAttributeWithValue(XmlElement e, String aAttribute, String aValue)
     {
         return getAttributeValue(e, aAttribute).map(v -> aValue.equals(v)).orElse(false);
@@ -281,8 +286,27 @@ public class XmlNodeUtils
         return path;
     }
 
+    public static boolean containsXmlDocumentStructure(CAS aCas)
+    {
+        var ts = aCas.getTypeSystem();
+        if (ts.getType(XmlDocument._TypeName) == null) {
+            return false;
+        }
+
+        return !aCas.select(XmlDocument.class).isEmpty();
+    }
+
     public static int transferXmlDocumentStructure(CAS aTarget, CAS aSource)
     {
+        var sourceTS = aSource.getTypeSystem();
+        var targetTS = aTarget.getTypeSystem();
+        if (sourceTS.getType(XmlDocument._TypeName) == null
+                || sourceTS.getType(XmlNode._TypeName) == null
+                || targetTS.getType(XmlDocument._TypeName) == null
+                || targetTS.getType(XmlNode._TypeName) == null) {
+            return 0;
+        }
+
         var copied = new AtomicInteger();
         var casCopier = new CasCopier(aSource, aTarget);
         Consumer<FeatureStructure> copyFunc = fs -> {
@@ -295,6 +319,7 @@ public class XmlNodeUtils
 
         aSource.select(XmlDocument.class).forEach(copyFunc);
         aSource.select(XmlNode.class).forEach(copyFunc);
+
         return copied.get();
     }
 

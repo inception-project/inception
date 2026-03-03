@@ -21,7 +21,6 @@ import static java.lang.System.currentTimeMillis;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
@@ -29,9 +28,9 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
@@ -45,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.inception.annotation.feature.string.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -56,6 +54,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.kendo.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 /**
@@ -78,8 +77,8 @@ public abstract class ConceptFeatureEditor_ImplBase
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
 
-        AnnotationFeature feat = getModelObject().feature;
-        ConceptFeatureTraits_ImplBase traits = readFeatureTraits(feat);
+        var feat = getModelObject().feature;
+        var traits = readFeatureTraits(feat);
 
         add(new DisabledKBWarning("disabledKBWarning", Model.of(feat),
                 Model.of(traits.getRepositoryId())));
@@ -171,17 +170,19 @@ public abstract class ConceptFeatureEditor_ImplBase
 
         if (labelFilter) {
             choices = choices.stream() //
-                    .filter(kb -> containsIgnoreCase(kb.getUiLabel(), finalInput))
-                    .collect(Collectors.toList());
+                    .filter(kb -> Strings.CI.contains(kb.getUiLabel(), finalInput)) //
+                    .toList();
         }
 
         if (isNotBlank(secondaryFilter)) {
-            choices = choices.stream().filter(kb -> applySecondaryFilter(kb, secondaryFilter))
-                    .collect(Collectors.toList());
+            choices = choices.stream() //
+                    .filter(kb -> applySecondaryFilter(kb, secondaryFilter)) //
+                    .toList();
         }
 
         var result = choices.stream()//
-                .limit(entityLinkingProperties.getCandidateDisplayLimit()).toList();
+                .limit(entityLinkingProperties.getCandidateDisplayLimit()) //
+                .toList();
 
         WicketUtil.serverTiming("getCandidates", currentTimeMillis() - startTime);
 
@@ -190,12 +191,12 @@ public abstract class ConceptFeatureEditor_ImplBase
 
     private boolean applySecondaryFilter(KBHandle aObject, String aFilter)
     {
-        if (containsIgnoreCase(aObject.getDescription(), aFilter)) {
+        if (Strings.CI.contains(aObject.getDescription(), aFilter)) {
             return true;
         }
 
         if (aObject.getQueryBestMatchTerm() != null
-                && containsIgnoreCase(aObject.getUiLabel(), aFilter)) {
+                && Strings.CI.contains(aObject.getUiLabel(), aFilter)) {
             return true;
         }
 

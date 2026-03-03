@@ -134,7 +134,7 @@ public class GenerateDocumentation
             // List all files in the current module
             for (var f : listFiles(module.toFile(), TrueFileFilter.INSTANCE,
                     TrueFileFilter.INSTANCE)) {
-                if (Set.of(".DS_Store").contains(f.getName())) {
+                if (Set.of(".DS_Store", ".asciidoctorconfig.adoc").contains(f.getName())) {
                     continue;
                 }
 

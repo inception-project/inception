@@ -37,63 +37,61 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { SVGTypeMapping, Svg } from '@svgdotjs/svg.js'
-import { Fragment } from './Fragment'
-import { Row } from './Row'
+import { SVGTypeMapping, Svg } from '@svgdotjs/svg.js';
+import { Fragment } from './Fragment';
+import { Row } from './Row';
 
-export type Marker = [
-  textNo: number,
-  start: boolean,
-  offset: number,
-  width: number,
-  type: string
-]
+export type Marker = [textNo: number, start: boolean, offset: number, width: number, type: string];
 
 /**
  * Chunk of text generated from the token offsets and representing one or more tokens.
  */
 export class Chunk {
-  index: number
-  text: string
-  from: number
-  to: number
-  space: string
-  fragments: Fragment[] = []
-  lastSpace: string
-  nextSpace: string
-  sentence: number
-  virtual: boolean
-  group: SVGTypeMapping<SVGGElement>
-  highlightGroup: SVGTypeMapping<SVGGElement>
-  markedTextStart: MarkerStart[] = []
-  markedTextEnd: MarkerEnd[] = []
-  right: number
-  row: Row
-  textX: number
-  translation: { x: number, y: number } = { x: 0, y: 0 }
-  firstFragmentIndex : number
-  lastFragmentIndex : number
-  rtlsizes: { charDirection: Array<'rtl' | 'ltr'>, charAttrs: Array<{order: number, width: number, direction: 'rtl' | 'ltr'}>, corrFactor: number }
+    index: number;
+    text: string;
+    from: number;
+    to: number;
+    space: string;
+    fragments: Fragment[] = [];
+    lastSpace: string;
+    nextSpace: string;
+    sentence: number;
+    virtual: boolean;
+    group: SVGTypeMapping<SVGGElement>;
+    highlightGroup: SVGTypeMapping<SVGGElement>;
+    markedTextStart: MarkerStart[] = [];
+    markedTextEnd: MarkerEnd[] = [];
+    right: number;
+    row: Row;
+    textX: number;
+    translation: { x: number; y: number } = { x: 0, y: 0 };
+    firstFragmentIndex: number;
+    lastFragmentIndex: number;
+    rtlsizes: {
+        charDirection: Array<'rtl' | 'ltr'>;
+        charAttrs: Array<{ order: number; width: number; direction: 'rtl' | 'ltr' }>;
+        corrFactor: number;
+    };
 
-  constructor (index: number, text: string, from: number, to: number, space: string) {
-    this.index = index
-    this.text = text
-    this.from = from
-    this.to = to
-    this.space = space
-    // Object.seal(this)
-  }
+    constructor(index: number, text: string, from: number, to: number, space: string) {
+        this.index = index;
+        this.text = text;
+        this.from = from;
+        this.to = to;
+        this.space = space;
+        // Object.seal(this)
+    }
 
-  renderText (svg: Svg, rowTextGroup: SVGTypeMapping<SVGGElement>) {
-    svg.plain(this.text)
-      .attr({
-        // Storing the exact position in the attributes here is an optimization because that
-        // allows us to obtain the position directly later without the browser having to actually
-        // layout stuff
-        x: this.textX,
-        y: this.row.textY,
-        'data-chunk-id': this.index
-      })
-      .addTo(rowTextGroup)
-  }
+    renderText(svg: Svg, rowTextGroup: SVGTypeMapping<SVGGElement>) {
+        svg.plain(this.text)
+            .attr({
+                // Storing the exact position in the attributes here is an optimization because that
+                // allows us to obtain the position directly later without the browser having to actually
+                // layout stuff
+                x: this.textX,
+                y: this.row.textY,
+                'data-chunk-id': this.index,
+            })
+            .addTo(rowTextGroup);
+    }
 }

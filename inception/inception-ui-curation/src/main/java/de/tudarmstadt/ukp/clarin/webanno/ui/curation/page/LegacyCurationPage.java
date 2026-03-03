@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPa
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
@@ -75,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratSentenceOrientedAnn
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -89,6 +89,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEv
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverview;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
@@ -136,6 +137,7 @@ public class LegacyCurationPage
     private @SpringBean CurationService curationService;
     private @SpringBean CurationMergeService curationMergeService;
     private @SpringBean AnnotationEditorRegistry editorRegistry;
+    private @SpringBean DiffAdapterRegistry diffAdapterRegistry;
 
     private long currentprojectId;
 
@@ -703,7 +705,7 @@ public class LegacyCurationPage
 
         casses.put(CURATION_USER, editorCas);
 
-        var adapters = getDiffAdapters(annotationService, aState.getAnnotationLayers());
+        var adapters = diffAdapterRegistry.getDiffAdapters(aState.getAnnotationLayers());
 
         var diffStart = System.currentTimeMillis();
         LOG.debug("Calculating differences...");
@@ -757,8 +759,8 @@ public class LegacyCurationPage
             // We need a modifiable copy of some annotation document which we can use to initialize
             // the curation CAS. This is an exceptional case where UNMANAGED_ACCESS is the correct
             // choice
-            mergeCas = documentService.readAnnotationCas(aDocument, aTemplateUser,
-                    FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
+            mergeCas = documentService.readAnnotationCas(aDocument,
+                    AnnotationSet.forUser(aTemplateUser), FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
             curationMergeService.mergeCasses(aState.getDocument(), aState.getUser().getUsername(),
                     mergeCas, aCasses, aMergeStrategy, aState.getAnnotationLayers(), true);
             curationDocumentService.deleteCurationCas(aDocument);

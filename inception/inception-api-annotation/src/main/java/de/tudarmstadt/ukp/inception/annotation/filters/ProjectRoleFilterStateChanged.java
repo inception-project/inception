@@ -27,18 +27,18 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 public class ProjectRoleFilterStateChanged
     extends AbstractAjaxAwareEvent
 {
-    private final List<PermissionLevel> selectedStates;
+    private final List<PermissionLevel> selectedRoles;
 
     public ProjectRoleFilterStateChanged(AjaxRequestTarget aTarget,
-            List<PermissionLevel> aSelectedStates)
+            List<PermissionLevel> aSelectedRoles)
     {
         super(aTarget);
 
-        selectedStates = aSelectedStates;
+        selectedRoles = aSelectedRoles;
     }
 
-    public List<PermissionLevel> getSelectedStates()
+    public List<PermissionLevel> getSelectedRoles()
     {
-        return selectedStates;
+        return selectedRoles;
     }
 }

@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 public class PolicyCollectionBuilder
 {
-    private final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @SuppressWarnings("rawtypes")
     private final Supplier<? extends Map> mapSupplier;
@@ -281,7 +281,7 @@ public class PolicyCollectionBuilder
         @SuppressWarnings("unchecked")
         Map<QName, QNameAttributePolicy> attributePolicies = elementAttributePolicies
                 .computeIfAbsent(aElementName, k -> mapSupplier.get());
-        AttributePolicy attributePolicy = attributePolicies.computeIfAbsent(aAttributeName,
+        var attributePolicy = attributePolicies.computeIfAbsent(aAttributeName,
                 k -> QNameAttributePolicy.UNDEFINED);
 
         if (aPolicy instanceof ChainableAttributePolicy) {
@@ -290,9 +290,10 @@ public class PolicyCollectionBuilder
             return;
         }
 
-        AttributePolicy oldPolicy = attributePolicies.put(aAttributeName, aPolicy);
-        if (!AttributePolicy.isUndefined(oldPolicy)) {
-            log.warn("On element [{}] overriding policy for attribute [{}]: [{}] -> [{}]",
+        var oldPolicy = attributePolicies.put(aAttributeName, aPolicy);
+        if (!AttributePolicy.isUndefined(oldPolicy)
+                && oldPolicy.getAction() != aPolicy.getAction()) {
+            LOG.warn("On element [{}] overriding policy for attribute [{}]: [{}] -> [{}]",
                     aElementName, aAttributeName, oldPolicy, aPolicy);
         }
     }
@@ -343,7 +344,7 @@ public class PolicyCollectionBuilder
         AttributePolicy oldPolicy = globalAttributePolicies.put(aPolicy.getQName(), newPolicy);
         if (!QNameAttributePolicy.isUndefined(oldPolicy)
                 && oldPolicy.getAction() != newPolicy.getAction()) {
-            log.warn("Globally overriding policy for attribute [{}]: [{}] -> [{}]",
+            LOG.warn("Globally overriding policy for attribute [{}]: [{}] -> [{}]",
                     aPolicy.getQName(), oldPolicy, newPolicy);
         }
     }

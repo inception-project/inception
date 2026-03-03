@@ -37,17 +37,15 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
-import static org.apache.uima.cas.impl.TypeSystemUtils.isIdentifier;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
-import static org.hibernate.annotations.QueryHints.CACHEABLE;
+import static org.apache.uima.util.TypeSystemUtil.isFeatureName;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
@@ -61,7 +59,6 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASImpl;
-import org.apache.uima.cas.impl.TypeSystemUtils;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.util.CasUtil;
@@ -76,7 +73,6 @@ import org.apache.uima.util.CasIOUtils;
 import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -101,10 +97,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag_;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation;
@@ -149,7 +146,6 @@ public class AnnotationSchemaServiceImpl
         this(null, null, null, null, null);
     }
 
-    @Autowired
     public AnnotationSchemaServiceImpl(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aApplicationEventPublisher,
@@ -373,7 +369,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public boolean existsTagSet(String aName, Project aProject)
     {
         try {
@@ -391,7 +387,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public boolean existsTagSet(Project aProject)
     {
         try {
@@ -406,7 +402,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public boolean existsLayer(Project aProject)
     {
         return entityManager.createQuery(
@@ -418,7 +414,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public boolean existsLayer(String aName, Project aProject)
     {
         try {
@@ -436,7 +432,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public boolean existsLayer(String aName, String aType, Project aProject)
     {
         try {
@@ -455,7 +451,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsEnabledLayerOfType(Project aProject, String aType)
     {
         var query = String.join("\n", //
@@ -481,7 +477,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsFeature(String aName, AnnotationLayer aLayer)
     {
         try {
@@ -499,7 +495,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsEnabledFeatureOfType(Project aProject, String aType)
     {
         var query = String.join("\n", //
@@ -631,7 +627,6 @@ public class AnnotationSchemaServiceImpl
         return entityManager.createQuery(query, AnnotationLayer.class) //
                 .setParameter("name", aName) //
                 .setParameter("project", aProject) //
-                .setHint(CACHEABLE, true) //
                 .getResultStream() //
                 .findFirst();
     }
@@ -682,6 +677,25 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
+    public Optional<AnnotationFeature> getFeature(long aLayerId, String aName)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(AnnotationFeature.class);
+        var feature = query.from(AnnotationFeature.class);
+
+        var namePredicate = cb.equal(feature.get(AnnotationFeature_.name), aName);
+        var layerPredicate = cb
+                .equal(feature.get(AnnotationFeature_.layer).get(AnnotationLayer_.id), aLayerId);
+
+        query.select(feature).where(cb.and(namePredicate, layerPredicate));
+
+        return entityManager.createQuery(query) //
+                .getResultStream() //
+                .findFirst();
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public boolean existsType(String aName, String aType)
     {
         try {
@@ -747,7 +761,6 @@ public class AnnotationSchemaServiceImpl
 
         return entityManager.createQuery(query, AnnotationLayer.class)
                 .setParameter("project", aProject) //
-                .setHint(CACHEABLE, true) //
                 .getResultList();
     }
 
@@ -756,6 +769,10 @@ public class AnnotationSchemaServiceImpl
     public List<AnnotationLayer> listAttachedRelationLayers(AnnotationLayer aLayer)
     {
         Objects.requireNonNull(aLayer, "Parameter [layer] must be specified");
+
+        if (!SpanLayerSupport.TYPE.equals(aLayer.getType())) {
+            return emptyList();
+        }
 
         var cb = entityManager.getCriteriaBuilder();
         var cq = cb.createQuery(AnnotationLayer.class);
@@ -827,7 +844,6 @@ public class AnnotationSchemaServiceImpl
                 .setParameter("attachType", asList(aLayer.getName(), CAS.TYPE_NAME_ANNOTATION))
                 // Checking for project is necessary because type match is string-based
                 .setParameter("project", aLayer.getProject()) //
-                .setHint(CACHEABLE, true) //
                 .getResultList();
     }
 
@@ -842,7 +858,7 @@ public class AnnotationSchemaServiceImpl
                 "ORDER BY l.attachFeature.rank ASC, l.attachFeature.uiName ASC");
 
         return entityManager.createQuery(query, AnnotationFeature.class)
-                .setParameter("layer", aLayer).setHint(CACHEABLE, true) //
+                .setParameter("layer", aLayer) //
                 .getResultList();
     }
 
@@ -863,7 +879,7 @@ public class AnnotationSchemaServiceImpl
                 .orderBy(cb.asc(root.get(AnnotationFeature_.rank)),
                         cb.asc(root.get(AnnotationFeature_.uiName)));
 
-        return entityManager.createQuery(query).setHint(CACHEABLE, true).getResultList();
+        return entityManager.createQuery(query).getResultList();
     }
 
     @Override
@@ -891,7 +907,6 @@ public class AnnotationSchemaServiceImpl
                         cb.asc(root.get(AnnotationFeature_.uiName)));
 
         return entityManager.createQuery(query) //
-                .setHint(CACHEABLE, true) //
                 .getResultList();
     }
 
@@ -943,14 +958,13 @@ public class AnnotationSchemaServiceImpl
     public List<ImmutableTag> listTagsImmutable(TagSet aTagSet)
     {
         if (aTagSet == null) {
-            return Collections.emptyList();
+            return emptyList();
         }
 
         return immutableTagsCache.get(aTagSet);
     }
 
     @Override
-    @Transactional
     public List<ReorderableTag> listTagsReorderable(TagSet aTagSet)
     {
         return listTagsImmutable(aTagSet).stream() //
@@ -1269,7 +1283,7 @@ public class AnnotationSchemaServiceImpl
     public boolean upgradeCasIfRequired(CAS aCas, AnnotationDocument aAnnotationDocument)
         throws UIMAException, IOException
     {
-        return upgradeCasIfRequired(asList(aCas), aAnnotationDocument.getProject());
+        return upgradeCasIfRequired(asList(aCas), aAnnotationDocument.getDocument().getProject());
     }
 
     @Override
@@ -1439,7 +1453,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional(noRollbackFor = NoResultException.class, readOnly = true)
     public TypeAdapter findAdapter(Project aProject, FeatureStructure aFS)
     {
         var layer = findLayer(aProject, aFS);
@@ -1604,27 +1618,27 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AttachedAnnotation> getAttachedLinks(AnnotationLayer aLayer, AnnotationFS aFs)
     {
-        CAS cas = aFs.getCAS();
-        List<AttachedAnnotation> result = new ArrayList<>();
-        TypeAdapter adapter = getAdapter(aLayer);
+        var cas = aFs.getCAS();
+        var result = new ArrayList<AttachedAnnotation>();
+        var adapter = getAdapter(aLayer);
         if (adapter instanceof SpanAdapter) {
-            for (AnnotationFeature linkFeature : listAttachedLinkFeatures(aLayer)) {
+            // Check for incoming links - other annotations that link TO this annotation
+            for (var linkFeature : listAttachedLinkFeatures(aLayer)) {
                 if (linkFeature.getMultiValueMode() == ARRAY
                         && linkFeature.getLinkMode() == WITH_ROLE) {
                     // Fetch slot hosts that could link to the current FS and check if any of
                     // them actually links to the current FS
-                    Type linkHost = CasUtil.getType(cas, linkFeature.getLayer().getName());
-                    for (FeatureStructure linkFS : cas.select(linkHost)) {
+                    var linkHost = CasUtil.getType(cas, linkFeature.getLayer().getName());
+                    for (var linkFS : cas.select(linkHost)) {
                         if (!(linkFS instanceof AnnotationFS)) {
                             continue;
                         }
 
                         List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature,
                                 linkFS);
-                        for (int li = 0; li < links.size(); li++) {
-                            LinkWithRoleModel link = links.get(li);
-                            AnnotationFS linkTarget = selectByAddr(cas, AnnotationFS.class,
-                                    link.targetAddr);
+                        for (var li = 0; li < links.size(); li++) {
+                            var link = links.get(li);
+                            var linkTarget = selectByAddr(cas, AnnotationFS.class, link.targetAddr);
                             // If the current annotation fills a slot, then add the slot host to
                             // our list of attached links.
                             if (isSame(linkTarget, aFs)) {
@@ -1635,12 +1649,25 @@ public class AnnotationSchemaServiceImpl
                     }
                 }
             }
+
+            // Check for outgoing links - this annotation links TO other annotations
+            for (var feature : listSupportedFeatures(aLayer)) {
+                if (feature.getMultiValueMode() == ARRAY && feature.getLinkMode() == WITH_ROLE) {
+                    List<LinkWithRoleModel> links = adapter.getFeatureValue(feature, aFs);
+                    for (var link : links) {
+                        var linkTarget = selectByAddr(cas, AnnotationFS.class, link.targetAddr);
+                        if (linkTarget != null) {
+                            result.add(new AttachedAnnotation(aLayer, linkTarget, OUTGOING));
+                        }
+                    }
+                }
+            }
         }
         return result;
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean isSentenceLayerEditable(Project aProject)
     {
         if (!annotationEditorProperties.isSentenceLayerEditable()) {
@@ -1657,7 +1684,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean isTokenLayerEditable(Project aProject)
     {
         if (!annotationEditorProperties.isTokenLayerEditable()) {
@@ -1751,6 +1778,12 @@ public class AnnotationSchemaServiceImpl
             return errors;
         }
 
+        if (name.contains(FEATURE_SUFFIX_SEP)) {
+            errors.add(new ValidationError("[" + name + "] must not contain [__]. Please "
+                    + "use a different name for the feature."));
+            return errors;
+        }
+
         var layerSupport = layerSupportRegistry.getLayerSupport(aFeature.getLayer());
         errors.addAll(layerSupport.validateFeatureName(aFeature));
         if (!errors.isEmpty()) {
@@ -1759,7 +1792,7 @@ public class AnnotationSchemaServiceImpl
 
         // Checking if feature name doesn't start with a number or underscore
         // And only uses alphanumeric characters
-        if (!TypeSystemUtils.isIdentifier(name)) {
+        if (!isFeatureName(name)) {
             errors.add(new ValidationError("Invalid feature name [" + name
                     + "].  Feature names must start with a letter and consist only of letters, digits, or underscores."));
             return errors;
@@ -1816,7 +1849,7 @@ public class AnnotationSchemaServiceImpl
     {
         var tok = new StringTokenizer(name, NAMESPACE_SEPARATOR_AS_STRING, true);
         while (tok.hasMoreTokens()) {
-            if (!isIdentifier(tok.nextToken())) {
+            if (!isFeatureName(tok.nextToken())) {
                 return false;
             }
             if (tok.hasMoreTokens()) {

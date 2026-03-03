@@ -17,20 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
 
-import java.io.IOException;
-
 import org.apache.commons.math3.util.Precision;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.NumberSerializers.Base;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ser.jdk.NumberSerializers.Base;
 
 public class ScoreSerializer
     extends Base<Object>
 {
-    private static final long serialVersionUID = -1140076942834412161L;
-
     final static ScoreSerializer instance = new ScoreSerializer();
 
     public ScoreSerializer()
@@ -39,8 +35,7 @@ public class ScoreSerializer
     }
 
     @Override
-    public void serialize(Object value, JsonGenerator gen, SerializerProvider provider)
-        throws IOException
+    public void serialize(Object value, JsonGenerator gen, SerializationContext provider)
     {
         gen.writeNumber(Precision.round((Double) value, 2));
     }

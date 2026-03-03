@@ -32,6 +32,7 @@ import static wicket.contrib.input.events.key.KeyType.Ctrl;
 import static wicket.contrib.input.events.key.KeyType.End;
 
 import java.io.IOException;
+import java.util.Set;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -86,6 +87,7 @@ public class MatrixWorkflowActionBarItemGroup
     private final AnnotationPageBase page;
     private final ModalDialog dialog;
     private final IModel<MatrixWorkloadTraits> traits;
+    private final LoadableDetachableModel<Boolean> reopenableByUser;
 
     public MatrixWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage)
     {
@@ -100,9 +102,19 @@ public class MatrixWorkflowActionBarItemGroup
         dialog = new BootstrapModalDialog("dialog");
         add(dialog);
 
+        reopenableByUser = LoadableDetachableModel.of(this::isReopenableByUser);
+
         add(createToggleDocumentStateLink("toggleDocumentState"));
 
         add(createResetDocumentLink("showResetDocumentDialog"));
+    }
+
+    @Override
+    protected void onDetach()
+    {
+        super.onDetach();
+        reopenableByUser.detach();
+        traits.detach();
     }
 
     private Component createResetDocumentLink(String aString)
@@ -116,37 +128,61 @@ public class MatrixWorkflowActionBarItemGroup
 
     private LambdaAjaxLink createToggleDocumentStateLink(String aId)
     {
-        LambdaAjaxLink link;
-        if (isReopenableByUser()) {
-            link = new LambdaAjaxLink(aId, this::actionToggleDocumentState);
-        }
-        else {
-            link = new LambdaAjaxLink(aId, this::actionRequestFinishDocumentConfirmation);
-        }
+        var link = new LambdaAjaxLink(aId, this::actionFinishOrReopen);
         link.setOutputMarkupId(true);
-        link.add(enabledWhen(() -> page.isEditable() || isReopenableByUser()));
+        link.add(enabledWhen(() -> page.isEditable() || reopenableByUser.getObject()));
         link.add(new InputBehavior(new KeyType[] { Ctrl, End }, click));
+
         var stateLabel = new Label("state");
         stateLabel.add(new CssClassNameModifier(LoadableDetachableModel.of(this::getStateClass)));
         stateLabel.add(AttributeModifier.replace("title", LoadableDetachableModel.of(() -> {
             var tooltip = this.getStateTooltip();
             return tooltip.wrapOnAssignment(stateLabel).getObject();
         })));
+
         link.add(stateLabel);
+
         return link;
+    }
+
+    private void actionFinishOrReopen(AjaxRequestTarget aTarget) throws AnnotationException, IOException
+    {
+        if (reopenableByUser.getObject()) {
+            actionToggleDocumentState(aTarget);
+        }
+        else {
+            actionRequestFinishDocumentConfirmation(aTarget);
+        }
     }
 
     private boolean isReopenableByUser()
     {
+        var state = page.getModelObject();
+        var srcDoc = state.getDocument();
+
+        if (srcDoc == null) {
+            return false;
+        }
+
         // Curators can re-open documents anyway via the monitoring page, so we can always allow
         // the re-open documents here as well
-        var state = page.getModelObject();
         if (projectService.hasRole(userRepository.getCurrentUsername(), state.getProject(),
                 CURATOR)) {
             return true;
         }
 
-        return traits.getObject().isReopenableByAnnotator();
+        if (!traits.getObject().isReopenableByAnnotator()) {
+            return false;
+        }
+
+        // Check latest state of the document
+        srcDoc = documentService.getSourceDocument(srcDoc.getProject().getId(), srcDoc.getId());
+        if (Set.of(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(srcDoc.getState())) {
+            // Annotators may not re-open documents once curation has started
+            return false;
+        }
+
+        return true;
     }
 
     protected AnnotationPageBase getAnnotationPage()

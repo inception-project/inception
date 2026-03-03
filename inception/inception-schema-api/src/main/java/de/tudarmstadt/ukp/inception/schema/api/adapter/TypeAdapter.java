@@ -17,7 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.schema.api.adapter;
 
+import static org.apache.commons.lang3.StringUtils.normalizeSpace;
+import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
+
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -34,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeatureFilter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -186,6 +191,8 @@ public interface TypeAdapter
      */
     <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs);
 
+    FeatureState getFeatureState(AnnotationFeature aFeature, FeatureStructure aFs);
+
     boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS);
 
     /**
@@ -236,7 +243,7 @@ public interface TypeAdapter
 
     <T> Optional<T> getFeatureTraits(AnnotationFeature aFeature, Class<T> aInterface);
 
-    default boolean isEquivalentAnnotation(AnnotationFS aFS1, AnnotationFS aFS2)
+    default boolean isEquivalentAnnotation(FeatureStructure aFS1, FeatureStructure aFS2)
     {
         if (!isSamePosition(aFS1, aFS2)) {
             return false;
@@ -263,10 +270,48 @@ public interface TypeAdapter
 
     <T> Optional<FeatureSupport<T>> getFeatureSupport(String aName);
 
+    <T> Optional<FeatureSupport<T>> getFeatureSupport(AnnotationFeature aFeature);
+
     String renderFeatureValue(FeatureStructure aFS, String aFeature);
 
     boolean isFeatureValueEqual(AnnotationFeature aFeature, FeatureStructure aFS1,
             FeatureStructure aFS2);
 
     boolean isSamePosition(FeatureStructure aFS1, FeatureStructure aFS2);
+
+    /**
+     * Produce a POJO representation for the given annotation including span, context and feature
+     * values. This is a convenience helper used by various assistant tasks to render annotations
+     * for LLM prompts.
+     */
+    default AnnotationRepresentation annotationAsObject(AnnotationFS aAnnotation,
+            AnnotationFS aContext)
+    {
+        var instance = new AnnotationRepresentation();
+
+        instance.setSpan(normalizeSpace(aAnnotation.getCoveredText()));
+
+        var docText = aAnnotation.getCAS().getDocumentText();
+        var context = docText.substring(aContext.getBegin(), aAnnotation.getBegin()) + " <span> "
+                + aAnnotation.getCoveredText() + " </span> "
+                + docText.substring(aAnnotation.getEnd(), aContext.getEnd());
+        instance.setContext(normalizeSpace(context));
+
+        var attributes = new LinkedHashMap<String, Object>();
+        for (var feature : listFeatures()) {
+            var featureName = normalizeSpace(feature.getUiName());
+            if (TYPE_NAME_BOOLEAN.equals(feature.getType())) {
+                attributes.put(featureName, getFeatureValue(feature, aAnnotation));
+                continue;
+            }
+
+            var featureValue = normalizeSpace(renderFeatureValue(aAnnotation, feature.getName()));
+            if (featureValue != null) {
+                attributes.put(featureName, featureValue);
+            }
+        }
+        instance.setFeatureValues(attributes);
+
+        return instance;
+    }
 }

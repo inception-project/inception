@@ -15,68 +15,72 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<svelte:options accessors={true} />
-
 <script lang="ts">
     import {
-        Annotation,
+        type Annotation,
         AnnotationOverEvent,
         AnnotationOutEvent,
         Relation,
         Span,
-        DiamAjax,
-        LazyDetailGroup,
-    } from "../..";
-    import { onDestroy, onMount } from "svelte";
+        type LazyDetailGroup,
+        type DiamAjax,
+    } from '../..';
+    import { onDestroy, onMount } from 'svelte';
 
-    export let ajax: DiamAjax;
-    export let root: Element;
-    export let top: number = 0;
-    export let left: number = 0;
-    export let width: number = 400;
-    export let annotation: Annotation | undefined = undefined;
+    interface Props {
+        ajax: DiamAjax;
+        root: Element;
+    }
+
+    let { ajax, root }: Props = $props();
 
     const renderDelay = 10;
     const showDelay = 1000;
     const hideDelay = 500;
     const yOffset = 32;
 
-    let popover: HTMLElement;
-    let detailGroups: LazyDetailGroup[];
+    let popover: HTMLElement = $state(undefined);
+    let detailGroups: LazyDetailGroup[] = $state(undefined);
+    let loading = $state(false);
+    let annotation = $state<Annotation | undefined>(undefined);
     let popoverTimeoutId: number | undefined;
-    let loading = false;
+    let top = $state(0);
+    let left = $state(0);
+    let width = $state(400);
 
     onMount(() => {
         root.addEventListener(AnnotationOverEvent.eventType, onAnnotationOver);
         root.addEventListener(AnnotationOutEvent.eventType, onAnnotationOut);
-        root.addEventListener("mousemove", onMouseMove);
-        root.addEventListener("mousedown", onMouseDown);
+        root.addEventListener('mousemove', onMouseMove);
+        root.addEventListener('mousedown', onMouseDown);
     });
 
     onDestroy(() => {
         root.removeEventListener(AnnotationOverEvent.eventType, onAnnotationOver);
         root.removeEventListener(AnnotationOutEvent.eventType, onAnnotationOut);
-        root.removeEventListener("mousemove", onMouseMove);
-        root.removeEventListener("mousedown", onMouseDown);
-    })
+        root.removeEventListener('mousemove', onMouseMove);
+        root.removeEventListener('mousedown', onMouseDown);
+    });
 
-    $: {
+    $effect(() => {
         if (annotation) {
-            loading = true
+            loading = true;
             ajax.loadLazyDetails(annotation)
-                .then((response) => { 
-                    loading = false
-                    detailGroups = response
+                .then((response) => {
+                    loading = false;
+                    detailGroups = response;
                 })
                 .catch(() => {
-                    loading = false
-                    detailGroups = [{
-                        title: "Error", 
-                        details: [{label: "", value: "Unable to load details."
-                    }]}]
-            })
+                    loading = false;
+                    detailGroups = [
+                        {
+                            title: 'Error',
+                            details: [{ label: '', value: 'Unable to load details.' }],
+                        },
+                    ];
+                });
         }
-    }
+    });
 
     function onMouseMove(e: MouseEvent) {
         if (!annotation) return;
@@ -94,36 +98,34 @@
 
     function onAnnotationOver(e: AnnotationOverEvent) {
         const originalEvent = e.originalEvent;
-        if (!(originalEvent instanceof MouseEvent))
-            return;
+        if (!(originalEvent instanceof MouseEvent)) return;
 
         if (popoverTimeoutId) window.clearTimeout(popoverTimeoutId);
         popoverTimeoutId = undefined;
 
         if (annotation && annotation.vid !== e.annotation.vid) {
             annotation = e.annotation;
-            detailGroups = undefined
+            detailGroups = undefined;
         } else if (!annotation || annotation.vid !== e.annotation.vid) {
-            showPopoverWithDelay(e.annotation, originalEvent)
+            showPopoverWithDelay(e.annotation, originalEvent);
         }
     }
 
     function onAnnotationOut(e: AnnotationOutEvent) {
-        if (!(e.originalEvent instanceof MouseEvent))
-            return;
+        if (!(e.originalEvent instanceof MouseEvent)) return;
 
         hidePopoverWithDelay();
     }
 
     function showPopoverWithDelay(ann: Annotation, originalEvent: MouseEvent) {
         popoverTimeoutId = window.setTimeout(() => {
+            popoverTimeoutId = undefined;
+            annotation = ann;
+            popoverTimeoutId = window.setTimeout(() => {
+                movePopover(originalEvent);
                 popoverTimeoutId = undefined;
-                annotation = ann;
-                popoverTimeoutId = window.setTimeout(() => {
-                    movePopover(originalEvent);
-                    popoverTimeoutId = undefined;
-                }, renderDelay);
-            }, showDelay);
+            }, renderDelay);
+        }, showDelay);
     }
 
     function hidePopoverWithDelay() {
@@ -136,12 +138,12 @@
             if (annotation) {
                 annotation = undefined;
             }
-            popoverTimeoutId = undefined
+            popoverTimeoutId = undefined;
         }, hideDelay);
     }
 
     function movePopover(e: MouseEvent) {
-        if (!popover) return
+        if (!popover) return;
 
         const rect = popover.getBoundingClientRect();
 
@@ -152,7 +154,7 @@
         if (y + rect.height + yOffset > window.innerHeight) {
             top = y - rect.height - yOffset;
         } else {
-            top = y + yOffset;  
+            top = y + yOffset;
         }
 
         // Shift left if the popover is about to be clipped on the right
@@ -178,14 +180,14 @@
                 class="annotation-type-marker"
                 class:i7n-icon-span={annotation instanceof Span}
                 class:i7n-icon-relation={annotation instanceof Relation}
-            />
+            ></span>
         </div>
         <div class="flex-grow-1 px-1">{annotation?.layer?.name}</div>
         <div class="text-body-secondary px-1">ID: {annotation?.vid}</div>
     </div>
     {#if annotation}
         <div class="popover-body p-0">
-            {#if annotation.comments}
+            {#if annotation.comments && annotation.comments.length > 0}
                 <div class="p-1">
                     {#each annotation.comments as comment}
                         <div class="i7n-marker-{comment.type}">{comment.comment}</div>
@@ -194,7 +196,10 @@
             {/if}
 
             {#if loading}
-                <div class="d-flex flex-column justify-content-center" class:border-top={annotation.comments}>
+                <div
+                    class="d-flex flex-column justify-content-center"
+                    class:border-top={annotation.comments}
+                >
                     <div class="d-flex flex-row justify-content-center">
                         <div class="spinner-border spinner-border-sm text-muted" role="status">
                             <span class="visually-hidden">Loading...</span>
@@ -209,24 +214,24 @@
                                 <div class="fw-bold">{detailGroup.title}</div>
                             {/if}
                             {#each detailGroup.details as detail}
-                                <div class:ps-2={detailGroup.title}>
+                                <div class:ps-2={detailGroup.title} style="white-space: pre-line;">
                                     <span class="fw-semibold">{detail.label}:</span>
                                     {detail.value}
                                 </div>
                             {/each}
                         </li>
                     {/each}
-               </ul>
+                </ul>
             {/if}
         </div>
     {/if}
 </div>
 
-<!-- svelte-ignore css-unused-selector -->
+<!-- svelte-ignore css_unused_selector -->
 <style lang="scss">
-    @import "bootstrap/scss/bootstrap.scss";
-    @import "../style/InceptionEditorIcons.scss";
-    @import "../style/InceptionEditorColors.scss";
+    @import 'bootstrap/scss/bootstrap.scss';
+    @import '../style/InceptionEditorIcons.scss';
+    @import '../style/InceptionEditorColors.scss';
 
     .bootstrap {
         // Ensure that Bootstrap properly applies to the component

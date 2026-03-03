@@ -15,11 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the L
  */
-import { DiamClientFactory } from '../diam'
-import { AnnotationEditor, AnnotationEditorProperties } from '.'
+import { DiamClientFactory } from '../diam';
+import { AnnotationEditor, AnnotationEditorProperties } from '.';
 
 export interface AnnotationEditorFactory {
-  getOrInitialize(element: Node, diam: DiamClientFactory, props: AnnotationEditorProperties): Promise<AnnotationEditor>;
+    getOrInitialize(
+        element: Node,
+        diam: DiamClientFactory,
+        props: AnnotationEditorProperties
+    ): Promise<AnnotationEditor>;
 
-  destroy(element: Node): void;
+    destroy(element: Node): void;
 }

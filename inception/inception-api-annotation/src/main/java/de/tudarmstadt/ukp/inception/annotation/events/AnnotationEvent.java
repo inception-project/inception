@@ -23,7 +23,7 @@ import org.springframework.context.ApplicationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 import de.tudarmstadt.ukp.inception.support.wicket.event.HybridApplicationUIEvent;
 
 public abstract class AnnotationEvent

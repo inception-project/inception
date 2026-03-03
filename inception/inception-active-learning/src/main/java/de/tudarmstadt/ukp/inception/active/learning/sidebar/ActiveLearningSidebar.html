@@ -40,6 +40,12 @@
               <i class="fa fa-stop" aria-hidden="true"></i>
             </a>
           </div>
+          <div class="form-check form-switch mt-2" wicket:enclosure="filterByCurrentDocument">
+            <input type="checkbox" class="form-check-input" wicket:id="filterByCurrentDocument" id="filterByCurrentDocument"/>
+            <label class="form-check-label" for="filterByCurrentDocument">
+              Focus on current document
+            </label>
+          </div>
         </form>
 
         <div wicket:id="mainContainer" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
@@ -62,8 +68,13 @@
             <div class="card-header small">
               <wicket:message key="recommendation"/>
             </div>
-            <div class="card-body  pb-1">
+            <div class="card-body pb-1">
               <div class="row form-row">
+                <div class="feature-editors-sidebar p-0">
+                  <label class="feature-editor-label col-form-label">
+                    <span wicket:id="recommendationDocument"></span>
+                  </label>
+                </div>
                 <div class="col-sm-12 p-0" style="position: relative; height: 5em;">
                   <div class="form-control"
                     style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 0px; right: 0px;"

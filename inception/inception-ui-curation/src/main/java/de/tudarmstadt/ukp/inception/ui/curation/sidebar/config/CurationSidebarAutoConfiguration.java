@@ -25,6 +25,7 @@ import org.springframework.security.core.session.SessionRegistry;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
@@ -36,8 +37,6 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarApplicationInitializer;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarDocumentNavigatorActionBarExtension;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarFactory;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarServiceImpl;
@@ -68,11 +67,12 @@ public class CurationSidebarAutoConfiguration
             ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserRepository,
             CurationSidebarService aCurationSidebarService,
             FeatureSupportRegistry aFeatureSupportRegistry,
-            LazyDetailsLookupService aDetailsLookupService)
+            LazyDetailsLookupService aDetailsLookupService,
+            DiffAdapterRegistry aDiffAdapterRegistry)
     {
         return new CurationEditorExtension(aAnnotationService, aDocumentService,
                 aApplicationEventPublisher, aUserRepository, aCurationSidebarService,
-                aFeatureSupportRegistry, aDetailsLookupService);
+                aFeatureSupportRegistry, aDetailsLookupService, aDiffAdapterRegistry);
     }
 
     @Bean("curationSidebar")
@@ -86,25 +86,10 @@ public class CurationSidebarAutoConfiguration
     @Bean
     public CurationSidebarRenderer curationSidebarRenderer(CurationSidebarService aCurationService,
             LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
-            UserDao aUserRepository, AnnotationSchemaService aAnnotationService)
+            UserDao aUserRepository, AnnotationSchemaService aAnnotationService,
+            DiffAdapterRegistry aDiffAdapterRegistry)
     {
         return new CurationSidebarRenderer(aCurationService, aLayerSupportRegistry,
-                aDocumentService, aUserRepository, aAnnotationService);
-    }
-
-    @Deprecated
-    @Bean
-    public CurationSidebarApplicationInitializer curationSidebarApplicationInitializer()
-    {
-        return new CurationSidebarApplicationInitializer();
-    }
-
-    @Deprecated
-    @Bean
-    public CurationSidebarDocumentNavigatorActionBarExtension curationSidebarDocumentNavigatorActionBarExtension(
-            CurationSidebarService aCurationSidebarService, UserDao aUserRepository)
-    {
-        return new CurationSidebarDocumentNavigatorActionBarExtension(aCurationSidebarService,
-                aUserRepository);
+                aDocumentService, aUserRepository, aAnnotationService, aDiffAdapterRegistry);
     }
 }

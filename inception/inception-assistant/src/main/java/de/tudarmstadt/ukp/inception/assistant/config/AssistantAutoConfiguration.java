@@ -17,8 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.config;
 
+import static de.tudarmstadt.ukp.inception.websocket.config.MessageExpressionAuthorizationManager.expression;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
+
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -36,12 +43,14 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.AssistantServiceImpl;
 import de.tudarmstadt.ukp.inception.assistant.contextmenu.CheckAnnotationContextMenuItem;
+import de.tudarmstadt.ukp.inception.assistant.documents.AssistantIndexFootprintProvider;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentContextRetriever;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryServiceImpl;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingService;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingServiceImpl;
-import de.tudarmstadt.ukp.inception.assistant.retriever.CurrentDateTimeRetriever;
+import de.tudarmstadt.ukp.inception.assistant.recommender.AssistantRecommenderFactory;
+import de.tudarmstadt.ukp.inception.assistant.retriever.CurrentDateRetriever;
 import de.tudarmstadt.ukp.inception.assistant.retriever.Retriever;
 import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPoint;
 import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPointImpl;
@@ -51,9 +60,11 @@ import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideQueryServiceImp
 import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideRetriever;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibraryExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.websocket.security.StompSecurityConfigurer;
 
 @ConditionalOnWebApplication
 @Configuration
@@ -62,14 +73,17 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
         AssistantDocumentIndexPropertiesImpl.class, })
 public class AssistantAutoConfiguration
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     @Bean
     public AssistantService assistantService(SessionRegistry aSessionRegistry,
             SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
             AssistantProperties aProperties, EncodingRegistry aEncodingRegistry,
-            RetrieverExtensionPoint aRetrieverExtensionPoint)
+            RetrieverExtensionPoint aRetrieverExtensionPoint,
+            ToolLibraryExtensionPoint aToolLibraryExtensionPoint)
     {
         return new AssistantServiceImpl(aSessionRegistry, aMsgTemplate, aOllamaClient, aProperties,
-                aEncodingRegistry, aRetrieverExtensionPoint);
+                aEncodingRegistry, aRetrieverExtensionPoint, aToolLibraryExtensionPoint);
     }
 
     @Bean
@@ -116,9 +130,9 @@ public class AssistantAutoConfiguration
     }
 
     @Bean
-    public CurrentDateTimeRetriever currentDateTimeRetriever()
+    public CurrentDateRetriever currentDateRetriever()
     {
-        return new CurrentDateTimeRetriever();
+        return new CurrentDateRetriever();
     }
 
     @Bean
@@ -142,5 +156,31 @@ public class AssistantAutoConfiguration
     {
         return new CheckAnnotationContextMenuItem(aSchedulingService, aAssistantSidebarFactory,
                 aSchemaService, aUserService);
+    }
+
+    @Bean
+    public AssistantIndexFootprintProvider assistantIndexFootprintProvider(
+            RepositoryProperties aRepositoryProperties)
+    {
+        return new AssistantIndexFootprintProvider(aRepositoryProperties);
+    }
+
+    @Bean
+    public AssistantRecommenderFactory assistantRecommenderFactory()
+    {
+        return new AssistantRecommenderFactory();
+    }
+
+    @Bean
+    public StompSecurityConfigurer assistantWebsocketSecurity()
+    {
+        return (aBuilder, aMAH) -> {
+            LOG.debug("Configuring websocket security for assistant controller");
+
+            aBuilder.simpDestMatchers(
+                    "/*/assistant" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}")
+                    .access(expression(aMAH,
+                            "@projectAccess.canAccessProject(#" + PARAM_PROJECT + ")"));
+        };
     }
 }

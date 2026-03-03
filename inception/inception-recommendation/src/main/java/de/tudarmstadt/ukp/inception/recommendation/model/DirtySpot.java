@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingInstance;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public class DirtySpot
 {
@@ -38,7 +38,8 @@ public class DirtySpot
     private final Range affectedRange;
     private final Map<Recommender, List<TrainingInstance>> incrementalTrainingData;
 
-    public DirtySpot(AnnotationEvent aEvent, Map<Recommender, List<TrainingInstance>> aIncrementalTrainingData)
+    public DirtySpot(AnnotationEvent aEvent,
+            Map<Recommender, List<TrainingInstance>> aIncrementalTrainingData)
     {
         document = aEvent.getDocument();
         user = aEvent.getDocumentOwner();

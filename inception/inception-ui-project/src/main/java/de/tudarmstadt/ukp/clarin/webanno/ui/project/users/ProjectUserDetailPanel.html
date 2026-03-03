@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div wicket:id="dialog"/>
+    <form wicket:id="form" class="card border-0 flex-content flex-v-container">
+      <div class="flex-content flex-v-container">
+        <div class="card-header rounded-0">
+          <div class="flex-h-container flex-centered flex-gutter flex-only-internal-gutter">
+            <div class="me-auto">
+              <wicket:message key="permissions.for"/> <b><wicket:container wicket:id="username"/></b>
+            </div>
+            <button wicket:id="save" class="btn btn-primary">
+              <i class="fas fa-save"></i>
+              <span class="d-none d-lg-inline">
+                &nbsp;<wicket:message key="save"/>
+              </span>
+            </button>
+            <button wicket:id="cancel" class="btn btn-secondary">
+              <i class="fas fa-times"></i>
+              <span class="d-none d-lg-inline">
+                &nbsp;<wicket:message key="cancel"/>
+              </span>
+            </button>
+            <span class="dropdown" aria-haspopup="true" aria-expanded="false" wicket:enclosure="delete">
+              <button class="btn btn-action dropdown-toggle flex-content" type="button" data-bs-toggle="dropdown">
+                <i class="fas fa-ellipsis-v"/>
+              </button>
+              <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 220px;">
+                <li>
+                  <button wicket:id="delete" class="dropdown-item" type="button">
+                    <wicket:message key="delete"/>
+                    <span class="float-end badge badge-pill bg-danger">
+                      <i class="fas fa-trash"/>
+                    </span>
+                  </button>
+                </li>
+              </ul>
+            </span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row form-row" wicket:enclosure="uiName">
+            <label wicket:for="uiName" class="col-sm-4 col-form-label">
+              <wicket:label key="uiName"/>
+            </label>
+            <div class="col-sm-8">
+              <input wicket:id="uiName" type="text" class="form-control"/>
+            </div>
+          </div>
+          <div class="row form-row">
+            <div wicket:id="permissions"></div>
+          </div>
+        </div>
+        <small class="text-body-secondary card-footer d-block">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          Removing the annotator role from a user will make their annotations inaccessible.
+          Add the annotator role back to the user to make the annotations accessible again.
+          While the annotations of users who have lost the annotator role are not immediately
+          outright deleted, they will not be included in project exports.
+        </small>
+      </div>
+    </form>
+  </wicket:panel>
+</body>
+</html>

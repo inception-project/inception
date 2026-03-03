@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.io.brat.dkprocore;
 
+import static tools.jackson.databind.SerializationFeature.INDENT_OUTPUT;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -39,14 +41,12 @@ import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import org.dkpro.core.api.parameter.ComponentParameters;
 import org.dkpro.core.api.parameter.MimeTypes;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.mapping.RelationMapping;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.mapping.TypeMappings;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratAnnotationDocument;
 import de.tudarmstadt.ukp.inception.io.brat.dkprocore.internal.model.BratConfiguration;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Writer for the brat annotation format.
@@ -290,22 +290,23 @@ public class BratWriter
                 template = "{ \"collData\" : ##COLL-DATA## , \"docData\" : ##DOC-DATA## }";
             }
 
-            JsonFactory jfactory = new JsonFactory();
-            try (Writer out = new OutputStreamWriter(getOutputStream(aJCas, filenameSuffix),
+            var mapper = JsonMapper.builder() //
+                    .enable(INDENT_OUTPUT) //
+                    .build();
+
+            try (var out = new OutputStreamWriter(getOutputStream(aJCas, filenameSuffix),
                     "UTF-8")) {
                 String docData;
-                try (StringWriter buf = new StringWriter()) {
-                    try (JsonGenerator jg = jfactory.createGenerator(buf)) {
-                        jg.useDefaultPrettyPrinter();
+                try (var buf = new StringWriter()) {
+                    try (var jg = mapper.createGenerator(buf)) {
                         doc.write(jg, aJCas.getDocumentText());
                     }
                     docData = buf.toString();
                 }
 
                 String collData;
-                try (StringWriter buf = new StringWriter()) {
-                    try (JsonGenerator jg = jfactory.createGenerator(buf)) {
-                        jg.useDefaultPrettyPrinter();
+                try (var buf = new StringWriter()) {
+                    try (var jg = mapper.createGenerator(buf)) {
                         conf.write(jg);
                     }
                     collData = buf.toString();

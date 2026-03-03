@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.telemetry.model;
 
+import static jakarta.persistence.GenerationType.IDENTITY;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -24,13 +26,10 @@ import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetrySupport;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
 @Entity
 @Table(name = "telemetry_settings")
@@ -40,7 +39,7 @@ public class TelemetrySettings
     private static final long serialVersionUID = -8944000690183645340L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     @Column(name = "id")
     private Long id;
 
@@ -53,11 +52,9 @@ public class TelemetrySettings
     @Column(length = 64000)
     private String traits;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date created;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date updated;
 

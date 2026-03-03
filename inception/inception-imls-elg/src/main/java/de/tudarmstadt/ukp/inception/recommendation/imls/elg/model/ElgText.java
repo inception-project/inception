@@ -21,7 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import tools.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -33,6 +33,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
+/**
+ * @deprecated We no longer store the document structure in the annotator/curator CASes, only in the
+ *             INITIAL_CAS.
+ */
+@Deprecated
 @Safe(false)
 public class ReplaceXmlStructureInCurationCasRepair
     implements Repair
@@ -69,7 +74,7 @@ public class ReplaceXmlStructureInCurationCasRepair
                 operation = "added";
             }
 
-            aMessages.add(LogMessage.error(this,
+            aMessages.add(LogMessage.info(this,
                     "XML document structure has been %s using the structure from the initial CAS (nodes: %d removed, %d added)",
                     operation, deleted, added));
         }

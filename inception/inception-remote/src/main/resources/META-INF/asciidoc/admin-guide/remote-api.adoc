@@ -37,11 +37,45 @@ is disabled by default. In order to enable it, add the setting `remote-api.enabl
 | Enable remote API
 | `false`
 | `true`
+|===
+
+Once the remote API is enabled, it becomes possible to assign the role `ROLE_REMOTE` to a user.
+Create a new user, e.g. `remote-api` via the user management page and assign at least the roles `ROLE_USER` and `ROLE_REMOTE`.
+Most of the actions accessible through the remote API require administrator access, so adding the `ROLE_ADMIN` is usually necessary as well.
+
+Once the remote API has been enabled, it offers a convenient and self-explanatory web-based user interface under `<APPLICATION_URL>/swagger-ui.html` which can be accessed by any user with the role `ROLE_REMOTE`.
+Here, you can browse the different operations, their parameters, and even try them out directly via a web browser.
+The actual AERO remote API uses `<APPLICATION_URL/api/aero/v1` as the base URL for its operations.
+
+The API follows the link:https://openminted.github.io/releases/aero-spec/1.0.0/omtd-aero/[Annotation Editor Remote Operations (AERO) protocol] (with a few extensions).
+
+The third-party Python library link:https://pycaprio.readthedocs.io/en/latest/[pycaprio] can be used to facilitate accessing the remote API.
+
+== HTTP basic authentication
+
+.HTTP basic settings for the remote API
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
 
 | `remote-api.http-basic.enabled`
 | Enable HTTP basic authentication
 | `true`
 | `false`
+|===
+
+== OAuth2 authentication
+
+.OAuth 2 settings for the remote API
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
 
 | `remote-api.oauth2.enabled`
 | Enable HTTP basic authentication
@@ -59,17 +93,6 @@ is disabled by default. In order to enable it, add the setting `remote-api.enabl
 | `preferred_username`
 |===
 
-Once the remote API is enabled, it becomes possible to assign the role `ROLE_REMOTE` to a user. Create a new user, e.g. `remote-api` via the user management page and assign at least the roles `ROLE_USER` and `ROLE_REMOTE`. Most of the actions accessible through the remote API require administrator access, so adding the `ROLE_ADMIN` is usually necessary as well.
-
-Once the remote API has been enabled, it offers a convenient and self-explanatory web-based user interface under `<APPLICATION_URL>/swagger-ui.html` which can be accessed by any user with the role `ROLE_REMOTE`. Here, you can browse the different operations, their parameters, and even try them out directly via a web browser. The actual AERO remote API uses `<APPLICATION_URL/api/aero/v1` as the
-base URL for its operations.
-
-The API follows the link:https://openminted.github.io/releases/aero-spec/1.0.0/omtd-aero/[Annotation Editor Remote Operations (AERO) protocol].
-
-The third-party Python library link:https://pycaprio.readthedocs.io/en/latest/[pycaprio] can be used
-to facilitate accessing the remote API.
-
-== OAuth2 authentication
 
 The remote API can be used using OAuth2 authentication. A client is expected to obtain a JWT token
 from an OAuth2 endpoint. {product-name} will verify that token using the public key of the OAuth2

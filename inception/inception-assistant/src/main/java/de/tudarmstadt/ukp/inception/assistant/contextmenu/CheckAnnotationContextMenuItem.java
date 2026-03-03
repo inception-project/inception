@@ -28,7 +28,7 @@ import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemContext;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemExtension;
 import de.tudarmstadt.ukp.inception.assistant.sidebar.AssistantSidebarFactory;

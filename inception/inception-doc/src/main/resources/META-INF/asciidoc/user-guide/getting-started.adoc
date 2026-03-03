@@ -228,30 +228,30 @@ NOTE: *Formats:* For details on the different formats {product-name} provides fo
 NOTE: *{product-name} Instance vs.
 Project:* In some cases, we have to distinguish between the {product-name} *instance* we are working in and the *project(s)* it contains. +
 For example, a user may be added to the {product-name} instance but not to a certain project.
-Or she may have different rights in several projects.
+Or she may have different roles in several projects.
 
 [[users_in_getting_started]]
 === Users
-Here, you may add users to your _project_ and change their rights within that project.
+Here, you may add users to your _project_ and change their roles within that project.
 You can only add users to a project from the dropdown at the left if they exist already in the {product-name} _instance_.
 
 * *Add new users:* In order to find users for a _project_ in the dropdown, you need to add them to your {product-name} _instance_ first.
 Click on the *administration* button in the very top right corner and select section *Users* on the left.
-For *user roles* (for an _instance_ of {product-name}) see the <<User Management>> in the main documentation.
+For *Instance roles* (for an _instance_ of {product-name}) see the <<User Management>> in the main documentation.
 +
 image::images/getting_started_create_users.png[align="center"]
 +
-* *Giving rights to users:* After selecting a user from the dropdown in the project settings section *Users*, you can check and uncheck the user's rights on the right side.
-User rights count for that _project_ only and are different from user roles which count for the whole {product-name} _instance_.
-Any combination of rights is possible and the user will always have the sum of all rights given.
+* *Assinging roles to users:* After selecting a user from the dropdown in the project settings section *Users*, you can check and uncheck the user's roles on the right side.
+Project roles count for that _project_ only and are different from instance-wide roles which count for the whole {product-name} _instance_.
+Any combination of roles is possible and the user will always have the sum of all roles given.
 +
 image::images/getting_started_users.png[align="center"]
 +
-[[User_rights]]
+[[Project_roles]]
 
 [cols=",,",]
 |===
-|User Right | Description | Access to Dashboard Sections
+|Project role | Description | Access to Dashboard Sections
 
 |Annotator |- annotate only |
 - Annotation +
@@ -437,7 +437,7 @@ Here, we will find out what you can _do_ in each project having a look at the <<
 
 If you are in a project already, click on the dashboard button on the top to get there.
 If you just logged in, choose a project by clicking on its name.
-As you are a Project Manager (see xref:User_rights[User Rights]), you see all of the following sub pages.
+As you are a Project Manager (see xref:Project_roles[Project Roles]), you see all of the following sub pages.
 For details on each section, check the section on <<sect_core_funct, Core Functionalities>>.
 
 === Annotation
@@ -445,7 +445,7 @@ If you went to <<First Annotations with {product-name}>> before, you have been h
 Here, the annotators can go to annotate the texts.
 
 === Curation
-Everyone with curation rights (see xref:User_rights[User Rights]) within a project can curate it.
+Everyone with curation rights (see xref:Project_roles[Project Roles]) within a project can curate it.
 All other users do not have access to nor see this page.
 Only documents marked as finished by at least one annotator can be curated.
 For details on how to curate, see the main documentation -> xref:sect_curation[Curation] or just try it out:
@@ -459,7 +459,7 @@ During the process called "Curation", you decide which annotations to keep in th
 * Log out and log in again as the test user.
 * In the very same document, make some annotations which are the same and some which are different than before.
 Mark the document as finished.
-* Log in as any user with curation rights (e.g. as the "`admin`" user we used before), enter the curation page and explore how to curate: You see the automatic merge on top (what both users agreed on has been accepted already) and the annotations of each of the users below.
+* Log in as any user with the curator role (e.g. as the "`admin`" user we used before), enter the curation page and explore how to curate: You see the automatic merge on top (what both users agreed on has been accepted already) and the annotations of each of the users below.
 Differences are highlighted.
 You can accept an annotation by clicking on it.
 
@@ -467,7 +467,7 @@ image::images/getting_started_curation.png[align="center"]
 
 * As a curator, you can also create new annotations on this page.
 It works exactly like on the Annotation page.
-Note that users who have nothing but curation rights do not see nor have access to the annotation page (see xref:User_rights[User Rights]).
+Note that users who have nothing but curation roles do not see nor have access to the annotation page (see xref:Project_roles[Project Roles]).
 
 [[knowledge_bases_in_getting_started_in_structrue]]
 === Knowledge Base

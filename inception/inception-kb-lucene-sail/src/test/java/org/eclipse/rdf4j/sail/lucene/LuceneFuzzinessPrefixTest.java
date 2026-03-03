@@ -15,7 +15,6 @@ import static org.eclipse.rdf4j.query.QueryLanguage.SPARQL;
 import static org.eclipse.rdf4j.sail.lucene.LuceneSail.FUZZY_PREFIX_LENGTH_KEY;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +28,6 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.repository.sail.SailRepositoryConnection;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -56,23 +54,16 @@ public class LuceneFuzzinessPrefixTest
     private LuceneSail sail;
     private MemoryStore memoryStore;
     private SailRepository repository;
-    private @TempDir File dataDir;
+    @TempDir
+    private File dataDir;
 
     @BeforeEach
-    public void setup() throws IOException
+    public void setup()
     {
         memoryStore = new MemoryStore();
         sail = new LuceneSail();
         sail.setParameter(LuceneSail.LUCENE_DIR_KEY, "lucene-index");
         sail.setParameter(LuceneSail.INDEX_CLASS_KEY, LuceneSail.DEFAULT_INDEX_CLASS);
-    }
-
-    @AfterEach
-    void shutdown()
-    {
-        if (sail != null) {
-            sail.shutDown();
-        }
     }
 
     private void initSail()

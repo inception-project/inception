@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.security.saml;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_EXTERNAL_PREFIX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -30,8 +29,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -40,6 +39,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.InceptionSecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
@@ -104,12 +104,12 @@ class Saml2AdapterImplTest
                 .ignoringFields(User_.CREATED, User_.UPDATED, User_.PASSWORD, "passwordEncoder") //
                 .isEqualTo(User.builder() //
                         .withUsername(USERNAME) //
-                        .withRealm(REALM_EXTERNAL_PREFIX + CLIENT_REGISTRATION_ID)
+                        .withRealm(Realm.REALM_EXTERNAL_PREFIX + CLIENT_REGISTRATION_ID)
                         .withRoles(Set.of(Role.ROLE_USER)) //
                         .withEnabled(true) //
                         .build());
 
-        assertThat(userService.userHasNoPassword(autoCreatedUser)) //
+        assertThat(UserDao.userHasNoPassword(autoCreatedUser)) //
                 .as("Auto-created external users should be created without password") //
                 .isTrue();
     }
@@ -119,7 +119,7 @@ class Saml2AdapterImplTest
     {
         userService.create(User.builder() //
                 .withUsername(USERNAME) //
-                .withRealm(REALM_EXTERNAL_PREFIX + CLIENT_REGISTRATION_ID)
+                .withRealm(Realm.REALM_EXTERNAL_PREFIX + CLIENT_REGISTRATION_ID)
                 .withRoles(Set.of(Role.ROLE_USER)) //
                 .withEnabled(true) //
                 .build());

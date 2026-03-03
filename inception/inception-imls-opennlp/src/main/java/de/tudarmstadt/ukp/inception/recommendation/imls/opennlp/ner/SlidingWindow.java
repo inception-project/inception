@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
-import static de.tudarmstadt.ukp.inception.rendering.model.Range.rangeCoveringDocument;
+import static de.tudarmstadt.ukp.inception.support.uima.Range.rangeCoveringDocument;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.util.Collections;
@@ -28,7 +28,7 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.tcas.Annotation;
 
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 class SlidingWindow<T extends Annotation>
     implements Iterable<List<T>>

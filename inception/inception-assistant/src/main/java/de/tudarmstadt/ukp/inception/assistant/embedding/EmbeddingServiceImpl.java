@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.embedding;
 
+import static de.tudarmstadt.ukp.inception.assistant.config.AssistantEmbeddingProperties.AUTO_DETECT_DIMENSION;
+
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -151,7 +153,7 @@ public class EmbeddingServiceImpl
     {
         var embeddingProperties = properties.getEmbedding();
         synchronized (embeddingProperties) {
-            if (embeddingProperties.getDimension() < 1) {
+            if (embeddingProperties.getDimension() == AUTO_DETECT_DIMENSION) {
                 try {
                     LOG.info("Contacting [{}] to auto-detect dimension of model [{}]...",
                             properties.getUrl(), embeddingProperties.getModel());

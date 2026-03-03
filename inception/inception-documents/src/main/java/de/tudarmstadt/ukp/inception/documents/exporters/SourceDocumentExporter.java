@@ -96,10 +96,11 @@ public class SourceDocumentExporter
         // add source documents to a project
         var documents = documentService.listSourceDocuments(aProject);
         for (var sourceDocument : documents) {
-            ExportedSourceDocument exDocument = new ExportedSourceDocument();
+            var exDocument = new ExportedSourceDocument();
             exDocument.setFormat(sourceDocument.getFormat());
             exDocument.setName(sourceDocument.getName());
             exDocument.setState(sourceDocument.getState());
+            exDocument.setStateUpdated(sourceDocument.getStateUpdated());
             exDocument.setTimestamp(sourceDocument.getTimestamp());
             exDocument.setCreated(sourceDocument.getCreated());
             exDocument.setUpdated(sourceDocument.getUpdated());
@@ -184,6 +185,7 @@ public class SourceDocumentExporter
             sourceDocument.setFormat(importedSourceDocument.getFormat());
             sourceDocument.setName(importedSourceDocument.getName());
             sourceDocument.setState(importedSourceDocument.getState());
+            sourceDocument.setStateUpdated(importedSourceDocument.getStateUpdated());
             sourceDocument.setProject(aImportedProject);
             sourceDocument.setTimestamp(importedSourceDocument.getTimestamp());
             sourceDocument.setCreated(importedSourceDocument.getCreated());

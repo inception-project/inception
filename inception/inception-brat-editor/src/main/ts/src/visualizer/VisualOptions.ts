@@ -39,9 +39,9 @@
  */
 
 export interface VisualOptions {
-  arc_bundle: string
+    arc_bundle: string;
 
-  // constructor () {
-  // Object.seal(this)
-  // }
+    // constructor () {
+    // Object.seal(this)
+    // }
 }

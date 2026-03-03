@@ -140,14 +140,14 @@ public class LookupFeatureSupport
     }
 
     @Override
-    public <V> V getDefaultFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    public <V> V getNullFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         return null;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public String unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    public String unwrapFeatureValue(AnnotationFeature aFeature, Object aValue)
     {
         // When used in a recommendation context, we might get the concept identifier as a string
         // value.

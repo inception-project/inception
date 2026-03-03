@@ -23,6 +23,10 @@ spring:
       cache:
         cachecontrol:
           max-age: 31536000
+    error:
+      whitelabel:
+        enabled: false
+      path: /whoops
 
   datasource:
     url: ${database.url:${INCEPTION_DB_URL:jdbc:hsqldb:file:${inception.home:${user.home}/.inception}/db/inception;hsqldb.default_table_type=cached;hsqldb.tx=mvcc}}
@@ -51,14 +55,11 @@ spring:
 
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.xml
+    analytics-enabled: false
 
 server:
   # Use the forward-header handling of the embedded Tomcat - usually works best
   forward-headers-strategy: NATIVE
-  error:
-    whitelabel:
-      enabled: false
-    path: /whoops
   servlet:
     session:
       cookie:
@@ -86,3 +87,7 @@ wicket:
         preserveLineBreaks: true
         compressJavaScript: false
         compressCss: false
+
+springdoc:
+  swagger-ui:
+    tagsSorter: alpha

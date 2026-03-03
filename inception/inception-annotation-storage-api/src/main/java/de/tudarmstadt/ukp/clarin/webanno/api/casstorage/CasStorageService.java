@@ -25,6 +25,7 @@ import java.util.Optional;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasSessionException;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public interface CasStorageService
@@ -39,16 +40,15 @@ public interface CasStorageService
      *            the {@link SourceDocument}
      * @param aCas
      *            The annotated CAS object
-     * @param aUserName
-     *            the user who annotates the document if it is user's annotation document OR the
-     *            CURATION_USER
+     * @param aSet
+     *            the set to which the CAS belongs.
      * @throws CasSessionException
      *             if no CAS storage session in available for the current thread or if the session
      *             does not permit writing.
      * @throws IOException
      *             if there was and error writing the CAS
      */
-    void writeCas(SourceDocument aDocument, CAS aCas, String aUserName)
+    void writeCas(SourceDocument aDocument, CAS aCas, AnnotationSet aSet)
         throws IOException, CasSessionException;
 
     /**
@@ -58,15 +58,16 @@ public interface CasStorageService
      *
      * @param aDocument
      *            the document.
-     * @param aUsername
-     *            the user.
+     * @param aSet
+     *            the set to which the CAS belongs.
      * @return the CAS.
      * @throws IOException
      *             if there was a problem loading or creating the CAS.
      * @throws CasSessionException
      *             if no CAS storage session in available for the current thread.
      */
-    CAS readCas(SourceDocument aDocument, String aUsername) throws IOException, CasSessionException;
+    CAS readCas(SourceDocument aDocument, AnnotationSet aSet)
+        throws IOException, CasSessionException;
 
     /**
      * Retrieve the annotation CAS of a given user for a given {@link SourceDocument}. If
@@ -76,8 +77,8 @@ public interface CasStorageService
      *
      * @param aDocument
      *            the document.
-     * @param aUsername
-     *            the user.
+     * @param aSet
+     *            the set to which the CAS belongs.
      * @param aAccessMode
      *            in which mode to read the CAS.
      * @return the CAS.
@@ -86,7 +87,7 @@ public interface CasStorageService
      * @throws CasSessionException
      *             if no CAS storage session in available for the current thread.
      */
-    CAS readCas(SourceDocument aDocument, String aUsername, CasAccessMode aAccessMode)
+    CAS readCas(SourceDocument aDocument, AnnotationSet aSet, CasAccessMode aAccessMode)
         throws IOException, CasSessionException;
 
     /**
@@ -99,8 +100,8 @@ public interface CasStorageService
      * 
      * @param aDocument
      *            the document to obtain the CAS for.
-     * @param aUsername
-     *            the user to obtain the CAS for.
+     * @param aSet
+     *            the set to which the CAS belongs.
      * @param aUpgradeMode
      *            whether the CAS should be upgraded to the latest project type system.
      * @param aSupplier
@@ -114,7 +115,7 @@ public interface CasStorageService
      * @throws CasSessionException
      *             if no CAS storage session in available for the current thread.
      */
-    CAS readOrCreateCas(SourceDocument aDocument, String aUsername, CasUpgradeMode aUpgradeMode,
+    CAS readOrCreateCas(SourceDocument aDocument, AnnotationSet aSet, CasUpgradeMode aUpgradeMode,
             CasProvider aSupplier, CasAccessMode aAccessMode)
         throws IOException, CasSessionException;
 
@@ -123,8 +124,8 @@ public interface CasStorageService
      * 
      * @param aDocument
      *            the document to delete the CAS for.
-     * @param aUsername
-     *            the user to delete the CAS for.
+     * @param aSet
+     *            the set to which the CAS belongs.
      * @return if the CAS was successfully deleted.
      * @throws IOException
      *             if the CAS could not be deleted.
@@ -132,14 +133,16 @@ public interface CasStorageService
      *             if no CAS storage session in available for the current thread or if the session
      *             does not permit writing.
      */
-    boolean deleteCas(SourceDocument aDocument, String aUsername)
+    boolean deleteCas(SourceDocument aDocument, AnnotationSet aSet)
         throws IOException, CasSessionException;
 
-    void exportCas(SourceDocument aDocument, String aUser, OutputStream aStream) throws IOException;
+    void exportCas(SourceDocument aDocument, AnnotationSet aSet, OutputStream aStream)
+        throws IOException;
 
-    void importCas(SourceDocument aDocument, String aUser, InputStream aStream) throws IOException;
+    void importCas(SourceDocument aDocument, AnnotationSet aSet, InputStream aStream)
+        throws IOException;
 
-    boolean existsCas(SourceDocument aDocument, String aUser) throws IOException;
+    boolean existsCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException;
 
     /**
      * Runs {@code CasDoctor} in repair mode on the given CAS (if repairs are active), otherwise it
@@ -150,16 +153,16 @@ public interface CasStorageService
      * 
      * @param aDocument
      *            the document
-     * @param aUsername
-     *            the user owning the CAS (used for logging)
+     * @param aSet
+     *            the set to which the CAS belongs.
      * @param aCas
      *            the CAS object
      */
-    void analyzeAndRepair(SourceDocument aDocument, String aUsername, CAS aCas);
+    void analyzeAndRepair(SourceDocument aDocument, AnnotationSet aSet, CAS aCas);
 
-    Optional<Long> getCasTimestamp(SourceDocument aDocument, String aUser) throws IOException;
+    Optional<Long> getCasTimestamp(SourceDocument aDocument, AnnotationSet aSet) throws IOException;
 
-    Optional<Long> verifyCasTimestamp(SourceDocument aDocument, String aUser,
+    Optional<Long> verifyCasTimestamp(SourceDocument aDocument, AnnotationSet aSet,
             long aExpectedTimeStamp, String aContextAction)
         throws IOException, ConcurentCasModificationException;
 
@@ -168,19 +171,20 @@ public interface CasStorageService
      * 
      * @param aDocument
      *            the document to upgrade the CAS for.
-     * @param aUser
-     *            the user to upgrade the CAS for.
+     * @param aSet
+     *            the set to which the CAS belongs.
      * @throws IOException
      *             if the CAS could not be loaded, upgraded or saved.
      * @throws CasSessionException
      *             if no CAS storage session in available for the current thread or if the session
      *             does not permit writing.
      */
-    void upgradeCas(SourceDocument aDocument, String aUser) throws IOException, CasSessionException;
+    void upgradeCas(SourceDocument aDocument, AnnotationSet aSet)
+        throws IOException, CasSessionException;
 
-    void forceActionOnCas(SourceDocument aDocument, String aUser, CasStorageServiceLoader aLoader,
-            CasStorageServiceAction aAction, boolean aSave)
+    void forceActionOnCas(SourceDocument aDocument, AnnotationSet aSet,
+            CasStorageServiceLoader aLoader, CasStorageServiceAction aAction, boolean aSave)
         throws IOException;
 
-    Optional<Long> getCasFileSize(SourceDocument aDocument, String aUser) throws IOException;
+    Optional<Long> getCasFileSize(SourceDocument aDocument, AnnotationSet aSet) throws IOException;
 }
