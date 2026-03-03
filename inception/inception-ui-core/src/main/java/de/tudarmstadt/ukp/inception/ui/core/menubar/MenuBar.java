@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.ui.core.menubar;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.lang.Integer.toHexString;
+import static java.util.Comparator.comparing;
+import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
@@ -109,6 +111,7 @@ public class MenuBar
                     return d;
                 }).forEach(result::add);
             }
+            result.sort(comparing(ImageLinkDecl::getId));
             return result;
         });
 
@@ -157,7 +160,7 @@ public class MenuBar
                     LOG.error(
                             "Skipping header icon [{}] due to path traversal attempt: [{}] resolves outside [{}]",
                             decl.getId(), rel, publicDir);
-                    return Optional.empty();
+                    return empty();
                 }
 
                 var name = "inception-public-" + toHexString(target.toString().hashCode());
@@ -165,7 +168,7 @@ public class MenuBar
             }
             catch (Exception e) {
                 LOG.error("Error creating FileSystemResourceReference for header icon [{}]: [{}]",
-                        imageUrl, e.getMessage());
+                        imageUrl, e);
             }
         }
         else {
@@ -173,11 +176,11 @@ public class MenuBar
                 return Optional.of(new UrlResourceReference(Url.parse(imageUrl)));
             }
             catch (Exception e) {
-                LOG.error("Invalid URL for header icon [{}]: [{}]", imageUrl, e.getMessage());
+                LOG.error("Invalid URL for header icon [{}]: [{}]", imageUrl, e);
             }
         }
 
-        return Optional.empty();
+        return empty();
     }
 
     private ListView<Component> createMenuItems(String aId, MenuBarItemJusification aJustification)

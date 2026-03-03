@@ -61,6 +61,7 @@ import jakarta.servlet.ServletContext;
 
 @Configuration
 @EnableConfigurationProperties({ //
+        AuthProperties.class, //
         UserProfilePropertiesImpl.class, //
         LegacyLoginPropertiesImpl.class, //
         LoginPropertiesImpl.class, //
