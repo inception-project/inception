@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core;
 
+import static de.tudarmstadt.ukp.inception.support.SettingsUtil.DEBUG_SEND_SERVER_SIDE_TIMINGS;
 import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getApplicationHome;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
@@ -48,12 +49,10 @@ import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.regex.Pattern;
 
 import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
-import org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration;
 import org.apache.wicket.coep.CrossOriginEmbedderPolicyRequestCycleListener;
 import org.apache.wicket.csp.CSPDirective;
 import org.apache.wicket.csp.CSPRenderable;
@@ -181,12 +180,11 @@ public abstract class WicketApplicationBase
     private void installTimingListener()
     {
         var settings = SettingsUtil.getSettings();
-        if (!"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
+        if (!"true".equalsIgnoreCase(settings.getProperty(DEBUG_SEND_SERVER_SIDE_TIMINGS))) {
             return;
         }
 
         WicketUtil.installTimingListeners(this);
-
     }
 
     @Override
@@ -212,13 +210,12 @@ public abstract class WicketApplicationBase
 
     private void installPatternMatchingCrossOriginEmbedderPolicyRequestCycleListener()
     {
-        CrossOriginEmbedderPolicyConfiguration coepConfig = getSecuritySettings()
-                .getCrossOriginEmbedderPolicyConfiguration();
+        var coepConfig = getSecuritySettings().getCrossOriginEmbedderPolicyConfiguration();
         if (coepConfig.isEnabled()) {
             // Remove the CrossOriginEmbedderPolicyRequestCycleListener that was configured
             // by Wicket
-            List<IRequestCycleListener> toRemove = new ArrayList<>();
-            for (IRequestCycleListener listener : getRequestCycleListeners()) {
+            var toRemove = new ArrayList<IRequestCycleListener>();
+            for (var listener : getRequestCycleListeners()) {
                 if (listener instanceof CrossOriginEmbedderPolicyRequestCycleListener) {
                     toRemove.add(listener);
                 }
@@ -423,8 +420,8 @@ public abstract class WicketApplicationBase
 
     protected void initServerTimeReporting()
     {
-        Properties settings = SettingsUtil.getSettings();
-        if (!"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
+        var settings = SettingsUtil.getSettings();
+        if (!"true".equalsIgnoreCase(settings.getProperty(DEBUG_SEND_SERVER_SIDE_TIMINGS))) {
             return;
         }
 

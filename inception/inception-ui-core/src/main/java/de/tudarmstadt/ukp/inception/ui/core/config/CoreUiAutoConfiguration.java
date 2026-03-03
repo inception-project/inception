@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.ui.core.menubar.HelpMenuBarItemSupport;
 
 @Configuration
 @EnableConfigurationProperties({ DarkModePropertiesImpl.class, ErrorPagePropertiesImpl.class,
-        WarningsPropertiesImpl.class })
+        WarningsPropertiesImpl.class, HeaderLinkPropertiesImpl.class })
 public class CoreUiAutoConfiguration
 {
     @ConditionalOnMissingBean(value = VersionFooterItem.class)

@@ -43,7 +43,6 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.csrf.CsrfToken;
 
@@ -96,8 +95,6 @@ public abstract class ApplicationPageBase
 
     private void commonInit()
     {
-        setLocale();
-
         for (var interceptor : interceptorsRegistry.getInterceptors()) {
             interceptor.intercept(this);
         }
@@ -137,8 +134,8 @@ public abstract class ApplicationPageBase
         var panel = new BootstrapFeedbackPanel("feedbackPanel");
         panel.setOutputMarkupId(true);
         panel.setFilter((IFeedbackMessageFilter) aMessage -> {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String username = auth != null ? auth.getName() : "SYSTEM";
+            var auth = SecurityContextHolder.getContext().getAuthentication();
+            var username = auth != null ? auth.getName() : "SYSTEM";
             if (aMessage.isFatal()) {
                 LOG.error("{}: {}", username, aMessage.getMessage());
             }
