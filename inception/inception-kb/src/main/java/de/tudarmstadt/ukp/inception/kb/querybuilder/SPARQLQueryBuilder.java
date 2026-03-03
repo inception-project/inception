@@ -165,6 +165,7 @@ public class SPARQLQueryBuilder
     private List<String> fallbackLanguages = emptyList();
     private List<String> preResolvedPrefLabelProperties = emptyList();
     private List<String> preResolvedAdditionalMatchingProperties = emptyList();
+    private boolean prefLabelPropertiesPreResolved = false;
 
     /**
      * Case-insensitive mode is a best-effort approach. Depending on the underlying FTS, it may or
@@ -578,6 +579,7 @@ public class SPARQLQueryBuilder
     public SPARQLQueryPrimaryConditions withPrefLabelProperties(Collection<String> aProps)
     {
         preResolvedPrefLabelProperties = new ArrayList<>(aProps);
+        prefLabelPropertiesPreResolved = true;
 
         return this;
     }
@@ -826,6 +828,8 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelMatchingExactlyAnyOf(String... aValues)
     {
+        checkPrefLabelPropertiesPreResolved();
+
         var values = Arrays.stream(aValues) //
                 .map(SPARQLQueryBuilder::trimQueryString) //
                 .filter(StringUtils::isNotBlank) //
@@ -929,9 +933,22 @@ public class SPARQLQueryBuilder
         return FTS_WIKIDATA.equals(ftsMode);
     }
 
+    private void checkPrefLabelPropertiesPreResolved()
+    {
+        if (!prefLabelPropertiesPreResolved) {
+            throw new IllegalStateException(
+                    "withPrefLabelProperties() must be called before any label-matching method. "
+                            + "Use resolvePrefLabelProperties(RepositoryConnection) to resolve "
+                            + "the effective label properties, then pass the result to "
+                            + "withPrefLabelProperties().");
+        }
+    }
+
     @Override
     public SPARQLQueryBuilder withLabelMatchingAnyOf(String... aValues)
     {
+        checkPrefLabelPropertiesPreResolved();
+
         var values = Arrays.stream(aValues) //
                 .map(SPARQLQueryBuilder::trimQueryString) //
                 .filter(StringUtils::isNotBlank) //
@@ -953,6 +970,8 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelContainingAnyOf(String... aValues)
     {
+        checkPrefLabelPropertiesPreResolved();
+
         var values = Arrays.stream(aValues) //
                 .map(SPARQLQueryBuilder::trimQueryString) //
                 .filter(StringUtils::isNotBlank) //
@@ -974,6 +993,8 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelStartingWith(String aPrefixQuery)
     {
+        checkPrefLabelPropertiesPreResolved();
+
         var value = trimQueryString(aPrefixQuery);
 
         if (value == null || value.length() == 0) {

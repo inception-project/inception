@@ -28,6 +28,7 @@ import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLoc
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.buildSparqlRepository;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.initRdfsMapping;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.initWikidataMapping;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.resolvePrefLabelProperties;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.lang.invoke.MethodHandles;
@@ -114,7 +115,7 @@ public class SPARQLQueryBuilderRemoteServicesTest
 
     @Tag("slow")
     @Test
-    void thatPropertyQueryLabelStartingWith_Wikidata()
+    void thatPropertyQueryLabelStartingWith_Wikidata() throws Exception
     {
         assertIsReachable(wikidata);
 
@@ -122,8 +123,11 @@ public class SPARQLQueryBuilderRemoteServicesTest
         kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping(kb);
 
-        var results = asHandles(wikidata,
-                SPARQLQueryBuilder.forProperties(kb).withLabelStartingWith("educated"));
+        var prefLabels = resolvePrefLabelProperties(wikidata, kb);
+        var results = asHandles(wikidata, SPARQLQueryBuilder //
+                .forProperties(kb) //
+                .withPrefLabelProperties(prefLabels) //
+                .withLabelStartingWith("educated"));
 
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
         assertThat(results).isNotEmpty();
@@ -152,9 +156,11 @@ public class SPARQLQueryBuilderRemoteServicesTest
         kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping(kb);
 
+        var prefLabels = resolvePrefLabelProperties(wikidata, kb);
         var results = asHandles(wikidata, SPARQLQueryBuilder //
                 .forInstances(kb) //
                 .childrenOf("http://www.wikidata.org/entity/Q924827") //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelStartingWith("Amanda") //
                 .retrieveLabel());
 
@@ -174,8 +180,10 @@ public class SPARQLQueryBuilderRemoteServicesTest
         kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping(kb);
 
+        var prefLabels = resolvePrefLabelProperties(wikidata, kb);
         var results = asHandles(wikidata, SPARQLQueryBuilder //
                 .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelContainingAnyOf("Tower"));
 
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
@@ -195,8 +203,10 @@ public class SPARQLQueryBuilderRemoteServicesTest
         kb.setLabelIri(RDFS.LABEL.stringValue());
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
 
+        var prefLabels = resolvePrefLabelProperties(zbwGnd, kb);
         var results = asHandles(zbwGnd, SPARQLQueryBuilder //
                 .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelContainingAnyOf("Schapiro-Frisch", "Stiker-Métral"));
 
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
@@ -215,8 +225,10 @@ public class SPARQLQueryBuilderRemoteServicesTest
         kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping(kb);
 
+        var prefLabels = resolvePrefLabelProperties(wikidata, kb);
         var results = asHandles(wikidata, SPARQLQueryBuilder //
                 .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelStartingWith("Barack"));
 
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
@@ -236,8 +248,10 @@ public class SPARQLQueryBuilderRemoteServicesTest
         kb.setLabelIri(RDFS.LABEL.stringValue());
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
 
+        var prefLabels = resolvePrefLabelProperties(zbwGnd, kb);
         var results = asHandles(zbwGnd, SPARQLQueryBuilder //
                 .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelStartingWith("Thom"));
 
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
@@ -255,8 +269,10 @@ public class SPARQLQueryBuilderRemoteServicesTest
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(null);
 
+        var prefLabels = resolvePrefLabelProperties(zbwStw, kb);
         var results = asHandles(zbwStw, SPARQLQueryBuilder //
                 .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelMatchingExactlyAnyOf("Labour"));
 
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
@@ -283,8 +299,10 @@ public class SPARQLQueryBuilderRemoteServicesTest
         // <https://d-nb.info/gnd/100136605> gndo:variantNameForThePerson "Gadebusch, Thomas
         // Henricus";
         // gndo:variantNameEntityForThePerson _:node1fhgbdto1x8884759 .
+        var prefLabels = resolvePrefLabelProperties(zbwGnd, kb);
         var results = asHandles(zbwGnd, SPARQLQueryBuilder //
                 .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelMatchingExactlyAnyOf("Gadebusch, Thomas Henricus"));
 
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
@@ -303,8 +321,10 @@ public class SPARQLQueryBuilderRemoteServicesTest
         kb.setFullTextSearchIri(null);
         initWikidataMapping(kb);
 
+        var prefLabels = resolvePrefLabelProperties(wikidata, kb);
         var results = asHandles(wikidata, SPARQLQueryBuilder //
                 .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelMatchingExactlyAnyOf("Labour"));
 
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
@@ -323,8 +343,10 @@ public class SPARQLQueryBuilderRemoteServicesTest
         kb.setFullTextSearchIri(null);
         initWikidataMapping(kb);
 
+        var prefLabels = resolvePrefLabelProperties(wikidata, kb);
         var results = asHandles(wikidata, SPARQLQueryBuilder //
                 .forProperties(kb) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelMatchingAnyOf("academic"));
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
         assertThat(results).isNotEmpty();
@@ -342,8 +364,10 @@ public class SPARQLQueryBuilderRemoteServicesTest
         kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping(kb);
 
+        var prefLabels = resolvePrefLabelProperties(wikidata, kb);
         var results = asHandles(wikidata, SPARQLQueryBuilder //
                 .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelMatchingExactlyAnyOf("Labour"));
 
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
@@ -362,8 +386,10 @@ public class SPARQLQueryBuilderRemoteServicesTest
         kb.setFullTextSearchIri(FTS_WIKIDATA.stringValue());
         initWikidataMapping(kb);
 
+        var prefLabels = resolvePrefLabelProperties(wikidata, kb);
         var results = asHandles(wikidata, SPARQLQueryBuilder //
                 .forInstances(kb) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelMatchingExactlyAnyOf("Labour", "Tory"));
 
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
