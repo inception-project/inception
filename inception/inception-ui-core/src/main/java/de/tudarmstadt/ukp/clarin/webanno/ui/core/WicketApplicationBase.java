@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core;
 
-import static de.tudarmstadt.ukp.inception.support.SettingsUtil.DEBUG_SEND_SERVER_SIDE_TIMINGS;
 import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getApplicationHome;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
@@ -90,7 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.theme.CustomThemeCssResourceBeh
 import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapCssReference;
 import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapResourceReference;
 import de.tudarmstadt.ukp.inception.security.config.CspProperties;
-import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.jquery.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.inception.support.jquery.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.inception.support.kendo.KendoFixDisabledInputComponentStylingBehavior;
@@ -101,6 +99,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.ContextSensitivePackageStringResourceLoader;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorListener;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorTestPage;
+import de.tudarmstadt.ukp.inception.ui.core.config.DebugProperties;
 
 /**
  * The Wicket application class. Sets up pages, authentication, theme, and other application-wide
@@ -112,6 +111,7 @@ public abstract class WicketApplicationBase
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired CspProperties cspProperties;
+    private @Autowired DebugProperties debugProperties;
 
     @Override
     protected void init()
@@ -179,8 +179,7 @@ public abstract class WicketApplicationBase
 
     private void installTimingListener()
     {
-        var settings = SettingsUtil.getSettings();
-        if (!"true".equalsIgnoreCase(settings.getProperty(DEBUG_SEND_SERVER_SIDE_TIMINGS))) {
+        if (!debugProperties.isSendServerSideTimings()) {
             return;
         }
 
@@ -420,8 +419,7 @@ public abstract class WicketApplicationBase
 
     protected void initServerTimeReporting()
     {
-        var settings = SettingsUtil.getSettings();
-        if (!"true".equalsIgnoreCase(settings.getProperty(DEBUG_SEND_SERVER_SIDE_TIMINGS))) {
+        if (!debugProperties.isSendServerSideTimings()) {
             return;
         }
 

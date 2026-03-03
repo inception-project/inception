@@ -47,8 +47,6 @@ public class SettingsUtil
     private static final String SETTINGS_FILE = "settings.properties";
     private static final String SETTINGS_YAML_FILE = "settings.yml";
 
-    public static final String DEBUG_SEND_SERVER_SIDE_TIMINGS = "debug.sendServerSideTimings";
-
     private static Properties versionInfo;
     private static Properties settings;
 

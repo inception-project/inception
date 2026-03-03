@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
 import javax.sql.DataSource;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
@@ -70,6 +71,7 @@ public class InceptionSecurityAutoConfiguration
 
     @Bean(name = "authenticationProvider")
     @ConditionalOnProperty(name = "auth.mode", havingValue = "preauth")
+    @ConditionalOnMissingBean(name = "authenticationProvider")
     public PreAuthenticatedAuthenticationProvider externalAuthenticationProvider(
             @Lazy UserDetailsManager aUserDetails)
     {
@@ -82,6 +84,7 @@ public class InceptionSecurityAutoConfiguration
 
     @Bean(name = "authenticationProvider")
     @ConditionalOnProperty(name = "auth.mode", havingValue = "database", matchIfMissing = true)
+    @ConditionalOnMissingBean(name = "authenticationProvider")
     public DaoAuthenticationProvider internalAuthenticationProvider(
             @Lazy UserDetailsService aUserDetails, PasswordEncoder aPasswordEncoder)
     {

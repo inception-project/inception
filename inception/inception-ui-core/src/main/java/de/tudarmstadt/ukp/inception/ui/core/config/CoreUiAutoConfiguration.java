@@ -33,8 +33,9 @@ import de.tudarmstadt.ukp.inception.ui.core.log.LogPageMenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.menubar.HelpMenuBarItemSupport;
 
 @Configuration
-@EnableConfigurationProperties({ DarkModePropertiesImpl.class, ErrorPagePropertiesImpl.class,
-        WarningsPropertiesImpl.class, HeaderLinkPropertiesImpl.class })
+@EnableConfigurationProperties({ DebugPropertiesImpl.class, DarkModePropertiesImpl.class,
+        ErrorPagePropertiesImpl.class, WarningsPropertiesImpl.class,
+        HeaderLinkPropertiesImpl.class })
 public class CoreUiAutoConfiguration
 {
     @ConditionalOnMissingBean(value = VersionFooterItem.class)
