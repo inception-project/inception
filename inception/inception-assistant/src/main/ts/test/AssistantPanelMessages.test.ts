@@ -18,6 +18,8 @@
 import { describe, it, expect } from 'vitest';
 import { buildGroups } from '../src/AssistantPanelMessages';
 import type { MTextMessage, MChatMessage } from '../src/AssistantPanelModels';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 
 function textMessage(id: string, opts: Partial<MTextMessage> = {}): MTextMessage {
     return {
@@ -58,17 +60,19 @@ describe('AssistantPanelMessages.buildGroups', () => {
         const m3 = { id: 'c1', role: 'assistant', internal: false, content: 'final' } as any;
 
         const groups = buildGroups([m1, m2, m3]);
-        // m1 and m2 are groupable (have thinking), m3 is not (no thinking, no special type)
-        expect(groups.length).toBe(2);
+        // m1 and m2 are groupable (have thinking), m3 is a content message.
+        // With the new behavior the content message is appended to the running
+        // group and the group is flushed afterwards, so we expect a single
+        // group containing all three messages.
+        expect(groups.length).toBe(1);
         const g = groups[0] as any;
         expect(g.type).toBe('group');
         expect(g.activeThinkingMessage).toBeDefined();
         expect(g.activeThinkingMessage.id).toBe('t2');
         expect(g.lastCompletedThinkingMessage).toBeDefined();
         expect(g.lastCompletedThinkingMessage.id).toBe('t1');
-        // m3 should be a separate single item
-        expect(groups[1].type).toBe('single');
-        expect((groups[1] as any).message.id).toBe('c1');
+        // The content message should be part of the group's messages
+        expect(g.messages.some((mm) => mm.id === 'c1')).toBe(true);
     });
 
     it('separates non-groupable text messages from groupable ones', () => {
@@ -80,13 +84,13 @@ describe('AssistantPanelMessages.buildGroups', () => {
         const m2 = { id: 'c1', role: 'assistant', internal: false, content: 'final' } as any;
 
         const groups = buildGroups([m1, m2]);
-        // The thinking message should be in a group, and the plain text message should be a single
-        expect(groups.length).toBe(2);
+        // The thinking message should form a running group and the content message
+        // is appended to that group and flushed afterwards.
+        expect(groups.length).toBe(1);
         expect(groups[0].type).toBe('group');
-        expect((groups[0] as any).messages.length).toBe(1);
+        expect((groups[0] as any).messages.length).toBe(2);
         expect((groups[0] as any).messages[0].id).toBe('t1');
-        expect(groups[1].type).toBe('single');
-        expect((groups[1] as any).message.id).toBe('c1');
+        expect((groups[0] as any).messages[1].id).toBe('c1');
     });
 
     it('includes system Error messages in the running group (do not terminate group)', () => {
@@ -113,5 +117,37 @@ describe('AssistantPanelMessages.buildGroups', () => {
         expect(g.type).toBe('group');
         // The error message should be included in the group's messages
         expect(g.messages.some((mm) => mm.id === 'e1')).toBe(true);
+    });
+
+    it('loads conversation1.json and generates the expected groups', () => {
+        const p = resolve(__dirname, 'resources', 'conversation1.json');
+        const json = JSON.parse(readFileSync(p, 'utf8')) as MChatMessage[];
+
+        const groups = buildGroups(json);
+
+        // Expect: user single, assistant content single (2), a running group
+        // with the intermediate tool/assistant messages, and the final
+        // assistant content as a single message.
+        expect(groups.length).toBe(3);
+
+        // First should be the user message
+        expect(groups[0].type).toBe('single');
+        expect((groups[0] as any).message.role).toBe('user');
+        expect((groups[0] as any).message.id).toBe('1');
+
+        // Second should be the assistant content message (2)
+        expect(groups[1].type).toBe('single');
+        expect((groups[1] as any).message.id).toBe('2');
+
+        // Third should be a group containing the tool/streaming messages (3,4,5)
+        // and the final assistant content message (6) appended as the last
+        // element in the group.
+        expect(groups[2].type).toBe('group');
+        const g = groups[2] as any;
+        expect(g.messages.length).toBe(4);
+        expect(g.id).toBe('3');
+        expect(g.lastMessage.id).toBe('6');
+        expect(g.lastCompletedThinkingMessage).toBeDefined();
+        expect(g.lastCompletedThinkingMessage.id).toBe('6');
     });
 });
