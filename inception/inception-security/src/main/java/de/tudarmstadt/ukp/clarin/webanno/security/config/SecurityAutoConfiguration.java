@@ -139,10 +139,11 @@ public class SecurityAutoConfiguration
     @Bean
     public Saml2Adapter saml2Adapter(@Lazy ServletContext aContext, @Lazy UserDao aUserRepository,
             @Lazy OverridableUserDetailsManager aUserDetailsManager,
-            @Lazy Optional<RelyingPartyRegistrationRepository> aRelyingPartyRegistrationRepository)
+            @Lazy Optional<RelyingPartyRegistrationRepository> aRelyingPartyRegistrationRepository,
+            PreauthenticationProperties aPreauthenticationProperties)
     {
         return new Saml2AdapterImpl(aContext, aUserRepository, aUserDetailsManager,
-                aRelyingPartyRegistrationRepository);
+                aRelyingPartyRegistrationRepository, aPreauthenticationProperties);
     }
 
     @Bean

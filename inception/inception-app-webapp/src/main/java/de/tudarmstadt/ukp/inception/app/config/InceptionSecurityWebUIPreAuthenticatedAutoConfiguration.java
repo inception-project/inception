@@ -38,6 +38,7 @@ import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.preauth.ShibbolethRequestHeaderAuthenticationFilter;
 
 @ConditionalOnWebApplication
@@ -97,13 +98,15 @@ public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
     @Bean
     @Profile(PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)
     public ShibbolethRequestHeaderAuthenticationFilter preAuthFilter(
-            AuthenticationConfiguration aAuthenticationConfiguration, UserDao aUserRepository)
+            AuthenticationConfiguration aAuthenticationConfiguration, UserDao aUserRepository,
+            PreauthenticationProperties aPreauthenticationProperties)
         throws Exception
     {
         var filter = new ShibbolethRequestHeaderAuthenticationFilter();
         filter.setPrincipalRequestHeader(preAuthPrincipalHeader);
         filter.setAuthenticationManager(aAuthenticationConfiguration.getAuthenticationManager());
         filter.setUserRepository(aUserRepository);
+        filter.setPreauthenticationProperties(aPreauthenticationProperties);
         filter.setExceptionIfHeaderMissing(true);
         return filter;
     }
