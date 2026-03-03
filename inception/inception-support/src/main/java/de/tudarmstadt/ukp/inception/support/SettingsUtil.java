@@ -60,12 +60,6 @@ public class SettingsUtil
      * @deprecated Should introduce/use a Spring properties bean instead.
      */
     @Deprecated
-    public static final String CFG_LOCALE = "locale";
-
-    /**
-     * @deprecated Should introduce/use a Spring properties bean instead.
-     */
-    @Deprecated
     public static final String CFG_AUTH_MODE = "auth.mode";
     @Deprecated
     public static final String CFG_AUTH_PREAUTH_NEWUSER_ROLES = "auth.preauth.newuser.roles";
