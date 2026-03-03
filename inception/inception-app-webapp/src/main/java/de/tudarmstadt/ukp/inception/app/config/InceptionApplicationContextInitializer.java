@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.app.config;
 
-import static de.tudarmstadt.ukp.inception.support.SettingsUtil.CFG_AUTH_MODE;
-import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_DATABASE;
-import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
 import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 
 import java.io.IOException;
@@ -42,8 +39,6 @@ import de.tudarmstadt.ukp.inception.support.logging.LoggingFilter;
 public class InceptionApplicationContextInitializer
     implements ApplicationContextInitializer<ConfigurableApplicationContext>
 {
-    private static final String AUTH_MODE_PREAUTH = "preauth";
-
     @Override
     public void initialize(ConfigurableApplicationContext aApplicationContext)
     {
@@ -54,8 +49,6 @@ public class InceptionApplicationContextInitializer
         loadSettings(aEnvironment);
 
         applyDatabaseSpecificOverrides(aEnvironment);
-
-        activateAuthenticationProfiles(aEnvironment);
 
         Runtime rt = Runtime.getRuntime();
         BOOT_LOG.info("Max. application memory: {}MB",
@@ -127,16 +120,4 @@ public class InceptionApplicationContextInitializer
         }
     }
 
-    private void activateAuthenticationProfiles(ConfigurableEnvironment aEnvironment)
-    {
-        // Activate bean profile depending on authentication mode
-        if (AUTH_MODE_PREAUTH.equals(aEnvironment.getProperty(CFG_AUTH_MODE))) {
-            aEnvironment.addActiveProfile(PROFILE_AUTH_MODE_EXTERNAL_PREAUTH);
-            BOOT_LOG.info("Authentication: pre-auth");
-        }
-        else {
-            aEnvironment.addActiveProfile(PROFILE_AUTH_MODE_DATABASE);
-            BOOT_LOG.info("Authentication: database");
-        }
-    }
 }

@@ -17,13 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
-import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
-
 import javax.sql.DataSource;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -41,7 +39,6 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
-import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -72,7 +69,7 @@ public class InceptionSecurityAutoConfiguration
     }
 
     @Bean(name = "authenticationProvider")
-    @Profile(PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)
+    @ConditionalOnProperty(name = "auth.mode", havingValue = "preauth")
     public PreAuthenticatedAuthenticationProvider externalAuthenticationProvider(
             @Lazy UserDetailsManager aUserDetails)
     {
@@ -84,7 +81,7 @@ public class InceptionSecurityAutoConfiguration
     }
 
     @Bean(name = "authenticationProvider")
-    @Profile(DeploymentModeService.PROFILE_AUTH_MODE_DATABASE)
+    @ConditionalOnProperty(name = "auth.mode", havingValue = "database", matchIfMissing = true)
     public DaoAuthenticationProvider internalAuthenticationProvider(
             @Lazy UserDetailsService aUserDetails, PasswordEncoder aPasswordEncoder)
     {

@@ -43,7 +43,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,14 +52,13 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProper
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User_;
-import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 @Transactional
-@ActiveProfiles(DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)
 @DataJpaTest( //
         showSql = false, //
         properties = { //
+                "auth.mode=preauth", //
                 "spring.liquibase.enabled=false", //
                 "spring.main.banner-mode=off" })
 @ImportAutoConfiguration({ //

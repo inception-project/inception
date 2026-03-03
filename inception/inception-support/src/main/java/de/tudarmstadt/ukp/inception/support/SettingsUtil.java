@@ -49,14 +49,6 @@ public class SettingsUtil
 
     public static final String DEBUG_SEND_SERVER_SIDE_TIMINGS = "debug.sendServerSideTimings";
 
-    /**
-     * @deprecated Should introduce/use a Spring properties bean instead.
-     */
-    @Deprecated
-    public static final String CFG_AUTH_MODE = "auth.mode";
-    @Deprecated
-    public static final String CFG_AUTH_PREAUTH_NEWUSER_ROLES = "auth.preauth.newuser.roles";
-
     private static Properties versionInfo;
     private static Properties settings;
 

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -59,6 +60,28 @@ class PreauthenticationPropertiesImplTest
     {
         contextRunner.withPropertyValues("auth.preauth.newuser.roles[0]=ROLE_USER",
                 "auth.preauth.newuser.roles[1]=ROLE_ADMIN").run(ctx -> {
+                    var props = ctx.getBean(PreauthenticationPropertiesImpl.class);
+                    assertThat(props.getNewUserRoles(dummyUser))
+                            .containsExactlyInAnyOrder(ROLE_USER, ROLE_ADMIN);
+                });
+    }
+
+    @Test
+    void thatSingleScalarRoleIsParsed()
+    {
+        contextRunner.withPropertyValues("auth.preauth.newuser.roles=ROLE_PROJECT_CREATOR")
+                .run(ctx -> {
+                    var props = ctx.getBean(PreauthenticationPropertiesImpl.class);
+                    assertThat(props.getNewUserRoles(dummyUser))
+                            .containsExactlyInAnyOrder(ROLE_USER, ROLE_PROJECT_CREATOR);
+                });
+    }
+
+    @Test
+    void thatCsvRolesWithSpacesAreParsed()
+    {
+        contextRunner.withPropertyValues("auth.preauth.newuser.roles=ROLE_USER, ROLE_ADMIN")
+                .run(ctx -> {
                     var props = ctx.getBean(PreauthenticationPropertiesImpl.class);
                     assertThat(props.getNewUserRoles(dummyUser))
                             .containsExactlyInAnyOrder(ROLE_USER, ROLE_ADMIN);
