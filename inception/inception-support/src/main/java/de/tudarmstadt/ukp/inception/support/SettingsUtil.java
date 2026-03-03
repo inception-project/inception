@@ -74,14 +74,6 @@ public class SettingsUtil
      * @deprecated Should introduce/use a Spring properties bean instead.
      */
     @Deprecated
-    public static final String CFG_WARNINGS_EMBEDDED_DATABASE = "warnings.embeddedDatabase";
-    @Deprecated
-    public static final String CFG_WARNINGS_UNSUPPORTED_BROWSER = "warnings.unsupportedBrowser";
-
-    /**
-     * @deprecated Should introduce/use a Spring properties bean instead.
-     */
-    @Deprecated
     public static final String CFG_LINK_PREFIX = "style.header.icon.";
     public static final @Deprecated String CFG_LINK_URL = ".linkUrl";
     public static final @Deprecated String CFG_LINK_IMAGE_URL = ".imageUrl";

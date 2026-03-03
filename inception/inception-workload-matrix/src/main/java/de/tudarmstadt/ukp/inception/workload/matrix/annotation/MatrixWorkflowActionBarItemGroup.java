@@ -145,7 +145,8 @@ public class MatrixWorkflowActionBarItemGroup
         return link;
     }
 
-    private void actionFinishOrReopen(AjaxRequestTarget aTarget) throws AnnotationException, IOException
+    private void actionFinishOrReopen(AjaxRequestTarget aTarget)
+        throws AnnotationException, IOException
     {
         if (reopenableByUser.getObject()) {
             actionToggleDocumentState(aTarget);
