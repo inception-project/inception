@@ -105,7 +105,8 @@ class OAuth2AdapterImplKeycloakTest
     {
         // Container startup waits for Keycloak readiness automatically.
         // Verify the realm was imported successfully via the public OIDC discovery endpoint
-        // (avoids relying on the admin-cli ROPC grant which is disabled by default in Keycloak 26+).
+        // (avoids relying on the admin-cli ROPC grant which is disabled by default in Keycloak
+        // 26+).
         var discoveryUrl = keycloak.getAuthServerUrl() + "/realms/" + REALM
                 + "/.well-known/openid-configuration";
         var discovery = RestClient.create().get() //

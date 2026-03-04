@@ -141,15 +141,15 @@ public class GraphDbRepositoryTest
         var request = RequestBuilder.delete(new URI(baseUrl + "/rest/repositories/" + repositoryId))
                 .build();
 
-        var client = HttpClientBuilder.create().build();
-        var response = client.execute(request);
-
-        var statusCode = response.getStatusLine().getStatusCode();
-        if (statusCode < 200 || statusCode >= 300) {
-            LOG.error("Failed to delete repository [{}]: {}", repositoryId, statusCode);
-        }
-        else {
-            LOG.info("Repository deleted: [{}]", repositoryId);
+        try (var client = HttpClientBuilder.create().build();
+                var response = client.execute(request)) {
+            var statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode < 200 || statusCode >= 300) {
+                LOG.error("Failed to delete repository [{}]: {}", repositoryId, statusCode);
+            }
+            else {
+                LOG.info("Repository deleted: [{}]", repositoryId);
+            }
         }
     }
 
@@ -170,18 +170,22 @@ public class GraphDbRepositoryTest
                 .build();
 
         // Send the request and get the response
-        var client = HttpClientBuilder.create().build();
-        var response = client.execute(request);
-
-        // Print the response status and body
-        var statusCode = response.getStatusLine().getStatusCode();
-        if (statusCode < 200 || statusCode >= 300) {
-            LOG.error("Response status code: {}", statusCode);
-            LOG.error("Response body: {}",
-                    IOUtils.toString(response.getEntity().getContent(), UTF_8));
-        }
-        else {
-            LOG.info("Repository created: [{}]", repositoryId);
+        try (var client = HttpClientBuilder.create().build();
+                var response = client.execute(request)) {
+            // Read the response status and body
+            var statusCode = response.getStatusLine().getStatusCode();
+            String responseBody = response.getEntity() != null
+                    ? IOUtils.toString(response.getEntity().getContent(), UTF_8)
+                    : "";
+            if (statusCode < 200 || statusCode >= 300) {
+                LOG.error("Response status code: {}", statusCode);
+                LOG.error("Response body: {}", responseBody);
+                throw new IOException("Failed to create repository [" + repositoryId + "]: HTTP "
+                        + statusCode + " - " + responseBody);
+            }
+            else {
+                LOG.info("Repository created: [{}]", repositoryId);
+            }
         }
     }
 

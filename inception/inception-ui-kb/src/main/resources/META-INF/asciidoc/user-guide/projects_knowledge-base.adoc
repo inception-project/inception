@@ -318,7 +318,7 @@ Fuseki databases are usually accessible via SPARQL at `http://localhost:3030/DAT
 
 In GraphDB, the languages for full-text indexing need to be explicitly configured.
 E.g. if you have string literals without a language tag (`default`), with an English language tag (`en`) and with a
-German language tag (`de`) in your KB, you need to full-text indices for all of these:
+German language tag (`de`) in your KB, you need to configure full-text indices for all of these:
 
 ```
 <http://www.ontotext.com/config/graphdb#fts-indexes> ("default" "de" "en");
