@@ -31,13 +31,14 @@ import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringStrategy;
 
 /**
- * This is a class representing the bean objects to store users preference of annotation settings
- * such as annotation layers, number of sentence to display at a time, visibility of lemma and
+ * This is a class representing the bean objects to store users preference of
+ * annotation settings
+ * such as annotation layers, number of sentence to display at a time,
+ * visibility of lemma and
  * whether to allow auto page scrolling.
  */
 public class AnnotationPreference
-    implements Serializable, ColoringPreferences
-{
+        implements Serializable, ColoringPreferences {
     private static final long serialVersionUID = 2202236699782758271L;
 
     // BEGIN: Settings related to editor choice
@@ -75,73 +76,65 @@ public class AnnotationPreference
     private Map<Long, ColoringStrategyType> colorPerLayer = new HashMap<>();
     private ReadonlyColoringStrategy readonlyLayerColoringBehaviour = ReadonlyColoringStrategy.LEGACY;
     private @Deprecated boolean staticColor = true;
+    private boolean cleanTextMode = false;
     // END: Settings specific to layer visibility and coloring
 
     /**
      * @return the preferred annotation layers
      * 
-     * @deprecated working with preferred layers is deprecated, use hidden layers instead
+     * @deprecated working with preferred layers is deprecated, use hidden layers
+     *             instead
      */
     @Deprecated
-    public List<Long> getAnnotationLayers()
-    {
+    public List<Long> getAnnotationLayers() {
         return annotationLayers;
     }
 
     /**
-     * @deprecated working with preferred layers is deprecated, use hidden layers instead
+     * @deprecated working with preferred layers is deprecated, use hidden layers
+     *             instead
      * 
      * @param aAnnotationLayers
-     *            the preferred annotation layers
+     *                          the preferred annotation layers
      */
     @Deprecated()
-    public void setAnnotationLayers(List<Long> aAnnotationLayers)
-    {
+    public void setAnnotationLayers(List<Long> aAnnotationLayers) {
         annotationLayers = aAnnotationLayers;
     }
 
-    public void setLayerVisible(AnnotationLayer aLayer, boolean aVisible)
-    {
+    public void setLayerVisible(AnnotationLayer aLayer, boolean aVisible) {
         if (aVisible) {
             hiddenAnnotationLayerIds.remove(aLayer.getId());
-        }
-        else {
+        } else {
             hiddenAnnotationLayerIds.add(aLayer.getId());
         }
     }
 
-    public Set<Long> getHiddenAnnotationLayerIds()
-    {
+    public Set<Long> getHiddenAnnotationLayerIds() {
         return hiddenAnnotationLayerIds;
     }
 
-    public void setHiddenAnnotationLayerIds(Set<Long> aAnnotationLayerIds)
-    {
+    public void setHiddenAnnotationLayerIds(Set<Long> aAnnotationLayerIds) {
         hiddenAnnotationLayerIds = aAnnotationLayerIds;
     }
 
-    public void setFeatureVisible(AnnotationFeature aFeature, boolean aVisible)
-    {
+    public void setFeatureVisible(AnnotationFeature aFeature, boolean aVisible) {
         if (aVisible) {
             hiddenAnnotationFeatureIds.remove(aFeature.getId());
-        }
-        else {
+        } else {
             hiddenAnnotationFeatureIds.add(aFeature.getId());
         }
     }
 
-    public Set<Long> getHiddenAnnotationFeatureIds()
-    {
+    public Set<Long> getHiddenAnnotationFeatureIds() {
         return hiddenAnnotationFeatureIds;
     }
 
-    public void setHiddenAnnotationFeatureIds(Set<Long> aAnnotationFeatureIds)
-    {
+    public void setHiddenAnnotationFeatureIds(Set<Long> aAnnotationFeatureIds) {
         hiddenAnnotationFeatureIds = aAnnotationFeatureIds;
     }
 
-    public void setTagVisible(AnnotationFeature aFeature, Tag aTag, boolean aVisible)
-    {
+    public void setTagVisible(AnnotationFeature aFeature, Tag aTag, boolean aVisible) {
         var tags = hiddenTags.get(aFeature.getId());
         if (tags == null) {
             if (!aVisible) {
@@ -149,12 +142,10 @@ public class AnnotationPreference
                 tags.add(aTag.getName());
                 hiddenTags.put(aFeature.getId(), tags);
             }
-        }
-        else {
+        } else {
             if (!aVisible) {
                 tags.add(aTag.getName());
-            }
-            else {
+            } else {
                 tags.remove(aTag.getName());
                 if (tags.isEmpty()) {
                     hiddenTags.remove(aFeature.getId());
@@ -163,205 +154,177 @@ public class AnnotationPreference
         }
     }
 
-    public Map<Long, Set<String>> getHiddenTags()
-    {
+    public Map<Long, Set<String>> getHiddenTags() {
         return hiddenTags;
     }
 
-    public void setHiddenTags(Map<Long, Set<String>> aTags)
-    {
+    public void setHiddenTags(Map<Long, Set<String>> aTags) {
         hiddenTags = aTags;
     }
 
     /**
      * @return number of sentences to be displayed at a time
      */
-    public int getWindowSize()
-    {
+    public int getWindowSize() {
         return Math.max(1, windowSize);
     }
 
     /**
      * @param aWindowSize
-     *            number of sentences to be displayed at a time
+     *                    number of sentences to be displayed at a time
      */
-    public void setWindowSize(int aWindowSize)
-    {
+    public void setWindowSize(int aWindowSize) {
         windowSize = aWindowSize;
     }
 
     /**
      * @return if auto-scrolling is enabled while annotating
      */
-    public boolean isScrollPage()
-    {
+    public boolean isScrollPage() {
         return scrollPage;
     }
 
     /**
      * @param aScrollPage
-     *            enable/disable auto-scrolling while annotation
+     *                    enable/disable auto-scrolling while annotation
      */
-    public void setScrollPage(boolean aScrollPage)
-    {
+    public void setScrollPage(boolean aScrollPage) {
         scrollPage = aScrollPage;
     }
 
     @Override
-    public Map<Long, ColoringStrategyType> getColorPerLayer()
-    {
+    public Map<Long, ColoringStrategyType> getColorPerLayer() {
         return colorPerLayer;
     }
 
-    public void setColorPerLayer(Map<Long, ColoringStrategyType> colorPerLayer)
-    {
+    public void setColorPerLayer(Map<Long, ColoringStrategyType> colorPerLayer) {
         this.colorPerLayer = colorPerLayer;
     }
 
     @Override
-    public ReadonlyColoringStrategy getReadonlyLayerColoringBehaviour()
-    {
+    public ReadonlyColoringStrategy getReadonlyLayerColoringBehaviour() {
         return readonlyLayerColoringBehaviour;
     }
 
     public void setReadonlyLayerColoringBehaviour(
-            ReadonlyColoringStrategy readonlyLayerColoringBehaviour)
-    {
+            ReadonlyColoringStrategy readonlyLayerColoringBehaviour) {
         this.readonlyLayerColoringBehaviour = readonlyLayerColoringBehaviour;
     }
 
     /**
-     * @deprecated this is only here to not break previous user settings, its not an option that can
+     * @deprecated this is only here to not break previous user settings, its not an
+     *             option that can
      *             be set anymore and is also no longer used anywhere
      */
     @SuppressWarnings("javadoc")
     @Deprecated
-    public boolean isStaticColor()
-    {
+    public boolean isStaticColor() {
         return staticColor;
     }
 
     @Deprecated
-    public int getSidebarSize()
-    {
+    public int getSidebarSize() {
         if (sidebarSize < SIDEBAR_SIZE_MIN || sidebarSize > SIDEBAR_SIZE_MAX) {
             return SIDEBAR_SIZE_DEFAULT;
-        }
-        else {
+        } else {
             return sidebarSize;
         }
     }
 
     @Deprecated
-    public void setSidebarSize(int aSidebarSize)
-    {
+    public void setSidebarSize(int aSidebarSize) {
         if (aSidebarSize > SIDEBAR_SIZE_MAX) {
             sidebarSize = SIDEBAR_SIZE_MAX;
-        }
-        else if (aSidebarSize < SIDEBAR_SIZE_MIN) {
+        } else if (aSidebarSize < SIDEBAR_SIZE_MIN) {
             sidebarSize = SIDEBAR_SIZE_MIN;
-        }
-        else {
+        } else {
             sidebarSize = aSidebarSize;
         }
     }
 
-    public int getSidebarSizeLeft()
-    {
+    public int getSidebarSizeLeft() {
         if (sidebarSizeLeft < SIDEBAR_SIZE_MIN || sidebarSizeLeft > SIDEBAR_SIZE_MAX) {
             return SIDEBAR_SIZE_DEFAULT;
-        }
-        else {
+        } else {
             return sidebarSizeLeft;
         }
     }
 
-    public void setSidebarSizeLeft(int aSidebarSize)
-    {
+    public void setSidebarSizeLeft(int aSidebarSize) {
         if (aSidebarSize > SIDEBAR_SIZE_MAX) {
             sidebarSizeLeft = SIDEBAR_SIZE_MAX;
-        }
-        else if (aSidebarSize < SIDEBAR_SIZE_MIN) {
+        } else if (aSidebarSize < SIDEBAR_SIZE_MIN) {
             sidebarSizeLeft = SIDEBAR_SIZE_MIN;
-        }
-        else {
+        } else {
             sidebarSizeLeft = aSidebarSize;
         }
     }
 
-    public int getSidebarSizeRight()
-    {
+    public int getSidebarSizeRight() {
         if (sidebarSizeRight < SIDEBAR_SIZE_MIN || sidebarSizeRight > SIDEBAR_SIZE_MAX) {
             return SIDEBAR_SIZE_DEFAULT;
-        }
-        else {
+        } else {
             return sidebarSizeRight;
         }
     }
 
-    public void setSidebarSizeRight(int aSidebarSize)
-    {
+    public void setSidebarSizeRight(int aSidebarSize) {
         if (aSidebarSize > SIDEBAR_SIZE_MAX) {
             sidebarSizeRight = SIDEBAR_SIZE_MAX;
-        }
-        else if (aSidebarSize < SIDEBAR_SIZE_MIN) {
+        } else if (aSidebarSize < SIDEBAR_SIZE_MIN) {
             sidebarSizeRight = SIDEBAR_SIZE_MIN;
-        }
-        else {
+        } else {
             sidebarSizeRight = aSidebarSize;
         }
     }
 
-    public int getFontZoom()
-    {
+    public int getFontZoom() {
         if (fontZoom < FONT_ZOOM_MIN || fontZoom > FONT_ZOOM_MAX) {
             return FONT_ZOOM_DEFAULT;
-        }
-        else {
+        } else {
             return fontZoom;
         }
     }
 
-    public void setFontZoom(int aFontZoom)
-    {
+    public void setFontZoom(int aFontZoom) {
         if (aFontZoom > FONT_ZOOM_MAX) {
             fontZoom = FONT_ZOOM_MAX;
-        }
-        else if (aFontZoom < FONT_ZOOM_MIN) {
+        } else if (aFontZoom < FONT_ZOOM_MIN) {
             fontZoom = FONT_ZOOM_MIN;
-        }
-        else {
+        } else {
             fontZoom = aFontZoom;
         }
     }
 
-    public String getEditor()
-    {
+    public String getEditor() {
         return editor;
     }
 
-    public void setEditor(String aEditor)
-    {
+    public void setEditor(String aEditor) {
         editor = aEditor;
     }
 
-    public void setDefaultLayer(long aLayerId)
-    {
+    public void setDefaultLayer(long aLayerId) {
         defaultLayer = aLayerId;
     }
 
-    public long getDefaultLayer()
-    {
+    public long getDefaultLayer() {
         return defaultLayer;
     }
 
-    public boolean isCollapseArcs()
-    {
+    public boolean isCollapseArcs() {
         return collapseArcs;
     }
 
-    public void setCollapseArcs(boolean aCollapseArcs)
-    {
+    public void setCollapseArcs(boolean aCollapseArcs) {
         collapseArcs = aCollapseArcs;
+    }
+
+    public boolean isCleanTextMode() {
+        return cleanTextMode;
+    }
+
+    public void setCleanTextMode(boolean aCleanTextMode) {
+        cleanTextMode = aCleanTextMode;
     }
 }
