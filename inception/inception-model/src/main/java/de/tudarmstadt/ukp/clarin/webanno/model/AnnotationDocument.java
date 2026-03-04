@@ -38,15 +38,15 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
 /**
- * A persistence object for meta-data of annotation documents. The content of annotation document is
+ * A persistence object for meta-data of annotation documents. The content of
+ * annotation document is
  * stored in a file system.
  */
 @Entity
 @Table(name = "annotation_document", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "name", "project", "user" }) })
 public class AnnotationDocument
-    implements Serializable
-{
+        implements Serializable {
     private static final long serialVersionUID = 8496087166198616020L;
 
     @Id
@@ -70,8 +70,10 @@ public class AnnotationDocument
     private SourceDocument document;
 
     /**
-     * The effective state of the annotation document. This state may be set by the annotator user
-     * or by a third person (e.g. curator/manager) or the system (e.g. workload manager).
+     * The effective state of the annotation document. This state may be set by the
+     * annotator user
+     * or by a third person (e.g. curator/manager) or the system (e.g. workload
+     * manager).
      */
     @Column(name = "state", nullable = false)
     @Type(AnnotationDocumentStateType.class)
@@ -82,11 +84,16 @@ public class AnnotationDocument
     private Date stateUpdated = new Date();
 
     /**
-     * State manually set by the annotator user. If a third person (e.g. curator/manager) or the
-     * system (e.g. workload manager) wants to change the state, they only change {@link #state} and
-     * leave this field here as it is. The exception is if the document is reset in which case the
-     * state should be cleared. This state is maintained mostly for informational purposes, e.g. to
-     * allow managers to see whether an annotation document as marked as finished by the annotator
+     * State manually set by the annotator user. If a third person (e.g.
+     * curator/manager) or the
+     * system (e.g. workload manager) wants to change the state, they only change
+     * {@link #state} and
+     * leave this field here as it is. The exception is if the document is reset in
+     * which case the
+     * state should be cleared. This state is maintained mostly for informational
+     * purposes, e.g. to
+     * allow managers to see whether an annotation document as marked as finished by
+     * the annotator
      * or if it was marked as finished by the manager or by the system.
      */
     @Column(name = "annotatorState", nullable = true)
@@ -94,16 +101,26 @@ public class AnnotationDocument
     private AnnotationDocumentState annotatorState;
 
     /**
-     * Comment the anntoator can leave when marking a document as finished. Typically used to report
+     * Comment the anntoator can leave when marking a document as finished.
+     * Typically used to report
      * problems to the curator.
      */
     @Column(name = "annotatorComment", length = 64000)
     private String annotatorComment;
 
     /**
-     * Last change made to the annotations or the last state transition triggered by the annotator
-     * user. State changes triggered by a third person (e.g. curator/manager) or by the system (e.g.
-     * workload manager) should not update the timestamp - except if the change is a reset of the
+     * Free-form notes that can be added by the annotator for a document.
+     */
+    @Column(name = "notes", length = 64000)
+    private String notes;
+
+    /**
+     * Last change made to the annotations or the last state transition triggered by
+     * the annotator
+     * user. State changes triggered by a third person (e.g. curator/manager) or by
+     * the system (e.g.
+     * workload manager) should not update the timestamp - except if the change is a
+     * reset of the
      * annotation document in which case the timestamp should be cleared.
      */
     @Temporal(TemporalType.TIMESTAMP)
@@ -116,6 +133,20 @@ public class AnnotationDocument
     @Column(name = "sentenceAccessed")
     private int sentenceAccessed = 0;
 
+    /**
+     * Time the annotator had the document open and was actively interacting with the browser
+     * (mouse/keyboard/scroll activity). Measured by the client-side idle tracker.
+     */
+    @Column(name = "totalActiveTime")
+    private Long totalActiveTime;
+
+    /**
+     * Time the annotator spent making actual annotation decisions, measured as the sum of
+     * gaps between consecutive annotation events (capped at 5 minutes per gap).
+     */
+    @Column(name = "totalAnnotationTime")
+    private Long totalAnnotationTime;
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created", nullable = true)
     private Date created;
@@ -124,8 +155,7 @@ public class AnnotationDocument
     @Column(name = "updated", nullable = true)
     private Date updated;
 
-    private AnnotationDocument(Builder builder)
-    {
+    private AnnotationDocument(Builder builder) {
         id = builder.id;
         name = builder.name;
         project = builder.project;
@@ -134,42 +164,39 @@ public class AnnotationDocument
         state = builder.state;
         annotatorState = builder.annotatorState;
         annotatorComment = builder.annotatorComment;
+        notes = builder.notes;
         timestamp = builder.timestamp;
         sentenceAccessed = builder.sentenceAccessed;
+        totalActiveTime = builder.totalActiveTime;
+        totalAnnotationTime = builder.totalAnnotationTime;
         created = builder.created;
         updated = builder.updated;
     }
 
-    public AnnotationDocument()
-    {
+    public AnnotationDocument() {
         // Nothing to do
     }
 
-    public AnnotationDocument(String aUser, SourceDocument aDocument)
-    {
+    public AnnotationDocument(String aUser, SourceDocument aDocument) {
         setUser(aUser);
         document = aDocument;
         name = aDocument.getName();
         project = aDocument.getProject();
     }
 
-    public SourceDocument getDocument()
-    {
+    public SourceDocument getDocument() {
         return document;
     }
 
-    public void setDocument(SourceDocument aDocument)
-    {
+    public void setDocument(SourceDocument aDocument) {
         document = aDocument;
     }
 
-    public Long getId()
-    {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Long aId)
-    {
+    public void setId(Long aId) {
         id = aId;
     }
 
@@ -178,14 +205,12 @@ public class AnnotationDocument
      * @return the name of the source document this annotation document is for.
      */
     @Deprecated
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
     @Deprecated
-    public void setName(String aName)
-    {
+    public void setName(String aName) {
         name = aName;
     }
 
@@ -194,14 +219,12 @@ public class AnnotationDocument
      * @return the project of the source document this annotation document is for.
      */
     @Deprecated
-    public Project getProject()
-    {
+    public Project getProject() {
         return project;
     }
 
     @Deprecated
-    public void setProject(Project aProject)
-    {
+    public void setProject(Project aProject) {
         project = aProject;
     }
 
@@ -209,8 +232,7 @@ public class AnnotationDocument
      * @deprecated Use {@link #getAnnotationSet}
      */
     @Deprecated
-    public String getUser()
-    {
+    public String getUser() {
         return user;
     }
 
@@ -218,42 +240,38 @@ public class AnnotationDocument
      * @deprecated Use {@link #setAnnotationSet}
      */
     @Deprecated
-    public void setUser(String aUser)
-    {
+    public void setUser(String aUser) {
         user = aUser;
     }
 
-    public AnnotationSet getAnnotationSet()
-    {
+    public AnnotationSet getAnnotationSet() {
         return AnnotationSet.forUser(user);
     }
 
-    public void setAnnotationSet(AnnotationSet aSet)
-    {
+    public void setAnnotationSet(AnnotationSet aSet) {
         user = aSet.id();
     }
 
-    public AnnotationDocumentState getState()
-    {
+    public AnnotationDocumentState getState() {
         return state;
     }
 
     /**
      * @param aState
-     *            the new state.
-     * @deprecated Use this only when you need to import the state from an external source and call
+     *               the new state.
+     * @deprecated Use this only when you need to import the state from an external
+     *             source and call
      *             {@link #setStateUpdated(Date)} as well. Otherwise use
-     *             {@link #updateState(AnnotationDocumentState)} which implicitly sets
+     *             {@link #updateState(AnnotationDocumentState)} which implicitly
+     *             sets
      *             {@link #stateUpdated} when required.
      */
     @Deprecated
-    public void setState(AnnotationDocumentState aState)
-    {
+    public void setState(AnnotationDocumentState aState) {
         state = aState;
     }
 
-    public void updateState(AnnotationDocumentState aState)
-    {
+    public void updateState(AnnotationDocumentState aState) {
         if (aState != state) {
             stateUpdated = new Date();
         }
@@ -263,55 +281,58 @@ public class AnnotationDocument
 
     /**
      * @param aStateUpdated
-     *            the new state updated time.
-     * @deprecated Use this only when you need to import the state from an external source and call
+     *                      the new state updated time.
+     * @deprecated Use this only when you need to import the state from an external
+     *             source and call
      *             {@link #setStateUpdated(Date)} as well. Otherwise use
-     *             {@link #updateState(AnnotationDocumentState)} which implicitly sets
+     *             {@link #updateState(AnnotationDocumentState)} which implicitly
+     *             sets
      *             {@link #stateUpdated} when required.
      */
     @Deprecated
-    public void setStateUpdated(Date aStateUpdated)
-    {
+    public void setStateUpdated(Date aStateUpdated) {
         stateUpdated = aStateUpdated;
     }
 
-    public Date getStateUpdated()
-    {
+    public Date getStateUpdated() {
         return stateUpdated;
     }
 
-    public AnnotationDocumentState getAnnotatorState()
-    {
+    public AnnotationDocumentState getAnnotatorState() {
         return annotatorState;
     }
 
-    public void setAnnotatorState(AnnotationDocumentState aAnnotatorState)
-    {
+    public void setAnnotatorState(AnnotationDocumentState aAnnotatorState) {
         annotatorState = aAnnotatorState;
     }
 
-    public String getAnnotatorComment()
-    {
+    public String getAnnotatorComment() {
         return annotatorComment;
     }
 
-    public void setAnnotatorComment(String aAnnotatorComment)
-    {
+    public void setAnnotatorComment(String aAnnotatorComment) {
         annotatorComment = aAnnotatorComment;
     }
 
-    public Date getTimestamp()
-    {
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String aNotes) {
+        notes = aNotes;
+    }
+
+    public Date getTimestamp() {
         return timestamp;
     }
 
     /**
      * @param aTimestamp
-     *            last change to the actual annotations in the CAS. The change to the annotation
-     *            document record is tracked in {@link #getUpdated()}
+     *                   last change to the actual annotations in the CAS. The
+     *                   change to the annotation
+     *                   document record is tracked in {@link #getUpdated()}
      */
-    public void setTimestamp(Date aTimestamp)
-    {
+    public void setTimestamp(Date aTimestamp) {
         timestamp = aTimestamp;
     }
 
@@ -319,8 +340,7 @@ public class AnnotationDocument
      * @deprecated no longer used.
      */
     @Deprecated
-    public int getSentenceAccessed()
-    {
+    public int getSentenceAccessed() {
         return sentenceAccessed;
     }
 
@@ -328,14 +348,48 @@ public class AnnotationDocument
      * @deprecated no longer used.
      */
     @Deprecated
-    public void setSentenceAccessed(int sentenceAccessed)
-    {
+    public void setSentenceAccessed(int sentenceAccessed) {
         this.sentenceAccessed = sentenceAccessed;
     }
 
-    @PrePersist
-    protected void onCreate()
+    public Long getTotalActiveTime()
     {
+        return totalActiveTime;
+    }
+
+    public void setTotalActiveTime(Long aTotalActiveTime)
+    {
+        totalActiveTime = aTotalActiveTime;
+    }
+
+    public void addActiveTime(long aDeltaMs)
+    {
+        if (totalActiveTime == null) {
+            totalActiveTime = 0L;
+        }
+        totalActiveTime += aDeltaMs;
+    }
+
+    public Long getTotalAnnotationTime()
+    {
+        return totalAnnotationTime;
+    }
+
+    public void setTotalAnnotationTime(Long aTotalAnnotationTime)
+    {
+        totalAnnotationTime = aTotalAnnotationTime;
+    }
+
+    public void addAnnotationTime(long aDeltaMs)
+    {
+        if (totalAnnotationTime == null) {
+            totalAnnotationTime = 0L;
+        }
+        totalAnnotationTime += aDeltaMs;
+    }
+
+    @PrePersist
+    protected void onCreate() {
         // When we import data, we set the fields via setters and don't want these to be
         // overwritten by this event handler.
         if (created == null) {
@@ -345,43 +399,36 @@ public class AnnotationDocument
     }
 
     @PreUpdate
-    protected void onUpdate()
-    {
+    protected void onUpdate() {
         updated = new Date();
     }
 
-    public Date getCreated()
-    {
+    public Date getCreated() {
         return created;
     }
 
-    public void setCreated(Date aCreated)
-    {
+    public void setCreated(Date aCreated) {
         created = aCreated;
     }
 
     /**
      * @return last change to the annotation document record.
      */
-    public Date getUpdated()
-    {
+    public Date getUpdated() {
         return updated;
     }
 
-    public void setUpdated(Date aUpdated)
-    {
+    public void setUpdated(Date aUpdated) {
         updated = aUpdated;
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "[" + user + "@" + name + "](" + id + ")";
     }
 
     @Override
-    public boolean equals(final Object other)
-    {
+    public boolean equals(final Object other) {
         if (!(other instanceof AnnotationDocument)) {
             return false;
         }
@@ -392,18 +439,15 @@ public class AnnotationDocument
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return Objects.hash(name, project, user, document);
     }
 
-    public static Builder builder()
-    {
+    public static Builder builder() {
         return new Builder();
     }
 
-    public static final class Builder
-    {
+    public static final class Builder {
         private Long id;
         private String name;
         private Project project;
@@ -412,78 +456,75 @@ public class AnnotationDocument
         private AnnotationDocumentState state = AnnotationDocumentState.NEW;
         private AnnotationDocumentState annotatorState;
         private String annotatorComment;
+        private String notes;
         private Date timestamp;
         /**
          * @deprecated no longer used.
          */
         @Deprecated
         private int sentenceAccessed = 0;
+        private Long totalActiveTime;
+        private Long totalAnnotationTime;
         private Date created;
         private Date updated;
 
-        private Builder()
-        {
+        private Builder() {
             // Nothing
         }
 
-        public Builder withId(Long aId)
-        {
+        public Builder withId(Long aId) {
             id = aId;
             return this;
         }
 
-        public Builder withName(String aName)
-        {
+        public Builder withName(String aName) {
             name = aName;
             return this;
         }
 
-        public Builder withProject(Project aProject)
-        {
+        public Builder withProject(Project aProject) {
             project = aProject;
             return this;
         }
 
-        public Builder withUser(String aUser)
-        {
+        public Builder withUser(String aUser) {
             user = aUser;
             return this;
         }
 
-        public Builder withDocument(SourceDocument aDocument)
-        {
+        public Builder withDocument(SourceDocument aDocument) {
             document = aDocument;
             return this;
         }
 
-        public Builder forDocument(SourceDocument aDocument)
-        {
+        public Builder forDocument(SourceDocument aDocument) {
             document = aDocument;
             name = aDocument.getName();
             project = aDocument.getProject();
             return this;
         }
 
-        public Builder withState(AnnotationDocumentState aState)
-        {
+        public Builder withState(AnnotationDocumentState aState) {
             state = aState;
             return this;
         }
 
-        public Builder withAnnotatorState(AnnotationDocumentState aAnnotatorState)
-        {
+        public Builder withAnnotatorState(AnnotationDocumentState aAnnotatorState) {
             annotatorState = aAnnotatorState;
             return this;
         }
 
-        public Builder withAnnotatorComment(String aAnnotatorComment)
-        {
+        public Builder withAnnotatorComment(String aAnnotatorComment) {
             annotatorComment = aAnnotatorComment;
             return this;
         }
 
-        public Builder withTimestamp(Date aTimestamp)
-        {
+        public Builder withNotes(String aNotes) {
+            notes = aNotes;
+            return this;
+        }
+
+        public Builder withTimestamp(Date aTimestamp) {
             timestamp = aTimestamp;
             return this;
         }
@@ -492,26 +533,32 @@ public class AnnotationDocument
          * @deprecated no longer used.
          */
         @Deprecated
-        public Builder withSentenceAccessed(int aSentenceAccessed)
-        {
+        public Builder withSentenceAccessed(int aSentenceAccessed) {
             sentenceAccessed = aSentenceAccessed;
             return this;
         }
 
-        public Builder withCreated(Date aCreated)
-        {
+        public Builder withTotalActiveTime(Long aTotalActiveTime) {
+            totalActiveTime = aTotalActiveTime;
+            return this;
+        }
+
+        public Builder withTotalAnnotationTime(Long aTotalAnnotationTime) {
+            totalAnnotationTime = aTotalAnnotationTime;
+            return this;
+        }
+
+        public Builder withCreated(Date aCreated) {
             created = aCreated;
             return this;
         }
 
-        public Builder withUpdated(Date aUpdated)
-        {
+        public Builder withUpdated(Date aUpdated) {
             updated = aUpdated;
             return this;
         }
 
-        public AnnotationDocument build()
-        {
+        public AnnotationDocument build() {
             return new AnnotationDocument(this);
         }
     }

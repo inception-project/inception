@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,12 +28,16 @@ import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.lang.invoke.MethodHandles;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,7 +46,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.AnnotationSessionService;
 import de.tudarmstadt.ukp.inception.remoteapi.Controller_ImplBase;
+import de.tudarmstadt.ukp.inception.remoteapi.next.model.RAnnotationSession;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -61,6 +67,8 @@ public class AnnotationController
     extends Controller_ImplBase
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private @Autowired AnnotationSessionService annotationSessionService;
 
     @Operation(summary = "Update annotation state for a document in a project (non-AERO)")
     @PostMapping( //
@@ -111,5 +119,137 @@ public class AnnotationController
                         + annotationDocumentStateToString(anno.getState()) + "]");
 
         return ResponseEntity.ok(response);
+    }
+
+    private static final String TIME = "time";
+
+    @Operation(summary = "Get total active annotation time for a user's annotation on a document")
+    @GetMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{" //
+                    + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}/"
+                    + TIME, //
+            produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<RResponse<Map<String, Long>>> getAnnotationTime( //
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId, //
+            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId, //
+            @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId)
+        throws Exception
+    {
+        var project = getProject(aProjectId);
+        var document = getDocument(project, aDocumentId);
+
+        long totalMs = annotationSessionService.listSessions(document, aAnnotatorId).stream()
+                .mapToLong(s -> s.getActiveTimeMs())
+                .sum();
+
+        var body = Map.of(
+                "totalActiveTimeMs", totalMs,
+                "totalActiveTimeSec", totalMs / 1000);
+
+        return ResponseEntity.ok(new RResponse<>(body));
+    }
+
+    private static final String COMMENTS = "comments";
+
+    @Operation(summary = "Get comments/notes for a user's annotation on a document")
+    @GetMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{" //
+                    + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}/"
+                    + COMMENTS, //
+            produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<RResponse<Map<String, String>>> getComments( //
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId, //
+            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId, //
+            @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId)
+        throws Exception
+    {
+        var project = getProject(aProjectId);
+        var document = getDocument(project, aDocumentId);
+        var anno = getAnnotation(document, aAnnotatorId, false);
+
+        var body = Map.of(
+                "notes", anno.getNotes() != null ? anno.getNotes() : "",
+                "annotatorComment",
+                anno.getAnnotatorComment() != null ? anno.getAnnotatorComment() : "");
+
+        return ResponseEntity.ok(new RResponse<>(body));
+    }
+
+    @Operation(summary = "Set comments/notes for a user's annotation on a document")
+    @PostMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{" //
+                    + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}/"
+                    + COMMENTS, //
+            consumes = ALL_VALUE, //
+            produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<RResponse<Map<String, String>>> setComments( //
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId, //
+            @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId, //
+            @PathVariable(PARAM_ANNOTATOR_ID) String aAnnotatorId, //
+            @RequestParam(name = "notes", required = false) String aNotes, //
+            @RequestParam(name = "annotatorComment", required = false) String aAnnotatorComment)
+        throws Exception
+    {
+        var project = getProject(aProjectId);
+        var document = getDocument(project, aDocumentId);
+        var anno = getAnnotation(document, aAnnotatorId, false);
+
+        if (aNotes != null) {
+            anno.setNotes(aNotes);
+        }
+        if (aAnnotatorComment != null) {
+            anno.setAnnotatorComment(aAnnotatorComment);
+        }
+        documentService.createOrUpdateAnnotationDocument(anno);
+
+        var body = Map.of(
+                "notes", anno.getNotes() != null ? anno.getNotes() : "",
+                "annotatorComment",
+                anno.getAnnotatorComment() != null ? anno.getAnnotatorComment() : "");
+
+        var response = new RResponse<>(body);
+        response.addMessage(INFO,
+                "Comments updated for user [" + aAnnotatorId + "] on document ["
+                        + document.getId() + "]");
+
+        return ResponseEntity.ok(response);
+    }
+
+    private static final String SESSIONS = "sessions";
+
+    @Operation(summary = "List annotation sessions for a user on a document",
+            description = """
+                    Returns all recorded annotation sessions for the given annotator on the given
+                    document, ordered newest-first. Each session represents one period of work
+                    (one browser tab open). Fields:
+                    - **activeTimeMs**: JS-tracked time the user was actively interacting.
+                    - **changesCount**: annotation create/update/delete events.
+                    - **closedAt**: null if the tab was not cleanly closed (e.g. browser crash).
+                    """)
+    @GetMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{" //
+                    + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}/"
+                    + SESSIONS, //
+            produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<RResponse<List<RAnnotationSession>>> listSessions( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = "Project identifier.") //
+            long aProjectId, //
+            @PathVariable(PARAM_DOCUMENT_ID) //
+            @Schema(description = "Document identifier.") //
+            long aDocumentId, //
+            @PathVariable(PARAM_ANNOTATOR_ID) //
+            @Schema(description = "Username of the annotator.") //
+            String aAnnotatorId)
+        throws Exception
+    {
+        var project = getProject(aProjectId);
+        var document = getDocument(project, aDocumentId);
+
+        var sessions = annotationSessionService.listSessions(document, aAnnotatorId).stream()
+                .map(RAnnotationSession::new)
+                .toList();
+
+        return ResponseEntity.ok(new RResponse<>(sessions));
     }
 }

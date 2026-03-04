@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
+import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.eye_r;
+import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.eye_slash_r;
 import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.chevron_down_s;
 import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.chevron_up_s;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs.KEY_ANNOTATION_EDITOR_MANAGER_PREFS;
@@ -33,6 +35,7 @@ import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPageL
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
@@ -49,6 +52,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LambdaModel;
@@ -87,6 +91,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.PreparingToOpenDocumentEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.TypeAdapter_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.documents.AnnotationSessionService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
@@ -110,8 +115,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 public abstract class AnnotationPageBase2
-    extends AnnotationPageBase
-{
+        extends AnnotationPageBase {
     private static final long serialVersionUID = 1378872465851908515L;
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -120,6 +124,7 @@ public abstract class AnnotationPageBase2
     private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
 
     private @SpringBean DocumentService documentService;
+    private @SpringBean AnnotationSessionService annotationSessionService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
     private @SpringBean AnnotationSchemaService annotationService;
@@ -138,27 +143,36 @@ public abstract class AnnotationPageBase2
     private AnnotationDetailEditorPanel detailEditor;
     private SidebarPanel leftSidebar;
     private LambdaAjaxLink actionBarToggle;
+    private LambdaAjaxLink cleanTextToggle;
+    private AnnotationTimeTrackingBehavior timeTrackingBehavior;
 
+    private WebMarkupContainer cleanTextPanel;
+    private WebMarkupContainer notesPanel;
+    private IModel<String> notesModel;
     private long currentProjectId;
     private boolean pageReloaded = false;
     private boolean actionBarCollapsed = false;
 
-    public AnnotationPageBase2(final PageParameters aPageParameters)
-    {
+    public AnnotationPageBase2(final PageParameters aPageParameters) {
         super(aPageParameters);
 
         var state = new AnnotatorStateImpl();
         state.setUser(userRepository.getCurrentUser());
         setModel(Model.of(state));
 
-        // AnnotationPageBase will push the document and user parameters into the URL fragment so
+        // AnnotationPageBase will push the document and user parameters into the URL
+        // fragment so
         // we can afterwards navigate between documents freely. When AnnotationPageBase
-        // does that, it restarts the request. So basically when we get here, PAGE_PARAM_DOCUMENT
-        // will always be `null`... PAGE_PARAM_DATA_OWNER may be non-null if it is set without a
+        // does that, it restarts the request. So basically when we get here,
+        // PAGE_PARAM_DOCUMENT
+        // will always be `null`... PAGE_PARAM_DATA_OWNER may be non-null if it is set
+        // without a
         // document being specified - but in that case it is pretty useless
         //
-        // The actual loading of the documents will be handled by onParameterArrival in the
-        // UrlFragmentBehavior which will call handleParameters again, this time with the right
+        // The actual loading of the documents will be handled by onParameterArrival in
+        // the
+        // UrlFragmentBehavior which will call handleParameters again, this time with
+        // the right
         // information.
         var document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
         var focus = aPageParameters.get(PAGE_PARAM_FOCUS);
@@ -172,15 +186,15 @@ public abstract class AnnotationPageBase2
     }
 
     @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
+    public void renderHead(IHeaderResponse aResponse) {
         super.renderHead(aResponse);
         pageReloaded = true;
     }
 
-    private void createChildComponents()
-    {
+    private void createChildComponents() {
         add(createUrlFragmentBehavior());
+        timeTrackingBehavior = new AnnotationTimeTrackingBehavior(annotationSessionService);
+        add(timeTrackingBehavior);
 
         centerArea = new WebMarkupContainer("centerArea");
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
@@ -195,6 +209,35 @@ public abstract class AnnotationPageBase2
                 LambdaModel.of(() -> actionBarCollapsed ? " visually-hidden" : "")));
         centerArea.add(actionBar);
 
+        // Create clean text panel
+        cleanTextPanel = new WebMarkupContainer("cleanTextPanel");
+        cleanTextPanel.setOutputMarkupPlaceholderTag(true);
+        cleanTextPanel.add(visibleWhen(() -> getModelObject().getPreferences().isCleanTextMode()));
+        cleanTextPanel.add(AttributeModifier.append("class", "clean-text-panel"));
+
+        // Add label with document text
+        cleanTextPanel.add(new Label("cleanText", LambdaModel.of(this::getDocumentText)));
+        centerArea.add(cleanTextPanel);
+
+        // Create notes panel with model that persists to AnnotationDocument
+        notesModel = Model.of("");
+        notesPanel = new WebMarkupContainer("notesPanel");
+        notesPanel.setOutputMarkupPlaceholderTag(true);
+        var notesInput = new org.apache.wicket.markup.html.form.TextArea<String>("notesInput", notesModel);
+        notesInput.setOutputMarkupId(true);
+        notesInput.add(new org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior("blur") {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onUpdate(AjaxRequestTarget target) {
+                saveNotes();
+            }
+        });
+        // Disable notes input when document is not editable (e.g., annotation complete)
+        notesInput.add(enabledWhen(this::isEditable));
+        notesPanel.add(notesInput);
+        centerArea.add(notesPanel);
+
         add(createRightSidebar("rightSidebar"));
 
         createAnnotationEditor(MID_EDITOR);
@@ -207,10 +250,25 @@ public abstract class AnnotationPageBase2
                 LambdaModel.of(() -> actionBarCollapsed ? chevron_down_s : chevron_up_s)));
         actionBarToggle.setOutputMarkupId(true);
         centerArea.add(actionBarToggle);
+
+        cleanTextToggle = new LambdaAjaxLink("toggleCleanText", this::toggleCleanTextMode);
+        cleanTextToggle.add(new Icon("toggleCleanTextIcon",
+                LambdaModel.of(() -> getModelObject().getPreferences().isCleanTextMode()
+                        ? eye_slash_r
+                        : eye_r)));
+        cleanTextToggle.add(AttributeModifier.replace("class",
+                LambdaModel.of(() -> getModelObject().getPreferences().isCleanTextMode()
+                        ? "btn btn-sm btn-primary"
+                        : "btn btn-sm btn-outline-secondary")));
+        cleanTextToggle.add(AttributeModifier.replace("title",
+                LambdaModel.of(() -> getModelObject().getPreferences().isCleanTextMode()
+                        ? "Hide clean text view"
+                        : "Show clean text view (unannotated)")));
+        cleanTextToggle.setOutputMarkupId(true);
+        centerArea.add(cleanTextToggle);
     }
 
-    private void toggleActionBar(AjaxRequestTarget aTarget)
-    {
+    private void toggleActionBar(AjaxRequestTarget aTarget) {
         actionBarCollapsed = !actionBarCollapsed;
 
         var project = getProject();
@@ -223,9 +281,54 @@ public abstract class AnnotationPageBase2
         aTarget.add(actionBar, actionBarToggle);
     }
 
+    private void toggleCleanTextMode(AjaxRequestTarget aTarget) {
+        try {
+            var state = getModelObject();
+            var preferences = state.getPreferences();
+
+            // Toggle the clean text panel visibility
+            var newCleanTextMode = !preferences.isCleanTextMode();
+            preferences.setCleanTextMode(newCleanTextMode);
+
+            LOG.info("Toggling clean text panel to: {}", newCleanTextMode ? "visible" : "hidden");
+
+            // Save preferences
+            var sessionOwner = userRepository.getCurrentUsername();
+            userPreferenceService.savePreferences(state, sessionOwner);
+
+            // Update the panel and button visibility
+            aTarget.add(cleanTextPanel, cleanTextToggle);
+        } catch (IOException e) {
+            LOG.error("Error toggling clean text panel", e);
+            error("Error toggling clean text panel: " + e.getMessage());
+        }
+    }
+
+    private void saveNotes() {
+        try {
+            var state = getModelObject();
+            if (state.getDocument() == null || state.getUser() == null) {
+                return;
+            }
+
+            var annotationDocument = documentService.createOrGetAnnotationDocument(
+                    state.getDocument(), state.getUser());
+            annotationDocument.setNotes(notesModel.getObject());
+            documentService.createOrUpdateAnnotationDocument(annotationDocument);
+            LOG.trace("Saved notes for document {}", state.getDocument());
+        } catch (Exception e) {
+            LOG.error("Error saving notes", e);
+        }
+    }
+
+    private void loadNotes(AnnotationDocument aAnnotationDocument) {
+        var notes = aAnnotationDocument.getNotes();
+        notesModel.setObject(notes != null ? notes : "");
+        LOG.trace("Loaded notes for document: {}", notes);
+    }
+
     @Override
-    public IModel<List<DecoratedObject<Project>>> getAllowedProjects()
-    {
+    public IModel<List<DecoratedObject<Project>>> getAllowedProjects() {
         return LoadableDetachableModel.of(() -> {
             var user = userRepository.getCurrentUser();
             var allowedProjects = new ArrayList<DecoratedObject<Project>>();
@@ -236,49 +339,47 @@ public abstract class AnnotationPageBase2
         });
     }
 
-    private AnnotationDetailEditorPanel createDetailEditor()
-    {
-        return new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this, getModel())
-        {
+    private AnnotationDetailEditorPanel createDetailEditor() {
+        return new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this, getModel()) {
             private static final long serialVersionUID = 2857345299480098279L;
 
             @Override
-            public CAS getEditorCas() throws IOException
-            {
+            public CAS getEditorCas() throws IOException {
                 return AnnotationPageBase2.this.getEditorCas();
             }
 
             @Override
-            public void writeEditorCas() throws IOException, AnnotationException
-            {
+            public void writeEditorCas() throws IOException, AnnotationException {
                 AnnotationPageBase2.this.writeEditorCas(getEditorCas());
             }
         };
     }
 
     /**
-     * Re-render the document when the selection has changed. This is necessary in order to update
+     * Re-render the document when the selection has changed. This is necessary in
+     * order to update
      * the selection highlight in the annotation editor.
      */
     @SuppressWarnings("javadoc")
     @OnEvent
-    public void onSelectionChangedEvent(SelectionChangedEvent aEvent)
-    {
+    public void onSelectionChangedEvent(SelectionChangedEvent aEvent) {
         actionRefreshDocument(aEvent.getRequestHandler());
     }
 
     /**
-     * Re-render the document when an annotation has been created or deleted (assuming that this
+     * Re-render the document when an annotation has been created or deleted
+     * (assuming that this
      * might have triggered a change in some feature that might be shown on screen.
      * <p>
-     * NOTE: Considering that this is a backend event, we check here if it even applies to the
-     * current view. It might be more efficient to have another event that more closely mimics
+     * NOTE: Considering that this is a backend event, we check here if it even
+     * applies to the
+     * current view. It might be more efficient to have another event that more
+     * closely mimics
      * {@code AnnotationDetailEditorPanel.onChange()}.
      */
     @SuppressWarnings("javadoc")
     @OnEvent
-    public void onAnnotationEvent(AnnotationEvent aEvent)
-    {
+    public void onAnnotationEvent(AnnotationEvent aEvent) {
         var state = getModelObject();
 
         if (!Objects.equals(state.getProject(), aEvent.getProject())
@@ -291,17 +392,19 @@ public abstract class AnnotationPageBase2
     }
 
     /**
-     * Re-render the document when a feature value has changed (assuming that this might have
+     * Re-render the document when a feature value has changed (assuming that this
+     * might have
      * triggered a change in some feature that might be shown on screen.
      * <p>
-     * NOTE: Considering that this is a backend event, we check here if it even applies to the
-     * current view. It might be more efficient to have another event that more closely mimics
+     * NOTE: Considering that this is a backend event, we check here if it even
+     * applies to the
+     * current view. It might be more efficient to have another event that more
+     * closely mimics
      * {@code AnnotationDetailEditorPanel.onChange()}.
      */
     @SuppressWarnings("javadoc")
     @OnEvent
-    public void onFeatureValueUpdatedEvent(FeatureValueUpdatedEvent aEvent)
-    {
+    public void onFeatureValueUpdatedEvent(FeatureValueUpdatedEvent aEvent) {
         var state = getModelObject();
 
         if (!Objects.equals(state.getProject(), aEvent.getProject())
@@ -318,28 +421,29 @@ public abstract class AnnotationPageBase2
      */
     @SuppressWarnings("javadoc")
     @OnEvent
-    public void onViewStateChanged(AnnotatorViewportChangedEvent aEvent)
-    {
-        // Partial page updates only need to be triggered if we are in a partial page update request
+    public void onViewStateChanged(AnnotatorViewportChangedEvent aEvent) {
+        // Partial page updates only need to be triggered if we are in a partial page
+        // update request
         if (aEvent.getRequestHandler() == null) {
             return;
         }
 
         try {
             aEvent.getRequestHandler().add(centerArea.get(MID_NUMBER_OF_PAGES));
-        }
-        catch (IllegalStateException e) {
-            // Ignore IllegalStateException if rendering of page has already progress so far that
-            // no new components can be added. We hope the caller will know what they are doing
-            // when they invoke this method so late in the render cycle and trigger a page-reload
+        } catch (IllegalStateException e) {
+            // Ignore IllegalStateException if rendering of page has already progress so far
+            // that
+            // no new components can be added. We hope the caller will know what they are
+            // doing
+            // when they invoke this method so late in the render cycle and trigger a
+            // page-reload
             // themselves.
         }
 
         actionRefreshDocument(aEvent.getRequestHandler());
     }
 
-    private void createAnnotationEditor(String aId)
-    {
+    private void createAnnotationEditor(String aId) {
         var state = getModelObject();
 
         if (state.getDocument() == null) {
@@ -364,8 +468,7 @@ public abstract class AnnotationPageBase2
             if (state.getDocument() != null) {
                 factory = editorRegistry.getPreferredEditorFactory(state.getProject(),
                         state.getDocument().getFormat());
-            }
-            else {
+            } else {
                 factory = editorRegistry.getDefaultEditorFactory();
             }
         }
@@ -376,8 +479,10 @@ public abstract class AnnotationPageBase2
 
         centerArea.addOrReplace(annotationEditor);
 
-        // Give the new editor an opportunity to configure the current paging strategy, this does
-        // not configure the paging for a document yet this would require loading the CAS which
+        // Give the new editor an opportunity to configure the current paging strategy,
+        // this does
+        // not configure the paging for a document yet this would require loading the
+        // CAS which
         // might not have been upgraded yet
         factory.initState(state);
         // Use the proper position labels for the current paging strategy
@@ -386,16 +491,14 @@ public abstract class AnnotationPageBase2
                         .add(visibleWhen(() -> getModelObject().getDocument() != null)));
     }
 
-    private SidebarPanel createLeftSidebar(String aId)
-    {
+    private SidebarPanel createLeftSidebar(String aId) {
         return new SidebarPanel(aId,
                 getModel().map(AnnotatorState::getPreferences)
                         .map(AnnotationPreference::getSidebarSizeLeft),
                 detailEditor, () -> getEditorCas(), AnnotationPageBase2.this);
     }
 
-    private WebMarkupContainer createRightSidebar(String aId)
-    {
+    private WebMarkupContainer createRightSidebar(String aId) {
         var rightSidebar = new WebMarkupContainer(aId);
         rightSidebar.setOutputMarkupPlaceholderTag(true);
         // Override sidebar width from preferences
@@ -412,23 +515,22 @@ public abstract class AnnotationPageBase2
     }
 
     @Override
-    public List<SourceDocument> getListOfDocs()
-    {
+    public List<SourceDocument> getListOfDocs() {
         var state = getModelObject();
         return new ArrayList<>(documentService
                 .listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
     }
 
     @Override
-    public CAS getEditorCas() throws IOException
-    {
+    public CAS getEditorCas() throws IOException {
         var state = getModelObject();
 
         if (state.getDocument() == null) {
             throw new IllegalStateException("Please open a document first!");
         }
 
-        // If we have a timestamp, then use it to detect if there was a concurrent access
+        // If we have a timestamp, then use it to detect if there was a concurrent
+        // access
         if (isEditable() && state.getAnnotationDocumentTimestamp().isPresent()) {
             documentService
                     .verifyAnnotationCasTimestamp(state.getDocument(),
@@ -442,8 +544,7 @@ public abstract class AnnotationPageBase2
     }
 
     @Override
-    public void writeEditorCas(CAS aCas) throws IOException, AnnotationException
-    {
+    public void writeEditorCas(CAS aCas) throws IOException, AnnotationException {
         ensureIsEditable();
         var state = getModelObject();
         documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(),
@@ -452,8 +553,7 @@ public abstract class AnnotationPageBase2
         bumpAnnotationCasTimestamp(state);
     }
 
-    public void bumpAnnotationCasTimestamp(AnnotatorState aState) throws IOException
-    {
+    public void bumpAnnotationCasTimestamp(AnnotatorState aState) throws IOException {
         documentService
                 .getAnnotationCasTimestamp(aState.getDocument(),
                         AnnotationSet.forUser(aState.getUser()))
@@ -461,19 +561,16 @@ public abstract class AnnotationPageBase2
     }
 
     @Override
-    public AnnotationActionHandler getAnnotationActionHandler()
-    {
+    public AnnotationActionHandler getAnnotationActionHandler() {
         return detailEditor;
     }
 
     @Override
-    public void actionLoadDocument(AjaxRequestTarget aTarget)
-    {
+    public void actionLoadDocument(AjaxRequestTarget aTarget) {
         actionLoadDocument(aTarget, 0);
     }
 
-    protected void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
-    {
+    protected void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus) {
         try {
             var sessionOwner = userRepository.getCurrentUser();
             var sessionOwnerName = sessionOwner.getUsername();
@@ -494,8 +591,10 @@ public abstract class AnnotationPageBase2
             // Load user preferences
             loadPreferences();
 
-            // Set the actual editor component. This has to happen *before* any AJAX refreshes are
-            // scheduled and *after* the preferences have been loaded (because the current editor
+            // Set the actual editor component. This has to happen *before* any AJAX
+            // refreshes are
+            // scheduled and *after* the preferences have been loaded (because the current
+            // editor
             // type is set in the preferences.
             createAnnotationEditor(MID_EDITOR);
 
@@ -508,15 +607,20 @@ public abstract class AnnotationPageBase2
             // INFO BOUNDARY ---------------------------------------------------------------
             // PreparingToOpenDocumentEvent has the option to change the annotator state.
             // No information from the annotator state read before this point may be
-            // used afterwards. Information has to be re-read from the annotator state to get
+            // used afterwards. Information has to be re-read from the annotator state to
+            // get
             // the latest values.
 
-            // Check if there is an annotation document entry in the database. If there is none,
+            // Check if there is an annotation document entry in the database. If there is
+            // none,
             // create one.
             LOG.trace("Opening document {}@{}", state.getUser(), state.getDocument());
             var annotationDocument = documentService
                     .createOrGetAnnotationDocument(state.getDocument(), state.getUser());
             var stateBeforeOpening = annotationDocument.getState();
+
+            // Load notes for the document
+            loadNotes(annotationDocument);
 
             var editable = isEditable();
 
@@ -535,7 +639,8 @@ public abstract class AnnotationPageBase2
                 // After creating an new CAS or upgrading the CAS, we need to save it. If the
                 // document is accessed for the first time and thus will transition from NEW to
                 // IN_PROGRESS, then we use this opportunity also to set the timestamp of the
-                // annotation document - this ensures that e.g. the dynamic workflow considers the
+                // annotation document - this ensures that e.g. the dynamic workflow considers
+                // the
                 // document to be "active" for the given user so that it won't be considered as
                 // abandoned immediately after having been opened for the first time.
                 // We suppress the AfterCasWrittenEvent here - handlers should react to
@@ -556,21 +661,21 @@ public abstract class AnnotationPageBase2
 
             actionBar.refresh();
 
-            // update paging, only do it during document load so we load the CAS after it has been
+            // update paging, only do it during document load so we load the CAS after it
+            // has been
             // upgraded
             state.getPagingStrategy().recalculatePage(state, editorCas);
 
-            // Initialize the visible content - this has to happen after the annotation editor
+            // Initialize the visible content - this has to happen after the annotation
+            // editor
             // component has been created because only then the paging strategy is known
             if (aFocus > 0) {
                 state.moveToUnit(editorCas, aFocus, CENTERED);
-            }
-            else if (dataOwnerName.equals(sessionOwnerName)
+            } else if (dataOwnerName.equals(sessionOwnerName)
                     || dataOwnerName.equals(CURATION_USER)) {
                 var offset = TypeAdapter_ImplBase.getResumptionLocation(editorCas);
                 state.moveToOffset(editorCas, offset, CENTERED);
-            }
-            else {
+            } else {
                 state.moveToUnit(editorCas, 0, TOP);
             }
 
@@ -599,7 +704,8 @@ public abstract class AnnotationPageBase2
                 }
             }
 
-            // Reset the editor (we reload the page content below, so in order not to schedule
+            // Reset the editor (we reload the page content below, so in order not to
+            // schedule
             // a double-update, we pass null here)
             detailEditor.reset(null);
 
@@ -615,16 +721,26 @@ public abstract class AnnotationPageBase2
                     .publishEvent(new DocumentOpenedEvent(this, editorCas,
                             getModelObject().getDocument(), stateBeforeOpening,
                             getModelObject().getUser().getUsername(), sessionOwnerName));
-        }
-        catch (Exception e) {
+
+            // Open a new per-tab session and bind it to this page's time tracker.
+            // Each tab gets its own session ID so active-time reports never interfere.
+            try {
+                var sessionId = annotationSessionService.openSession(getModelObject().getDocument(),
+                        getModelObject().getUser().getUsername());
+                timeTrackingBehavior.setCurrentSessionId(sessionId);
+            }
+            catch (Exception e2) {
+                LOG.warn("Failed to open annotation session", e2);
+            }
+        } catch (Exception e) {
             handleException(aTarget, e);
         }
     }
 
     @Override
-    public void actionRefreshDocument(AjaxRequestTarget aTarget)
-    {
-        // Partial page updates only need to be triggered if we are in a partial page update request
+    public void actionRefreshDocument(AjaxRequestTarget aTarget) {
+        // Partial page updates only need to be triggered if we are in a partial page
+        // update request
         if (aTarget == null) {
             return;
         }
@@ -632,8 +748,7 @@ public abstract class AnnotationPageBase2
         if (annotationEditor != null) {
             try {
                 annotationEditor.requestRender(aTarget);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 LOG.warn("Unable to refresh annotation editor, forcing page refresh", e);
                 throw new RestartResponseException(getPage());
             }
@@ -644,8 +759,7 @@ public abstract class AnnotationPageBase2
 
     @Override
     protected void handleParameters(StringValue aDocumentParameter, StringValue aFocusParameter,
-            StringValue aUserParameter)
-    {
+            StringValue aUserParameter) {
         var sessionOwner = userRepository.getCurrentUser();
         requireAnyProjectRole(sessionOwner);
 
@@ -653,8 +767,10 @@ public abstract class AnnotationPageBase2
         var project = getProject();
         var doc = getDocumentFromParameters(project, aDocumentParameter);
 
-        // If there is no change in the current document, then there is nothing to do. Mind
-        // that document IDs are globally unique and a change in project does not happen unless
+        // If there is no change in the current document, then there is nothing to do.
+        // Mind
+        // that document IDs are globally unique and a change in project does not happen
+        // unless
         // there is also a document change.
         var dataOwner = state.getUser().getUsername();
         if (doc != null && //
@@ -675,8 +791,10 @@ public abstract class AnnotationPageBase2
 
         if (!aUserParameter.isEmpty()
                 && !state.getUser().getUsername().equals(aUserParameter.toString())) {
-            // REC: We currently do not want that one can switch to the CURATION_USER directly via
-            // the URL without having to activate sidebar curation mode as well, so we do not handle
+            // REC: We currently do not want that one can switch to the CURATION_USER
+            // directly via
+            // the URL without having to activate sidebar curation mode as well, so we do
+            // not handle
             // the CURATION_USER here.
             // if (CURATION_USER.equals(aUserParameter.toString())) {
             // state.setUser(new User(CURATION_USER));
@@ -686,8 +804,7 @@ public abstract class AnnotationPageBase2
             if (requestedUser == null) {
                 failWithDocumentNotFound("User not found [" + aUserParameter + "]");
                 return;
-            }
-            else {
+            } else {
                 LOG.trace("Changing data owner: {}", requestedUser);
                 state.setUser(requestedUser);
             }
@@ -701,7 +818,8 @@ public abstract class AnnotationPageBase2
             return;
         }
 
-        // If we arrive here and the document is not null, then we have a change of document
+        // If we arrive here and the document is not null, then we have a change of
+        // document
         // or a change of focus (or both)
         if (doc != null && !doc.equals(state.getDocument())) {
             LOG.trace("Changing document: {} (prev: {})", doc, state.getDocument());
@@ -711,12 +829,12 @@ public abstract class AnnotationPageBase2
 
     @Override
     protected void updateDocumentView(AjaxRequestTarget aTarget, SourceDocument aPreviousDocument,
-            User aPreviousDataOwner, StringValue aFocusParameter)
-    {
+            User aPreviousDataOwner, StringValue aFocusParameter) {
         var originalPageReloaded = pageReloaded;
         pageReloaded = false;
 
-        // URL is from external link, not just paging through documents, tabs may have changed
+        // URL is from external link, not just paging through documents, tabs may have
+        // changed
         // depending on user rights
         if (aTarget != null && aPreviousDocument == null) {
             LOG.trace(
@@ -732,7 +850,8 @@ public abstract class AnnotationPageBase2
             return;
         }
 
-        // If we arrive here and the document is not null, then we have a change of document
+        // If we arrive here and the document is not null, then we have a change of
+        // document
         // or a change of focus (or both)
 
         // Get current focus unit from parameters
@@ -741,8 +860,10 @@ public abstract class AnnotationPageBase2
             focus = aFocusParameter.toInt(0);
         }
 
-        // If there is no change in the current document, then there is nothing to do. Mind
-        // that document IDs are globally unique and a change in project does not happen unless
+        // If there is no change in the current document, then there is nothing to do.
+        // Mind
+        // that document IDs are globally unique and a change in project does not happen
+        // unless
         // there is also a document change.
         if (aPreviousDocument != null && aPreviousDocument.equals(currentDocument) && //
                 aPreviousDataOwner != null && aPreviousDataOwner.equals(dataOwner) && //
@@ -761,8 +882,7 @@ public abstract class AnnotationPageBase2
                             var editorCas = getEditorCas();
                             var offset = TypeAdapter_ImplBase.getResumptionLocation(editorCas);
                             state.moveToOffset(editorCas, offset, CENTERED);
-                        }
-                        catch (Exception e) {
+                        } catch (Exception e) {
                             LOG.error("Error reading CAS of document {} for user {}",
                                     state.getDocument(), state.getUser(), e);
                             error("Error reading CAS " + e.getMessage());
@@ -790,8 +910,7 @@ public abstract class AnnotationPageBase2
             state.moveToUnit(cas, focus, TOP);
 
             actionRefreshDocument(aTarget);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             if (aTarget != null) {
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
@@ -802,22 +921,19 @@ public abstract class AnnotationPageBase2
     }
 
     @Override
-    protected void loadPreferences() throws BeansException, IOException
-    {
+    protected void loadPreferences() throws BeansException, IOException {
         var state = getModelObject();
 
         if (state.isUserViewingOthersWork(userRepository.getCurrentUsername())
                 || CURATION_USER.equals(state.getUser().getUsername())) {
             userPreferenceService.loadPreferences(state,
                     userRepository.getCurrentUser().getUsername());
-        }
-        else {
+        } else {
             super.loadPreferences();
         }
     }
 
-    public List<AnnotationDocument> listAccessibleDocuments(Project aProject, User aUser)
-    {
+    public List<AnnotationDocument> listAccessibleDocuments(Project aProject, User aUser) {
         var allDocuments = new ArrayList<AnnotationDocument>();
         var docs = documentService.listAllDocuments(aProject, AnnotationSet.forUser(aUser));
 
@@ -831,8 +947,7 @@ public abstract class AnnotationPageBase2
                 if (userIsSelected && ad.getState() == IGNORE) {
                     continue;
                 }
-            }
-            else {
+            } else {
                 ad = new AnnotationDocument(sessionOwner.getUsername(), sd);
             }
 
@@ -843,8 +958,44 @@ public abstract class AnnotationPageBase2
     }
 
     @Override
-    public Optional<ContextMenuLookup> getContextMenuLookup()
-    {
+    public Optional<ContextMenuLookup> getContextMenuLookup() {
         return annotationEditor.getContextMenuLookup();
+    }
+
+    private String getDocumentText() {
+        try {
+            var cas = getEditorCas();
+            var text = cas.getDocumentText();
+
+            return normalizeText(text);
+        } catch (Exception e) {
+            LOG.error("Error getting document text", e);
+            return "Error loading document text";
+        }
+    }
+
+    static String normalizeText(String text) {
+        // Collapse all whitespace into single spaces
+        text = text.replaceAll("\\s+", " ");
+        // Remove spaces around hyphens
+        text = text.replaceAll("\\s*-\\s*", "-");
+        // Remove spaces around slashes
+        text = text.replaceAll("\\s*/\\s*", "/");
+        // Remove space after opening parenthesis
+        text = text.replaceAll("\\(\\s+", "(");
+        // Remove space before closing parenthesis
+        text = text.replaceAll("\\s+\\)", ")");
+        // Remove spaces inside paired quotes: '" mammalian "' -> '"mammalian"'
+        text = text.replaceAll("\"\\s+([^\"]+?)\\s+\"", "\"$1\"");
+        text = text.replaceAll("'\\s+([^']+?)\\s+'", "'$1'");
+        // Remove spaces before punctuation (always no space before)
+        text = text.replaceAll("\\s+([.,;:!?])", "$1");
+        // Remove space after , when followed by a digit (e.g. "6,000")
+        text = text.replaceAll(",\\s+(?=\\d)", ",");
+        // Remove space after . when preceded by a single character (e.g. "e. coli" -> "e.coli")
+        text = text.replaceAll("(?<=\\b\\w\\.)\\s+", "");
+        // Collapse any remaining multiple spaces
+        text = text.replaceAll(" {2,}", " ");
+        return text.trim();
     }
 }

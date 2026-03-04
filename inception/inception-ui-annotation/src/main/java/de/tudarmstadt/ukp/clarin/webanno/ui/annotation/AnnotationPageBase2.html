@@ -17,6 +17,7 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
+
 <body>
   <wicket:extend>
     <div class="flex-content flex-v-container">
@@ -25,25 +26,41 @@
         <div wicket:id="centerArea" class="flex-content flex-v-container flex-gutter">
           <div class="flex-content card overflow-hidden">
             <div class="card-header d-flex justify-content-between border-bottom-0">
-              <div wicket:id="documentNamePanel"/> 
-              <div class="d-flex">
-                <div wicket:id="numberOfPages" class="small text-muted"/>
+              <div class="d-flex align-items-center gap-2">
+                <div wicket:id="documentNamePanel" />
+                <button wicket:id="toggleCleanText"
+                  style="font-size: 0.8rem; padding: 0.15rem 0.35rem; line-height: 1;">
+                  <i wicket:id="toggleCleanTextIcon" />
+                </button>
+              </div>
+              <div class="d-flex align-items-center gap-1">
+                <div wicket:id="numberOfPages" class="small text-muted" />
                 <button wicket:id="toggleActionBar" class="btn btn-sm btn-outline-secondary border-0">
-                  <i wicket:id="toggleActionBarIcon"/>
+                  <i wicket:id="toggleActionBarIcon" />
                 </button>
               </div>
             </div>
             <div class="card-body flex-v-container" style="padding: 0px;">
-              <nav wicket:id="actionBar" class="action-bar"/>
-              <div wicket:id="editor" class="flex-content flex-v-container" style="padding: 0px;"/>
+              <nav wicket:id="actionBar" class="action-bar" />
+              <div wicket:id="cleanTextPanel" class="clean-text-panel"
+                style="padding: 8px 50px; background-color: #fffef5; border-bottom: 1px solid #dee2e6; max-height: 200px; overflow-y: auto; white-space: pre-wrap; font-family: 'Georgia', 'Cambria', 'Times New Roman', serif; font-size: 0.88rem; line-height: 1.7; color: #2c2c2c; text-align: justify;">
+                <span wicket:id="cleanText"></span>
+              </div>
+              <div wicket:id="editor" class="flex-content flex-v-container" style="padding: 0px;" />
+              <div wicket:id="notesPanel" class="notes-panel"
+                style="padding: 8px 50px; background-color: #f8f9fa; border-top: 1px solid #dee2e6;">
+                <textarea wicket:id="notesInput" class="form-control" rows="4"
+                  placeholder="Add any comments you have for this abstract here..."></textarea>
+              </div>
             </div>
           </div>
         </div>
         <div wicket:id="rightSidebar" class="flex-sidebar flex-v-container">
-          <wicket:container wicket:id="annotationDetailEditorPanel"/>
+          <wicket:container wicket:id="annotationDetailEditorPanel" />
         </div>
       </div>
     </div>
   </wicket:extend>
 </body>
+
 </html>
