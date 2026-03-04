@@ -21,12 +21,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_
 import static de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIShared.accessToApplication;
 import static de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIShared.accessToRemoteApiAndSwagger;
 import static de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIShared.accessToStaticResources;
+import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 
 import java.util.Optional;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.session.SessionRegistry;
@@ -44,13 +45,16 @@ import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 import de.tudarmstadt.ukp.inception.security.saml.Saml2Adapter;
-import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 
 @ConditionalOnWebApplication
+@ConditionalOnProperty(name = "auth.mode", havingValue = "database", matchIfMissing = true)
 @EnableWebSecurity
 public class InceptionSecurityWebUIBuiltInAutoConfiguration
 {
-    @Profile(DeploymentModeService.PROFILE_AUTH_MODE_DATABASE)
+    static {
+        BOOT_LOG.info("Authentication: database");
+    }
+
     @Bean
     public SecurityFilterChain webUiFilterChain(HttpSecurity aHttp,
             SessionRegistry aSessionRegistry, OAuth2Adapter aOAuth2Handling,

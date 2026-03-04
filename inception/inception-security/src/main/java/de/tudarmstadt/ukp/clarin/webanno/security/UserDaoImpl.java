@@ -25,7 +25,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
-import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCharacterMatching;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveDuplicateCharacters;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
@@ -44,7 +43,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.wicket.validation.ValidationError;
@@ -756,8 +754,7 @@ public class UserDaoImpl
         // Just in case the administrator has not run the user account migration of external
         // accounts after the upgrade... because if an external user could change their password,
         // they would be able to log in via form-based login...
-        if (ArrayUtils.contains(applicationContext.getEnvironment().getActiveProfiles(),
-                PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)) {
+        if ("preauth".equals(applicationContext.getEnvironment().getProperty("auth.mode"))) {
             if (UserDao.userHasNoPassword(aUser)) {
                 return false;
             }

@@ -31,6 +31,7 @@ import org.springframework.security.web.authentication.preauth.RequestHeaderAuth
 
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -40,6 +41,7 @@ public class ShibbolethRequestHeaderAuthenticationFilter
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private UserDao userRepository;
+    private PreauthenticationProperties preauthenticationProperties;
 
     private void newUserLogin(String aUsername)
     {
@@ -48,7 +50,7 @@ public class ShibbolethRequestHeaderAuthenticationFilter
         u.setPassword(NO_PASSWORD);
         u.setEnabled(true);
         u.setRealm(Realm.REALM_PREAUTH);
-        u.setRoles(PreAuthUtils.getPreAuthenticationNewUserRoles(u));
+        u.setRoles(preauthenticationProperties.getNewUserRoles(u));
 
         userRepository.create(u);
     }
@@ -56,6 +58,12 @@ public class ShibbolethRequestHeaderAuthenticationFilter
     public void setUserRepository(UserDao aUserRepository)
     {
         userRepository = aUserRepository;
+    }
+
+    public void setPreauthenticationProperties(
+            PreauthenticationProperties aPreauthenticationProperties)
+    {
+        preauthenticationProperties = aPreauthenticationProperties;
     }
 
     @Override

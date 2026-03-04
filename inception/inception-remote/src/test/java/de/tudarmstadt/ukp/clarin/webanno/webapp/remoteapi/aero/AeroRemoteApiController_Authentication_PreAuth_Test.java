@@ -45,7 +45,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
@@ -56,20 +55,18 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.config.DashboardAutoConfiguration;
 
 /**
- * This is basically the same as {@link AeroRemoteApiController_Authentication_Test} but with the
- * {@link DeploymentModeServiceImpl#PROFILE_AUTH_MODE_EXTERNAL_PREAUTH} profile enabled. This test
- * should ensure that authentication for the remote API always uses the built-in user database and
- * does not care about the external pre-authentication.
+ * This is basically the same as {@link AeroRemoteApiController_Authentication_Test} but with
+ * {@code auth.mode=preauth} enabled. This test should ensure that authentication for the remote API
+ * always uses the built-in user database and does not care about the external pre-authentication.
  */
-@ActiveProfiles(DeploymentModeServiceImpl.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)
 @SpringBootTest( //
         webEnvironment = RANDOM_PORT, //
         properties = { //
+                "auth.mode=preauth", //
                 "server.address=127.0.0.1", //
                 "spring.main.banner-mode=off", //
                 "remote-api.enabled=true" })

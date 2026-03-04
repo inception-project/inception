@@ -20,12 +20,12 @@ package de.tudarmstadt.ukp.inception.app.config;
 import static de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIShared.accessToApplication;
 import static de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIShared.accessToRemoteApiAndSwagger;
 import static de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIShared.accessToStaticResources;
-import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
+import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -38,15 +38,20 @@ import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.preauth.ShibbolethRequestHeaderAuthenticationFilter;
 
 @ConditionalOnWebApplication
+@ConditionalOnProperty(name = "auth.mode", havingValue = "preauth")
 @EnableWebSecurity
 public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
 {
+    static {
+        BOOT_LOG.info("Authentication: pre-auth");
+    }
+
     private @Value("${auth.preauth.header.principal:remote_user}") String preAuthPrincipalHeader;
 
-    @Profile(PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)
     @Bean
     public SecurityFilterChain externalPreAuthenticationFilterChain(HttpSecurity aHttp,
             ShibbolethRequestHeaderAuthenticationFilter aFilter, SessionRegistry aSessionRegistry)
@@ -95,15 +100,16 @@ public class InceptionSecurityWebUIPreAuthenticatedAutoConfiguration
     }
 
     @Bean
-    @Profile(PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)
     public ShibbolethRequestHeaderAuthenticationFilter preAuthFilter(
-            AuthenticationConfiguration aAuthenticationConfiguration, UserDao aUserRepository)
+            AuthenticationConfiguration aAuthenticationConfiguration, UserDao aUserRepository,
+            PreauthenticationProperties aPreauthenticationProperties)
         throws Exception
     {
         var filter = new ShibbolethRequestHeaderAuthenticationFilter();
         filter.setPrincipalRequestHeader(preAuthPrincipalHeader);
         filter.setAuthenticationManager(aAuthenticationConfiguration.getAuthenticationManager());
         filter.setUserRepository(aUserRepository);
+        filter.setPreauthenticationProperties(aPreauthenticationProperties);
         filter.setExceptionIfHeaderMissing(true);
         return filter;
     }

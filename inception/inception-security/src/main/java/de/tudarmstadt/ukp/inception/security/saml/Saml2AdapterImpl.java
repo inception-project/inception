@@ -46,8 +46,8 @@ import org.springframework.security.saml2.provider.service.registration.RelyingP
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.security.preauth.PreAuthUtils;
 import jakarta.servlet.ServletContext;
 
 public class Saml2AdapterImpl
@@ -61,15 +61,18 @@ public class Saml2AdapterImpl
     private final UserDao userRepository;
     private final OverridableUserDetailsManager userDetailsManager;
     private final Optional<RelyingPartyRegistrationRepository> relyingPartyRegistrationRepository;
+    private final PreauthenticationProperties preauthenticationProperties;
 
     public Saml2AdapterImpl(@Lazy ServletContext aContext, @Lazy UserDao aUserRepository,
             @Lazy OverridableUserDetailsManager aUserDetailsManager,
-            @Lazy Optional<RelyingPartyRegistrationRepository> aRelyingPartyRegistrationRepository)
+            @Lazy Optional<RelyingPartyRegistrationRepository> aRelyingPartyRegistrationRepository,
+            PreauthenticationProperties aPreauthenticationProperties)
     {
         context = aContext;
         userRepository = aUserRepository;
         userDetailsManager = aUserDetailsManager;
         relyingPartyRegistrationRepository = aRelyingPartyRegistrationRepository;
+        preauthenticationProperties = aPreauthenticationProperties;
     }
 
     /*
@@ -145,7 +148,7 @@ public class Saml2AdapterImpl
         u.setPassword(NO_PASSWORD);
         u.setEnabled(true);
         u.setRealm(realm);
-        u.setRoles(PreAuthUtils.getPreAuthenticationNewUserRoles(u));
+        u.setRoles(preauthenticationProperties.getNewUserRoles(u));
         userRepository.create(u);
 
         return u;
