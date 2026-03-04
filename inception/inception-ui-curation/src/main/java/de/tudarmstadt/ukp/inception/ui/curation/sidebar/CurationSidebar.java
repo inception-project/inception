@@ -33,6 +33,7 @@ import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -77,8 +78,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 
 public class CurationSidebar
-    extends AnnotationSidebar_ImplBase
-{
+        extends AnnotationSidebar_ImplBase {
     private static final long serialVersionUID = -4195790451286055737L;
 
     private static final String CID_SESSION_CONTROL_FORM = "sessionControlForm";
@@ -108,12 +108,12 @@ public class CurationSidebar
     private final IModel<Boolean> isTargetFinished;
 
     private final Label noDocsLabel;
+    private final WebMarkupContainer annotatorNotesPanel;
 
     private final MergeDialog mergeConfirm;
 
     public CurationSidebar(String aId, AnnotationActionHandler aActionHandler,
-            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
-    {
+            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage) {
         super(aId, aActionHandler, aCasProvider, aAnnotationPage);
 
         var state = aAnnotationPage.getModelObject();
@@ -157,6 +157,28 @@ public class CurationSidebar
         curationWorkflowModel = Model
                 .of(curationService.readOrCreateCurationWorkflow(state.getProject()));
 
+        // Annotator notes panel - shows notes from all annotators for curators
+        annotatorNotesPanel = new WebMarkupContainer("annotatorNotesPanel");
+        annotatorNotesPanel.setOutputMarkupPlaceholderTag(true);
+        annotatorNotesPanel.add(visibleWhen(() -> isSessionActive() && !listAnnotatorNotes().isEmpty()));
+
+        var annotatorNotesList = new ListView<AnnotatorNote>("annotatorNotes",
+                LoadableDetachableModel.of(this::listAnnotatorNotes)) {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void populateItem(ListItem<AnnotatorNote> aItem) {
+                var note = aItem.getModelObject();
+                aItem.add(new Label("annotatorName", note.getAnnotatorName()));
+                var notesArea = new org.apache.wicket.markup.html.form.TextArea<String>(
+                        "notesText", Model.of(note.getNotes()));
+                notesArea.setEnabled(false); // Read-only for curators
+                aItem.add(notesArea);
+            }
+        };
+        annotatorNotesPanel.add(annotatorNotesList);
+        queue(annotatorNotesPanel);
+
         // confirmation dialog when using automatic merging (might change user's annos)
         IModel<String> documentNameModel = PropertyModel.of(getAnnotationPage().getModel(),
                 "document.name");
@@ -165,30 +187,82 @@ public class CurationSidebar
                 documentNameModel, curationWorkflowModel));
     }
 
-    private void actionToggleShowMerged(AjaxRequestTarget aTarget)
-    {
+    /**
+     * Returns list of annotator notes for the current document
+     */
+    private List<AnnotatorNote> listAnnotatorNotes() {
+        var doc = getModelObject().getDocument();
+        if (doc == null) {
+            return Collections.emptyList();
+        }
+
+        var project = getModelObject().getProject();
+        var annotationDocuments = documentService.listAnnotationDocuments(doc);
+        var notes = new ArrayList<AnnotatorNote>();
+
+        for (var annDoc : annotationDocuments) {
+            // Skip CURATION_USER's notes - that's the curator's own notes
+            if (CURATION_USER.equals(annDoc.getUser())) {
+                continue;
+            }
+
+            var noteText = annDoc.getNotes();
+            if (noteText != null && !noteText.isBlank()) {
+                var annotatorName = annDoc.getUser();
+                // Anonymize if project has anonymous curation enabled
+                if (project.isAnonymousCuration()
+                        && !projectService.hasRole(userRepository.getCurrentUser(), project, MANAGER)) {
+                    annotatorName = "Annotator " + (notes.size() + 1);
+                }
+                notes.add(new AnnotatorNote(annotatorName, noteText));
+            }
+        }
+
+        return notes;
+    }
+
+    /**
+     * Simple record to hold annotator name and notes
+     */
+    private static class AnnotatorNote implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+        private final String annotatorName;
+        private final String notes;
+
+        public AnnotatorNote(String aAnnotatorName, String aNotes) {
+            annotatorName = aAnnotatorName;
+            notes = aNotes;
+        }
+
+        public String getAnnotatorName() {
+            return annotatorName;
+        }
+
+        public String getNotes() {
+            return notes;
+        }
+    }
+
+    private void actionToggleShowMerged(AjaxRequestTarget aTarget) {
         var sessionOwner = userRepository.getCurrentUsername();
         curationSidebarService.setShowAll(sessionOwner, getModelObject().getProject().getId(),
                 showMerged.getModelObject());
         getAnnotationPage().actionRefreshDocument(aTarget);
     }
 
-    private void actionToggleShowScore(AjaxRequestTarget aTarget)
-    {
+    private void actionToggleShowScore(AjaxRequestTarget aTarget) {
         var sessionOwner = userRepository.getCurrentUsername();
         curationSidebarService.setShowScore(sessionOwner, getModelObject().getProject().getId(),
                 showScore.getModelObject());
         getAnnotationPage().actionRefreshDocument(aTarget);
     }
 
-    private void actionOpenMergeDialog(AjaxRequestTarget aTarget, Form<Void> aForm)
-    {
+    private void actionOpenMergeDialog(AjaxRequestTarget aTarget, Form<Void> aForm) {
         mergeConfirm.setConfirmAction(this::actionMerge);
         mergeConfirm.show(aTarget);
     }
 
-    private void actionMerge(AjaxRequestTarget aTarget, Form<State> aForm)
-    {
+    private void actionMerge(AjaxRequestTarget aTarget, Form<State> aForm) {
         var state = getModelObject();
         var dataOwner = state.getUser();
         var curationWorkflow = curationWorkflowModel.getObject();
@@ -206,15 +280,13 @@ public class CurationSidebar
                     aForm.getModelObject().isClearTargetCas());
             success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
             refreshPage(aTarget, getPage());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             error("Unable to merge: " + e.getMessage());
             LOG.error("Unable to merge document {} to user {}", dataOwner, state.getDocument(), e);
         }
     }
 
-    private Form<Void> createSessionControlForm(String aId)
-    {
+    private Form<Void> createSessionControlForm(String aId) {
         var form = new Form<Void>(aId);
 
         form.setOutputMarkupId(true);
@@ -232,8 +304,7 @@ public class CurationSidebar
         curationTargetChoice = new DropDownChoice<>(CID_SELECT_CURATION_TARGET);
         if (!isSessionActive()) {
             curationTargetChoice.setModel(Model.of(curationTargets.get(0)));
-        }
-        else {
+        } else {
             curationTargetChoice.setModel(Model.of(curationSidebarService.getCurationTarget(
                     userRepository.getCurrentUsername(), getModelObject().getProject().getId())));
         }
@@ -253,14 +324,12 @@ public class CurationSidebar
         return form;
     }
 
-    private boolean isSessionActive()
-    {
+    private boolean isSessionActive() {
         return curationSidebarService.existsSession(userRepository.getCurrentUsername(),
                 getModelObject().getProject().getId());
     }
 
-    private void actionStartSession(AjaxRequestTarget aTarget, Form<?> form)
-    {
+    private void actionStartSession(AjaxRequestTarget aTarget, Form<?> form) {
         var sessionOwner = userRepository.getCurrentUsername();
         var state = getModelObject();
         var project = state.getProject().getId();
@@ -278,8 +347,7 @@ public class CurationSidebar
         getAnnotationPage().actionLoadDocument(aTarget);
     }
 
-    private void actionStopSession(AjaxRequestTarget aTarget)
-    {
+    private void actionStopSession(AjaxRequestTarget aTarget) {
         var state = getModelObject();
         var sessionOwner = userRepository.getCurrentUser();
 
@@ -291,8 +359,7 @@ public class CurationSidebar
         getAnnotationPage().actionLoadDocument(aTarget);
     }
 
-    private Form<Void> createUserSelection(String aId)
-    {
+    private Form<Void> createUserSelection(String aId) {
         var sessionOwner = userRepository.getCurrentUsername();
         var project = getModelObject().getProject();
 
@@ -303,13 +370,11 @@ public class CurationSidebar
         form.add(new LambdaAjaxButton<>("merge", this::actionOpenMergeDialog)
                 .add(visibleWhenNot(isTargetFinished)));
 
-        users = new ListView<User>("users", LoadableDetachableModel.of(this::listCuratableUsers))
-        {
+        users = new ListView<User>("users", LoadableDetachableModel.of(this::listCuratableUsers)) {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void populateItem(ListItem<User> aItem)
-            {
+            protected void populateItem(ListItem<User> aItem) {
                 aItem.add(new Check<User>("user", aItem.getModel()));
                 aItem.add(new Label("name", maybeAnonymizeUsername(aItem)));
             }
@@ -328,8 +393,7 @@ public class CurationSidebar
         return form;
     }
 
-    private IModel<String> maybeAnonymizeUsername(ListItem<User> aUserListItem)
-    {
+    private IModel<String> maybeAnonymizeUsername(ListItem<User> aUserListItem) {
         var project = getModelObject().getProject();
         if (project.isAnonymousCuration()
                 && !projectService.hasRole(userRepository.getCurrentUser(), project, MANAGER)) {
@@ -342,8 +406,7 @@ public class CurationSidebar
     /**
      * retrieve annotators of this document which finished annotating
      */
-    private List<User> listCuratableUsers()
-    {
+    private List<User> listCuratableUsers() {
         var doc = getModelObject().getDocument();
         if (doc == null) {
             return Collections.emptyList();
@@ -352,8 +415,7 @@ public class CurationSidebar
         return curationSidebarService.listCuratableUsers(userRepository.getCurrentUsername(), doc);
     }
 
-    private void actionChangeVisibleUsers(AjaxRequestTarget aTarget)
-    {
+    private void actionChangeVisibleUsers(AjaxRequestTarget aTarget) {
         aTarget.add(usersForm);
         getAnnotationPage().actionRefreshDocument(aTarget);
     }

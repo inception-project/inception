@@ -21,16 +21,18 @@
   <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
     <div class="card flex-content">
       <div wicket:id="mergeConfirmDialog"></div>
-    
+
       <div class="card-header">
-        <wicket:message key="curationHeader"/>
+        <wicket:message key="curationHeader" />
       </div>
-      
+
       <div class="scrolling card-body flex-v-container flex-gutter flex-only-internal-gutter">
         <form wicket:id="sessionControlForm" class="d-flex flex-row mb-2">
           <div class="form-floating flex-fill me-2" wicket:enclosure="curationTarget">
-            <select class="form-select" wicket:id="curationTarget"/>
-            <label wicket:for="curationTarget"><wicket:label key="curationTarget"/></label>
+            <select class="form-select" wicket:id="curationTarget" />
+            <label wicket:for="curationTarget">
+              <wicket:label key="curationTarget" />
+            </label>
           </div>
           <div class="input-group w-auto">
             <a wicket:id="startSession" class="btn btn-primary align-content-center">
@@ -41,13 +43,13 @@
             </a>
           </div>
         </form>
-      
-        <div class="row form-row" >
+
+        <div class="row form-row">
           <div class="col-sm-12" wicket:enclosure="showMerged">
             <div class="form-check form-switch">
               <input class="form-check-input" type="checkbox" wicket:id="showMerged">
               <label class="form-check-label" wicket:for="showMerged">
-                <wicket:label key="showMerged"/>
+                <wicket:label key="showMerged" />
               </label>
             </div>
           </div>
@@ -56,15 +58,15 @@
             <div class="form-check form-switch">
               <input class="form-check-input" type="checkbox" wicket:id="showScore">
               <label class="form-check-label" wicket:for="showScore">
-                <wicket:label key="showScore"/>
+                <wicket:label key="showScore" />
               </label>
             </div>
           </div>
         </div>
-        
+
         <form wicket:id="usersForm" class="card flex-content">
           <div class="card-header">
-            <wicket:message key="usersLabel"/>
+            <wicket:message key="usersLabel" />
             <div class="actions">
               <button wicket:id="merge" class="btn btn-secondary">
                 <i class="fas fa-sync" wicket:message="title:merge"></i>
@@ -77,17 +79,31 @@
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" wicket:id="user">
                   <label class="form-check-label" wicket:for="user">
-                    <span wicket:id="name"/>
+                    <span wicket:id="name" />
                   </label>
                 </div>
               </li>
             </ul>
           </div>
         </form>
-        
+
+        <!-- Annotator Notes Panel - displays notes from all annotators for curators -->
+        <div wicket:id="annotatorNotesPanel" class="card flex-content">
+          <div class="card-header">
+            <wicket:message key="annotatorNotesLabel">Annotator Notes</wicket:message>
+          </div>
+          <div class="scrolling card-body p-2">
+            <div wicket:id="annotatorNotes" class="mb-2">
+              <label class="form-label fw-bold" wicket:id="annotatorName"></label>
+              <textarea wicket:id="notesText" class="form-control form-control-sm" rows="2" readonly></textarea>
+            </div>
+          </div>
+        </div>
+
         <span class="flex-content no-data-notice" wicket:id="noDocumentsLabel"></span>
       </div>
     </div>
   </div>
 </wicket:panel>
+
 </html>
