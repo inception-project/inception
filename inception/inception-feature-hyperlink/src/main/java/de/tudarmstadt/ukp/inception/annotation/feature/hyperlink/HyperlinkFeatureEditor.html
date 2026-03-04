@@ -1,0 +1,47 @@
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:panel>
+    <div class="feature-editor hyperlink-feature-editor">
+        <label wicket:id="feature" class="control-label font-weight-bold"><!-- Label --></label>
+        <div wicket:id="itemsContainer">
+            <div wicket:id="items" class="mb-2">
+                <div wicket:id="inputGroup" class="d-flex">
+                    <input wicket:id="text" type="text" class="form-control" placeholder="Text (optional)"
+                        style="flex: 1; min-width: 0;" />
+                    <input wicket:id="url" type="text" class="form-control" placeholder="URL"
+                        style="flex: 2; min-width: 0; margin-left: 5px;" />
+                    <a wicket:id="launch" target="_blank" class="btn btn-outline-secondary" style="margin-left: 5px;"
+                        title="Open link">
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    <button wicket:id="remove" type="button" class="btn btn-outline-danger" style="margin-left: 5px;"
+                        title="Remove link">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <button wicket:id="add" type="button" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-plus"></i> Add Link
+        </button>
+        <input wicket:id="dummy" type="hidden" />
+    </div>
+</wicket:panel>
+
+</html>

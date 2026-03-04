@@ -281,6 +281,7 @@
     <module>inception-feature-lookup</module>
     <module>inception-feature-number</module>
     <module>inception-feature-string</module>
+    <module>inception-feature-hyperlink</module>
     <module>inception-image</module>
     <!-- Recommender system -->
     <module>inception-recommendation-api</module>

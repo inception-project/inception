@@ -38,12 +38,10 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.RecommendableFeatureTrait
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StringFeatureTraits
-    implements Serializable, KeyBindingTrait, RecommendableFeatureTrait
-{
+        implements Serializable, KeyBindingTrait, RecommendableFeatureTrait {
     private static final long serialVersionUID = -8450181605003189055L;
 
-    public enum EditorType
-    {
+    public enum EditorType {
         @JsonEnumDefaultValue
         AUTO("Auto (depending on tagset size)"), //
         RADIOGROUP("Radio group (small tagsets)"), //
@@ -52,14 +50,12 @@ public class StringFeatureTraits
 
         private final String name;
 
-        EditorType(String name)
-        {
+        EditorType(String name) {
             this.name = name;
         }
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return name;
         }
     }
@@ -70,118 +66,115 @@ public class StringFeatureTraits
     private boolean retainSuggestionInfo = false;
     private @JsonInclude(NON_DEFAULT) boolean multipleRows = false;
     private @JsonInclude(NON_DEFAULT) boolean dynamicSize = false;
+    private @JsonInclude(NON_DEFAULT) boolean hyperlinkEnabled = false;
+    private @JsonInclude(NON_EMPTY) String hyperlinkUrl;
     private @JsonInclude(NON_EMPTY) List<KeyBinding> keyBindings = new ArrayList<>();
     private @JsonInclude(NON_EMPTY) String defaultValue;
     private @JsonInclude(NON_EMPTY) List<PermissionLevel> rolesSeeingSuggestionInfo = new ArrayList<>();
 
-    public StringFeatureTraits()
-    {
+    public StringFeatureTraits() {
         // Nothing to do
     }
 
-    public boolean isMultipleRows()
-    {
+    public boolean isHyperlinkEnabled() {
+        return hyperlinkEnabled;
+    }
+
+    public void setHyperlinkEnabled(boolean aHyperlinkEnabled) {
+        hyperlinkEnabled = aHyperlinkEnabled;
+    }
+
+    public String getHyperlinkUrl() {
+        return hyperlinkUrl;
+    }
+
+    public void setHyperlinkUrl(String aHyperlinkUrl) {
+        hyperlinkUrl = aHyperlinkUrl;
+    }
+
+    public boolean isMultipleRows() {
         return multipleRows;
     }
 
-    public void setMultipleRows(boolean aMultipleRows)
-    {
+    public void setMultipleRows(boolean aMultipleRows) {
         multipleRows = aMultipleRows;
     }
 
-    public boolean isDynamicSize()
-    {
+    public boolean isDynamicSize() {
         return dynamicSize;
     }
 
-    public void setDynamicSize(boolean aDynamicSize)
-    {
+    public void setDynamicSize(boolean aDynamicSize) {
         dynamicSize = aDynamicSize;
     }
 
-    public int getCollapsedRows()
-    {
+    public int getCollapsedRows() {
         return collapsedRows;
     }
 
-    public void setCollapsedRows(int aCollapsedRows)
-    {
+    public void setCollapsedRows(int aCollapsedRows) {
         collapsedRows = aCollapsedRows;
     }
 
-    public int getExpandedRows()
-    {
+    public int getExpandedRows() {
         return expandedRows;
     }
 
-    public void setExpandedRows(int aExpandedRows)
-    {
+    public void setExpandedRows(int aExpandedRows) {
         expandedRows = aExpandedRows;
     }
 
-    public EditorType getEditorType()
-    {
+    public EditorType getEditorType() {
         return editorType;
     }
 
-    public void setEditorType(EditorType aEditorType)
-    {
+    public void setEditorType(EditorType aEditorType) {
         editorType = aEditorType;
     }
 
     @Override
-    public List<KeyBinding> getKeyBindings()
-    {
+    public List<KeyBinding> getKeyBindings() {
         return keyBindings;
     }
 
     @Override
-    public void setKeyBindings(List<KeyBinding> aKeyBindings)
-    {
+    public void setKeyBindings(List<KeyBinding> aKeyBindings) {
         if (aKeyBindings == null) {
             keyBindings = new ArrayList<>();
-        }
-        else {
+        } else {
             keyBindings = aKeyBindings;
         }
     }
 
-    public String getDefaultValue()
-    {
+    public String getDefaultValue() {
         return defaultValue;
     }
 
-    public void setDefaultValue(String aDefaultValue)
-    {
+    public void setDefaultValue(String aDefaultValue) {
         defaultValue = aDefaultValue;
     }
 
     @Override
-    public boolean isRetainSuggestionInfo()
-    {
+    public boolean isRetainSuggestionInfo() {
         return retainSuggestionInfo;
     }
 
     @Override
-    public void setRetainSuggestionInfo(boolean aRetainSuggestionInfo)
-    {
+    public void setRetainSuggestionInfo(boolean aRetainSuggestionInfo) {
         retainSuggestionInfo = aRetainSuggestionInfo;
     }
 
     @Override
-    public void setRolesSeeingSuggestionInfo(List<PermissionLevel> aRolesSeeingSuggestionInfo)
-    {
+    public void setRolesSeeingSuggestionInfo(List<PermissionLevel> aRolesSeeingSuggestionInfo) {
         if (aRolesSeeingSuggestionInfo == null) {
             rolesSeeingSuggestionInfo = new ArrayList<>();
-        }
-        else {
+        } else {
             rolesSeeingSuggestionInfo = aRolesSeeingSuggestionInfo;
         }
     }
 
     @Override
-    public List<PermissionLevel> getRolesSeeingSuggestionInfo()
-    {
+    public List<PermissionLevel> getRolesSeeingSuggestionInfo() {
         return rolesSeeingSuggestionInfo;
     }
 }

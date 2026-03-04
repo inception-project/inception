@@ -1425,4 +1425,75 @@
       <column name="state_updated" type="datetime(6)"/>
     </addColumn>
   </changeSet>
+  <changeSet author="INCEpTION Team" id="20260106-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_document" columnName="notes"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_document">
+      <column name="notes" type="LONGTEXT"/>
+    </addColumn>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20260227-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_document" columnName="totalAnnotationTime"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_document">
+      <column name="totalAnnotationTime" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20260302-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_document" columnName="totalActiveTime"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_document">
+      <column name="totalActiveTime" type="BIGINT"/>
+    </addColumn>
+    <sql>UPDATE annotation_document SET totalActiveTime = totalAnnotationTime</sql>
+    <sql>UPDATE annotation_document SET totalAnnotationTime = NULL</sql>
+  </changeSet>
+  <changeSet author="INCEpTION Team" id="20260302-3">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="annotation_session"/>
+      </not>
+    </preConditions>
+    <createTable tableName="annotation_session">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true"/>
+      </column>
+      <column name="document" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="user" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="project" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="openedAt" type="datetime(6)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="closedAt" type="datetime(6)"/>
+      <column name="activeTimeMs" type="BIGINT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+      <column name="changesCount" type="INT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+    <addForeignKeyConstraint
+        constraintName="fk_annotation_session_document"
+        baseTableName="annotation_session" baseColumnNames="document"
+        referencedTableName="source_document" referencedColumnNames="id"/>
+    <addForeignKeyConstraint
+        constraintName="fk_annotation_session_project"
+        baseTableName="annotation_session" baseColumnNames="project"
+        referencedTableName="project" referencedColumnNames="id"/>
+  </changeSet>
 </databaseChangeLog>

@@ -48,8 +48,7 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.RetainSuggestionInfoPanel
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 public class StringFeatureTraitsEditor
-    extends GenericPanel<AnnotationFeature>
-{
+        extends GenericPanel<AnnotationFeature> {
     private static final long serialVersionUID = -9082045435380184514L;
 
     private static final String MID_FORM = "form";
@@ -64,8 +63,7 @@ public class StringFeatureTraitsEditor
 
     public StringFeatureTraitsEditor(String aId,
             UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits> aFS,
-            IModel<AnnotationFeature> aFeature)
-    {
+            IModel<AnnotationFeature> aFeature) {
         super(aId, aFeature);
 
         featureSupportId = aFS.getId();
@@ -76,20 +74,17 @@ public class StringFeatureTraitsEditor
         keyBindings = newKeyBindingsConfigurationPanel(aFeature);
         add(keyBindings);
 
-        var form = new Form<StringFeatureTraits>(MID_FORM, traits)
-        {
+        var form = new Form<StringFeatureTraits>(MID_FORM, traits) {
             private static final long serialVersionUID = -3109239605783291123L;
 
             @Override
-            protected void onSubmit()
-            {
+            protected void onSubmit() {
                 super.onSubmit();
 
                 // Tagsets only are allowed for single-row input fields, not for textareas
                 if (traits.getObject().isMultipleRows()) {
                     feature.getObject().setTagset(null);
-                }
-                else {
+                } else {
                     traits.getObject().setDynamicSize(false);
                 }
 
@@ -128,7 +123,8 @@ public class StringFeatureTraitsEditor
         tagset.setChoices(LoadableDetachableModel
                 .of(() -> annotationService.listTagSets(aFeature.getObject().getProject())));
         tagset.add(visibleWhen(() -> !traits.getObject().isMultipleRows()));
-        // If we change the tagset, the input component for the key bindings may change, so we need
+        // If we change the tagset, the input component for the key bindings may change,
+        // so we need
         // to re-generate the key bindings
         tagset.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
             _target.add(form);
@@ -147,6 +143,22 @@ public class StringFeatureTraitsEditor
             refreshKeyBindings(_target, aFeature);
         }));
         form.add(multipleRows);
+
+        var hyperlinkEnabled = new CheckBox("hyperlinkEnabled");
+        hyperlinkEnabled.setOutputMarkupId(true);
+        hyperlinkEnabled.setModel(PropertyModel.of(traits, "hyperlinkEnabled"));
+        hyperlinkEnabled.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                target -> target.add(form)));
+        form.add(hyperlinkEnabled);
+
+        var hyperlinkUrlContainer = new WebMarkupContainer("hyperlinkUrlContainer");
+        hyperlinkUrlContainer.setOutputMarkupPlaceholderTag(true);
+        hyperlinkUrlContainer.add(visibleWhen(() -> traits.getObject().isHyperlinkEnabled()));
+        form.add(hyperlinkUrlContainer);
+
+        var hyperlinkUrl = new TextField<String>("hyperlinkUrl");
+        hyperlinkUrl.setModel(PropertyModel.of(traits, "hyperlinkUrl"));
+        hyperlinkUrlContainer.add(hyperlinkUrl);
 
         var dynamicSize = new CheckBox("dynamicSize");
         dynamicSize.setOutputMarkupId(true);
@@ -172,8 +184,7 @@ public class StringFeatureTraitsEditor
                 traits.map(RecommendableFeatureTrait.class::cast)));
     }
 
-    private void refreshKeyBindings(AjaxRequestTarget aTarget, IModel<AnnotationFeature> aFeature)
-    {
+    private void refreshKeyBindings(AjaxRequestTarget aTarget, IModel<AnnotationFeature> aFeature) {
         var newKeyBindings = newKeyBindingsConfigurationPanel(aFeature);
         keyBindings.replaceWith(newKeyBindings);
         keyBindings = newKeyBindings;
@@ -181,8 +192,7 @@ public class StringFeatureTraitsEditor
     }
 
     private KeyBindingsConfigurationPanel newKeyBindingsConfigurationPanel(
-            IModel<AnnotationFeature> aFeature)
-    {
+            IModel<AnnotationFeature> aFeature) {
         getFeatureSupport().writeTraits(aFeature.getObject(), traits.getObject());
         var panel = new KeyBindingsConfigurationPanel("keyBindings", aFeature,
                 traits.bind("keyBindings"));
@@ -192,8 +202,7 @@ public class StringFeatureTraitsEditor
     }
 
     @SuppressWarnings("unchecked")
-    private UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits> getFeatureSupport()
-    {
+    private UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits> getFeatureSupport() {
         return (UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits>) featureSupportRegistry
                 .getExtension(featureSupportId).orElseThrow();
     }

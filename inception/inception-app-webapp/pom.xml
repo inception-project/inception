@@ -103,6 +103,11 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-feature-hyperlink</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-image</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -1155,6 +1160,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-feature-lookup</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-feature-number</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-feature-string</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-feature-hyperlink</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-processing</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-basic</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-doclabeling</usedDependency>

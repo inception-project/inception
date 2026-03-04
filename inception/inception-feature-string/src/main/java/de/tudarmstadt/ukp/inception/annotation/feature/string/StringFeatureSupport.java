@@ -71,8 +71,7 @@ import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
  * </p>
  */
 public class StringFeatureSupport
-    extends UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits>
-{
+        extends UimaPrimitiveFeatureSupport_ImplBase<StringFeatureTraits> {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private List<FeatureType> primitiveTypes;
@@ -82,44 +81,39 @@ public class StringFeatureSupport
     private final AnnotationSchemaService schemaService;
 
     /*
-     * Constructor for use in unit tests to avoid having to always instantiate the properties.
+     * Constructor for use in unit tests to avoid having to always instantiate the
+     * properties.
      */
-    public StringFeatureSupport()
-    {
+    public StringFeatureSupport() {
         this(new StringFeatureSupportPropertiesImpl(), null);
     }
 
     public StringFeatureSupport(StringFeatureSupportProperties aProperties,
-            AnnotationSchemaService aSchemaService)
-    {
+            AnnotationSchemaService aSchemaService) {
         properties = aProperties;
         schemaService = aSchemaService;
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception
-    {
+    public void afterPropertiesSet() throws Exception {
         primitiveTypes = asList(
                 new FeatureType(CAS.TYPE_NAME_STRING, "Primitive: String", getId()));
     }
 
     @Override
-    public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
-    {
+    public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer) {
         return unmodifiableList(primitiveTypes);
     }
 
     @Override
-    public boolean accepts(AnnotationFeature aFeature)
-    {
+    public boolean accepts(AnnotationFeature aFeature) {
         return MultiValueMode.NONE.equals(aFeature.getMultiValueMode())
                 && CAS.TYPE_NAME_STRING.equals(aFeature.getType());
     }
 
     @Override
     public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
-        throws AnnotationException
-    {
+            throws AnnotationException {
         if (schemaService != null) {
             schemaService.createMissingTag(aFeature, (String) aValue);
         }
@@ -128,8 +122,7 @@ public class StringFeatureSupport
     }
 
     @Override
-    public boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
-    {
+    public boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS) {
         if (aFeature.isRequired()) {
             return isNotBlank(FSUtil.getFeature(aFS, aFeature.getName(), String.class));
         }
@@ -138,8 +131,7 @@ public class StringFeatureSupport
     }
 
     @Override
-    public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
-    {
+    public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel) {
         var feature = aFeatureModel.getObject();
 
         if (!accepts(feature)) {
@@ -152,8 +144,7 @@ public class StringFeatureSupport
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
-            final IModel<FeatureState> aFeatureStateModel)
-    {
+            final IModel<FeatureState> aFeatureStateModel) {
         var feature = aFeatureStateModel.getObject().feature;
 
         if (!accepts(feature)) {
@@ -161,18 +152,18 @@ public class StringFeatureSupport
         }
 
         var traits = readTraits(feature);
+        var state = aFeatureStateModel.getObject();
+        var isAffected = state.indicator.isAffected();
 
-        if (feature.getTagset() == null || traits.isMultipleRows()) {
+        if ((feature.getTagset() == null && !isAffected) || traits.isMultipleRows()) {
             if (traits.isMultipleRows()) {
                 // If multiple rows are set use a textarea
                 if (traits.isDynamicSize()) {
                     return new DynamicTextAreaFeatureEditor(aId, aOwner, aFeatureStateModel);
-                }
-                else {
+                } else {
                     return new TextAreaFeatureEditor(aId, aOwner, aFeatureStateModel);
                 }
-            }
-            else {
+            } else {
                 // Otherwise use a simple input field
                 return new InputFieldStringFeatureEditor(aId, aOwner, aFeatureStateModel, aHandler);
             }
@@ -184,26 +175,32 @@ public class StringFeatureSupport
         }
 
         switch (editorType) {
-        case RADIOGROUP:
-            return new RadioGroupStringFeatureEditor(aId, aOwner, aFeatureStateModel, aHandler);
-        case COMBOBOX:
-            return new KendoComboboxTextFeatureEditor(aId, aOwner, aFeatureStateModel, aHandler);
-        case AUTOCOMPLETE:
-            return new KendoAutoCompleteTextFeatureEditor(aId, aOwner, aFeatureStateModel,
-                    aHandler);
-        default:
-            throw new IllegalStateException(
-                    "Unknown editor type: [" + traits.getEditorType() + "]");
+            case RADIOGROUP:
+                return new RadioGroupStringFeatureEditor(aId, aOwner, aFeatureStateModel, aHandler);
+            case COMBOBOX:
+                return new KendoComboboxTextFeatureEditor(aId, aOwner, aFeatureStateModel, aHandler);
+            case AUTOCOMPLETE:
+                return new KendoAutoCompleteTextFeatureEditor(aId, aOwner, aFeatureStateModel,
+                        aHandler);
+            default:
+                throw new IllegalStateException(
+                        "Unknown editor type: [" + traits.getEditorType() + "]");
         }
     }
 
     private EditorType autoChooseFeatureEditorWithTagset(
-            final IModel<FeatureState> aFeatureStateModel)
-    {
+            final IModel<FeatureState> aFeatureStateModel) {
         var featureState = aFeatureStateModel.getObject();
 
-        // For really small tagsets where tag creation is not supported, use a radio group
-        if (!featureState.feature.getTagset().isCreateTag()
+        // Check if creation is allowed. If tagset is null, assume creation is NOT
+        // allowed (strict).
+        boolean isCreateTag = featureState.feature.getTagset() != null
+                ? featureState.feature.getTagset().isCreateTag()
+                : false;
+
+        // For really small tagsets where tag creation is not supported, use a radio
+        // group
+        if (!isCreateTag
                 && featureState.tagset.size() < properties.getComboBoxThreshold()) {
             return RADIOGROUP;
         }
@@ -218,23 +215,20 @@ public class StringFeatureSupport
     }
 
     @Override
-    public StringFeatureTraits createDefaultTraits()
-    {
+    public StringFeatureTraits createDefaultTraits() {
         var traits = new StringFeatureTraits();
         traits.setRolesSeeingSuggestionInfo(asList(CURATOR));
         return traits;
     }
 
     @Override
-    public boolean suppressAutoFocus(AnnotationFeature aFeature)
-    {
+    public boolean suppressAutoFocus(AnnotationFeature aFeature) {
         var traits = readTraits(aFeature);
         return !traits.getKeyBindings().isEmpty();
     }
 
     @Override
-    public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
-    {
+    public List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue) {
         if (aValue instanceof String value) {
             var tag = schemaService.getTag(value, aFeature.getTagset());
 
@@ -252,15 +246,13 @@ public class StringFeatureSupport
     }
 
     @Override
-    public <V> V getNullFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
-    {
+    public <V> V getNullFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS) {
         return null;
     }
 
     @Override
     public void initializeAnnotation(AnnotationFeature aFeature, FeatureStructure aFS)
-        throws AnnotationException
-    {
+            throws AnnotationException {
         var traits = readTraits(aFeature);
         if (isNotBlank(traits.getDefaultValue())) {
             setFeatureValue(aFS.getCAS(), aFeature, ICasUtil.getAddr(aFS),
@@ -270,8 +262,7 @@ public class StringFeatureSupport
 
     @Override
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
-            AnnotationFeature aFeature)
-    {
+            AnnotationFeature aFeature) {
         super.generateFeature(aTSD, aTD, aFeature);
 
         var traits = readTraits(aFeature);
@@ -284,16 +275,14 @@ public class StringFeatureSupport
     @Override
     public void pushSuggestions(SourceDocument aDocument, String aDataOwner,
             AnnotationBaseFS aAnnotation, AnnotationFeature aFeature,
-            List<SuggestionState> aSuggestions)
-    {
+            List<SuggestionState> aSuggestions) {
         setStringSuggestions(aAnnotation, aFeature.getName() + SUFFIX_SUGGESTION_INFO,
                 aSuggestions);
     }
 
     @Override
     public List<SuggestionState> getSuggestions(FeatureStructure aAnnotation,
-            AnnotationFeature aFeature)
-    {
+            AnnotationFeature aFeature) {
         var cas = aAnnotation.getCAS();
         var suggestionInfoFeature = aAnnotation.getType()
                 .getFeatureByBaseName(aFeature.getName() + SUFFIX_SUGGESTION_INFO);
