@@ -21,8 +21,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
 
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.wicket.Component;
@@ -45,14 +43,12 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.csrf.CsrfToken;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItemRegistry;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFeedbackPanel;
-import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.interceptors.GlobalInterceptorsRegistry;
 import de.tudarmstadt.ukp.inception.ui.core.darkmode.DarkModeWrapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -99,8 +95,6 @@ public abstract class ApplicationPageBase
 
     private void commonInit()
     {
-        setLocale();
-
         for (var interceptor : interceptorsRegistry.getInterceptors()) {
             interceptor.intercept(this);
         }
@@ -140,8 +134,8 @@ public abstract class ApplicationPageBase
         var panel = new BootstrapFeedbackPanel("feedbackPanel");
         panel.setOutputMarkupId(true);
         panel.setFilter((IFeedbackMessageFilter) aMessage -> {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String username = auth != null ? auth.getName() : "SYSTEM";
+            var auth = SecurityContextHolder.getContext().getAuthentication();
+            var username = auth != null ? auth.getName() : "SYSTEM";
             if (aMessage.isFatal()) {
                 LOG.error("{}: {}", username, aMessage.getMessage());
             }
@@ -160,23 +154,6 @@ public abstract class ApplicationPageBase
             return true;
         });
         return panel;
-    }
-
-    private void setLocale()
-    {
-        Properties settings = SettingsUtil.getSettings();
-
-        // Override locale to be used by application
-        String locale = settings.getProperty(SettingsUtil.CFG_LOCALE, "en");
-        switch (locale) {
-        case "auto":
-            // Do nothing - locale is picked up from browser
-            break;
-        default:
-            // Override the locale in the session
-            getSession().setLocale(Locale.forLanguageTag(locale));
-            break;
-        }
     }
 
     private WebMarkupContainer createFooter(String aId, IModel<List<Component>> aFooterItems)

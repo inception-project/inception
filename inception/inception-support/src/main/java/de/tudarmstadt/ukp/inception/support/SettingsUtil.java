@@ -24,23 +24,14 @@ import static org.apache.commons.lang3.StringUtils.substring;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
-
-import de.tudarmstadt.ukp.inception.support.help.ImageLinkDecl;
 
 public class SettingsUtil
 {
@@ -55,36 +46,6 @@ public class SettingsUtil
 
     private static final String SETTINGS_FILE = "settings.properties";
     private static final String SETTINGS_YAML_FILE = "settings.yml";
-
-    /**
-     * @deprecated Should introduce/use a Spring properties bean instead.
-     */
-    @Deprecated
-    public static final String CFG_LOCALE = "locale";
-
-    /**
-     * @deprecated Should introduce/use a Spring properties bean instead.
-     */
-    @Deprecated
-    public static final String CFG_AUTH_MODE = "auth.mode";
-    @Deprecated
-    public static final String CFG_AUTH_PREAUTH_NEWUSER_ROLES = "auth.preauth.newuser.roles";
-
-    /**
-     * @deprecated Should introduce/use a Spring properties bean instead.
-     */
-    @Deprecated
-    public static final String CFG_WARNINGS_EMBEDDED_DATABASE = "warnings.embeddedDatabase";
-    @Deprecated
-    public static final String CFG_WARNINGS_UNSUPPORTED_BROWSER = "warnings.unsupportedBrowser";
-
-    /**
-     * @deprecated Should introduce/use a Spring properties bean instead.
-     */
-    @Deprecated
-    public static final String CFG_LINK_PREFIX = "style.header.icon.";
-    public static final @Deprecated String CFG_LINK_URL = ".linkUrl";
-    public static final @Deprecated String CFG_LINK_IMAGE_URL = ".imageUrl";
 
     private static Properties versionInfo;
     private static Properties settings;
@@ -233,7 +194,7 @@ public class SettingsUtil
             var props = new Properties(System.getProperties());
             var settingsFile = getSettingsFile();
             if (settingsFile != null) {
-                try (InputStream in = new FileInputStream(settingsFile)) {
+                try (var in = new FileInputStream(settingsFile)) {
                     props.load(in);
                 }
                 catch (IOException e) {
@@ -245,38 +206,5 @@ public class SettingsUtil
             settings = props;
         }
         return settings;
-    }
-
-    public static List<ImageLinkDecl> getLinks()
-    {
-        var props = getSettings();
-        Map<String, ImageLinkDecl> linkMap = new HashMap<>();
-        for (var key : props.stringPropertyNames()) {
-            if (key.startsWith(CFG_LINK_PREFIX)) {
-                var id = StringUtils.substringBetween(key, CFG_LINK_PREFIX, ".");
-
-                // Create new declaration for current ID if there is none so far
-                var e = linkMap.get(id);
-                if (e == null) {
-                    e = new ImageLinkDecl(id);
-                    linkMap.put(id, e);
-                }
-
-                // Record link URL
-                if (key.endsWith(CFG_LINK_URL)) {
-                    e.setLinkUrl(props.getProperty(key));
-                }
-                // Record link URL
-                if (key.endsWith(CFG_LINK_IMAGE_URL)) {
-                    e.setImageUrl(props.getProperty(key));
-                }
-            }
-        }
-
-        // Sort by ID
-        List<ImageLinkDecl> links = new ArrayList<>(linkMap.values());
-        links.sort(Comparator.comparing(ImageLinkDecl::getId));
-
-        return links;
     }
 }
