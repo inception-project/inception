@@ -92,8 +92,7 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
  * </p>
  */
 public class AnnotationDocumentExporter
-    implements ProjectExporter
-{
+        implements ProjectExporter {
     private static final String ANNOTATION_ORIGINAL_FOLDER = "/annotation/";
     private static final String ANNOTATION_AS_SERIALISED_CAS = "annotation_ser";
     private static final String ANNOTATION_CAS_FOLDER = "/" + ANNOTATION_AS_SERIALISED_CAS + "/";
@@ -108,8 +107,7 @@ public class AnnotationDocumentExporter
     @Autowired
     public AnnotationDocumentExporter(DocumentService aDocumentService, UserDao aUserRepository,
             DocumentImportExportService aImportExportService,
-            RepositoryProperties aRepositoryProperties)
-    {
+            RepositoryProperties aRepositoryProperties) {
         documentService = aDocumentService;
         userRepository = aUserRepository;
         importExportService = aImportExportService;
@@ -117,29 +115,25 @@ public class AnnotationDocumentExporter
     }
 
     @Override
-    public List<Class<? extends ProjectExporter>> getExportDependencies()
-    {
+    public List<Class<? extends ProjectExporter>> getExportDependencies() {
         return asList(SourceDocumentExporter.class);
     }
 
     @Override
-    public List<Class<? extends ProjectExporter>> getImportDependencies()
-    {
+    public List<Class<? extends ProjectExporter>> getImportDependencies() {
         return asList(SourceDocumentExporter.class);
     }
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, ZipOutputStream aStage)
-        throws IOException, InterruptedException, ProjectExportException
-    {
+            throws IOException, InterruptedException, ProjectExportException {
         exportAnnotationDocuments(aMonitor, aRequest.getProject(), aExProject);
         exportAnnotationDocumentContents(aRequest, aMonitor, aExProject, aStage);
     }
 
     private void exportAnnotationDocuments(ProjectExportTaskMonitor aMonitor, Project aProject,
-            ExportedProject aExProject)
-    {
+            ExportedProject aExProject) {
         var annotationDocuments = new ArrayList<ExportedAnnotationDocument>();
 
         for (var annotationDocument : documentService.listAnnotationDocuments(aProject)) {
@@ -162,20 +156,23 @@ public class AnnotationDocumentExporter
 
     private void exportAnnotationDocumentContents(FullProjectExportRequest aRequest,
             ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, ZipOutputStream aStage)
-        throws IOException, InterruptedException, ProjectExportException
-    {
+            throws IOException, InterruptedException, ProjectExportException {
         var project = aRequest.getProject();
 
-        // The export process may store project-related information in this context to ensure it
-        // is looked up only once during the bulk operation and the DB is not hit too often.
+        // The export process may store project-related information in this context to
+        // ensure it
+        // is looked up only once during the bulk operation and the DB is not hit too
+        // often.
         var bulkOperationContext = new HashMap<Pair<Project, String>, Object>();
 
         var documents = documentService.listSourceDocuments(project);
         var i = 1;
         var initProgress = aMonitor.getProgress();
 
-        // Create a map containing the annotation documents for each source document. Doing this
-        // as one DB access before the main processing to avoid hammering the DB in the loops
+        // Create a map containing the annotation documents for each source document.
+        // Doing this
+        // as one DB access before the main processing to avoid hammering the DB in the
+        // loops
         // below.
         var srcToAnnIdx = documentService.listAnnotationDocuments(project).stream()
                 .collect(groupingBy(doc -> doc.getDocument(), toList()));
@@ -212,9 +209,11 @@ public class AnnotationDocumentExporter
                 //
 
                 // The initial CAS must always be exported to ensure that the converted source
-                // document will *always* have the state it had at the time of the initial import.
+                // document will *always* have the state it had at the time of the initial
+                // import.
                 // We we do have a reliably initial CAS and instead lazily convert whenever an
-                // annotator starts annotating, then we could end up with two annotators having two
+                // annotator starts annotating, then we could end up with two annotators having
+                // two
                 // different versions of their CAS e.g. if there was a code change in the reader
                 // component that affects its output.
 
@@ -261,6 +260,15 @@ public class AnnotationDocumentExporter
                                     annDoc.getUser());
                         }
 
+                        // Export notes as comments.txt
+                        var notes = annDoc.getNotes();
+                        if (notes != null && !notes.isBlank()) {
+                            ProjectExporter.writeEntry(aStage, ANNOTATION_CAS_FOLDER + srcDoc.getName()
+                                    + "/" + annDoc.getUser() + "_comments.txt", os -> {
+                                        os.write(notes.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                                    });
+                        }
+
                         LOG.info("Exported annotation document content for user [{}] for " //
                                 + "source document {} in project {}", annDoc.getUser(), srcDoc,
                                 project);
@@ -276,8 +284,7 @@ public class AnnotationDocumentExporter
     private void exportAdditionalFormat(ZipOutputStream aStage,
             Map<Pair<Project, String>, Object> bulkOperationContext, SourceDocument srcDoc,
             FormatSupport format, String aUsername)
-        throws IOException, ProjectExportException
-    {
+            throws IOException, ProjectExportException {
         File annFile = null;
         try {
             annFile = importExportService.exportAnnotationDocument(srcDoc, aUsername, format,
@@ -286,7 +293,8 @@ public class AnnotationDocumentExporter
             var finalAnnFile = annFile;
             if (userRepository.isValidUsername(aUsername)
                     || RESERVED_USERNAMES.contains(aUsername)) {
-                // Safe-guard for legacy instances where user name validity has not been checked.
+                // Safe-guard for legacy instances where user name validity has not been
+                // checked.
                 var filename = aUsername + "." + getExtension(annFile.getName());
                 ProjectExporter.writeEntry(aStage,
                         ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName() + "/" + filename, os -> {
@@ -294,8 +302,7 @@ public class AnnotationDocumentExporter
                                 is.transferTo(os);
                             }
                         });
-            }
-            else {
+            } else {
                 ProjectExporter.writeEntry(aStage,
                         ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName() + "/" + annFile.getName(),
                         os -> {
@@ -304,13 +311,11 @@ public class AnnotationDocumentExporter
                             }
                         });
             }
-        }
-        catch (UIMAException e) {
+        } catch (UIMAException e) {
             throw new ProjectExportException("Error exporting annotations of " + srcDoc
                     + " for user [" + aUsername + "] as [" + format.getName() + "]: "
                     + ExceptionUtils.getRootCauseMessage(e), e);
-        }
-        finally {
+        } finally {
             if (annFile != null) {
                 forceDelete(annFile);
             }
@@ -320,8 +325,7 @@ public class AnnotationDocumentExporter
     @Override
     public void importData(ProjectImportRequest aRequest, Project aProject,
             ExportedProject aExProject, ZipFile aZip)
-        throws Exception
-    {
+            throws Exception {
         var start = currentTimeMillis();
 
         var nameToDoc = documentService.listSourceDocuments(aProject).stream()
@@ -329,6 +333,7 @@ public class AnnotationDocumentExporter
 
         importAnnotationDocuments(aExProject, aProject, nameToDoc);
         importAnnotationDocumentContents(aZip, aProject, nameToDoc);
+        importAnnotationDocumentNotes(aZip, aProject, nameToDoc);
 
         LOG.info("Imported [{}] annotation documents for project [{}] ({})",
                 aExProject.getSourceDocuments().size(), aExProject.getName(),
@@ -336,20 +341,20 @@ public class AnnotationDocumentExporter
     }
 
     /**
-     * Create {@link de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument} from exported
+     * Create {@link de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument}
+     * from exported
      * {@link ExportedAnnotationDocument}
      * 
      * @param aExProject
-     *            the imported project.
+     *                   the imported project.
      * @param aProject
-     *            the project.
+     *                   the project.
      * @throws IOException
-     *             if an I/O error occurs.
+     *                     if an I/O error occurs.
      */
     private void importAnnotationDocuments(ExportedProject aExProject, Project aProject,
             Map<String, SourceDocument> aNameToDoc)
-        throws IOException
-    {
+            throws IOException {
         for (var exAnnotationDocument : aExProject.getAnnotationDocuments()) {
             var sourceDocumentName = exAnnotationDocument.getName();
             var sourceDocument = aNameToDoc.get(sourceDocumentName);
@@ -374,20 +379,20 @@ public class AnnotationDocumentExporter
      * copy annotation documents (serialized CASs) from the exported project
      * 
      * @param aZipFile
-     *            the ZIP file.
+     *                 the ZIP file.
      * @param aProject
-     *            the project.
+     *                 the project.
      * @throws IOException
-     *             if an I/O error occurs.
+     *                     if an I/O error occurs.
      */
     private void importAnnotationDocumentContents(ZipFile aZipFile, Project aProject,
             Map<String, SourceDocument> aNameToDoc)
-        throws IOException
-    {
+            throws IOException {
         var n = 0;
 
         // NOTE: we resort to internal knowledge about the CasStorageService here, but
-        // it makes the import quite a bit faster than using DocumentService.getCasFile(...)
+        // it makes the import quite a bit faster than using
+        // DocumentService.getCasFile(...)
         var docRoot = repositoryProperties.getPath().toPath() //
                 .resolve(PROJECT_FOLDER) //
                 .resolve(aProject.getId().toString()) //
@@ -436,6 +441,65 @@ public class AnnotationDocumentExporter
                     "Imported content for annotation document {}: user [{}] for [{}]({}) in project [{}]({})",
                     n, username, sourceDocument.getName(), sourceDocument.getId(),
                     aProject.getName(), aProject.getId());
+        }
+    }
+
+    private void importAnnotationDocumentNotes(ZipFile aZipFile, Project aProject,
+            Map<String, SourceDocument> aNameToDoc)
+            throws IOException
+    {
+        for (var zipEnumerate = aZipFile.entries(); zipEnumerate.hasMoreElements();) {
+            var entry = (ZipEntry) zipEnumerate.nextElement();
+
+            var entryName = ProjectExporter.normalizeEntryName(entry);
+
+            if (!entryName.startsWith(ANNOTATION_AS_SERIALISED_CAS + "/")
+                    || !entryName.endsWith("_comments.txt")) {
+                continue;
+            }
+
+            var fileName = entryName.replace(ANNOTATION_AS_SERIALISED_CAS + "/", "");
+
+            if (fileName.trim().isEmpty()) {
+                continue;
+            }
+
+            // Extract username from filename (e.g. "admin_comments.txt" -> "admin")
+            var baseName = FilenameUtils.getBaseName(fileName);
+            var username = baseName.substring(0, baseName.length() - "_comments".length());
+
+            // Extract document name from path
+            var docName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
+            var sourceDocument = aNameToDoc.get(docName);
+
+            if (sourceDocument == null) {
+                LOG.warn("Source document [{}] not found for comments import, skipping", docName);
+                continue;
+            }
+
+            try {
+                var annDocs = documentService.listAnnotationDocuments(sourceDocument);
+                var annDoc = annDocs.stream()
+                        .filter(d -> username.equals(d.getUser()))
+                        .findFirst();
+
+                if (annDoc.isPresent()) {
+                    var notes = new String(aZipFile.getInputStream(entry).readAllBytes(),
+                            java.nio.charset.StandardCharsets.UTF_8);
+                    annDoc.get().setNotes(notes);
+                    documentService.createOrUpdateAnnotationDocument(annDoc.get());
+                    LOG.info("Imported notes for user [{}] on document [{}] in project [{}]",
+                            username, docName, aProject.getName());
+                }
+                else {
+                    LOG.warn("Annotation document for user [{}] on [{}] not found, "
+                            + "skipping notes import", username, docName);
+                }
+            }
+            catch (Exception e) {
+                LOG.warn("Could not import notes for user [{}] on document [{}]: {}",
+                        username, docName, e.getMessage());
+            }
         }
     }
 }

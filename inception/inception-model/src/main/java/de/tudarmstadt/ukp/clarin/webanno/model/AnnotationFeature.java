@@ -45,12 +45,18 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 /**
- * A persistence object for an annotation feature. One or more features can be defined per
- * {@link AnnotationLayer}. At least one feature must be defined which serves as the “label
- * feature”. Additional features may be defined. Features have a type which can either be String,
- * integer, float, or boolean. To control the values that a String feature assumes, it can be
- * associated with a tagset. If the feature is defined on a span type, it is also possible to add a
- * feature of another span type which then serves as a label type for the first one
+ * A persistence object for an annotation feature. One or more features can be
+ * defined per
+ * {@link AnnotationLayer}. At least one feature must be defined which serves as
+ * the “label
+ * feature”. Additional features may be defined. Features have a type which can
+ * either be String,
+ * integer, float, or boolean. To control the values that a String feature
+ * assumes, it can be
+ * associated with a tagset. If the feature is defined on a span type, it is
+ * also possible to add a
+ * feature of another span type which then serves as a label type for the first
+ * one
  */
 @Entity
 @Table(name = "annotation_feature", uniqueConstraints = {
@@ -58,8 +64,7 @@ import jakarta.persistence.UniqueConstraint;
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class AnnotationFeature
-    implements Serializable
-{
+        implements Serializable {
     private static final long serialVersionUID = 8496087166198616020L;
 
     @Id
@@ -133,22 +138,19 @@ public class AnnotationFeature
     @Column(nullable = false)
     private int rank;
 
-    public AnnotationFeature()
-    {
+    public AnnotationFeature() {
         // Nothing to do
     }
 
     // Visible for testing
-    public AnnotationFeature(String aName, String aType)
-    {
+    public AnnotationFeature(String aName, String aType) {
         name = aName;
         uiName = aName;
         type = aType;
     }
 
     // Visible for testing
-    public AnnotationFeature(long aId, AnnotationLayer aLayer, String aName, String aType)
-    {
+    public AnnotationFeature(long aId, AnnotationLayer aLayer, String aName, String aType) {
         id = aId;
         layer = aLayer;
         project = aLayer.getProject();
@@ -158,8 +160,7 @@ public class AnnotationFeature
     }
 
     public AnnotationFeature(Project aProject, AnnotationLayer aLayer, String aName, String aUiName,
-            String aType)
-    {
+            String aType) {
         project = aProject;
         layer = aLayer;
         name = aName;
@@ -168,8 +169,7 @@ public class AnnotationFeature
     }
 
     public AnnotationFeature(Project aProject, AnnotationLayer aLayer, String aName, String aUiName,
-            String aType, String aDescription, TagSet aTagSet)
-    {
+            String aType, String aDescription, TagSet aTagSet) {
         project = aProject;
         layer = aLayer;
         name = aName;
@@ -179,8 +179,7 @@ public class AnnotationFeature
         tagset = aTagSet;
     }
 
-    private AnnotationFeature(Builder builder)
-    {
+    private AnnotationFeature(Builder builder) {
         this.id = builder.id;
         this.type = builder.type;
         this.layer = builder.layer;
@@ -205,35 +204,34 @@ public class AnnotationFeature
         this.rank = builder.rank;
     }
 
-    public Long getId()
-    {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Long id)
-    {
+    public void setId(Long id) {
         this.id = id;
     }
 
     /**
-     * Get the type of feature (string, integer, float, boolean, or a span type used as a label)
+     * Get the type of feature (string, integer, float, boolean, or a span type used
+     * as a label)
      * 
      * @return the type of feature.
      */
-    public String getType()
-    {
+    public String getType() {
         return type;
     }
 
     /**
-     * The type of feature (string, integer, float, boolean, or a span type used as a label). Must
-     * be a UIMA type name such as {@code uima.cas.String} or the name of a custom type.
+     * The type of feature (string, integer, float, boolean, or a span type used as
+     * a label). Must
+     * be a UIMA type name such as {@code uima.cas.String} or the name of a custom
+     * type.
      * 
      * @param type
-     *            the type of feature.
+     *             the type of feature.
      */
-    public void setType(String type)
-    {
+    public void setType(String type) {
         this.type = type;
     }
 
@@ -242,8 +240,7 @@ public class AnnotationFeature
      * 
      * @return the layer.
      */
-    public AnnotationLayer getLayer()
-    {
+    public AnnotationLayer getLayer() {
         return layer;
     }
 
@@ -251,24 +248,21 @@ public class AnnotationFeature
      * The layer with which the feature is associated.
      * 
      * @param layer
-     *            the layer.
+     *              the layer.
      */
-    public void setLayer(AnnotationLayer layer)
-    {
+    public void setLayer(AnnotationLayer layer) {
         this.layer = layer;
     }
 
-    public Project getProject()
-    {
+    public Project getProject() {
         return project;
     }
 
     /**
      * @param project
-     *            the project.
+     *                the project.
      */
-    public void setProject(Project project)
-    {
+    public void setProject(Project project) {
         this.project = project;
     }
 
@@ -277,8 +271,7 @@ public class AnnotationFeature
      * 
      * @return the name displayed in the UI.
      */
-    public String getUiName()
-    {
+    public String getUiName() {
         return uiName;
     }
 
@@ -286,10 +279,9 @@ public class AnnotationFeature
      * The name of the feature as displayed in the UI.
      * 
      * @param uiName
-     *            the name displayed in the UI.
+     *               the name displayed in the UI.
      */
-    public void setUiName(String uiName)
-    {
+    public void setUiName(String uiName) {
         this.uiName = uiName;
     }
 
@@ -298,8 +290,7 @@ public class AnnotationFeature
      * 
      * @return the description.
      */
-    public String getDescription()
-    {
+    public String getDescription() {
         return description;
     }
 
@@ -307,10 +298,9 @@ public class AnnotationFeature
      * A description of the feature.
      * 
      * @param description
-     *            the description.
+     *                    the description.
      */
-    public void setDescription(String description)
-    {
+    public void setDescription(String description) {
         this.description = description;
     }
 
@@ -319,8 +309,7 @@ public class AnnotationFeature
      * 
      * @return if the layer is enabled.
      */
-    public boolean isEnabled()
-    {
+    public boolean isEnabled() {
         return enabled;
     }
 
@@ -328,10 +317,9 @@ public class AnnotationFeature
      * Whether the type is available in the UI (outside of the project settings)
      * 
      * @param enabled
-     *            if the layer is enabled.
+     *                if the layer is enabled.
      */
-    public void setEnabled(boolean enabled)
-    {
+    public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
 
@@ -340,8 +328,7 @@ public class AnnotationFeature
      *
      * @return the UIMA type name.
      */
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
@@ -349,237 +336,213 @@ public class AnnotationFeature
      * The name of the feature in the UIMA type system.
      * 
      * @param name
-     *            the UIMA type name.
+     *             the UIMA type name.
      */
-    public void setName(String name)
-    {
+    public void setName(String name) {
         this.name = name;
     }
 
     /**
      * @return if the feature value is rendered in the label.
      */
-    public boolean isVisible()
-    {
+    public boolean isVisible() {
         return visible;
     }
 
     /**
      * @param visible
-     *            if the feature value is rendered in the label.
+     *                if the feature value is rendered in the label.
      */
-    public void setVisible(boolean visible)
-    {
+    public void setVisible(boolean visible) {
         this.visible = visible;
     }
 
-    public boolean isIncludeInHover()
-    {
+    public boolean isIncludeInHover() {
         return includeInHover;
     }
 
-    public void setIncludeInHover(boolean includeInHover)
-    {
+    public void setIncludeInHover(boolean includeInHover) {
         this.includeInHover = includeInHover;
     }
 
     /**
      * @return the tagset.
      */
-    public TagSet getTagset()
-    {
+    public TagSet getTagset() {
         return tagset;
     }
 
     /**
-     * The tagset which is used for this layer. If this is null, the label can be freely set (text
+     * The tagset which is used for this layer. If this is null, the label can be
+     * freely set (text
      * input field), otherwise only values from the tagset can be used as labels.
      * 
      * @param tagset
-     *            the tagset.
+     *               the tagset.
      */
-    public void setTagset(TagSet tagset)
-    {
+    public void setTagset(TagSet tagset) {
         this.tagset = tagset;
     }
 
-    public MultiValueMode getMultiValueMode()
-    {
+    public MultiValueMode getMultiValueMode() {
         if (multiValueMode == null) {
             return MultiValueMode.NONE;
-        }
-        else {
+        } else {
             return multiValueMode;
         }
     }
 
     /**
      * @param aMode
-     *            used to control if a feature can have multiple values and how these are
-     *            represented.
+     *              used to control if a feature can have multiple values and how
+     *              these are
+     *              represented.
      * 
      */
-    public void setMode(MultiValueMode aMode)
-    {
+    public void setMode(MultiValueMode aMode) {
         multiValueMode = aMode;
     }
 
-    public LinkMode getLinkMode()
-    {
+    public LinkMode getLinkMode() {
         if (linkMode == null) {
             return LinkMode.NONE;
-        }
-        else {
+        } else {
             return linkMode;
         }
     }
 
     /**
      * @param aLinkMode
-     *            indicates what kind of relation if the feature is a link to another feature
-     *            structure, e.g. {@link LinkMode#NONE}, {@link LinkMode#SIMPLE},
-     *            {@link LinkMode#WITH_ROLE}.
+     *                  indicates what kind of relation if the feature is a link to
+     *                  another feature
+     *                  structure, e.g. {@link LinkMode#NONE},
+     *                  {@link LinkMode#SIMPLE},
+     *                  {@link LinkMode#WITH_ROLE}.
      */
-    public void setLinkMode(LinkMode aLinkMode)
-    {
+    public void setLinkMode(LinkMode aLinkMode) {
         linkMode = aLinkMode;
     }
 
-    public String getLinkTypeName()
-    {
+    public String getLinkTypeName() {
         return linkTypeName;
     }
 
     /**
      * @param aLinkTypeName
-     *            indicates the UIMA type that bears the role feature if a
-     *            {@link LinkMode#WITH_ROLE} type is used.
+     *                      indicates the UIMA type that bears the role feature if a
+     *                      {@link LinkMode#WITH_ROLE} type is used.
      */
-    public void setLinkTypeName(String aLinkTypeName)
-    {
+    public void setLinkTypeName(String aLinkTypeName) {
         linkTypeName = aLinkTypeName;
     }
 
-    public String getLinkTypeRoleFeatureName()
-    {
+    public String getLinkTypeRoleFeatureName() {
         return linkTypeRoleFeatureName;
     }
 
     /**
      * @param aLinkTypeRoleFeatureName
-     *            the name of the feature bearing the role.
+     *                                 the name of the feature bearing the role.
      */
-    public void setLinkTypeRoleFeatureName(String aLinkTypeRoleFeatureName)
-    {
+    public void setLinkTypeRoleFeatureName(String aLinkTypeRoleFeatureName) {
         linkTypeRoleFeatureName = aLinkTypeRoleFeatureName;
     }
 
-    public String getLinkTypeTargetFeatureName()
-    {
+    public String getLinkTypeTargetFeatureName() {
         return linkTypeTargetFeatureName;
     }
 
     /**
      * @param aLinkTypeTargetFeatureName
-     *            the name of the feature pointing to the target.
+     *                                   the name of the feature pointing to the
+     *                                   target.
      * 
      */
-    public void setLinkTypeTargetFeatureName(String aLinkTypeTargetFeatureName)
-    {
+    public void setLinkTypeTargetFeatureName(String aLinkTypeTargetFeatureName) {
         linkTypeTargetFeatureName = aLinkTypeTargetFeatureName;
     }
 
-    public boolean isRemember()
-    {
+    public boolean isRemember() {
         return remember;
     }
 
     /**
      * @param aRemember
-     *            whether the annotation detail editor should carry values of this feature over when
-     *            creating a new annotation of the same type. This can be useful when creating many
-     *            annotations of the same type in a row.
+     *                  whether the annotation detail editor should carry values of
+     *                  this feature over when
+     *                  creating a new annotation of the same type. This can be
+     *                  useful when creating many
+     *                  annotations of the same type in a row.
      * 
      */
-    public void setRemember(boolean aRemember)
-    {
+    public void setRemember(boolean aRemember) {
         remember = aRemember;
     }
 
-    public boolean isHideUnconstraintFeature()
-    {
+    public boolean isHideUnconstraintFeature() {
         return hideUnconstraintFeature;
     }
 
     /**
      * @param aHideUnconstraintFeature
-     *            whether the feature should be showed if constraints rules are enabled and based on
-     *            the evaluation of constraint rules on a feature.
+     *                                 whether the feature should be showed if
+     *                                 constraints rules are enabled and based on
+     *                                 the evaluation of constraint rules on a
+     *                                 feature.
      * 
      */
-    public void setHideUnconstraintFeature(boolean aHideUnconstraintFeature)
-    {
+    public void setHideUnconstraintFeature(boolean aHideUnconstraintFeature) {
         hideUnconstraintFeature = aHideUnconstraintFeature;
     }
 
-    public boolean isRequired()
-    {
+    public boolean isRequired() {
         return required;
     }
 
-    public void setRequired(boolean aRequired)
-    {
+    public void setRequired(boolean aRequired) {
         required = aRequired;
     }
 
     /**
-     * @return {@code true} if this is not a plain UIMA feature type but a "virtual" feature that
+     * @return {@code true} if this is not a plain UIMA feature type but a "virtual"
+     *         feature that
      *         must be mapped to a plain UIMA type (usually to String).
      */
-    public boolean isVirtualFeature()
-    {
+    public boolean isVirtualFeature() {
         return getType().contains(":");
     }
 
-    public String getTraits()
-    {
+    public String getTraits() {
         return traits;
     }
 
-    public void setTraits(String aTraits)
-    {
+    public void setTraits(String aTraits) {
         traits = aTraits;
     }
 
-    public boolean isCuratable()
-    {
+    public boolean isCuratable() {
         return curatable;
     }
 
-    public void setCuratable(boolean aCuratable)
-    {
+    public void setCuratable(boolean aCuratable) {
         curatable = aCuratable;
     }
 
-    public int getRank()
-    {
+    public int getRank() {
         return rank;
     }
 
-    public void setRank(int aRank)
-    {
+    public void setRank(int aRank) {
         rank = aRank;
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "[" + name + "](" + id + ")";
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((layer == null) ? 0 : layer.hashCode());
@@ -590,8 +553,7 @@ public class AnnotationFeature
     }
 
     @Override
-    public boolean equals(Object obj)
-    {
+    public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
@@ -606,45 +568,39 @@ public class AnnotationFeature
             if (other.layer != null) {
                 return false;
             }
-        }
-        else if (!layer.equals(other.layer)) {
+        } else if (!layer.equals(other.layer)) {
             return false;
         }
         if (name == null) {
             if (other.name != null) {
                 return false;
             }
-        }
-        else if (!name.equals(other.name)) {
+        } else if (!name.equals(other.name)) {
             return false;
         }
         if (project == null) {
             if (other.project != null) {
                 return false;
             }
-        }
-        else if (!project.equals(other.project)) {
+        } else if (!project.equals(other.project)) {
             return false;
         }
         if (type == null) {
             if (other.type != null) {
                 return false;
             }
-        }
-        else if (!type.equals(other.type)) {
+        } else if (!type.equals(other.type)) {
             return false;
         }
         return true;
     }
 
-    public static Builder builder()
-    {
+    public static Builder builder() {
         return new Builder();
     }
 
     @SuppressWarnings("hiding")
-    public static final class Builder
-    {
+    public static final class Builder {
         private Long id;
         private String type;
         private AnnotationLayer layer;
@@ -668,166 +624,139 @@ public class AnnotationFeature
         private boolean curatable = true;
         private int rank = 0;
 
-        private Builder()
-        {
+        private Builder() {
         }
 
-        public Builder forFeature(Feature aFeature)
-        {
+        public Builder forFeature(Feature aFeature) {
             withType(aFeature.getRange().getName());
             withName(aFeature.getShortName());
             withUiName(aFeature.getShortName());
             return this;
         }
 
-        public Builder withId(Long id)
-        {
+        public Builder withId(Long id) {
             this.id = id;
             return this;
         }
 
-        public Builder withType(String type)
-        {
+        public Builder withType(String type) {
             this.type = type;
             return this;
         }
 
-        public Builder withRange(String type)
-        {
+        public Builder withRange(String type) {
             return withType(type);
         }
 
-        public Builder withRange(Class<? extends TOP> aClazz)
-        {
+        public Builder withRange(Class<? extends TOP> aClazz) {
             if (CommonPrimitiveArray.class.isAssignableFrom(aClazz)) {
                 withMultiValueMode(ARRAY);
             }
             return withType(getUimaTypeName(aClazz));
         }
 
-        public Builder withLayer(AnnotationLayer layer)
-        {
+        public Builder withLayer(AnnotationLayer layer) {
             this.layer = layer;
             this.project = layer.getProject();
             return this;
         }
 
-        public Builder withProject(Project project)
-        {
+        public Builder withProject(Project project) {
             this.project = project;
             return this;
         }
 
-        public Builder withTagset(TagSet tagset)
-        {
+        public Builder withTagset(TagSet tagset) {
             this.tagset = tagset;
             return this;
         }
 
-        public Builder withUiName(String uiName)
-        {
+        public Builder withUiName(String uiName) {
             this.uiName = uiName;
             return this;
         }
 
-        public Builder withDescription(String description)
-        {
+        public Builder withDescription(String description) {
             this.description = description;
             return this;
         }
 
-        public Builder withEnabled(boolean enabled)
-        {
+        public Builder withEnabled(boolean enabled) {
             this.enabled = enabled;
             return this;
         }
 
-        public Builder withName(String name)
-        {
+        public Builder withName(String name) {
             this.name = name;
             return this;
         }
 
-        public Builder withVisible(boolean visible)
-        {
+        public Builder withVisible(boolean visible) {
             this.visible = visible;
             return this;
         }
 
-        public Builder withIncludeInHover(boolean includeInHover)
-        {
+        public Builder withIncludeInHover(boolean includeInHover) {
             this.includeInHover = includeInHover;
             return this;
         }
 
-        public Builder withRemember(boolean remember)
-        {
+        public Builder withRemember(boolean remember) {
             this.remember = remember;
             return this;
         }
 
-        public Builder withHideUnconstraintFeature(boolean hideUnconstraintFeature)
-        {
+        public Builder withHideUnconstraintFeature(boolean hideUnconstraintFeature) {
             this.hideUnconstraintFeature = hideUnconstraintFeature;
             return this;
         }
 
-        public Builder withRequired(boolean required)
-        {
+        public Builder withRequired(boolean required) {
             this.required = required;
             return this;
         }
 
-        public Builder withMultiValueMode(MultiValueMode multiValueMode)
-        {
+        public Builder withMultiValueMode(MultiValueMode multiValueMode) {
             this.multiValueMode = multiValueMode;
             return this;
         }
 
-        public Builder withLinkMode(LinkMode linkMode)
-        {
+        public Builder withLinkMode(LinkMode linkMode) {
             this.linkMode = linkMode;
             return this;
         }
 
-        public Builder withLinkTypeName(String linkTypeName)
-        {
+        public Builder withLinkTypeName(String linkTypeName) {
             this.linkTypeName = linkTypeName;
             return this;
         }
 
-        public Builder withLinkTypeRoleFeatureName(String linkTypeRoleFeatureName)
-        {
+        public Builder withLinkTypeRoleFeatureName(String linkTypeRoleFeatureName) {
             this.linkTypeRoleFeatureName = linkTypeRoleFeatureName;
             return this;
         }
 
-        public Builder withLinkTypeTargetFeatureName(String linkTypeTargetFeatureName)
-        {
+        public Builder withLinkTypeTargetFeatureName(String linkTypeTargetFeatureName) {
             this.linkTypeTargetFeatureName = linkTypeTargetFeatureName;
             return this;
         }
 
-        public Builder withTraits(String traits)
-        {
+        public Builder withTraits(String traits) {
             this.traits = traits;
             return this;
         }
 
-        public Builder withCuratable(boolean curatable)
-        {
+        public Builder withCuratable(boolean curatable) {
             this.curatable = curatable;
             return this;
         }
 
-        public Builder withRank(int aRank)
-        {
+        public Builder withRank(int aRank) {
             this.rank = aRank;
             return this;
         }
 
-        public AnnotationFeature build()
-        {
+        public AnnotationFeature build() {
             return new AnnotationFeature(this);
         }
     }

@@ -104,11 +104,11 @@ import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 import jakarta.persistence.NoResultException;
 
 /**
- * A Panel Used to add Layers to a selected {@link Project} in the project settings page
+ * A Panel Used to add Layers to a selected {@link Project} in the project
+ * settings page
  */
 public class ProjectLayersPanel
-    extends ProjectSettingsPanelBase
-{
+        extends ProjectSettingsPanelBase {
     static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final long serialVersionUID = -7870526462864489252L;
@@ -134,8 +134,7 @@ public class ProjectLayersPanel
     private IModel<AnnotationLayer> selectedLayer;
     private IModel<AnnotationFeature> selectedFeature;
 
-    public ProjectLayersPanel(String id, final IModel<Project> aProjectModel)
-    {
+    public ProjectLayersPanel(String id, final IModel<Project> aProjectModel) {
         super(id, aProjectModel);
 
         selectedLayer = Model.of();
@@ -160,8 +159,7 @@ public class ProjectLayersPanel
     }
 
     @Override
-    protected void onModelChanged()
-    {
+    protected void onModelChanged() {
         super.onModelChanged();
 
         layerDetailForm.setModelObject(null);
@@ -169,8 +167,7 @@ public class ProjectLayersPanel
     }
 
     public class LayerSelectionPane
-        extends WebMarkupContainer
-    {
+            extends WebMarkupContainer {
         private static final long serialVersionUID = -1L;
 
         private final Map<AnnotationLayer, String> colors = new HashMap<>();
@@ -179,8 +176,7 @@ public class ProjectLayersPanel
         private final IModel<List<LayerInitializer>> layerInitializers;
         private final LambdaAjaxLink addButton;
 
-        public LayerSelectionPane(String id, IModel<AnnotationLayer> aModel)
-        {
+        public LayerSelectionPane(String id, IModel<AnnotationLayer> aModel) {
             super(id, aModel);
 
             layerInitializers = LoadableDetachableModel.of(this::listLayerInitializers);
@@ -200,22 +196,18 @@ public class ProjectLayersPanel
             queue(addButton);
 
             layerSelection = new Select<>("layerSelection", aModel);
-            var layers = new ListView<AnnotationLayer>("layers", LambdaModel.of(this::listLayers))
-            {
+            var layers = new ListView<AnnotationLayer>("layers", LambdaModel.of(this::listLayers)) {
                 private static final long serialVersionUID = 8901519963052692214L;
 
                 @Override
-                protected void populateItem(final ListItem<AnnotationLayer> item)
-                {
+                protected void populateItem(final ListItem<AnnotationLayer> item) {
                     item.add(new SelectOption<AnnotationLayer>("layer",
-                            new Model<>(item.getModelObject()))
-                    {
+                            new Model<>(item.getModelObject())) {
                         private static final long serialVersionUID = 3095089418860168215L;
 
                         @Override
                         public void onComponentTagBody(MarkupStream markupStream,
-                                ComponentTag openTag)
-                        {
+                                ComponentTag openTag) {
                             replaceComponentTagBody(markupStream, openTag,
                                     item.getModelObject().getUiName());
                         }
@@ -240,8 +232,7 @@ public class ProjectLayersPanel
             }));
         }
 
-        private void actionCreateLayer(AjaxRequestTarget aTarget)
-        {
+        private void actionCreateLayer(AjaxRequestTarget aTarget) {
             var layer = new AnnotationLayer();
             layer.setProject(ProjectLayersPanel.this.getModelObject());
 
@@ -250,21 +241,21 @@ public class ProjectLayersPanel
 
             aTarget.add(ProjectLayersPanel.this);
 
-            // AjaxRequestTarget.focusComponent does not work. It sets the focus but the cursor
-            // does not actually appear in the input field. However, using JQuery here works.
+            // AjaxRequestTarget.focusComponent does not work. It sets the focus but the
+            // cursor
+            // does not actually appear in the input field. However, using JQuery here
+            // works.
             aTarget.appendJavaScript(WicketUtil.wrapInTryCatch("$('#"
                     + layerDetailForm.getInitialFocusComponent().getMarkupId() + "').focus();"));
         }
 
-        private void actionAddLayer(AjaxRequestTarget aTarget)
-        {
+        private void actionAddLayer(AjaxRequestTarget aTarget) {
             var dialogContent = new LayerTemplateSelectionDialogPanel(
                     BootstrapModalDialog.CONTENT_ID, getModel(), layerInitializers);
             dialog.open(dialogContent, aTarget);
         }
 
-        private List<LayerInitializer> listLayerInitializers()
-        {
+        private List<LayerInitializer> listLayerInitializers() {
             if (getModelObject() == null) {
                 return emptyList();
             }
@@ -281,8 +272,7 @@ public class ProjectLayersPanel
         }
 
         @OnEvent
-        public void onLayerTemplateSelected(LayerTemplateSelectedEvent aEvent)
-        {
+        public void onLayerTemplateSelected(LayerTemplateSelectedEvent aEvent) {
             var target = aEvent.getTarget();
             var initializer = aEvent.getLayerInitializer();
             try {
@@ -294,8 +284,7 @@ public class ProjectLayersPanel
                         .build();
                 projectService.initializeProject(request, asList(initializer));
                 success("Applied project initializer [" + initializer.getName() + "]");
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 error("Error applying project initializer [" + initializer.getName() + "]: "
                         + ExceptionUtils.getRootCauseMessage(e));
                 LOG.error("Error applying project initializer {}", initializer, e);
@@ -305,8 +294,7 @@ public class ProjectLayersPanel
                     this, ProjectLayersPanel.this.getModelObject()));
         }
 
-        private List<AnnotationLayer> listLayers()
-        {
+        private List<AnnotationLayer> listLayers() {
             var project = ProjectLayersPanel.this.getModelObject();
 
             if (project.getId() == null) {
@@ -319,11 +307,9 @@ public class ProjectLayersPanel
                 try {
                     var tokenLayer = annotationService.findLayer(project, Token.class.getName());
                     _layers.remove(tokenLayer);
-                }
-                catch (NoResultException e) {
+                } catch (NoResultException e) {
                     LOG.trace("Project has no Token type!", e);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     LOG.error("Unexpected error trying to locate Token type", e);
                 }
             }
@@ -333,11 +319,9 @@ public class ProjectLayersPanel
                     var sentenceLayer = annotationService.findLayer(project,
                             Sentence.class.getName());
                     _layers.remove(sentenceLayer);
-                }
-                catch (NoResultException e) {
+                } catch (NoResultException e) {
                     LOG.trace("Project has no Sentence type!", e);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     LOG.error("Unexpected error trying to locate Sentence type", e);
                 }
             }
@@ -345,11 +329,9 @@ public class ProjectLayersPanel
             for (var layer : _layers) {
                 if (layer.isBuiltIn() && layer.isEnabled()) {
                     colors.put(layer, "green");
-                }
-                else if (layer.isEnabled()) {
+                } else if (layer.isEnabled()) {
                     colors.put(layer, "blue");
-                }
-                else {
+                } else {
                     colors.put(layer, "red");
                 }
             }
@@ -359,15 +341,13 @@ public class ProjectLayersPanel
     }
 
     private class ImportLayerForm
-        extends Form<String>
-    {
+            extends Form<String> {
         private static final long serialVersionUID = -7777616763931128598L;
 
         private BootstrapFileInputField fileUpload;
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
-        public ImportLayerForm(String id)
-        {
+        public ImportLayerForm(String id) {
             super(id);
 
             add(fileUpload = new BootstrapFileInputField("content", new ListModel<>()));
@@ -379,16 +359,14 @@ public class ProjectLayersPanel
             add(new LambdaAjaxButton("import", this::actionImport));
         }
 
-        private void actionImport(AjaxRequestTarget aTarget, Form<String> aForm)
-        {
+        private void actionImport(AjaxRequestTarget aTarget, Form<String> aForm) {
             List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
             Project project = ProjectLayersPanel.this.getModelObject();
 
             if (isEmpty(uploadedFiles)) {
                 error("Please choose file with layer details before uploading");
                 return;
-            }
-            else if (isNull(project.getId())) {
+            } else if (isNull(project.getId())) {
                 error("Project not yet created, please save project details!");
                 return;
             }
@@ -403,15 +381,13 @@ public class ProjectLayersPanel
                     // type system file.
                     if (Arrays.equals(buf, new byte[] { '<', '?', 'x', 'm', 'l' })) {
                         importUimaTypeSystemFile(bis);
-                    }
-                    else {
+                    } else {
                         User user = userRepository.getCurrentUser();
                         var layer = LayerImportExportUtils.importLayerFile(annotationService, user,
                                 project, bis);
                         layerDetailForm.setModelObject(layer);
                     }
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     error("Error importing layers: " + ExceptionUtils.getRootCauseMessage(e));
                     aTarget.addChildren(getPage(), IFeedback.class);
                     LOG.error("Error importing layers", e);
@@ -422,8 +398,7 @@ public class ProjectLayersPanel
         }
 
         private void importUimaTypeSystemFile(InputStream aIS)
-            throws IOException, InvalidXMLException, ResourceInitializationException
-        {
+                throws IOException, InvalidXMLException, ResourceInitializationException {
             Project project = ProjectLayersPanel.this.getModelObject();
             TypeSystemDescription tsd = UIMAFramework.getXMLParser()
                     .parseTypeSystemDescription(new XMLInputSource(aIS, null));
@@ -433,8 +408,7 @@ public class ProjectLayersPanel
     }
 
     public class FeatureSelectionForm
-        extends Form<AnnotationFeature>
-    {
+            extends Form<AnnotationFeature> {
         private static final String CID_CREATE_FEATURE = "new";
 
         private static final long serialVersionUID = -1L;
@@ -446,8 +420,7 @@ public class ProjectLayersPanel
         private final IModel<List<FeatureInitializer>> featureInitializers;
         private final LambdaAjaxLink addButton;
 
-        public FeatureSelectionForm(String id, IModel<AnnotationFeature> aModel)
-        {
+        public FeatureSelectionForm(String id, IModel<AnnotationFeature> aModel) {
             super(id, aModel);
 
             setOutputMarkupPlaceholderTag(true);
@@ -466,19 +439,16 @@ public class ProjectLayersPanel
 
             add(new DocLink("featuresHelpLink", "sect_projects_layers_features"));
 
-            overviewList = new ListChoice<AnnotationFeature>("feature")
-            {
+            overviewList = new ListChoice<AnnotationFeature>("feature") {
                 private static final long serialVersionUID = 1L;
                 {
                     setChoices(FeatureSelectionForm.this::listFeatures);
                     setModel(aModel);
-                    setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>()
-                    {
+                    setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>() {
                         private static final long serialVersionUID = 4610648616450168333L;
 
                         @Override
-                        public Object getDisplayValue(AnnotationFeature aObject)
-                        {
+                        public Object getDisplayValue(AnnotationFeature aObject) {
                             return aObject.getUiName() + " : ["
                                     + StringUtils.substringAfterLast(aObject.getType(), ".") + "]";
                         }
@@ -487,8 +457,7 @@ public class ProjectLayersPanel
                     add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
                 }
 
-                private void onChange(AjaxRequestTarget _target)
-                {
+                private void onChange(AjaxRequestTarget _target) {
                     // list and detail panel share the same model, but they are not
                     // automatically notified of updates to the model unless the
                     // updates go through their respective setModelObject() calls
@@ -497,8 +466,7 @@ public class ProjectLayersPanel
                 }
 
                 @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
-                {
+                protected CharSequence getDefaultChoice(String aSelectedValue) {
                     return "";
                 }
             };
@@ -524,8 +492,7 @@ public class ProjectLayersPanel
             add(createButton);
         }
 
-        private void moveTagUp(AjaxRequestTarget aTarget)
-        {
+        private void moveTagUp(AjaxRequestTarget aTarget) {
             @SuppressWarnings("unchecked")
             var tags = (List<AnnotationFeature>) overviewList.getChoices();
             int i = tags.indexOf(overviewList.getModelObject());
@@ -540,8 +507,7 @@ public class ProjectLayersPanel
             updateFeatureRanks(aTarget, tags);
         }
 
-        private void moveTagDown(AjaxRequestTarget aTarget)
-        {
+        private void moveTagDown(AjaxRequestTarget aTarget) {
             @SuppressWarnings("unchecked")
             var tags = (List<AnnotationFeature>) overviewList.getChoices();
             int i = tags.indexOf(overviewList.getModelObject());
@@ -557,8 +523,7 @@ public class ProjectLayersPanel
         }
 
         private void updateFeatureRanks(AjaxRequestTarget aTarget,
-                List<AnnotationFeature> aFeatures)
-        {
+                List<AnnotationFeature> aFeatures) {
             annotationService.updateFeatureRanks(selectedLayer.getObject(), aFeatures);
 
             var selected = overviewList.getModelObject();
@@ -571,8 +536,7 @@ public class ProjectLayersPanel
             aTarget.add(overviewList, btnMoveUp, btnMoveDown);
         }
 
-        private void actionCreateFeature(AjaxRequestTarget aTarget)
-        {
+        private void actionCreateFeature(AjaxRequestTarget aTarget) {
             // cancel selection of feature list
             selectedFeature.setObject(null);
 
@@ -583,22 +547,21 @@ public class ProjectLayersPanel
 
             aTarget.add(featureSelectionForm);
             aTarget.add(featureDetailForm);
-            // AjaxRequestTarget.focusComponent does not work. It sets the focus but the cursor does
+            // AjaxRequestTarget.focusComponent does not work. It sets the focus but the
+            // cursor does
             // not actually appear in the input field. However, using JQuery here works.
             aTarget.appendJavaScript(WicketUtil.wrapInTryCatch("$('#"
                     + featureDetailForm.getInitialFocusComponent().getMarkupId() + "').focus();"));
         }
 
-        private void actionAddFeature(AjaxRequestTarget aTarget)
-        {
+        private void actionAddFeature(AjaxRequestTarget aTarget) {
             var dialogContent = new FeatureTemplateSelectionDialogPanel(
                     BootstrapModalDialog.CONTENT_ID, ProjectLayersPanel.this.getModel(),
                     featureInitializers);
             dialog.open(dialogContent, aTarget);
         }
 
-        private List<AnnotationFeature> listFeatures()
-        {
+        private List<AnnotationFeature> listFeatures() {
             var features = annotationService
                     .listAnnotationFeature(layerDetailForm.getModelObject());
 
@@ -611,14 +574,12 @@ public class ProjectLayersPanel
                     }
                 }
                 return filtered;
-            }
-            else {
+            } else {
                 return features;
             }
         }
 
-        private List<FeatureInitializer> listFeatureInitializers()
-        {
+        private List<FeatureInitializer> listFeatureInitializers() {
             if (!selectedLayer.isPresent().getObject()) {
                 return emptyList();
             }
@@ -629,8 +590,7 @@ public class ProjectLayersPanel
         }
 
         @Override
-        protected void onConfigure()
-        {
+        protected void onConfigure() {
             super.onConfigure();
 
             setVisible(selectedLayer.getObject() != null
@@ -638,8 +598,7 @@ public class ProjectLayersPanel
         }
 
         @OnEvent
-        public void onFeatureTemplateSelected(FeatureTemplateSelectedEvent aEvent)
-        {
+        public void onFeatureTemplateSelected(FeatureTemplateSelectedEvent aEvent) {
             var target = aEvent.getTarget();
             var initializer = aEvent.getLayerInitializer();
             try {
@@ -648,8 +607,7 @@ public class ProjectLayersPanel
                 target.addChildren(getPage(), IFeedback.class);
                 initializer.configure(selectedLayer.getObject());
                 success("Applied feature initializer [" + initializer.getName() + "]");
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 error("Error applying feature initializer [" + initializer.getName() + "]: "
                         + ExceptionUtils.getRootCauseMessage(e));
                 LOG.error("Error applying feature initializer {}", initializer, e);

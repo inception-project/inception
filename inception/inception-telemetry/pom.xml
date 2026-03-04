@@ -156,6 +156,8 @@
             <ignoredDependencies>
               <!-- Used via reflection -->
               <ignoredDependency>org.piwik.java.tracking:matomo-java-tracker</ignoredDependency>
+              <!-- Transitive dependency used by wicketstuff-kendo-ui -->
+              <ignoredDependency>org.danekja:jdk-serializable-functional</ignoredDependency>
             </ignoredDependencies>
           </configuration>
         </plugin>

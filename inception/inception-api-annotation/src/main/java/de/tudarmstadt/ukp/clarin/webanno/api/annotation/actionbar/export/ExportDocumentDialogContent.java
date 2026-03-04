@@ -52,8 +52,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.InputStreamResourceStream;
  * Modal window to Export annotated document
  */
 public class ExportDocumentDialogContent
-    extends Panel
-{
+        extends Panel {
     private static final long serialVersionUID = -2102136855109258306L;
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -66,8 +65,7 @@ public class ExportDocumentDialogContent
 
     private final LambdaAjaxLink cancelButton;
 
-    public ExportDocumentDialogContent(String aId, IModel<AnnotatorState> aModel)
-    {
+    public ExportDocumentDialogContent(String aId, IModel<AnnotatorState> aModel) {
         super(aId);
         state = aModel;
 
@@ -97,9 +95,9 @@ public class ExportDocumentDialogContent
         queue(new LambdaAjaxLink("closeDialog", this::actionCloseDialog));
     }
 
-    private IResourceStream export()
-    {
+    private IResourceStream export() {
         File exportedFile = null;
+        File zipFile = null;
         try {
             var s = state.getObject();
             var format = importExportService.getFormatByName(preferences.getObject().format).get();
@@ -108,43 +106,79 @@ public class ExportDocumentDialogContent
 
             var name = exportedFile.getName();
 
-            // Safe-guard for legacy instances where document name validity has not been checked
+            // Safe-guard for legacy instances where document name validity has not been
+            // checked
             // during import.
             if (documentService.isValidDocumentName(s.getDocument().getName())) {
                 name = FilenameUtils.getBaseName(s.getDocument().getName()) + "."
                         + FilenameUtils.getExtension(exportedFile.getName());
             }
 
-            var resource = new InputStreamResourceStream(new FileInputStream(exportedFile), name);
+            // Check if there are notes to export
+            var annotationDocument = documentService.getAnnotationDocument(
+                    s.getDocument(), s.getUser());
+            var notes = annotationDocument.getNotes();
 
-            var cleaner = Application.get().getResourceSettings().getFileCleaner();
-            cleaner.track(exportedFile, resource);
+            if (notes != null && !notes.isBlank()) {
+                // Create a ZIP file containing both the document and comments.txt
+                var baseName = FilenameUtils.getBaseName(s.getDocument().getName());
+                zipFile = java.io.File.createTempFile(baseName + "_export", ".zip");
 
-            return resource;
-        }
-        catch (Exception e) {
+                try (var zos = new java.util.zip.ZipOutputStream(
+                        new java.io.FileOutputStream(zipFile))) {
+                    // Add the exported document
+                    zos.putNextEntry(new java.util.zip.ZipEntry(name));
+                    try (var fis = new FileInputStream(exportedFile)) {
+                        fis.transferTo(zos);
+                    }
+                    zos.closeEntry();
+
+                    // Add comments.txt
+                    zos.putNextEntry(new java.util.zip.ZipEntry("comments.txt"));
+                    zos.write(notes.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    zos.closeEntry();
+                }
+
+                var zipName = baseName + ".zip";
+                var resource = new InputStreamResourceStream(new FileInputStream(zipFile), zipName);
+
+                var cleaner = Application.get().getResourceSettings().getFileCleaner();
+                cleaner.track(zipFile, resource);
+                cleaner.track(exportedFile, resource);
+
+                return resource;
+            } else {
+                // No notes, export just the document as before
+                var resource = new InputStreamResourceStream(new FileInputStream(exportedFile), name);
+
+                var cleaner = Application.get().getResourceSettings().getFileCleaner();
+                cleaner.track(exportedFile, resource);
+
+                return resource;
+            }
+        } catch (Exception e) {
             LOG.error("Export failed", e);
             getSession().error("Export failed: " + ExceptionUtils.getRootCauseMessage(e));
             if (exportedFile != null) {
                 exportedFile.delete();
             }
+            if (zipFile != null) {
+                zipFile.delete();
+            }
             return null;
         }
     }
 
-    protected void actionCloseDialog(AjaxRequestTarget aTarget)
-    {
+    protected void actionCloseDialog(AjaxRequestTarget aTarget) {
         findParent(ModalDialog.class).close(aTarget);
     }
 
-    public void onShow(AjaxRequestTarget aTarget)
-    {
+    public void onShow(AjaxRequestTarget aTarget) {
         aTarget.focusComponent(cancelButton);
     }
 
     private static class Preferences
-        implements Serializable
-    {
+            implements Serializable {
         private static final long serialVersionUID = -4905538356691404575L;
 
         public String format;

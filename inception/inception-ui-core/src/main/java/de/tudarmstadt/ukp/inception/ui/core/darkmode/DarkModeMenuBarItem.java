@@ -53,12 +53,12 @@ public class DarkModeMenuBarItem
 
         user = LoadableDetachableModel.of(userRepository::getCurrentUser);
 
-        queue(new LambdaAjaxLink(CID_DARK_MODE_SWITCH, this::actionToggleDarkMode));
+        var link = new LambdaAjaxLink(CID_DARK_MODE_SWITCH, this::actionToggleDarkMode);
+        link.add(visibleWhen(user.isPresent()));
+        queue(link);
         queue(new Icon(CID_ICON, LoadableDetachableModel.of( //
                 () -> UIState.DEFAULT_THEME.equals(getTheme()) ? FontAwesome5IconType.sun_s
                         : FontAwesome5IconType.moon_s)));
-
-        add(visibleWhen(user.isPresent()));
     }
 
     private String getTheme()

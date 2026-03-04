@@ -33,8 +33,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 
 public class ActionBar
-    extends Panel
-{
+        extends Panel {
     private static final long serialVersionUID = -5445521297124750502L;
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -43,18 +42,15 @@ public class ActionBar
 
     private final Set<String> activeExtensions = new HashSet<>();
 
-    public ActionBar(String aId)
-    {
+    public ActionBar(String aId) {
         super(aId);
 
         add(new ListView<ActionBarExtension>("items",
-                LoadableDetachableModel.of(this::getExtensions))
-        {
+                LoadableDetachableModel.of(this::getExtensions)) {
             private static final long serialVersionUID = -3124915140030491897L;
 
             @Override
-            protected void populateItem(ListItem<ActionBarExtension> aItem)
-            {
+            protected void populateItem(ListItem<ActionBarExtension> aItem) {
                 aItem.add(aItem.getModelObject().createActionBarItem("item",
                         (AnnotationPageBase) getPage()));
             }
@@ -62,8 +58,7 @@ public class ActionBar
     }
 
     @Override
-    protected void onInitialize()
-    {
+    protected void onInitialize() {
         super.onInitialize();
 
         var page = (AnnotationPageBase) getPage();
@@ -73,8 +68,7 @@ public class ActionBar
         }
     }
 
-    public void refresh()
-    {
+    public void refresh() {
         var page = (AnnotationPageBase) getPage();
 
         // Notify removed extensions
@@ -97,8 +91,7 @@ public class ActionBar
         }
     }
 
-    private List<ActionBarExtension> getExtensions()
-    {
+    private List<ActionBarExtension> getExtensions() {
         return actionBarExtensionPoint.getExtensions((AnnotationPageBase) getPage());
     }
 }

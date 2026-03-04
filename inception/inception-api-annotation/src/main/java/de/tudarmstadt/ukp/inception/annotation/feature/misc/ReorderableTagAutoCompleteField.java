@@ -38,52 +38,47 @@ import de.tudarmstadt.ukp.inception.support.kendo.KendoChoiceDescriptionScriptRe
 import de.tudarmstadt.ukp.inception.support.kendo.KendoStyleUtils;
 
 public class ReorderableTagAutoCompleteField
-    extends AutoCompleteTextField<ReorderableTag>
-{
+        extends AutoCompleteTextField<ReorderableTag> {
     private static final long serialVersionUID = 311286735004237737L;
 
     private final IModel<FeatureState> featureState;
     private final int maxResults;
 
     public ReorderableTagAutoCompleteField(String aId, IModel<FeatureState> aFeatureState,
-            int aMaxResults)
-    {
+            int aMaxResults) {
         super(aId);
         featureState = aFeatureState;
         maxResults = aMaxResults;
     }
 
     public ReorderableTagAutoCompleteField(String aId, IModel<ReorderableTag> aModel,
-            IModel<FeatureState> aFeatureState, int aMaxResults)
-    {
+            IModel<FeatureState> aFeatureState, int aMaxResults) {
         super(aId, aModel);
         featureState = aFeatureState;
         maxResults = aMaxResults;
     }
 
     @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
+    public void renderHead(IHeaderResponse aResponse) {
         super.renderHead(aResponse);
 
         aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
     }
 
     @Override
-    protected List<ReorderableTag> getChoices(String aTerm)
-    {
+    protected List<ReorderableTag> getChoices(String aTerm) {
         var state = featureState.getObject();
 
         var ranker = new TagRanker();
         ranker.setMaxResults(maxResults);
-        ranker.setTagCreationAllowed(state.getFeature().getTagset().isCreateTag());
+        var tagset = state.getFeature().getTagset();
+        ranker.setTagCreationAllowed(tagset != null && tagset.isCreateTag());
 
         return ranker.rank(aTerm, state.tagset);
     }
 
     @Override
-    public void onConfigure(JQueryBehavior aBehavior)
-    {
+    public void onConfigure(JQueryBehavior aBehavior) {
         super.onConfigure(aBehavior);
 
         aBehavior.setOption("delay", 500);
@@ -102,52 +97,48 @@ public class ReorderableTagAutoCompleteField
     }
 
     /*
-     * Below is a hack which is required because all the text feature editors are expected to write
+     * Below is a hack which is required because all the text feature editors are
+     * expected to write
      * a plain string into the feature state. However, we cannot have an {@code
-     * AutoCompleteTextField<String>} field because then we would loose easy access to the tag
-     * description which we show in the tooltips. So we hack the converter to return strings on the
-     * way out into the model. This is a very evil hack and we need to avoid declaring generic types
+     * AutoCompleteTextField<String>} field because then we would loose easy access
+     * to the tag
+     * description which we show in the tooltips. So we hack the converter to return
+     * strings on the
+     * way out into the model. This is a very evil hack and we need to avoid
+     * declaring generic types
      * because we work against them!
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public <C> IConverter<C> getConverter(Class<C> aType)
-    {
+    public <C> IConverter<C> getConverter(Class<C> aType) {
         IConverter originalConverter = super.getConverter(aType);
 
-        return new IConverter()
-        {
+        return new IConverter() {
             private static final long serialVersionUID = -6505569244789767066L;
 
             @Override
-            public Object convertToObject(String aValue, Locale aLocale) throws ConversionException
-            {
+            public Object convertToObject(String aValue, Locale aLocale) throws ConversionException {
                 Object value = originalConverter.convertToObject(aValue, aLocale);
                 if (value instanceof String stringValue) {
                     return stringValue;
-                }
-                else if (value instanceof Tag tag) {
+                } else if (value instanceof Tag tag) {
                     return tag.getName();
-                }
-                else if (value instanceof ReorderableTag reorderableTag) {
+                } else if (value instanceof ReorderableTag reorderableTag) {
                     return reorderableTag.getName();
-                }
-                else {
+                } else {
                     return null;
                 }
             }
 
             @Override
-            public String convertToString(Object aValue, Locale aLocale)
-            {
+            public String convertToString(Object aValue, Locale aLocale) {
                 return originalConverter.convertToString(aValue, aLocale);
             }
         };
     }
 
     @Override
-    protected IJQueryTemplate newTemplate()
-    {
+    protected IJQueryTemplate newTemplate() {
         return KendoChoiceDescriptionScriptReference.templateReorderable();
     }
 }

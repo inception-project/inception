@@ -64,34 +64,33 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 /**
  * This class contains Utility methods that can be used in Project settings.
  */
-public class LayerImportExportUtils
-{
+public class LayerImportExportUtils {
     private static final Logger LOG = LoggerFactory.getLogger(LayerImportExportUtils.class);
 
     public static String exportLayerToJson(AnnotationSchemaService aSchemaService,
             AnnotationLayer aLayer)
-        throws IOException
-    {
+            throws IOException {
         return exportLayersToJson(aSchemaService, List.of(aLayer));
     }
 
     /**
-     * Export multiple layers to JSON format. This method ensures that all layers referenced by the
-     * provided layers (through attach layers or link features) are also included in the export,
+     * Export multiple layers to JSON format. This method ensures that all layers
+     * referenced by the
+     * provided layers (through attach layers or link features) are also included in
+     * the export,
      * with no layer appearing more than once.
      * 
      * @param aSchemaService
-     *            the annotation schema service
+     *                       the annotation schema service
      * @param aLayers
-     *            the layers to export
+     *                       the layers to export
      * @return JSON string containing all layers and their dependencies
      * @throws IOException
-     *             if there is an I/O error
+     *                     if there is an I/O error
      */
     public static String exportLayersToJson(AnnotationSchemaService aSchemaService,
             List<AnnotationLayer> aLayers)
-        throws IOException
-    {
+            throws IOException {
         // Use LinkedHashSet to maintain order and avoid duplicates
         var layersToExport = new LinkedHashSet<AnnotationLayer>();
         var project = !aLayers.isEmpty() ? aLayers.get(0).getProject() : null;
@@ -126,12 +125,12 @@ public class LayerImportExportUtils
     }
 
     /**
-     * Recursively collect a layer and all its dependencies (attach layers and link feature target
+     * Recursively collect a layer and all its dependencies (attach layers and link
+     * feature target
      * layers).
      */
     private static void collectLayerAndDependencies(AnnotationSchemaService aSchemaService,
-            AnnotationLayer aLayer, Set<AnnotationLayer> aCollectedLayers, Project aProject)
-    {
+            AnnotationLayer aLayer, Set<AnnotationLayer> aCollectedLayers, Project aProject) {
         // Avoid infinite recursion and duplicates
         if (aCollectedLayers.contains(aLayer)) {
             return;
@@ -149,7 +148,7 @@ public class LayerImportExportUtils
         for (var feature : aSchemaService.listAnnotationFeature(aLayer)) {
             if (feature.getLinkMode() != null && feature.getLinkMode() != LinkMode.NONE) {
                 var targetLayerName = feature.getType();
-                
+
                 // Skip generic annotation type
                 if (CAS.TYPE_NAME_ANNOTATION.equals(targetLayerName)) {
                     continue;
@@ -161,8 +160,7 @@ public class LayerImportExportUtils
                         collectLayerAndDependencies(aSchemaService, targetLayer, aCollectedLayers,
                                 aProject);
                     }
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     LOG.warn("Unable to find layer [{}] referenced by link feature [{}] in layer "
                             + "[{}]: {}", targetLayerName, feature.getName(), aLayer.getName(),
                             ExceptionUtils.getRootCauseMessage(e));
@@ -172,14 +170,14 @@ public class LayerImportExportUtils
     }
 
     /**
-     * Read Tag and Tag Description. A line has a tag name and a tag description separated by a TAB
+     * Read Tag and Tag Description. A line has a tag name and a tag description
+     * separated by a TAB
      * 
      * @param aLineSeparatedTags
-     *            the line.
+     *                           the line.
      * @return the parsed line.
      */
-    public static Map<String, String> getTagSetFromFile(String aLineSeparatedTags)
-    {
+    public static Map<String, String> getTagSetFromFile(String aLineSeparatedTags) {
         var tags = new LinkedHashMap<String, String>();
         var st = new StringTokenizer(aLineSeparatedTags, "\n");
         while (st.hasMoreTokens()) {
@@ -194,8 +192,7 @@ public class LayerImportExportUtils
     @Deprecated
     private static void createTagSet(TagSet aTagSet, ExportedTagSet aExTagSet, Project aProject,
             AnnotationSchemaService aAnnotationService)
-        throws IOException
-    {
+            throws IOException {
         aTagSet.setCreateTag(aExTagSet.isCreateTag());
         aTagSet.setDescription(aExTagSet.getDescription());
         aTagSet.setLanguage(aExTagSet.getLanguage());
@@ -219,8 +216,7 @@ public class LayerImportExportUtils
     @Deprecated
     private static void setLayer(AnnotationSchemaService aAnnotationService, AnnotationLayer aLayer,
             ExportedAnnotationLayer aExLayer, Project aProject)
-        throws IOException
-    {
+            throws IOException {
         aLayer.setBuiltIn(aExLayer.isBuiltIn());
         aLayer.setReadonly(aExLayer.isReadonly());
         aLayer.setCrossSentence(aExLayer.isCrossSentence());
@@ -230,16 +226,14 @@ public class LayerImportExportUtils
         if (aExLayer.getAnchoringMode() == null) {
             // This allows importing old projects which did not have the anchoring mode yet
             aLayer.setAnchoringMode(aExLayer.isLockToTokenOffset(), aExLayer.isMultipleTokens());
-        }
-        else {
+        } else {
             aLayer.setAnchoringMode(aExLayer.getAnchoringMode());
         }
 
         if (aExLayer.getOverlapMode() == null) {
             // This allows importing old projects which did not have the overlap mode yet
             aLayer.setOverlapMode(aExLayer.isAllowStacking() ? ANY_OVERLAP : OVERLAP_ONLY);
-        }
-        else {
+        } else {
             aLayer.setOverlapMode(aExLayer.getOverlapMode());
         }
 
@@ -257,8 +251,7 @@ public class LayerImportExportUtils
 
     public static AnnotationLayer importLayerFile(AnnotationSchemaService annotationService,
             User user, Project project, InputStream aIS)
-        throws IOException
-    {
+            throws IOException {
         var text = IOUtils.toString(aIS, "UTF-8");
 
         var exLayers = JSONUtil.getObjectMapper().readValue(text, ExportedAnnotationLayer[].class);
@@ -293,15 +286,13 @@ public class LayerImportExportUtils
 
     private static AnnotationLayer createLayer(AnnotationSchemaService annotationService,
             Project project, ExportedAnnotationLayer aExLayer)
-        throws IOException
-    {
+            throws IOException {
         AnnotationLayer layer;
 
         if (annotationService.existsLayer(aExLayer.getName(), aExLayer.getType(), project)) {
             layer = annotationService.findLayer(project, aExLayer.getName());
             setLayer(annotationService, layer, aExLayer, project);
-        }
-        else {
+        } else {
             layer = new AnnotationLayer();
             setLayer(annotationService, layer, aExLayer, project);
         }
@@ -312,8 +303,7 @@ public class LayerImportExportUtils
             if (exTagset != null && annotationService.existsTagSet(exTagset.getName(), project)) {
                 tagSet = annotationService.getTagSet(exTagset.getName(), project);
                 createTagSet(tagSet, exTagset, project, annotationService);
-            }
-            else if (exTagset != null) {
+            } else if (exTagset != null) {
                 tagSet = new TagSet();
                 createTagSet(tagSet, exTagset, project, annotationService);
             }
@@ -335,20 +325,17 @@ public class LayerImportExportUtils
 
     @Deprecated
     private static void setFeature(AnnotationSchemaService aAnnotationService,
-            AnnotationFeature aFeature, ExportedAnnotationFeature aExFeature, Project aProject)
-    {
+            AnnotationFeature aFeature, ExportedAnnotationFeature aExFeature, Project aProject) {
         var isItChainedLayer = ChainLayerSupport.TYPE.equals(aFeature.getLayer().getType());
         if (isItChainedLayer && (COREFERENCE_TYPE_FEATURE.equals(aExFeature.getName())
                 || COREFERENCE_RELATION_FEATURE.equals(aExFeature.getName()))) {
             aFeature.setType(CAS.TYPE_NAME_STRING);
-        }
-        else if (Token._TypeName.equals(aFeature.getLayer().getName())
+        } else if (Token._TypeName.equals(aFeature.getLayer().getName())
                 && Token._FeatName_morph.equals(aExFeature.getName())
                 && Lemma._TypeName.equals(aExFeature.getType())) {
             // See https://github.com/inception-project/inception/issues/3080
             aFeature.setType(MorphologicalFeatures._TypeName);
-        }
-        else {
+        } else {
             aFeature.setType(aExFeature.getType());
         }
 
@@ -378,8 +365,7 @@ public class LayerImportExportUtils
     public static ExportedAnnotationLayer exportLayerDetails(
             Map<AnnotationLayer, ExportedAnnotationLayer> aLayerToExLayer,
             Map<AnnotationFeature, ExportedAnnotationFeature> aFeatureToExFeature,
-            AnnotationLayer aLayer, AnnotationSchemaService aAnnotationService)
-    {
+            AnnotationLayer aLayer, AnnotationSchemaService aAnnotationService) {
         var exLayer = new ExportedAnnotationLayer();
         exLayer.setAllowStacking(aLayer.isAllowStacking());
         exLayer.setLockToTokenOffset(SINGLE_TOKEN.equals(aLayer.getAnchoringMode()));

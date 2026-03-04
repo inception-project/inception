@@ -74,8 +74,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 
 public class FeatureDetailForm
-    extends Form<AnnotationFeature>
-{
+        extends Form<AnnotationFeature> {
     private static final String MID_TRAITS_CONTAINER = "traitsContainer";
     private static final String MID_TRAITS = "traits";
     private static final String FIRST = "first";
@@ -97,8 +96,7 @@ public class FeatureDetailForm
     private final ChallengeResponseDialog confirmationDialog;
     private final TextField<String> uiName;
 
-    public FeatureDetailForm(String id, IModel<AnnotationFeature> aFeature)
-    {
+    public FeatureDetailForm(String id, IModel<AnnotationFeature> aFeature) {
         super(id, CompoundPropertyModel.of(aFeature));
 
         setOutputMarkupPlaceholderTag(true);
@@ -128,8 +126,7 @@ public class FeatureDetailForm
             if (rememberAllowed) {
                 remember.setModel(PropertyModel.of(FeatureDetailForm.this.getModel(), "remember"));
                 remember.setVisible(true);
-            }
-            else {
+            } else {
                 remember.setModel(Model.of(false));
                 remember.setVisible(false);
             }
@@ -146,13 +143,11 @@ public class FeatureDetailForm
             if (requiredMandatory) {
                 required.setModel(Model.of(true));
                 required.setEnabled(false);
-            }
-            else if (requiredOptional) {
+            } else if (requiredOptional) {
                 required.setModel(PropertyModel.of(FeatureDetailForm.this.getModel(), "required"));
                 required.setEnabled(true);
                 required.setVisible(true);
-            }
-            else {
+            } else {
                 required.setModel(Model.of(false));
                 required.setVisible(false);
             }
@@ -164,10 +159,7 @@ public class FeatureDetailForm
                 .setOutputMarkupPlaceholderTag(true) //
                 .add(visibleWhen(() -> {
                     var type = FeatureDetailForm.this.getModelObject().getType();
-                    var constraintsSupportType = asList(TYPE_NAME_STRING_ARRAY, TYPE_NAME_STRING)
-                            .contains(type);
-                    var hasTagset = FeatureDetailForm.this.getModelObject().getTagset() != null;
-                    return constraintsSupportType && hasTagset;
+                    return asList(TYPE_NAME_STRING_ARRAY, TYPE_NAME_STRING).contains(type);
                 })) //
                 .setOutputMarkupPlaceholderTag(true));
         defaultOptionsContainer
@@ -181,13 +173,11 @@ public class FeatureDetailForm
                                     && !RelationLayerSupport.TYPE.equals(layertype);
                         })));
 
-        add(featureType = new DropDownChoice<FeatureType>("type")
-        {
+        add(featureType = new DropDownChoice<FeatureType>("type") {
             private static final long serialVersionUID = 9029205407108101183L;
 
             @Override
-            protected void onModelChanged()
-            {
+            protected void onModelChanged() {
                 // If the feature type has changed, we need to set up a new traits editor
                 Component newTraits;
                 if (FeatureDetailForm.this.getModelObject() != null && getModelObject() != null) {
@@ -195,8 +185,7 @@ public class FeatureDetailForm
                             .getExtension(getModelObject().getFeatureSupportId()).orElseThrow();
                     newTraits = fs.createTraitsEditor(MID_TRAITS,
                             FeatureDetailForm.this.getModel());
-                }
-                else {
+                } else {
                     newTraits = new EmptyPanel(MID_TRAITS);
                 }
 
@@ -214,8 +203,7 @@ public class FeatureDetailForm
                 featureType.setEnabled(true);
                 featureType.setChoices(() -> featureSupportRegistry
                         .getUserSelectableTypes(getModelObject().getLayer()));
-            }
-            else {
+            } else {
                 featureType.setEnabled(false);
                 featureType.setChoices(
                         asList(featureSupportRegistry.getFeatureType(getModelObject())));
@@ -240,8 +228,7 @@ public class FeatureDetailForm
         add(confirmationDialog);
     }
 
-    private boolean isUsingDefaultOptions()
-    {
+    private boolean isUsingDefaultOptions() {
         var feature = getModelObject();
         if (isNull(feature.getId())) {
             return false;
@@ -252,8 +239,7 @@ public class FeatureDetailForm
                 .orElse(false);
     }
 
-    private boolean isDeletable()
-    {
+    private boolean isDeletable() {
         var feature = getModelObject();
         if (isNull(feature.getId())) {
             return false;
@@ -266,14 +252,12 @@ public class FeatureDetailForm
         return layerSupportRegistry.getLayerSupport(feature.getLayer()).isDeletable(feature);
     }
 
-    public Component getInitialFocusComponent()
-    {
+    public Component getInitialFocusComponent() {
         return uiName;
     }
 
     @Override
-    protected void onModelChanged()
-    {
+    protected void onModelChanged() {
         super.onModelChanged();
 
         // Since feature type uses a lambda model, it needs to be notified explicitly.
@@ -281,29 +265,25 @@ public class FeatureDetailForm
     }
 
     @Override
-    protected void onConfigure()
-    {
+    protected void onConfigure() {
         super.onConfigure();
 
         setVisible(getModelObject() != null);
     }
 
-    private void actionCancel()
-    {
+    private void actionCancel() {
         // cancel selection of feature list
         setModelObject(null);
     }
 
-    private void actionDelete(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
-    {
+    private void actionDelete(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm) {
         confirmationDialog.setMessageModel(new ResourceModel("DeleteFeatureDialog.text"));
         confirmationDialog.setExpectedResponseModel(getModel().map(AnnotationFeature::getName));
         confirmationDialog.setConfirmAction(this::actionDeleteConfirmed);
         confirmationDialog.show(aTarget);
     }
 
-    private void actionDeleteConfirmed(AjaxRequestTarget aTarget) throws IOException
-    {
+    private void actionDeleteConfirmed(AjaxRequestTarget aTarget) throws IOException {
         annotationService.removeFeature(getModelObject());
 
         var project = getModelObject().getProject();
@@ -319,8 +299,7 @@ public class FeatureDetailForm
         aTarget.add(getPage());
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
-    {
+    private void actionSave(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm) {
         aTarget.addChildren(getPage(), IFeedback.class);
 
         var feature = getModelObject();

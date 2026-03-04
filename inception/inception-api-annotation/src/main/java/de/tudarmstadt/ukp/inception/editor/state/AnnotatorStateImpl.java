@@ -71,8 +71,7 @@ import de.tudarmstadt.ukp.inception.schema.api.layer.LayerTypes;
  * Data model for annotation editors
  */
 public class AnnotatorStateImpl
-    implements Serializable, AnnotatorState
-{
+        implements Serializable, AnnotatorState {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final long serialVersionUID = 1078613192789450714L;
@@ -87,10 +86,12 @@ public class AnnotatorStateImpl
      */
     private SourceDocument document;
 
-    // This is being used in the action bar paging area to indicate the maximum number of units
+    // This is being used in the action bar paging area to indicate the maximum
+    // number of units
     private int documentIndex = -1;
 
-    // This is being used in the action bar paging area to indicate the maximum number of units
+    // This is being used in the action bar paging area to indicate the maximum
+    // number of units
     private int numberOfDocuments = -1;
 
     /**
@@ -120,19 +121,22 @@ public class AnnotatorStateImpl
     /**
      * The index of the first visible unit in the display window.
      */
-    // This is being used in the action bar paging area to indicate the maximum number of units
+    // This is being used in the action bar paging area to indicate the maximum
+    // number of units
     private int firstVisibleUnitIndex;
 
     /**
      * The index of the last visible unit in the display window.
      */
-    // This is being used in the action bar paging area to indicate the maximum number of units
+    // This is being used in the action bar paging area to indicate the maximum
+    // number of units
     private int lastVisibleUnitIndex;
 
     /**
      * The total number of units in the document.
      */
-    // This is being used in the action bar paging area to indicate the maximum number of units
+    // This is being used in the action bar paging area to indicate the maximum
+    // number of units
     private int unitCount;
 
     private final List<FeatureState> featureModels = new ArrayList<>();
@@ -169,8 +173,10 @@ public class AnnotatorStateImpl
     private Mode mode;
 
     /**
-     * The previously selected {@link TagSet} and {@link Tag} for a span/Arc annotation so as to
-     * pre-fill the type in the span/arc annotation dialog (only for new span/arc annotations)
+     * The previously selected {@link TagSet} and {@link Tag} for a span/Arc
+     * annotation so as to
+     * pre-fill the type in the span/arc annotation dialog (only for new span/arc
+     * annotations)
      */
     private AnnotationLayer rememberedSpanLayer;
     private AnnotationLayer rememberedArcLayer;
@@ -212,45 +218,38 @@ public class AnnotatorStateImpl
      * @deprecated Use {@link #AnnotatorStateImpl()} instead.
      */
     @Deprecated
-    public AnnotatorStateImpl(Mode aMode)
-    {
+    public AnnotatorStateImpl(Mode aMode) {
         mode = aMode;
     }
 
-    public AnnotatorStateImpl()
-    {
+    public AnnotatorStateImpl() {
         mode = Mode.ANNOTATION;
     }
 
     @Override
-    public ParsedConstraints getConstraints()
-    {
+    public ParsedConstraints getConstraints() {
         return constraints;
     }
 
     @Override
-    public void setConstraints(ParsedConstraints aConstraints)
-    {
+    public void setConstraints(ParsedConstraints aConstraints) {
         constraints = aConstraints;
     }
 
     private final Selection selection = new Selection();
 
     @Override
-    public Selection getSelection()
-    {
+    public Selection getSelection() {
         return selection;
     }
 
     @Override
-    public Project getProject()
-    {
+    public Project getProject() {
         return project;
     }
 
     @Override
-    public void setProject(Project aProject)
-    {
+    public void setProject(Project aProject) {
         if (project == null || !project.equals(aProject)) {
             setScriptDirection(aProject.getScriptDirection());
         }
@@ -259,76 +258,64 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public void clearProject()
-    {
+    public void clearProject() {
         project = null;
         clearDocument();
     }
 
     @Override
-    public ScriptDirection getScriptDirection()
-    {
+    public ScriptDirection getScriptDirection() {
         return scriptDirection;
     }
 
     @Override
-    public void toggleScriptDirection()
-    {
+    public void toggleScriptDirection() {
         if (ScriptDirection.LTR.equals(getScriptDirection())) {
             setScriptDirection(ScriptDirection.RTL);
-        }
-        else {
+        } else {
             setScriptDirection(ScriptDirection.LTR);
         }
     }
 
     @Override
-    public void setScriptDirection(ScriptDirection aScriptDirection)
-    {
+    public void setScriptDirection(ScriptDirection aScriptDirection) {
         scriptDirection = aScriptDirection;
     }
 
     @Override
-    public SourceDocument getDocument()
-    {
+    public SourceDocument getDocument() {
         return document;
     }
 
     @Override
-    public int getDocumentIndex()
-    {
+    public int getDocumentIndex() {
         return documentIndex;
     }
 
     @Override
-    public int getNumberOfDocuments()
-    {
+    public int getNumberOfDocuments() {
         return numberOfDocuments;
     }
 
     @Override
-    public void clearDocument()
-    {
+    public void clearDocument() {
         setDocument(null, null);
     }
 
     @Override
-    public void setDocument(SourceDocument aDocument, List<SourceDocument> aDocuments)
-    {
+    public void setDocument(SourceDocument aDocument, List<SourceDocument> aDocuments) {
         document = aDocument;
         if (aDocument != null) {
             documentIndex = aDocuments.indexOf(aDocument);
             numberOfDocuments = aDocuments.size();
-        }
-        else {
+        } else {
             documentIndex = -1;
             numberOfDocuments = -1;
         }
     }
 
     @Override
-    public void refreshDocument(DocumentService aDocumentService)
-    {
+    public void refreshDocument(DocumentService aDocumentService) {
         if (document != null) {
             document = aDocumentService.getSourceDocument(document.getProject().getId(),
                     document.getId());
@@ -336,22 +323,19 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public void refreshProject(ProjectService aProjectService)
-    {
+    public void refreshProject(ProjectService aProjectService) {
         if (project != null) {
             project = aProjectService.getProject(project.getId());
         }
     }
 
     @Override
-    public User getUser()
-    {
+    public User getUser() {
         return user;
     }
 
     @Override
-    public void setUser(User aUser)
-    {
+    public void setUser(User aUser) {
         user = aUser;
     }
 
@@ -360,22 +344,19 @@ public class AnnotatorStateImpl
      */
     @Deprecated
     @Override
-    public void setFirstVisibleUnit(AnnotationFS aFirstVisibleUnit)
-    {
+    public void setFirstVisibleUnit(AnnotationFS aFirstVisibleUnit) {
         setPageBegin(aFirstVisibleUnit.getCAS(), aFirstVisibleUnit.getBegin());
     }
 
     @Override
-    public void setPageBegin(CAS aCas, int aOffset)
-    {
+    public void setPageBegin(CAS aCas, int aOffset) {
         var ps = getPagingStrategy();
         var units = ps.unitsStartingAtOffset(aCas, aOffset, getPreferences().getWindowSize());
         setVisibleUnits(units, ps.unitCount(aCas));
     }
 
     @Override
-    public void setVisibleUnits(List<Unit> aUnits, int aTotalUnitCount)
-    {
+    public void setVisibleUnits(List<Unit> aUnits, int aTotalUnitCount) {
         if (aUnits.isEmpty()) {
             unitCount = 0;
             visibleUnits = aUnits;
@@ -404,44 +385,37 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public List<Unit> getVisibleUnits()
-    {
+    public List<Unit> getVisibleUnits() {
         return visibleUnits;
     }
 
     @Override
-    public int getWindowBeginOffset()
-    {
+    public int getWindowBeginOffset() {
         return windowBeginOffset;
     }
 
     @Override
-    public int getWindowEndOffset()
-    {
+    public int getWindowEndOffset() {
         return windowEndOffset;
     }
 
     @Override
-    public List<AnnotationLayer> getAllAnnotationLayers()
-    {
+    public List<AnnotationLayer> getAllAnnotationLayers() {
         return allAnnotationLayers;
     }
 
     @Override
-    public void setAllAnnotationLayers(List<AnnotationLayer> aLayers)
-    {
+    public void setAllAnnotationLayers(List<AnnotationLayer> aLayers) {
         allAnnotationLayers = unmodifiableList(new ArrayList<>(aLayers));
     }
 
     @Override
-    public List<AnnotationLayer> getAnnotationLayers()
-    {
+    public List<AnnotationLayer> getAnnotationLayers() {
         return annotationLayers;
     }
 
     @Override
-    public void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers)
-    {
+    public void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers) {
         annotationLayers = unmodifiableList(new ArrayList<>(aAnnotationLayers));
 
         // Make sure the currently selected layer is actually visible/exists
@@ -454,20 +428,17 @@ public class AnnotatorStateImpl
         }
     }
 
-    public void setSelectableLayers(List<AnnotationLayer> aSelectableLayers)
-    {
+    public void setSelectableLayers(List<AnnotationLayer> aSelectableLayers) {
         selectableLayers = aSelectableLayers;
     }
 
     @Override
-    public List<AnnotationLayer> getSelectableLayers()
-    {
+    public List<AnnotationLayer> getSelectableLayers() {
         return selectableLayers;
     }
 
     @Override
-    public void refreshSelectableLayers(Predicate<AnnotationLayer> isLayerBlocked)
-    {
+    public void refreshSelectableLayers(Predicate<AnnotationLayer> isLayerBlocked) {
         selectableLayers.clear();
 
         for (var layer : getAnnotationLayers()) {
@@ -491,46 +462,39 @@ public class AnnotatorStateImpl
 
             if (getDefaultAnnotationLayer() != null) {
                 setSelectedAnnotationLayer(getDefaultAnnotationLayer());
-            }
-            else if (!selectableLayers.isEmpty()) {
+            } else if (!selectableLayers.isEmpty()) {
                 setSelectedAnnotationLayer(selectableLayers.get(0));
             }
         }
     }
 
     @Override
-    public AnnotationPreference getPreferences()
-    {
+    public AnnotationPreference getPreferences() {
         return preferences;
     }
 
     @Override
-    public void setPreferences(AnnotationPreference aPreferences)
-    {
+    public void setPreferences(AnnotationPreference aPreferences) {
         preferences = aPreferences;
     }
 
     @Deprecated
     @Override
-    public Mode getMode()
-    {
+    public Mode getMode() {
         return mode;
     }
 
     @Override
-    public AnnotationLayer getRememberedSpanLayer()
-    {
+    public AnnotationLayer getRememberedSpanLayer() {
         return rememberedSpanLayer;
     }
 
     @Override
-    public Map<AnnotationFeature, Serializable> getRememberedSpanFeatures()
-    {
+    public Map<AnnotationFeature, Serializable> getRememberedSpanFeatures() {
         return rememberedSpanFeatures;
     }
 
-    private void setRememberedSpanFeatures(List<FeatureState> aModels)
-    {
+    private void setRememberedSpanFeatures(List<FeatureState> aModels) {
         rememberedSpanFeatures = new HashMap<>();
         if (aModels != null) {
             for (var fm : aModels) {
@@ -549,13 +513,11 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public Map<AnnotationFeature, Serializable> getRememberedArcFeatures()
-    {
+    public Map<AnnotationFeature, Serializable> getRememberedArcFeatures() {
         return rememberedArcFeatures;
     }
 
-    private void setRememberedArcFeatures(List<FeatureState> aModels)
-    {
+    private void setRememberedArcFeatures(List<FeatureState> aModels) {
         rememberedArcFeatures = new HashMap<>();
         if (aModels != null) {
             for (FeatureState fm : aModels) {
@@ -574,76 +536,64 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public int getFocusUnitIndex()
-    {
+    public int getFocusUnitIndex() {
         return focusUnitIndex;
     }
 
     @Override
-    public void setFocusUnitIndex(int aUnitIndex)
-    {
+    public void setFocusUnitIndex(int aUnitIndex) {
         focusUnitIndex = aUnitIndex;
     }
 
     @Override
-    public int getFirstVisibleUnitIndex()
-    {
+    public int getFirstVisibleUnitIndex() {
         return firstVisibleUnitIndex;
     }
 
     @Override
-    public int getLastVisibleUnitIndex()
-    {
+    public int getLastVisibleUnitIndex() {
         return lastVisibleUnitIndex;
     }
 
     @Override
-    public int getUnitCount()
-    {
+    public int getUnitCount() {
         return unitCount;
     }
 
     @Override
-    public AnnotationLayer getSelectedAnnotationLayer()
-    {
+    public AnnotationLayer getSelectedAnnotationLayer() {
         return selectedAnnotationLayer;
     }
 
     @Override
-    public void setSelectedAnnotationLayer(AnnotationLayer selectedAnnotationLayer)
-    {
+    public void setSelectedAnnotationLayer(AnnotationLayer selectedAnnotationLayer) {
         this.selectedAnnotationLayer = selectedAnnotationLayer;
     }
 
     @Override
-    public AnnotationLayer getDefaultAnnotationLayer()
-    {
+    public AnnotationLayer getDefaultAnnotationLayer() {
         return defaultAnnotationLayer;
     }
 
     @Override
-    public void setDefaultAnnotationLayer(AnnotationLayer defaultAnnotationLayer)
-    {
+    public void setDefaultAnnotationLayer(AnnotationLayer defaultAnnotationLayer) {
         this.defaultAnnotationLayer = defaultAnnotationLayer;
     }
 
     @Override
-    public void rememberFeatures()
-    {
+    public void rememberFeatures() {
         LOG.trace("Remembering feature editor values");
         if (getSelection().isArc()) {
             rememberedArcLayer = getSelectedAnnotationLayer();
             setRememberedArcFeatures(featureModels);
-        }
-        else {
+        } else {
             rememberedSpanLayer = getSelectedAnnotationLayer();
             setRememberedSpanFeatures(featureModels);
         }
     }
 
     @Override
-    public void clearRememberedFeatures()
-    {
+    public void clearRememberedFeatures() {
         setRememberedArcFeatures(null);
         rememberedArcLayer = null;
         setRememberedSpanFeatures(null);
@@ -651,8 +601,7 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public void reset()
-    {
+    public void reset() {
         getSelection().clear();
         clearArmedSlot();
         clearRememberedFeatures();
@@ -671,8 +620,7 @@ public class AnnotatorStateImpl
     private int armedSlot = -1;
 
     @Override
-    public void setArmedSlot(FeatureState aState, int aIndex)
-    {
+    public void setArmedSlot(FeatureState aState, int aIndex) {
         boolean needRerender = armedFeatureState != aState || armedSlot != aIndex;
         armedFeatureState = aState;
         armedSlot = aIndex;
@@ -682,8 +630,7 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public boolean isArmedSlot(FeatureState aState, int aIndex)
-    {
+    public boolean isArmedSlot(FeatureState aState, int aIndex) {
         if (armedFeatureState == null) {
             return false;
         }
@@ -695,8 +642,7 @@ public class AnnotatorStateImpl
     /**
      * Re-render all slots to de-select all slots that are not armed anymore
      */
-    private void rerenderSlots()
-    {
+    private void rerenderSlots() {
         RequestCycle requestCycle = RequestCycle.get();
 
         if (requestCycle == null) {
@@ -712,8 +658,7 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public void clearArmedSlot()
-    {
+    public void clearArmedSlot() {
         boolean needRerender = armedFeatureState != null || armedSlot != -1;
         armedFeatureState = null;
         armedSlot = -1;
@@ -723,32 +668,27 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public boolean isSlotArmed()
-    {
+    public boolean isSlotArmed() {
         return armedFeatureState != null;
     }
 
     @Override
-    public FeatureState getArmedFeature()
-    {
+    public FeatureState getArmedFeature() {
         return armedFeatureState;
     }
 
     @Override
-    public int getArmedSlot()
-    {
+    public int getArmedSlot() {
         return armedSlot;
     }
 
     @Override
-    public List<FeatureState> getFeatureStates()
-    {
+    public List<FeatureState> getFeatureStates() {
         return featureModels;
     }
 
     @Override
-    public FeatureState getFeatureState(AnnotationFeature aFeature)
-    {
+    public FeatureState getFeatureState(AnnotationFeature aFeature) {
         for (FeatureState f : featureModels) {
             if (Objects.equals(f.feature.getId(), aFeature.getId())) {
                 return f;
@@ -758,51 +698,43 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public Optional<Long> getAnnotationDocumentTimestamp()
-    {
+    public Optional<Long> getAnnotationDocumentTimestamp() {
         return Optional.ofNullable(annotationDocumentTimestamp);
     }
 
     @Override
-    public void setAnnotationDocumentTimestamp(long aAnnotationDocumentTimestamp)
-    {
+    public void setAnnotationDocumentTimestamp(long aAnnotationDocumentTimestamp) {
         annotationDocumentTimestamp = aAnnotationDocumentTimestamp;
     }
 
     @Override
-    public PagingStrategy getPagingStrategy()
-    {
+    public PagingStrategy getPagingStrategy() {
         return pagingStrategy;
     }
 
     @Override
-    public void setPagingStrategy(PagingStrategy aPagingStrategy)
-    {
+    public void setPagingStrategy(PagingStrategy aPagingStrategy) {
         pagingStrategy = aPagingStrategy;
     }
 
     @Override
-    public boolean isUserViewingOthersWork(String aCurrentUserName)
-    {
+    public boolean isUserViewingOthersWork(String aCurrentUserName) {
         return !user.getUsername().equals(aCurrentUserName);
     }
 
     @Override
-    public void setEditorFactoryId(String aId)
-    {
+    public void setEditorFactoryId(String aId) {
         editorFactoryId = aId;
     }
 
     @Override
-    public String getEditorFactoryId()
-    {
+    public String getEditorFactoryId() {
         return editorFactoryId;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <M extends Serializable> M getMetaData(AnnotatorStateMetaDataKey<M> aKey)
-    {
+    public <M extends Serializable> M getMetaData(AnnotatorStateMetaDataKey<M> aKey) {
         if (metaData.containsKey(aKey)) {
             return (M) metaData.get(aKey);
         }
@@ -810,13 +742,11 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public <M extends Serializable> void setMetaData(AnnotatorStateMetaDataKey<M> aKey, M aMetadata)
-    {
+    public <M extends Serializable> void setMetaData(AnnotatorStateMetaDataKey<M> aKey, M aMetadata) {
         metaData.put(aKey, aMetadata);
     }
 
-    private void fireViewStateChanged()
-    {
+    private void fireViewStateChanged() {
         RequestCycle requestCycle = RequestCycle.get();
 
         if (requestCycle == null) {
@@ -832,20 +762,17 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public AnchoringMode getAnchoringMode()
-    {
+    public AnchoringMode getAnchoringMode() {
         return anchoringMode;
     }
 
     @Override
-    public void setAnchoringMode(AnchoringMode aAnchoringMode)
-    {
+    public void setAnchoringMode(AnchoringMode aAnchoringMode) {
         anchoringMode = aAnchoringMode;
     }
 
     @Override
-    public void syncAnchoringModeToDefaultLayer(AnchoringModePrefs aAnchoringPrefs)
-    {
+    public void syncAnchoringModeToDefaultLayer(AnchoringModePrefs aAnchoringPrefs) {
         var defaultLayer = getDefaultAnnotationLayer();
         if (defaultLayer == null) {
             setAnchoringMode(null);
@@ -855,8 +782,7 @@ public class AnnotatorStateImpl
         var prefAnchoringMode = aAnchoringPrefs.getAnchoringMode(defaultLayer);
         if (prefAnchoringMode.map(defaultLayer.getAnchoringMode()::allows).orElse(false)) {
             prefAnchoringMode.ifPresent(this::setAnchoringMode);
-        }
-        else {
+        } else {
             setAnchoringMode(defaultLayer.getAnchoringMode());
         }
     }
