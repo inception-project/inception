@@ -1,6 +1,7 @@
 {
   "realm": "inception-security-test",
   "enabled": true,
+  "sslRequired": "none",
   "registrationAllowed": false,
   "verifyEmail": false,
   "loginWithEmailAllowed": false,

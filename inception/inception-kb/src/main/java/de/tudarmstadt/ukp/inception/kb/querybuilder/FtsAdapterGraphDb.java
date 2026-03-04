@@ -21,13 +21,13 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_GRAPHDB;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.convertToRequiredTokenPrefixMatchingQuery;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.and;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.union;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
@@ -61,14 +61,10 @@ public class FtsAdapterGraphDb
                 continue;
             }
 
-            builder.addProjection(SPARQLQueryBuilder.VAR_SCORE);
+            builder.addProjection(VAR_SCORE);
 
-            valuePatterns.add(new GraphDbFtsQuery(SPARQLQueryBuilder.VAR_SUBJECT,
-                    SPARQLQueryBuilder.VAR_SCORE, SPARQLQueryBuilder.VAR_MATCH_TERM,
-                    SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY, sanitizedValue) //
-                            .withLimit(builder.getLimit()) //
-                            .filter(builder.equalsPattern(SPARQLQueryBuilder.VAR_MATCH_TERM, value,
-                                    kb)));
+            var filter = builder.equalsPattern(VAR_MATCH_TERM, value, kb);
+            valuePatterns.addAll(buildLanguageUnionPatterns(sanitizedValue, filter));
         }
 
         if (valuePatterns.isEmpty()) {
@@ -76,7 +72,7 @@ public class FtsAdapterGraphDb
         }
 
         builder.addPattern(PRIMARY, and( //
-                builder.bindMatchTermProperties(SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY), //
+                builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
                 union(valuePatterns.toArray(GraphPattern[]::new))));
     }
 
@@ -91,23 +87,23 @@ public class FtsAdapterGraphDb
                 continue;
             }
 
-            builder.addProjection(SPARQLQueryBuilder.VAR_SCORE);
+            builder.addProjection(VAR_SCORE);
 
-            valuePatterns.add(new GraphDbFtsQuery(SPARQLQueryBuilder.VAR_SUBJECT,
-                    SPARQLQueryBuilder.VAR_SCORE, SPARQLQueryBuilder.VAR_MATCH_TERM,
-                    SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY, sanitizedValue) //
-                            .withLimit(builder.getLimit()) //
-                            .filter(builder.containsPattern(SPARQLQueryBuilder.VAR_MATCH_TERM,
-                                    value)));
+            // Use a prefix wildcard so that Lucene matches tokens that START WITH the search
+            // term. Without the wildcard, only exact token matches are returned (e.g. "auto"
+            // finds "auto"@nl but NOT "automóvel"@pt or "automobile"@en). The REGEX CONTAINS
+            // post-filter then confirms the actual substring relationship.
+            var ftsQuery = sanitizedValue + MULTI_CHAR_WILDCARD;
+            var filter = builder.containsPattern(VAR_MATCH_TERM, value);
+            valuePatterns.addAll(buildLanguageUnionPatterns(ftsQuery, filter));
         }
 
         if (valuePatterns.isEmpty()) {
             builder.noResult();
         }
 
-        builder.addPattern(PRIMARY,
-                and(builder.bindMatchTermProperties(SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY),
-                        union(valuePatterns.toArray(GraphPattern[]::new))));
+        builder.addPattern(PRIMARY, and(builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                union(valuePatterns.toArray(GraphPattern[]::new))));
     }
 
     @Override
@@ -127,18 +123,18 @@ public class FtsAdapterGraphDb
             queryString += MULTI_CHAR_WILDCARD;
         }
 
-        builder.addProjection(SPARQLQueryBuilder.VAR_SCORE);
+        builder.addProjection(VAR_SCORE);
 
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
+        // We issue one FTS query per effective language so that language-tagged literals
+        // are returned with their language tag preserved (onto:fts requires the language
+        // code to be passed explicitly to search the language-specific Lucene index).
+        var filter = builder.startsWithPattern(VAR_MATCH_TERM, aPrefixQuery);
+        var patterns = buildLanguageUnionPatterns(queryString, filter);
         builder.addPattern(PRIMARY, and( //
-                builder.bindMatchTermProperties(SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY), //
-                new GraphDbFtsQuery(SPARQLQueryBuilder.VAR_SUBJECT, SPARQLQueryBuilder.VAR_SCORE,
-                        SPARQLQueryBuilder.VAR_MATCH_TERM,
-                        SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY, queryString) //
-                                .withLimit(builder.getLimit()) //
-                                .filter(builder.startsWithPattern(SPARQLQueryBuilder.VAR_MATCH_TERM,
-                                        aPrefixQuery))));
+                builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
+                union(patterns.toArray(GraphPattern[]::new))));
     }
 
     @Override
@@ -159,24 +155,57 @@ public class FtsAdapterGraphDb
                 continue;
             }
 
-            builder.addProjection(SPARQLQueryBuilder.VAR_SCORE);
+            builder.addProjection(VAR_SCORE);
 
-            var labelFilterExpressions = new ArrayList<Expression<?>>();
-            labelFilterExpressions.add(builder.matchKbLanguage(VAR_MATCH_TERM));
-
-            valuePatterns.add(new GraphDbFtsQuery(SPARQLQueryBuilder.VAR_SUBJECT,
-                    SPARQLQueryBuilder.VAR_SCORE, SPARQLQueryBuilder.VAR_MATCH_TERM,
-                    SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY, fuzzyQuery) //
-                            .withLimit(builder.getLimit()) //
-                            .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
+            var filter = builder.matchKbLanguage(VAR_MATCH_TERM);
+            valuePatterns.addAll(buildLanguageUnionPatterns(fuzzyQuery, filter));
         }
 
         if (valuePatterns.isEmpty()) {
             builder.noResult();
         }
 
-        builder.addPattern(PRIMARY,
-                and(builder.bindMatchTermProperties(SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY),
-                        union(valuePatterns.toArray(GraphPattern[]::new))));
+        builder.addPattern(PRIMARY, and(builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                union(valuePatterns.toArray(GraphPattern[]::new))));
+    }
+
+    /**
+     * Builds a list of {@link GraphDbFtsQuery} patterns — one for the default (plain literal) index
+     * and one for each effective language index. Calling code should union these patterns.
+     * <p>
+     * GraphDB’s simple FTS ({@code onto:fts}) only indexes language-tagged literals in
+     * language-specific indexes, not in the default index. To search language-tagged literals while
+     * preserving their language tag in the result, the language code must be passed as a second
+     * string argument: {@code onto:fts ("query" "en" limit)}.
+     */
+    private List<GraphPattern> buildLanguageUnionPatterns(String aFtsQuery, Expression<?> aFilter)
+    {
+        var patterns = new ArrayList<GraphPattern>();
+
+        // Per-language indexes: each language-specific index is searched separately
+        // and returns literals with the language tag intact
+        var defaultLanguage = builder.getKnowledgeBase().getDefaultLanguage();
+        if (defaultLanguage != null) {
+            patterns.add(match(aFtsQuery, aFilter, defaultLanguage));
+        }
+
+        // ... also search fallback language indices
+        for (var lang : builder.getFallbackLanguages()) {
+            patterns.add(match(aFtsQuery, aFilter, lang));
+        }
+
+        // Default index: matches plain (language-untagged) literals
+        patterns.add(match(aFtsQuery, aFilter, null));
+
+        return patterns;
+    }
+
+    private GraphPattern match(String aFtsQuery, Expression<?> aFilter, String lang)
+    {
+        return new GraphDbFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM, VAR_MATCH_TERM_PROPERTY,
+                aFtsQuery) //
+                        .withLanguage(lang) //
+                        .withLimit(builder.getLimit()) //
+                        .filter(aFilter);
     }
 }

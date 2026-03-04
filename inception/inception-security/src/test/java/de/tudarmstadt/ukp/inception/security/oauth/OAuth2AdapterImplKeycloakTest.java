@@ -91,7 +91,7 @@ class OAuth2AdapterImplKeycloakTest
     private static final String CLIENT_SECRET = "test-secret";
 
     @Container
-    static KeycloakContainer keycloak = new KeycloakContainer() //
+    static KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:26.5") //
             .withRealmImportFile("keycloak/inception-security-test-realm.json");
 
     @Autowired
@@ -103,11 +103,19 @@ class OAuth2AdapterImplKeycloakTest
     @BeforeAll
     static void waitForKeycloak()
     {
-        // Container startup waits for Keycloak readiness automatically, but verifying via
-        // admin API confirms the realm was imported successfully.
-        assertThat(keycloak.getKeycloakAdminClient().realm(REALM).toRepresentation().isEnabled()) //
-                .as("Realm '%s' should be enabled after import", REALM) //
-                .isTrue();
+        // Container startup waits for Keycloak readiness automatically.
+        // Verify the realm was imported successfully via the public OIDC discovery endpoint
+        // (avoids relying on the admin-cli ROPC grant which is disabled by default in Keycloak 26+).
+        var discoveryUrl = keycloak.getAuthServerUrl() + "/realms/" + REALM
+                + "/.well-known/openid-configuration";
+        var discovery = RestClient.create().get() //
+                .uri(discoveryUrl) //
+                .retrieve() //
+                .body(Map.class);
+        assertThat(discovery) //
+                .as("OIDC discovery for realm '%s' should be available after import", REALM) //
+                .isNotNull() //
+                .containsKey("issuer");
     }
 
     @Test

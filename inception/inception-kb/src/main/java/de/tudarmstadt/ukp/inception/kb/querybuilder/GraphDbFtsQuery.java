@@ -45,6 +45,7 @@ public class GraphDbFtsQuery
     private final Variable matchTerm;
     private final Variable matchTermProperty;
     private final String query;
+    private String language = null;
     private int limit = 0;
 
     public GraphDbFtsQuery(Variable aSubject, Variable aScore, Variable aMatchTerm,
@@ -63,11 +64,29 @@ public class GraphDbFtsQuery
         return this;
     }
 
+    /**
+     * Restrict the FTS search to a specific language index. When set, the query uses the
+     * {@code onto:fts ("query" "lang" limit)} syntax which searches the language-specific Lucene
+     * index and returns language-tagged literals with their language tag preserved.
+     *
+     * @param aLanguage
+     *            the BCP-47 language code (e.g. {@code "en"}, {@code "de"}) or {@code null} to
+     *            search the default index (plain, non-tagged literals only).
+     */
+    public GraphDbFtsQuery withLanguage(String aLanguage)
+    {
+        language = aLanguage;
+        return this;
+    }
+
     @Override
     public String getQueryString()
     {
         var queryElements = new ArrayList<QueryElement>();
         queryElements.add(literalOf(query));
+        if (language != null) {
+            queryElements.add(literalOf(language));
+        }
         if (limit > 0) {
             queryElements.add(literalOf(2 * limit));
         }

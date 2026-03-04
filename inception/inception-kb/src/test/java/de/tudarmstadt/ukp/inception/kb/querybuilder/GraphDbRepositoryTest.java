@@ -33,11 +33,11 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.wicket.util.io.IOUtils;
 import org.eclipse.rdf4j.repository.Repository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -91,16 +91,22 @@ public class GraphDbRepositoryTest
 
         var baseUrl = "http://" + GRAPH_DB.getHost() + ":" + GRAPH_DB.getMappedPort(GRAPHDB_PORT);
 
-        if (!repoCreated) {
-            createRepository(baseUrl, "test");
-            repoCreated = true;
+        // Recreate the repository from scratch on every test. Using conn.clear() is not
+        // sufficient because it seems to break the GraphDB FTS transaction listener: once
+        // conn.clear() is called on a repository that contains existing FTS-indexed data,
+        // subsequent inserts seem to be no longer propagated to the FTS index, causing all
+        // FTS-based queries to return empty results.
+        if (repoCreated) {
+            deleteRepository(baseUrl, repositoryId);
         }
+        createRepository(baseUrl, repositoryId);
+        repoCreated = true;
 
         kb = new KnowledgeBase();
         kb.setDefaultLanguage("en");
         kb.setType(RepositoryType.REMOTE);
-        // kb.setFullTextSearchIri(IriConstants.FTS_GRAPHDB.stringValue());
-        kb.setFullTextSearchIri(IriConstants.FTS_NONE.stringValue());
+        kb.setFullTextSearchIri(IriConstants.FTS_GRAPHDB.stringValue());
+        // kb.setFullTextSearchIri(IriConstants.FTS_NONE.stringValue());
         kb.setMaxResults(100);
 
         SPARQLQueryBuilderLocalTestScenarios.initRdfsMapping(kb);
@@ -110,10 +116,6 @@ public class GraphDbRepositoryTest
                         + "/repositories/" + repositoryId,
                 "http://" + GRAPH_DB.getHost() + ":" + GRAPH_DB.getMappedPort(GRAPHDB_PORT)
                         + "/repositories/" + repositoryId + "/statements");
-
-        try (var conn = repository.getConnection()) {
-            conn.clear();
-        }
     }
 
     private static List<Arguments> tests() throws Exception
@@ -131,6 +133,24 @@ public class GraphDbRepositoryTest
     public void runTests(String aScenarioName, Scenario aScenario) throws Exception
     {
         aScenario.implementation.accept(repository, kb);
+    }
+
+    private static void deleteRepository(String baseUrl, String repositoryId)
+        throws IOException, URISyntaxException
+    {
+        var request = RequestBuilder.delete(new URI(baseUrl + "/rest/repositories/" + repositoryId))
+                .build();
+
+        var client = HttpClientBuilder.create().build();
+        var response = client.execute(request);
+
+        var statusCode = response.getStatusLine().getStatusCode();
+        if (statusCode < 200 || statusCode >= 300) {
+            LOG.error("Failed to delete repository [{}]: {}", repositoryId, statusCode);
+        }
+        else {
+            LOG.info("Repository deleted: [{}]", repositoryId);
+        }
     }
 
     private static void createRepository(String baseUrl, String repositoryId)
@@ -157,7 +177,8 @@ public class GraphDbRepositoryTest
         var statusCode = response.getStatusLine().getStatusCode();
         if (statusCode < 200 || statusCode >= 300) {
             LOG.error("Response status code: {}", statusCode);
-            LOG.error("Response body: {}", IOUtils.toString(response.getEntity().getContent()));
+            LOG.error("Response body: {}",
+                    IOUtils.toString(response.getEntity().getContent(), UTF_8));
         }
         else {
             LOG.info("Repository created: [{}]", repositoryId);
@@ -188,7 +209,7 @@ public class GraphDbRepositoryTest
                                 <http://www.ontotext.com/config/graphdb#enablePredicateList> "true";
                                 <http://www.ontotext.com/config/graphdb#entity-id-size> "32";
                                 <http://www.ontotext.com/config/graphdb#entity-index-size> "10000000";
-                                <http://www.ontotext.com/config/graphdb#fts-indexes> ("default" "en" "de" "fr" "iri");
+                                <http://www.ontotext.com/config/graphdb#fts-indexes> ("default" "de" "en" "es" "fr" "iri" "it" "pt" "nl");
                                 <http://www.ontotext.com/config/graphdb#fts-iris-index> "none";
                                 <http://www.ontotext.com/config/graphdb#fts-string-literals-index> "default";
                                 <http://www.ontotext.com/config/graphdb#imports> "";

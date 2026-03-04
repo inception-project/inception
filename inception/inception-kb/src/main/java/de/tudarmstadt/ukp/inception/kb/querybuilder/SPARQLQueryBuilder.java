@@ -1095,6 +1095,11 @@ public class SPARQLQueryBuilder
         return and(expressions.toArray(Expression[]::new)).parenthesize();
     }
 
+    List<String> getFallbackLanguages()
+    {
+        return fallbackLanguages;
+    }
+
     Expression<?> matchKbLanguage(Variable aVariable)
     {
         var defaultLang = kb.getDefaultLanguage();
