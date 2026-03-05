@@ -297,6 +297,7 @@ Unfortunately, the SPARQL standard does not define a uniform way to perform full
 * link:https://franz.com/agraph/support/documentation/current/text-index.html[AllegroGraph]
 * link:https://jena.apache.org/documentation/query/text-query.html[Apache Jena Fuseki]
 * link:https://github.com/blazegraph/database/wiki/FullTextSearch[Blazegraph DB]
+* link:https://graphdb.ontotext.com/documentation/11.3/full-text-search.html[GraphDB]
 * link:https://rdf4j.org/documentation/programming/lucene/[RDF4J Lucene]
 * link:https://docs.stardog.com/query-stardog/full-text-search[Stardog]
 * link:https://docs.openlinksw.com/virtuoso/rdfsparqlrulefulltext/[Virtuoso]
@@ -312,6 +313,23 @@ To enable the full text index on the Fuseki server side, set the options options
 
 Fuseki databases are usually accessible via SPARQL at `http://localhost:3030/DATABASE-NAME/sparql` or
 `http://localhost:3030/DATABASE-NAME/query`.
+
+==== GraphDB
+
+In GraphDB, the languages for full-text indexing need to be explicitly configured.
+E.g. if you have string literals without a language tag (`default`), with an English language tag (`en`) and with a
+German language tag (`de`) in your KB, you need to configure full-text indices for all of these:
+
+```
+<http://www.ontotext.com/config/graphdb#fts-indexes> ("default" "de" "en");
+```
+
+{product-name} expects that knowledge bases do not perform any type of inference.
+To run GraphDB in the way we test it, you need to disable inference via an empty ruleset:
+
+```
+<http://www.ontotext.com/config/graphdb#ruleset> "empty";
+```
 
 ==== Stardog
 

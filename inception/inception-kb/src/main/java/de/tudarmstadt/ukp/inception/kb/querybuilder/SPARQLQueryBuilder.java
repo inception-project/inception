@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_ALLEGRO_GRAPH;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_BLAZEGRAPH;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_GRAPHDB;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_STARDOG;
@@ -164,6 +165,7 @@ public class SPARQLQueryBuilder
     private List<String> fallbackLanguages = emptyList();
     private List<String> preResolvedPrefLabelProperties = emptyList();
     private List<String> preResolvedAdditionalMatchingProperties = emptyList();
+    private boolean prefLabelPropertiesPreResolved = false;
 
     /**
      * Case-insensitive mode is a best-effort approach. Depending on the underlying FTS, it may or
@@ -577,6 +579,7 @@ public class SPARQLQueryBuilder
     public SPARQLQueryPrimaryConditions withPrefLabelProperties(Collection<String> aProps)
     {
         preResolvedPrefLabelProperties = new ArrayList<>(aProps);
+        prefLabelPropertiesPreResolved = true;
 
         return this;
     }
@@ -825,6 +828,8 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelMatchingExactlyAnyOf(String... aValues)
     {
+        checkPrefLabelPropertiesPreResolved();
+
         var values = Arrays.stream(aValues) //
                 .map(SPARQLQueryBuilder::trimQueryString) //
                 .filter(StringUtils::isNotBlank) //
@@ -853,6 +858,10 @@ public class SPARQLQueryBuilder
 
         if (FTS_BLAZEGRAPH.equals(ftsMode)) {
             return new FtsAdapterBlazegraph(this);
+        }
+
+        if (FTS_GRAPHDB.equals(ftsMode)) {
+            return new FtsAdapterGraphDb(this);
         }
 
         if (FTS_FUSEKI.equals(ftsMode)) {
@@ -924,9 +933,22 @@ public class SPARQLQueryBuilder
         return FTS_WIKIDATA.equals(ftsMode);
     }
 
+    private void checkPrefLabelPropertiesPreResolved()
+    {
+        if (!prefLabelPropertiesPreResolved) {
+            throw new IllegalStateException(
+                    "withPrefLabelProperties() must be called before any label-matching method. "
+                            + "Use resolvePrefLabelProperties(RepositoryConnection) to resolve "
+                            + "the effective label properties, then pass the result to "
+                            + "withPrefLabelProperties().");
+        }
+    }
+
     @Override
     public SPARQLQueryBuilder withLabelMatchingAnyOf(String... aValues)
     {
+        checkPrefLabelPropertiesPreResolved();
+
         var values = Arrays.stream(aValues) //
                 .map(SPARQLQueryBuilder::trimQueryString) //
                 .filter(StringUtils::isNotBlank) //
@@ -948,6 +970,8 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelContainingAnyOf(String... aValues)
     {
+        checkPrefLabelPropertiesPreResolved();
+
         var values = Arrays.stream(aValues) //
                 .map(SPARQLQueryBuilder::trimQueryString) //
                 .filter(StringUtils::isNotBlank) //
@@ -969,6 +993,8 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelStartingWith(String aPrefixQuery)
     {
+        checkPrefLabelPropertiesPreResolved();
+
         var value = trimQueryString(aPrefixQuery);
 
         if (value == null || value.length() == 0) {
@@ -1051,6 +1077,9 @@ public class SPARQLQueryBuilder
                 value = Stream.of(TOKENKIZER_PATTERN.split(aValue)) //
                         .map(t -> "(?=.*" + asRegexp(t) + ")") //
                         .collect(joining());
+                // value = Stream.of(TOKENKIZER_PATTERN.split(aValue)) //
+                // .map(t -> asRegexp(t)) //
+                // .collect(joining("|"));
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -1064,6 +1093,11 @@ public class SPARQLQueryBuilder
         expressions.add(matchKbLanguage(aVariable));
 
         return and(expressions.toArray(Expression[]::new)).parenthesize();
+    }
+
+    List<String> getFallbackLanguages()
+    {
+        return fallbackLanguages;
     }
 
     Expression<?> matchKbLanguage(Variable aVariable)
