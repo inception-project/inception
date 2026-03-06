@@ -132,6 +132,11 @@ public class LinkFeatureSupport
     @Override
     public boolean accepts(AnnotationFeature aFeature)
     {
+        return isLinkFeature(aFeature);
+    }
+
+    public static boolean isLinkFeature(AnnotationFeature aFeature)
+    {
         switch (aFeature.getMultiValueMode()) {
         case ARRAY:
             switch (aFeature.getLinkMode()) {

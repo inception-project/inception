@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCa
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
-import static org.apache.commons.lang3.StringUtils.appendIfMissing;
 import static org.apache.commons.lang3.Strings.CS;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -240,7 +239,7 @@ public class ExternalRecommender
         predictionRequest.setMetadata(buildMetadata(aCas, new Range(aBegin, aEnd)));
 
         var request = HttpRequest.newBuilder() //
-                .uri(URI.create(appendIfMissing(traits.getRemoteUrl(), "/")).resolve("predict")) //
+                .uri(URI.create(CS.appendIfMissing(traits.getRemoteUrl(), "/")).resolve("predict")) //
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON_VALUE) //
                 .timeout(properties.getReadTimeout()) //
                 .POST(BodyPublishers.ofString(toJson(predictionRequest), UTF_8)) //
