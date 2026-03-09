@@ -26,8 +26,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.sax.SAXTransformerFactory;
-import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
 import org.dkpro.core.api.xml.type.XmlDocument;
@@ -66,8 +64,8 @@ public class XmlCas2SaxEvents
 
     public static ContentHandler makeSerializer(Writer out) throws TransformerConfigurationException
     {
-        SAXTransformerFactory tf = XmlParserUtils.newTransformerFactory();
-        TransformerHandler th = tf.newTransformerHandler();
+        var tf = XmlParserUtils.newTransformerFactory();
+        var th = tf.newTransformerHandler();
         th.getTransformer().setOutputProperty(OMIT_XML_DECLARATION, "yes");
         th.getTransformer().setOutputProperty(METHOD, "xml");
         th.getTransformer().setOutputProperty(INDENT, "no");
@@ -97,7 +95,7 @@ public class XmlCas2SaxEvents
     @Override
     public AttributesImpl attributes(XmlElement aElement)
     {
-        AttributesImpl attrs = super.attributes(aElement);
+        var attrs = super.attributes(aElement);
         if (captureRoots != null && captureRoots.contains(aElement)) {
             attrs.addAttribute(null, null, DATA_CAPTURE_ROOT, null, "");
         }
