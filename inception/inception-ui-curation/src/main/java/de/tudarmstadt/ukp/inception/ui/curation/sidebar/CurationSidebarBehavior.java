@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.annotation.events.PreparingToOpenDocumentEvent;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
@@ -65,6 +66,7 @@ public class CurationSidebarBehavior
     private @SpringBean DocumentService documentService;
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean CurationService curationService;
+    private @SpringBean CurationSessionService curationSessionService;
     private @SpringBean CurationSidebarService curationSidebarService;
     private @SpringBean UserDao userService;
     private @SpringBean ProjectService projectService;
@@ -103,6 +105,7 @@ public class CurationSidebarBehavior
         var sessionOwner = userService.getCurrentUsername();
         var doc = aEvent.getDocument();
         var project = doc.getProject();
+        var isCurationSessionActive = isSessionActive(project);
 
         var params = page.getPageParameters();
         var dataOwner = aEvent.getDocumentOwner();
@@ -120,8 +123,10 @@ public class CurationSidebarBehavior
         handleSessionActivationPageParameters(page, params, doc, sessionOwner);
 
         ensureDataOwnerMatchesCurationTarget(page, project, sessionOwner, dataOwner);
-        curationSidebarService.setDefaultSelectedUsersForDocument(aEvent.getSessionOwner(),
-                aEvent.getDocument());
+        if (!isCurationSessionActive) {
+            curationSessionService.setDefaultSelectedUsersForDocument(aEvent.getSessionOwner(),
+                    aEvent.getDocument());
+        }
 
         var prefs = preferencesService
                 .loadDefaultTraitsForProject(KEY_CURATION_SIDEBAR_MANAGER_PREFS, project);
@@ -149,7 +154,7 @@ public class CurationSidebarBehavior
                 // if an initial merge is required.
                 documentService.readAnnotationCas(state.getDocument(),
                         AnnotationSet.forUser(state.getUser()), FORCE_CAS_UPGRADE);
-                var selectedUsers = curationSidebarService.getSelectedUsers(sessionOwner,
+                var selectedUsers = curationSessionService.getSelectedUsers(sessionOwner,
                         project.getId());
 
                 var workflow = curationService.readOrCreateCurationWorkflow(state.getProject());
@@ -181,7 +186,7 @@ public class CurationSidebarBehavior
 
         // If the curation target user is different from the data owner set in the annotation
         // state, then we need to update the state and reload.
-        var curationTarget = curationSidebarService.getCurationTargetUser(aSessionOwner,
+        var curationTarget = curationSessionService.getCurationTargetUser(aSessionOwner,
                 aProject.getId());
 
         if (!aDataOwner.equals(curationTarget.getUsername())) {
@@ -206,8 +211,8 @@ public class CurationSidebarBehavior
         }
 
         // Stop/starting session to set the target parameter
-        curationSidebarService.closeSession(aSessionOwner, project.getId());
-        curationSidebarService.startSession(aSessionOwner, project,
+        curationSessionService.closeSession(aSessionOwner, project.getId());
+        curationSessionService.startSession(aSessionOwner, project,
                 curationTargetOwnParameterValue.toBoolean(false));
 
         LOG.trace("Removing session control parameters and reloading (redirect)");
@@ -234,6 +239,6 @@ public class CurationSidebarBehavior
     private boolean isSessionActive(Project aProject)
     {
         var sessionOwner = userService.getCurrentUsername();
-        return curationSidebarService.existsSession(sessionOwner, aProject.getId());
+        return curationSessionService.existsSession(sessionOwner, aProject.getId());
     }
 }

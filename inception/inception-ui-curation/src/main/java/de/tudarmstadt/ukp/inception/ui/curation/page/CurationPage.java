@@ -32,9 +32,9 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarBehavior;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate/#{" + PAGE_PARAM_DOCUMENT + "}")
@@ -43,7 +43,7 @@ public class CurationPage
 {
     private static final long serialVersionUID = 8665608337791132617L;
 
-    private @SpringBean CurationSidebarService curationSidebarService;
+    private @SpringBean CurationSessionService curationSessionService;
     private @SpringBean UserDao userRepository;
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean CurationDocumentService curationDocumentService;
@@ -57,7 +57,7 @@ public class CurationPage
         var sessionOwner = userRepository.getCurrentUsername();
         var state = getModelObject();
 
-        curationSidebarService.startSession(sessionOwner, state.getProject(), false);
+        curationSessionService.startSession(sessionOwner, state.getProject(), false);
     }
 
     @Override
