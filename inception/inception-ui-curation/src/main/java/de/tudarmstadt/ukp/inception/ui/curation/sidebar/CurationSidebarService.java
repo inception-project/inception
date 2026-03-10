@@ -27,13 +27,11 @@ import java.util.Collection;
 import org.apache.uima.UIMAException;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public interface CurationSidebarService
-    extends CurationSessionService
 {
     /**
      * @return if user in given annotator state is curating and has finished it

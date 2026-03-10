@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
@@ -59,13 +60,15 @@ public class CurationSidebarAutoConfiguration
     public CurationEditorExtension curationEditorExtension(
             AnnotationSchemaService aAnnotationService, DocumentService aDocumentService,
             ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserRepository,
+            CurationSessionService aCurationSessionService,
             CurationSidebarService aCurationSidebarService,
             FeatureSupportRegistry aFeatureSupportRegistry,
             LazyDetailsLookupService aDetailsLookupService,
             DiffAdapterRegistry aDiffAdapterRegistry)
     {
         return new CurationEditorExtension(aAnnotationService, aDocumentService,
-                aApplicationEventPublisher, aUserRepository, aCurationSidebarService,
+                aApplicationEventPublisher, aUserRepository, aCurationSessionService,
+                aCurationSidebarService,
                 aFeatureSupportRegistry, aDetailsLookupService, aDiffAdapterRegistry);
     }
 
@@ -78,12 +81,15 @@ public class CurationSidebarAutoConfiguration
     }
 
     @Bean
-    public CurationSidebarRenderer curationSidebarRenderer(CurationSidebarService aCurationService,
+    public CurationSidebarRenderer curationSidebarRenderer(
+            CurationSessionService aCurationSessionService,
+            CurationSidebarService aCurationService,
             LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
             UserDao aUserRepository, AnnotationSchemaService aAnnotationService,
             DiffAdapterRegistry aDiffAdapterRegistry)
     {
-        return new CurationSidebarRenderer(aCurationService, aLayerSupportRegistry,
-                aDocumentService, aUserRepository, aAnnotationService, aDiffAdapterRegistry);
+        return new CurationSidebarRenderer(aCurationSessionService, aCurationService,
+                aLayerSupportRegistry, aDocumentService, aUserRepository, aAnnotationService,
+                aDiffAdapterRegistry);
     }
 }

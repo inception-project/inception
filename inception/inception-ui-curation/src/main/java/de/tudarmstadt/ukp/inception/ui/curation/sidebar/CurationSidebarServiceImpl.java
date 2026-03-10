@@ -29,7 +29,6 @@ import static java.util.Optional.empty;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.UIMAException;
@@ -40,15 +39,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
-import de.tudarmstadt.ukp.inception.curation.service.CurationSessionServiceImpl;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
@@ -69,12 +67,12 @@ public class CurationSidebarServiceImpl
     private final CasStorageService casStorageService;
     private final CurationService curationService;
     private final CurationMergeService curationMergeService;
-    private final CurationSessionServiceImpl curationSessionService;
+    private final CurationSessionService curationSessionService;
 
     public CurationSidebarServiceImpl(DocumentService aDocumentService, UserDao aUserRegistry,
             CasStorageService aCasStorageService, CurationService aCurationService,
             CurationMergeService aCurationMergeService,
-            CurationSessionServiceImpl aCurationSessionService)
+            CurationSessionService aCurationSessionService)
     {
         documentService = aDocumentService;
         userRegistry = aUserRegistry;
@@ -82,36 +80,6 @@ public class CurationSidebarServiceImpl
         curationService = aCurationService;
         curationMergeService = aCurationMergeService;
         curationSessionService = aCurationSessionService;
-    }
-
-    @Transactional
-    @Override
-    public void setSelectedUsers(String aSessionOwner, long aProjectId,
-            Collection<User> aSelectedUsers)
-    {
-        curationSessionService.setSelectedUsers(aSessionOwner, aProjectId, aSelectedUsers);
-    }
-
-    @Transactional
-    @Override
-    public List<User> getSelectedUsers(String aSessionOwner, long aProjectId)
-    {
-        return curationSessionService.getSelectedUsers(aSessionOwner, aProjectId);
-    }
-
-    @Transactional
-    @Override
-    public List<User> listUsersReadyForCuration(String aSessionOwner, Project aProject,
-            SourceDocument aDocument)
-    {
-        return curationSessionService.listUsersReadyForCuration(aSessionOwner, aProject, aDocument);
-    }
-
-    @Override
-    @Transactional
-    public List<User> listCuratableUsers(String aSessionOwner, SourceDocument aDocument)
-    {
-        return curationSessionService.listCuratableUsers(aSessionOwner, aDocument);
     }
 
     /**
@@ -153,33 +121,6 @@ public class CurationSidebarServiceImpl
                 .ifPresent(aState::setAnnotationDocumentTimestamp);
     }
 
-    @Override
-    @Deprecated
-    public boolean existsSession(String aSessionOwner, long aProjectId)
-    {
-        return curationSessionService.existsSession(aSessionOwner, aProjectId);
-    }
-
-    @Override
-    @Deprecated
-    public void startSession(String aSessionOwner, Project aProject, boolean aOwnDocument)
-    {
-        curationSessionService.startSession(aSessionOwner, aProject, aOwnDocument);
-    }
-
-    @Override
-    @Deprecated
-    public void closeSession(String aSessionOwner, long aProjectId)
-    {
-        curationSessionService.closeSession(aSessionOwner, aProjectId);
-    }
-
-    @Override
-    public void setDefaultSelectedUsersForDocument(String aSessionOwner, SourceDocument aDocument)
-    {
-        curationSessionService.setDefaultSelectedUsersForDocument(aSessionOwner, aDocument);
-    }
-
     @Transactional
     @Override
     public boolean isShowAll(String aSessionOwner, Long aProjectId)
@@ -206,20 +147,6 @@ public class CurationSidebarServiceImpl
     public void setShowScore(String aSessionOwner, Long aProjectId, boolean aValue)
     {
         curationSessionService.setShowScore(aSessionOwner, aProjectId, aValue);
-    }
-
-    @Transactional
-    @Override
-    public String getCurationTarget(String aSessionOwner, long aProjectId)
-    {
-        return curationSessionService.getCurationTarget(aSessionOwner, aProjectId);
-    }
-
-    @Transactional
-    @Override
-    public User getCurationTargetUser(String aSessionOwner, long aProjectId)
-    {
-        return curationSessionService.getCurationTargetUser(aSessionOwner, aProjectId);
     }
 
     @Override

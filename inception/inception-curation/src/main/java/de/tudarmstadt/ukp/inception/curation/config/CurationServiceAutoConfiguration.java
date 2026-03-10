@@ -30,6 +30,7 @@ import org.springframework.security.core.session.SessionRegistry;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.export.CuratedDocumentsExporter;
 import de.tudarmstadt.ukp.inception.curation.export.CurationWorkflowExporter;
@@ -90,7 +91,7 @@ public class CurationServiceAutoConfiguration
 
     @Bean
     @Primary
-    public CurationSessionServiceImpl curationSessionService(EntityManager aEntityManager,
+    public CurationSessionService curationSessionService(EntityManager aEntityManager,
             SessionRegistry aSessionRegistry, ProjectService aProjectService, UserDao aUserRegistry,
             CurationSidebarProperties aCurationSidebarProperties,
             CurationDocumentService aCurationDocumentService)

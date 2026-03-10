@@ -43,6 +43,14 @@ public interface CurationSessionService
 
     User getCurationTargetUser(String aUser, long aProjectId);
 
+    boolean isShowAll(String aSessionOwner, Long aProjectId);
+
+    void setShowAll(String aSessionOwner, Long aProjectId, boolean aValue);
+
+    boolean isShowScore(String aSessionOwner, Long aProjectId);
+
+    void setShowScore(String aSessionOwner, Long aProjectId, boolean aValue);
+
     List<User> listUsersReadyForCuration(String aUsername, Project aProject,
             SourceDocument aDocument);
 

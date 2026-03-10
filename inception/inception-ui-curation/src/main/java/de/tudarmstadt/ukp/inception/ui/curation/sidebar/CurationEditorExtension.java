@@ -49,13 +49,13 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ScrollToHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -76,7 +76,6 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationVID;
  */
 public class CurationEditorExtension
     extends AnnotationEditorExtensionImplBase
-    implements AnnotationEditorExtension
 {
     public static final String EXTENSION_ID = "cur";
 
@@ -86,6 +85,7 @@ public class CurationEditorExtension
     private final DocumentService documentService;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final UserDao userRepository;
+    private final CurationSessionService curationSessionService;
     private final CurationSidebarService curationSidebarService;
     private final FeatureSupportRegistry featureSupportRegistry;
     private final LazyDetailsLookupService detailsLookupService;
@@ -93,7 +93,8 @@ public class CurationEditorExtension
 
     public CurationEditorExtension(AnnotationSchemaService aAnnotationService,
             DocumentService aDocumentService, ApplicationEventPublisher aApplicationEventPublisher,
-            UserDao aUserRepository, CurationSidebarService aCurationSidebarService,
+            UserDao aUserRepository, CurationSessionService aCurationSessionService,
+            CurationSidebarService aCurationSidebarService,
             FeatureSupportRegistry aFeatureSupportRegistry,
             LazyDetailsLookupService aDetailsLookupService,
             DiffAdapterRegistry aDiffAdapterRegistry)
@@ -102,6 +103,7 @@ public class CurationEditorExtension
         documentService = aDocumentService;
         applicationEventPublisher = aApplicationEventPublisher;
         userRepository = aUserRepository;
+        curationSessionService = aCurationSessionService;
         curationSidebarService = aCurationSidebarService;
         featureSupportRegistry = aFeatureSupportRegistry;
         detailsLookupService = aDetailsLookupService;
@@ -337,7 +339,7 @@ public class CurationEditorExtension
             CAS aSrcCas, List<AnnotationFeature> aNonCuratableFeatures)
     {
         var sessionOwner = userRepository.getCurrentUsername();
-        var selectedUsers = curationSidebarService.listUsersReadyForCuration(sessionOwner,
+        var selectedUsers = curationSessionService.listUsersReadyForCuration(sessionOwner,
                 aDocument.getProject(), aDocument);
 
         if (selectedUsers.isEmpty()) {

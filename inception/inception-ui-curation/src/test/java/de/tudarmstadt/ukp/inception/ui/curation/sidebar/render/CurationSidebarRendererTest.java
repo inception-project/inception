@@ -71,6 +71,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffSupport;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
@@ -89,6 +90,7 @@ class CurationSidebarRendererTest
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Mock ConstraintsService constraintsService;
+        private @Mock CurationSessionService curationSessionService;
     private @Mock CurationSidebarService curationService;
     private @Mock DocumentService documentService;
     private @Mock UserDao userRepository;
@@ -147,8 +149,9 @@ class CurationSidebarRendererTest
 
         diffAdapterRegistry = new DiffAdapterRegistryImpl(schemaService, diffSupportRegistry);
 
-        sut = new CurationSidebarRenderer(curationService, layerSupportRegistry, documentService,
-                userRepository, schemaService, diffAdapterRegistry);
+        sut = new CurationSidebarRenderer(curationSessionService, curationService,
+                layerSupportRegistry, documentService, userRepository, schemaService,
+                diffAdapterRegistry);
 
         curator = User.builder() //
                 .withUsername(CURATION_USER) //
@@ -202,7 +205,7 @@ class CurationSidebarRendererTest
 
         when(userRepository.getCurrentUsername()).thenReturn(curator.getUsername());
 
-        when(curationService.listUsersReadyForCuration(curator.getUsername(), project, doc))
+        when(curationSessionService.listUsersReadyForCuration(curator.getUsername(), project, doc))
                 .thenReturn(asList(anno1, anno2));
 
         var allFeaturesInProject = asList(spanLayerLinkFeature);
