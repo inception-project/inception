@@ -27,10 +27,12 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.util.FSCollectionFactory;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.cas.AnnotationBase;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.Test;
 
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
@@ -108,16 +110,17 @@ class DocumentMetadataDiffAdapterTest
     }
 
     @Test
-    void getPosition_handlesMissingDocumentMetadata_gracefully() throws Exception
+    void getPosition_handlesMissingDocumentMetadataFeatures_gracefully() throws Exception
     {
-        var tsd = TypeSystemDescriptionFactory.createTypeSystemDescription();
+        var tsd = new TypeSystemDescription_impl();
+        tsd.addType(DocumentMetaData.class.getName(), "", CAS.TYPE_NAME_ANNOTATION);
         var dld = tsd.addType(DOC_TYPE, "", CAS.TYPE_NAME_ANNOTATION);
         dld.addFeature("label", "", CAS.TYPE_NAME_STRING);
-        var fullTsd = CasCreationUtils.mergeTypeSystems(
-                List.of(tsd, TypeSystemDescriptionFactory.createTypeSystemDescription()));
-
-        var jcas = JCasFactory.createJCas(fullTsd);
+        var jcas = JCasFactory.createJCas(tsd);
         var cas = jcas.getCas();
+
+        var dmdType = cas.getTypeSystem().getType(DocumentMetaData.class.getName());
+        cas.addFsToIndexes(cas.createAnnotation(dmdType, 0, 0));
 
         var type = cas.getTypeSystem().getType(DOC_TYPE);
         var a1 = cas.createAnnotation(type, 0, 0);
@@ -126,7 +129,7 @@ class DocumentMetadataDiffAdapterTest
 
         var adapter = new DocumentMetadataDiffAdapter(DOC_TYPE, "label");
 
-        var pos = adapter.getPosition((org.apache.uima.jcas.cas.AnnotationBase) a1);
+        var pos = adapter.getPosition((AnnotationBase) a1);
 
         assertThat(pos.getCollectionId()).isNull();
         assertThat(pos.getDocumentId()).isNull();

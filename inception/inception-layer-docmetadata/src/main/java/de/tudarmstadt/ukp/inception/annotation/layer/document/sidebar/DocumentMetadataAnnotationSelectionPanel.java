@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.document.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.forUser;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.forUser;
 import static de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport.FEATURE_NAME_ORDER;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
@@ -77,13 +77,12 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.CreateDocumentAnnotationRequest;
@@ -396,8 +395,7 @@ public class DocumentMetadataAnnotationSelectionPanel
             @Override
             protected void populateItem(ListItem<LayerGroup> aItem)
             {
-                var annotations = LoadableDetachableModel
-                        .of(() -> listAnnotations(aItem.getModelObject().layer));
+                var annotations = Model.ofList(aItem.getModelObject().annotations);
 
                 aItem.add(new Label("layerName", aItem.getModelObject().layer.getUiName()));
 
@@ -537,11 +535,6 @@ public class DocumentMetadataAnnotationSelectionPanel
 
     private List<LayerGroup> listLayers()
     {
-        return listMetadataLayers().stream().map(LayerGroup::new).toList();
-    }
-
-    private List<AnnotationListItem> listAnnotations(AnnotationLayer aLayer)
-    {
         CAS cas;
         try {
             cas = casProvider.get();
@@ -551,6 +544,17 @@ public class DocumentMetadataAnnotationSelectionPanel
             return emptyList();
         }
 
+        var curationCandidatesByLayer = listCurationCandidatesByLayer(cas);
+
+        return listMetadataLayers().stream() //
+                .map(layer -> new LayerGroup(layer, listAnnotations(layer, cas,
+                        curationCandidatesByLayer.getOrDefault(layer.getName(), emptyList()))))
+                .toList();
+    }
+
+    private List<AnnotationListItem> listAnnotations(AnnotationLayer aLayer, CAS aCas,
+            List<CurationCandidate> aCurationCandidates)
+    {
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses
         // later
         var features = annotationService.listSupportedFeatures(aLayer);
@@ -558,9 +562,9 @@ public class DocumentMetadataAnnotationSelectionPanel
         var singleton = layerSupport.readTraits(aLayer).isSingleton();
 
         var items = new ArrayList<AnnotationListItem>();
-        generateAnnotationItems(aLayer, layerSupport, singleton, cas, items, features);
-        generateSuggestionItems(aLayer, layerSupport, singleton, cas, items, features);
-        generateCurationItems(aLayer, layerSupport, singleton, cas, items, features);
+        generateAnnotationItems(aLayer, layerSupport, singleton, aCas, items, features);
+        generateSuggestionItems(aLayer, layerSupport, singleton, aCas, items, features);
+        generateCurationItems(aLayer, singleton, aCas, items, aCurationCandidates);
         return items;
     }
 
@@ -648,98 +652,66 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
     }
 
-    private void generateCurationItems(AnnotationLayer aLayer,
-            DocumentMetadataLayerSupport aLayerSupport, boolean aSingleton, CAS aTargetCas,
-            List<AnnotationListItem> aItems, List<AnnotationFeature> aFeatures)
+    private void generateCurationItems(AnnotationLayer aLayer, boolean aSingleton, CAS aTargetCas,
+            List<AnnotationListItem> aItems, List<CurationCandidate> aCurationCandidates)
+    {
+        if (aCurationCandidates.isEmpty()) {
+            return;
+        }
+
+        var adapter = (DocumentMetadataLayerAdapter) annotationService.getAdapter(aLayer);
+
+        for (var candidate : aCurationCandidates) {
+            if (isBlank(candidate.label()) && existsAnyAnnotation(aTargetCas, adapter)) {
+                continue;
+            }
+
+            aItems.add(new AnnotationListItem(
+                    createCurationVid(candidate.sourceUser(), candidate.sourceVid()),
+                    candidate.label(), aLayer, aSingleton, candidate.score(), candidate.order(),
+                    ItemKind.CURATION));
+        }
+    }
+
+    private Map<String, List<CurationCandidate>> listCurationCandidatesByLayer(CAS aTargetCas)
     {
         if (!getPage().getPageClass().getName().contains("Curation")) {
             // Hack to only show curation items on the curation page without introducing a
             // circular dependency
-            return;
+            return Map.of();
         }
 
         var state = getModelObject();
         var sessionOwner = userService.getCurrentUsername();
         if (!curationSessionService.existsSession(sessionOwner, state.getProject().getId())) {
-            return;
+            return Map.of();
         }
 
         var selectedUsers = curationSessionService.listUsersReadyForCuration(sessionOwner,
                 state.getProject(), state.getDocument());
         if (selectedUsers.isEmpty()) {
-            return;
+            return Map.of();
         }
 
         var targetUser = state.getUser().getUsername();
-        var adapter = (DocumentMetadataLayerAdapter) annotationService.getAdapter(aLayer);
-        var renderer = aLayerSupport.createRenderer(aLayer,
-                () -> annotationService.listAnnotationFeature(aLayer));
-        var casDiff = createCurationDiff(aLayer, aTargetCas, targetUser, state.getDocument(),
-                selectedUsers);
-        if (casDiff == null) {
-            return;
-        }
+        var selectedUsernames = selectedUsers.stream() //
+                .map(User::getUsername) //
+                .filter(username -> !targetUser.equals(username)) //
+                .distinct() //
+                .sorted() //
+                .toList();
 
-        var diff = casDiff.toResult();
-
-        var totalAnnotatorCount = selectedUsers.stream()
-                .filter(user -> !targetUser.equals(user.getUsername()))
-                .map(user -> user.getUsername()).distinct().count();
-
-        for (var cfgSet : diff.getConfigurationSets()) {
-            var position = cfgSet.getPosition();
-            if (!isDocumentMetadataBasePosition(aLayer, position)) {
-                continue;
-            }
-
-            for (var cfg : cfgSet.getConfigurations()) {
-                if (cfg.getCasGroupIds().contains(targetUser)) {
-                    continue;
-                }
-
-                var representativeFs = cfg.getRepresentative(casDiff.getCasMap());
-                if (!(representativeFs instanceof AnnotationBase representative)) {
-                    continue;
-                }
-
-                var renderedFeatures = renderer.renderLabelFeatureValues(adapter, representative,
-                        aFeatures);
-                var labelText = TypeUtil.getUiLabelText(renderedFeatures);
-                if (isBlank(labelText) && existsAnyAnnotation(aTargetCas, adapter)) {
-                    continue;
-                }
-
-                var order = representative.getType()
-                        .getFeatureByBaseName(FEATURE_NAME_ORDER) != null
-                                ? getFeature(representative, FEATURE_NAME_ORDER, Integer.class)
-                                : aItems.size();
-                var sourceVid = VID.of(representative);
-                var score = totalAnnotatorCount > 0
-                        ? (double) cfg.getCasGroupIds().stream()
-                                .filter(user -> !targetUser.equals(user)).count()
-                                / (double) totalAnnotatorCount
-                        : 0.0d;
-
-                aItems.add(new AnnotationListItem(
-                        createCurationVid(cfg.getRepresentativeCasGroupId(), sourceVid),
-                        labelText, aLayer, aSingleton, score, order, ItemKind.CURATION));
-            }
-        }
-    }
-
-    private CasDiff createCurationDiff(AnnotationLayer aLayer, CAS aTargetCas, String aTargetUser,
-            SourceDocument aDocument, List<User> aSelectedUsers)
-    {
         Map<String, CAS> casses = new LinkedHashMap<>();
-        casses.put(aTargetUser, aTargetCas);
+        casses.put(targetUser, aTargetCas);
 
-        for (var user : aSelectedUsers) {
-            if (aTargetUser.equals(user.getUsername())) {
+        for (var user : selectedUsers) {
+            if (targetUser.equals(user.getUsername())) {
                 continue;
             }
 
             try {
-                var sourceCas = documentService.readAnnotationCas(aDocument, forUser(user));
+                var sourceCas = documentService.readAnnotationCas(state.getDocument(),
+                        forUser(user));
                 casses.put(user.getUsername(), sourceCas);
             }
             catch (IOException e) {
@@ -749,11 +721,59 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
 
         if (casses.size() <= 1) {
-            return null;
+            return Map.of();
         }
 
-        var adapters = diffAdapterRegistry.getDiffAdapters(List.of(aLayer));
-        return doDiff(adapters, casses);
+        var metadataLayers = listMetadataLayers();
+        var adapters = diffAdapterRegistry.getDiffAdapters(metadataLayers);
+        var diff = doDiff(adapters, casses).toResult();
+        var layersByName = metadataLayers.stream()
+                .collect(toMap(AnnotationLayer::getName, identity()));
+        var candidatesByLayer = new LinkedHashMap<String, List<CurationCandidate>>();
+        var totalAnnotatorCount = selectedUsernames.size();
+
+        for (var cfgSet : diff.getConfigurationSets()) {
+            var layer = layersByName.get(cfgSet.getPosition().getType());
+            if (layer == null || !isDocumentMetadataBasePosition(layer, cfgSet.getPosition())) {
+                continue;
+            }
+
+            var adapter = (DocumentMetadataLayerAdapter) annotationService.getAdapter(layer);
+            var features = annotationService.listSupportedFeatures(layer);
+            var renderer = getLayerSupport(layer).createRenderer(layer,
+                    () -> annotationService.listAnnotationFeature(layer));
+            var candidates = candidatesByLayer.computeIfAbsent(layer.getName(),
+                    $ -> new ArrayList<>());
+
+            for (var cfg : cfgSet.getConfigurations()) {
+                if (cfg.getCasGroupIds().contains(targetUser)) {
+                    continue;
+                }
+
+                var representativeFs = cfg.getRepresentative(casses);
+                if (!(representativeFs instanceof AnnotationBase representative)) {
+                    continue;
+                }
+
+                var renderedFeatures = renderer.renderLabelFeatureValues(adapter, representative,
+                        features);
+                var labelText = TypeUtil.getUiLabelText(renderedFeatures);
+                var order = representative.getType()
+                        .getFeatureByBaseName(FEATURE_NAME_ORDER) != null
+                                ? getFeature(representative, FEATURE_NAME_ORDER, Integer.class)
+                                : candidates.size();
+                var score = totalAnnotatorCount > 0
+                        ? (double) cfg.getCasGroupIds().stream()
+                                .filter(user -> !targetUser.equals(user)).count()
+                                / (double) totalAnnotatorCount
+                        : 0.0d;
+
+                candidates.add(new CurationCandidate(cfg.getRepresentativeCasGroupId(),
+                        VID.of(representative), labelText, score, order));
+            }
+        }
+
+        return candidatesByLayer;
     }
 
     private boolean isDocumentMetadataBasePosition(AnnotationLayer aLayer, Position aPosition)
@@ -926,11 +946,16 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
     }
 
-    private record LayerGroup(AnnotationLayer layer)
+    private record LayerGroup(AnnotationLayer layer, List<AnnotationListItem> annotations)
         implements Serializable
     {}
 
     private record CurationReference(String sourceUser, VID sourceVid)
+        implements Serializable
+    {}
+
+    private record CurationCandidate(String sourceUser, VID sourceVid, String label, double score,
+            int order)
         implements Serializable
     {}
 
