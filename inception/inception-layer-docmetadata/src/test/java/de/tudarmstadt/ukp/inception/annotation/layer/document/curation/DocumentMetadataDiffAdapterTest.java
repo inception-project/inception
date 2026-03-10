@@ -85,14 +85,9 @@ class DocumentMetadataDiffAdapterTest
         var cas = jcas.getCas();
 
         // ensure document metadata exists and set collection/document id
-        var dmd = de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getDocumentMetadata(cas);
-        try {
-            FSUtil.setFeature(dmd, "collectionId", "coll1");
-            FSUtil.setFeature(dmd, "documentId", "doc1");
-        }
-        catch (IllegalArgumentException e) {
-            // ignore if feature missing
-        }
+        var dmd = DocumentMetaData.create(jcas);
+        dmd.setCollectionId("coll1");
+        dmd.setDocumentId("doc1");
 
         var type = cas.getTypeSystem().getType(DOC_TYPE);
         var a1 = cas.createAnnotation(type, 0, 0);

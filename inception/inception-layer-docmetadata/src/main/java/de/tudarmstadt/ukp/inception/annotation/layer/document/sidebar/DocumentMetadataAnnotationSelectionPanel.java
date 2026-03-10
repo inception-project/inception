@@ -91,6 +91,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetada
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerTraits;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.event.DocumentMetadataEvent;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
+import de.tudarmstadt.ukp.inception.curation.api.CurationVID;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.api.Position;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -118,8 +119,6 @@ public class DocumentMetadataAnnotationSelectionPanel
     private static final long serialVersionUID = 8318858582025740458L;
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    private static final String CURATION_EXTENSION_ID = "meta-cur";
-
     private static final String CID_LABEL = "label";
     private static final String CID_SCORE = "score";
     private static final String CID_LAYER = "layer";
@@ -249,20 +248,20 @@ public class DocumentMetadataAnnotationSelectionPanel
         throws AnnotationException, IOException
     {
         var state = getModelObject();
-        var curationReference = parseCurationReference(aItem.vid)
+        var curationVid = parseCurationVid(aItem.vid)
                 .orElseThrow(() -> new IllegalStateException("Invalid curation item identifier"));
+        var sourceVid = VID.parse(curationVid.getExtensionPayload());
 
         var sourceCas = documentService.readAnnotationCas(state.getDocument(),
-                AnnotationSet.forUser(curationReference.sourceUser()));
-        var sourceFs = selectFsByAddr(sourceCas, curationReference.sourceVid().getId());
+                AnnotationSet.forUser(curationVid.getUsername()));
+        var sourceFs = selectFsByAddr(sourceCas, sourceVid.getId());
 
         if (!(sourceFs instanceof AnnotationBase sourceAnnotation)) {
             throw new IllegalStateException("Curation source annotation could not be resolved");
         }
 
         var targetCas = casProvider.get();
-        mergeDocumentMetadataAnnotation(state, aItem.layer, targetCas,
-                curationReference.sourceUser(), sourceAnnotation);
+        mergeDocumentMetadataAnnotation(state, aItem.layer, targetCas, sourceAnnotation);
         annotationPage.writeEditorCas(targetCas);
         aTarget.add(layersContainer);
         annotationPage.actionRefreshDocument(aTarget);
@@ -424,6 +423,7 @@ public class DocumentMetadataAnnotationSelectionPanel
                 var itemState = aItem.getModelObject();
 
                 var container = new WebMarkupContainer(CID_ANNOTATION);
+                container.setOutputMarkupId(true);
                 container.add(visibleWhen(
                         () -> !itemState.singleton || itemState.kind != ItemKind.ANNOTATION));
                 aItem.add(container);
@@ -667,7 +667,7 @@ public class DocumentMetadataAnnotationSelectionPanel
             }
 
             aItems.add(new AnnotationListItem(
-                    createCurationVid(candidate.sourceUser(), candidate.sourceVid()),
+                    new CurationVID(candidate.sourceUser(), candidate.sourceVid()),
                     candidate.label(), aLayer, aSingleton, candidate.score(), candidate.order(),
                     ItemKind.CURATION));
         }
@@ -783,7 +783,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     }
 
     private void mergeDocumentMetadataAnnotation(AnnotatorState aState, AnnotationLayer aLayer,
-            CAS aTargetCas, String aSourceUser, AnnotationBase aSourceAnnotation)
+            CAS aTargetCas, AnnotationBase aSourceAnnotation)
         throws AnnotationException
     {
         var adapter = (DocumentMetadataLayerAdapter) annotationService.getAdapter(aLayer);
@@ -882,30 +882,12 @@ public class DocumentMetadataAnnotationSelectionPanel
         return aTargetCas.select(targetType.get()).findAny().isPresent();
     }
 
-    private VID createCurationVid(String aSourceUser, VID aSourceVid)
+    private Optional<CurationVID> parseCurationVid(VID aVid)
     {
-        return VID.builder() //
-                .withAnnotationId(aSourceVid.getId()) //
-                .withExtensionId(CURATION_EXTENSION_ID) //
-                .withExtensionPayload(aSourceUser + "!" + aSourceVid.toString()) //
-                .build();
-    }
-
-    private Optional<CurationReference> parseCurationReference(VID aVid)
-    {
-        if (!CURATION_EXTENSION_ID.equals(aVid.getExtensionId())
-                || isBlank(aVid.getExtensionPayload())) {
-            return empty();
+        if (aVid instanceof CurationVID curationVid) {
+            return Optional.of(curationVid);
         }
-
-        var separator = aVid.getExtensionPayload().indexOf('!');
-        if (separator < 0) {
-            return empty();
-        }
-
-        var sourceUser = aVid.getExtensionPayload().substring(0, separator);
-        var sourceVid = VID.parse(aVid.getExtensionPayload().substring(separator + 1));
-        return Optional.of(new CurationReference(sourceUser, sourceVid));
+        return empty();
     }
 
     @OnEvent
@@ -947,10 +929,6 @@ public class DocumentMetadataAnnotationSelectionPanel
     }
 
     private record LayerGroup(AnnotationLayer layer, List<AnnotationListItem> annotations)
-        implements Serializable
-    {}
-
-    private record CurationReference(String sourceUser, VID sourceVid)
         implements Serializable
     {}
 
