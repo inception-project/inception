@@ -110,6 +110,8 @@ So if you do not want to accept or override an annotation, just ignore it.
 
 In this mode, you can find a **Curation sidebar** on the left side of the page.
 In this sidebar, you can configure which annotators you want to see in the document view.
+If document metadata layers are configured in the project, you can curate document-level
+annotations in the **Document Metadata sidebar** in this mode.
 You can also restart the curation process for a document using the **Re-merge** button.
 
 // In this mode, you can select the target to which your curated annotations are added:

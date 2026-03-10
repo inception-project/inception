@@ -15,9 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.curation.sidebar.render;
-
-import static de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension.EXTENSION_ID;
+package de.tudarmstadt.ukp.inception.curation.api;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,6 +29,8 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 public class CurationVID
     extends VID
 {
+    public static final String EXTENSION_ID = "cur";
+
     private static final long serialVersionUID = -4052847275637346338L;
 
     private final String username;

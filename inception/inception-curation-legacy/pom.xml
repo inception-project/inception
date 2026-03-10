@@ -68,11 +68,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-layer-docmetadata</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-layer-relation-api</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -164,10 +159,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
-            <ignoredUnusedDeclaredDependencies>
-              <!-- Used for an inlined string... -->
-              <dependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</dependency>
-            </ignoredUnusedDeclaredDependencies>
             <ignoredNonTestScopedDependencies combine.children="append">
               <!-- Directly used only in tests but we need it for a transitive base class -->
               <dependency>de.tudarmstadt.ukp.inception.app:inception-support</dependency>
