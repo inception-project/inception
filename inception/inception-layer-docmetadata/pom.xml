@@ -211,5 +211,11 @@
       <groupId>tools.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-segmentation-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>

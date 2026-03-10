@@ -19,8 +19,10 @@ On the annotation page, you can now:
 image::images/metadata-sidebar.png[align="center"]
 
 ====
-NOTE: Curation of document-level annotations is not possible. Import and export of document-level
-annotations is only supported in the UIMA CAS XMI and UIMA CAS JSON formats.
+NOTE: Document-level annotations can be curated in the **Document Metadata sidebar** when the
+project uses the *integrated curation mode*. Document-level annotation curation is not available
+in the *split curation mode*. Import and export of document-level annotations is only supported in
+the UIMA CAS XMI and UIMA CAS JSON formats.
 ====
 
 == Singletons
