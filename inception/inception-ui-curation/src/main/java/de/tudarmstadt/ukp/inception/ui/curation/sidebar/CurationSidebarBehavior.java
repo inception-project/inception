@@ -103,6 +103,7 @@ public class CurationSidebarBehavior
         var sessionOwner = userService.getCurrentUsername();
         var doc = aEvent.getDocument();
         var project = doc.getProject();
+        var isCurationSessionActive = isSessionActive(project);
 
         var params = page.getPageParameters();
         var dataOwner = aEvent.getDocumentOwner();
@@ -120,8 +121,10 @@ public class CurationSidebarBehavior
         handleSessionActivationPageParameters(page, params, doc, sessionOwner);
 
         ensureDataOwnerMatchesCurationTarget(page, project, sessionOwner, dataOwner);
-        curationSidebarService.setDefaultSelectedUsersForDocument(aEvent.getSessionOwner(),
-                aEvent.getDocument());
+        if (!isCurationSessionActive) {
+            curationSidebarService.setDefaultSelectedUsersForDocument(aEvent.getSessionOwner(),
+                    aEvent.getDocument());
+        }
 
         var prefs = preferencesService
                 .loadDefaultTraitsForProject(KEY_CURATION_SIDEBAR_MANAGER_PREFS, project);
