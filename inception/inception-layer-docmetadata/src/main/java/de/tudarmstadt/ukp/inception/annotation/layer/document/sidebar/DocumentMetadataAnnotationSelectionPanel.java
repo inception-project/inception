@@ -45,6 +45,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -426,6 +427,19 @@ public class DocumentMetadataAnnotationSelectionPanel
                 container.setOutputMarkupId(true);
                 container.add(visibleWhen(
                         () -> !itemState.singleton || itemState.kind != ItemKind.ANNOTATION));
+                container.add(AttributeModifier.replace("data-annotation-sidebar-item", true));
+                container.add(AttributeModifier.replace("data-annotation-sidebar-vid",
+                    itemState.vid.toString()));
+                container.add(AttributeModifier.replace("data-annotation-sidebar-layer-id",
+                    itemState.layer.getId()));
+                container.add(AttributeModifier.replace("data-annotation-sidebar-layer-name",
+                    itemState.layer.getUiName()));
+                container.add(AttributeModifier.replace("data-annotation-sidebar-kind",
+                    itemState.kind.name().toLowerCase(Locale.ROOT)));
+                container.add(AttributeModifier.replace("data-annotation-sidebar-label",
+                    defaultIfEmpty(itemState.label, "")));
+                container.add(AttributeModifier.replace("data-annotation-sidebar-score",
+                    itemState.score));
                 aItem.add(container);
 
                 Component detailPanel;

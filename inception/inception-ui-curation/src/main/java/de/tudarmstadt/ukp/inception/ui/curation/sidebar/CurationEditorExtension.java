@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
@@ -47,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
@@ -202,7 +205,7 @@ public class CurationEditorExtension
 
         var vid = VID.parse(curationVid.getExtensionPayload());
         var cas = documentService.readAnnotationCas(aDocument, srcSet);
-        var fs = selectAnnotationByAddr(cas, vid.getId());
+        var fs = selectFsByAddr(cas, vid.getId());
         var ext = featureSupportRegistry.findExtension(aFeature).orElseThrow();
         return ext.getFeatureValue(aFeature, fs);
     }
@@ -348,10 +351,10 @@ public class CurationEditorExtension
 
         var casses = collectCasses(aDocument, aDataOwner, aCas, selectedUsers);
 
-        var srcAnnotation = selectAnnotationByAddr(aSrcCas, vid.getId());
-        var casDiff = createDiff(casses, aLayer, srcAnnotation.getBegin(), srcAnnotation.getEnd());
+        var srcFs = selectFsByAddr(aSrcCas, vid.getId());
+        var casDiff = createDiff(casses, aLayer, srcFs);
 
-        var maybeConfiguration = casDiff.toResult().findConfiguration(aSrcUser, srcAnnotation);
+        var maybeConfiguration = casDiff.toResult().findConfiguration(aSrcUser, srcFs);
         if (maybeConfiguration.isEmpty()) {
             return emptyList();
         }
@@ -376,6 +379,21 @@ public class CurationEditorExtension
         }
 
         return detailGroups;
+    }
+
+    private CasDiff createDiff(Map<String, CAS> aCasses, AnnotationLayer aLayer,
+            FeatureStructure aSourceFs)
+    {
+        if (DocumentMetadataLayerSupport.TYPE.equals(aLayer.getType())) {
+            var end = aCasses.values().stream() //
+                    .findFirst() //
+                    .map(cas -> cas.getDocumentAnnotation().getEnd()) //
+                    .orElse(0);
+            return createDiff(aCasses, aLayer, 0, end);
+        }
+
+        var srcAnnotation = (AnnotationFS) aSourceFs;
+        return createDiff(aCasses, aLayer, srcAnnotation.getBegin(), srcAnnotation.getEnd());
     }
 
     private Map<String, CAS> collectCasses(SourceDocument aDocument, User aDataOwner, CAS aCas,
