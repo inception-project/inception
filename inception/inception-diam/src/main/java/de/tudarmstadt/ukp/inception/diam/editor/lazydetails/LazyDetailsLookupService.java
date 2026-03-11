@@ -18,7 +18,9 @@
 package de.tudarmstadt.ukp.inception.diam.editor.lazydetails;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.request.IRequestParameters;
@@ -46,5 +48,6 @@ public interface LazyDetailsLookupService
     List<VLazyDetailGroup> lookupFeatureLevelDetails(VID aVid, CAS aCas,
             AnnotationFeature aFeature);
 
-    List<VLazyDetailGroup> lookupLayerLevelDetails(VID aVid, CAS aCas, AnnotationLayer aLayer);
+    List<VLazyDetailGroup> lookupLayerLevelDetails(VID aVid, CAS aCas, AnnotationLayer aLayer,
+            Supplier<Collection<AnnotationFeature>> aFeatureSupplier);
 }

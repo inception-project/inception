@@ -133,7 +133,9 @@ public class DocumentMetadataAnnotationSelectionPanel
     private static final String CID_CREATE = "create";
     private static final String CID_DELETE = "delete";
     private static final String CID_ACCEPT = "accept";
+    private static final String CID_MERGE = "merge";
     private static final String CID_REJECT = "reject";
+    private static final String CID_ACTION_GROUP = "actionGroup";
     private static final String CID_OPEN = "open";
     private static final String CID_CLOSE = "close";
 
@@ -198,18 +200,24 @@ public class DocumentMetadataAnnotationSelectionPanel
                 .add(visibleWhen(layers.map(List::isEmpty).orElse(true))));
     }
 
-    private void actionAccept(AjaxRequestTarget aTarget, AnnotationListItem aItem)
+    private void actionAcceptSuggestion(AjaxRequestTarget aTarget, AnnotationListItem aItem)
     {
         try {
             annotationPage.ensureIsEditable();
 
-            switch (aItem.kind) {
-            case RECOMMENDATION -> acceptSuggestion(aTarget, aItem);
-            case CURATION -> mergeCuration(aTarget, aItem);
-            case ANNOTATION -> {
-                // Nothing to do
-            }
-            }
+            acceptSuggestion(aTarget, aItem);
+        }
+        catch (Exception e) {
+            handleException(this, aTarget, e);
+        }
+    }
+
+    private void actionMergeCuration(AjaxRequestTarget aTarget, AnnotationListItem aItem)
+    {
+        try {
+            annotationPage.ensureIsEditable();
+
+            mergeCuration(aTarget, aItem);
         }
         catch (Exception e) {
             handleException(this, aTarget, e);
@@ -422,24 +430,20 @@ public class DocumentMetadataAnnotationSelectionPanel
 
                 var vid = aItem.getModelObject().vid;
                 var itemState = aItem.getModelObject();
+                var isRecommendation = itemState.kind == ItemKind.RECOMMENDATION;
+                var isCuration = itemState.kind == ItemKind.CURATION;
+                var hoverTarget = itemState.kind == ItemKind.ANNOTATION ? null : aItem;
 
                 var container = new WebMarkupContainer(CID_ANNOTATION);
                 container.setOutputMarkupId(true);
                 container.add(visibleWhen(
                         () -> !itemState.singleton || itemState.kind != ItemKind.ANNOTATION));
-                container.add(AttributeModifier.replace("data-annotation-sidebar-item", true));
-                container.add(AttributeModifier.replace("data-annotation-sidebar-vid",
-                    itemState.vid.toString()));
-                container.add(AttributeModifier.replace("data-annotation-sidebar-layer-id",
-                    itemState.layer.getId()));
-                container.add(AttributeModifier.replace("data-annotation-sidebar-layer-name",
-                    itemState.layer.getUiName()));
-                container.add(AttributeModifier.replace("data-annotation-sidebar-kind",
-                    itemState.kind.name().toLowerCase(Locale.ROOT)));
-                container.add(AttributeModifier.replace("data-annotation-sidebar-label",
-                    defaultIfEmpty(itemState.label, "")));
-                container.add(AttributeModifier.replace("data-annotation-sidebar-score",
-                    itemState.score));
+                if (hoverTarget == null) {
+                    applySidebarItemAttributes(container, itemState);
+                }
+                else {
+                    applySidebarItemAttributes(hoverTarget, itemState);
+                }
                 aItem.add(container);
 
                 Component detailPanel;
@@ -453,10 +457,6 @@ public class DocumentMetadataAnnotationSelectionPanel
                     detailPanel.setVisible(false);
                 }
                 aItem.add(detailPanel);
-
-                var isRecommendation = itemState.kind == ItemKind.RECOMMENDATION;
-                var isCuration = itemState.kind == ItemKind.CURATION;
-                var isSuggestion = isRecommendation || isCuration;
 
                 if (itemState.kind == ItemKind.ANNOTATION) {
                     container.add(new LambdaAjaxEventBehavior(CLICK_EVENT, $ -> actionSelect($,
@@ -490,6 +490,12 @@ public class DocumentMetadataAnnotationSelectionPanel
                         .add(visibleWhen(() -> itemState.kind != ItemKind.ANNOTATION
                                 || (!itemState.singleton && !isExpanded(aItem, container)))));
 
+                var actionGroup = new WebMarkupContainer(CID_ACTION_GROUP);
+                if (isCuration) {
+                    actionGroup.add(AttributeModifier.append("class", "curation-action-group"));
+                }
+                aItem.queue(actionGroup);
+
                 aItem.queue(new LambdaAjaxLink(CID_DELETE,
                         $ -> actionDelete($, (DocumentMetadataAnnotationDetailPanel) detailPanel))
                                 .add(AttributeModifier.replace("title", itemState.vid))
@@ -499,12 +505,24 @@ public class DocumentMetadataAnnotationSelectionPanel
                                         && !itemState.layer.isReadonly())));
 
                 aItem.queue(new Label(CID_SCORE,
-                        format(Session.get().getLocale(), "%.2f", itemState.score))
-                                .add(visibleWhen(() -> isSuggestion && itemState.score != 0.0d)));
+                    format(Session.get().getLocale(), "%.2f", itemState.score))
+                        .add(visibleWhen(() -> isRecommendation
+                            && itemState.score != 0.0d)));
 
-                aItem.queue(new LambdaAjaxLink(CID_ACCEPT, $ -> actionAccept($, itemState))
+                aItem.queue(new Label("mergeScore",
+                    format(Session.get().getLocale(), "%.2f", itemState.score))
+                        .add(visibleWhen(() -> isCuration && itemState.score != 0.0d)));
+
+                aItem.queue(new LambdaAjaxLink(CID_ACCEPT,
+                    $ -> actionAcceptSuggestion($, itemState))
                         .add(AttributeModifier.replace("title", itemState.vid))
-                        .add(visibleWhen(() -> isSuggestion && annotationPage.isEditable()
+                    .add(visibleWhen(() -> isRecommendation && annotationPage.isEditable()
+                        && !itemState.layer.isReadonly())));
+
+                aItem.queue(new LambdaAjaxLink(CID_MERGE,
+                    $ -> actionMergeCuration($, itemState))
+                    .add(AttributeModifier.replace("title", itemState.vid))
+                    .add(visibleWhen(() -> isCuration && annotationPage.isEditable()
                                 && !itemState.layer.isReadonly())));
 
                 aItem.queue(
@@ -525,6 +543,22 @@ public class DocumentMetadataAnnotationSelectionPanel
             }
         };
     }
+
+        private void applySidebarItemAttributes(Component aComponent, AnnotationListItem aItem)
+        {
+        aComponent.add(AttributeModifier.replace("data-annotation-sidebar-item", true));
+        aComponent.add(AttributeModifier.replace("data-annotation-sidebar-vid",
+            aItem.vid.toString()));
+        aComponent.add(AttributeModifier.replace("data-annotation-sidebar-layer-id",
+            aItem.layer.getId()));
+        aComponent.add(AttributeModifier.replace("data-annotation-sidebar-layer-name",
+            aItem.layer.getUiName()));
+        aComponent.add(AttributeModifier.replace("data-annotation-sidebar-kind",
+            aItem.kind.name().toLowerCase(Locale.ROOT)));
+        aComponent.add(AttributeModifier.replace("data-annotation-sidebar-label",
+            defaultIfEmpty(aItem.label, "")));
+        aComponent.add(AttributeModifier.replace("data-annotation-sidebar-score", aItem.score));
+        }
 
     private List<AnnotationLayer> listMetadataLayers()
     {

@@ -91,7 +91,7 @@ class CurationSidebarRendererTest
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Mock ConstraintsService constraintsService;
-        private @Mock CurationSessionService curationSessionService;
+    private @Mock CurationSessionService curationSessionService;
     private @Mock CurationSidebarService curationService;
     private @Mock DocumentService documentService;
     private @Mock UserDao userRepository;
@@ -280,7 +280,7 @@ class CurationSidebarRendererTest
                         curationVid(anno1, anchorB));
         assertThat(vdoc.comments()) //
                 .extracting(comment -> comment.getComment()) //
-                .containsExactlyInAnyOrder("Annotators: anno1, anno2");
+                .containsExactlyInAnyOrder("Curation item");
     }
 
     /**

@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.rendering.Renderer.REL_EXTENSION_ID;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 
@@ -89,10 +88,9 @@ public class CurationSidebarRenderer
     private final DiffAdapterRegistry diffAdapterRegistry;
 
     public CurationSidebarRenderer(CurationSessionService aCurationSessionService,
-            CurationSidebarService aCurationService,
-            LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
-            UserDao aUserRepository, AnnotationSchemaService aAnnotationService,
-            DiffAdapterRegistry aDiffAdapterRegistry)
+            CurationSidebarService aCurationService, LayerSupportRegistry aLayerSupportRegistry,
+            DocumentService aDocumentService, UserDao aUserRepository,
+            AnnotationSchemaService aAnnotationService, DiffAdapterRegistry aDiffAdapterRegistry)
     {
         curationSessionService = aCurationSessionService;
         curationService = aCurationService;
@@ -242,9 +240,7 @@ public class CurationSidebarRenderer
                     }
                     aVdoc.add(object);
 
-                    aVdoc.add(new VComment(object.getVid(), VCommentType.INFO,
-                            "Annotators: " + cfg.getCasGroupIds().stream()
-                                    .filter(a -> !targetUser.equals(a)).collect(joining(", "))));
+                    aVdoc.add(new VComment(object.getVid(), VCommentType.INFO, "Curation item"));
 
                     if (object instanceof VArc arc) {
                         resolveArcEndpoints(targetUser, diff, showAll, cfg, arc);

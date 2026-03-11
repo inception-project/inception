@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotatio
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
@@ -306,24 +307,25 @@ public class CurationEditorExtension
                     .filter(f -> f.isIncludeInHover()) //
                     .filter(f -> NONE == f.getMultiValueMode()) //
                     .toList();
-
-            // This is where we get the "show on hover" stuff...
-            detailsLookupService.lookupLayerLevelDetails(vid, srcCas, aLayer)
-                    .forEach(detailGroups::add);
-
             // The curatable features need to be all the same across the users for the position
             var curatableFeatures = features.stream() //
                     .filter(f -> f.isCuratable()) //
                     .toList();
+            // The non-curatable features (e.g. comments) may differ, so we need to collect them
+            var nonCuratableFeatures = features.stream() //
+                    .filter(f -> !f.isCuratable()) //
+                    .toList();
+
+            // This is where we get the "show on hover" stuff...
+            detailsLookupService
+                    .lookupLayerLevelDetails(vid, srcCas, aLayer, () -> curatableFeatures)
+                    .forEach(detailGroups::add);
+
             for (var feature : curatableFeatures) {
                 detailsLookupService.lookupFeatureLevelDetails(vid, srcCas, feature)
                         .forEach(detailGroups::add);
             }
 
-            // The non-curatable features (e.g. comments) may differ, so we need to collect them
-            var nonCuratableFeatures = features.stream() //
-                    .filter(f -> !f.isCuratable()) //
-                    .toList();
             lookupFeaturesAcrossAnnotators(aDocument, aDataOwner, aCas, aLayer, vid, srcUser,
                     srcCas, nonCuratableFeatures).forEach(detailGroups::add);
         }
@@ -358,10 +360,15 @@ public class CurationEditorExtension
         if (maybeConfiguration.isEmpty()) {
             return emptyList();
         }
+        var configuration = maybeConfiguration.get();
 
         var detailGroups = new ArrayList<VLazyDetailGroup>();
 
-        var configuration = maybeConfiguration.get();
+        var annotatorsGroup = new VLazyDetailGroup();
+        annotatorsGroup.addDetail(new VLazyDetail("Annotators", configuration.getCasGroupIds()
+                .stream().filter(a -> !aDataOwner.getUsername().equals(a)).collect(joining(", "))));
+        detailGroups.add(annotatorsGroup);
+
         for (var user : configuration.getCasGroupIds()) {
             var group = new VLazyDetailGroup(user);
             var fs = configuration.getFs(user, casses);

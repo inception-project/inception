@@ -3,6 +3,7 @@
   "version": "${semver}",
   "author": "INCEpTION Team",
   "license": "Apache-2.0",
+  "type": "module",
   "private": true,
   "homepage": "https://github.com/inception-project/inception#readme",
   "bugs": {
