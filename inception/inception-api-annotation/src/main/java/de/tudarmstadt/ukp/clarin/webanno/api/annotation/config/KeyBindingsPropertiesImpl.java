@@ -82,8 +82,8 @@ public class KeyBindingsPropertiesImpl
         private KeyCombo lastPage = new KeyCombo(End);
         private KeyCombo nextDocument = new KeyCombo(Shift, Page_down);
         private KeyCombo previousDocument = new KeyCombo(Shift, Page_up);
-        private KeyCombo nextAnnotation = new KeyCombo(Shift, Right);
-        private KeyCombo previousAnnotation = new KeyCombo(Shift, Left);
+        private KeyCombo nextAnnotation = new KeyCombo(true, Shift, Right);
+        private KeyCombo previousAnnotation = new KeyCombo(true, Shift, Left);
 
         @Override
         public KeyCombo getNextPage()
