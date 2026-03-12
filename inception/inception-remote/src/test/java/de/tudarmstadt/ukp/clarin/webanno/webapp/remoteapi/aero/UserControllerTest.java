@@ -27,14 +27,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Set;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -48,7 +48,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.util.FileSystemUtils;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.context.WebApplicationContext;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -64,8 +65,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
         webEnvironment = WebEnvironment.MOCK, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "remote-api.enabled=true", //
-                "repository.path=" + UserControllerTest.TEST_OUTPUT_FOLDER })
+                "remote-api.enabled=true" })
 @EnableWebSecurity
 @EnableAutoConfiguration( //
         exclude = { //
@@ -77,7 +77,13 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
 public class UserControllerTest
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Permissions_Test";
+    static @TempDir Path tempFolder;
+
+    @DynamicPropertySource
+    static void registerDynamicProperties(DynamicPropertyRegistry registry)
+    {
+        registry.add("repository.path", () -> tempFolder.toAbsolutePath().toString());
+    }
 
     private @Autowired WebApplicationContext context;
     private @Autowired UserDao userRepository;
@@ -87,12 +93,6 @@ public class UserControllerTest
     private MockAeroClient userActor;
 
     private Project project;
-
-    @BeforeAll
-    public static void setupClass()
-    {
-        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
-    }
 
     @BeforeEach
     public void setup() throws Exception

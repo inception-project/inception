@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType.ERROR;
-import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static java.lang.String.join;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -182,7 +182,7 @@ public interface Renderer
 
     default List<VLazyDetailGroup> lookupLazyDetails(CAS aCas, VID aVid)
     {
-        var aFs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+        var aFs = selectFsByAddr(aCas, aVid.getId());
 
         var details = new ArrayList<VLazyDetailGroup>();
         generateLazyDetailsForFeaturesIncludedInHover(details, aFs);
@@ -190,7 +190,7 @@ public interface Renderer
     }
 
     default void generateLazyDetailsForFeaturesIncludedInHover(List<VLazyDetailGroup> aDetails,
-            AnnotationFS aFs)
+            FeatureStructure aFs)
     {
         var fsr = getFeatureSupportRegistry();
 

@@ -170,6 +170,31 @@ public class MtasDocumentIndex
 
     private static final String EMPTY_FEATURE_VALUE_KEY = "<Empty>";
 
+    /**
+     * Characters that need to be escaped in CQL queries. Note: Backslash must be first to avoid
+     * double-escaping.
+     */
+    static final String[] CHARS_TO_ESCAPE = { "\\", "(", ")", "{", "}", "<", ">", "[", "]", "&",
+            "#", ".", "+", "*", "?", "|", "^", "$" };
+
+    /**
+     * Characters that trigger CQL mode detection in queries. If any of these characters are
+     * present, the query is treated as CQL and returned unchanged.
+     */
+    static final String[] CQL_TRIGGER_CHARS = { "\"", "[", "]", "<", ">" };
+
+    /**
+     * Escaped versions of the characters in {@link #CHARS_TO_ESCAPE}.
+     */
+    private static final String[] ESCAPED_CHARS;
+
+    static {
+        ESCAPED_CHARS = new String[CHARS_TO_ESCAPE.length];
+        for (var i = 0; i < CHARS_TO_ESCAPE.length; i++) {
+            ESCAPED_CHARS[i] = "\\" + CHARS_TO_ESCAPE[i];
+        }
+    }
+
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
@@ -728,11 +753,13 @@ public class MtasDocumentIndex
         }
     }
 
-    private String preprocessQuery(String aQuery, AnnotationSearchState aPrefs)
+    static String preprocessQuery(String aQuery, AnnotationSearchState aPrefs)
     {
-        if (aQuery.contains("\"") || aQuery.contains("[") || aQuery.contains("]")
-                || aQuery.contains("<") || aQuery.contains(">")) {
-            return aQuery;
+        // Check if query contains CQL syntax markers
+        for (var cqlChar : CQL_TRIGGER_CHARS) {
+            if (aQuery.contains(cqlChar)) {
+                return aQuery;
+            }
         }
 
         // Convert raw words query to a Mtas CQP query
@@ -740,6 +767,7 @@ public class MtasDocumentIndex
         var words = BreakIterator.getWordInstance();
         words.setText(aQuery);
 
+        var addedWord = false;
         int start = words.first();
         int end = words.next();
         while (end != BreakIterator.DONE) {
@@ -750,22 +778,18 @@ public class MtasDocumentIndex
             }
 
             if (!word.trim().isEmpty()) {
-                word = word.replace("&", "\\&");
-                word = word.replace("(", "\\(");
-                word = word.replace(")", "\\)");
-                word = word.replace("#", "\\#");
-                word = word.replace("{", "\\{");
-                word = word.replace("}", "\\}");
-                word = word.replace("<", "\\<");
-                word = word.replace(">", "\\>");
+                // Add space before word if we already added a word
+                if (addedWord) {
+                    result += " ";
+                }
+                // Escape special CQL/regex characters
+                word = StringUtils.replaceEach(word, CHARS_TO_ESCAPE, ESCAPED_CHARS);
                 // Add the word to the query
                 result += "\"" + word + "\"";
+                addedWord = true;
             }
             start = end;
             end = words.next();
-            if (end != BreakIterator.DONE) {
-                result += " ";
-            }
         }
 
         return result;

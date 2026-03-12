@@ -30,20 +30,7 @@ import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfigura
 public class CurationSidebarPropertiesImpl
     implements CurationSidebarProperties
 {
-    private boolean enabled;
-
     private boolean ownUserCurationTargetEnabled;
-
-    @Override
-    public boolean isEnabled()
-    {
-        return enabled;
-    }
-
-    public void setEnabled(boolean aEnabled)
-    {
-        enabled = aEnabled;
-    }
 
     @Override
     public boolean isOwnUserCurationTargetEnabled()

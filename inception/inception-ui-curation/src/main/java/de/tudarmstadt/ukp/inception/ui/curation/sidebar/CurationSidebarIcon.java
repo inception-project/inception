@@ -29,6 +29,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 
@@ -37,7 +38,7 @@ public class CurationSidebarIcon
 {
     private static final long serialVersionUID = -1870047500327624860L;
 
-    private @SpringBean CurationSidebarService curationSidebarService;
+    private @SpringBean CurationSessionService curationSessionService;
     private @SpringBean UserDao userService;
 
     public CurationSidebarIcon(String aId, IModel<AnnotatorState> aState)
@@ -55,7 +56,7 @@ public class CurationSidebarIcon
     {
         var project = getModelObject().getProject();
 
-        if (project != null && curationSidebarService
+        if (project != null && curationSessionService
                 .existsSession(userService.getCurrentUsername(), project.getId())) {
             return true;
         }

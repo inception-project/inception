@@ -37,57 +37,57 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { SVGTypeMapping, Svg } from '@svgdotjs/svg.js'
-import { Chunk } from './Chunk'
+import { SVGTypeMapping, Svg } from '@svgdotjs/svg.js';
+import { Chunk } from './Chunk';
 
 export class Row {
-  group: SVGTypeMapping<SVGGElement>
-  background: SVGTypeMapping<SVGGElement>
-  arcs: SVGTypeMapping<SVGGElement>
-  chunks: Chunk[] = []
-  hasAnnotations = false
-  maxArcHeight = 0
-  maxSpanHeight = 0
-  boxHeight = 0
-  sentence: number
-  index: number
-  backgroundIndex: number
-  heightsStart: number
-  heightsEnd: number
-  heightsAdjust: number
-  textY: number
-  translation: { x: number, y: number } = { x: 0, y: 0 }
+    group: SVGTypeMapping<SVGGElement>;
+    background: SVGTypeMapping<SVGGElement>;
+    arcs: SVGTypeMapping<SVGGElement>;
+    chunks: Chunk[] = [];
+    hasAnnotations = false;
+    maxArcHeight = 0;
+    maxSpanHeight = 0;
+    boxHeight = 0;
+    sentence: number;
+    index: number;
+    backgroundIndex: number;
+    heightsStart: number;
+    heightsEnd: number;
+    heightsAdjust: number;
+    textY: number;
+    translation: { x: number; y: number } = { x: 0, y: 0 };
 
-  constructor (svg: Svg) {
-    this.group = svg.group().addClass('row')
-    this.background = svg.group().addTo(this.group)
-    // Object.seal(this)
-  }
-
-  updateFragmentHeight (defaultHeight: number) {
-    if (this.chunks.length === 0) {
-      this.maxSpanHeight = defaultHeight
-      return
+    constructor(svg: Svg) {
+        this.group = svg.group().addClass('row');
+        this.background = svg.group().addTo(this.group);
+        // Object.seal(this)
     }
 
-    for (const chunk of this.chunks) {
-      for (const fragment of chunk.fragments) {
-        if (this.maxSpanHeight < fragment.height) {
-          this.maxSpanHeight = fragment.height
+    updateFragmentHeight(defaultHeight: number) {
+        if (this.chunks.length === 0) {
+            this.maxSpanHeight = defaultHeight;
+            return;
         }
-      }
-    }
-  }
 
-  updateRowBoxHeight (rowSpacing: number, rowPadding: number) {
-    // This is the fix for brat #724, but the numbers are guessed.
-    this.boxHeight = Math.max(this.maxArcHeight + 5, this.maxSpanHeight + 1.5) // XXX TODO HACK: why 5, 1.5?
-    if (this.hasAnnotations) {
-      this.boxHeight += rowSpacing + 1.5 // XXX TODO HACK: why 1.5?
-    } else {
-      this.boxHeight -= 5 // XXX TODO HACK: why -5?
+        for (const chunk of this.chunks) {
+            for (const fragment of chunk.fragments) {
+                if (this.maxSpanHeight < fragment.height) {
+                    this.maxSpanHeight = fragment.height;
+                }
+            }
+        }
     }
 
-    this.boxHeight += rowPadding
-  }
+    updateRowBoxHeight(rowSpacing: number, rowPadding: number) {
+        // This is the fix for brat #724, but the numbers are guessed.
+        this.boxHeight = Math.max(this.maxArcHeight + 5, this.maxSpanHeight + 1.5); // XXX TODO HACK: why 5, 1.5?
+        if (this.hasAnnotations) {
+            this.boxHeight += rowSpacing + 1.5; // XXX TODO HACK: why 1.5?
+        } else {
+            this.boxHeight -= 5; // XXX TODO HACK: why -5?
+        }
+
+        this.boxHeight += rowPadding;
+    }
 }

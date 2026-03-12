@@ -25,13 +25,13 @@ import static java.util.Comparator.comparing;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-import java.io.File;
 import java.lang.invoke.MethodHandles;
+import java.nio.file.Path;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,8 +41,9 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
@@ -66,8 +67,7 @@ import de.tudarmstadt.ukp.inception.schema.exporters.AnnotationDocumentExporter;
 @DataJpaTest(showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "workload.matrix.enabled=true", //
-                "repository.path=" + MatrixWorkloadServiceImplIntegrationTest.TEST_OUTPUT_FOLDER })
+                "workload.matrix.enabled=true" })
 @EntityScan({ //
         "de.tudarmstadt.ukp.clarin.webanno.security.model", //
         "de.tudarmstadt.ukp.clarin.webanno.model" })
@@ -83,7 +83,13 @@ class MatrixWorkloadServiceImplIntegrationTest
 {
     static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/MatrixWorkloadServiceImplIntegrationTest";
+    static @TempDir Path tempFolder;
+
+    @DynamicPropertySource
+    static void registerDynamicProperties(DynamicPropertyRegistry registry)
+    {
+        registry.add("repository.path", () -> tempFolder.toAbsolutePath().toString());
+    }
 
     private @MockitoBean AnnotationDocumentExporter annotationDocumentExporter;
     private @MockitoBean CasStorageService casStorageService;
@@ -104,12 +110,6 @@ class MatrixWorkloadServiceImplIntegrationTest
     private SourceDocument doc1;
     private SourceDocument doc2;
     private SourceDocument doc3;
-
-    @BeforeAll
-    public static void setupClass()
-    {
-        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
-    }
 
     @BeforeEach
     void setup() throws Exception

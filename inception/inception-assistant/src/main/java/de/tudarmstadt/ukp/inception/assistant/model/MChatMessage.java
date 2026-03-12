@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public sealed interface MChatMessage
     extends MMessage
-    permits MTextMessage, MCallResponse
+    permits MTextMessage, MCallResponse, MErrorMessage
 {
     UUID id();
 
@@ -58,7 +58,7 @@ public sealed interface MChatMessage
 
     String textRepresentation();
 
-    default String toolName()
+    default List<MToolCall> toolCalls()
     {
         return null;
     }

@@ -28,6 +28,19 @@ style.header.icon.mySupport.linkUrl=http://my.org/support
 style.header.icon.mySupport.imageUrl=http://my.org/help.png
 ----
 
+.Server-hosted images
+
+`imageUrl` values may also use a special `file:` prefix to refer to
+an image file placed on the server. The value after `file:` is interpreted as a relative path
+that is resolved under the INCEpTION application home `public` directory (that is, `${inception.home}/public`).
+
+Example (server-hosted image):
+----
+style.header.icon.logo.linkUrl=https://example.com
+style.header.icon.logo.imageUrl=file:logo.png
+----
+
+
 [cols="4*", options="header"]
 |===
 | Setting

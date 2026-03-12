@@ -19,17 +19,20 @@ import RunningExportsPanel from './RunningExportsPanel.svelte';
 import { mount, unmount } from 'svelte';
 
 export default class RunningExportsPanelFactory {
-  static instance: any;
+    static instance: any;
 
-  constructor(args: any) {
-    RunningExportsPanelFactory.instance = mount(RunningExportsPanel, { target: args.target, props: args.props });
-  }
-
-  $destroy() {
-    const i = RunningExportsPanelFactory.instance;
-    if (i) {
-      unmount(i)
-      RunningExportsPanelFactory.instance = null;
+    constructor(args: any) {
+        RunningExportsPanelFactory.instance = mount(RunningExportsPanel, {
+            target: args.target,
+            props: args.props,
+        });
     }
-  }
+
+    $destroy() {
+        const i = RunningExportsPanelFactory.instance;
+        if (i) {
+            unmount(i);
+            RunningExportsPanelFactory.instance = null;
+        }
+    }
 }

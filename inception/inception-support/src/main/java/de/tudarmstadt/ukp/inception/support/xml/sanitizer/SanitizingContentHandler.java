@@ -20,13 +20,13 @@ package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sanitizeIllegalXmlCharacters;
 import static de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils.getQName;
 import static java.lang.System.arraycopy;
+import static java.util.Collections.emptyMap;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.Strings.CS;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -328,25 +328,16 @@ public class SanitizingContentHandler
         }
     }
 
-    private static final class Frame
+    private record Frame( //
+            QName element, //
+            @SuppressWarnings("unused") Optional<QNameElementPolicy> policy, //
+            ElementAction action, //
+            Map<String, String> namespaces)
     {
-        final QName element;
-        final @SuppressWarnings("unused") Optional<QNameElementPolicy> policy;
-        final ElementAction action;
-        final Map<String, String> namespaces;
-
-        public Frame(QName aElement, Optional<QNameElementPolicy> aPolicy, ElementAction aAction,
-                Map<String, String> aLocalNamespaces)
+        private Frame
         {
-            element = aElement;
-            policy = aPolicy;
-            action = aAction;
-
-            if (aLocalNamespaces != null && !aLocalNamespaces.isEmpty()) {
-                namespaces = aLocalNamespaces;
-            }
-            else {
-                namespaces = Collections.emptyMap();
+            if (namespaces == null || namespaces.isEmpty()) {
+                namespaces = emptyMap();
             }
         }
 

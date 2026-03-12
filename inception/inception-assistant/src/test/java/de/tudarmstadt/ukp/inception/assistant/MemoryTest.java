@@ -42,7 +42,7 @@ class MemoryTest
     void ephemeralIsSkippedWhenNotInDebugMode()
     {
         var msg = MTextMessage.builder() //
-                .withMessage("ephemeral") //
+                .withContent("ephemeral") //
                 .withRole("assistant") //
                 .withActor("bot") //
                 .ephemeral() //
@@ -58,7 +58,7 @@ class MemoryTest
     void ephemeralIsRecordedWhenInDebugMode()
     {
         var msg = MTextMessage.builder() //
-                .withMessage("ephemeral") //
+                .withContent("ephemeral") //
                 .withRole("assistant") //
                 .withActor("bot") //
                 .ephemeral() //
@@ -81,7 +81,7 @@ class MemoryTest
                 .withId(id) //
                 .withRole("user") //
                 .withActor("me") //
-                .withMessage("Hello") //
+                .withContent("Hello") //
                 .notDone() //
                 .build();
 
@@ -89,7 +89,7 @@ class MemoryTest
                 .withId(id) //
                 .withRole("user") //
                 .withActor("me") //
-                .withMessage(" World") //
+                .withContent(" World") //
                 .notDone() //
                 .build();
 
@@ -112,7 +112,7 @@ class MemoryTest
                 .withId(id) //
                 .withRole("user") //
                 .withActor("me") //
-                .withMessage("Hello") //
+                .withContent("Hello") //
                 .notDone() //
                 .build();
 
@@ -120,7 +120,7 @@ class MemoryTest
                 .withId(id) //
                 .withRole("user") //
                 .withActor("me") //
-                .withMessage("Final") //
+                .withContent("Final") //
                 .done() //
                 .build();
 
@@ -140,7 +140,7 @@ class MemoryTest
         var base = MTextMessage.builder() //
                 .withRole("assistant") //
                 .withActor("bot") //
-                .withMessage("A") //
+                .withContent("A") //
                 .build();
 
         sut.recordMessage(base);
@@ -148,7 +148,7 @@ class MemoryTest
         var withContext = MTextMessage.builder() //
                 .withRole("assistant") //
                 .withActor("bot") //
-                .withMessage("B") //
+                .withContent("B") //
                 .withContext(base.id()) //
                 .build();
 

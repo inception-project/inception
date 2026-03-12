@@ -23,19 +23,16 @@
         Relation,
         Span,
         type LazyDetailGroup,
-        type DiamAjax
-    } from "../..";
-    import { onDestroy, onMount } from "svelte";
+        type DiamAjax,
+    } from '../..';
+    import { onDestroy, onMount } from 'svelte';
 
-  interface Props {
-    ajax: DiamAjax;
-    root: Element;
-  }
+    interface Props {
+        ajax: DiamAjax;
+        root: Element;
+    }
 
-  let {
-    ajax,
-    root,
-  }: Props = $props();
+    let { ajax, root }: Props = $props();
 
     const renderDelay = 10;
     const showDelay = 1000;
@@ -54,32 +51,34 @@
     onMount(() => {
         root.addEventListener(AnnotationOverEvent.eventType, onAnnotationOver);
         root.addEventListener(AnnotationOutEvent.eventType, onAnnotationOut);
-        root.addEventListener("mousemove", onMouseMove);
-        root.addEventListener("mousedown", onMouseDown);
+        root.addEventListener('mousemove', onMouseMove);
+        root.addEventListener('mousedown', onMouseDown);
     });
 
     onDestroy(() => {
         root.removeEventListener(AnnotationOverEvent.eventType, onAnnotationOver);
         root.removeEventListener(AnnotationOutEvent.eventType, onAnnotationOut);
-        root.removeEventListener("mousemove", onMouseMove);
-        root.removeEventListener("mousedown", onMouseDown);
-    })
+        root.removeEventListener('mousemove', onMouseMove);
+        root.removeEventListener('mousedown', onMouseDown);
+    });
 
     $effect(() => {
         if (annotation) {
-            loading = true
+            loading = true;
             ajax.loadLazyDetails(annotation)
-                .then((response) => { 
-                    loading = false
-                    detailGroups = response
+                .then((response) => {
+                    loading = false;
+                    detailGroups = response;
                 })
                 .catch(() => {
-                    loading = false
-                    detailGroups = [{
-                        title: "Error", 
-                        details: [{label: "", value: "Unable to load details."
-                    }]}]
-            })
+                    loading = false;
+                    detailGroups = [
+                        {
+                            title: 'Error',
+                            details: [{ label: '', value: 'Unable to load details.' }],
+                        },
+                    ];
+                });
         }
     });
 
@@ -99,36 +98,34 @@
 
     function onAnnotationOver(e: AnnotationOverEvent) {
         const originalEvent = e.originalEvent;
-        if (!(originalEvent instanceof MouseEvent))
-            return;
+        if (!(originalEvent instanceof MouseEvent)) return;
 
         if (popoverTimeoutId) window.clearTimeout(popoverTimeoutId);
         popoverTimeoutId = undefined;
 
         if (annotation && annotation.vid !== e.annotation.vid) {
             annotation = e.annotation;
-            detailGroups = undefined
+            detailGroups = undefined;
         } else if (!annotation || annotation.vid !== e.annotation.vid) {
-            showPopoverWithDelay(e.annotation, originalEvent)
+            showPopoverWithDelay(e.annotation, originalEvent);
         }
     }
 
     function onAnnotationOut(e: AnnotationOutEvent) {
-        if (!(e.originalEvent instanceof MouseEvent))
-            return;
+        if (!(e.originalEvent instanceof MouseEvent)) return;
 
         hidePopoverWithDelay();
     }
 
     function showPopoverWithDelay(ann: Annotation, originalEvent: MouseEvent) {
         popoverTimeoutId = window.setTimeout(() => {
+            popoverTimeoutId = undefined;
+            annotation = ann;
+            popoverTimeoutId = window.setTimeout(() => {
+                movePopover(originalEvent);
                 popoverTimeoutId = undefined;
-                annotation = ann;
-                popoverTimeoutId = window.setTimeout(() => {
-                    movePopover(originalEvent);
-                    popoverTimeoutId = undefined;
-                }, renderDelay);
-            }, showDelay);
+            }, renderDelay);
+        }, showDelay);
     }
 
     function hidePopoverWithDelay() {
@@ -141,12 +138,12 @@
             if (annotation) {
                 annotation = undefined;
             }
-            popoverTimeoutId = undefined
+            popoverTimeoutId = undefined;
         }, hideDelay);
     }
 
     function movePopover(e: MouseEvent) {
-        if (!popover) return
+        if (!popover) return;
 
         const rect = popover.getBoundingClientRect();
 
@@ -157,7 +154,7 @@
         if (y + rect.height + yOffset > window.innerHeight) {
             top = y - rect.height - yOffset;
         } else {
-            top = y + yOffset;  
+            top = y + yOffset;
         }
 
         // Shift left if the popover is about to be clipped on the right
@@ -183,7 +180,7 @@
                 class="annotation-type-marker"
                 class:i7n-icon-span={annotation instanceof Span}
                 class:i7n-icon-relation={annotation instanceof Relation}
-></span>
+            ></span>
         </div>
         <div class="flex-grow-1 px-1">{annotation?.layer?.name}</div>
         <div class="text-body-secondary px-1">ID: {annotation?.vid}</div>
@@ -199,7 +196,10 @@
             {/if}
 
             {#if loading}
-                <div class="d-flex flex-column justify-content-center" class:border-top={annotation.comments}>
+                <div
+                    class="d-flex flex-column justify-content-center"
+                    class:border-top={annotation.comments}
+                >
                     <div class="d-flex flex-row justify-content-center">
                         <div class="spinner-border spinner-border-sm text-muted" role="status">
                             <span class="visually-hidden">Loading...</span>
@@ -221,7 +221,7 @@
                             {/each}
                         </li>
                     {/each}
-               </ul>
+                </ul>
             {/if}
         </div>
     {/if}
@@ -229,9 +229,9 @@
 
 <!-- svelte-ignore css_unused_selector -->
 <style lang="scss">
-    @import "bootstrap/scss/bootstrap.scss";
-    @import "../style/InceptionEditorIcons.scss";
-    @import "../style/InceptionEditorColors.scss";
+    @import 'bootstrap/scss/bootstrap.scss';
+    @import '../style/InceptionEditorIcons.scss';
+    @import '../style/InceptionEditorColors.scss';
 
     .bootstrap {
         // Ensure that Bootstrap properly applies to the component

@@ -61,7 +61,7 @@ public class UserGuideRetriever
     public List<MTextMessage> retrieve(Project aProject, MTextMessage aMessage)
     {
         var messageBody = new StringBuilder();
-        var passages = documentationIndexingService.query(aMessage.message(),
+        var passages = documentationIndexingService.query(aMessage.content(),
                 properties.getUserGuide().getMaxChunks(), properties.getUserGuide().getMinScore());
         for (var passage : passages) {
             messageBody.append("\n```user-manual\n") //
@@ -81,7 +81,7 @@ public class UserGuideRetriever
         return asList(MTextMessage.builder() //
                 .withActor("User guide") //
                 .withRole(SYSTEM).internal().ephemeral() //
-                .withMessage(join("\n", asList(
+                .withContent(join("\n", asList(
                         "The user guide retriever automatically provides you with relevant sources from the user guide.",
                         "Use the following sources from the user guide to respond.", "",
                         messageBody.toString())))

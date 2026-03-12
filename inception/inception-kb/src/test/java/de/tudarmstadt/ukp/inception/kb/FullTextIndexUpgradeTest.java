@@ -133,12 +133,13 @@ public class FullTextIndexUpgradeTest
         kb.setRepositoryId("pid-1-kbid-");
         sut.reconfigureLocalKnowledgeBase(kb);
 
-        var builder = SPARQLQueryBuilder //
-                .forItems(kb) //
-                .withLabelStartingWith("Green Go");
-
         List<KBHandle> results;
         try (var conn = sut.getConnection(kb)) {
+            var prefLabels = SPARQLQueryBuilder.forItems(kb).resolvePrefLabelProperties(conn);
+            var builder = SPARQLQueryBuilder //
+                    .forItems(kb) //
+                    .withPrefLabelProperties(prefLabels) //
+                    .withLabelStartingWith("Green Go");
             results = builder.asHandles(conn, true);
         }
 
@@ -163,12 +164,13 @@ public class FullTextIndexUpgradeTest
             sut.importData(kb, "data.ttl", is);
         }
 
-        var builder = SPARQLQueryBuilder //
-                .forItems(kb) //
-                .withLabelContainingAnyOf("Green", "case");
-
         List<KBHandle> results;
         try (var conn = sut.getConnection(kb)) {
+            var prefLabels = SPARQLQueryBuilder.forItems(kb).resolvePrefLabelProperties(conn);
+            var builder = SPARQLQueryBuilder //
+                    .forItems(kb) //
+                    .withPrefLabelProperties(prefLabels) //
+                    .withLabelContainingAnyOf("Green", "case");
             results = builder.asHandles(conn, true);
         }
 

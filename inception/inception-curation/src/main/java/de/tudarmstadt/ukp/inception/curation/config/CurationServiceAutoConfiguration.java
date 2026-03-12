@@ -25,8 +25,12 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
+import org.springframework.security.core.session.SessionRegistry;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.export.CuratedDocumentsExporter;
 import de.tudarmstadt.ukp.inception.curation.export.CurationWorkflowExporter;
@@ -37,20 +41,24 @@ import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactory
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactoryExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.ThresholdBasedMergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.ThresholdBasedMergeStrategyFactoryImpl;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeServiceImpl;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationServiceImpl;
+import de.tudarmstadt.ukp.inception.curation.service.CurationSessionServiceImpl;
 import de.tudarmstadt.ukp.inception.curation.settings.CurationProjectSettingsMenuItem;
 import de.tudarmstadt.ukp.inception.curation.settings.CurationProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarPropertiesImpl;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 @Configuration
-@EnableConfigurationProperties(CurationSidebarPropertiesImpl.class)
+@EnableConfigurationProperties({ CurationSidebarPropertiesImpl.class })
 public class CurationServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
@@ -79,6 +87,17 @@ public class CurationServiceAutoConfiguration
             MergeStrategyFactoryExtensionPoint aMergeStrategyFactoryExtensionPoint)
     {
         return new CurationServiceImpl(entityManager, aMergeStrategyFactoryExtensionPoint);
+    }
+
+    @Bean
+    @Primary
+    public CurationSessionService curationSessionService(EntityManager aEntityManager,
+            SessionRegistry aSessionRegistry, ProjectService aProjectService, UserDao aUserRegistry,
+            CurationSidebarProperties aCurationSidebarProperties,
+            CurationDocumentService aCurationDocumentService)
+    {
+        return new CurationSessionServiceImpl(aEntityManager, aSessionRegistry, aProjectService,
+                aUserRegistry, aCurationSidebarProperties, aCurationDocumentService);
     }
 
     @Bean

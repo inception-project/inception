@@ -27,6 +27,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.lang.invoke.MethodHandles;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +54,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -81,8 +85,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
                 // it might come in useful.
                 // "jdk.net.hosts.file=src/test/resources/hosts", //
                 "server.address=127.0.0.1", //
-                "spring.main.banner-mode=off",
-                "repository.path=" + WebhookServiceTest.TEST_OUTPUT_FOLDER })
+                "spring.main.banner-mode=off" })
 @ImportAutoConfiguration( //
         exclude = { //
                 SecurityAutoConfiguration.class }, //
@@ -99,7 +102,13 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 @AutoConfigureTestRestTemplate
 public class WebhookServiceTest
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/WebhookServiceTest";
+    static @TempDir Path tempFolder;
+
+    @DynamicPropertySource
+    static void registerDynamicProperties(DynamicPropertyRegistry registry)
+    {
+        registry.add("repository.path", () -> tempFolder.toAbsolutePath().toString());
+    }
 
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 

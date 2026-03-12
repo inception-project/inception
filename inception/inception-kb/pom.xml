@@ -276,11 +276,11 @@
     </dependency>    
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpcore</artifactId>
+      <artifactId>httpclient</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
+      <artifactId>httpcore</artifactId>
     </dependency>
 
     <!-- DEPENDENCIES FOR TESTING -->
@@ -353,6 +353,11 @@
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpmime</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

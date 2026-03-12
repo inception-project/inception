@@ -15,5 +15,5 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { AnnotationOverEvent } from './AnnotationOverEvent'
-export { AnnotationOutEvent } from './AnnotationOutEvent'
+export { AnnotationOverEvent } from './AnnotationOverEvent';
+export { AnnotationOutEvent } from './AnnotationOutEvent';

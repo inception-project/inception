@@ -37,7 +37,7 @@ COPY launch.sh .
 RUN set -ex \
     && DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
-    && apt-get install -y --no-install-recommends locales jq \
+    && apt-get install -y --no-install-recommends locales curl jq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
@@ -60,4 +60,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD curl -sf http://localhost:8080/actuator/health | jq -e '.status=="UP"' || exit 1
 
 # Launch application
-CMD /opt/inception/launch.sh java ${JAVA_MEM_OPTS} ${JAVA_OPTS} -Djava.awt.headless=true -Dinception.home=/export -jar inception-app-standalone.jar ${APP_ARGS}
+CMD /opt/inception/launch.sh java ${JAVA_MEM_OPTS} ${JAVA_OPTS} --add-modules jdk.incubator.vector -Djava.awt.headless=true -Dinception.home=/export -jar inception-app-standalone.jar ${APP_ARGS}

@@ -29,6 +29,8 @@ public interface AssistantProperties
 
     String getNickname();
 
+    boolean isSummarizeThoughts();
+
     AssitantUserGuideProperties getUserGuide();
 
     AssistantDocumentIndexProperties getDocumentIndex();

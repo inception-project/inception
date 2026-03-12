@@ -17,18 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.document.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.forUser;
 import static de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport.FEATURE_NAME_ORDER;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.EXTENSION_ID;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.getAddr;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
+import static java.util.Optional.empty;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
@@ -36,13 +43,19 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.jcas.cas.AnnotationBase;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.Session;
@@ -67,18 +80,28 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.CreateDocumentAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerTraits;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.event.DocumentMetadataEvent;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
+import de.tudarmstadt.ukp.inception.curation.api.CurationVID;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
+import de.tudarmstadt.ukp.inception.curation.api.Position;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -90,7 +113,6 @@ import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxEventBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public class DocumentMetadataAnnotationSelectionPanel
     extends GenericPanel<AnnotatorState>
@@ -98,7 +120,6 @@ public class DocumentMetadataAnnotationSelectionPanel
     private static final long serialVersionUID = 8318858582025740458L;
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
     private static final String CID_LABEL = "label";
     private static final String CID_SCORE = "score";
     private static final String CID_LAYER = "layer";
@@ -112,7 +133,9 @@ public class DocumentMetadataAnnotationSelectionPanel
     private static final String CID_CREATE = "create";
     private static final String CID_DELETE = "delete";
     private static final String CID_ACCEPT = "accept";
+    private static final String CID_MERGE = "merge";
     private static final String CID_REJECT = "reject";
+    private static final String CID_ACTION_GROUP = "actionGroup";
     private static final String CID_OPEN = "open";
     private static final String CID_CLOSE = "close";
 
@@ -120,6 +143,9 @@ public class DocumentMetadataAnnotationSelectionPanel
     private @SpringBean FeatureSupportRegistry fsRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean RecommendationService recommendationService;
+    private @SpringBean CurationSessionService curationSessionService;
+    private @SpringBean DiffAdapterRegistry diffAdapterRegistry;
+    private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userService;
 
     private final AnnotationPageBase2 annotationPage;
@@ -174,54 +200,106 @@ public class DocumentMetadataAnnotationSelectionPanel
                 .add(visibleWhen(layers.map(List::isEmpty).orElse(true))));
     }
 
-    private void actionAccept(AjaxRequestTarget aTarget, AnnotationListItem aItem)
+    private void actionAcceptSuggestion(AjaxRequestTarget aTarget, AnnotationListItem aItem)
     {
         try {
             annotationPage.ensureIsEditable();
 
-            var page = (AnnotationPage) aTarget.getPage();
-            var state = getModelObject();
-            var dataOwner = state.getUser().getUsername();
-            var sessionOwner = userService.getCurrentUser();
-            var predictions = recommendationService.getPredictions(sessionOwner,
-                    state.getProject());
-            var suggestion = predictions.getPredictionByVID(state.getDocument(), aItem.vid).get();
-
-            var aCas = casProvider.get();
-
-            recommendationService.acceptSuggestion(sessionOwner.getUsername(), state.getDocument(),
-                    dataOwner, aCas, predictions, suggestion, MAIN_EDITOR);
-
-            page.writeEditorCas(aCas);
-
-            page.send(page, BREADTH,
-                    new AjaxRecommendationAcceptedEvent(aTarget, state, aItem.vid));
+            acceptSuggestion(aTarget, aItem);
         }
         catch (Exception e) {
             handleException(this, aTarget, e);
         }
     }
 
-    private void actionReject(AjaxRequestTarget aTarget, AnnotationListItem aItem)
+    private void actionMergeCuration(AjaxRequestTarget aTarget, AnnotationListItem aItem)
     {
         try {
             annotationPage.ensureIsEditable();
 
-            var page = (AnnotationPage) aTarget.getPage();
+            mergeCuration(aTarget, aItem);
+        }
+        catch (Exception e) {
+            handleException(this, aTarget, e);
+        }
+    }
+
+    private void acceptSuggestion(AjaxRequestTarget aTarget, AnnotationListItem aItem)
+        throws AnnotationException, IOException
+    {
+        var state = getModelObject();
+        var dataOwner = state.getUser().getUsername();
+        var sessionOwner = userService.getCurrentUser();
+        var maybeSuggestion = recommendationService.getSuggestionByVID(sessionOwner,
+                state.getDocument(), aItem.vid);
+
+        if (maybeSuggestion.isEmpty()) {
+            if (aTarget != null) {
+                aTarget.addChildren(getPage(), IFeedback.class);
+            }
+            error("Suggestion no longer available, please refresh.");
+            return;
+        }
+
+        var cas = casProvider.get();
+
+        recommendationService.acceptSuggestion(sessionOwner.getUsername(), state.getDocument(),
+                dataOwner, cas, maybeSuggestion.get().getKey(), maybeSuggestion.get().getValue(),
+                MAIN_EDITOR);
+
+        annotationPage.writeEditorCas(cas);
+
+        send(annotationPage, BREADTH,
+                new AjaxRecommendationAcceptedEvent(aTarget, state, aItem.vid));
+    }
+
+    private void mergeCuration(AjaxRequestTarget aTarget, AnnotationListItem aItem)
+        throws AnnotationException, IOException
+    {
+        var state = getModelObject();
+        var curationVid = parseCurationVid(aItem.vid)
+                .orElseThrow(() -> new IllegalStateException("Invalid curation item identifier"));
+        var sourceVid = VID.parse(curationVid.getExtensionPayload());
+
+        var sourceCas = documentService.readAnnotationCas(state.getDocument(),
+                AnnotationSet.forUser(curationVid.getUsername()));
+        var sourceFs = selectFsByAddr(sourceCas, sourceVid.getId());
+
+        if (!(sourceFs instanceof AnnotationBase sourceAnnotation)) {
+            throw new IllegalStateException("Curation source annotation could not be resolved");
+        }
+
+        var targetCas = casProvider.get();
+        mergeDocumentMetadataAnnotation(state, aItem.layer, targetCas, sourceAnnotation);
+        annotationPage.writeEditorCas(targetCas);
+        aTarget.add(layersContainer);
+        annotationPage.actionRefreshDocument(aTarget);
+    }
+
+    private void actionRejectSuggestion(AjaxRequestTarget aTarget, AnnotationListItem aItem)
+    {
+        try {
+            annotationPage.ensureIsEditable();
+
             var state = getModelObject();
             var dataOwner = state.getUser().getUsername();
             var sessionOwner = userService.getCurrentUser();
-            var suggestion = recommendationService.getPredictions(sessionOwner, state.getProject())
-                    .getPredictionByVID(state.getDocument(), aItem.vid).get();
+            var maybeSuggestion = recommendationService
+                    .getSuggestionByVID(sessionOwner, state.getDocument(), aItem.vid)
+                    .map(Pair::getValue);
+
+            if (maybeSuggestion.isEmpty()) {
+                return;
+            }
 
             var aCas = casProvider.get();
 
             recommendationService.rejectSuggestion(sessionOwner.getUsername(), state.getDocument(),
-                    dataOwner, suggestion, MAIN_EDITOR);
+                    dataOwner, maybeSuggestion.get(), MAIN_EDITOR);
 
-            page.writeEditorCas(aCas);
+            annotationPage.writeEditorCas(aCas);
 
-            page.send(page, BREADTH,
+            send(annotationPage, BREADTH,
                     new AjaxRecommendationRejectedEvent(aTarget, state, aItem.vid));
         }
         catch (Exception e) {
@@ -261,7 +339,7 @@ public class DocumentMetadataAnnotationSelectionPanel
             // Load the boiler-plate
             var state = getModelObject();
             var cas = casProvider.get();
-            var fs = ICasUtil.selectFsByAddr(cas, aDetailPanel.getModelObject().getId());
+            var fs = selectFsByAddr(cas, aDetailPanel.getModelObject().getId());
             var adapter = annotationService.findAdapter(state.getProject(), fs);
 
             // Perform actual actions
@@ -297,7 +375,7 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
 
         if (selectedAnnotation == container) {
-            // if container is already selected, deselect and close annotation
+            // if container is already selected, de-select and close annotation
             selectedAnnotation = null;
         }
         else {
@@ -305,7 +383,7 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
 
         if (selectedDetailPanel == detailPanel) {
-            // if detail panel is already selected, deselect and close annotation
+            // if detail panel is already selected, de-select and close annotation
             selectedDetailPanel = null;
         }
         else {
@@ -325,8 +403,7 @@ public class DocumentMetadataAnnotationSelectionPanel
             @Override
             protected void populateItem(ListItem<LayerGroup> aItem)
             {
-                var annotations = LoadableDetachableModel
-                        .of(() -> listAnnotations(aItem.getModelObject().layer));
+                var annotations = Model.ofList(aItem.getModelObject().annotations);
 
                 aItem.add(new Label("layerName", aItem.getModelObject().layer.getUiName()));
 
@@ -352,67 +429,108 @@ public class DocumentMetadataAnnotationSelectionPanel
                 aItem.setModel(CompoundPropertyModel.of(aItem.getModel()));
 
                 var vid = aItem.getModelObject().vid;
+                var itemState = aItem.getModelObject();
+                var isRecommendation = itemState.kind == ItemKind.RECOMMENDATION;
+                var isCuration = itemState.kind == ItemKind.CURATION;
+                var hoverTarget = itemState.kind == ItemKind.ANNOTATION ? null : aItem;
 
                 var container = new WebMarkupContainer(CID_ANNOTATION);
-                container.add(visibleWhen(() -> !aItem.getModelObject().singleton));
+                container.setOutputMarkupId(true);
+                container.add(visibleWhen(
+                        () -> !itemState.singleton || itemState.kind != ItemKind.ANNOTATION));
+                if (hoverTarget == null) {
+                    applySidebarItemAttributes(container, itemState);
+                }
+                else {
+                    applySidebarItemAttributes(hoverTarget, itemState);
+                }
                 aItem.add(container);
 
-                var detailPanel = new DocumentMetadataAnnotationDetailPanel(CID_ANNOTATION_DETAILS,
-                        Model.of(vid), casProvider, annotationPage, actionHandler,
-                        DocumentMetadataAnnotationSelectionPanel.this.getModel());
+                Component detailPanel;
+                if (itemState.kind == ItemKind.ANNOTATION) {
+                    detailPanel = new DocumentMetadataAnnotationDetailPanel(CID_ANNOTATION_DETAILS,
+                            Model.of(vid), casProvider, annotationPage, actionHandler,
+                            DocumentMetadataAnnotationSelectionPanel.this.getModel());
+                }
+                else {
+                    detailPanel = new WebMarkupContainer(CID_ANNOTATION_DETAILS);
+                    detailPanel.setVisible(false);
+                }
                 aItem.add(detailPanel);
 
-                var isSuggestion = EXTENSION_ID.equals(aItem.getModelObject().vid.getExtensionId());
-
-                if (!isSuggestion) {
-                    container.add(new LambdaAjaxEventBehavior(CLICK_EVENT,
-                            $ -> actionSelect($, container, detailPanel)));
+                if (itemState.kind == ItemKind.ANNOTATION) {
+                    container.add(new LambdaAjaxEventBehavior(CLICK_EVENT, $ -> actionSelect($,
+                            container, (DocumentMetadataAnnotationDetailPanel) detailPanel)));
                 }
 
-                detailPanel.add(visibleWhen(() -> isExpanded(aItem, container)));
+                if (detailPanel instanceof DocumentMetadataAnnotationDetailPanel metadataDetailPanel) {
+                    metadataDetailPanel.add(visibleWhen(() -> isExpanded(aItem, container)));
+                }
 
-                if (createdAnnotationAddress == vid.getId()) {
+                if (itemState.kind == ItemKind.ANNOTATION
+                        && createdAnnotationAddress == vid.getId()) {
                     createdAnnotationAddress = -1;
                     selectedAnnotation = container;
-                    selectedDetailPanel = detailPanel;
+                    selectedDetailPanel = (DocumentMetadataAnnotationDetailPanel) detailPanel;
                 }
 
                 var close = new WebMarkupContainer(CID_CLOSE);
-                close.add(visibleWhen(() -> isExpanded(aItem, container) && !isSuggestion));
+                close.add(visibleWhen(() -> isExpanded(aItem, container)
+                        && itemState.kind == ItemKind.ANNOTATION));
                 close.setOutputMarkupId(true);
                 container.add(close);
 
                 var open = new WebMarkupContainer(CID_OPEN);
-                open.add(visibleWhen(() -> !isExpanded(aItem, container) && !isSuggestion));
+                open.add(visibleWhen(() -> !isExpanded(aItem, container)
+                        && itemState.kind == ItemKind.ANNOTATION));
                 open.setOutputMarkupId(true);
                 container.add(open);
 
-                container.add(new Label(CID_LABEL,
-                        StringUtils.defaultIfEmpty(aItem.getModelObject().label, "[No label]"))
-                                .add(visibleWhen(() -> !aItem.getModelObject().singleton
-                                        && !isExpanded(aItem, container))));
+                container.add(new Label(CID_LABEL, defaultIfEmpty(itemState.label, "[No label]"))
+                        .add(visibleWhen(() -> itemState.kind != ItemKind.ANNOTATION
+                                || (!itemState.singleton && !isExpanded(aItem, container)))));
 
-                aItem.queue(new LambdaAjaxLink(CID_DELETE, $ -> actionDelete($, detailPanel))
-                        .add(AttributeModifier.replace("title", aItem.getModelObject().vid))
-                        .add(visibleWhen(() -> !aItem.getModelObject().singleton && !isSuggestion))
-                        .add(enabledWhen(() -> annotationPage.isEditable()
-                                && !aItem.getModelObject().layer.isReadonly())));
+                var actionGroup = new WebMarkupContainer(CID_ACTION_GROUP);
+                if (isCuration) {
+                    actionGroup.add(AttributeModifier.append("class", "curation-action-group"));
+                }
+                aItem.queue(actionGroup);
 
-                aItem.queue(new Label(CID_SCORE, String.format(Session.get().getLocale(), "%.2f",
-                        aItem.getModelObject().score)).add(visibleWhen(
-                                () -> isSuggestion && aItem.getModelObject().score != 0.0d)));
+                aItem.queue(new LambdaAjaxLink(CID_DELETE,
+                        $ -> actionDelete($, (DocumentMetadataAnnotationDetailPanel) detailPanel))
+                                .add(AttributeModifier.replace("title", itemState.vid))
+                                .add(visibleWhen(() -> itemState.kind == ItemKind.ANNOTATION
+                                        && !itemState.singleton))
+                                .add(enabledWhen(() -> annotationPage.isEditable()
+                                        && !itemState.layer.isReadonly())));
+
+                aItem.queue(new Label(CID_SCORE,
+                    format(Session.get().getLocale(), "%.2f", itemState.score))
+                        .add(visibleWhen(() -> isRecommendation
+                            && itemState.score != 0.0d)));
+
+                aItem.queue(new Label("mergeScore",
+                    format(Session.get().getLocale(), "%.2f", itemState.score))
+                        .add(visibleWhen(() -> isCuration && itemState.score != 0.0d)));
+
+                aItem.queue(new LambdaAjaxLink(CID_ACCEPT,
+                    $ -> actionAcceptSuggestion($, itemState))
+                        .add(AttributeModifier.replace("title", itemState.vid))
+                    .add(visibleWhen(() -> isRecommendation && annotationPage.isEditable()
+                        && !itemState.layer.isReadonly())));
+
+                aItem.queue(new LambdaAjaxLink(CID_MERGE,
+                    $ -> actionMergeCuration($, itemState))
+                    .add(AttributeModifier.replace("title", itemState.vid))
+                    .add(visibleWhen(() -> isCuration && annotationPage.isEditable()
+                                && !itemState.layer.isReadonly())));
 
                 aItem.queue(
-                        new LambdaAjaxLink(CID_ACCEPT, $ -> actionAccept($, aItem.getModelObject()))
-                                .add(AttributeModifier.replace("title", aItem.getModelObject().vid))
-                                .add(visibleWhen(() -> isSuggestion && annotationPage.isEditable()
-                                        && !aItem.getModelObject().layer.isReadonly())));
-
-                aItem.queue(
-                        new LambdaAjaxLink(CID_REJECT, $ -> actionReject($, aItem.getModelObject()))
-                                .add(AttributeModifier.replace("title", aItem.getModelObject().vid))
-                                .add(visibleWhen(() -> isSuggestion && annotationPage.isEditable()
-                                        && !aItem.getModelObject().layer.isReadonly())));
+                        new LambdaAjaxLink(CID_REJECT, $ -> actionRejectSuggestion($, itemState))
+                                .add(AttributeModifier.replace("title", itemState.vid))
+                                .add(visibleWhen(
+                                        () -> isRecommendation && annotationPage.isEditable()
+                                                && !itemState.layer.isReadonly())));
 
                 aItem.setOutputMarkupId(true);
             }
@@ -420,10 +538,27 @@ public class DocumentMetadataAnnotationSelectionPanel
             private boolean isExpanded(ListItem<AnnotationListItem> aItem,
                     WebMarkupContainer container)
             {
-                return selectedAnnotation == container || aItem.getModelObject().singleton;
+                return aItem.getModelObject().kind == ItemKind.ANNOTATION
+                        && (selectedAnnotation == container || aItem.getModelObject().singleton);
             }
         };
     }
+
+        private void applySidebarItemAttributes(Component aComponent, AnnotationListItem aItem)
+        {
+        aComponent.add(AttributeModifier.replace("data-annotation-sidebar-item", true));
+        aComponent.add(AttributeModifier.replace("data-annotation-sidebar-vid",
+            aItem.vid.toString()));
+        aComponent.add(AttributeModifier.replace("data-annotation-sidebar-layer-id",
+            aItem.layer.getId()));
+        aComponent.add(AttributeModifier.replace("data-annotation-sidebar-layer-name",
+            aItem.layer.getUiName()));
+        aComponent.add(AttributeModifier.replace("data-annotation-sidebar-kind",
+            aItem.kind.name().toLowerCase(Locale.ROOT)));
+        aComponent.add(AttributeModifier.replace("data-annotation-sidebar-label",
+            defaultIfEmpty(aItem.label, "")));
+        aComponent.add(AttributeModifier.replace("data-annotation-sidebar-score", aItem.score));
+        }
 
     private List<AnnotationLayer> listMetadataLayers()
     {
@@ -448,11 +583,6 @@ public class DocumentMetadataAnnotationSelectionPanel
 
     private List<LayerGroup> listLayers()
     {
-        return listMetadataLayers().stream().map(LayerGroup::new).toList();
-    }
-
-    private List<AnnotationListItem> listAnnotations(AnnotationLayer aLayer)
-    {
         CAS cas;
         try {
             cas = casProvider.get();
@@ -462,6 +592,17 @@ public class DocumentMetadataAnnotationSelectionPanel
             return emptyList();
         }
 
+        var curationCandidatesByLayer = listCurationCandidatesByLayer(cas);
+
+        return listMetadataLayers().stream() //
+                .map(layer -> new LayerGroup(layer, listAnnotations(layer, cas,
+                        curationCandidatesByLayer.getOrDefault(layer.getName(), emptyList()))))
+                .toList();
+    }
+
+    private List<AnnotationListItem> listAnnotations(AnnotationLayer aLayer, CAS aCas,
+            List<CurationCandidate> aCurationCandidates)
+    {
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses
         // later
         var features = annotationService.listSupportedFeatures(aLayer);
@@ -469,8 +610,9 @@ public class DocumentMetadataAnnotationSelectionPanel
         var singleton = layerSupport.readTraits(aLayer).isSingleton();
 
         var items = new ArrayList<AnnotationListItem>();
-        generateAnnotationItems(aLayer, layerSupport, singleton, cas, items, features);
-        generateSuggestionItems(aLayer, layerSupport, singleton, cas, items, features);
+        generateAnnotationItems(aLayer, layerSupport, singleton, aCas, items, features);
+        generateSuggestionItems(aLayer, layerSupport, singleton, aCas, items, features);
+        generateCurationItems(aLayer, singleton, aCas, items, aCurationCandidates);
         return items;
     }
 
@@ -498,8 +640,8 @@ public class DocumentMetadataAnnotationSelectionPanel
             var renderedFeatures = renderer.renderLabelFeatureValues(adapter, fs, aFeatures);
             var labelText = TypeUtil.getUiLabelText(renderedFeatures);
             var order = hasOrderFeature ? getFeature(fs, FEATURE_NAME_ORDER, Integer.class) : 0;
-            aItems.add(
-                    new AnnotationListItem(VID.of(fs), labelText, aLayer, aSingleton, 0.0d, order));
+            aItems.add(new AnnotationListItem(VID.of(fs), labelText, aLayer, aSingleton, 0.0d,
+                    order, ItemKind.ANNOTATION));
         }
     }
 
@@ -508,9 +650,22 @@ public class DocumentMetadataAnnotationSelectionPanel
             List<AnnotationListItem> aItems, List<AnnotationFeature> aFeatures)
     {
         var state = getModelObject();
+        var predictions = recommendationService.getPredictions(state.getUser(), state.getProject())
+                .values();
+        for (var preds : predictions) {
+            generateSuggestionItems(preds, aLayer, aLayerSupport, aSingleton, aCas, aItems,
+                    aFeatures);
+        }
+    }
+
+    private void generateSuggestionItems(Predictions predictions, AnnotationLayer aLayer,
+            DocumentMetadataLayerSupport aLayerSupport, boolean aSingleton, CAS aCas,
+            List<AnnotationListItem> aItems, List<AnnotationFeature> aFeatures)
+    {
+        var state = getModelObject();
         var featuresIndex = aFeatures.stream()
                 .collect(toMap(AnnotationFeature::getName, identity()));
-        var predictions = recommendationService.getPredictions(state.getUser(), state.getProject());
+
         if (predictions != null) {
             var predictionsByDocument = predictions
                     .getPredictionsByDocument(state.getDocument().getId());
@@ -531,17 +686,256 @@ public class DocumentMetadataAnnotationSelectionPanel
                 }
 
                 if (suggestion instanceof MetadataSuggestion metadataSuggestion) {
-                    var feature = featuresIndex.get(suggestion.getFeature());
+                    var feature = featuresIndex.get(metadataSuggestion.getFeature());
 
                     // Retrieve the UI display label for the given feature value
                     var featureSupport = fsRegistry.findExtension(feature).orElseThrow();
                     var annotation = featureSupport.renderFeatureValue(feature,
-                            suggestion.getLabel());
-                    aItems.add(new AnnotationListItem(suggestion.getVID(), annotation, aLayer,
-                            false, suggestion.getScore(), aItems.size()));
+                            metadataSuggestion.getLabel());
+                    aItems.add(new AnnotationListItem(metadataSuggestion.getVID(), annotation,
+                            aLayer, false, metadataSuggestion.getScore(), aItems.size(),
+                            ItemKind.RECOMMENDATION));
                 }
             }
         }
+    }
+
+    private void generateCurationItems(AnnotationLayer aLayer, boolean aSingleton, CAS aTargetCas,
+            List<AnnotationListItem> aItems, List<CurationCandidate> aCurationCandidates)
+    {
+        if (aCurationCandidates.isEmpty()) {
+            return;
+        }
+
+        var adapter = (DocumentMetadataLayerAdapter) annotationService.getAdapter(aLayer);
+
+        for (var candidate : aCurationCandidates) {
+            if (isBlank(candidate.label()) && existsAnyAnnotation(aTargetCas, adapter)) {
+                continue;
+            }
+
+            aItems.add(new AnnotationListItem(
+                    new CurationVID(candidate.sourceUser(), candidate.sourceVid()),
+                    candidate.label(), aLayer, aSingleton, candidate.score(), candidate.order(),
+                    ItemKind.CURATION));
+        }
+    }
+
+    private Map<String, List<CurationCandidate>> listCurationCandidatesByLayer(CAS aTargetCas)
+    {
+        if (!getPage().getPageClass().getName().contains("Curation")) {
+            // Hack to only show curation items on the curation page without introducing a
+            // circular dependency
+            return Map.of();
+        }
+
+        var state = getModelObject();
+        var sessionOwner = userService.getCurrentUsername();
+        if (!curationSessionService.existsSession(sessionOwner, state.getProject().getId())) {
+            return Map.of();
+        }
+
+        var selectedUsers = curationSessionService.listUsersReadyForCuration(sessionOwner,
+                state.getProject(), state.getDocument());
+        if (selectedUsers.isEmpty()) {
+            return Map.of();
+        }
+
+        var targetUser = state.getUser().getUsername();
+        var selectedUsernames = selectedUsers.stream() //
+                .map(User::getUsername) //
+                .filter(username -> !targetUser.equals(username)) //
+                .distinct() //
+                .sorted() //
+                .toList();
+
+        Map<String, CAS> casses = new LinkedHashMap<>();
+        casses.put(targetUser, aTargetCas);
+
+        for (var user : selectedUsers) {
+            if (targetUser.equals(user.getUsername())) {
+                continue;
+            }
+
+            try {
+                var sourceCas = documentService.readAnnotationCas(state.getDocument(),
+                        forUser(user));
+                casses.put(user.getUsername(), sourceCas);
+            }
+            catch (IOException e) {
+                LOG.error("Unable to read source CAS for curation user [{}]", user.getUsername(),
+                        e);
+            }
+        }
+
+        if (casses.size() <= 1) {
+            return Map.of();
+        }
+
+        var metadataLayers = listMetadataLayers();
+        var adapters = diffAdapterRegistry.getDiffAdapters(metadataLayers);
+        var diff = doDiff(adapters, casses).toResult();
+        var layersByName = metadataLayers.stream()
+                .collect(toMap(AnnotationLayer::getName, identity()));
+        var candidatesByLayer = new LinkedHashMap<String, List<CurationCandidate>>();
+        var totalAnnotatorCount = selectedUsernames.size();
+
+        for (var cfgSet : diff.getConfigurationSets()) {
+            var layer = layersByName.get(cfgSet.getPosition().getType());
+            if (layer == null || !isDocumentMetadataBasePosition(layer, cfgSet.getPosition())) {
+                continue;
+            }
+
+            var adapter = (DocumentMetadataLayerAdapter) annotationService.getAdapter(layer);
+            var features = annotationService.listSupportedFeatures(layer);
+            var renderer = getLayerSupport(layer).createRenderer(layer,
+                    () -> annotationService.listAnnotationFeature(layer));
+            var candidates = candidatesByLayer.computeIfAbsent(layer.getName(),
+                    $ -> new ArrayList<>());
+
+            for (var cfg : cfgSet.getConfigurations()) {
+                if (cfg.getCasGroupIds().contains(targetUser)) {
+                    continue;
+                }
+
+                var representativeFs = cfg.getRepresentative(casses);
+                if (!(representativeFs instanceof AnnotationBase representative)) {
+                    continue;
+                }
+
+                var renderedFeatures = renderer.renderLabelFeatureValues(adapter, representative,
+                        features);
+                var labelText = TypeUtil.getUiLabelText(renderedFeatures);
+                var order = representative.getType()
+                        .getFeatureByBaseName(FEATURE_NAME_ORDER) != null
+                                ? getFeature(representative, FEATURE_NAME_ORDER, Integer.class)
+                                : candidates.size();
+                var score = totalAnnotatorCount > 0
+                        ? (double) cfg.getCasGroupIds().stream()
+                                .filter(user -> !targetUser.equals(user)).count()
+                                / (double) totalAnnotatorCount
+                        : 0.0d;
+
+                candidates.add(new CurationCandidate(cfg.getRepresentativeCasGroupId(),
+                        VID.of(representative), labelText, score, order));
+            }
+        }
+
+        return candidatesByLayer;
+    }
+
+    private boolean isDocumentMetadataBasePosition(AnnotationLayer aLayer, Position aPosition)
+    {
+        return Objects.equals(aLayer.getName(), aPosition.getType())
+                && !aPosition.isLinkFeaturePosition();
+    }
+
+    private void mergeDocumentMetadataAnnotation(AnnotatorState aState, AnnotationLayer aLayer,
+            CAS aTargetCas, AnnotationBase aSourceAnnotation)
+        throws AnnotationException
+    {
+        var adapter = (DocumentMetadataLayerAdapter) annotationService.getAdapter(aLayer);
+        var document = aState.getDocument();
+        var dataOwner = aState.getUser().getUsername();
+
+        try (var eventBatch = adapter.batchEvents()) {
+            if (existsEquivalent(aTargetCas, adapter, aSourceAnnotation)) {
+                throw new AnnotationException(
+                        "The annotation already exists in the target document.");
+            }
+
+            var allowStacking = !adapter.getTraits(DocumentMetadataLayerTraits.class)
+                    .map(DocumentMetadataLayerTraits::isSingleton).orElse(false);
+
+            var targetType = adapter.getAnnotationType(aTargetCas)
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Target CAS does not define the document metadata type"));
+            var existingAnnotations = aTargetCas.select(targetType).asList();
+
+            AnnotationBase targetAnnotation;
+            var annotationCreated = false;
+            if (existingAnnotations.isEmpty() || allowStacking) {
+                targetAnnotation = adapter.handle(CreateDocumentAnnotationRequest.builder() //
+                        .withDocument(document, dataOwner, aTargetCas) //
+                        .build());
+                annotationCreated = true;
+            }
+            else {
+                targetAnnotation = (AnnotationBase) existingAnnotations.get(0);
+            }
+
+            try {
+                copyCuratableFeatures(document, dataOwner, adapter, targetAnnotation,
+                        aSourceAnnotation);
+            }
+            catch (AnnotationException e) {
+                if (annotationCreated) {
+                    adapter.delete(document, dataOwner, aTargetCas, VID.of(targetAnnotation));
+                }
+                throw e;
+            }
+
+            eventBatch.commit();
+        }
+    }
+
+    private void copyCuratableFeatures(SourceDocument aDocument, String aDataOwner,
+            DocumentMetadataLayerAdapter aAdapter, FeatureStructure aTargetAnnotation,
+            FeatureStructure aSourceAnnotation)
+        throws AnnotationException
+    {
+        for (var feature : annotationService.listSupportedFeatures(aAdapter.getLayer())) {
+            if (!feature.isCuratable()) {
+                continue;
+            }
+
+            var sourceType = aAdapter.getAnnotationType(aSourceAnnotation.getCAS())
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Source CAS does not define the document metadata type"));
+            if (sourceType.getFeatureByBaseName(feature.getName()) == null) {
+                throw new IllegalStateException("Source CAS type [" + sourceType.getName()
+                        + "] does not define a feature named [" + feature.getName() + "]");
+            }
+
+            if (!aAdapter.getFeatureSupport(feature.getName())
+                    .map(fs -> fs.isCopyOnCurationMerge(feature)).orElse(false)) {
+                continue;
+            }
+
+            var value = aAdapter.getFeatureValue(feature, aSourceAnnotation);
+            aAdapter.setFeatureValue(aDocument, aDataOwner, aTargetAnnotation.getCAS(),
+                    getAddr(aTargetAnnotation), feature, value);
+        }
+    }
+
+    private boolean existsEquivalent(CAS aTargetCas, DocumentMetadataLayerAdapter aAdapter,
+            AnnotationBase aSourceAnnotation)
+    {
+        var targetType = aAdapter.getAnnotationType(aTargetCas);
+        if (targetType.isEmpty()) {
+            return false;
+        }
+
+        return aTargetCas.<AnnotationBase> select(targetType.get())
+                .anyMatch(fs -> aAdapter.isEquivalentAnnotation(fs, aSourceAnnotation));
+    }
+
+    private boolean existsAnyAnnotation(CAS aTargetCas, DocumentMetadataLayerAdapter aAdapter)
+    {
+        var targetType = aAdapter.getAnnotationType(aTargetCas);
+        if (targetType.isEmpty()) {
+            return false;
+        }
+
+        return aTargetCas.select(targetType.get()).findAny().isPresent();
+    }
+
+    private Optional<CurationVID> parseCurationVid(VID aVid)
+    {
+        if (aVid instanceof CurationVID curationVid) {
+            return Optional.of(curationVid);
+        }
+        return empty();
     }
 
     @OnEvent
@@ -554,15 +948,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     @OnEvent
     public void onFeatureValueUpdated(FeatureValueUpdatedEvent aEvent)
     {
-        var vid = VID.of(aEvent.getFS());
-        layersContainer.visitChildren(DocumentMetadataAnnotationDetailPanel.class, (c, v) -> {
-            var detailPanel = (DocumentMetadataAnnotationDetailPanel) c;
-            if (detailPanel.getModelObject().getId() == vid.getId()) {
-                aEvent.getRequestTarget()
-                        .ifPresent(target -> target.add(detailPanel.findParent(ListItem.class)));
-            }
-        });
-
+        aEvent.getRequestTarget().ifPresent(target -> target.add(layersContainer));
         annotationPage.actionRefreshDocument((aEvent.getRequestTarget().orElse(null)));
     }
 
@@ -590,12 +976,22 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
     }
 
-    private record LayerGroup(AnnotationLayer layer)
+    private record LayerGroup(AnnotationLayer layer, List<AnnotationListItem> annotations)
         implements Serializable
     {}
 
+    private record CurationCandidate(String sourceUser, VID sourceVid, String label, double score,
+            int order)
+        implements Serializable
+    {}
+
+    private enum ItemKind
+    {
+        ANNOTATION, RECOMMENDATION, CURATION
+    }
+
     private record AnnotationListItem(VID vid, String label, AnnotationLayer layer,
-            boolean singleton, double score, int order)
+            boolean singleton, double score, int order, ItemKind kind)
         implements Serializable
     {}
 }

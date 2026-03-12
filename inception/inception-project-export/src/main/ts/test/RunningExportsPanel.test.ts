@@ -15,38 +15,62 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { it, expect } from 'vitest'
-import RunningExportsPanel from '../src/RunningExportsPanel.svelte'
-import { render } from '@testing-library/svelte'
+import { it, expect, vi } from 'vitest';
+
+// Prevent real WebSocket connections in tests
+globalThis.WebSocket = class {
+    constructor() {}
+    close() {}
+};
+
+// Mock @stomp/stompjs so the component won't activate real STOMP websockets
+vi.mock('@stomp/stompjs', () => {
+    class Client {
+        activate() {}
+        deactivate() {}
+        subscribe() {}
+        publish() {}
+    }
+    return {
+        Client,
+        Stomp: {
+            over: () => new Client(),
+        },
+        IFrame: class {},
+    };
+});
+
+import RunningExportsPanel from '../src/RunningExportsPanel.svelte';
+import { render } from '@testing-library/svelte';
 
 it('Shows the loading indicator', async () => {
-  const { getByText } = render(RunningExportsPanel, {
-    props: {
-      connected: false,
-      wsEndpointUrl: 'ws://localhost:8080',
-    }
-  })
+    const { getByText } = render(RunningExportsPanel, {
+        props: {
+            connected: false,
+            wsEndpointUrl: 'ws://localhost:8080',
+        },
+    });
 
-  const loadIndicator = getByText('Connecting...')
+    const loadIndicator = getByText('Connecting...');
 
-  expect(loadIndicator).to.be.not.null
-})
+    expect(loadIndicator).to.be.not.null;
+});
 
 it('Shows the activities', async () => {
-  const { queryByText, getByText } = render(RunningExportsPanel, {
-    props: {
-      connected: true,
-      exports: [
-        {
-          id: '1',
-          title: 'test-download',
-          progress: 0.5,
-          state: 'RUNNING'
-        }
-      ]
-    }
-  })
+    const { queryByText, getByText } = render(RunningExportsPanel, {
+        props: {
+            connected: true,
+            exports: [
+                {
+                    id: '1',
+                    title: 'test-download',
+                    progress: 0.5,
+                    state: 'RUNNING',
+                },
+            ],
+        },
+    });
 
-  expect(queryByText('Connecting...')).to.be.null
-  expect(getByText('test-download')).to.be.not.null
-})
+    expect(queryByText('Connecting...')).to.be.null;
+    expect(getByText('test-download')).to.be.not.null;
+});

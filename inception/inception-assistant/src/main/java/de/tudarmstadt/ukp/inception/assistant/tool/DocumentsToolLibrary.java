@@ -19,13 +19,14 @@ package de.tudarmstadt.ukp.inception.assistant.tool;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.String.join;
+import static org.apache.commons.lang3.ArrayUtils.subarray;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang3.ArrayUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -42,24 +43,21 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolParam;
 public class DocumentsToolLibrary
     implements ToolLibrary
 {
+    private static final int READ_DOCUMENT_CHARACTER_LIMIT = 64_000;
+
+    private static final String GET_CURRENT_DOCUMENT_TOOL_DESCRIPTION = """
+            Get the name of the current document.
+            """;
+
     private static final String LIST_DOCUMENTS_TOOL_DESCRIPTION = """
-            Provides a list of the documents in the project.
+            List the documents in the project.
             """;
 
     private static final String READ_DOCUMENT_TOOL_DESCRIPTION = """
-            Allows to read a document from the project.
-            """;
+            Read lines from a document.
+            You can read at most 200 lines at a time.
 
-    private static final String PARAM_DOCUMENT_DESCRIPTION = """
-            Name of the document to read.
-            """;
-
-    private static final String PARAM_START_DESCRIPTION = """
-            Number of the first line to read (starting with 0).
-            """;
-
-    private static final String PARAM_LINES_DESCRIPTION = """
-            How many lines to read.
+            Omit the parameter `document` unless the user explicitly asks for a specific document.
             """;
 
     private final DocumentService documentService;
@@ -84,15 +82,29 @@ public class DocumentsToolLibrary
     }
 
     @Tool( //
+            value = "get_current_document", //
+            actor = "Get current document", //
+            description = GET_CURRENT_DOCUMENT_TOOL_DESCRIPTION)
+    public MCallResponse.Builder<?> getCurrentDocument( //
+            AnnotationEditorContext aContext)
+        throws IOException
+    {
+        Builder<Map<String, Object>> callResponse = MCallResponse.builder();
+        callResponse.withPayload(Map.of( //
+                "document_name", aContext.getDocument().getName()));
+        return callResponse;
+    }
+
+    @Tool( //
             value = "list_documents", //
             actor = "List documents", //
             description = LIST_DOCUMENTS_TOOL_DESCRIPTION)
-    public MCallResponse.Builder<Map<String, List<String>>> listDocuments( //
+    public MCallResponse.Builder<?> listDocuments( //
             AnnotationEditorContext aContext)
         throws IOException
     {
         var project = aContext.getProject();
-        var sessionOwner = userService.get(aContext.getSessionOwner());
+        var sessionOwner = aContext.getSessionOwner();
         var documents = documentService.listAnnotatableDocuments(project, sessionOwner);
 
         var payload = documents.keySet().stream() //
@@ -100,8 +112,11 @@ public class DocumentsToolLibrary
                 .sorted() //
                 .toList();
 
-        Builder<Map<String, List<String>>> callResponse = MCallResponse.builder();
-        callResponse.withPayload(Map.of("documents", payload));
+        Builder<Map<String, Object>> callResponse = MCallResponse.builder();
+        callResponse.withPayload(Map.of( //
+                "current_document", aContext.getDocument().getName(), //
+                "document_count", payload.size(), //
+                "documents", payload));
         return callResponse;
     }
 
@@ -111,40 +126,65 @@ public class DocumentsToolLibrary
             description = READ_DOCUMENT_TOOL_DESCRIPTION)
     public MCallResponse.Builder<String> readDocument( //
             AnnotationEditorContext aContext,
-            @ToolParam(value = "document", description = PARAM_DOCUMENT_DESCRIPTION) String aDocument,
-            @ToolParam(value = "from", description = PARAM_START_DESCRIPTION) int aStart,
-            @ToolParam(value = "count", description = PARAM_LINES_DESCRIPTION) int aLines)
+            @ToolParam(value = "document", description = "Name of the document to read (optional)") String aDocumentName,
+            @ToolParam(value = "start_line", description = "First line to read (1-based)") int aStartLine,
+            @ToolParam(value = "end_line", description = "Last line to read (1-based)") int aEndLine)
         throws IOException
     {
-        if (aStart < 0) {
+        if (aStartLine < 1) {
             return MCallResponse.builder(String.class)
-                    .withPayload("Error: The 'from' parameter (start line) must be >= 0.");
+                    .withPayload("Error: The 'start_line' parameter must be >= 1.");
         }
 
-        if (aLines <= 0) {
+        if (aEndLine < 1) {
             return MCallResponse.builder(String.class)
-                    .withPayload("Error: The 'count' parameter (number of lines) must be > 0.");
+                    .withPayload("Error: The 'end_line' parameter must be >= 1.");
         }
 
         var project = aContext.getProject();
-        var sessionOwner = userService.get(aContext.getSessionOwner());
+
+        var startLine = min(aStartLine, aEndLine);
+        var endLine = max(aStartLine, aEndLine);
+
+        if (endLine - startLine + 1 > 200) {
+            endLine = startLine + 200 - 1;
+        }
+
+        var sessionOwner = aContext.getSessionOwner();
         var documents = documentService.listAnnotatableDocuments(project, sessionOwner);
 
-        var document = documents.keySet().stream().filter(d -> d.getName().equals(aDocument))
+        var docName = defaultIfBlank(aDocumentName, aContext.getDocument().getName());
+
+        var doc = documents.keySet().stream() //
+                .filter(d -> d.getName().equals(docName)) //
                 .findFirst();
 
         // Safeguard to ensure the session owner has access to the document
-        if (document.isEmpty()) {
+        if (doc.isEmpty()) {
             return MCallResponse.builder(String.class).withPayload(
-                    "Error: Document '" + aDocument + "' does not exist in the project.");
+                    "Error: Document [" + docName + "] does not exist in the project.");
         }
 
         try (var session = CasStorageSession.openNested()) {
-            var cas = documentService.createOrReadInitialCas(document.get(), AUTO_CAS_UPGRADE,
+            var cas = documentService.createOrReadInitialCas(doc.get(), AUTO_CAS_UPGRADE,
                     SHARED_READ_ONLY_ACCESS);
             var lines = cas.getDocumentText().split("\\r?\\n|\\r");
-            lines = ArrayUtils.subarray(lines, aStart, aStart + aLines);
-            return MCallResponse.builder(String.class).withPayload(join("\n", lines));
+            var totalLines = lines.length;
+            lines = subarray(lines, startLine - 1, endLine);
+            var joinedLines = join("\n", lines);
+            if (joinedLines.length() > READ_DOCUMENT_CHARACTER_LIMIT) {
+                joinedLines = "ERROR: Selected lines exceed the limit of "
+                        + READ_DOCUMENT_CHARACTER_LIMIT + " characters. Try reading fewer lines.";
+            }
+            return MCallResponse.builder(String.class) //
+                    .withActor("Read " + docName + " (lines " + startLine + "-"
+                            + (startLine + lines.length - 1) + " of " + totalLines + ")")
+                    .withPayload("---\n" + //
+                            "total_lines: " + totalLines + "\n" + //
+                            "start_line: " + startLine + "\n" + //
+                            "end_line: " + (startLine + lines.length - 1) + "\n" + //
+                            "---\n" + //
+                            joinedLines);
         }
     }
 }

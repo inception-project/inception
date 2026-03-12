@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.rendering.Renderer.REL_EXTENSION_ID;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 
@@ -46,6 +45,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanPosition;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
+import de.tudarmstadt.ukp.inception.curation.api.CurationVID;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
@@ -78,6 +79,7 @@ public class CurationSidebarRenderer
 
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    private final CurationSessionService curationSessionService;
     private final CurationSidebarService curationService;
     private final LayerSupportRegistry layerSupportRegistry;
     private final DocumentService documentService;
@@ -85,11 +87,12 @@ public class CurationSidebarRenderer
     private final AnnotationSchemaService annotationService;
     private final DiffAdapterRegistry diffAdapterRegistry;
 
-    public CurationSidebarRenderer(CurationSidebarService aCurationService,
-            LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
-            UserDao aUserRepository, AnnotationSchemaService aAnnotationService,
-            DiffAdapterRegistry aDiffAdapterRegistry)
+    public CurationSidebarRenderer(CurationSessionService aCurationSessionService,
+            CurationSidebarService aCurationService, LayerSupportRegistry aLayerSupportRegistry,
+            DocumentService aDocumentService, UserDao aUserRepository,
+            AnnotationSchemaService aAnnotationService, DiffAdapterRegistry aDiffAdapterRegistry)
     {
+        curationSessionService = aCurationSessionService;
         curationService = aCurationService;
         layerSupportRegistry = aLayerSupportRegistry;
         documentService = aDocumentService;
@@ -120,7 +123,7 @@ public class CurationSidebarRenderer
         }
 
         var sessionOwner = userRepository.getCurrentUsername();
-        if (!curationService.existsSession(sessionOwner, project.getId())) {
+        if (!curationSessionService.existsSession(sessionOwner, project.getId())) {
             return false;
         }
 
@@ -132,7 +135,7 @@ public class CurationSidebarRenderer
     {
         var sessionOwner = userRepository.getCurrentUsername();
 
-        var selectedUsers = curationService.listUsersReadyForCuration(sessionOwner,
+        var selectedUsers = curationSessionService.listUsersReadyForCuration(sessionOwner,
                 aRequest.getProject(), aRequest.getSourceDocument());
         if (selectedUsers.isEmpty()) {
             return;
@@ -237,9 +240,7 @@ public class CurationSidebarRenderer
                     }
                     aVdoc.add(object);
 
-                    aVdoc.add(new VComment(object.getVid(), VCommentType.INFO,
-                            "Annotators: " + cfg.getCasGroupIds().stream()
-                                    .filter(a -> !targetUser.equals(a)).collect(joining(", "))));
+                    aVdoc.add(new VComment(object.getVid(), VCommentType.INFO, "Curation item"));
 
                     if (object instanceof VArc arc) {
                         resolveArcEndpoints(targetUser, diff, showAll, cfg, arc);

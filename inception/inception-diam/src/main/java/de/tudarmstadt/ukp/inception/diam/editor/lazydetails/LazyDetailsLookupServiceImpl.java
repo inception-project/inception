@@ -24,7 +24,9 @@ import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
@@ -112,15 +114,16 @@ public class LazyDetailsLookupServiceImpl
         throws AnnotationException, IOException
     {
         var detailGroups = new ArrayList<VLazyDetailGroup>();
+        var features = annotationService.listSupportedFeatures(aLayer);
 
-        lookupLayerLevelDetails(aVid, aCas, aLayer).forEach(detailGroups::add);
+        lookupLayerLevelDetails(aVid, aCas, aLayer, () -> features).forEach(detailGroups::add);
 
         if (aVid.isSynthetic()) {
             lookupExtensionLevelDetails(aVid, aDocument, aCas, aDataOwner, aLayer)
                     .forEach(detailGroups::add);
         }
         else {
-            for (var feature : annotationService.listSupportedFeatures(aLayer)) {
+            for (var feature : features) {
                 lookupFeatureLevelDetails(aVid, aCas, feature).forEach(detailGroups::add);
             }
         }
@@ -194,14 +197,14 @@ public class LazyDetailsLookupServiceImpl
 
     @Override
     public List<VLazyDetailGroup> lookupLayerLevelDetails(VID aVid, CAS aCas,
-            AnnotationLayer aLayer)
+            AnnotationLayer aLayer, Supplier<Collection<AnnotationFeature>> aFeatureSupplier)
     {
         if (aVid.isSynthetic()) {
             return emptyList();
         }
 
-        return layerSupportRegistry.getLayerSupport(aLayer)
-                .createRenderer(aLayer, () -> annotationService.listAnnotationFeature(aLayer))
+        return layerSupportRegistry.getLayerSupport(aLayer) //
+                .createRenderer(aLayer, aFeatureSupplier) //
                 .lookupLazyDetails(aCas, aVid);
 
     }

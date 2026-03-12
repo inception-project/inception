@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.footer;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import java.util.Locale;
-import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Session;
@@ -36,8 +35,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.db.DatabaseDriverService;
+import de.tudarmstadt.ukp.inception.ui.core.config.WarningsProperties;
 
 public class WarningsFooterPanel
     extends Panel
@@ -47,6 +46,7 @@ public class WarningsFooterPanel
     private final static Logger LOG = LoggerFactory.getLogger(WarningsFooterPanel.class);
 
     private @SpringBean DatabaseDriverService dbDriverService;
+    private @SpringBean WarningsProperties warningsProperties;
 
     private Label embeddedDbWarning;
     private Label browserWarning;
@@ -58,11 +58,9 @@ public class WarningsFooterPanel
 
         setOutputMarkupId(true);
 
-        var settings = SettingsUtil.getSettings();
-
         // set up warnings shown when using an embedded DB or some unsupported browser
-        var isBrowserWarningVisible = isBrowserWarningVisible(settings);
-        var isDatabaseWarningVisible = isDatabaseWarningVisible(settings);
+        var isBrowserWarningVisible = isBrowserWarningVisible();
+        var isDatabaseWarningVisible = isDatabaseWarningVisible();
 
         embeddedDbWarning = new Label("embeddedDbWarning", new ResourceModel("warning.database"));
         embeddedDbWarning.setVisible(isDatabaseWarningVisible);
@@ -83,7 +81,7 @@ public class WarningsFooterPanel
         super.renderHead(aResponse);
     }
 
-    private boolean isDatabaseWarningVisible(Properties settings)
+    private boolean isDatabaseWarningVisible()
     {
         boolean isUsingEmbeddedDatabase;
         try {
@@ -94,13 +92,12 @@ public class WarningsFooterPanel
             LOG.warn("Unable to determine which database is being used", e);
             isUsingEmbeddedDatabase = false;
         }
-        var ignoreWarning = "false".equalsIgnoreCase(
-                settings.getProperty(SettingsUtil.CFG_WARNINGS_EMBEDDED_DATABASE));
+        var showWarning = warningsProperties == null || warningsProperties.isEmbeddedDatabase();
 
-        return isUsingEmbeddedDatabase && !ignoreWarning;
+        return isUsingEmbeddedDatabase && showWarning;
     }
 
-    private boolean isBrowserWarningVisible(Properties settings)
+    private boolean isBrowserWarningVisible()
     {
         var requestCycle = RequestCycle.get();
         WebClientInfo clientInfo;
@@ -115,9 +112,8 @@ public class WarningsFooterPanel
         var isUsingUnsupportedBrowser = !(userAgent.contains("safari")
                 || userAgent.contains("chrome"));
 
-        var ignoreWarning = "false".equalsIgnoreCase(
-                settings.getProperty(SettingsUtil.CFG_WARNINGS_UNSUPPORTED_BROWSER));
+        var showWarning = warningsProperties == null || warningsProperties.isUnsupportedBrowser();
 
-        return isUsingUnsupportedBrowser && !ignoreWarning;
+        return isUsingUnsupportedBrowser && showWarning;
     }
 }

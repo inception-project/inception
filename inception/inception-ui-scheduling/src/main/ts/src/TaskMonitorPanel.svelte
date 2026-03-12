@@ -17,10 +17,10 @@
      * limitations under the License.
      */
 
-    import type { MTaskStateUpdate } from "./MTaskStateUpdate"
-    import { onMount, onDestroy } from "svelte"
-    import { Client, Stomp } from "@stomp/stompjs"
-    import type { IFrame } from "@stomp/stompjs"
+    import type { MTaskStateUpdate } from './MTaskStateUpdate';
+    import { onMount, onDestroy } from 'svelte';
+    import { Client, Stomp } from '@stomp/stompjs';
+    import type { IFrame } from '@stomp/stompjs';
 
     interface Props {
         csrfToken: string;
@@ -45,72 +45,62 @@
         connected = $bindable(false),
         popupMode = true,
         showFinishedTasks = true,
-        typePattern = null
+        typePattern = null,
     }: Props = $props();
 
-    let socket: WebSocket = null
-    let stompClient: Client = null
-    let connectionError = null
-    let popupOpen = $state(false)
+    let socket: WebSocket = null;
+    let stompClient: Client = null;
+    let connectionError = null;
+    let popupOpen = $state(false);
 
     export function connect(): void {
         if (connected) {
             return;
         }
 
-        let protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         let wsEndpoint = new URL(wsEndpointUrl);
         wsEndpoint.protocol = protocol;
 
-        stompClient = Stomp.over(
-            () => (socket = new WebSocket(wsEndpoint.toString()))
-        );
+        stompClient = Stomp.over(() => (socket = new WebSocket(wsEndpoint.toString())));
         stompClient.debug = () => {}; // Disable debug logging of all messages
-        stompClient.connectHeaders= { 'X-CSRF-TOKEN': csrfToken }
+        stompClient.connectHeaders = { 'X-CSRF-TOKEN': csrfToken };
 
         stompClient.onConnect = () => {
             connected = true;
-            stompClient.subscribe("/user/queue/errors", function (msg) {
-                console.error(
-                    "Websocket server error: " + JSON.stringify(msg.body)
-                );
+            stompClient.subscribe('/user/queue/errors', function (msg) {
+                console.error('Websocket server error: ' + JSON.stringify(msg.body));
             });
-            stompClient.subscribe(
-                taskStatusTopic,
-                function (msg) {
-                    tasks = JSON.parse(msg.body) || []
-                    if (!showFinishedTasks) {
-                        tasks = tasks.filter((e, i) => e.state === 'NOT_STARTED' || e.state === 'RUNNING');
-                    }
-                }
-            );
-            stompClient.subscribe(
-                taskUpdatesTopic,
-                function (msg) {
-                    var msgBody = JSON.parse(msg.body) as MTaskStateUpdate;
-
-                    // console.log(msgBody)
-
-                    if (typePattern && msgBody.type && !msgBody.type.match(typePattern)) {
-                        return;
-                    }
-
-                    var index = tasks.findIndex(
-                        (item) => item.id === msgBody.id
+            stompClient.subscribe(taskStatusTopic, function (msg) {
+                tasks = JSON.parse(msg.body) || [];
+                if (!showFinishedTasks) {
+                    tasks = tasks.filter(
+                        (e, i) => e.state === 'NOT_STARTED' || e.state === 'RUNNING'
                     );
-                    if (index === -1) {
-                        if (!msgBody.removed) {
-                            tasks = [msgBody, ...tasks];
-                        }
+                }
+            });
+            stompClient.subscribe(taskUpdatesTopic, function (msg) {
+                var msgBody = JSON.parse(msg.body) as MTaskStateUpdate;
+
+                // console.log(msgBody)
+
+                if (typePattern && msgBody.type && !msgBody.type.match(typePattern)) {
+                    return;
+                }
+
+                var index = tasks.findIndex((item) => item.id === msgBody.id);
+                if (index === -1) {
+                    if (!msgBody.removed) {
+                        tasks = [msgBody, ...tasks];
+                    }
+                } else {
+                    if (!msgBody.removed) {
+                        tasks = tasks.map((e, i) => (i !== index ? e : msgBody));
                     } else {
-                        if (!msgBody.removed) {
-                            tasks = tasks.map((e, i) => i !== index ? e : msgBody)
-                        } else {
-                            tasks = tasks.filter((e, i) => i !== index);
-                        }
+                        tasks = tasks.filter((e, i) => i !== index);
                     }
                 }
-            );
+            });
         };
 
         stompClient.onStompError = handleBrokerError;
@@ -125,8 +115,8 @@
     }
 
     function handleBrokerError(receipt: IFrame) {
-        console.log("Broker reported error: " + receipt.headers.message);
-        console.log("Additional details: " + receipt.body);
+        console.log('Broker reported error: ' + receipt.headers.message);
+        console.log('Additional details: ' + receipt.body);
     }
 
     export function closeMessages(item): void {
@@ -134,23 +124,23 @@
     }
 
     function cancelTask(item) {
-        console.log("Canceling task " + item.id);
-        fetch(endpointUrl + "/tasks/" + item.id + "/cancel", {
+        console.log('Canceling task ' + item.id);
+        fetch(endpointUrl + '/tasks/' + item.id + '/cancel', {
             headers: {
-                "X-CSRF-TOKEN": csrfToken,
+                'X-CSRF-TOKEN': csrfToken,
             },
-            method: 'POST'
-        })
+            method: 'POST',
+        });
     }
 
     function acknowledgeResult(item) {
-        console.log("Acknowledging task result " + item.id);
-        fetch(endpointUrl + "/tasks/" + item.id + "/acknowledge", {
+        console.log('Acknowledging task result ' + item.id);
+        fetch(endpointUrl + '/tasks/' + item.id + '/acknowledge', {
             headers: {
-                "X-CSRF-TOKEN": csrfToken,
+                'X-CSRF-TOKEN': csrfToken,
             },
-            method: 'POST'
-        })
+            method: 'POST',
+        });
     }
 
     onMount(async () => {
@@ -167,7 +157,7 @@
     <div class="ms-3 float-start" onclick={() => (popupOpen = !popupOpen)}>
         <!-- svelte-ignore a11y_missing_attribute -->
         <a role="button" tabindex="0" title="Background tasks">
-            {#if tasks?.find((t) => t.state === "RUNNING")}
+            {#if tasks?.find((t) => t.state === 'RUNNING')}
                 <div class="spinner-border spinner-border-sm" role="status"></div>
                 Processing...
             {:else if tasks?.length > 0}
@@ -197,46 +187,51 @@
             </div>
         {/if}
         {#if !connected}
-            <div class="flex-content flex-h-container no-data-notice">
-                Connecting...
-            </div>
+            <div class="flex-content flex-h-container no-data-notice">Connecting...</div>
         {/if}
         {#if connected && !tasks?.length}
-            <div class="flex-content flex-h-container no-data-notice">
-                No background tasks.
-            </div>
+            <div class="flex-content flex-h-container no-data-notice">No background tasks.</div>
         {/if}
         {#if tasks?.length}
             <ul class="list-group list-group-flush flex-grow-1">
                 {#each tasks as item}
                     <li class="list-group-item py-1 px-3">
-                        <div
-                            class="d-flex w-100 justify-content-between align-items-center"
-                        >
+                        <div class="d-flex w-100 justify-content-between align-items-center">
                             {item.title}
                             <span class="d-flex">
-                            {#if item.state === 'FAILED'}
-                              <i class="text-danger fas fa-exclamation-triangle"></i>
-                            {:else if item.state === 'CANCELLED'}
-                              <i class="text-secondary fas fa-ban"></i>
-                            {:else if item.state === 'RUNNING'}
-                              <div class="spinner spinner-border spinner-border-sm flex-shrink-0" role="status"></div>
-                            {:else if item.state === 'COMPLETED'}
-                              <i class="text-success fas fa-check-circle"></i>
-                            {/if}
-                            {#if endpointUrl && item.state !== 'RUNNING' && item.state !== 'NOT_STARTED'}
-                                <!-- svelte-ignore a11y_click_events_have_key_events -->
-                                <i class="fas fa-times-circle ms-2 text-secondary align-content-center" style="cursor: pointer;" onclick={() => acknowledgeResult(item)}></i>
-                            {/if}
-                            {#if item.state === "RUNNING" || item.state === 'NOT_STARTED'}
-                                {#if item.cancellable && endpointUrl}
-                                <!-- svelte-ignore a11y_click_events_have_key_events -->
-                                <i class="far fa-stop-circle ms-3 text-secondary align-content-center" style="cursor: pointer;" onclick={() => cancelTask(item)}></i>
+                                {#if item.state === 'FAILED'}
+                                    <i class="text-danger fas fa-exclamation-triangle"></i>
+                                {:else if item.state === 'CANCELLED'}
+                                    <i class="text-secondary fas fa-ban"></i>
+                                {:else if item.state === 'RUNNING'}
+                                    <div
+                                        class="spinner spinner-border spinner-border-sm flex-shrink-0"
+                                        role="status"
+                                    ></div>
+                                {:else if item.state === 'COMPLETED'}
+                                    <i class="text-success fas fa-check-circle"></i>
                                 {/if}
-                            {/if}
-                        </span>
+                                {#if endpointUrl && item.state !== 'RUNNING' && item.state !== 'NOT_STARTED'}
+                                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                    <i
+                                        class="fas fa-times-circle ms-2 text-secondary align-content-center"
+                                        style="cursor: pointer;"
+                                        onclick={() => acknowledgeResult(item)}
+                                    ></i>
+                                {/if}
+                                {#if item.state === 'RUNNING' || item.state === 'NOT_STARTED'}
+                                    {#if item.cancellable && endpointUrl}
+                                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                        <i
+                                            class="far fa-stop-circle ms-3 text-secondary align-content-center"
+                                            style="cursor: pointer;"
+                                            onclick={() => cancelTask(item)}
+                                        ></i>
+                                    {/if}
+                                {/if}
+                            </span>
                         </div>
-                        {#if item.state === "RUNNING" || item.state === 'NOT_STARTED'}
+                        {#if item.state === 'RUNNING' || item.state === 'NOT_STARTED'}
                             {#each item.progresses as progress}
                                 <div class="d-flex flex-row">
                                     {#if progress.maxProgress}
@@ -250,22 +245,19 @@
                                     {/if}
                                 </div>
                                 {#if progress.unit}
-                                <div class="text-muted small fw-light">
-                                    {progress.progress} / {progress.maxProgress} {progress.unit}
-                                </div>
-                            {/if}
-                    {/each}
+                                    <div class="text-muted small fw-light">
+                                        {progress.progress} / {progress.maxProgress}
+                                        {progress.unit}
+                                    </div>
+                                {/if}
+                            {/each}
                         {/if}
-                        {#if item.latestMessage} 
+                        {#if item.latestMessage}
                             <div class="text-muted small">
-                                {#if item.latestMessage.level === "ERROR"}
-                                    <i
-                                        class="text-danger fas fa-exclamation-triangle"
-                                    ></i>
-                                {:else if item.latestMessage.level === "WARN"}
-                                    <i
-                                        class="text-warning fas fa-exclamation-triangle"
-                                    ></i>
+                                {#if item.latestMessage.level === 'ERROR'}
+                                    <i class="text-danger fas fa-exclamation-triangle"></i>
+                                {:else if item.latestMessage.level === 'WARN'}
+                                    <i class="text-warning fas fa-exclamation-triangle"></i>
                                 {/if}
                                 {item.latestMessage.message}
                             </div>

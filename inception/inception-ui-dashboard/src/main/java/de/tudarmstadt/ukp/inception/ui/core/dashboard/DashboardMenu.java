@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard;
 
 import static java.util.stream.Collectors.joining;
+import static wicket.contrib.input.events.EventType.click;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -49,7 +50,6 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
-import wicket.contrib.input.events.EventType;
 
 public class DashboardMenu
     extends Panel
@@ -181,16 +181,7 @@ public class DashboardMenu
         menulink.add(AttributeAppender.append("class",
                 () -> getPage().getClass().equals(pageClass) ? "active" : ""));
         if (item.shortcut() != null && item.shortcut().length > 0) {
-            menulink.add(new InputBehavior(item.shortcut(), EventType.click)
-            {
-                private static final long serialVersionUID = -3230776977218522942L;
-
-                @Override
-                protected Boolean getDisable_in_input()
-                {
-                    return true;
-                };
-            });
+            menulink.add(new InputBehavior(item.shortcut(), click).setDisabledInInput(true));
             menulink.add(AttributeModifier.append("title",
                     "[" + Stream.of(item.shortcut()).map(Object::toString).collect(joining(" + "))
                             + "]"));

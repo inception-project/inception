@@ -19,17 +19,20 @@ import ActivitiesDashlet from './ActivitiesDashlet.svelte';
 import { mount, unmount } from 'svelte';
 
 export default class ActivitiesDashletFactory {
-  static instance: any;
+    static instance: any;
 
-  constructor(args: any) {
-    ActivitiesDashletFactory.instance = mount(ActivitiesDashlet, { target: args.target, props: args.props });
-  }
-
-  $destroy() {
-    const i = ActivitiesDashletFactory.instance;
-    if (i) {
-      unmount(i)
-      ActivitiesDashletFactory.instance = null;
+    constructor(args: any) {
+        ActivitiesDashletFactory.instance = mount(ActivitiesDashlet, {
+            target: args.target,
+            props: args.props,
+        });
     }
-  }
+
+    $destroy() {
+        const i = ActivitiesDashletFactory.instance;
+        if (i) {
+            unmount(i);
+            ActivitiesDashletFactory.instance = null;
+        }
+    }
 }

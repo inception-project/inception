@@ -14,6 +14,7 @@ cache
 idea/
 *.jfr
 *.eml
+*.license
 */*.eml
 .gradle
 inception/inception-html-editor/src/main/js/annotatorjs/lib
@@ -28,3 +29,5 @@ local/
 .asciidoctorconfig.adoc
 outdated-packages-report.txt
 outdated-packages-summary.txt
+PLAN*.md
+PLAN_*.md

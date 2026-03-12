@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.KEY_RECOMMENDER_GENERAL_SETTINGS;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommenderPredictionSources.RECOMMENDER_SOURCE;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.REC_SIDEBAR;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.stream.Collectors.groupingBy;
@@ -259,7 +260,8 @@ public class RecommenderInfoPanel
 
         var cas = page.getEditorCas();
 
-        var predictions = recommendationService.getPredictions(sessionOwner, state.getProject());
+        var predictions = recommendationService.getPredictions(sessionOwner, state.getProject(),
+                RECOMMENDER_SOURCE);
         if (predictions == null) {
             error("Recommenders did not yet provide any suggestions.");
             aTarget.addChildren(getPage(), IFeedback.class);

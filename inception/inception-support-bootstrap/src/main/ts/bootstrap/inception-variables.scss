@@ -18,31 +18,29 @@
 
 // Bootstrap variables: Cards
 
-$card-spacer-y:                      .25rem !default;      // Original: .75rem
-$card-spacer-x:                      .75rem !default;      // Original: 1.25rem
+$card-spacer-y: 0.25rem !default; // Original: .75rem
+$card-spacer-x: 0.75rem !default; // Original: 1.25rem
 
 // Bootstrap variables: Forms
 
-$label-margin-bottom:                0.5rem !default;      // Original: .5rem
-$form-group-margin-bottom:           0.5rem !default;      // Original: 1rem
+$label-margin-bottom: 0.5rem !default; // Original: .5rem
+$form-group-margin-bottom: 0.5rem !default; // Original: 1rem
 
 // Bootstrap variables: Navbar:
 
-$navbar-padding-y:                   0px;                  // Original: $spacer / 2 !default;
-$navbar-padding-x:                   0px;                  // $spacer !default;
-
+$navbar-padding-y: 0px; // Original: $spacer / 2 !default;
+$navbar-padding-x: 0px; // $spacer !default;
 
 // INCEpTION variables: Footer
 
-$page-footer-height:                 24px;
-$page-header-height:                 51px;
-
+$page-footer-height: 24px;
+$page-header-height: 51px;
 
 $grid-breakpoints: (
-  xs: 0,
-  sm: 576px,
-  md: 768px,
-  lg: 992px,
-  xl: 1200px,
-  xxl: 1600px
+    xs: 0,
+    sm: 576px,
+    md: 768px,
+    lg: 992px,
+    xl: 1200px,
+    xxl: 1600px,
 );

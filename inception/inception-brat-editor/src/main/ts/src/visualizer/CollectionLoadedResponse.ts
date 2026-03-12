@@ -38,18 +38,18 @@
  * SOFTWARE.
  */
 
-import { EntityTypeDto, RelationTypeDto } from '../protocol/Protocol'
-import { VisualOptions } from './VisualOptions'
+import { EntityTypeDto, RelationTypeDto } from '../protocol/Protocol';
+import { VisualOptions } from './VisualOptions';
 
 /**
  * Class currently defined only for documentation purposes
  */
 export interface CollectionLoadedResponse {
-  entity_types: EntityTypeDto[]
-  // server currently does not send this, rel types are in the arcs properties of the entity types
-  relation_types: RelationTypeDto[]
-  visual_options: VisualOptions
-  // event_attribute_types
-  // entity_attribute_types
-  // event_types
+    entity_types: EntityTypeDto[];
+    // server currently does not send this, rel types are in the arcs properties of the entity types
+    relation_types: RelationTypeDto[];
+    visual_options: VisualOptions;
+    // event_attribute_types
+    // entity_attribute_types
+    // event_types
 }

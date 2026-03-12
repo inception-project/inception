@@ -19,17 +19,20 @@ import RecommendationEventFooterPanel from './RecommendationEventFooterPanel.sve
 import { mount, unmount } from 'svelte';
 
 export default class RecommendationEventFooterPanelFactory {
-  static instance: any;
+    static instance: any;
 
-  constructor(args: any) {
-    RecommendationEventFooterPanelFactory.instance = mount(RecommendationEventFooterPanel, { target: args.target, props: args.props });
-  }
-
-  $destroy() {
-    const i = RecommendationEventFooterPanelFactory.instance;
-    if (i) {
-      unmount(i)
-      RecommendationEventFooterPanelFactory.instance = null;
+    constructor(args: any) {
+        RecommendationEventFooterPanelFactory.instance = mount(RecommendationEventFooterPanel, {
+            target: args.target,
+            props: args.props,
+        });
     }
-  }
+
+    $destroy() {
+        const i = RecommendationEventFooterPanelFactory.instance;
+        if (i) {
+            unmount(i);
+            RecommendationEventFooterPanelFactory.instance = null;
+        }
+    }
 }

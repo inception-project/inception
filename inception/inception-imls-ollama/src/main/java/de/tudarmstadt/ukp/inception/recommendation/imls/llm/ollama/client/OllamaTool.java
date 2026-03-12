@@ -34,7 +34,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.victools.jsonschema.generator.Option;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
@@ -77,7 +76,7 @@ public class OllamaTool
     }
 
     public Object invoke(OllamaToolCall toolCall)
-        throws JsonProcessingException, IllegalAccessException, InvocationTargetException
+        throws IllegalAccessException, InvocationTargetException
     {
         if (!toolCall.getFunction().getName().equals(getFunction().getName())) {
             throw new IllegalArgumentException(
@@ -139,8 +138,8 @@ public class OllamaTool
 
             var paramName = ToolUtils.getParameterName(param);
 
-            var schemaBuilder = generator.buildMultipleSchemaDefinitions();
-            var propertySchema = schemaBuilder.createSchemaReference(param.getType());
+            // Generate full inline schema definition using parameterized type to preserve generics
+            var propertySchema = generator.generateSchema(param.getParameterizedType());
 
             getParameterDescription(param).ifPresent(
                     description -> propertySchema.put("description", description.strip()));

@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.assistant.model;
 
 public sealed interface MCommandMessage
     extends MMessage
-    permits MRemoveConversationCommand
+    permits MClearCommand, MRefreshCommand
 {
 
 }

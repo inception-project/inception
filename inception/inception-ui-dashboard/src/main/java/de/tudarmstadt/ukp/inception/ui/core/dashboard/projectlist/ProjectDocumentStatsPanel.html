@@ -50,8 +50,8 @@
 </head>
 <body>
   <wicket:panel>
-    <span class="states-container">
-      <span class="show-counts-on-hover me-2">
+    <span class="states-container d-flex flex-column flex-md-row align-items-end">
+      <span class="show-counts-on-hover me-2 my-1 text-nowrap">
         <span wicket:id="badgeNew" class="text-body me-2">
           <span wicket:id="iconNew"/>
           <span wicket:id="docsNew"/>
@@ -73,7 +73,7 @@
           <span wicket:id="docsCurationFinished"/>
         </span>
       </span>
-      <span class="d-inline-flex project-progress-bar rounded border-1 overflow-hidden">
+      <span class="d-inline-flex project-progress-bar rounded border-1 overflow-hidden mb-2 mt-1">
         <span wicket:id="barAnnotationInProgress" />
         <span wicket:id="barAnnotationFinished" />
         <span wicket:id="barCurationInProgress" />

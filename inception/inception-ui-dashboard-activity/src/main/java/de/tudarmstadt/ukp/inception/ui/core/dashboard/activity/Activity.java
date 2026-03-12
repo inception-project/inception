@@ -45,7 +45,7 @@ class Activity
         documentName = aDocument.getName();
         user = aEvent.getUser();
         annotator = aEvent.getAnnotator();
-        timestamp = aEvent.getCreated().getTime();
+        timestamp = aEvent.getCreated().toEpochMilli();
         link = aLink;
         type = CURATION_USER.equals(aEvent.getAnnotator()) ? "Curation" : "Annotation";
     }

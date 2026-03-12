@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 export interface CompactAnnotationAttributes {
-  /**
-   * Label (optional)
-   */
-  l: string;
+    /**
+     * Label (optional)
+     */
+    l: string;
 
-  /**
-   * Color (optional)
-   */
-  c: string;
+    /**
+     * Color (optional)
+     */
+    c: string;
 }

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.config;
 import static org.assertj.core.api.Assertions.assertThat;
 import static wicket.contrib.input.events.key.KeyType.Ctrl;
 import static wicket.contrib.input.events.key.KeyType.Page_down;
+import static wicket.contrib.input.events.key.KeyType.Shift;
 import static wicket.contrib.input.events.key.KeyType.z;
 
 import org.junit.jupiter.api.Test;
@@ -38,10 +39,11 @@ import wicket.contrib.input.events.key.KeyType;
  */
 @SpringBootTest(classes = KeyBindingsPropertiesSpringIntegrationTest.TestConfig.class)
 @TestPropertySource(properties = { //
-        "ui.keybindings.navigation.nextPage=Page_down", //
-        "ui.keybindings.navigation.previousPage=Page_up", //
-        "ui.keybindings.editing.undo=Ctrl,z", //
-        "ui.keybindings.editing.redo=Ctrl,y" })
+        "ui.keybindings.navigation.nextPage.keys=Page_down", //
+        "ui.keybindings.navigation.previousPage.keys=Page_up", //
+        "ui.keybindings.editing.undo.keys=Ctrl,z", //
+        "ui.keybindings.editing.undo.disabled-in-inputs=true", //
+        "ui.keybindings.editing.redo.keys=Ctrl,y" })
 class KeyBindingsPropertiesSpringIntegrationTest
 {
     @Configuration
@@ -69,15 +71,17 @@ class KeyBindingsPropertiesSpringIntegrationTest
     void testDefaultKeyTypeArraysAreAccessible()
     {
         // Test that KeyType[] arrays can be retrieved from the properties
-        KeyType[] nextPage = keyBindings.getNavigation().getNextPage();
+        var nextPage = keyBindings.getNavigation().getNextPage();
         assertThat(nextPage).isNotNull();
-        assertThat(nextPage).isInstanceOf(KeyType[].class);
-        assertThat(nextPage).containsExactly(Page_down);
+        assertThat(nextPage.getKeys()).isInstanceOf(KeyType[].class);
+        assertThat(nextPage.isDisabledInInputs()).isFalse();
+        assertThat(nextPage.getKeys()).containsExactly(Page_down);
 
-        KeyType[] undo = keyBindings.getEditing().getUndo();
+        var undo = keyBindings.getEditing().getUndo();
         assertThat(undo).isNotNull();
-        assertThat(undo).isInstanceOf(KeyType[].class);
-        assertThat(undo).containsExactly(Ctrl, z);
+        assertThat(undo.getKeys()).isInstanceOf(KeyType[].class);
+        assertThat(undo.isDisabledInInputs()).isTrue();
+        assertThat(undo.getKeys()).containsExactly(Ctrl, z);
     }
 
     @Test
@@ -94,10 +98,10 @@ class KeyBindingsPropertiesSpringIntegrationTest
     void testSingleKeyTypeConversion()
     {
         // Test that single KeyType values from properties are correctly converted
-        KeyType[] nextPage = keyBindings.getNavigation().getNextPage();
+        var nextPage = keyBindings.getNavigation().getNextPage().getKeys();
         assertThat(nextPage).containsExactly(Page_down);
 
-        KeyType[] previousPage = keyBindings.getNavigation().getPreviousPage();
+        var previousPage = keyBindings.getNavigation().getPreviousPage().getKeys();
         assertThat(previousPage).containsExactly(KeyType.Page_up);
     }
 
@@ -105,10 +109,10 @@ class KeyBindingsPropertiesSpringIntegrationTest
     void testCommaSeparatedKeyTypeConversion()
     {
         // Test that comma-separated KeyType combinations are correctly converted
-        KeyType[] undo = keyBindings.getEditing().getUndo();
+        var undo = keyBindings.getEditing().getUndo().getKeys();
         assertThat(undo).containsExactly(Ctrl, z);
 
-        KeyType[] redo = keyBindings.getEditing().getRedo();
+        var redo = keyBindings.getEditing().getRedo().getKeys();
         assertThat(redo).containsExactly(Ctrl, KeyType.y);
     }
 
@@ -117,8 +121,8 @@ class KeyBindingsPropertiesSpringIntegrationTest
     {
         // Verify that configured properties override the hardcoded defaults
         // Default redo is Shift+Ctrl+z, but we've configured it as Ctrl+y
-        KeyType[] redo = keyBindings.getEditing().getRedo();
-        assertThat(redo).doesNotContain(KeyType.Shift);
+        var redo = keyBindings.getEditing().getRedo().getKeys();
+        assertThat(redo).doesNotContain(Shift);
         assertThat(redo).containsExactly(Ctrl, KeyType.y);
     }
 }

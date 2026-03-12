@@ -21,6 +21,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model;
 
+import static jakarta.persistence.GenerationType.IDENTITY;
+
 import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -32,7 +34,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -48,7 +49,7 @@ public class Gazeteer
     private static final long serialVersionUID = 7310223920449064425L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     private Long id;
 
     @Column(nullable = false)
@@ -56,7 +57,7 @@ public class Gazeteer
 
     @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne
-    @JoinColumn(name = "recommender")
+    @JoinColumn(name = "recommender", nullable = false)
     private Recommender recommender;
 
     public Gazeteer()

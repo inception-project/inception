@@ -21,62 +21,63 @@
  * we gain more horizontal space for the feature name as well as for the feature value 
  */
 .feature-editors-sidebar {
-  .row {
-    // display: block;
-    flex-direction: column;
-  }  
+    .row {
+        // display: block;
+        flex-direction: column;
+    }
 
-  .feature-editor-label {
-    @extend .small;
-    @extend .badge;
-    color: var(--bs-emphasis-color);
-    background-color: var(--bs-light-bg-subtle);
-    max-width: none;
-    text-align: left;
-    width: 100%;
-    padding-right: calc(var(--bs-gutter-x) / 2);
-    padding-left: calc(var(--bs-gutter-x) / 2);
-  }
-  
-  .k-widget, .k-textbox {
-    width: 100%;
-  }
+    .feature-editor-label {
+        @extend .small;
+        @extend .badge;
+        color: var(--bs-emphasis-color);
+        background-color: var(--bs-light-bg-subtle);
+        max-width: none;
+        text-align: left;
+        width: 100%;
+        padding-right: calc(var(--bs-gutter-x) / 2);
+        padding-left: calc(var(--bs-gutter-x) / 2);
+    }
+
+    .k-widget,
+    .k-textbox {
+        width: 100%;
+    }
 }
 
 // Cannot use `.feature-editor-value` here because the dropdowns are placed higher in the DOM to
 // be able to overlap with other content
-.k-item,.k-list-item {
-  .item-title {
-    font-weight: bolder;
-  }
+.k-item,
+.k-list-item {
+    .item-title {
+        font-weight: bolder;
+    }
 
-  .item-alt-title {
-    font-size: 85%;
-    line-height: normal; 
-    padding-left: 10px;
-  }
-  
-  .item-title .badge {
-    font-size: 8px;
-  }
-  
-  .item-rank {
-    font-weight: lighter;
-  }
-  
-  .item-identifier {
-    font-size: 85%;
-    line-height: normal; 
-    font-style: italic;
-    padding-left: 10px;
-  }
-  
-  .item-description {
-    font-size: 85%;
-    font-weight: lighter;
-    white-space: normal;
-    line-height: normal;
-    padding-left: 10px;
-  }  
+    .item-alt-title {
+        font-size: 85%;
+        line-height: normal;
+        padding-left: 10px;
+    }
+
+    .item-title .badge {
+        font-size: 8px;
+    }
+
+    .item-rank {
+        font-weight: lighter;
+    }
+
+    .item-identifier {
+        font-size: 85%;
+        line-height: normal;
+        font-style: italic;
+        padding-left: 10px;
+    }
+
+    .item-description {
+        font-size: 85%;
+        font-weight: lighter;
+        white-space: normal;
+        line-height: normal;
+        padding-left: 10px;
+    }
 }
-

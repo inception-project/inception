@@ -20,49 +20,49 @@
  * JQuery UI overrides - Probably should roll own theme instead...
  */
 .ui-widget {
-  font-size: $font-size-base !important;
-  font-family: $font-family-base !important;
+    font-size: $font-size-base !important;
+    font-family: $font-family-base !important;
 }
-  
+
 .ui-widget-content {
-  background: #fff;
-  color: #000;
+    background: #fff;
+    color: #000;
 }
 
 .ui-tooltip {
-  padding: 0px;
-  border: 1px solid #4D4D4D;
+    padding: 0px;
+    border: 1px solid #4d4d4d;
 }
 
 .ui-description-tooltip {
-  min-width: 400px !important;
-  max-width: 65% !important;
-  padding: 0px !important;
+    min-width: 400px !important;
+    max-width: 65% !important;
+    padding: 0px !important;
 }
 
 /* -------------------------------------------------------------------------------------------------
  * DescriptionTooltipBehavior
  */
- 
+
 .ui-tooltip .tooltip-title {
-  text-align: center;
-  font-weight: bold;
-  color: #fff;
-  background-color: #B90F22;
-  padding: 4px;
-  margin-bottom: 4px;
+    text-align: center;
+    font-weight: bold;
+    color: #fff;
+    background-color: #b90f22;
+    padding: 4px;
+    margin-bottom: 4px;
 }
 
 .ui-tooltip .tooltip-content {
-  font-size: 75%;
-  padding: 4px;
+    font-size: 75%;
+    padding: 4px;
 }
 
 .ui-tooltip .tooltip-pre {
-  word-break: keep-all; /* webkit */
-  word-wrap: break-word;
-  white-space: pre;
-  white-space: -moz-pre-wrap; /* fennec */
-  white-space: pre-wrap;
-  white-space: pre\9; /* IE7+ */  
+    word-break: keep-all; /* webkit */
+    word-wrap: break-word;
+    white-space: pre;
+    white-space: -moz-pre-wrap; /* fennec */
+    white-space: pre-wrap;
+    white-space: pre\9; /* IE7+ */
 }

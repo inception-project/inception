@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -37,6 +38,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
@@ -112,6 +114,21 @@ class Saml2AdapterImplTest
         assertThat(UserDao.userHasNoPassword(autoCreatedUser)) //
                 .as("Auto-created external users should be created without password") //
                 .isTrue();
+    }
+
+    @Nested
+    @TestPropertySource(properties = "auth.preauth.newuser.roles=ROLE_USER,ROLE_ADMIN")
+    class WithExtraRoles
+    {
+        @Test
+        void thatConfiguredRolesAreAssignedToNewUser()
+        {
+            sut.loadSamlUser(USERNAME, CLIENT_REGISTRATION_ID);
+
+            assertThat(userService.get(USERNAME).getRoles()) //
+                    .as("Auto-created user should have the configured extra roles") //
+                    .containsExactlyInAnyOrder(Role.ROLE_USER, Role.ROLE_ADMIN);
+        }
     }
 
     @Test

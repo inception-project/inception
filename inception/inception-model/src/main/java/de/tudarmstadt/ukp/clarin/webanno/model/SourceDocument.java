@@ -34,8 +34,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
 /**
@@ -67,18 +65,14 @@ public class SourceDocument
     @Type(SourceDocumentStateType.class)
     private SourceDocumentState state = SourceDocumentState.NEW;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "state_updated", nullable = true)
     private Date stateUpdated = new Date();
 
-    @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created", nullable = true)
     private Date created;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated", nullable = true)
     private Date updated;
 

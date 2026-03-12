@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { CompactAnnotationAttributes } from './CompactAnnotationAttributes'
+import { CompactAnnotationAttributes } from './CompactAnnotationAttributes';
 
 export interface CompactRelationAttributes extends CompactAnnotationAttributes {
-  // No additional attributes (yet)
+    // No additional attributes (yet)
 }

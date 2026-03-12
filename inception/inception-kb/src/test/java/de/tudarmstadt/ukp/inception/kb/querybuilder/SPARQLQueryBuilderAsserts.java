@@ -88,6 +88,31 @@ public class SPARQLQueryBuilderAsserts
         });
     }
 
+    public static KBHandle asHandle(Repository aRepo, SPARQLQuery aBuilder)
+    {
+        try (var conn = aRepo.getConnection()) {
+            printQuery(conn, aBuilder);
+
+            var startTime = currentTimeMillis();
+
+            var result = aBuilder.asHandle(conn, true);
+
+            var buf = new StringWriter();
+            var out = new PrintWriter(buf);
+
+            out.printf("Results : %d in %dms%n", result.isPresent() ? 1 : 0,
+                    currentTimeMillis() - startTime);
+            result.ifPresent(r -> out.printf("          %s%n", r));
+
+            LOG.info("{}", buf);
+
+            return result.orElse(null);
+        }
+        catch (MalformedQueryException e) {
+            throw handleParseException(aBuilder, e);
+        }
+    }
+
     public static List<KBHandle> asHandles(Repository aRepo, SPARQLQuery aBuilder)
     {
         try (var conn = aRepo.getConnection()) {

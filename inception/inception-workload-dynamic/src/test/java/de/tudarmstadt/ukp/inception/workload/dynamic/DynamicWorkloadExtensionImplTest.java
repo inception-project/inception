@@ -25,7 +25,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -35,9 +35,9 @@ import javax.sql.DataSource;
 
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.util.CasCreationUtils;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -45,7 +45,8 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.util.FileSystemUtils;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
@@ -80,8 +81,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 @DataJpaTest(showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "workload.dynamic.enabled=true", //
-                "repository.path=" + DynamicWorkloadExtensionImplTest.TEST_OUTPUT_FOLDER })
+                "workload.dynamic.enabled=true" })
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //
         "de.tudarmstadt.ukp.clarin.webanno" })
@@ -100,7 +100,13 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
         DynamicWorkloadManagerAutoConfiguration.class })
 public class DynamicWorkloadExtensionImplTest
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/DynamicWorkloadExtensionImplTest";
+    static @TempDir Path tempFolder;
+
+    @DynamicPropertySource
+    static void registerDynamicProperties(DynamicPropertyRegistry registry)
+    {
+        registry.add("repository.path", () -> tempFolder.toAbsolutePath().toString());
+    }
 
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
@@ -113,12 +119,6 @@ public class DynamicWorkloadExtensionImplTest
     private User otherAnnotator;
     private Project project;
     private DynamicWorkloadTraits traits;
-
-    @BeforeAll
-    public static void setupClass()
-    {
-        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
-    }
 
     @BeforeEach
     public void setup() throws Exception

@@ -32,7 +32,6 @@ import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.TypeSystemUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
@@ -47,7 +46,6 @@ public class UimaJsonCasFormatSupport
 
     private final DocumentImportExportService documentImportExportService;
 
-    @Autowired
     public UimaJsonCasFormatSupport(DocumentImportExportService aDocumentImportExportService)
     {
         documentImportExportService = aDocumentImportExportService;

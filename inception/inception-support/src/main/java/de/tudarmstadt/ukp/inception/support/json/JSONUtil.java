@@ -34,8 +34,10 @@ import com.networknt.schema.dialect.Dialects;
 
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import tools.jackson.core.SerializableString;
+import tools.jackson.core.StreamReadConstraints;
 import tools.jackson.core.io.CharacterEscapes;
 import tools.jackson.core.io.SerializedString;
+import tools.jackson.core.json.JsonFactory;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.MapperFeature;
@@ -47,10 +49,16 @@ import tools.jackson.databind.node.ObjectNode;
 
 public class JSONUtil
 {
-    private static final ObjectMapper JSON_MAPPER;
+    private static final JsonMapper J3_MAPPER;
+    private static final com.fasterxml.jackson.databind.ObjectMapper J2_MAPPER;
 
     static {
-        JSON_MAPPER = JsonMapper.builder() //
+        var j3JsonFactory = JsonFactory.builder() //
+                .streamReadConstraints(StreamReadConstraints.builder() //
+                        .maxStringLength(250_000_000) //
+                        .build()) //
+                .build();
+        J3_MAPPER = JsonMapper.builder(j3JsonFactory) //
                 .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS) //
                 // .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY) //
                 .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES) //
@@ -59,10 +67,9 @@ public class JSONUtil
                 .disable(EnumFeature.WRITE_ENUMS_USING_TO_STRING) //
                 .enable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS) //
                 .build();
-    }
 
-    private static final JsonMapper J3_MAPPER = JsonMapper.builder().build();
-    private static final com.fasterxml.jackson.databind.ObjectMapper J2_MAPPER = new com.fasterxml.jackson.databind.ObjectMapper();
+        J2_MAPPER = new com.fasterxml.jackson.databind.ObjectMapper();
+    }
 
     public static com.fasterxml.jackson.databind.JsonNode adaptJackson3To2(JsonNode aNode)
     {
@@ -167,7 +174,7 @@ public class JSONUtil
 
     public static ObjectMapper getObjectMapper()
     {
-        return JSON_MAPPER;
+        return J3_MAPPER;
     }
 
     public static String toInterpretableJsonString(Object aObject) throws IOException

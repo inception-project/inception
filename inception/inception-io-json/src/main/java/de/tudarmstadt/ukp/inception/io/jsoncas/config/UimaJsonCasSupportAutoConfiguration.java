@@ -23,8 +23,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.io.jsoncas.LegacyUimaJsonFormatSupport;
 import de.tudarmstadt.ukp.inception.io.jsoncas.UimaJsonCasFormatSupport;
+import de.tudarmstadt.ukp.inception.io.jsoncas.UimaJsonCasStructureFormatSupport;
 
 @Configuration
 @EnableConfigurationProperties(LegacyUimaJsonCasFormatProperties.class)
@@ -46,5 +48,14 @@ public class UimaJsonCasSupportAutoConfiguration
             DocumentImportExportService aDocumentImportExportService)
     {
         return new UimaJsonCasFormatSupport(aDocumentImportExportService);
+    }
+
+    @ConditionalOnProperty(prefix = "format.json-cas-struct", name = "enabled", //
+            havingValue = "true", matchIfMissing = true)
+    @Bean
+    public UimaJsonCasStructureFormatSupport uimaJsonCasStructureFormatSupport(
+            DocumentService aDocumentService)
+    {
+        return new UimaJsonCasStructureFormatSupport(aDocumentService);
     }
 }

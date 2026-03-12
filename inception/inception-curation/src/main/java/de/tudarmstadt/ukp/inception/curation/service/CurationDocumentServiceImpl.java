@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.inception.curation.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 
 import java.io.IOException;
@@ -39,9 +42,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModification
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument_;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.curation.config.CurationProperties;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import jakarta.persistence.EntityManager;
@@ -55,6 +59,7 @@ import jakarta.persistence.EntityManager;
 public class CurationDocumentServiceImpl
     implements CurationDocumentService
 {
+    private final CurationProperties curationProperties;
     private final EntityManager entityManager;
     private final CasStorageService casStorageService;
     private final AnnotationSchemaService annotationService;
@@ -63,12 +68,13 @@ public class CurationDocumentServiceImpl
     @Autowired
     public CurationDocumentServiceImpl(CasStorageService aCasStorageService,
             AnnotationSchemaService aAnnotationService, ProjectService aProjectService,
-            EntityManager aEntityManager)
+            CurationProperties aCurationProperties, EntityManager aEntityManager)
     {
         casStorageService = aCasStorageService;
         annotationService = aAnnotationService;
         entityManager = aEntityManager;
         projectService = aProjectService;
+        curationProperties = aCurationProperties;
     }
 
     @Override
@@ -133,6 +139,17 @@ public class CurationDocumentServiceImpl
     @Transactional
     public List<SourceDocument> listCuratableSourceDocuments(Project aProject)
     {
+        if (curationProperties.isLegacyCuratableDocumentsStrategy()) {
+            return listCuratableSourceDocuments_legacy(aProject);
+        }
+        else {
+            return listCuratableSourceDocuments_new(aProject);
+        }
+    }
+
+    @Transactional
+    List<SourceDocument> listCuratableSourceDocuments_legacy(Project aProject)
+    {
         Validate.notNull(aProject, "Project must be specified");
 
         // Get all annotators in the project
@@ -142,7 +159,7 @@ public class CurationDocumentServiceImpl
             return new ArrayList<>();
         }
 
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "SELECT DISTINCT adoc.document", //
                 "FROM AnnotationDocument AS adoc", //
                 "WHERE adoc.project = :project", //
@@ -150,14 +167,33 @@ public class CurationDocumentServiceImpl
                 "AND (adoc.state = :state or adoc.annotatorState = :ignore)", //
                 "ORDER BY adoc.document.name");
 
-        List<SourceDocument> docs = entityManager.createQuery(query, SourceDocument.class) //
+        return entityManager.createQuery(query, SourceDocument.class) //
                 .setParameter("project", aProject) //
                 .setParameter("users", users.stream().map(User::getUsername).toList()) //
                 .setParameter("state", AnnotationDocumentState.FINISHED) //
                 .setParameter("ignore", AnnotationDocumentState.IGNORE) //
                 .getResultList();
+    }
 
-        return docs;
+    @Transactional
+    List<SourceDocument> listCuratableSourceDocuments_new(Project aProject)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createQuery(SourceDocument.class);
+        var sd = cq.from(SourceDocument.class);
+
+        cq.select(sd).distinct(true);
+
+        var projectPredicate = cb.equal(sd.get(SourceDocument_.project), aProject);
+        var statePredicate = sd.get(SourceDocument_.state).in(ANNOTATION_FINISHED,
+                CURATION_IN_PROGRESS, CURATION_FINISHED);
+
+        cq.where(cb.and(projectPredicate, statePredicate));
+        cq.orderBy(cb.asc(sd.get(SourceDocument_.name)));
+
+        return entityManager.createQuery(cq).getResultList();
     }
 
     @Override
@@ -187,8 +223,8 @@ public class CurationDocumentServiceImpl
                 "  state = :state");
 
         return entityManager.createQuery(query, SourceDocument.class)
-                .setParameter("project", aProject)
-                .setParameter("state", SourceDocumentState.CURATION_FINISHED).getResultList();
+                .setParameter("project", aProject).setParameter("state", CURATION_FINISHED)
+                .getResultList();
     }
 
     @Override
@@ -203,7 +239,7 @@ public class CurationDocumentServiceImpl
                 .setParameter("id", aDocument.getId()) //
                 .getSingleResult();
 
-        return SourceDocumentState.CURATION_FINISHED.equals(d.getState());
+        return CURATION_FINISHED.equals(d.getState());
     }
 
     @Override

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClientBuilder;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandle;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.exists;
 import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.isReachable;
@@ -39,6 +40,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -252,6 +254,8 @@ public class SPARQLQueryBuilderLocalTestScenarios
                         SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_withLanguage_FTS_3),
                 new Scenario("testWithLabelStartingWith_withLanguage_FTS_4",
                         SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_withLanguage_FTS_4),
+                new Scenario("testWithLabelStartingWith_withLanguage_FTS_5",
+                        SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_withLanguage_FTS_5),
                 new Scenario("testWithLabelStartingWith_withLanguage_noFTS",
                         SPARQLQueryBuilderLocalTestScenarios::testWithLabelStartingWith_withLanguage_noFTS),
                 new Scenario("testWithLabelContainingAnyOf_pets_ttl_noFTS",
@@ -467,9 +471,11 @@ public class SPARQLQueryBuilderLocalTestScenarios
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_MULTIPLE_LABELS);
 
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
         for (var term : asList("specimen", "sample", "instance", "case")) {
             var results = asHandles(aRepository, SPARQLQueryBuilder //
                     .forItems(aKB) //
+                    .withPrefLabelProperties(prefLabels) //
                     .withLabelMatchingAnyOf(term) //
                     .retrieveLabel());
 
@@ -507,9 +513,12 @@ public class SPARQLQueryBuilderLocalTestScenarios
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_ADDITIONAL_SEARCH_PROPERTIES);
 
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
         for (var term : asList("specimen", "sample", "instance", "case")) {
             var results = asHandles(aRepository, SPARQLQueryBuilder //
                     .forItems(aKB) //
+                    .withPrefLabelProperties(prefLabels) //
+                    .withAdditionalMatchingProperties(aKB.getAdditionalMatchingProperties()) //
                     .withLabelMatchingAnyOf(term) //
                     .retrieveLabel());
 
@@ -538,9 +547,12 @@ public class SPARQLQueryBuilderLocalTestScenarios
                 Pair.of("body structure", //
                         asList("Hand structure (body structure)", "Hand structure")));
 
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
         for (var queryPair : queriesWithMatchTerms) {
             var results = asHandles(aRepository, SPARQLQueryBuilder //
                     .forItems(aKB) //
+                    .withPrefLabelProperties(prefLabels) //
+                    .withAdditionalMatchingProperties(aKB.getAdditionalMatchingProperties()) //
                     .withLabelMatchingAnyOf(queryPair.getKey()) //
                     .retrieveLabel());
 
@@ -1031,8 +1043,10 @@ public class SPARQLQueryBuilderLocalTestScenarios
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
         var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelMatchingAnyOf("Gobli"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1063,9 +1077,11 @@ public class SPARQLQueryBuilderLocalTestScenarios
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
         var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .withFallbackLanguages("it", "fr") //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelMatchingAnyOf("Blue"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1084,8 +1100,10 @@ public class SPARQLQueryBuilderLocalTestScenarios
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
         var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelContainingAnyOf("Goblin"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1113,8 +1131,10 @@ public class SPARQLQueryBuilderLocalTestScenarios
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
         var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelMatchingExactlyAnyOf("Green Goblin"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1147,8 +1167,11 @@ public class SPARQLQueryBuilderLocalTestScenarios
 
         // The label "Green Goblin" is not assigned directly via rdfs:label but rather via a
         // subproperty of it. Thus, this test also checks if the label sub-property support works.
-        var results = asHandles(aRepository,
-                SPARQLQueryBuilder.forItems(aKB).withLabelMatchingExactlyAnyOf("Green Goblin"));
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
+        var results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forItems(aKB) //
+                .withPrefLabelProperties(prefLabels) //
+                .withLabelMatchingExactlyAnyOf("Green Goblin"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.equals("Green Goblin"));
@@ -1172,8 +1195,10 @@ public class SPARQLQueryBuilderLocalTestScenarios
     {
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_LABELS_WITHOUT_LANGUAGE);
 
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
         var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelStartingWith("Green"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1193,8 +1218,10 @@ public class SPARQLQueryBuilderLocalTestScenarios
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
         var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelStartingWith("Green Goblin"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1216,8 +1243,10 @@ public class SPARQLQueryBuilderLocalTestScenarios
 
         // Single word - actually, we add a wildcard here so anything that starts with "Green"
         // would also be matched
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
         var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelStartingWith("Green"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1239,8 +1268,10 @@ public class SPARQLQueryBuilderLocalTestScenarios
 
         // Two words with the second being very short - this is no problem for the LUCENE FTS
         // and we simply add a wildcard to match "Green Go*"
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
         var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelStartingWith("Green Go"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1263,8 +1294,10 @@ public class SPARQLQueryBuilderLocalTestScenarios
         // Two words with the second being very short and a space following - in this case we
         // assume that the user is in fact searching for "Barack Ob" and do either drop the
         // last element nor add a wildcard
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
         var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelStartingWith("Green Go "));
 
         assertThat(results).isEmpty();
@@ -1279,8 +1312,10 @@ public class SPARQLQueryBuilderLocalTestScenarios
 
         // Two words with the second being very short - this is no problem for the LUCENE FTS
         // and we simply add a wildcard to match "Green Go*"
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
         var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelStartingWith("Green     Go"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1293,6 +1328,41 @@ public class SPARQLQueryBuilderLocalTestScenarios
                         "Green Goblin", null, "en"));
     }
 
+    static void testWithLabelStartingWith_withLanguage_FTS_5(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
+    {
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
+
+        // language → expected UI label
+        var expectations = Map.of( //
+                "de", "Automobil", //
+                "en", "automobile", //
+                "fr", "automobile", //
+                "es", "automóvil", //
+                "it", "automobile", //
+                "pt", "automóvel", //
+                "nl", "auto");
+
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
+        expectations.forEach((language, expectedLabel) -> {
+            aKB.setDefaultLanguage(language);
+            aKB.setAdditionalLanguages(expectations.keySet().stream() //
+                    .filter(lang -> !language.equals(lang)) //
+                    .toList());
+
+            var results = asHandle(aRepository, SPARQLQueryBuilder //
+                    .forItems(aKB) //
+                    .withPrefLabelProperties(prefLabels) //
+                    .withLabelContainingAnyOf("auto"));
+
+            assertThat(results).as("Language: %s", language) //
+                    .extracting(KBHandle::getUiLabel) //
+                    .matches(expectedLabel::equals, "is equal to");
+        });
+    }
+
     static void testWithLabelStartingWith_OLIA(Repository aRepository, KnowledgeBase aKB)
         throws Exception
     {
@@ -1300,8 +1370,10 @@ public class SPARQLQueryBuilderLocalTestScenarios
 
         importDataFromFile(aRepository, aKB, "src/test/resources/data/penn.owl");
 
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
         var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forInstances(aKB) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelStartingWith("N"));
 
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
@@ -1318,8 +1390,10 @@ public class SPARQLQueryBuilderLocalTestScenarios
 
         importDataFromFile(aRepository, aKB, "src/test/resources/data/pets.ttl");
 
+        var prefLabels = resolvePrefLabelProperties(aRepository, aKB);
         var results = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
+                .withPrefLabelProperties(prefLabels) //
                 .withLabelContainingAnyOf("Socke"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1347,6 +1421,14 @@ public class SPARQLQueryBuilderLocalTestScenarios
 
         assertThat(results).extracting(KBHandle::getUiLabel).contains("Adjective position",
                 "Lexical domain", "Part of speech", "Phrase type", "Synset");
+    }
+
+    static Set<String> resolvePrefLabelProperties(Repository aRepository, KnowledgeBase aKB)
+        throws Exception
+    {
+        try (var conn = aRepository.getConnection()) {
+            return SPARQLQueryBuilder.forItems(aKB).resolvePrefLabelProperties(conn);
+        }
     }
 
     static void importDataFromFile(Repository aRepository, KnowledgeBase aKB, String aFilename)

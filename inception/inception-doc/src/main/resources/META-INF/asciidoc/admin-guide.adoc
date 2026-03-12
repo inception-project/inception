@@ -121,6 +121,8 @@ include::{include-dir}settings_dashboard.adoc[leveloffset=+1]
 
 include::{include-dir}settings_theming.adoc[leveloffset=+1]
 
+include::{include-dir}settings_keybindings.adoc[leveloffset=+1]
+
 include::{include-dir}settings_annotation-editor.adoc[leveloffset=+1]
 include::{include-dir}settings_annotation-editor_pdf.adoc[leveloffset=+2]
 include::{include-dir}settings_cross-layer-relations.adoc[leveloffset=+2]

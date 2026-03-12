@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import static java.util.Optional.empty;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -109,15 +111,14 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
             featureTraitsCache = new HashMap<>();
         }
 
-        Object trait = featureTraitsCache.computeIfAbsent(aFeature,
-                feature -> featureSupportRegistry.findExtension(feature).orElseThrow()
-                        .readTraits(feature));
+        var trait = featureTraitsCache.computeIfAbsent(aFeature, feature -> featureSupportRegistry
+                .findExtension(feature).orElseThrow().readTraits(feature));
 
         if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
             return Optional.of((T) trait);
         }
 
-        return Optional.empty();
+        return empty();
     }
 
     /**
@@ -137,14 +138,14 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
             layerTraitsCache = new HashMap<>();
         }
 
-        Object trait = layerTraitsCache.computeIfAbsent(aLayer,
+        var trait = layerTraitsCache.computeIfAbsent(aLayer,
                 feature -> layerSupportRegistry.getLayerSupport(feature).readTraits(feature));
 
         if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
             return Optional.of((T) trait);
         }
 
-        return Optional.empty();
+        return empty();
     }
 
     public static VID createEndpoint(RenderRequest aRequest, VDocument aVDocument,

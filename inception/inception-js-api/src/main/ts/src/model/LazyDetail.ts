@@ -16,6 +16,6 @@
  * limitations under the License.
  */
 export interface LazyDetail {
-  label: string
-  value: string
+    label: string;
+    value: string;
 }

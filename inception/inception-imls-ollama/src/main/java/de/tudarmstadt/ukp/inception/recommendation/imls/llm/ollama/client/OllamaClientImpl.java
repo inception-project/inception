@@ -205,16 +205,18 @@ public class OllamaClientImpl
                     finalResponse = response;
                 }
 
-                if (response.getMessage().thinking() != null) {
-                    thinking.append(response.getMessage().thinking());
-                }
+                if (response.getMessage() != null) {
+                    if (response.getMessage().thinking() != null) {
+                        thinking.append(response.getMessage().thinking());
+                    }
 
-                if (response.getMessage().content() != null) {
-                    content.append(response.getMessage().content());
-                }
+                    if (response.getMessage().content() != null) {
+                        content.append(response.getMessage().content());
+                    }
 
-                if (response.getMessage().toolCalls() != null) {
-                    toolCalls.addAll(response.getMessage().toolCalls());
+                    if (response.getMessage().toolCalls() != null) {
+                        toolCalls.addAll(response.getMessage().toolCalls());
+                    }
                 }
 
                 if (aCallback != null) {
@@ -229,7 +231,7 @@ public class OllamaClientImpl
 
         if (aRequest.isStream()) {
             finalResponse.setMessage(new OllamaChatMessage(finalResponse.getMessage().role(),
-                    content.toString().trim(), thinking.toString().trim(), null, toolCalls));
+                    content.toString().trim(), thinking.toString().trim(), toolCalls));
 
             if (LOG.isTraceEnabled()) {
                 var msg = new StringBuilder();

@@ -35,9 +35,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *            The content of the message.
  * @param thinking
  *            (for thinking models) the model's thinking process
- * @param toolName
- *            (optional): add the name of the tool that was executed to inform the model of the
- *            result
  * @param toolCalls
  *            (optional): a list of tools in JSON that the model wants to use
  */
@@ -46,16 +43,15 @@ public record OllamaChatMessage( //
         @JsonProperty("role") String role, //
         @JsonProperty("content") @JsonInclude(NON_NULL) String content, //
         @JsonProperty("thinking") @JsonInclude(NON_NULL) String thinking, //
-        @JsonProperty("tool_name") @JsonInclude(NON_NULL) String toolName, //
         @JsonProperty("tool_calls") @JsonInclude(NON_EMPTY) List<OllamaToolCall> toolCalls)
 {
     public OllamaChatMessage(String aRole, String aContent)
     {
-        this(aRole, aContent, null, null, emptyList());
+        this(aRole, aContent, null, emptyList());
     }
 
-    public OllamaChatMessage(String aRole, String aContent, String aThinking, String aTooName)
+    public OllamaChatMessage(String aRole, String aContent, String aThinking)
     {
-        this(aRole, aContent, aThinking, aTooName, emptyList());
+        this(aRole, aContent, aThinking, emptyList());
     }
 }

@@ -35,8 +35,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.UniqueConstraint;
 
 @Entity
@@ -50,19 +48,17 @@ public class ElgSession
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "project")
+    @JoinColumn(name = "project", nullable = false)
     private Project project;
 
     @Column(length = 64000)
     private String accessToken;
 
-    @Temporal(TemporalType.TIMESTAMP)
     private Date accessTokenValidUntil;
 
     @Column(length = 64000)
     private String refreshToken;
 
-    @Temporal(TemporalType.TIMESTAMP)
     private Date refreshTokenValidUntil;
 
     public ElgSession()

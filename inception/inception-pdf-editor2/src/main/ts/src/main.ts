@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { PdfAnnotationEditorFactory } from './PdfAnnotationEditorFactory'
+import { PdfAnnotationEditorFactory } from './PdfAnnotationEditorFactory';
 
-const INSTANCE = new PdfAnnotationEditorFactory()
+const INSTANCE = new PdfAnnotationEditorFactory();
 
-export function factory (): PdfAnnotationEditorFactory {
-  return INSTANCE
+export function factory(): PdfAnnotationEditorFactory {
+    return INSTANCE;
 }

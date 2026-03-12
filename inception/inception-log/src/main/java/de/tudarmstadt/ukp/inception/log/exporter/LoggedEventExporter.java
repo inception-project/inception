@@ -193,7 +193,7 @@ public class LoggedEventExporter
                 event.setProject(aProject.getId());
                 event.setUser(exportedEvent.getUser());
                 event.setEvent(exportedEvent.getEvent());
-                event.setCreated(exportedEvent.getCreated());
+                event.setCreated(exportedEvent.getCreated().toInstant());
                 event.setAnnotator(exportedEvent.getAnnotator());
                 event.setDetails(exportedEvent.getDetails());
 

@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
-import de.tudarmstadt.ukp.inception.pdfeditor2.format.PdfFormatSupport;
+import de.tudarmstadt.ukp.inception.io.pdf.PdfFormatSupport;
 import de.tudarmstadt.ukp.inception.pdfeditor2.resources.PdfAnnotationEditorCssResourceReference;
 import de.tudarmstadt.ukp.inception.pdfeditor2.resources.PdfAnnotationEditorJavascriptResourceReference;
 import de.tudarmstadt.ukp.inception.pdfeditor2.view.PdfDocumentIFrameView;

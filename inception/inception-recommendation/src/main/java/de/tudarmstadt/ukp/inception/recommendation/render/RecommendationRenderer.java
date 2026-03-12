@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportQuery;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
@@ -126,6 +127,23 @@ public class RecommendationRenderer
 
         var predictions = recommendationService.getPredictions(aRequest.getSessionOwner(),
                 aRequest.getProject());
+        if (predictions == null) {
+            return;
+        }
+
+        for (var preds : predictions.values()) {
+            render(aVDoc, aRequest, preds);
+        }
+    }
+
+    public void render(VDocument aVDoc, RenderRequest aRequest, Predictions predictions)
+    {
+        var cas = aRequest.getCas();
+
+        if (cas == null || recommendationService == null) {
+            return;
+        }
+
         if (predictions == null) {
             return;
         }

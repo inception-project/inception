@@ -48,7 +48,6 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
-import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 
 public class UndoPanel
     extends Panel
@@ -68,13 +67,13 @@ public class UndoPanel
         super(aId);
 
         queue(new LambdaAjaxLink("undo", this::actionUndo)
-                .add(new InputBehavior(keyBindings.getEditing().getUndo(), click))
+                .add(keyBindings.getEditing().getUndo().toInputBehavior(click))
                 .add(AttributeModifier.append("title",
                         () -> " ("
                                 + KeyBindingsUtil.formatShortcut(keyBindings.getEditing().getUndo())
                                 + ")")));
         queue(new LambdaAjaxLink("redo", this::actionRedo)
-                .add(new InputBehavior(keyBindings.getEditing().getRedo(), click))
+                .add(keyBindings.getEditing().getRedo().toInputBehavior(click))
                 .add(AttributeModifier.append("title",
                         () -> " ("
                                 + KeyBindingsUtil.formatShortcut(keyBindings.getEditing().getRedo())

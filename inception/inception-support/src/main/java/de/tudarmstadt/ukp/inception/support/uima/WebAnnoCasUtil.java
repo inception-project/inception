@@ -474,7 +474,7 @@ public class WebAnnoCasUtil
 
     public static FeatureStructure createDocumentMetadata(CAS aCas)
     {
-        Type type = getType(aCas, DocumentMetaData.class);
+        var type = getType(aCas, DocumentMetaData.class);
         FeatureStructure dmd;
         if (aCas.getDocumentText() != null) {
             dmd = aCas.createAnnotation(type, 0, aCas.getDocumentText().length());
@@ -484,7 +484,7 @@ public class WebAnnoCasUtil
         }
 
         // If there is already a DocumentAnnotation copy it's information and delete it
-        FeatureStructure da = aCas.getDocumentAnnotation();
+        var da = aCas.getDocumentAnnotation();
         if (da != null) {
             FSUtil.setFeature(dmd, FEATURE_BASE_NAME_LANGUAGE,
                     FSUtil.getFeature(da, FEATURE_BASE_NAME_LANGUAGE, String.class));
@@ -519,8 +519,8 @@ public class WebAnnoCasUtil
     public static void copyDocumentMetadata(CAS aSourceView, CAS aTargetView)
     {
         // First get the DMD then create. In case the get fails, we do not create.
-        FeatureStructure dmd = getDocumentMetadata(aSourceView);
-        FeatureStructure docMetaData = createDocumentMetadata(aTargetView);
+        var dmd = getDocumentMetadata(aSourceView);
+        var docMetaData = createDocumentMetadata(aTargetView);
         FSUtil.setFeature(docMetaData, "collectionId",
                 FSUtil.getFeature(dmd, "collectionId", String.class));
         FSUtil.setFeature(docMetaData, "documentBaseUri",

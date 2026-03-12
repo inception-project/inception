@@ -54,7 +54,7 @@ public class CurrentDateRetriever
         return asList(MTextMessage.builder() //
                 .withActor("Current date provider") //
                 .withRole(SYSTEM).internal().ephemeral() //
-                .withMessage("The current date is " + LocalDateTime.now(UTC).format(dtf)) //
+                .withContent("The current date is " + LocalDateTime.now(UTC).format(dtf)) //
                 .build());
     }
 }

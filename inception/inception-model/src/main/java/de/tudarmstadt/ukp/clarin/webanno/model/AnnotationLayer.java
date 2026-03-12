@@ -74,7 +74,7 @@ public class AnnotationLayer
 
     private boolean enabled = true;
 
-    @Column(name = "builtIn")
+    @Column(name = "builtIn", nullable = false)
     private boolean builtIn = false;
 
     private boolean readonly = false;
@@ -103,13 +103,13 @@ public class AnnotationLayer
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Project project;
 
-    @Column(name = "crossSentence")
+    @Column(name = "crossSentence", nullable = false)
     private boolean crossSentence;
 
-    @Column(name = "showTextInHover")
+    @Column(name = "showTextInHover", nullable = false)
     private boolean showTextInHover = true;
 
-    @Column(name = "linkedListBehavior")
+    @Column(name = "linkedListBehavior", nullable = false)
     private boolean linkedListBehavior;
 
     @Column(name = "anchoring_mode")
@@ -120,7 +120,7 @@ public class AnnotationLayer
     @Type(OverlapModeType.class)
     private OverlapMode overlapMode = OverlapMode.DEFAULT_OVERLAP_MODE;
 
-    @Column(name = "validation_mode")
+    @Column(name = "validation_mode", nullable = false)
     @Type(ValidationModeType.class)
     private ValidationMode validationMode = ValidationMode.DEFAULT_VALIDATION_MODE;
 

@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
-import static de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter.SpanOption.TRIM;
-
 import java.util.Set;
 
 import org.apache.uima.cas.CAS;
@@ -191,7 +189,7 @@ public class SegmentationUnitAdapter
             int oldBegin, int oldEnd, int newBegin, int newEnd)
     {
         aCas.removeFsFromIndexes(aAnnToBeRemoved);
-        spanAdapter.moveSpanAnnotation(aCas, aAnnToBeResized, newBegin, newEnd, TRIM);
+        spanAdapter.moveSpanAnnotation(aCas, aAnnToBeResized, newBegin, newEnd);
         spanAdapter.publishEvent(() -> new UnitMergedEvent(this, aDocument, aDocumentOwner,
                 spanAdapter.getLayer(), aAnnToBeResized, oldBegin, oldEnd, aAnnToBeRemoved));
     }
@@ -282,9 +280,8 @@ public class SegmentationUnitAdapter
                     "Splitting a unit may not create a zero-width unit.");
         }
 
-        var resizedUnit = spanAdapter.moveSpanAnnotation(cas, unit, headRange[0], headRange[1],
-                TRIM);
-        var newUnit = spanAdapter.createSpanAnnotation(cas, tailRange[0], tailRange[1], TRIM);
+        var resizedUnit = spanAdapter.moveSpanAnnotation(cas, unit, headRange[0], headRange[1]);
+        var newUnit = spanAdapter.createSpanAnnotation(cas, tailRange[0], tailRange[1]);
         spanAdapter.publishEvent(
                 () -> new UnitSplitEvent(this, aRequest.getDocument(), aRequest.getDocumentOwner(),
                         spanAdapter.getLayer(), resizedUnit, oldBegin, oldEnd, newUnit));
@@ -298,7 +295,7 @@ public class SegmentationUnitAdapter
         throws AnnotationException
     {
         var resizedUnit = ICasUtil.selectAnnotationByAddr(aCas, aResizedUnit.getId());
-        spanAdapter.moveSpanAnnotation(aCas, resizedUnit, aBegin, aEnd, TRIM);
+        spanAdapter.moveSpanAnnotation(aCas, resizedUnit, aBegin, aEnd);
         return spanAdapter.restore(aDocument, aDocumentOwner, aCas, aDeletedUnit);
     }
 
@@ -308,6 +305,6 @@ public class SegmentationUnitAdapter
     {
         spanAdapter.delete(aDocument, aDocumentOwner, aCas, aNewUnit);
         var resizedUnit = ICasUtil.selectAnnotationByAddr(aCas, aResizedUnit.getId());
-        return spanAdapter.moveSpanAnnotation(aCas, resizedUnit, aBegin, aEnd, TRIM);
+        return spanAdapter.moveSpanAnnotation(aCas, resizedUnit, aBegin, aEnd);
     }
 }

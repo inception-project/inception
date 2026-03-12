@@ -18,9 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.security.model;
 
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static jakarta.persistence.FetchType.EAGER;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.hibernate.annotations.CacheConcurrencyStrategy.READ_WRITE;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -30,7 +32,6 @@ import java.util.Set;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -43,14 +44,11 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
 /**
@@ -64,7 +62,7 @@ import jakarta.persistence.Transient;
 @Entity
 @Table(name = "users")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cache(usage = READ_WRITE)
 public class User
     implements Serializable
 {
@@ -85,26 +83,23 @@ public class User
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date lastLogin;
 
     @Column(nullable = true)
     private String email;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = EAGER)
     @CollectionTable(name = "authorities", joinColumns = {
             @JoinColumn(name = "username", referencedColumnName = "username") })
     @Column(nullable = true, name = "authority")
     @Enumerated(EnumType.STRING)
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    @Cache(usage = READ_WRITE)
     private Set<Role> roles = new HashSet<>();
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date created;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date updated;
 

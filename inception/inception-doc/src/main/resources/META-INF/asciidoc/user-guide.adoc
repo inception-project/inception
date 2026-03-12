@@ -86,8 +86,6 @@ include::{include-dir}statistics.adoc[leveloffset=+1]
 
 include::{include-dir}annotation_recommendation.adoc[leveloffset=+2]
 
-include::{include-dir}curation-sidebar.adoc[leveloffset=+2]
-
 include::{include-dir}annotation_activeLearning.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_concept-linking.adoc[leveloffset=+2]

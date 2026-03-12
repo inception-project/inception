@@ -48,7 +48,6 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
-import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
@@ -247,7 +246,14 @@ public class TestFixtures
             var status = con.getResponseCode();
 
             if (status == HTTP_MOVED_TEMP || status == HTTP_MOVED_PERM) {
-                String location = con.getHeaderField("Location");
+                // Strip any query string from the Location header before recursing: the server
+                // may echo back the ?query= parameter we sent, and appending it again in the
+                // recursive call would result in "Multiple 'query=' parameters" errors.
+                var location = con.getHeaderField("Location");
+                var qIdx = location.indexOf('?');
+                if (qIdx >= 0) {
+                    location = location.substring(0, qIdx);
+                }
                 return isReachable(location);
             }
         }
@@ -264,7 +270,7 @@ public class TestFixtures
         try (var conn = r.getConnection()) {
             var query = conn.prepareTupleQuery("SELECT ?v WHERE { BIND (true AS ?v)}");
             query.setMaxExecutionTime(5);
-            try (TupleQueryResult result = query.evaluate()) {
+            try (var result = query.evaluate()) {
                 return true;
             }
         }

@@ -265,9 +265,9 @@ public class KnowledgeBaseProfile
         try (var r = new InputStreamReader(
                 KnowledgeBaseProfile.class.getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML),
                 UTF_8)) {
-            var mapper =  YAMLMapper.builder() //
-                .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES) //
-                .build();
+            var mapper = YAMLMapper.builder() //
+                    .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES) //
+                    .build();
             return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
             {
             });

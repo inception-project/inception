@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.support.wicket;
 
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -32,6 +33,9 @@ public class ImageLink
     {
         super(aId, aUrl);
         ExternalLink link = new ExternalLink("link", aUrl);
+        // Open in new tab/window and avoid leaking window.opener
+        link.add(new AttributeAppender("target", "_blank"));
+        link.add(new AttributeAppender("rel", "noopener noreferrer"));
         link.add(new Image("image", aImageRes));
         add(link);
     }

@@ -38,8 +38,8 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 /**
  * Response for the {@code getDocument} command.
  */
-@JsonPropertyOrder({"action", "text", "windowBegin", "windowEnd", "entities", "args", 
-        "rtl_mode", "font_zoom", "sentence_number_offset", "token_offsets", "sentence_offsets"})
+@JsonPropertyOrder({ "action", "text", "windowBegin", "windowEnd", "entities", "args", "rtl_mode",
+        "font_zoom", "sentence_number_offset", "token_offsets", "sentence_offsets" })
 public class GetDocumentResponse
     extends AjaxResponse
 {

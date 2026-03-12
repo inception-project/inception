@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
-// The Bootstrap ".progress" class clashes with the ".progress" from the Wicketstuff progress bar 
+// The Bootstrap ".progress" class clashes with the ".progress" from the Wicketstuff progress bar
 .wicketstuff-progressbar {
-	.label {
-		background: none;
-	}
+    .label {
+        background: none;
+    }
 
-	.progress {
-		display: inline;
-		background-color: initial;
-	}
+    .progress {
+        display: inline;
+        background-color: initial;
+    }
 }

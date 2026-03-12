@@ -17,18 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.document.sidebar;
 
+import java.util.Map;
+
+import org.apache.wicket.model.Model;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
+import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
 
 public class DocumentMetadataSidebar
     extends AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = 2085197932148384096L;
+
+    private DiamAjaxBehavior diamBehavior;
 
     public DocumentMetadataSidebar(String aId, AnnotationActionHandler aActionHandler,
             CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
@@ -37,6 +44,24 @@ public class DocumentMetadataSidebar
 
         add(new DocumentMetadataAnnotationSelectionPanel("annotations", aCasProvider,
                 aAnnotationPage, aActionHandler));
+    }
+
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
+
+        add(diamBehavior = new DiamAjaxBehavior());
+        add(new SvelteBehavior());
+    }
+
+    @Override
+    protected void onConfigure()
+    {
+        super.onConfigure();
+
+        setDefaultModel(
+                Model.ofMap(Map.of("ajaxEndpointUrl", diamBehavior.getCallbackUrl().toString())));
     }
 
     @OnEvent

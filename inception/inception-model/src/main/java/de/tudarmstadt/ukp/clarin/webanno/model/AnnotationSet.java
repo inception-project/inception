@@ -20,13 +20,16 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import org.apache.commons.lang3.Validate;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-public record AnnotationSet(String id, String displayName) {
+public record AnnotationSet(String id, String displayName)
+    implements Serializable
+{
     public static final AnnotationSet EXPORT_SET = special("exportCas", "Export");
     public static final AnnotationSet PREDICTION_SET = special("predictionCas", "Prediction");
     public static final AnnotationSet INITIAL_SET = special(INITIAL_CAS_PSEUDO_USER, "Source");

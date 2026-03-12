@@ -19,17 +19,20 @@ import AssistantPanel from './AssistantPanel.svelte';
 import { mount, unmount } from 'svelte';
 
 export default class AssistantPanelFactory {
-  static instance: any;
+    static instance: any;
 
-  constructor(args: any) {
-    AssistantPanelFactory.instance = mount(AssistantPanel, { target: args.target, props: args.props });
-  }
-
-  $destroy() {
-    const i = AssistantPanelFactory.instance;
-    if (i) {
-      unmount(i)
-      AssistantPanelFactory.instance = null;
+    constructor(args: any) {
+        AssistantPanelFactory.instance = mount(AssistantPanel, {
+            target: args.target,
+            props: args.props,
+        });
     }
-  }
+
+    $destroy() {
+        const i = AssistantPanelFactory.instance;
+        if (i) {
+            unmount(i);
+            AssistantPanelFactory.instance = null;
+        }
+    }
 }

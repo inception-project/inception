@@ -16,51 +16,57 @@
   limitations under the License.
 -->
 <script lang="ts">
-  import type { DiamAjax } from '@inception-project/inception-js-api';
-  import { annotatorState } from './RecogitoEditorState.svelte'
-  import { createEventDispatcher } from 'svelte'
+    import type { DiamAjax } from '@inception-project/inception-js-api';
+    import { annotatorState } from './RecogitoEditorState.svelte';
+    import { createEventDispatcher } from 'svelte';
 
-  interface Props {
-    ajax: DiamAjax;
-    userPreferencesKey: string;
-  }
-
-  let { ajax, userPreferencesKey }: Props = $props();
-
-  let dispatch = createEventDispatcher()
-
-  const defaultPreferences = {
-      showLabels: false
+    interface Props {
+        ajax: DiamAjax;
+        userPreferencesKey: string;
     }
 
-    $effect(() => { 
-      annotatorState.showLabels;
-      savePreferences()
-      dispatch('renderingPreferencesChanged', {});
+    let { ajax, userPreferencesKey }: Props = $props();
+
+    let dispatch = createEventDispatcher();
+
+    const defaultPreferences = {
+        showLabels: false,
+    };
+
+    $effect(() => {
+        annotatorState.showLabels;
+        savePreferences();
+        dispatch('renderingPreferencesChanged', {});
     });
 
     function savePreferences() {
-      ajax.savePreferences(userPreferencesKey, {
-        showLabels: annotatorState.showLabels
-      });
+        ajax.savePreferences(userPreferencesKey, {
+            showLabels: annotatorState.showLabels,
+        });
     }
 </script>
 
 <div class="bootstrap card card-header border-0 border-bottom rounded-0 p-1" role="toolbar">
-  <div class="d-flex">
-    <div class="form-check form-switch mx-2">
-      <input class="form-check-input" type="checkbox" role="switch" id="inlineLabelsEnabled" bind:checked={annotatorState.showLabels}>
-      <label class="form-check-label" for="inlineLabelsEnabled">Labels</label>
+    <div class="d-flex">
+        <div class="form-check form-switch mx-2">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="inlineLabelsEnabled"
+                bind:checked={annotatorState.showLabels}
+            />
+            <label class="form-check-label" for="inlineLabelsEnabled">Labels</label>
+        </div>
     </div>
-  </div>
 </div>
 
 <!-- svelte-ignore css-unused-selector -->
 <style lang="scss">
-  @import '../../node_modules/bootstrap/scss/bootstrap.scss';
+    @import '../../node_modules/bootstrap/scss/bootstrap.scss';
 
-  .bootstrap {
-    // Ensure that Bootstrap properly applies to the component
-    @extend body
-  }
+    .bootstrap {
+        // Ensure that Bootstrap properly applies to the component
+        @extend body;
+    }
 </style>

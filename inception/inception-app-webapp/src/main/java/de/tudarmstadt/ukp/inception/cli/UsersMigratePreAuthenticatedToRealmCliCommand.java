@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.cli;
 import static com.nimbusds.oauth2.sdk.util.CollectionUtils.contains;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getPropApplicationHome;
-import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
-import static org.apache.commons.lang3.ArrayUtils.contains;
 
 import java.util.concurrent.Callable;
 
@@ -71,7 +69,7 @@ public class UsersMigratePreAuthenticatedToRealmCliCommand
     @Override
     public Integer call() throws Exception
     {
-        if (!contains(environment.getActiveProfiles(), PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)) {
+        if (!"preauth".equals(environment.getProperty("auth.mode"))) {
             LOG.error(
                     "This command is only intended for instances using external preauthentication!");
             LOG.error("If you are sure your instance is using external preauthentication, please "

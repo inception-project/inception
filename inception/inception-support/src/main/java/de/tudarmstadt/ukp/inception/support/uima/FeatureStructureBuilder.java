@@ -33,6 +33,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.JCas;
 
 public class FeatureStructureBuilder<T extends FeatureStructure>
 {
@@ -139,6 +140,11 @@ public class FeatureStructureBuilder<T extends FeatureStructure>
         catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             throw new IllegalArgumentException("Cannot set feature [" + aName + "]", e);
         }
+    }
+
+    public static FeatureStructureBuilder<FeatureStructure> buildFS(JCas aJCas, String aType)
+    {
+        return buildFS(aJCas.getCas(), aType);
     }
 
     public static FeatureStructureBuilder<FeatureStructure> buildFS(CAS aCas, String aType)

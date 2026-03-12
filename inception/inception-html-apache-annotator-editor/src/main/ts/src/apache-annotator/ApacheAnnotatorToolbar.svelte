@@ -16,109 +16,133 @@
   limitations under the License.
 -->
 <script lang="ts">
-  import type { DiamAjax } from '@inception-project/inception-js-api';
-  import { annotatorState } from './ApacheAnnotatorState.svelte'
-  import { createEventDispatcher } from 'svelte'
+    import type { DiamAjax } from '@inception-project/inception-js-api';
+    import { annotatorState } from './ApacheAnnotatorState.svelte';
+    import { createEventDispatcher } from 'svelte';
 
-  interface Props {
-    ajax: DiamAjax;
-    userPreferencesKey: string;
-    sectionSelector: string;
-  }
-
-  let { ajax, userPreferencesKey, sectionSelector }: Props = $props();
-
-  let dispatch = createEventDispatcher()
-
-  const defaultPreferences = {
-    showLabels: false,
-    showAggregatedLabels: true,
-    showEmptyHighlights: false,
-    showDocumentStructure: false,
-    showImages: true,
-    showTables: true,
-    documentStructureWidth: 0.2,
-  }
-
-  $effect(() => {
-    annotatorState.showDocumentStructure;
-    annotatorState.documentStructureWidth;
-    savePreferences()
-    dispatch('documentStructurePreferencesChanged', {});
-  });
-
-  $effect(() => {
-    annotatorState.showImages;
-    annotatorState.showTables;
-    savePreferences()
-    dispatch('cssRenderingPreferencesChanged', {});
-  });
-
-  $effect(() => {
-    annotatorState.showLabels;
-    annotatorState.showAggregatedLabels;
-    annotatorState.showEmptyHighlights;
-    savePreferences()
-    dispatch('renderingPreferencesChanged', {});
-  });
-
-  let preferencesDebounceTimeout: number | undefined = undefined
-
-  function savePreferences() {
-    if (preferencesDebounceTimeout) {
-      window.clearTimeout(preferencesDebounceTimeout)
-      preferencesDebounceTimeout = undefined
+    interface Props {
+        ajax: DiamAjax;
+        userPreferencesKey: string;
+        sectionSelector: string;
     }
-    preferencesDebounceTimeout = window.setTimeout(() => { 
-      console.log("Saved preferences")
-      ajax.savePreferences(userPreferencesKey, {
-        showLabels: annotatorState.showLabels,
-        showAggregatedLabels: annotatorState.showAggregatedLabels,
-        showEmptyHighlights: annotatorState.showEmptyHighlights,
-        showDocumentStructure: annotatorState.showDocumentStructure,
-        showImages: annotatorState.showImages,
-        showTables: annotatorState.showTables,
-        documentStructureWidth: annotatorState.documentStructureWidth
-      });
-    }, 250)
-  }
+
+    let { ajax, userPreferencesKey, sectionSelector }: Props = $props();
+
+    let dispatch = createEventDispatcher();
+
+    const defaultPreferences = {
+        showLabels: false,
+        showAggregatedLabels: true,
+        showEmptyHighlights: false,
+        showDocumentStructure: false,
+        showImages: true,
+        showTables: true,
+        documentStructureWidth: 0.2,
+    };
+
+    $effect(() => {
+        annotatorState.showDocumentStructure;
+        annotatorState.documentStructureWidth;
+        savePreferences();
+        dispatch('documentStructurePreferencesChanged', {});
+    });
+
+    $effect(() => {
+        annotatorState.showImages;
+        annotatorState.showTables;
+        savePreferences();
+        dispatch('cssRenderingPreferencesChanged', {});
+    });
+
+    $effect(() => {
+        annotatorState.showLabels;
+        annotatorState.showAggregatedLabels;
+        annotatorState.showEmptyHighlights;
+        savePreferences();
+        dispatch('renderingPreferencesChanged', {});
+    });
+
+    let preferencesDebounceTimeout: number | undefined = undefined;
+
+    function savePreferences() {
+        if (preferencesDebounceTimeout) {
+            window.clearTimeout(preferencesDebounceTimeout);
+            preferencesDebounceTimeout = undefined;
+        }
+        preferencesDebounceTimeout = window.setTimeout(() => {
+            console.log('Saved preferences');
+            ajax.savePreferences(userPreferencesKey, {
+                showLabels: annotatorState.showLabels,
+                showAggregatedLabels: annotatorState.showAggregatedLabels,
+                showEmptyHighlights: annotatorState.showEmptyHighlights,
+                showDocumentStructure: annotatorState.showDocumentStructure,
+                showImages: annotatorState.showImages,
+                showTables: annotatorState.showTables,
+                documentStructureWidth: annotatorState.documentStructureWidth,
+            });
+        }, 250);
+    }
 </script>
 
 <div class="bootstrap card card-header border-0 border-bottom rounded-0 p-1" role="toolbar">
-  <div class="d-flex align-items-center">
-    <div class="form-check form-switch mx-2">
-      <input class="form-check-input" type="checkbox" role="switch" id="inlineLabelsEnabled" bind:checked={annotatorState.showLabels}>
-      <label class="form-check-label" for="inlineLabelsEnabled">Inline labels</label>
-    </div>
-    {#if sectionSelector}
-      <div class="form-check form-switch mx-2">
-        <input class="form-check-input" type="checkbox" role="switch" id="aggregatedLabelsEnabled" bind:checked={annotatorState.showAggregatedLabels}>
-        <label class="form-check-label" for="aggregatedLabelsEnabled">Section labels</label>
-      </div>
-    {/if}
-    <!--
+    <div class="d-flex align-items-center">
+        <div class="form-check form-switch mx-2">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="inlineLabelsEnabled"
+                bind:checked={annotatorState.showLabels}
+            />
+            <label class="form-check-label" for="inlineLabelsEnabled">Inline labels</label>
+        </div>
+        {#if sectionSelector}
+            <div class="form-check form-switch mx-2">
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    id="aggregatedLabelsEnabled"
+                    bind:checked={annotatorState.showAggregatedLabels}
+                />
+                <label class="form-check-label" for="aggregatedLabelsEnabled">Section labels</label>
+            </div>
+        {/if}
+        <!--
     <div class="form-check form-switch mx-2">
       <input class="form-check-input" type="checkbox" role="switch" id="showEmptyHighlights" bind:checked={annotatorState.showEmptyHighlights}>
       <label class="form-check-label" for="showEmptyHighlights">Empties</label>
     </div>
     -->
-    <div class="form-check form-switch mx-2">
-      <input class="form-check-input" type="checkbox" role="switch" id="imagesEnabled" bind:checked={annotatorState.showImages}>
-      <label class="form-check-label" for="imagesEnabled">Images</label>
+        <div class="form-check form-switch mx-2">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="imagesEnabled"
+                bind:checked={annotatorState.showImages}
+            />
+            <label class="form-check-label" for="imagesEnabled">Images</label>
+        </div>
+        <div class="form-check form-switch mx-2">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="tablesEnabled"
+                bind:checked={annotatorState.showTables}
+            />
+            <label class="form-check-label" for="tablesEnabled">Tables</label>
+        </div>
     </div>
-    <div class="form-check form-switch mx-2">
-      <input class="form-check-input" type="checkbox" role="switch" id="tablesEnabled" bind:checked={annotatorState.showTables}>
-      <label class="form-check-label" for="tablesEnabled">Tables</label>
-    </div>
-  </div>
 </div>
 
 <!-- svelte-ignore css_unused_selector -->
 <style lang="scss">
-  @import '../../node_modules/bootstrap/scss/bootstrap.scss';
+    @import '../../node_modules/bootstrap/scss/bootstrap.scss';
 
-  .bootstrap {
-    // Ensure that Bootstrap properly applies to the component
-    @extend body
-  }
+    .bootstrap {
+        // Ensure that Bootstrap properly applies to the component
+        @extend body;
+    }
 </style>

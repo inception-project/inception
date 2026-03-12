@@ -38,7 +38,6 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 
 import java.util.Collection;
@@ -180,8 +179,8 @@ public class CasMergeRemergeTest
 
         result = doDiff(diffAdapters, casByUser).toResult();
 
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
+        assertThat(result.getDifferingConfigurationSets()).isEmpty();
+        assertThat(result.getIncompleteConfigurationSets()).isEmpty();
         assertThat(calculateState(result)).isEqualTo(AGREE);
     }
 

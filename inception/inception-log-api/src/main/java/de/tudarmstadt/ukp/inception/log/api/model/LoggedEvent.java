@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.log.api.model;
 
-import java.util.Date;
+import java.time.Instant;
 
 public interface LoggedEvent
 {
-    Date getCreated();
+    Instant getCreated();
 
     long getProject();
 

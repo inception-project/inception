@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.assistant.model;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static java.util.Collections.emptyList;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  *            fragments with the same ID
  * @param done
  *            when streaming indicates if the fragment is the last fragment of the message
- * @param message
+ * @param content
  *            the message or message fragment
  * @param thinking
  *            the thoughts or though fragment
@@ -55,6 +56,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  *            optional performance metrics
  * @param references
  *            optional list of references
+ * @param toolCalls
+ *            optional list of tool calls
  * @param context
  *            ID of a previous message this message relates to. The message should be rendered after
  *            the context message.
@@ -65,13 +68,15 @@ public record MTextMessage( //
         UUID id, //
         String role, //
         String actor, //
-        @JsonInclude(NON_NULL) String message, //
+        @JsonInclude(NON_NULL) String content, //
         @JsonInclude(NON_NULL) String thinking, //
+        @JsonInclude(NON_NULL) String thinkingSummary, //
         boolean done, //
         boolean internal, //
         boolean ephemeral, //
         MPerformanceMetrics performance, //
         List<MReference> references, //
+        List<MToolCall> toolCalls, //
         @JsonInclude(NON_NULL) UUID context)//
     implements MChatMessage
 {
@@ -79,9 +84,10 @@ public record MTextMessage( //
 
     private MTextMessage(Builder aBuilder)
     {
-        this(aBuilder.id, aBuilder.role, aBuilder.actor, aBuilder.message, aBuilder.thinking,
-                aBuilder.done, aBuilder.internal, aBuilder.ephemeral, aBuilder.performance,
-                aBuilder.references.values().stream().toList(), aBuilder.context);
+        this(aBuilder.id, aBuilder.role, aBuilder.actor, aBuilder.content, aBuilder.thinking,
+                aBuilder.thinkingSummary, aBuilder.done, aBuilder.internal, aBuilder.ephemeral,
+                aBuilder.performance, aBuilder.references.values().stream().toList(),
+                aBuilder.toolCalls, aBuilder.context);
     }
 
     public MTextMessage append(MTextMessage aMessage)
@@ -111,11 +117,11 @@ public record MTextMessage( //
         }
 
         var msg = new StringBuilder();
-        if (message() != null) {
-            msg.append(message());
+        if (content() != null) {
+            msg.append(content());
         }
-        if (aMessage.message() != null) {
-            msg.append(aMessage.message());
+        if (aMessage.content() != null) {
+            msg.append(aMessage.content());
         }
 
         var tnk = new StringBuilder();
@@ -126,9 +132,17 @@ public record MTextMessage( //
             tnk.append(aMessage.thinking());
         }
 
+        var tnkSum = new StringBuilder();
+        if (thinkingSummary() != null) {
+            tnkSum.append(thinkingSummary());
+        }
+        if (aMessage.thinkingSummary() != null) {
+            tnkSum.append(aMessage.thinkingSummary());
+        }
+
         return new MTextMessage(id(), role(), actor(), msg.toString(), tnk.toString(),
-                aMessage.done(), internal(), ephemeral(), perf, refs.values().stream().toList(),
-                context());
+                tnkSum.toString(), aMessage.done(), internal(), ephemeral(), perf,
+                refs.values().stream().toList(), toolCalls(), context());
     }
 
     public MTextMessage appendReferences(List<MReference> aReferences)
@@ -143,14 +157,22 @@ public record MTextMessage( //
         }
         aReferences.forEach(r -> refs.put(r.id(), r));
 
-        return new MTextMessage(id(), role(), actor(), message(), thinking(), done(), internal(),
-                ephemeral(), performance(), refs.values().stream().toList(), context());
+        return new MTextMessage(id(), role(), actor(), content(), thinking(), thinkingSummary(),
+                done(), internal(), ephemeral(), performance(), refs.values().stream().toList(),
+                toolCalls(), context());
+    }
+
+    public MTextMessage withThinkingSummary(String aThinkingSummary)
+    {
+        return new MTextMessage(id(), role(), actor(), content(), thinking(), aThinkingSummary,
+                done(), internal(), ephemeral(), performance(), references(), toolCalls(),
+                context());
     }
 
     public MTextMessage withoutContent()
     {
-        return new MTextMessage(id(), role(), actor(), "", "", done(), internal(), ephemeral(),
-                performance(), emptyList(), context());
+        return new MTextMessage(id(), role(), actor(), "", "", thinkingSummary(), done(),
+                internal(), ephemeral(), performance(), emptyList(), toolCalls(), context());
     }
 
     @JsonProperty(MMessage.TYPE_FIELD)
@@ -162,7 +184,7 @@ public record MTextMessage( //
     @Override
     public String textRepresentation()
     {
-        return message;
+        return content;
     }
 
     public static Builder builder()
@@ -175,13 +197,15 @@ public record MTextMessage( //
         private UUID id;
         private String actor;
         private String role;
-        private String message;
+        private String content;
         private String thinking;
+        private String thinkingSummary;
         private boolean done = true;
         private boolean internal = false;
         private boolean ephemeral = false;
         private MPerformanceMetrics performance;
         private Map<String, MReference> references = new LinkedHashMap<>();
+        private List<MToolCall> toolCalls = new ArrayList<>();
         private UUID context;
 
         private Builder()
@@ -236,15 +260,21 @@ public record MTextMessage( //
             return this;
         }
 
-        public Builder withMessage(String aMessage)
+        public Builder withContent(String aContent)
         {
-            message = aMessage;
+            content = aContent;
             return this;
         }
 
         public Builder withThinking(String aThinking)
         {
             thinking = aThinking;
+            return this;
+        }
+
+        public Builder withThinkingSummary(String aThinkingSummary)
+        {
+            thinkingSummary = aThinkingSummary;
             return this;
         }
 
@@ -270,6 +300,15 @@ public record MTextMessage( //
                 for (var ref : aReferences) {
                     references.put(ref.id(), ref);
                 }
+            }
+            return this;
+        }
+
+        public Builder withToolCalls(List<MToolCall> aToolCalls)
+        {
+            toolCalls.clear();
+            if (aToolCalls != null) {
+                toolCalls.addAll(aToolCalls);
             }
             return this;
         }

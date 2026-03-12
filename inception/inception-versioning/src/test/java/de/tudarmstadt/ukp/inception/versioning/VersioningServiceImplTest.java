@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,9 +36,9 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -46,7 +47,8 @@ import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.util.FileSystemUtils;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
@@ -74,7 +76,6 @@ import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfi
         showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "repository.path=" + VersioningServiceImplTest.TEST_OUTPUT_FOLDER, //
                 "versioning.enabled=true", //
                 "debug.cas-doctor.force-release-behavior=true", //
                 "document-import.run-cas-doctor-on-import=OFF" })
@@ -99,7 +100,13 @@ import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfi
         SecurityAutoConfiguration.class })
 public class VersioningServiceImplTest
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/VersioningServiceImplTest";
+    static @TempDir Path tempFolder;
+
+    @DynamicPropertySource
+    static void registerDynamicProperties(DynamicPropertyRegistry registry)
+    {
+        registry.add("repository.path", () -> tempFolder.toAbsolutePath().toString());
+    }
 
     private @Autowired VersioningService sut;
     private @Autowired TestEntityManager testEntityManager;
@@ -108,12 +115,6 @@ public class VersioningServiceImplTest
     private @Autowired DocumentService documentService;
 
     private Project testProject;
-
-    @BeforeAll
-    public static void setupClass()
-    {
-        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
-    }
 
     @BeforeEach
     public void setUp()
@@ -154,8 +155,8 @@ public class VersioningServiceImplTest
     {
         createProject(testProject);
 
-        User admin = createAdmin();
-        User annotator = createAnnotator();
+        var admin = createAdmin();
+        var annotator = createAnnotator();
 
         uploadDocuments();
 
@@ -164,7 +165,7 @@ public class VersioningServiceImplTest
 
         sut.snapshotCompleteProject(testProject, "Test snapshotting");
 
-        File repoDir = sut.getRepoDir(testProject);
+        var repoDir = sut.getRepoDir(testProject);
 
         // Check commit
         Git git = Git.open(repoDir);
@@ -180,13 +181,14 @@ public class VersioningServiceImplTest
         assertThat(commit.getAuthorIdent().getEmailAddress()).isEqualTo("admin@inception");
 
         // Check repo contents
-        TreeWalk treeWalk = new TreeWalk(git.getRepository());
-        treeWalk.addTree(commit.getTree());
-        treeWalk.setRecursive(true);
-
         List<String> documents = new ArrayList<>();
-        while (treeWalk.next()) {
-            documents.add(treeWalk.getPathString());
+        try (var treeWalk = new TreeWalk(git.getRepository())) {
+            treeWalk.addTree(commit.getTree());
+            treeWalk.setRecursive(true);
+
+            while (treeWalk.next()) {
+                documents.add(treeWalk.getPathString());
+            }
         }
 
         assertThat(documents).containsExactlyInAnyOrder( //
@@ -211,36 +213,37 @@ public class VersioningServiceImplTest
     public void pushingRepository_WithLocalRemote_ShouldPushFiles() throws Exception
     {
         createProject(testProject);
-        User admin = createAdmin();
+        var admin = createAdmin();
         uploadDocuments();
         createAnnotationDocuments(admin);
 
-        File remoteDir = Files.createTempDirectory("remote").toFile();
-        Git remoteGit = Git.init().setDirectory(remoteDir).setBare(true).call();
+        var remoteDir = Files.createTempDirectory("remote").toFile();
+        var remoteGit = Git.init().setDirectory(remoteDir).setBare(true).call();
 
         sut.snapshotCompleteProject(testProject, "Test snapshotting");
         sut.setRemote(testProject, remoteDir.getAbsolutePath());
         sut.pushToOrigin(testProject);
 
         // Check commit
-        List<RevCommit> commits = StreamSupport.stream(remoteGit.log() //
+        var commits = StreamSupport.stream(remoteGit.log() //
                 .call().spliterator(), false) //
                 .collect(Collectors.toList());
         assertThat(commits).hasSize(1);
 
-        RevCommit commit = commits.get(0);
+        var commit = commits.get(0);
         assertThat(commit.getFullMessage()).isEqualTo("Test snapshotting");
         assertThat(commit.getAuthorIdent().getName()).isEqualTo("admin");
         assertThat(commit.getAuthorIdent().getEmailAddress()).isEqualTo("admin@inception");
 
         // Check remote repo contents
-        TreeWalk treeWalk = new TreeWalk(remoteGit.getRepository());
-        treeWalk.addTree(commit.getTree());
-        treeWalk.setRecursive(true);
+        var remoteFiles = new ArrayList<String>();
+        try (var treeWalk = new TreeWalk(remoteGit.getRepository())) {
+            treeWalk.addTree(commit.getTree());
+            treeWalk.setRecursive(true);
 
-        List<String> remoteFiles = new ArrayList<>();
-        while (treeWalk.next()) {
-            remoteFiles.add(treeWalk.getPathString());
+            while (treeWalk.next()) {
+                remoteFiles.add(treeWalk.getPathString());
+            }
         }
         assertThat(remoteFiles).containsExactlyInAnyOrder( //
                 "layers.json", //
@@ -330,8 +333,8 @@ public class VersioningServiceImplTest
     private void uploadDocuments() throws Exception
     {
 
-        File doc1 = getResource("docs/dinos.txt");
-        File doc2 = getResource("docs/lorem.txt");
+        var doc1 = getResource("docs/dinos.txt");
+        var doc2 = getResource("docs/lorem.txt");
 
         try (var session = CasStorageSession.open()) {
             try (var is = Files.newInputStream(doc1.toPath())) {
