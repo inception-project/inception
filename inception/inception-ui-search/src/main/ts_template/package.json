@@ -13,7 +13,9 @@
   },
   "external": {},
   "overrides": {
-    "minimatch": "${minimatch.version}"
+    "minimatch": "${minimatch.version}",
+    "immutable": "${immutable.version}",
+    "undici": "${undici.version}"
   },
   "devDependencies": {
     "eslint": "${eslint.version}",
