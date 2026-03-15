@@ -75,4 +75,10 @@ This cache can be tuned using the following properties:
 | Time for an exclusive action to wait for another exclusive action to finish
 | `3m`
 | `5m`
+
+| `cas-storage.cache.trace-access`
+| Whether to capture and record the stack trace each time a CAS is checked out from the exclusive pool so it can be
+  included in diagnostics when errors occur. Capturing a stack trace on every checkout adds noticeable overhead!
+| `false`
+| `true`
 |===

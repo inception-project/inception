@@ -30,15 +30,25 @@ import org.apache.uima.cas.CAS;
 public class CasHolder
 {
     private final CasKey key;
+    private final Exception exception;
 
     private CAS cas;
-    private Exception exception;
     private boolean typeSystemOutdated = false;
     private boolean deleted = false;
+
+    // Transient runtime owner information (set when the holder is handed out by the pool)
+    private transient volatile long ownerThreadId = -1L;
+    private transient volatile String ownerThreadName;
+    private transient volatile long ownerSinceMillis = 0L;
+    private transient volatile StackTraceElement[] ownerStackTrace;
+
+    // Toggle capturing stack traces for owners (disabled by default because of overhead)
+    private static volatile boolean traceAccessEnabled = false;
 
     public CasHolder(CasKey aKey)
     {
         key = aKey;
+        exception = null;
     }
 
     public CasHolder(CasKey aKey, Exception aException)
@@ -84,11 +94,6 @@ public class CasHolder
     public Exception getException()
     {
         return exception;
-    }
-
-    public void setException(Exception aException)
-    {
-        exception = aException;
     }
 
     public synchronized boolean isTypeSystemOutdated()
@@ -137,14 +142,79 @@ public class CasHolder
         }
     }
 
+    public synchronized void setOwner(Thread aThread)
+    {
+        if (aThread == null) {
+            ownerThreadId = -1L;
+            ownerThreadName = null;
+            ownerSinceMillis = 0L;
+            ownerStackTrace = null;
+        }
+        else {
+            ownerThreadId = aThread.threadId();
+            ownerThreadName = aThread.getName();
+            ownerSinceMillis = System.currentTimeMillis();
+            if (traceAccessEnabled) {
+                try {
+                    ownerStackTrace = aThread.getStackTrace();
+                }
+                catch (Throwable t) {
+                    ownerStackTrace = null;
+                }
+            }
+            else {
+                ownerStackTrace = null;
+            }
+        }
+    }
+
+    public synchronized void clearOwner()
+    {
+        ownerThreadId = -1L;
+        ownerThreadName = null;
+        ownerSinceMillis = 0L;
+        ownerStackTrace = null;
+    }
+
+    public long getOwnerThreadId()
+    {
+        return ownerThreadId;
+    }
+
+    public String getOwnerThreadName()
+    {
+        return ownerThreadName;
+    }
+
+    public long getOwnerSinceMillis()
+    {
+        return ownerSinceMillis;
+    }
+
+    public StackTraceElement[] getOwnerStackTrace()
+    {
+        return ownerStackTrace;
+    }
+
+    public static void setTraceAccessEnabled(boolean aEnabled)
+    {
+        traceAccessEnabled = aEnabled;
+    }
+
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this, SHORT_PREFIX_STYLE).append("key", key)
+        var tb = new ToStringBuilder(this, SHORT_PREFIX_STYLE).append("key", key)
                 .append("cas", getCasHashCode()) //
                 .append("deleted", deleted) //
-                .append("typeSystemOutdated", typeSystemOutdated) //
-                .toString();
+                .append("typeSystemOutdated", typeSystemOutdated);
+
+        if (ownerThreadId > 0) {
+            tb.append("owner", ownerThreadName + "(" + ownerThreadId + ")").append("ownerSince",
+                    ownerSinceMillis);
+        }
+
+        return tb.toString();
     }
 
 }

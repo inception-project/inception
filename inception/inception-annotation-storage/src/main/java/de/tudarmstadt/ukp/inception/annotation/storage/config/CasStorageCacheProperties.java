@@ -44,4 +44,12 @@ public interface CasStorageCacheProperties
      * @return number of CAS instances that should be kept in memory for shared-read-only access.
      */
     long getSharedCasCacheSize();
+
+    /**
+     * @return whether access to CASes in the cache should be traced by capturing stack traces; this
+     *         is useful for debugging but may incur noticeable overhead due to the additional
+     *         stack-trace capture on each access.
+     */
+    boolean isTraceAccess();
+
 }

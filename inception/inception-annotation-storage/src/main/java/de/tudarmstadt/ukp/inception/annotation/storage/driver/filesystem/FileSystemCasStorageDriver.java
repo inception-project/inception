@@ -482,15 +482,15 @@ public class FileSystemCasStorageDriver
         var diskLastModified = casFile.lastModified();
         if (Math.abs(diskLastModified - aExpectedTimeStamp) > casStorageProperties
                 .getFileSystemTimestampAccuracy().toMillis()) {
-            StringBuilder lastWriteMsg = new StringBuilder();
+            var lastWriteMsg = new StringBuilder();
             if (metadataCache != null) {
-                InternalMetadata meta = metadataCache.get(casFile);
+                var meta = metadataCache.get(casFile);
                 if (meta.lastWriteSuccessTrace != null) {
                     lastWriteMsg.append("\n");
                     lastWriteMsg.append("Last known successful write was at ");
                     lastWriteMsg.append(formatTimestamp(meta.lastWriteSuccessTimestamp));
                     lastWriteMsg.append(" by:\n");
-                    for (StackTraceElement e : meta.lastWriteSuccessTrace) {
+                    for (var e : meta.lastWriteSuccessTrace) {
                         lastWriteMsg.append("    ");
                         lastWriteMsg.append(e);
                         lastWriteMsg.append("\n");

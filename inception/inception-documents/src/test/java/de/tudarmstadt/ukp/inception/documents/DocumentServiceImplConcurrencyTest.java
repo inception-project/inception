@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorag
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
 import static java.lang.Thread.sleep;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.repeat;
 import static org.apache.uima.fit.factory.CasFactory.createCas;
@@ -33,18 +34,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.lang.invoke.MethodHandles;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -227,7 +233,7 @@ public class DocumentServiceImplConcurrencyTest
         LOG.info("---- Wait for primary threads to complete ----");
         var done = false;
         while (!done) {
-            long running = primaryTasks.stream().filter(Thread::isAlive).count();
+            var running = primaryTasks.stream().filter(Thread::isAlive).count();
             done = running == 0l;
             sleep(1000);
             LOG.info("running {}  complete {}%  rw {}  ro {}  un {}  xx {} XX {}", running,
@@ -250,8 +256,6 @@ public class DocumentServiceImplConcurrencyTest
     public void testHighConcurrencyMultiUser() throws Exception
     {
         var docText = repeat("This is a test.\n", DOC_SIZE);
-        var typeSystem = mergeTypeSystems(
-                asList(createTypeSystemDescription(), getInternalTypeSystem()));
 
         when(importExportService.importCasFromFileNoChecks(any(File.class),
                 any(SourceDocument.class), any())).then(_invocation -> {
@@ -353,7 +357,7 @@ public class DocumentServiceImplConcurrencyTest
 
                 try (var session = openNested()) {
                     var cas = sut.readAnnotationCas(doc, user);
-                    Thread.sleep(50);
+                    sleep(50);
                     sut.writeAnnotationCas(cas, doc, user);
                     writeCounter.incrementAndGet();
                 }
@@ -387,7 +391,7 @@ public class DocumentServiceImplConcurrencyTest
                 try (var session = openNested()) {
                     sut.readAnnotationCas(doc, set, AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
                     managedReadCounter.incrementAndGet();
-                    Thread.sleep(50);
+                    sleep(50);
                 }
                 catch (Exception e) {
                     exception.set(true);
@@ -419,9 +423,9 @@ public class DocumentServiceImplConcurrencyTest
 
             while (!(exception.get() || rwTasksCompleted.get())) {
                 try (var session = openNested()) {
-                    Thread.sleep(2500 + rnd.nextInt(2500));
+                    sleep(2500 + rnd.nextInt(2500));
                     if (rnd.nextInt(100) >= 75) {
-                        sut.deleteAnnotationCas(doc, AnnotationSet.INITIAL_SET);
+                        sut.deleteAnnotationCas(doc, INITIAL_SET);
                         deleteInitialCounter.incrementAndGet();
                     }
                     sut.deleteAnnotationCas(doc, set);
@@ -457,7 +461,7 @@ public class DocumentServiceImplConcurrencyTest
                 try (var session = openNested()) {
                     sut.readAnnotationCas(doc, set, AUTO_CAS_UPGRADE, UNMANAGED_ACCESS);
                     unmanagedReadCounter.incrementAndGet();
-                    Thread.sleep(50);
+                    sleep(50);
                 }
                 catch (Exception e) {
                     exception.set(true);
@@ -478,5 +482,124 @@ public class DocumentServiceImplConcurrencyTest
         doc.setName(aDocName);
 
         return doc;
+    }
+
+    @Disabled("Flaky deadlock reproducer; for manual debugging only")
+    @Test
+    public void thatCrossDocumentImportCanDeadlock() throws Exception
+    {
+        // Two documents that will try to import each other while holding exclusive CAS access
+        var docA = makeSourceDocument(10l, 10l, "docA");
+        var docB = makeSourceDocument(20l, 20l, "docB");
+
+        // Try the scenario multiple times to increase chance of reproducing the race
+        var attempts = 12;
+        var reproduced = false;
+
+        for (var attempt = 1; attempt <= attempts && !reproduced; attempt++) {
+            LOG.info("Deadlock reproduction attempt {}/{}", attempt, attempts);
+
+            var ready = new CountDownLatch(2);
+
+            // Override importer to attempt to create/read the other document's initial CAS
+            when(importExportService.importCasFromFileNoChecks(any(File.class),
+                    any(SourceDocument.class), any())).thenAnswer(invocation -> {
+                        var requested = invocation.getArgument(1, SourceDocument.class);
+                        ready.countDown();
+                        // Wait until both importer threads are in the importer to maximize chance
+                        // of cycle
+                        ready.await();
+
+                        // Small pause to increase overlap while holding the importer
+                        try {
+                            sleep(200);
+                        }
+                        catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+
+                        if (requested.getId() == docA.getId()) {
+                            // While creating A, try to create B (will block if B is held by other
+                            // thread)
+                            return sut.createOrReadInitialCas(docB);
+                        }
+                        else {
+                            return sut.createOrReadInitialCas(docA);
+                        }
+                    });
+
+            var t1 = new Thread(() -> {
+                try {
+                    MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+                    try (var session = CasStorageSession.open()) {
+                        sut.createOrReadInitialCas(docA);
+                    }
+                }
+                catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }, "T1");
+
+            var t2 = new Thread(() -> {
+                try {
+                    MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+                    try (var session = CasStorageSession.open()) {
+                        sut.createOrReadInitialCas(docB);
+                    }
+                }
+                catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }, "T2");
+
+            t1.start();
+            t2.start();
+
+            // Wait longer for deadlock to manifest
+            t1.join(10_000);
+            t2.join(10_000);
+
+            // If both threads are still alive after the join timeout, we reproduced a deadlock
+            var deadlocked = t1.isAlive() && t2.isAlive();
+
+            // Interrupt to clean up threads so test runner doesn't hang
+            t1.interrupt();
+            t2.interrupt();
+
+            if (deadlocked) {
+                reproduced = true;
+                LOG.warn("Deadlock reproduced on attempt {}/{}", attempt, attempts);
+            }
+
+            // Reset mock for next attempt
+            reset(importExportService);
+            lenient().when(importExportService.importCasFromFileNoChecks(any(File.class),
+                    any(SourceDocument.class), any())).thenReturn(createCas(typeSystem));
+        }
+
+        if (!reproduced) {
+            // Write thread dump to temp folder for inspection
+            try {
+                var dumpFile = new File(testFolder, "thread-dump.txt");
+                try (var pw = new PrintWriter(dumpFile, UTF_8)) {
+                    pw.println("Thread dump at " + Instant.now());
+                    for (var e : Thread.getAllStackTraces().entrySet()) {
+                        var t = e.getKey();
+                        pw.println("Thread " + t.getName() + " (id=" + t.threadId() + ") state="
+                                + t.getState());
+                        for (var st : e.getValue()) {
+                            pw.println("\t" + st.toString());
+                        }
+                        pw.println();
+                    }
+                }
+                LOG.info("Wrote thread dump to {}", dumpFile.getAbsolutePath());
+            }
+            catch (Exception e) {
+                LOG.error("Failed to write thread dump", e);
+            }
+        }
+
+        assertThat(reproduced).as("Expected deadlock reproduction in one of the attempts").isTrue();
     }
 }
