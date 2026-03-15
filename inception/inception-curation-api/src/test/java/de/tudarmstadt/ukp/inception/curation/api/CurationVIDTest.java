@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.inception.curation.api.CurationVID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 public class CurationVIDTest

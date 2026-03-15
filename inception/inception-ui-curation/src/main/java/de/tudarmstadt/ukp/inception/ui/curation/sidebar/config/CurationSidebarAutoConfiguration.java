@@ -68,8 +68,8 @@ public class CurationSidebarAutoConfiguration
     {
         return new CurationEditorExtension(aAnnotationService, aDocumentService,
                 aApplicationEventPublisher, aUserRepository, aCurationSessionService,
-                aCurationSidebarService,
-                aFeatureSupportRegistry, aDetailsLookupService, aDiffAdapterRegistry);
+                aCurationSidebarService, aFeatureSupportRegistry, aDetailsLookupService,
+                aDiffAdapterRegistry);
     }
 
     @Bean("curationSidebar")
@@ -82,8 +82,7 @@ public class CurationSidebarAutoConfiguration
 
     @Bean
     public CurationSidebarRenderer curationSidebarRenderer(
-            CurationSessionService aCurationSessionService,
-            CurationSidebarService aCurationService,
+            CurationSessionService aCurationSessionService, CurationSidebarService aCurationService,
             LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
             UserDao aUserRepository, AnnotationSchemaService aAnnotationService,
             DiffAdapterRegistry aDiffAdapterRegistry)

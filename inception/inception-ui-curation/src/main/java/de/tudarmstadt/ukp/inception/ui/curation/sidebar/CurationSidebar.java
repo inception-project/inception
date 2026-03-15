@@ -302,8 +302,7 @@ public class CurationSidebar
         state.setUser(userRepository.getCurrentUser());
         state.getSelection().clear();
 
-        curationSessionService.closeSession(sessionOwner.getUsername(),
-            state.getProject().getId());
+        curationSessionService.closeSession(sessionOwner.getUsername(), state.getProject().getId());
 
         getAnnotationPage().actionLoadDocument(aTarget);
     }
@@ -334,8 +333,8 @@ public class CurationSidebar
 
         selectedUsers = new CheckGroup<User>("selectedUsers");
         selectedUsers.setModel(new LambdaModelAdapter<>( //
-            () -> curationSessionService.getSelectedUsers(sessionOwner, project.getId()), //
-            (_users) -> curationSessionService.setSelectedUsers(sessionOwner, project.getId(),
+                () -> curationSessionService.getSelectedUsers(sessionOwner, project.getId()), //
+                (_users) -> curationSessionService.setSelectedUsers(sessionOwner, project.getId(),
                         _users)));
         selectedUsers.add(
                 new LambdaAjaxFormChoiceComponentUpdatingBehavior(this::actionChangeVisibleUsers));
@@ -366,8 +365,7 @@ public class CurationSidebar
             return Collections.emptyList();
         }
 
-        return curationSessionService.listCuratableUsers(userRepository.getCurrentUsername(),
-            doc);
+        return curationSessionService.listCuratableUsers(userRepository.getCurrentUsername(), doc);
     }
 
     private void actionChangeVisibleUsers(AjaxRequestTarget aTarget)
