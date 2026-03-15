@@ -213,7 +213,7 @@ public class AnnotationDocumentExporter
 
                 // The initial CAS must always be exported to ensure that the converted source
                 // document will *always* have the state it had at the time of the initial import.
-                // We we do have a reliably initial CAS and instead lazily convert whenever an
+                // If we don't have a reliable initial CAS and instead lazily convert whenever an
                 // annotator starts annotating, then we could end up with two annotators having two
                 // different versions of their CAS e.g. if there was a code change in the reader
                 // component that affects its output.

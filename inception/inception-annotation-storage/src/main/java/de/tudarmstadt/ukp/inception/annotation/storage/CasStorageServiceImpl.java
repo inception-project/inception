@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceI
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.transferCasOwnershipToCurrentThread;
+import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.newSetFromMap;
 import static java.util.Collections.synchronizedSet;
@@ -56,7 +57,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.impl.CASImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.util.ConcurrentReferenceHashMap;
@@ -109,7 +109,7 @@ public class CasStorageServiceImpl
     private final AtomicLong lastExclusiveAccessPoolSnapshotUpdate = new AtomicLong();
     private final AtomicInteger lastExclusiveAccessPoolSnapshotSize = new AtomicInteger();
 
-    private final GenericKeyedObjectPool<CasKey, CasHolder> exclusiveAccessPool;
+    private final GenericKeyedObjectPool<CasKey, CasHolder> _exclusiveAccessPool;
     private final Set<CasHolder> exclusiveAccessHolders = synchronizedSet(
             newSetFromMap(new WeakHashMap<>()));
     private final Cache<CasKey, CasHolder> sharedAccessCache;
@@ -135,17 +135,54 @@ public class CasStorageServiceImpl
      * @param aSchemaService
      *            (optional) if present, CAS upgrades can be performed
      */
-    @Autowired
     public CasStorageServiceImpl(CasStorageDriver aDriver,
-            CasStorageCacheProperties aCasStorageProperties,
-            @Autowired(required = false) CasDoctor aCasDoctor,
-            @Autowired(required = false) AnnotationSchemaService aSchemaService)
+            CasStorageCacheProperties aCasStorageProperties, CasDoctor aCasDoctor,
+            AnnotationSchemaService aSchemaService)
     {
         driver = aDriver;
         casDoctor = aCasDoctor;
         schemaService = aSchemaService;
         casStorageProperties = aCasStorageProperties;
+        _exclusiveAccessPool = createExclusiveAccessPool(casStorageProperties);
+        sharedAccessCache = createSharedAccessCache();
 
+        CasHolder.setTraceAccessEnabled(casStorageProperties.isTraceAccess());
+
+        if (casDoctor == null) {
+            LOG.info("CAS doctor not available - unable to check/repair CASes");
+        }
+
+        BaseLoggers.BOOT_LOG.info("CAS cache size: {} instances",
+                casStorageProperties.getSharedCasCacheSize());
+    }
+
+    private Cache<CasKey, CasHolder> createSharedAccessCache()
+    {
+        return Caffeine.newBuilder() //
+                .scheduler(Scheduler.systemScheduler()) //
+                .expireAfterAccess(casStorageProperties.getIdleCasEvictionDelay()) //
+                .maximumSize(casStorageProperties.getSharedCasCacheSize()) //
+                .recordStats() //
+                .evictionListener((key, value, cause) -> {
+                    LOG.debug("Marked CAS for eviction from shared-access pool: {} [{}]", value,
+                            cause);
+                }) //
+                .build();
+    }
+
+    /**
+     * Package-private so tests can inject a custom pool, e.g. to simulate flakiness.
+     * 
+     * @return the exclusive access pool.
+     */
+    GenericKeyedObjectPool<CasKey, CasHolder> getExclusiveAccessPool()
+    {
+        return _exclusiveAccessPool;
+    }
+
+    private GenericKeyedObjectPool<CasKey, CasHolder> createExclusiveAccessPool(
+            CasStorageCacheProperties aProperties)
+    {
         var config = new GenericKeyedObjectPoolConfig<CasHolder>();
         config.setEvictionPolicy(new LoggingDefaultEvictionPolicy());
         // Since we want the pool to control exclusive access to a particular CAS, we only ever
@@ -155,10 +192,10 @@ public class CasStorageServiceImpl
         // Setting this to 0 because we do not want any CAS to stick around in memory indefinitely
         config.setMinIdlePerKey(0);
         // Run an evictor thread periodically
-        config.setTimeBetweenEvictionRuns(casStorageProperties.getIdleCasEvictionDelay());
+        config.setTimeBetweenEvictionRuns(aProperties.getIdleCasEvictionDelay());
         // Allow the evictor to drop idle CASes from pool after a short time. This should avoid that
         // CASes that are used regularly are dropped from the pool too quickly.
-        config.setMinEvictableIdleDuration(casStorageProperties.getMinIdleCasTime());
+        config.setMinEvictableIdleDuration(aProperties.getMinIdleCasTime());
         // Allow the evictor to drop all idle CASes on every eviction run
         config.setNumTestsPerEvictionRun(-1);
         // Allow viewing the pool in JMX
@@ -171,27 +208,9 @@ public class CasStorageServiceImpl
         config.setTestOnBorrow(true);
         config.setTestWhileIdle(true);
         // Max. time we wait for a CAS to become available before giving up with an error
-        config.setMaxWait(casStorageProperties.getCasBorrowWaitTimeout());
+        config.setMaxWait(aProperties.getCasBorrowWaitTimeout());
         // We do not have to set maxTotal because the default is already to have no limit (-1)
-        exclusiveAccessPool = new GenericKeyedObjectPool<>(new PooledCasHolderFactory(), config);
-
-        sharedAccessCache = Caffeine.newBuilder() //
-                .scheduler(Scheduler.systemScheduler()) //
-                .expireAfterAccess(casStorageProperties.getIdleCasEvictionDelay()) //
-                .maximumSize(casStorageProperties.getSharedCasCacheSize()) //
-                .recordStats() //
-                .evictionListener((key, value, cause) -> {
-                    LOG.debug("Marked CAS for eviction from shared-access pool: {} [{}]", value,
-                            cause);
-                }) //
-                .build();
-
-        if (casDoctor == null) {
-            LOG.info("CAS doctor not available - unable to check/repair CASes");
-        }
-
-        BaseLoggers.BOOT_LOG.info("CAS cache size: {} instances",
-                casStorageProperties.getSharedCasCacheSize());
+        return new GenericKeyedObjectPool<>(new PooledCasHolderFactory(), config);
     }
 
     public long getSharedAccessCacheSize()
@@ -296,7 +315,7 @@ public class CasStorageServiceImpl
     {
 
         try (var logCtx = withProjectLogger(aDocument.getProject())) {
-            CasStorageSession session = CasStorageSession.get();
+            var session = CasStorageSession.get();
 
             LOG.debug(
                     "CAS storage session [{}]: reading annotations for [{}]@{} in {} with {} using {}",
@@ -329,120 +348,23 @@ public class CasStorageServiceImpl
             // If exclusive access is requested, then we check the CAS out of the exclusive access
             // pool
             if (EXCLUSIVE_WRITE_ACCESS.equals(aAccessMode)) {
-                CasKey key = null;
-                CasHolder holder = null;
-                try {
-                    LOG.trace("CAS storage session [{}]: trying to borrow CAS [{}]@{}",
-                            session.hashCode(), aSet, aDocument);
-
-                    key = new CasKey(aDocument, aSet);
-                    holder = borrowCas(key);
-
-                    // If the CAS has not been loaded into the exclusive access pool, then we need
-                    // to load it
-                    if (!holder.isCasSet()) {
-                        var finalKey = key;
-                        var finalHolder = holder;
-
-                        CAS cas;
-                        // Make sure the system knows that the session has legitimate access to the
-                        // CAS being loaded so that it won't lock itself up trying to acquire the
-                        // exclusive lock in CAS in readOrCreateUnmanagedCas
-                        try (var loaderSession = CasStorageSession.openNested(true)) {
-                            var mLoaderCas = loaderSession.add(aDocument.getId(), aSet,
-                                    EXCLUSIVE_WRITE_ACCESS, holder);
-                            // Do not try to release the CAS when the loader session closes because
-                            // in fact we won't even have set the CAS in the holder by then
-                            mLoaderCas.setReleaseOnClose(false);
-
-                            cas = readOrCreateUnmanagedCas(aDocument, aSet, aSupplier, aUpgradeMode,
-                                    aAccessMode);
-                        }
-
-                        holder.setCas(cas);
-
-                        // Hook up releasing of the CAS when CAS.release() is called via the
-                        // CasStorageSession
-                        ((CASImpl) getRealCas(cas))
-                                .setOwner(_cas -> returnBorrowedCas(_cas, finalKey, finalHolder));
-
-                        LOG.debug(
-                                "CAS storage session [{}]: borrowed CAS [{}] for [{}]@{} loaded from storage",
-                                session.hashCode(), holder.getCasHashCode(), aSet, aDocument);
-                    }
-                    else {
-                        LOG.debug(
-                                "CAS storage session [{}]: borrowed CAS [{}] for [{}]@{} was already in memory",
-                                session.hashCode(), holder.getCasHashCode(), aSet, aDocument);
-
-                        transferCasOwnershipToCurrentThread(holder.getCas());
-
-                        repairAndUpgradeCasIfRequired(aDocument, aSet, holder.getCas(),
-                                aUpgradeMode, ISOLATED_SESSION);
-                    }
-
-                    casHolder = holder;
-                }
-                catch (Exception e) {
-                    // If there was an exception, we need to return the CAS to the pool
-                    if (key != null && holder != null) {
-                        LOG.trace(
-                                "CAS storage session [{}]: returning borrowed CAS [{}] for [{}]@{} after failure to load CAS",
-                                session.hashCode(), holder.getCasHashCode(), aSet, aDocument);
-                        try {
-                            exclusiveAccessPool.returnObject(key, holder);
-                            logExclusiveAccessHolders();
-                        }
-                        catch (Exception e1) {
-                            LOG.error("Unable to return CAS to exclusive access pool", e1);
-                        }
-                    }
-                    casHolder = new CasHolder(key, e);
-                }
+                casHolder = readOrCreateCasExclusiveWriteAccess(aDocument, aSet, aUpgradeMode,
+                        aSupplier, aAccessMode, session);
             }
             // else if shared read access is requested, then we try fetching it from the shared
             // cache
             else if (SHARED_READ_ONLY_ACCESS.equals(aAccessMode)) {
-                if (!AUTO_CAS_UPGRADE.equals(aUpgradeMode)) {
-                    throw new IllegalArgumentException(
-                            "When requesting a shared read-only CAS, the " + "access mode must be "
-                                    + AUTO_CAS_UPGRADE);
-                }
-
-                // Ensure that the CAS is not being re-written and temporarily unavailable while we
-                // check for its existence
-                try (var access = new WithExclusiveAccess(aDocument, aSet)) {
-                    // Since we promise to only read the CAS, we don't have to worry about it being
-                    // locked to a particular thread...
-                    casHolder = sharedAccessCache.get(new CasKey(aDocument, aSet),
-                            (key) -> CasHolder.of(key,
-                                    () -> getRealCas(readOrCreateUnmanagedCas(aDocument, aSet,
-                                            aSupplier, aUpgradeMode, aAccessMode))));
-                    var size = getSharedAccessCacheSize();
-                    var max = casStorageProperties.getSharedCasCacheSize();
-                    if (size > (max * 0.9)) {
-                        LOG.warn("Shared access CAS cache is >= 90% full: {} / {}", size, max);
-                    }
-                }
+                casHolder = readOrCreateCasReadOnlyAccess(aDocument, aSet, aUpgradeMode, aSupplier,
+                        aAccessMode);
             }
             // else if the special bypass mode is requested, then we fetch directly from disk
             else if (UNMANAGED_ACCESS.equals(aAccessMode)) {
-                // Ensure that the CAS is not being re-written and temporarily unavailable while we
-                // check for its existence
-                try (var access = new WithExclusiveAccess(aDocument, aSet)) {
-                    casHolder = CasHolder.of(new CasKey(aDocument, aSet),
-                            () -> readOrCreateUnmanagedCas(aDocument, aSet, aSupplier, aUpgradeMode,
-                                    aAccessMode));
-                }
+                casHolder = readOrCreateCasUnmanagedAccess(aDocument, aSet, aUpgradeMode, aSupplier,
+                        aAccessMode);
             }
             // else if the special bypass mode is requested, then we fetch directly from disk
             else if (UNMANAGED_NON_INITIALIZING_ACCESS.equals(aAccessMode)) {
-                // Ensure that the CAS is not being re-written and temporarily unavailable while we
-                // check for its existence
-                try (var access = new WithExclusiveAccess(aDocument, aSet)) {
-                    casHolder = CasHolder.of(new CasKey(aDocument, aSet),
-                            () -> driver.readCas(aDocument, aSet));
-                }
+                casHolder = readOrCreateCasNonInitializingAccess(aDocument, aSet);
             }
             else {
                 throw new IllegalArgumentException("Unknown CAS access mode [" + aAccessMode + "]");
@@ -450,11 +372,20 @@ public class CasStorageServiceImpl
 
             // If there was a problem retrieving the CAS, then we throw an exception
             if (casHolder.getException() != null) {
-                if (casHolder.getException() instanceof IOException) {
-                    throw (IOException) casHolder.getException();
+                var diag = buildPoolDiagnostics(casHolder.getKey());
+                if (casHolder.getException() instanceof FileNotFoundException e) {
+                    var wrappedException = new FileNotFoundException(
+                            diag + ": " + casHolder.getException().getMessage());
+                    wrappedException.initCause(e);
+                    throw wrappedException;
                 }
 
-                throw new IOException(casHolder.getException());
+                if (casHolder.getException() instanceof IOException e) {
+                    throw new IOException(diag + ": " + casHolder.getException().getMessage(), e);
+                }
+
+                throw new IOException(diag + ": " + casHolder.getException().getMessage(),
+                        casHolder.getException());
             }
 
             var cas = casHolder.getCas();
@@ -467,15 +398,146 @@ public class CasStorageServiceImpl
         }
     }
 
+    private CasHolder readOrCreateCasExclusiveWriteAccess(SourceDocument aDocument,
+            AnnotationSet aSet, CasUpgradeMode aUpgradeMode, CasProvider aSupplier,
+            CasAccessMode aAccessMode, CasStorageSession aSession)
+        throws IOException
+    {
+        CasKey key = null;
+        CasHolder holder = null;
+        try {
+            LOG.trace("CAS storage session [{}]: trying to borrow CAS [{}]@{}", aSession.hashCode(),
+                    aSet, aDocument);
+
+            key = new CasKey(aDocument, aSet);
+            holder = borrowCas(key);
+
+            // If the CAS has not been loaded into the exclusive access pool, then we need
+            // to load it
+            if (!holder.isCasSet()) {
+                var finalKey = key;
+                var finalHolder = holder;
+
+                CAS cas;
+                // Make sure the system knows that the session has legitimate access to the
+                // CAS being loaded so that it won't lock itself up trying to acquire the
+                // exclusive lock in CAS in readOrCreateUnmanagedCas
+                try (var loaderSession = CasStorageSession.openNested(true)) {
+                    var mLoaderCas = loaderSession.add(aDocument.getId(), aSet,
+                            EXCLUSIVE_WRITE_ACCESS, holder);
+                    // Do not try to release the CAS when the loader session closes because
+                    // in fact we won't even have set the CAS in the holder by then
+                    mLoaderCas.setReleaseOnClose(false);
+
+                    cas = readOrCreateUnmanagedCas(aDocument, aSet, aSupplier, aUpgradeMode,
+                            aAccessMode);
+                }
+
+                holder.setCas(cas);
+
+                // Hook up releasing of the CAS when CAS.release() is called via the
+                // CasStorageSession
+                ((CASImpl) getRealCas(cas))
+                        .setOwner(_cas -> returnBorrowedCas(_cas, finalKey, finalHolder));
+
+                LOG.debug(
+                        "CAS storage session [{}]: borrowed CAS [{}] for [{}]@{} loaded from storage",
+                        aSession.hashCode(), holder.getCasHashCode(), aSet, aDocument);
+            }
+            else {
+                LOG.debug(
+                        "CAS storage session [{}]: borrowed CAS [{}] for [{}]@{} was already in memory",
+                        aSession.hashCode(), holder.getCasHashCode(), aSet, aDocument);
+
+                transferCasOwnershipToCurrentThread(holder.getCas());
+
+                repairAndUpgradeCasIfRequired(aDocument, aSet, holder.getCas(), aUpgradeMode,
+                        ISOLATED_SESSION);
+            }
+
+            return holder;
+        }
+        catch (Throwable e) {
+            cleanupBorrowedCasAfterFailure(aSession, aDocument, aSet, key, holder, e);
+
+            if (e instanceof Exception exception) {
+                return new CasHolder(key, exception);
+            }
+            else {
+                throw e;
+            }
+        }
+    }
+
+    private CasHolder readOrCreateCasUnmanagedAccess(SourceDocument aDocument, AnnotationSet aSet,
+            CasUpgradeMode aUpgradeMode, CasProvider aSupplier, CasAccessMode aAccessMode)
+    {
+        CasHolder casHolder;
+        // Ensure that the CAS is not being re-written and temporarily unavailable while we
+        // check for its existence
+        try (var access = new WithExclusiveAccess(aDocument, aSet)) {
+            casHolder = CasHolder.of(new CasKey(aDocument, aSet),
+                    () -> readOrCreateUnmanagedCas(aDocument, aSet, aSupplier, aUpgradeMode,
+                            aAccessMode));
+        }
+        return casHolder;
+    }
+
+    private CasHolder readOrCreateCasReadOnlyAccess(SourceDocument aDocument, AnnotationSet aSet,
+            CasUpgradeMode aUpgradeMode, CasProvider aSupplier, CasAccessMode aAccessMode)
+    {
+        if (!AUTO_CAS_UPGRADE.equals(aUpgradeMode)) {
+            throw new IllegalArgumentException("When requesting a shared read-only CAS, the "
+                    + "upgrade mode must be " + AUTO_CAS_UPGRADE);
+        }
+
+        // Ensure that the CAS is not being re-written and temporarily unavailable while we
+        // check for its existence
+        try (var access = new WithExclusiveAccess(aDocument, aSet)) {
+            // Since we promise to only read the CAS, we don't have to worry about it being
+            // locked to a particular thread...
+            var casHolder = sharedAccessCache.get(new CasKey(aDocument, aSet),
+                    (key) -> CasHolder.of(key, () -> getRealCas(readOrCreateUnmanagedCas(aDocument,
+                            aSet, aSupplier, aUpgradeMode, aAccessMode))));
+            var size = getSharedAccessCacheSize();
+            var max = casStorageProperties.getSharedCasCacheSize();
+            if (size > (max * 0.9)) {
+                LOG.warn("Shared access CAS cache is >= 90% full: {} / {}", size, max);
+            }
+
+            return casHolder;
+        }
+    }
+
+    private CasHolder readOrCreateCasNonInitializingAccess(SourceDocument aDocument,
+            AnnotationSet aSet)
+    {
+        // Ensure that the CAS is not being re-written and temporarily unavailable while we
+        // check for its existence
+        try (var access = new WithExclusiveAccess(aDocument, aSet)) {
+            return CasHolder.of(new CasKey(aDocument, aSet), () -> driver.readCas(aDocument, aSet));
+        }
+    }
+
     private CasHolder borrowCas(CasKey aKey)
     {
         try {
+            var exclusiveAccessPool = getExclusiveAccessPool();
             var holder = exclusiveAccessPool.borrowObject(aKey);
             // Add the holder to the set of known holder. Because this set it using weak
             // references, and because we use the set only to inform holders when they become
             // invalid we do never have to explicitly remove the holder from the set
             exclusiveAccessHolders.add(holder);
             LOG.trace("Added to exclusiveAccessHolders: {}", holder);
+
+            // Log detailed borrow info for debugging potential deadlocks: include thread
+            // id/name, key and holder identity.
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(
+                        "Thread [{} - {}] borrowed holder [identity={}] for key [{}] (holder.casHash={})",
+                        Thread.currentThread().threadId(), Thread.currentThread().getName(),
+                        System.identityHashCode(holder), aKey, holder.getCasHashCode());
+            }
 
             if (currentTimeMillis()
                     - lastExclusiveAccessPoolSnapshotUpdate.get() > snapshotInterval) {
@@ -495,7 +557,8 @@ public class CasStorageServiceImpl
             return holder;
         }
         catch (Exception e) {
-            throw new CasSessionException("Unable to borrow CAS", e);
+            var diag = buildPoolDiagnostics(aKey);
+            throw new CasSessionException("Unable to borrow CAS - " + diag, e);
         }
     }
 
@@ -507,14 +570,191 @@ public class CasStorageServiceImpl
     private void returnBorrowedCas(AbstractCas cas, CasKey aKey, CasHolder aHolder)
     {
         try {
-            LOG.trace("Returning borrowed CAS [{}] for [{}]@[{}]({})", cas.hashCode(),
-                    aKey.getSet(), aKey.getDocumentName(), aKey.getDocumentId());
-            exclusiveAccessPool.returnObject(aKey, aHolder);
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(
+                        "Thread [{} - {}] returning borrowed CAS [{}] for [{}]@[{}]({}), holder.identity={}",
+                        Thread.currentThread().threadId(), Thread.currentThread().getName(),
+                        cas.hashCode(), aKey.getSet(), aKey.getDocumentName(), aKey.getDocumentId(),
+                        System.identityHashCode(aHolder));
+            }
+
+            getExclusiveAccessPool().returnObject(aKey, aHolder);
             logExclusiveAccessHolders();
         }
         catch (Exception e) {
-            LOG.error("Unable to return CAS [{}] for [{}]@[{}]({}) to exclusive access pool",
-                    cas.hashCode(), aKey.getSet(), aKey.getDocumentName(), aKey.getDocumentId(), e);
+            LOG.error("Unable to return CAS [{}] for [{}]@[{}]({}) to exclusive access pool - {}",
+                    cas.hashCode(), aKey.getSet(), aKey.getDocumentName(), aKey.getDocumentId(),
+                    buildPoolDiagnostics(aKey), e);
+            invalidateBorrowedCasAfterReturnFailure(aKey, aHolder, e);
+        }
+    }
+
+    private void cleanupBorrowedCasAfterFailure(CasStorageSession aSession,
+            SourceDocument aDocument, AnnotationSet aSet, CasKey aKey, CasHolder aHolder,
+            Throwable aOriginalFailure)
+    {
+        if (aKey == null || aHolder == null) {
+            return;
+        }
+
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(
+                    "CAS storage session [{}]: returning borrowed CAS [{}] for [{}]@{} after failure to load CAS",
+                    aSession.hashCode(), aHolder.getCasHashCode(), aSet, aDocument);
+        }
+
+        var exclusiveAccessPool = getExclusiveAccessPool();
+        try {
+            exclusiveAccessPool.returnObject(aKey, aHolder);
+            logExclusiveAccessHolders();
+        }
+        catch (Throwable e) {
+            LOG.error(
+                    "Unable to return CAS to exclusive access pool after failure to load CAS - {}",
+                    buildPoolDiagnostics(aKey), e);
+
+            try {
+                exclusiveAccessPool.invalidateObject(aKey, aHolder);
+                logExclusiveAccessHolders();
+            }
+            catch (Throwable e1) {
+                LOG.error("Unable to invalidate CAS [{}] after failed return - {}",
+                        aHolder.getCasHashCode(), buildPoolDiagnostics(aKey), e1);
+
+                // Always record the initial return failure on the original failure.
+                aOriginalFailure.addSuppressed(e);
+
+                // If the cleanup error is fatal, propagate it (it will have the
+                // original failure suppressed onto it via propagateCleanupFailure).
+                if (isFatalCleanupFailure(e1)) {
+                    throw propagateCleanupFailure(aOriginalFailure, e1);
+                }
+
+                // Non-fatal cleanup failures are recorded on the original failure.
+                aOriginalFailure.addSuppressed(e1);
+                return;
+            }
+
+            // If returning the object failed but invalidation succeeded, only
+            // propagate the return failure when it is fatal; otherwise record it
+            // as suppressed on the original failure.
+            if (isFatalCleanupFailure(e)) {
+                throw propagateCleanupFailure(aOriginalFailure, e);
+            }
+
+            aOriginalFailure.addSuppressed(e);
+        }
+    }
+
+    private RuntimeException propagateCleanupFailure(Throwable aOriginalFailure,
+            Throwable aCleanupFailure)
+    {
+        aCleanupFailure.addSuppressed(aOriginalFailure);
+
+        if (aCleanupFailure instanceof RuntimeException) {
+            return (RuntimeException) aCleanupFailure;
+        }
+
+        if (aCleanupFailure instanceof Error) {
+            throw (Error) aCleanupFailure;
+        }
+
+        return new RuntimeException(aCleanupFailure);
+    }
+
+    private boolean isFatalCleanupFailure(Throwable aFailure)
+    {
+        return aFailure instanceof VirtualMachineError || aFailure instanceof LinkageError;
+    }
+
+    private void invalidateBorrowedCasAfterReturnFailure(CasKey aKey, CasHolder aHolder,
+            Exception aOriginalError)
+    {
+        try {
+            getExclusiveAccessPool().invalidateObject(aKey, aHolder);
+            logExclusiveAccessHolders();
+        }
+        catch (Exception e) {
+            LOG.error("Unable to invalidate CAS [{}] after failed return - {}",
+                    aHolder.getCasHashCode(), buildPoolDiagnostics(aKey), e);
+            aOriginalError.addSuppressed(e);
+        }
+    }
+
+    private void releaseBorrowedCasWithFallback(CasKey aKey, CasHolder aHolder, String aContext)
+    {
+        try {
+            getExclusiveAccessPool().returnObject(aKey, aHolder);
+            logExclusiveAccessHolders();
+        }
+        catch (Exception e) {
+            LOG.error("Unable to return CAS [{}] during {} - {}", aHolder.getCasHashCode(),
+                    aContext, buildPoolDiagnostics(aKey), e);
+            invalidateBorrowedCasAfterReturnFailure(aKey, aHolder, e);
+        }
+    }
+
+    private String buildPoolDiagnostics(CasKey aKey)
+    {
+        try {
+            var exclusiveAccessPool = getExclusiveAccessPool();
+            var globalActive = exclusiveAccessPool.getNumActive();
+            var globalIdle = exclusiveAccessPool.getNumIdle();
+            var keyActive = aKey != null ? exclusiveAccessPool.getNumActive(aKey) : -1L;
+            var keyIdle = aKey != null ? exclusiveAccessPool.getNumIdle(aKey) : -1L;
+            var waitTimeout = casStorageProperties.getCasBorrowWaitTimeout().toMillis();
+
+            var projectName = aKey != null ? aKey.getProjectName() : "<unknown>";
+            var projectId = aKey != null ? aKey.getProjectId() : -1L;
+            var documentName = aKey != null ? aKey.getDocumentName() : "<unknown>";
+            var documentId = aKey != null ? aKey.getDocumentId() : -1L;
+            var setId = "<unknown>";
+            var setDisplay = "<unknown>";
+            if (aKey != null && aKey.getSet() != null) {
+                setId = aKey.getSet().toString();
+                try {
+                    setDisplay = aKey.getSet().displayName();
+                }
+                catch (Throwable t) {
+                    setDisplay = aKey.getSet().toString();
+                }
+            }
+
+            var ownerInfo = new StringBuilder();
+            if (aKey != null && keyActive > 0) {
+                exclusiveAccessHolders.forEach(h -> {
+                    if (!(Objects.equals(h.getKey(), aKey) && h.getOwnerThreadId() > 0)) {
+                        return;
+                    }
+                    try {
+                        ownerInfo.append(
+                                String.format(" owner(ownerName=%s,ownerId=%d,ownerSince=%d)",
+                                        h.getOwnerThreadName(), h.getOwnerThreadId(),
+                                        h.getOwnerSinceMillis()));
+
+                        var trace = h.getOwnerStackTrace();
+                        if (trace != null && trace.length > 0) {
+                            ownerInfo.append(" acquired holder at:\n");
+                            for (var e : trace) {
+                                ownerInfo.append("    ");
+                                ownerInfo.append(e);
+                                ownerInfo.append("\n");
+                            }
+                        }
+                    }
+                    catch (Throwable t) {
+                        // ignore holder inspection failures
+                    }
+                });
+            }
+
+            return format("project [%s](%d) document [%s](%d) set [%s](%s); "
+                    + "pool info(globalActive=%d,globalIdle=%d,keyActive=%d,keyIdle=%d,borrowMaxWaitMillis=%d)%s",
+                    projectName, projectId, documentName, documentId, setId, setDisplay,
+                    globalActive, globalIdle, keyActive, keyIdle, waitTimeout, ownerInfo);
+        }
+        catch (Exception e) {
+            return "<failed to collect pool diagnostics>";
         }
     }
 
@@ -734,8 +974,8 @@ public class CasStorageServiceImpl
             detailMsg.append("CAS Doctor found problems for set [").append(aSet)
                     .append("] in document ").append(aDocument).append(" in project ")
                     .append(project).append("\n");
-            e.getDetails().forEach(
-                    m -> detailMsg.append(String.format("- [%s] %s%n", m.level, m.message)));
+            e.getDetails()
+                    .forEach(m -> detailMsg.append(format("- [%s] %s%n", m.level, m.message)));
 
             throw new DataRetrievalFailureException(detailMsg.toString());
         }
@@ -982,9 +1222,8 @@ public class CasStorageServiceImpl
         public void release()
         {
             if (holder != null) {
-                exclusiveAccessPool.returnObject(key, holder);
+                releaseBorrowedCasWithFallback(key, holder, "WithExclusiveAccess.release");
                 holder = null;
-                logExclusiveAccessHolders();
             }
             else {
                 getCas().release();
@@ -997,8 +1236,7 @@ public class CasStorageServiceImpl
             if (holder != null) {
                 LOG.trace("Returning briefly borrowed CAS [{}]@[{}]({})", set, documentName,
                         documentId);
-                exclusiveAccessPool.returnObject(key, holder);
-                logExclusiveAccessHolders();
+                releaseBorrowedCasWithFallback(key, holder, "WithExclusiveAccess.close");
             }
         }
     }
@@ -1048,7 +1286,7 @@ public class CasStorageServiceImpl
      * When using the Spring {@link ConcurrentReferenceHashMap} for the
      * {@link #exclusiveAccessHolders}, we had some trouble that CASHolders disappeared from the set
      * even though they had not yet been garbage collected (i.e. still referenced from the
-     * {@link #exclusiveAccessPool}. To fix this, we switch to a simple synchronized
+     * {@link #_exclusiveAccessPool}. To fix this, we switch to a simple synchronized
      * {@link WeakHashMap} turned into a set. We keep the debug/logging code around for a little
      * more to facilitate debugging this again if need be.
      */

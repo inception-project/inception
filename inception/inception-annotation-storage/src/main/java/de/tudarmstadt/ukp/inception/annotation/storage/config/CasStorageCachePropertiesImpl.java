@@ -34,6 +34,18 @@ public class CasStorageCachePropertiesImpl
     private Duration minIdleCasTime = Duration.ofMinutes(5);
     private Duration casBorrowWaitTimeout = Duration.ofMinutes(3);
     private long sharedCasCacheSize = getDefaultCasCacheSize();
+    private boolean traceAccess = false;
+
+    @Override
+    public boolean isTraceAccess()
+    {
+        return traceAccess;
+    }
+
+    public void setTraceAccess(boolean aTraceAccess)
+    {
+        traceAccess = aTraceAccess;
+    }
 
     @Override
     public Duration getIdleCasEvictionDelay()
