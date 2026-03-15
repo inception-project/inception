@@ -56,6 +56,12 @@ public interface AnnotationSchemaService
 {
     String SERVICE_NAME = "annotationService";
 
+    static final String FEATURE_BASE_NAME_UI_NAME = "uiName";
+    static final String FEATURE_BASE_NAME_NAME = "name";
+    static final String FEATURE_BASE_NAME_LAYER = "layer";
+    static final String TYPE_NAME_FEATURE_DEFINITION = "de.tudarmstadt.ukp.clarin.webanno.api.type.FeatureDefinition";
+    static final String TYPE_NAME_LAYER_DEFINITION = "de.tudarmstadt.ukp.clarin.webanno.api.type.LayerDefinition";
+
     /**
      * Used when generating INCEpTION-specific feature names between a base name defined by the user
      * and an INCEpTION-specific suffix.
@@ -688,4 +694,8 @@ public interface AnnotationSchemaService
     List<AnnotationLayer> listEnabledLayers(Project aProject);
 
     List<AnnotationLayer> getRelationLayersFor(AnnotationLayer aSpanLayer);
+
+    void addTagsetDefinitionAnnotations(CAS aCas, List<AnnotationFeature> aFeatures);
+
+    void addLayerAndFeatureDefinitionAnnotations(CAS aCas, List<AnnotationFeature> aFeatures);
 }

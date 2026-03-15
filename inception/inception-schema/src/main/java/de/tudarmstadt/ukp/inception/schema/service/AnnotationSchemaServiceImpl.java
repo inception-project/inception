@@ -28,16 +28,20 @@ import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isNativeUimaType;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isSame;
+import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
+import static org.apache.uima.fit.util.FSUtil.setFeature;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.apache.uima.util.TypeSystemUtil.isFeatureName;
 
@@ -95,9 +99,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag_;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter;
@@ -454,7 +460,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional(readOnly = true)
     public boolean existsEnabledLayerOfType(Project aProject, String aType)
     {
-        var query = String.join("\n", //
+        var query = join("\n", //
                 "FROM AnnotationLayer", //
                 "WHERE project = :project ", //
                 "AND type = :type", //
@@ -498,7 +504,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional(readOnly = true)
     public boolean existsEnabledFeatureOfType(Project aProject, String aType)
     {
-        var query = String.join("\n", //
+        var query = join("\n", //
                 "FROM AnnotationFeature", //
                 "WHERE project = :project ", //
                 "AND type = :type", //
@@ -620,7 +626,7 @@ public class AnnotationSchemaServiceImpl
 
     private Optional<AnnotationLayer> getLayerInternal(String aName, Project aProject)
     {
-        String query = String.join("\n", //
+        String query = join("\n", //
                 "FROM AnnotationLayer ", //
                 "WHERE name = :name AND project = :project");
 
@@ -754,7 +760,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationLayer> listAnnotationLayer(Project aProject)
     {
-        String query = String.join("\n", //
+        String query = join("\n", //
                 "FROM AnnotationLayer", //
                 "WHERE project = :project ", //
                 "ORDER BY uiName");
@@ -811,9 +817,9 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Transactional
-    public List<AnnotationFeature> listAttachingFeatures(AnnotationLayer aLayer)
+    List<AnnotationFeature> listAttachingFeatures(AnnotationLayer aLayer)
     {
-        String query = String.join("\n", //
+        String query = join("\n", //
                 "FROM AnnotationFeature ", //
                 "WHERE type    = :type AND", //
                 "      project = :project", //
@@ -832,7 +838,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationFeature> listAttachedLinkFeatures(AnnotationLayer aLayer)
     {
-        String query = String.join("\n", //
+        String query = join("\n", //
                 "FROM AnnotationFeature", //
                 "WHERE linkMode in (:modes) AND ", //
                 "      project = :project AND ", //
@@ -851,7 +857,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationFeature> listAttachedSpanFeatures(AnnotationLayer aLayer)
     {
-        String query = String.join("\n", //
+        String query = join("\n", //
                 "SELECT l.attachFeature", //
                 "FROM AnnotationLayer AS l", //
                 "WHERE l.attachType = :layer", //
@@ -1838,6 +1844,76 @@ public class AnnotationSchemaServiceImpl
         }
 
         return candidates;
+    }
+
+    @Override
+    public void addLayerAndFeatureDefinitionAnnotations(CAS aCas, List<AnnotationFeature> aFeatures)
+    {
+        var layerDefType = aCas.getTypeSystem().getType(TYPE_NAME_LAYER_DEFINITION);
+        var featureDefType = aCas.getTypeSystem().getType(TYPE_NAME_FEATURE_DEFINITION);
+
+        var featuresGroupedByLayer = aFeatures.stream() //
+                .collect(groupingBy(AnnotationFeature::getLayer));
+
+        var layers = featuresGroupedByLayer.keySet().stream() //
+                .sorted(comparing(AnnotationLayer::getName)) //
+                .toList();
+
+        for (var layer : layers) {
+            final var layerDefFs = aCas.createFS(layerDefType);
+            setFeature(layerDefFs, FEATURE_BASE_NAME_NAME, layer.getName());
+            setFeature(layerDefFs, FEATURE_BASE_NAME_UI_NAME, layer.getUiName());
+            aCas.addFsToIndexes(layerDefFs);
+
+            var features = featuresGroupedByLayer.get(layer).stream() //
+                    .sorted(comparing(AnnotationFeature::getName)) //
+                    .toList();
+
+            for (var feature : features) {
+                final var featureDefFs = aCas.createFS(featureDefType);
+                setFeature(featureDefFs, FEATURE_BASE_NAME_LAYER, layerDefFs);
+                setFeature(featureDefFs, FEATURE_BASE_NAME_NAME, feature.getName());
+                setFeature(featureDefFs, FEATURE_BASE_NAME_UI_NAME, feature.getUiName());
+                aCas.addFsToIndexes(featureDefFs);
+            }
+        }
+    }
+
+    @Override
+    public void addTagsetDefinitionAnnotations(CAS aCas, List<AnnotationFeature> aFeatures)
+    {
+        for (var feature : aFeatures) {
+            var tagSet = feature.getTagset();
+            if (tagSet == null || ChainLayerSupport.TYPE.equals(feature.getLayer().getType())) {
+                continue;
+            }
+
+            var layerName = feature.getLayer().getName();
+            var tagSetName = tagSet.getName();
+
+            var tagSetModified = false;
+            // modify existing tagset Name
+            for (var fs : aCas.select(TagsetDescription.class)) {
+                var existingLayer = fs.getLayer();
+                var existingTagSetName = fs.getName();
+                if (existingLayer.equals(layerName)) {
+                    // only if the tagset name is changed
+                    if (!tagSetName.equals(existingTagSetName)) {
+                        fs.setName(tagSetName);
+                        aCas.addFsToIndexes(fs);
+                    }
+                    tagSetModified = true;
+                    break;
+                }
+            }
+
+            if (!tagSetModified) {
+                var fs = new TagsetDescription(aCas.getJCasImpl());
+                fs.setLayer(layerName);
+                fs.setName(tagSetName);
+                aCas.addFsToIndexes(fs);
+            }
+        }
     }
 
     private static final String NAMESPACE_SEPARATOR_AS_STRING = "" + TypeSystem.NAMESPACE_SEPARATOR;
