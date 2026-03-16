@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.workload.matrix.service;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static java.util.Comparator.comparing;
 
 import java.util.ArrayList;
@@ -54,7 +55,9 @@ public class MatrixWorkloadServiceImpl
     {
         Validate.validState(aAnnotatorsPerDocument > 0, "Annotators per document must be positive");
 
-        var documents = documentService.listSourceDocuments(aProject);
+        var documents = documentService.listSourceDocuments(aProject).stream() //
+                .filter(doc -> !CURATION_DOCUMENT_STATES.contains(doc.getState())) //
+                .toList();
 
         var documentsPerUser = new LinkedHashMap<String, AtomicInteger>();
 

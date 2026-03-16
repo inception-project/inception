@@ -172,6 +172,19 @@ class DynamicWorkloadExtensionImpl2Test
     }
 
     @Test
+    void thatNextDocumentDoesNotReturnCurationStateDocuments() throws Exception
+    {
+        var otherAnnotator = userService.create(new User("anno2"));
+
+        documentService.setSourceDocumentState(sourceDocument,
+                SourceDocumentState.CURATION_IN_PROGRESS);
+
+        var next = dynamicWorkloadExtension.nextDocumentToAnnotate(project, otherAnnotator);
+
+        assertThat(next).isEmpty();
+    }
+
+    @Test
     void thatAbandonedDocumentsAreReset() throws Exception
     {
         traits = new DynamicWorkloadTraits();

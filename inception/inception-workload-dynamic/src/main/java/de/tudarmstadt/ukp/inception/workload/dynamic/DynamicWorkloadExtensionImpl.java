@@ -22,9 +22,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
+import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -32,12 +34,10 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.uima.UIMAException;
 import org.slf4j.Logger;
@@ -59,7 +59,6 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
@@ -151,9 +150,9 @@ public class DynamicWorkloadExtensionImpl
     public void writeTraits(DynamicWorkloadTraits aTrait, Project aProject)
     {
         try {
-            WorkloadManager manager = workloadManagementService
+            var manager = workloadManagementService
                     .loadOrCreateWorkloadManagerConfiguration(aProject);
-            this.writeTraits(manager, aTrait);
+            writeTraits(manager, aTrait);
             workloadManagementService.saveConfiguration(manager);
         }
         catch (Exception e) {
@@ -166,8 +165,8 @@ public class DynamicWorkloadExtensionImpl
     {
         // First, check if there are other documents which have been in the state INPROGRESS
         // Load the first one found
-        List<AnnotationDocument> inProgressDocuments = documentService
-                .listAnnotationDocumentsWithStateForUser(aProject, aUser, IN_PROGRESS);
+        var inProgressDocuments = documentService.listAnnotationDocumentsWithStateForUser(aProject,
+                aUser, IN_PROGRESS);
         if (!inProgressDocuments.isEmpty()) {
             return Optional.of(inProgressDocuments.get(0).getDocument());
         }
@@ -176,27 +175,28 @@ public class DynamicWorkloadExtensionImpl
         // abandoned by another user are available
         freshenStatus(aProject);
 
-        WorkloadManager currentWorkload = workloadManagementService
+        var currentWorkload = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(aProject);
 
         // If there are no traits set yet, use the DefaultWorkflowExtension
         // otherwise select the current one
-        DynamicWorkloadTraits traits = readTraits(currentWorkload);
-        WorkflowExtension currentWorkflowExtension = workflowExtensionPoint
-                .getExtension(traits.getWorkflowType()) //
+        var traits = readTraits(currentWorkload);
+        var currentWorkflowExtension = workflowExtensionPoint.getExtension(traits.getWorkflowType()) //
                 .orElseGet(DefaultWorkflowExtension::new);
 
         // Get all documents for which the state is NEW, or which have not been created yet.
-        List<SourceDocument> sourceDocuments = documentService
-                .listAnnotatableDocuments(aProject, aUser).entrySet().stream()
+        var sourceDocuments = documentService.listAnnotatableDocuments(aProject, aUser).entrySet()
+                .stream() //
                 .filter(entry -> entry.getValue() == null
-                        || entry.getValue().getState() == AnnotationDocumentState.NEW)
-                .map(entry -> entry.getKey()).collect(Collectors.toList());
+                        || entry.getValue().getState() == AnnotationDocumentState.NEW) //
+                .filter(entry -> !CURATION_DOCUMENT_STATES.contains(entry.getKey().getState())) //
+                .map(entry -> entry.getKey()) //
+                .collect(toList());
 
         // Rearrange list of documents according to current workflow
         sourceDocuments = currentWorkflowExtension.rankDocuments(sourceDocuments);
 
-        for (SourceDocument doc : sourceDocuments) {
+        for (var doc : sourceDocuments) {
             // FIXME: repeated query to DB should be optimized into a single query returning
             // a map of documents / annotator counts
 

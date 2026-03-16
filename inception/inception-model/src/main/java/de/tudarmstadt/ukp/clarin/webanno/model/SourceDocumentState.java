@@ -17,6 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
+import static java.util.Collections.unmodifiableSet;
+
+import java.util.EnumSet;
+import java.util.Set;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -63,6 +68,9 @@ public enum SourceDocumentState
      */
     @JsonProperty("CURATION_FINISHED")
     CURATION_FINISHED("CURATION_FINISHED", "<i class=\"fas fa-clipboard-check\"></i>", "#3232FFFF");
+
+    public static final Set<SourceDocumentState> CURATION_DOCUMENT_STATES = unmodifiableSet(
+            EnumSet.of(CURATION_IN_PROGRESS, CURATION_FINISHED));
 
     private final String id;
     private final String symbol;

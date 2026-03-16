@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NE
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.oneClickTransition;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
@@ -41,7 +42,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -553,9 +553,12 @@ public class DynamicWorkloadManagementPage
                         result.addAll(
                                 documentService.listAnnotatableDocuments(currentProject.getObject(),
                                         userSelection.getModelObject()).keySet());
-                        result.sort(Comparator.comparing(SourceDocument::getName));
+                        result.sort(comparing(SourceDocument::getName));
                     }
                 }
+
+                result.removeIf(doc -> CURATION_DOCUMENT_STATES.contains(doc.getState()));
+
                 return result;
             }
         };
