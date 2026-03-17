@@ -4,7 +4,7 @@
 #
 ############################################################
 
-FROM eclipse-temurin:25-jre-noble@sha256:d8dd4342b7dbb5a9c06d0499eecca86315346acc6a20026080642610344ceb2c
+FROM eclipse-temurin:25-jre-noble@sha256:caca81d76e77890ce54e175f1d121ce3bd70ae56051033c3204618d253c3c814
 
 LABEL maintainer="INCEpTION Team"
 

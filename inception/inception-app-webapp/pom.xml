@@ -854,11 +854,6 @@
     </dependency>
     
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>no.nav.security</groupId>
       <artifactId>mock-oauth2-server</artifactId>
       <scope>test</scope>
@@ -1113,6 +1108,7 @@
               <ignoredDependency>com.nimbusds:nimbus-jose-jwt</ignoredDependency>
               <ignoredDependency>org.springframework.security:spring-security-oauth2-jose</ignoredDependency>
               <ignoredDependency>org.apache.logging.log4j:log4j-api</ignoredDependency>
+              <ignoredDependency>org.apache.commons:commons-lang3</ignoredDependency>
               <!-- 
                 - Detection of this dependency is flickering. We need it for a menu-item. So
                 - for the moment, completely ignore it in the dependency checking.
