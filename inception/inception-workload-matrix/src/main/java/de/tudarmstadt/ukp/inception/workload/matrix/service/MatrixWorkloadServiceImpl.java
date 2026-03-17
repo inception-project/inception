@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static java.util.Comparator.comparing;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +31,8 @@ import java.util.LinkedHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -40,6 +43,8 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 public class MatrixWorkloadServiceImpl
     implements MatrixWorkloadService
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private final DocumentService documentService;
     private final ProjectService projectService;
 
@@ -101,7 +106,8 @@ public class MatrixWorkloadServiceImpl
                         .findFirst();
 
                 if (maybeUserToAssign.isEmpty()) {
-                    // No more users we can assign the document to - give up
+                    LOG.debug("{} No more users left we can assign to this document - giving up",
+                            document);
                     break;
                 }
 
