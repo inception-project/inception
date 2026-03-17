@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAu
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
@@ -256,6 +257,24 @@ class MatrixWorkloadServiceImplIntegrationTest
 
         assertThat(documentService.listAnnotationDocuments(project)) //
                 .isEmpty();
+    }
+
+    @Test
+    void testAssignWorkloadSkipsCurationStateDocuments()
+    {
+        // Put doc1 into curation in-progress state
+        documentService.setSourceDocumentState(doc1, SourceDocumentState.CURATION_IN_PROGRESS);
+
+        // Run assignment
+        sut.assignWorkload(project, 1, true);
+
+        // Ensure no annotation documents were created for the document in curation state
+        var annDocs = documentService.listAnnotationDocuments(project);
+        assertThat(annDocs) //
+                .isNotEmpty() //
+                .extracting(AnnotationDocument::getDocument) //
+                .doesNotContain(doc1) //
+                .containsAnyOf(doc2, doc3);
     }
 
     @SpringBootConfiguration
