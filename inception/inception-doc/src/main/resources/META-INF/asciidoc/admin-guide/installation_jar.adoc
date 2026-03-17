@@ -70,8 +70,10 @@ $ chmod +x /srv/inception/inception.jar
 Description=INCEpTION
 
 [Service]
-ExecStart=/srv/inception/inception.jar
 User=www-data
+WorkingDirectory=/srv/inception
+EnvironmentFile=/srv/inception/inception.conf
+ExecStart=/usr/bin/java $JAVA_OPTS -jar /srv/inception/inception.jar
 
 [Install]
 WantedBy=multi-user.target
