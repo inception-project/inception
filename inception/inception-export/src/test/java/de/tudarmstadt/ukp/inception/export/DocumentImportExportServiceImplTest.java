@@ -21,11 +21,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
-import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.FEATURE_BASE_NAME_LAYER;
-import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.FEATURE_BASE_NAME_NAME;
-import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.FEATURE_BASE_NAME_UI_NAME;
-import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.TYPE_NAME_FEATURE_DEFINITION;
-import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.TYPE_NAME_LAYER_DEFINITION;
+import static de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService.FEATURE_BASE_NAME_LAYER;
+import static de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService.FEATURE_BASE_NAME_NAME;
+import static de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService.FEATURE_BASE_NAME_UI_NAME;
+import static de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService.TYPE_NAME_FEATURE_DEFINITION;
+import static de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService.TYPE_NAME_LAYER_DEFINITION;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
@@ -46,7 +46,6 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
@@ -199,10 +198,10 @@ public class DocumentImportExportServiceImplTest
         var jcas2 = loadJCasFromZippedXmi(exportedXmi);
         var layerDefs = jcas2.select(TYPE_NAME_LAYER_DEFINITION).asList().stream()
                 .sorted(comparing(fs -> getFeature(fs, FEATURE_BASE_NAME_NAME, String.class)))
-                .collect(Collectors.toList());
+                .toList();
         var featureDefs = jcas2.select(TYPE_NAME_FEATURE_DEFINITION).asList().stream()
                 .sorted(comparing(fs -> getFeature(fs, FEATURE_BASE_NAME_NAME, String.class)))
-                .collect(Collectors.toList());
+                .toList();
 
         assertThat(layerDefs) //
                 .extracting( //

@@ -47,6 +47,9 @@ import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
@@ -60,8 +63,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config.ExternalRecommenderPropertiesImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.PredictionRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.TrainingRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.MPredictionRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.MTrainingRequest;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 import okhttp3.mockwebserver.Dispatcher;
@@ -69,6 +73,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 
+@ExtendWith(MockitoExtension.class)
 public class ExternalRecommenderIntegrationTest
 {
     private static final String TYPE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
@@ -79,6 +84,8 @@ public class ExternalRecommenderIntegrationTest
     private static final long PROJECT_ID = 42L;
     private static final boolean CROSS_SENTENCE = true;
     private static final AnchoringMode ANCHORING_MODE = AnchoringMode.TOKENS;
+
+    private @Mock AnnotationSchemaService schemaService;
 
     private Recommender recommender;
     private RecommenderContext context;
@@ -97,7 +104,8 @@ public class ExternalRecommenderIntegrationTest
         context = new RecommenderContext();
 
         traits = new ExternalRecommenderTraits();
-        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
+        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits,
+                schemaService);
 
         remoteRecommender = new MockRemoteStringMatchingNerRecommender(recommender);
 
@@ -153,7 +161,7 @@ public class ExternalRecommenderIntegrationTest
         var casses = loadDevelopmentData();
         sut.train(context, casses);
 
-        var request = fromJsonString(TrainingRequest.class, requestBodies.get(0));
+        var request = fromJsonString(MTrainingRequest.class, requestBodies.get(0));
 
         assertThat(request.getMetadata()) //
                 .hasNoNullFieldsOrProperties() //
@@ -183,7 +191,7 @@ public class ExternalRecommenderIntegrationTest
         RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
         sut.predict(new PredictionContext(context), cas);
 
-        var request = fromJsonString(PredictionRequest.class, requestBodies.get(1));
+        var request = fromJsonString(MPredictionRequest.class, requestBodies.get(1));
 
         assertThat(request.getMetadata()) //
                 .hasNoNullFieldsOrProperties() //

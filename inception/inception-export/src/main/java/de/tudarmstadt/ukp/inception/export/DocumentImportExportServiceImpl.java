@@ -26,13 +26,9 @@ import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCa
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.FSUtil.setFeature;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 
 import java.io.File;
@@ -70,16 +66,13 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties.CasDoctorOnImportPolicy;
@@ -98,12 +91,6 @@ import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 public class DocumentImportExportServiceImpl
     implements DocumentImportExportService
 {
-    static final String FEATURE_BASE_NAME_UI_NAME = "uiName";
-    static final String FEATURE_BASE_NAME_NAME = "name";
-    static final String FEATURE_BASE_NAME_LAYER = "layer";
-    static final String TYPE_NAME_FEATURE_DEFINITION = "de.tudarmstadt.ukp.clarin.webanno.api.type.FeatureDefinition";
-    static final String TYPE_NAME_LAYER_DEFINITION = "de.tudarmstadt.ukp.clarin.webanno.api.type.LayerDefinition";
-
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final CasStorageService casStorageService;
@@ -467,9 +454,9 @@ public class DocumentImportExportServiceImpl
                 // necessary for the writers to create the files under the correct names.
                 addOrUpdateDocumentMetadata(exportCas, aDocument, aDataOwner);
 
-                addLayerAndFeatureDefinitionAnnotations(exportCas, project, bulkOperationContext);
-
-                addTagsetDefinitionAnnotations(exportCas, project, bulkOperationContext);
+                var features = listSupportedFeatures(project, aBulkOperationContext);
+                annotationService.addLayerAndFeatureDefinitionAnnotations(exportCas, features);
+                annotationService.addTagsetDefinitionAnnotations(exportCas, features);
 
                 var exportTempDir = Files.createTempDirectory("inception-export").toFile();
                 try {
@@ -538,12 +525,17 @@ public class DocumentImportExportServiceImpl
     {
         var exportFeaturesKey = Pair.of(aProject, "exportFeatures");
         @SuppressWarnings("unchecked")
-        var features = (List<AnnotationFeature>) aBulkOperationContext.get(exportFeaturesKey);
+        var features = aBulkOperationContext != null
+                ? (List<AnnotationFeature>) aBulkOperationContext.get(exportFeaturesKey)
+                : null;
         if (features == null) {
             features = annotationService.listSupportedFeatures(aProject).stream() //
                     .filter(AnnotationFeature::isEnabled) //
                     .toList();
-            aBulkOperationContext.put(exportFeaturesKey, features);
+
+            if (aBulkOperationContext != null) {
+                aBulkOperationContext.put(exportFeaturesKey, features);
+            }
         }
 
         return features;
@@ -559,82 +551,5 @@ public class DocumentImportExportServiceImpl
         documentMetadata.setDocumentId(aDataOwner);
         documentMetadata.setDocumentBaseUri(slug);
         documentMetadata.setDocumentUri(slug + "/" + aDocument.getName());
-    }
-
-    private void addLayerAndFeatureDefinitionAnnotations(CAS aCas, Project aProject,
-            Map<Pair<Project, String>, Object> aBulkOperationContext)
-    {
-        var allFeatures = listSupportedFeatures(aProject, aBulkOperationContext);
-
-        var layerDefType = aCas.getTypeSystem().getType(TYPE_NAME_LAYER_DEFINITION);
-        var featureDefType = aCas.getTypeSystem().getType(TYPE_NAME_FEATURE_DEFINITION);
-
-        var featuresGroupedByLayer = allFeatures.stream() //
-                .collect(groupingBy(AnnotationFeature::getLayer));
-
-        var layers = featuresGroupedByLayer.keySet().stream() //
-                .sorted(comparing(AnnotationLayer::getName)) //
-                .toList();
-
-        for (var layer : layers) {
-            final var layerDefFs = aCas.createFS(layerDefType);
-            setFeature(layerDefFs, FEATURE_BASE_NAME_NAME, layer.getName());
-            setFeature(layerDefFs, FEATURE_BASE_NAME_UI_NAME, layer.getUiName());
-            aCas.addFsToIndexes(layerDefFs);
-
-            var features = featuresGroupedByLayer.get(layer).stream() //
-                    .sorted(comparing(AnnotationFeature::getName)) //
-                    .toList();
-
-            for (var feature : features) {
-                final var featureDefFs = aCas.createFS(featureDefType);
-                setFeature(featureDefFs, FEATURE_BASE_NAME_LAYER, layerDefFs);
-                setFeature(featureDefFs, FEATURE_BASE_NAME_NAME, feature.getName());
-                setFeature(featureDefFs, FEATURE_BASE_NAME_UI_NAME, feature.getUiName());
-                aCas.addFsToIndexes(featureDefFs);
-            }
-        }
-    }
-
-    private void addTagsetDefinitionAnnotations(CAS aCas, Project aProject,
-            Map<Pair<Project, String>, Object> aBulkOperationContext)
-    {
-        var features = listSupportedFeatures(aProject, aBulkOperationContext);
-
-        for (var feature : features) {
-            var tagSet = feature.getTagset();
-            if (tagSet == null || ChainLayerSupport.TYPE.equals(feature.getLayer().getType())) {
-                continue;
-            }
-
-            var aLayer = feature.getLayer().getName();
-            var aTagSetName = tagSet.getName();
-            var tagsetType = getType(aCas, TagsetDescription.class);
-            var layerFeature = tagsetType.getFeatureByBaseName(FEATURE_BASE_NAME_LAYER);
-            var nameFeature = tagsetType.getFeatureByBaseName(FEATURE_BASE_NAME_NAME);
-
-            var tagSetModified = false;
-            // modify existing tagset Name
-            for (var fs : select(aCas, tagsetType)) {
-                var layer = fs.getStringValue(layerFeature);
-                var tagSetName = fs.getStringValue(nameFeature);
-                if (layer.equals(aLayer)) {
-                    // only if the tagset name is changed
-                    if (!aTagSetName.equals(tagSetName)) {
-                        fs.setStringValue(nameFeature, aTagSetName);
-                        aCas.addFsToIndexes(fs);
-                    }
-                    tagSetModified = true;
-                    break;
-                }
-            }
-
-            if (!tagSetModified) {
-                var fs = aCas.createFS(tagsetType);
-                fs.setStringValue(layerFeature, aLayer);
-                fs.setStringValue(nameFeature, aTagSetName);
-                aCas.addFsToIndexes(fs);
-            }
-        }
     }
 }

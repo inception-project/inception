@@ -188,6 +188,7 @@ public class TrainingTask
         var ctx = engine
                 .newContext(recommenderService.getContext(sessionOwner.getUsername(), aRecommender)
                         .orElse(RecommenderContext.emptyContext()));
+        ctx.setProject(aRecommender.getProject());
         ctx.setUser(sessionOwner);
 
         // If engine does not support training, mark engine ready and skip to
