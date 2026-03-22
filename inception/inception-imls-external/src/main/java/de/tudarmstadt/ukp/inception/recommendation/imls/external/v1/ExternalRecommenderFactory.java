@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config.ExternalRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config.ExternalRecommenderProperties;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * <p>
@@ -43,10 +44,13 @@ public class ExternalRecommenderFactory
     public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.external.ExternalClassificationTool";
 
     private final ExternalRecommenderProperties properties;
+    private final AnnotationSchemaService schemaService;
 
-    public ExternalRecommenderFactory(ExternalRecommenderProperties aProperties)
+    public ExternalRecommenderFactory(ExternalRecommenderProperties aProperties,
+            AnnotationSchemaService aSchemaService)
     {
         properties = aProperties;
+        schemaService = aSchemaService;
     }
 
     @Override
@@ -59,7 +63,7 @@ public class ExternalRecommenderFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         var traits = readTraits(aRecommender);
-        return new ExternalRecommender(properties, aRecommender, traits);
+        return new ExternalRecommender(properties, aRecommender, traits, schemaService);
     }
 
     @Override

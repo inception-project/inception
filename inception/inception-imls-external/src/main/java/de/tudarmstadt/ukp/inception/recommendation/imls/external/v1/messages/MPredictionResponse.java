@@ -17,52 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Document;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Metadata;
-
-public class TrainingRequest
+public class MPredictionResponse
 {
+    @JsonProperty("document")
+    private String document;
 
-    @JsonProperty("typeSystem")
-    private String typeSystem;
-
-    @JsonProperty("documents")
-    private List<Document> documents;
-
-    @JsonProperty("metadata")
-    private Metadata metadata;
-
-    public String getTypeSystem()
+    public String getDocument()
     {
-        return typeSystem;
+        return document;
     }
 
-    public void setTypeSystem(String aTypeSystem)
+    public void setDocument(String aDocument)
     {
-        typeSystem = aTypeSystem;
-    }
-
-    public List<Document> getDocuments()
-    {
-        return documents;
-    }
-
-    public void setDocuments(List<Document> aDocuments)
-    {
-        documents = aDocuments;
-    }
-
-    public Metadata getMetadata()
-    {
-        return metadata;
-    }
-
-    public void setMetadata(Metadata aMetadata)
-    {
-        metadata = aMetadata;
+        document = aDocument;
     }
 }

@@ -168,6 +168,7 @@ public class NonTrainableRecommenderActivationTask
         var ctx = aEngine
                 .newContext(recommendationService.getContext(user.getUsername(), recommender)
                         .orElse(RecommenderContext.emptyContext()));
+        ctx.setProject(recommender.getProject());
         ctx.setUser(user);
         ctx.close();
         recommendationService.putContext(user, recommender, ctx);

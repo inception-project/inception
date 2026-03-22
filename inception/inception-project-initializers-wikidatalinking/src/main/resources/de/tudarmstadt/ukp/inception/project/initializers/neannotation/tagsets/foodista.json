@@ -4,28 +4,28 @@
   "language" : null,
   "tags" : [ {
     "tag_name" : "Date",
-    "tag_description" : null
+    "tag_description" : "A calendar date or time expression (e.g., 'August 13, 2019')."
   }, {
     "tag_name" : "Event",
-    "tag_description" : null
+    "tag_description" : "A happening or occurrence (e.g., conferences, festivals, incidents)."
   }, {
     "tag_name" : "Location",
-    "tag_description" : null
+    "tag_description" : "A place or geographic location (city, landmark, address)."
   }, {
     "tag_name" : "Organization",
-    "tag_description" : null
+    "tag_description" : "A company, institution, agency, or group."
   }, {
     "tag_name" : "Person",
-    "tag_description" : null
+    "tag_description" : "An individual’s name."
   }, {
     "tag_name" : "Product",
-    "tag_description" : null
+    "tag_description" : "A named commercial item or specific product."
   }, {
     "tag_name" : "Product Category",
-    "tag_description" : null
+    "tag_description" : "A class or category of products (e.g., 'IPA', 'smartphone')."
   }, {
     "tag_name" : "Route",
-    "tag_description" : null
+    "tag_description" : "A named travel path or route (road, trail, transit line)."
   } ],
   "create_tag" : false
 }

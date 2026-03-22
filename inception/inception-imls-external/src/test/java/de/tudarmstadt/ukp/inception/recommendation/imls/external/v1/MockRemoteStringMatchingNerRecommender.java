@@ -43,9 +43,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.PredictionRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.PredictionResponse;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.TrainingRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.MPredictionRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.MPredictionResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.MTrainingRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderTraits;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
@@ -67,7 +67,7 @@ public class MockRemoteStringMatchingNerRecommender
     public void train(String aTrainingRequestJson)
         throws UIMAException, SAXException, IOException, RecommendationException
     {
-        var request = fromJsonString(TrainingRequest.class, aTrainingRequestJson);
+        var request = fromJsonString(MTrainingRequest.class, aTrainingRequestJson);
 
         List<CAS> casses = new ArrayList<>();
         for (var doc : request.getDocuments()) {
@@ -81,7 +81,7 @@ public class MockRemoteStringMatchingNerRecommender
     public String predict(String aPredictionRequestJson)
         throws IOException, UIMAException, SAXException, RecommendationException
     {
-        var request = fromJsonString(PredictionRequest.class, aPredictionRequestJson);
+        var request = fromJsonString(MPredictionRequest.class, aPredictionRequestJson);
         var cas = deserializeCas(request.getDocument().getXmi(), request.getTypeSystem());
 
         // Only work on real annotations, not on predictions
@@ -124,7 +124,7 @@ public class MockRemoteStringMatchingNerRecommender
     {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             XmiCasSerializer.serialize(aCas, null, out, true, null);
-            var response = new PredictionResponse();
+            var response = new MPredictionResponse();
             response.setDocument(new String(out.toByteArray(), UTF_8));
             return JSONUtil.toJsonString(response);
         }

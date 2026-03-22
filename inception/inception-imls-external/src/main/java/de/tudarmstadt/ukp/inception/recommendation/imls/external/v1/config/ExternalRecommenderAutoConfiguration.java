@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.ExternalRecommenderFactory;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
 @ConditionalOnProperty(prefix = "recommender.external", name = "enabled", havingValue = "true", matchIfMissing = true)
@@ -31,8 +32,8 @@ public class ExternalRecommenderAutoConfiguration
 {
     @Bean
     public ExternalRecommenderFactory externalRecommenderFactory(
-            ExternalRecommenderProperties aProperties)
+            ExternalRecommenderProperties aProperties, AnnotationSchemaService aSchemaService)
     {
-        return new ExternalRecommenderFactory(aProperties);
+        return new ExternalRecommenderFactory(aProperties, aSchemaService);
     }
 }

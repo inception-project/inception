@@ -17,18 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Document;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Metadata;
 
-public class PredictionRequest
+public class MTrainingRequest
 {
     @JsonProperty("typeSystem")
     private String typeSystem;
 
-    @JsonProperty("document")
-    private Document document;
+    @JsonProperty("documents")
+    private List<Document> documents;
 
     @JsonProperty("metadata")
     private Metadata metadata;
@@ -43,14 +45,14 @@ public class PredictionRequest
         typeSystem = aTypeSystem;
     }
 
-    public Document getDocument()
+    public List<Document> getDocuments()
     {
-        return document;
+        return documents;
     }
 
-    public void setDocument(Document aDocument)
+    public void setDocuments(List<Document> aDocuments)
     {
-        document = aDocument;
+        documents = aDocuments;
     }
 
     public Metadata getMetadata()

@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCa
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.Strings.CS;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -39,6 +40,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.net.ssl.SSLContext;
@@ -60,6 +62,8 @@ import org.springframework.http.HttpHeaders;
 import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -70,11 +74,15 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config.ExternalRecommenderProperties;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.PredictionRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.PredictionResponse;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.TrainingRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.MFeatureHandle;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.MPredictionRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.MPredictionResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.MTag;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.MTagset;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.MTrainingRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Document;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Metadata;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.uima.Range;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
@@ -92,16 +100,18 @@ public class ExternalRecommender
 
     private final ExternalRecommenderProperties properties;
     private final ExternalRecommenderTraits traits;
+    private final AnnotationSchemaService schemaService;
 
     private HttpClient _client;
 
     public ExternalRecommender(ExternalRecommenderProperties aProperties, Recommender aRecommender,
-            ExternalRecommenderTraits aTraits)
+            ExternalRecommenderTraits aTraits, AnnotationSchemaService aSchemaService)
     {
         super(aRecommender);
 
         properties = aProperties;
         traits = aTraits;
+        schemaService = aSchemaService;
     }
 
     private HttpClient getClient() throws RecommendationException
@@ -169,7 +179,7 @@ public class ExternalRecommender
     {
         var client = getClient();
 
-        var trainingRequest = new TrainingRequest();
+        var trainingRequest = new MTrainingRequest();
 
         // We assume that the type system for all CAS are the same
         var representativeCas = aCasses.get(0);
@@ -231,12 +241,11 @@ public class ExternalRecommender
 
         var typeSystem = serializeTypeSystem(aCas);
 
-        var predictionRequest = new PredictionRequest();
+        var predictionRequest = new MPredictionRequest();
         predictionRequest.setTypeSystem(typeSystem);
         predictionRequest.setDocument(buildDocument(aCas));
-
-        // Fill in metadata
         predictionRequest.setMetadata(buildMetadata(aCas, new Range(aBegin, aEnd)));
+        predictionRequest.setTagsets(buildTagsets(aCas, aContext));
 
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(CS.appendIfMissing(traits.getRemoteUrl(), "/")).resolve("predict")) //
@@ -262,6 +271,50 @@ public class ExternalRecommender
         }
 
         return Range.rangeCoveringDocument(aCas);
+    }
+
+    private List<MTagset> buildTagsets(CAS aCas, PredictionContext aContext)
+        throws RecommendationException
+    {
+        var casMetadata = getCasMetadata(aCas);
+        var projectId = casMetadata.getProjectId();
+        var maybeProject = aContext.getProject();
+
+        if (!(projectId > 0) || maybeProject.isEmpty()) {
+            return emptyList();
+        }
+
+        record TagsetAssignment(TagSet tagset, List<AnnotationFeature> features) {}
+
+        var activeTagsets = new HashMap<TagSet, TagsetAssignment>();
+        var project = maybeProject.get();
+
+        for (var feature : schemaService.listAnnotationFeature(project)) {
+            if (!feature.isEnabled() || !feature.getLayer().isEnabled()
+                    || feature.getTagset() == null) {
+                continue;
+            }
+
+            var tagset = feature.getTagset();
+
+            var assignment = activeTagsets.computeIfAbsent(tagset,
+                    $ -> new TagsetAssignment(tagset, new ArrayList<>()));
+            assignment.features.add(feature);
+        }
+
+        var result = new ArrayList<MTagset>();
+        for (var entry : activeTagsets.entrySet()) {
+            var targets = entry.getValue().features().stream() //
+                    .map(f -> new MFeatureHandle(f.getLayer().getName(), f.getName())) //
+                    .toList();
+
+            var tags = schemaService.listTags(entry.getKey()).stream() //
+                    .map(t -> new MTag(t.getName(), t.getDescription())) //
+                    .toList();
+
+            result.add(new MTagset(entry.getKey().getDescription(), tags, targets));
+        }
+        return result;
     }
 
     private String serializeTypeSystem(CAS aCas) throws RecommendationException
@@ -332,11 +385,11 @@ public class ExternalRecommender
                 layer.isCrossSentence(), aRange);
     }
 
-    private PredictionResponse deserializePredictionResponse(HttpResponse<String> response)
+    private MPredictionResponse deserializePredictionResponse(HttpResponse<String> response)
         throws RecommendationException
     {
         try {
-            return JSONUtil.fromJsonString(PredictionResponse.class, response.body());
+            return JSONUtil.fromJsonString(MPredictionResponse.class, response.body());
         }
         catch (IOException e) {
             throw new RecommendationException("Error while deserializing prediction response!", e);
