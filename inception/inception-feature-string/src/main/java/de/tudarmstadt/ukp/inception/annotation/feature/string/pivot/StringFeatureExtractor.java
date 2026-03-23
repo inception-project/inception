@@ -19,14 +19,14 @@ package de.tudarmstadt.ukp.inception.annotation.feature.string.pivot;
 
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
-import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.cas.FeatureStructure;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.FeatureStructureExtractor_ImplBase;
 
 public class StringFeatureExtractor
-    extends AnnotationExtractor_ImplBase<AnnotationFS, String>
+    extends FeatureStructureExtractor_ImplBase<FeatureStructure, String>
 {
     private final AnnotationFeature feature;
 
@@ -43,7 +43,7 @@ public class StringFeatureExtractor
     }
 
     @Override
-    public String extract(ContextualizedFS<AnnotationFS> aAnn)
+    public String extract(ContextualizedFS<FeatureStructure> aAnn)
     {
         var ann = aAnn.fs();
         var f = ann.getType().getFeatureByBaseName(feature.getName());

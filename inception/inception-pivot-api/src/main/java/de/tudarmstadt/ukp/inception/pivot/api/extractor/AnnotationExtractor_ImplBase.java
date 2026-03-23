@@ -17,57 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.pivot.api.extractor;
 
-import static java.util.Optional.empty;
-
 import java.io.Serializable;
-import java.util.Optional;
 
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public abstract class AnnotationExtractor_ImplBase<T extends AnnotationFS, R extends Serializable>
+    extends FeatureStructureExtractor_ImplBase<T, R>
     implements AnnotationExtractor<T, R>
 {
-    private final AnnotationLayer layer;
-
     public AnnotationExtractor_ImplBase(AnnotationLayer aLayer)
     {
-        layer = aLayer;
-    }
-
-    public AnnotationLayer getLayer()
-    {
-        return layer;
-    }
-
-    @Override
-    public Optional<String> getTriggerType()
-    {
-        if (layer == null) {
-            return empty();
-        }
-
-        return Optional.of(layer.getName());
-    }
-
-    @Override
-    public boolean isWeak()
-    {
-        return layer == null;
-    }
-
-    @Override
-    public boolean accepts(Object aSource)
-    {
-        if (aSource instanceof ContextualizedFS ann) {
-            if (layer == null) {
-                return true;
-            }
-
-            return layer.getName().equals(ann.fs().getType().getName());
-        }
-
-        return false;
+        super(aLayer);
     }
 }
