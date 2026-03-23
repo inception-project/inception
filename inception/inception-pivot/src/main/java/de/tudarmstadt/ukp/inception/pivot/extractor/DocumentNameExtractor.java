@@ -17,15 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.pivot.extractor;
 
-import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.cas.AnnotationBase;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.FeatureStructureExtractor_ImplBase;
 
 public class DocumentNameExtractor
-    extends AnnotationExtractor_ImplBase<AnnotationFS, String>
+    extends FeatureStructureExtractor_ImplBase<AnnotationBase, String>
 {
     private Object cacheMarker;
     private String documentName;
@@ -48,7 +48,7 @@ public class DocumentNameExtractor
     }
 
     @Override
-    public String extract(ContextualizedFS<AnnotationFS> aAnn)
+    public String extract(ContextualizedFS<AnnotationBase> aAnn)
     {
         var ann = aAnn.fs();
         var cas = ann.getCAS();
