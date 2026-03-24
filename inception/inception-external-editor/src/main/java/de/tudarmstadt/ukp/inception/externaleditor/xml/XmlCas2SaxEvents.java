@@ -77,7 +77,7 @@ public class XmlCas2SaxEvents
     }
 
     @Override
-    public void process(XmlElement aElement) throws SAXException
+    public void process(XmlElement aElement, ProcessElementOptions... aOptions) throws SAXException
     {
         // HACK: adding a wrapper because otherwise RecogitoJS cannot insert its own
         // wrapper...

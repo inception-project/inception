@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
+
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
@@ -91,36 +94,48 @@ public interface DocumentImportExportService
 
     default List<ResourceReference> getFormatCssStylesheets(SourceDocument aDoc)
     {
-        Optional<FormatSupport> maybeFormatSupport = getFormatById(aDoc.getFormat());
+        var maybeFormatSupport = getFormatById(aDoc.getFormat());
         if (!maybeFormatSupport.isPresent()) {
-            return Collections.emptyList();
+            return emptyList();
         }
 
-        FormatSupport formatSupport = maybeFormatSupport.get();
+        var formatSupport = maybeFormatSupport.get();
 
         return formatSupport.getCssStylesheets();
     }
 
-    default List<String> getSectionElements(SourceDocument aDoc)
+    default Set<String> getSectionElements(SourceDocument aDoc)
     {
-        Optional<FormatSupport> maybeFormatSupport = getFormatById(aDoc.getFormat());
+        var maybeFormatSupport = getFormatById(aDoc.getFormat());
         if (!maybeFormatSupport.isPresent()) {
-            return Collections.emptyList();
+            return emptySet();
         }
 
-        FormatSupport formatSupport = maybeFormatSupport.get();
+        var formatSupport = maybeFormatSupport.get();
 
         return formatSupport.getSectionElements();
     }
 
+    default Set<String> getProtectedElements(SourceDocument aDoc)
+    {
+        var maybeFormatSupport = getFormatById(aDoc.getFormat());
+        if (!maybeFormatSupport.isPresent()) {
+            return emptySet();
+        }
+
+        var formatSupport = maybeFormatSupport.get();
+
+        return formatSupport.getProtectedElements();
+    }
+
     default Optional<PolicyCollection> getFormatPolicy(SourceDocument aDoc) throws IOException
     {
-        Optional<FormatSupport> maybeFormatSupport = getFormatById(aDoc.getFormat());
+        var maybeFormatSupport = getFormatById(aDoc.getFormat());
         if (!maybeFormatSupport.isPresent()) {
             return Optional.empty();
         }
 
-        FormatSupport formatSupport = maybeFormatSupport.get();
+        var formatSupport = maybeFormatSupport.get();
 
         return formatSupport.getPolicy();
     }

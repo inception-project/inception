@@ -83,6 +83,7 @@ export class ApacheAnnotatorEditorFactory implements AnnotationEditorFactory {
             targetElement,
             ajax,
             props.userPreferencesKey,
+            protectedElementLocalNames,
             sectionElementLocalNames
         );
         return element[PROP_EDITOR];

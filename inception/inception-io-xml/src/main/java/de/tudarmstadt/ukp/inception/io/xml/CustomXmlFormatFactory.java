@@ -26,6 +26,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
@@ -113,7 +114,7 @@ public class CustomXmlFormatFactory
     }
 
     @Override
-    public List<String> getSectionElements()
+    public Set<String> getSectionElements()
     {
         return description.getSectionElements();
     }

@@ -17,12 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.io.html;
 
-import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
@@ -49,6 +48,8 @@ public class HtmlArchiveFormatSupport
 {
     public static final String ID = "htmldoc-zip";
     public static final String NAME = "HTML (ZIP)";
+
+    private static final Set<String> HTML_SECTION_ELEMENTS = Set.of("p");
 
     private final DefaultHtmlDocumentPolicy defaultPolicy;
 
@@ -90,9 +91,9 @@ public class HtmlArchiveFormatSupport
     }
 
     @Override
-    public List<String> getSectionElements()
+    public Set<String> getSectionElements()
     {
-        return asList("p");
+        return HTML_SECTION_ELEMENTS;
     }
 
     @Override

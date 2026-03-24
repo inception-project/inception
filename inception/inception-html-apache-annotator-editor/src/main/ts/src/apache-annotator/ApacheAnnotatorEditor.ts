@@ -21,12 +21,13 @@ import {
     type Offsets,
     calculateStartOffset,
 } from '@inception-project/inception-js-api';
-import { highlights, ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualizer.svelte';
+import { ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualizer.svelte';
 import { ApacheAnnotatorSelector } from './ApacheAnnotatorSelector';
 import ApacheAnnotatorToolbar from './ApacheAnnotatorToolbar.svelte';
 import { annotatorState } from './ApacheAnnotatorState.svelte';
 import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte';
 import { mount, tick, unmount } from 'svelte';
+import { highlights } from './Utilities';
 
 interface SelectionLike {
     anchorNode: Node | null | undefined;
@@ -49,27 +50,32 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     private navigatorContainer: HTMLElement;
     private deferredInitializationSteps: (() => void)[] = [];
     private initializationComplete = false;
+    private protectElements: boolean = true;
+    private protectedElementLocalNames: Set<string>;
     private activeResizeCleanup: (() => void) | undefined = undefined;
 
     public constructor(
         element: Element,
         ajax: DiamAjax,
         userPreferencesKey: string,
+        protectedElementLocalNames: Set<string>,
         sectionElementLocalNames: Set<string>
     ) {
         this.ajax = ajax;
         this.root = element;
         this.userPreferencesKey = userPreferencesKey;
         this.sectionSelector = [...sectionElementLocalNames].join(',');
+        this.protectedElementLocalNames = protectedElementLocalNames;
 
         const defaultPreferences = {
-            showLabels: false,
-            showAggregatedLabels: true,
+            showLabels: true,
+            showAggregatedLabels: false,
             showEmptyHighlights: false,
             showDocumentStructure: false,
             showImages: true,
             showTables: true,
             documentStructureWidth: 0.2,
+            protectElements: true,
         };
         let preferences = Object.assign({}, defaultPreferences);
 
@@ -89,6 +95,8 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
                 annotatorState.showTables = preferences.showTables ?? defaultPreferences.showTables;
                 annotatorState.documentStructureWidth =
                     preferences.documentStructureWidth ?? defaultPreferences.documentStructureWidth;
+                annotatorState.protectElements =
+                    preferences.protectElements ?? defaultPreferences.protectElements;
             })
             .then(() => {
                 this.ensureSectionElementsHaveAnId();
@@ -119,6 +127,7 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
                     this.ajax,
                     this.sectionSelector
                 );
+                this.vis.protectedElementSelector = [...protectedElementLocalNames].join(',');
                 this.selector = new ApacheAnnotatorSelector(this.root, this.ajax);
 
                 // Add auxiliary controls
@@ -333,15 +342,63 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
             return;
         }
 
-        if (!sel.anchorNode || !sel.focusNode) return;
+        const safeSel = this.expandSelectionOverProtectedElements(sel);
 
-        const anchorOffset = calculateStartOffset(this.root, sel.anchorNode) + sel.anchorOffset;
-        const focusOffset = calculateStartOffset(this.root, sel.focusNode) + sel.focusOffset;
+        if (!safeSel.anchorNode || !safeSel.focusNode) return;
         sel.removeAllRanges();
 
+        const anchorOffset =
+            calculateStartOffset(this.root, safeSel.anchorNode) + safeSel.anchorOffset;
+        const focusOffset =
+            calculateStartOffset(this.root, safeSel.focusNode) + safeSel.focusOffset;
         const begin = Math.min(anchorOffset, focusOffset);
         const end = Math.max(anchorOffset, focusOffset);
         this.ajax.createSpanAnnotation([[begin, end]], '');
+    }
+
+    private expandSelectionOverProtectedElements(sel: Selection): SelectionLike {
+        if (!this.protectElements || !sel.anchorNode || !sel.focusNode)
+            return {
+                anchorNode: sel.anchorNode,
+                anchorOffset: sel.anchorOffset,
+                focusNode: sel.focusNode,
+                focusOffset: sel.focusOffset,
+            };
+
+        let anchorNode: Node | null | undefined = sel.anchorNode?.parentElement;
+        let anchorOffset = sel.anchorOffset;
+
+        while (anchorNode instanceof Element) {
+            if (this.protectedElementLocalNames.has(anchorNode.localName.toLowerCase())) {
+                anchorOffset = 0;
+                break;
+            }
+            anchorNode = anchorNode.parentElement;
+        }
+
+        if (anchorNode == null) {
+            anchorNode = sel.anchorNode;
+        }
+
+        let focusNode: Node | null | undefined = sel.focusNode?.parentElement;
+        let focusOffset = sel.focusOffset;
+
+        while (focusNode instanceof Element) {
+            if (this.protectedElementLocalNames.has(focusNode.localName.toLowerCase())) {
+                focusOffset = focusNode.textContent?.length || 0;
+                break;
+            }
+            focusNode = focusNode.parentElement;
+        }
+
+        if (focusNode == null) {
+            focusNode = sel.focusNode;
+        }
+
+        // console.log(`Anchor node ${sel.anchorNode} ${sel.anchorOffset} -> ${anchorNode} ${anchorOffset}`)
+        // console.log(`Focus node ${sel.focusNode} ${sel.focusOffset} -> ${focusNode} ${focusOffset}`)
+
+        return { anchorNode, anchorOffset, focusNode, focusOffset };
     }
 
     onRightClick(event: Event): void {

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.io.html;
 
-import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
 import java.io.ByteArrayInputStream;
@@ -27,8 +26,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
@@ -59,6 +58,8 @@ public class MHtmlFormatSupport
 {
     public static final String ID = "mhtml";
     public static final String NAME = "MHTML (Web archive)";
+
+    private static final Set<String> HTML_SECTION_ELEMENTS = Set.of("p");
 
     private final DefaultHtmlDocumentPolicy defaultPolicy;
 
@@ -100,9 +101,9 @@ public class MHtmlFormatSupport
     }
 
     @Override
-    public List<String> getSectionElements()
+    public Set<String> getSectionElements()
     {
-        return asList("p");
+        return HTML_SECTION_ELEMENTS;
     }
 
     @Override

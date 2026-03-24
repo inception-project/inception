@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.externaleditor.model;
 
 import java.util.List;
+import java.util.Set;
 
 public class AnnotationEditorProperties
 {
@@ -29,8 +30,9 @@ public class AnnotationEditorProperties
     private String userPreferencesKey;
     private List<String> scriptSources;
     private List<String> stylesheetSources;
-    private List<String> sectionElements;
+    private Set<String> sectionElements;
     private boolean loadingIndicatorDisabled = false;
+    private Set<String> protectedElements;
 
     public String getEditorFactory()
     {
@@ -112,12 +114,12 @@ public class AnnotationEditorProperties
         return userPreferencesKey;
     }
 
-    public List<String> getSectionElements()
+    public Set<String> getSectionElements()
     {
         return sectionElements;
     }
 
-    public void setSectionElements(List<String> aSectionElements)
+    public void setSectionElements(Set<String> aSectionElements)
     {
         sectionElements = aSectionElements;
     }
@@ -130,5 +132,15 @@ public class AnnotationEditorProperties
     public void setCsrfToken(String aCsrfToken)
     {
         csrfToken = aCsrfToken;
+    }
+
+    public Set<String> getProtectedElements()
+    {
+        return protectedElements;
+    }
+
+    public void setProtectedElements(Set<String> aProtectedElements)
+    {
+        protectedElements = aProtectedElements;
     }
 }

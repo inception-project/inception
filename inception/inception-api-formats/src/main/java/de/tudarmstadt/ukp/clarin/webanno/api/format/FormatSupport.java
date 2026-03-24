@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.format;
 
 import static de.tudarmstadt.ukp.inception.support.io.ZipUtils.zipFolder;
 import static java.io.File.createTempFile;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.empty;
 import static org.apache.commons.io.FileUtils.copyFile;
@@ -132,9 +132,17 @@ public interface FormatSupport
     /**
      * @return format-specific section elements
      */
-    default List<String> getSectionElements()
+    default Set<String> getSectionElements()
     {
-        return asList("p");
+        return Set.of("p");
+    }
+
+    /**
+     * @return format-specific protected elements
+     */
+    default Set<String> getProtectedElements()
+    {
+        return emptySet();
     }
 
     default Optional<PolicyCollection> getPolicy() throws IOException

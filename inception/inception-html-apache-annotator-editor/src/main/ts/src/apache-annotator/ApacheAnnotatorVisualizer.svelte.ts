@@ -31,12 +31,17 @@ import {
     AnnotationOutEvent,
 } from '@inception-project/inception-js-api';
 import { type CompactAnnotatedText } from '@inception-project/inception-js-api/src/model/compact_v2';
-import { highlightText } from '@apache-annotator/dom';
 import { annotatorState } from './ApacheAnnotatorState.svelte';
 import { ResizeManager } from './ResizeManager';
 import { bgToFgColor } from '@inception-project/inception-js-api/src/util/Coloring';
 import { SectionAnnotationVisualizer } from './SectionAnnotationVisualizer';
 import { SectionAnnotationCreator } from './SectionAnnotationCreator';
+import {
+    groupHighlightsByVid,
+    removeClassFromAncestors,
+    safeHighlightText,
+    compileNsSelector,
+} from './Utilities';
 
 export const CLASS_RELATED = 'iaa-related';
 
@@ -81,6 +86,22 @@ export class ApacheAnnotatorVisualizer {
     private removeHoverTimeout: number | undefined = undefined;
 
     private alpha = '55';
+
+    private _protectedElementSelector?: string = undefined;
+    private protectedElementsMatcher?: (el: Element) => boolean = undefined;
+
+    public get protectedElementSelector(): string | undefined {
+        return this._protectedElementSelector;
+    }
+
+    public set protectedElementSelector(v: string | undefined) {
+        this._protectedElementSelector = v;
+        if (v == null || v.trim() === '') {
+            this.protectedElementsMatcher = undefined;
+        } else {
+            this.protectedElementsMatcher = compileNsSelector(v);
+        }
+    }
 
     constructor(element: Element, ajax: DiamAjax, sectionSelector: string) {
         this.ajax = ajax;
@@ -582,7 +603,9 @@ export class ApacheAnnotatorVisualizer {
             class: `iaa-text-marker iaa-marker-${marker.type}`,
         };
 
-        this.toCleanUp.add(highlightText(range, 'mark', attributes));
+        this.toCleanUp.add(
+            safeHighlightText(range, this.protectedElementsMatcher, 'mark', attributes)
+        );
     }
 
     private renderSpanAnnotation(doc: AnnotatedText, span: Span) {
@@ -677,7 +700,9 @@ export class ApacheAnnotatorVisualizer {
             return;
         }
 
-        this.toCleanUp.add(highlightText(range, 'mark', attributes));
+        this.toCleanUp.add(
+            safeHighlightText(range, this.protectedElementsMatcher, 'mark', attributes)
+        );
     }
 
     private clearScrollMarkers() {
@@ -699,7 +724,9 @@ export class ApacheAnnotatorVisualizer {
             const pingRange = offsetToRange(this.root, pingOffset[0], pingOffset[1]);
             if (pingRange) {
                 this.removePingMarkers.push(
-                    highlightText(pingRange, 'mark', { class: 'iaa-ping-marker' })
+                    safeHighlightText(pingRange, this.protectedElementsMatcher, 'mark', {
+                        class: 'iaa-ping-marker',
+                    })
                 );
             }
         }
@@ -734,7 +761,9 @@ export class ApacheAnnotatorVisualizer {
         this.clearPingMarkers();
 
         // Add scroll marker
-        const removeScrollMarker = highlightText(range, 'mark', { id: 'iaa-scroll-marker' });
+        const removeScrollMarker = safeHighlightText(range, this.protectedElementsMatcher, 'mark', {
+            id: 'iaa-scroll-marker',
+        });
         this.removeScrollMarkers = [removeScrollMarker];
 
         if (!annotatorState.showEmptyHighlights) {
@@ -866,116 +895,5 @@ export class ApacheAnnotatorVisualizer {
         this.tracker.disconnect();
         this.sectionTracker.disconnect();
         this.clearHighlights();
-    }
-}
-
-/**
- * Groups highlights by their VID.
- *
- * @param highlights list of highlights.
- * @returns groups of highlights by VID.
- */
-// eslint-disable-next-line no-undef
-export function groupHighlightsByVid(highlights: NodeListOf<Element>) {
-    const spansByVid = new Map<VID, Array<Element>>();
-    for (const highlight of Array.from(highlights)) {
-        const vid = highlight.getAttribute('data-iaa-id');
-        if (!vid) continue;
-
-        let sectionGroup = spansByVid.get(vid);
-        if (!sectionGroup) {
-            sectionGroup = [];
-            spansByVid.set(vid, sectionGroup);
-        }
-        sectionGroup.push(highlight);
-    }
-    return spansByVid;
-}
-
-/**
- * Utility function to find the closest highlight element to the given target.
- *
- * @param target a DOM node.
- * @returns the closest highlight element or null if none is found.
- */
-export function closestHighlight(target: Node | null): HTMLElement | null {
-    if (!(target instanceof Node)) {
-        return null;
-    }
-
-    if (target instanceof Text) {
-        const parent = target.parentElement;
-        if (!parent) return null;
-        target = parent;
-    }
-
-    const targetElement = target as Element;
-    return targetElement.closest('[data-iaa-id]');
-}
-
-/**
- * Utility function to find all highlights that are ancestors of the given target.
- *
- * @param target a DOM node.
- * @returns all highlight elements that are ancestors of the given target.
- */
-export function highlights(target: Node | null): HTMLElement[] {
-    let hl = closestHighlight(target);
-    const result: HTMLElement[] = [];
-    while (hl) {
-        result.push(hl);
-        hl = closestHighlight(hl.parentElement);
-    }
-    return result;
-}
-
-/**
- * Calculates the rectangle of the inline label for the given highlight.
- *
- * @param highlight a highlight element.
- * @returns the inline label rectangle.
- */
-export function getInlineLabelClientRect(highlight: Element): DOMRect {
-    const r = highlight.getClientRects()[0];
-
-    // TODO: It may be possible to implement this in a simpler way using
-    // `window.getComputedStyle(highlight, ':before')`
-
-    let cr: DOMRect;
-    if (highlight.firstChild instanceof Text) {
-        const range = document.createRange();
-        range.selectNode(highlight.firstChild);
-        cr = range.getClientRects()[0];
-    } else if (highlight.firstChild instanceof Element) {
-        cr = highlight.firstChild.getClientRects()[0];
-    } else {
-        throw new Error('Unexpected node type');
-    }
-
-    return new DOMRect(r.left, r.top, cr.left - r.left, r.height);
-}
-
-/**
- * Checks if the given point is inside the given DOMRect.
- */
-export function isPointInRect(point: { x: number; y: number }, rect: DOMRect): boolean {
-    return (
-        point.x >= rect.left &&
-        point.x <= rect.right &&
-        point.y >= rect.top &&
-        point.y <= rect.bottom
-    );
-}
-
-export function removeClassFromAncestors(start: Element, className: string, root?: Element | null) {
-    let current: Element | null = start.parentElement;
-    while (current) {
-        try {
-            current.classList.remove(className);
-        } catch (e) {
-            // ignore errors removing class from exotic nodes
-        }
-        if (root && current === root) break;
-        current = current.parentElement;
     }
 }

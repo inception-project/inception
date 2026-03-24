@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -33,7 +34,7 @@ public class CustomXmlFormatPluginDescripion
     private String name;
 
     private List<String> stylesheets = Collections.emptyList();
-    private List<String> sectionElements;
+    private Set<String> sectionElements;
     private List<String> blockElements;
     private boolean splitSentencesInBlockElements;
 
@@ -79,12 +80,12 @@ public class CustomXmlFormatPluginDescripion
         stylesheets = aStylesheets;
     }
 
-    public List<String> getSectionElements()
+    public Set<String> getSectionElements()
     {
         return sectionElements;
     }
 
-    public void setSectionElements(List<String> aSectionElements)
+    public void setSectionElements(Set<String> aSectionElements)
     {
         sectionElements = aSectionElements;
     }

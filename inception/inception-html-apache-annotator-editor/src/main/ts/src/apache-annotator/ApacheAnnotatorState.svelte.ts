@@ -24,4 +24,5 @@ export const annotatorState = $state({
     documentStructureWidth: 0.2,
     showImages: true,
     showTables: true,
+    protectElements: true,
 });
