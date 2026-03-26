@@ -50,7 +50,6 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     private navigatorContainer: HTMLElement;
     private deferredInitializationSteps: (() => void)[] = [];
     private initializationComplete = false;
-    private protectElements: boolean = true;
     private protectedElementLocalNames: Set<string>;
     private activeResizeCleanup: (() => void) | undefined = undefined;
 
@@ -357,7 +356,7 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     }
 
     private expandSelectionOverProtectedElements(sel: Selection): SelectionLike {
-        if (!this.protectElements || !sel.anchorNode || !sel.focusNode)
+        if (!annotatorState.protectElements || !sel.anchorNode || !sel.focusNode)
             return {
                 anchorNode: sel.anchorNode,
                 anchorOffset: sel.anchorOffset,

@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.io.xml;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
+
 import java.io.Serializable;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -33,9 +35,9 @@ public class CustomXmlFormatPluginDescripion
     private String id;
     private String name;
 
-    private List<String> stylesheets = Collections.emptyList();
-    private Set<String> sectionElements;
-    private List<String> blockElements;
+    private List<String> stylesheets = emptyList();
+    private Set<String> sectionElements = emptySet();
+    private List<String> blockElements = emptyList();
     private boolean splitSentencesInBlockElements;
 
     private @JsonIgnore Path basePath;
