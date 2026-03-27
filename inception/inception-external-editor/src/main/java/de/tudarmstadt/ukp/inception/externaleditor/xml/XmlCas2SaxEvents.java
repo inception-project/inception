@@ -77,7 +77,7 @@ public class XmlCas2SaxEvents
     }
 
     @Override
-    public void process(XmlElement aElement) throws SAXException
+    public void process(XmlElement aElement, ProcessElementOptions... aOptions) throws SAXException
     {
         // HACK: adding a wrapper because otherwise RecogitoJS cannot insert its own
         // wrapper...
@@ -85,7 +85,7 @@ public class XmlCas2SaxEvents
             handler.startElement(null, null, "wrapper", null);
         }
 
-        super.process(aElement);
+        super.process(aElement, aOptions);
 
         if (captureRoots != null && aElement == xml.getRoot() && captureRoots.contains(aElement)) {
             handler.endElement(null, null, "wrapper");

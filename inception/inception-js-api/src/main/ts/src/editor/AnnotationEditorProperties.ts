@@ -26,4 +26,6 @@ export interface AnnotationEditorProperties {
     diamWsUrl: string;
     csrfToken: string;
     loadingIndicatorDisabled: boolean;
+    sectionElements?: ReadonlyArray<string>;
+    protectedElements?: ReadonlyArray<string>;
 }

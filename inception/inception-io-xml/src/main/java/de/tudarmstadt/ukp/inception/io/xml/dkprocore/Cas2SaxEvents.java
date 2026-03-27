@@ -17,17 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.io.xml.dkprocore;
 
+import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents.ProcessElementOptions.SKIP_NAMESPACES;
+import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.prefixMappings;
+import static java.util.Collections.unmodifiableMap;
 import static org.apache.commons.lang3.StringUtils.defaultString;
-import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.uima.fit.util.JCasUtil.selectSingle;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.xml.type.XmlDocument;
 import org.dkpro.core.api.xml.type.XmlElement;
-import org.dkpro.core.api.xml.type.XmlNode;
 import org.dkpro.core.api.xml.type.XmlTextNode;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -37,11 +40,14 @@ import de.tudarmstadt.ukp.inception.support.xml.ContentHandlerAdapter;
 
 public class Cas2SaxEvents
 {
-    private static final String XMLNS = "xmlns";
-    private static final String XMLNS_PREFIX = "xmlns:";
+    public enum ProcessElementOptions
+    {
+        SKIP_NAMESPACES
+    }
+
+    private final Map<String, String> namespaceMappings = new LinkedHashMap<>();
 
     protected final ContentHandlerAdapter handler;
-    private final LinkedHashMap<String, String> namespaceMappings = new LinkedHashMap<>();
 
     private boolean namespaces = false;
 
@@ -53,6 +59,11 @@ public class Cas2SaxEvents
     public void setNamespaces(boolean aNamespaces)
     {
         namespaces = aNamespaces;
+    }
+
+    Map<String, String> getNamespaceMappings()
+    {
+        return unmodifiableMap(namespaceMappings);
     }
 
     public void process(JCas aJCas) throws SAXException
@@ -76,19 +87,11 @@ public class Cas2SaxEvents
         handler.endDocument();
     }
 
-    public void process(XmlElement aElement) throws SAXException
+    public void process(XmlElement aElement, ProcessElementOptions... aOptions) throws SAXException
     {
-        var localMappings = new LinkedHashMap<String, String>();
+        var skipNamespaces = ArrayUtils.contains(aOptions, SKIP_NAMESPACES);
 
-        if (namespaces) {
-            for (var xmlns : prefixMappings(aElement).entrySet()) {
-                var oldValue = namespaceMappings.put(xmlns.getKey(), xmlns.getValue());
-                if (oldValue == null) {
-                    localMappings.put(xmlns.getKey(), xmlns.getValue());
-                    handler.startPrefixMapping(xmlns.getKey(), xmlns.getValue());
-                }
-            }
-        }
+        var localMappings = skipNamespaces ? null : openNamespaces(aElement);
 
         var attributes = attributes(aElement);
         var uri = defaultString(aElement.getUri());
@@ -101,57 +104,79 @@ public class Cas2SaxEvents
 
         handler.endElement(uri, localName, qName);
 
+        if (localMappings != null) {
+            closeNamespaces(localMappings);
+        }
+    }
+
+    protected void closeNamespaces(Map<String, String> localMappings) throws SAXException
+    {
         if (namespaces) {
-            for (String xmlns : localMappings.keySet()) {
-                handler.endPrefixMapping(xmlns);
+            for (var xmlns : localMappings.entrySet()) {
+                var prefix = xmlns.getKey();
+                var previous = xmlns.getValue();
+
+                namespaceMappings.remove(prefix);
+                handler.endPrefixMapping(prefix);
+
+                if (previous != null) {
+                    // Restore the previous mapping in our internal map so that subsequent
+                    // siblings resolve prefixes correctly. Do NOT emit a startPrefixMapping
+                    // here because the handler already received the original start event
+                    // when the previous mapping was introduced.
+                    namespaceMappings.put(prefix, previous);
+                }
             }
         }
+    }
+
+    protected Map<String, String> openNamespaces(XmlElement aElement) throws SAXException
+    {
+        var localMappings = new LinkedHashMap<String, String>();
+
+        if (namespaces) {
+            for (var xmlns : prefixMappings(aElement).entrySet()) {
+                var prefix = xmlns.getKey();
+                var newValue = xmlns.getValue();
+                var oldValue = namespaceMappings.get(prefix);
+
+                if (oldValue == null) {
+                    // Newly introduced mapping
+                    namespaceMappings.put(prefix, newValue);
+                    localMappings.put(prefix, null);
+                    handler.startPrefixMapping(prefix, newValue);
+                }
+                else if (!oldValue.equals(newValue)) {
+                    // Redeclaration/override: remember previous value so we can restore it
+                    // when closing the element, and emit a startPrefixMapping for the
+                    // new value so the SAX handler sees the change.
+                    namespaceMappings.put(prefix, newValue);
+                    localMappings.put(prefix, oldValue);
+                    handler.startPrefixMapping(prefix, newValue);
+                }
+                // If oldValue equals newValue then nothing to do.
+            }
+        }
+        return localMappings;
     }
 
     public void processChildren(XmlElement aElement) throws SAXException
     {
         if (aElement.getChildren() != null) {
-            for (XmlNode child : aElement.getChildren()) {
-                if (child instanceof XmlElement) {
-                    process((XmlElement) child);
+            for (var child : aElement.getChildren()) {
+                if (child instanceof XmlElement childElement) {
+                    process(childElement);
                 }
-                else if (child instanceof XmlTextNode) {
-                    process((XmlTextNode) child);
-                }
-            }
-        }
-    }
-
-    public Map<String, String> prefixMappings(XmlElement aElement)
-    {
-        var mappings = new LinkedHashMap<String, String>();
-        if (aElement.getAttributes() != null) {
-            for (var attr : aElement.getAttributes()) {
-                if (XMLNS.equals(attr.getQName())) {
-                    mappings.put("", attr.getValue());
-                }
-                if (startsWith(attr.getQName(), XMLNS_PREFIX)) {
-                    mappings.put(attr.getQName().substring(XMLNS_PREFIX.length()), attr.getValue());
+                else if (child instanceof XmlTextNode childTextNode) {
+                    process(childTextNode);
                 }
             }
         }
-        return mappings;
     }
 
     public AttributesImpl attributes(XmlElement aElement)
     {
-        // FIXME: SAX parsers would skip xmlns attributes if namespace support is enabled. Maybe
-        // we should do the same?
-
-        var attrs = new AttributesImpl();
-        if (aElement.getAttributes() != null) {
-            for (var attr : aElement.getAttributes()) {
-                attrs.addAttribute(defaultString(attr.getUri()), defaultString(attr.getLocalName()),
-                        defaultString(attr.getQName()), defaultString(attr.getValueType(), "CDATA"),
-                        defaultString(attr.getValue()));
-            }
-        }
-        return attrs;
+        return XmlNodeUtils.attributes(aElement);
     }
 
     public void process(XmlTextNode aChild) throws SAXException
@@ -166,5 +191,10 @@ public class Cas2SaxEvents
         }
 
         handler.characters(text, 0, text.length);
+    }
+
+    public boolean matchesAny(XmlElement aElement, Collection<String> aSelectors)
+    {
+        return XmlNodeUtils.matchesAny(aElement, namespaceMappings, aSelectors);
     }
 }

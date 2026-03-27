@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.xhtml;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.BODY;
 import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.HEAD;
 import static de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlConstants.HTML;
@@ -149,7 +151,8 @@ public class XHtmlXmlDocumentViewControllerImpl
     {
         var doc = documentService.getSourceDocument(aProjectId, aDocumentId);
 
-        var cas = documentService.createOrReadInitialCas(doc);
+        var cas = documentService.createOrReadInitialCas(doc, AUTO_CAS_UPGRADE,
+                SHARED_READ_ONLY_ACCESS);
 
         try (var out = new StringWriter()) {
             Optional<XmlDocument> maybeXmlDocument;

@@ -31,8 +31,8 @@
     let dispatch = createEventDispatcher();
 
     const defaultPreferences = {
-        showLabels: false,
-        showAggregatedLabels: true,
+        showLabels: true,
+        showAggregatedLabels: false,
         showEmptyHighlights: false,
         showDocumentStructure: false,
         showImages: true,
@@ -58,6 +58,7 @@
         annotatorState.showLabels;
         annotatorState.showAggregatedLabels;
         annotatorState.showEmptyHighlights;
+        annotatorState.protectElements;
         savePreferences();
         dispatch('renderingPreferencesChanged', {});
     });
@@ -79,6 +80,7 @@
                 showImages: annotatorState.showImages,
                 showTables: annotatorState.showTables,
                 documentStructureWidth: annotatorState.documentStructureWidth,
+                protectElements: annotatorState.protectElements,
             });
         }, 250);
     }

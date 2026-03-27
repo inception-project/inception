@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.io.html;
 
-import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
 import java.io.ByteArrayInputStream;
@@ -27,25 +26,18 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
-import java.util.Optional;
 
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.SingleBody;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
 import de.tudarmstadt.ukp.inception.io.html.config.HtmlSupportAutoConfiguration;
-import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
-import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 
 /**
  * Support for HTML format.
@@ -55,16 +47,14 @@ import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
  * </p>
  */
 public class MHtmlFormatSupport
-    implements FormatSupport
+    extends HtmlFormatSupportImplBase
 {
     public static final String ID = "mhtml";
     public static final String NAME = "MHTML (Web archive)";
 
-    private final DefaultHtmlDocumentPolicy defaultPolicy;
-
     public MHtmlFormatSupport(DefaultHtmlDocumentPolicy aDefaultPolicy)
     {
-        defaultPolicy = aDefaultPolicy;
+        super(aDefaultPolicy);
     }
 
     @Override
@@ -91,24 +81,6 @@ public class MHtmlFormatSupport
         throws ResourceInitializationException
     {
         return createReaderDescription(MHtmlDocumentReader.class, aTSD);
-    }
-
-    @Override
-    public void prepareAnnotationCas(CAS aInitialCas, SourceDocument aDocument)
-    {
-        XmlNodeUtils.removeXmlDocumentStructure(aInitialCas);
-    }
-
-    @Override
-    public List<String> getSectionElements()
-    {
-        return asList("p");
-    }
-
-    @Override
-    public Optional<PolicyCollection> getPolicy() throws IOException
-    {
-        return Optional.of(defaultPolicy.getPolicy());
     }
 
     @Override

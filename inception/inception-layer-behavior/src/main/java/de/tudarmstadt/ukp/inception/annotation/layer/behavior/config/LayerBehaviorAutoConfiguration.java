@@ -20,9 +20,12 @@ package de.tudarmstadt.ukp.inception.annotation.layer.behavior.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
+import de.tudarmstadt.ukp.inception.annotation.layer.behavior.ProtectedElementBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.behavior.SpanAnchoringModeBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.behavior.SpanCrossSentenceBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.behavior.SpanOverlapBehavior;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 
 @Configuration
 public class LayerBehaviorAutoConfiguration
@@ -43,5 +46,12 @@ public class LayerBehaviorAutoConfiguration
     public SpanOverlapBehavior spanOverlapBehavior()
     {
         return new SpanOverlapBehavior();
+    }
+
+    @Bean
+    public ProtectedElementBehavior protectedElementBehavior(DocumentService aDocumentService,
+            DocumentImportExportService aDocumentImportExportService)
+    {
+        return new ProtectedElementBehavior(aDocumentService, aDocumentImportExportService);
     }
 }

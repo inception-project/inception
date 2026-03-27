@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlaceme
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.behavior.config.LayerBehaviorAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.CreateSpanAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.MoveSpanAnnotationRequest;
@@ -41,7 +42,7 @@ import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@code AnnotationServiceAutoConfiguration#spanAnchoringModeBehavior}.
+ * {@link LayerBehaviorAutoConfiguration#spanAnchoringModeBehavior}.
  * </p>
  */
 @Order(100)

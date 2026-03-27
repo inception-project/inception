@@ -20,7 +20,7 @@ import {
     AnnotatedText,
     calculateEndOffset,
     calculateStartOffset,
-    DiamAjax,
+    type DiamAjax,
 } from '@inception-project/inception-js-api';
 import { getScrollY } from './SectionAnnotationVisualizer';
 

@@ -34,6 +34,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.cas.TOP;
 
 public class FeatureStructureBuilder<T extends FeatureStructure>
 {
@@ -147,7 +148,19 @@ public class FeatureStructureBuilder<T extends FeatureStructure>
         return buildFS(aJCas.getCas(), aType);
     }
 
+    public static FeatureStructureBuilder<FeatureStructure> buildFS(JCas aJCas,
+            Class<? extends TOP> aType)
+    {
+        return buildFS(aJCas.getCas(), aType);
+    }
+
     public static FeatureStructureBuilder<FeatureStructure> buildFS(CAS aCas, String aType)
+    {
+        return new FeatureStructureBuilder<FeatureStructure>(aCas, CasUtil.getType(aCas, aType));
+    }
+
+    public static FeatureStructureBuilder<FeatureStructure> buildFS(CAS aCas,
+            Class<? extends TOP> aType)
     {
         return new FeatureStructureBuilder<FeatureStructure>(aCas, CasUtil.getType(aCas, aType));
     }

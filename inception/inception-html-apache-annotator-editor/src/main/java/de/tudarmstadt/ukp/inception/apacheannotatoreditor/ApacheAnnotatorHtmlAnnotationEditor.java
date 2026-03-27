@@ -83,6 +83,8 @@ public class ApacheAnnotatorHtmlAnnotationEditor
                         ApacheAnnotatorJsJavascriptResourceReference.get())));
         props.setSectionElements(
                 documentImportExportService.getSectionElements(getModelObject().getDocument()));
+        props.setProtectedElements(
+                documentImportExportService.getProtectedElements(getModelObject().getDocument()));
         return props;
     }
 

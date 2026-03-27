@@ -23,6 +23,7 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDe
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
@@ -43,6 +44,8 @@ public class TeiXmlDocumentFormatSupport
 {
     public static final String ID = "tei-xml-document";
     public static final String NAME = "TEI P5 XML (experimental)";
+
+    private static final Set<String> TEI_SECTION_ELEMENTS = Set.of("p", "lg", "biblStruct");
 
     @Override
     public String getId()
@@ -69,9 +72,9 @@ public class TeiXmlDocumentFormatSupport
     }
 
     @Override
-    public List<String> getSectionElements()
+    public Set<String> getSectionElements()
     {
-        return asList("p", "lg", "biblStruct");
+        return TEI_SECTION_ELEMENTS;
     }
 
     @Override
