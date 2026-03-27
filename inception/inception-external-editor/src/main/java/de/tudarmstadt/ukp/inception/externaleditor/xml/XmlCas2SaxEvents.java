@@ -85,7 +85,7 @@ public class XmlCas2SaxEvents
             handler.startElement(null, null, "wrapper", null);
         }
 
-        super.process(aElement);
+        super.process(aElement, aOptions);
 
         if (captureRoots != null && aElement == xml.getRoot() && captureRoots.contains(aElement)) {
             handler.endElement(null, null, "wrapper");

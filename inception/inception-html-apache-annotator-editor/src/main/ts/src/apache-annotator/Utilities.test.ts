@@ -55,10 +55,70 @@ import {
     getInlineLabelClientRect,
     isPointInRect,
     removeClassFromAncestors,
-    closerNsAware,
+    closestNsAware,
     compileNsSelector,
     closestWithMatcher,
+    expandSelectionOverProtectedElements,
 } from './Utilities';
+
+describe('expandSelectionOverProtectedElements', () => {
+    beforeEach(() => {
+        document.body.innerHTML = '';
+    });
+
+    it('uses the element itself when the boundary node is an Element and expands to protected ancestor', () => {
+        document.body.innerHTML = `
+            <div id="root">
+                <div class="protected">protected text</div>
+                <div class="other">other</div>
+            </div>
+        `;
+
+        const prot = document.querySelector('.protected') as Element;
+        const other = document.querySelector('.other') as Element;
+
+        const sel: any = {
+            anchorNode: prot,
+            anchorOffset: 2,
+            focusNode: other.firstChild,
+            focusOffset: 1,
+        };
+
+        const res = expandSelectionOverProtectedElements(sel as Selection, (el) =>
+            el.classList.contains('protected')
+        );
+
+        expect(res.anchorNode).toBe(prot);
+        expect(res.anchorOffset).toBe(0);
+    });
+
+    it('when the boundary is a Text node expands to the protected ancestor', () => {
+        document.body.innerHTML = `
+            <div id="root">
+                <div class="protected">abc</div>
+            </div>
+        `;
+
+        const prot = document.querySelector('.protected') as Element;
+        const text = prot.firstChild as Text;
+
+        const sel: any = {
+            anchorNode: text,
+            anchorOffset: 1,
+            focusNode: text,
+            focusOffset: 2,
+        };
+
+        const res = expandSelectionOverProtectedElements(sel as Selection, (el) =>
+            el.classList.contains('protected')
+        );
+
+        expect(res.anchorNode).toBe(prot);
+        expect(res.anchorOffset).toBe(0);
+        expect(res.focusNode).toBe(prot);
+        expect(res.focusOffset).toBe(prot.textContent?.length);
+    });
+});
 
 describe('querySelectorAllInRange', () => {
     beforeEach(() => {
@@ -120,9 +180,30 @@ describe('querySelectorAllInRange', () => {
         expect(found.length).toBe(1);
         expect(found[0].id).toBe('a');
     });
+
+    it('handles ranges whose commonAncestorContainer is a Text node', () => {
+        const root = document.createElement('div');
+        root.innerHTML = `
+            <div class="match">hello world</div>
+        `;
+        document.body.appendChild(root);
+
+        const el = root.querySelector('.match') as Element;
+        const text = el.firstChild as Text;
+
+        // Create a range wholly inside the text node so commonAncestorContainer
+        // will be the Text node.
+        const range = document.createRange();
+        range.setStart(text, 1);
+        range.setEnd(text, 2);
+
+        const found = querySelectorAllInRange(range, '.match');
+        expect(found.length).toBe(1);
+        expect(found[0]).toBe(el);
+    });
 });
 
-describe('closerNsAware', () => {
+describe('closestNsAware', () => {
     beforeEach(() => {
         document.body.innerHTML = '';
     });
@@ -134,7 +215,7 @@ describe('closerNsAware', () => {
         outer.appendChild(inner);
         document.body.appendChild(outer);
 
-        const found = closerNsAware(inner, '.foo');
+        const found = closestNsAware(inner, '.foo');
         expect(found).toBe(outer);
     });
 
@@ -145,7 +226,7 @@ describe('closerNsAware', () => {
         outer.appendChild(inner);
         document.body.appendChild(outer);
 
-        const found = closerNsAware(inner, `{${ns}}free_to_read`);
+        const found = closestNsAware(inner, `{${ns}}free_to_read`);
         expect(found).toBe(outer);
     });
 
@@ -157,7 +238,7 @@ describe('closerNsAware', () => {
         document.body.appendChild(outer);
 
         // include a CSS selector first which does not match, then the ns selector
-        const found = closerNsAware(inner, '.does-not-exist, {*}free_to_read');
+        const found = closestNsAware(inner, '.does-not-exist, {*}free_to_read');
         expect(found).toBe(outer);
     });
 });
@@ -258,6 +339,50 @@ describe('extendHighlightOverProtectedElements', () => {
         const afterParent = protectedEl.parentElement as Element;
         expect(afterParent).not.toBeNull();
         expect(afterParent.tagName.toLowerCase()).not.toBe('mark');
+    });
+
+    it('keeps only outermost protected elements when protected elements are nested', () => {
+        document.body.innerHTML = `
+            <div id="root">
+                <div class="protected outer">
+                    <div class="protected inner"><mark class="iaa-highlighted" data-iaa-id="v1">inside</mark></div>
+                </div>
+            </div>
+        `;
+
+        const root = document.getElementById('root') as Element;
+        const outer = root.querySelector('.outer') as Element;
+        const inner = root.querySelector('.inner') as Element;
+
+        const range = document.createRange();
+        range.selectNodeContents(root);
+
+        let oldCalled = false;
+        const oldCallback = () => {
+            oldCalled = true;
+        };
+
+        const returned = extendHighlightOverProtectedElements(
+            range,
+            '.protected',
+            `.iaa-highlighted[data-iaa-id="v1"]`,
+            { 'data-iaa-id': 'v1' },
+            oldCallback
+        );
+
+        // Only the outermost protected element should have been wrapped by a new mark
+        const outerWrapper = outer.parentElement as Element;
+        expect(outerWrapper).not.toBeNull();
+        expect(outerWrapper.tagName.toLowerCase()).toBe('mark');
+        expect(outerWrapper.getAttribute('data-iaa-id')).toBe('v1');
+
+        // The inner protected element itself must NOT have been wrapped separately
+        expect(inner.parentElement).not.toBeNull();
+        expect(inner.parentElement?.tagName.toLowerCase()).toBe('div');
+
+        // Cleanup should call the original callback
+        returned();
+        expect(oldCalled).toBe(true);
     });
 
     it('returns original callback when protection selector is undefined', () => {

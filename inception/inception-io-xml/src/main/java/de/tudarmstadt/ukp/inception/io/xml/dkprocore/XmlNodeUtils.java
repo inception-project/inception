@@ -556,7 +556,17 @@ public final class XmlNodeUtils
             return false;
         }
 
-        return aSelectors.contains(aElement.getQName());
+        var qName = aElement.getQName();
+        var uri = defaultString(aElement.getUri());
+        var localName = defaultString(aElement.getLocalName());
+
+        if (!uri.isEmpty()) {
+            if (aSelectors.contains("{" + uri + "}" + localName)) {
+                return true;
+            }
+        }
+
+        return aSelectors.contains(qName);
     }
 
     /**

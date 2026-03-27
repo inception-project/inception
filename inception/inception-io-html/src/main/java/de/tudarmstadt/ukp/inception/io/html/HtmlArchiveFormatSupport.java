@@ -19,22 +19,13 @@ package de.tudarmstadt.ukp.inception.io.html;
 
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
-import java.io.IOException;
-import java.util.Optional;
-import java.util.Set;
-
-import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
 import de.tudarmstadt.ukp.inception.io.html.config.HtmlSupportAutoConfiguration;
-import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
-import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 
 /**
  * Support for HTML format.
@@ -44,18 +35,14 @@ import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
  * </p>
  */
 public class HtmlArchiveFormatSupport
-    implements FormatSupport
+    extends HtmlFormatSupportImplBase
 {
     public static final String ID = "htmldoc-zip";
     public static final String NAME = "HTML (ZIP)";
 
-    private static final Set<String> HTML_SECTION_ELEMENTS = Set.of("p");
-
-    private final DefaultHtmlDocumentPolicy defaultPolicy;
-
     public HtmlArchiveFormatSupport(DefaultHtmlDocumentPolicy aDefaultPolicy)
     {
-        defaultPolicy = aDefaultPolicy;
+        super(aDefaultPolicy);
     }
 
     @Override
@@ -82,24 +69,6 @@ public class HtmlArchiveFormatSupport
         throws ResourceInitializationException
     {
         return createReaderDescription(HtmlArchiveDocumentReader.class, aTSD);
-    }
-
-    @Override
-    public void prepareAnnotationCas(CAS aInitialCas, SourceDocument aDocument)
-    {
-        XmlNodeUtils.removeXmlDocumentStructure(aInitialCas);
-    }
-
-    @Override
-    public Set<String> getSectionElements()
-    {
-        return HTML_SECTION_ELEMENTS;
-    }
-
-    @Override
-    public Optional<PolicyCollection> getPolicy() throws IOException
-    {
-        return Optional.of(defaultPolicy.getPolicy());
     }
 
     @Override

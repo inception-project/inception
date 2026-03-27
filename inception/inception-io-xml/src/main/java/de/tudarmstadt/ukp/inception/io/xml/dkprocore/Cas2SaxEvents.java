@@ -112,9 +112,20 @@ public class Cas2SaxEvents
     protected void closeNamespaces(Map<String, String> localMappings) throws SAXException
     {
         if (namespaces) {
-            for (var xmlns : localMappings.keySet()) {
-                namespaceMappings.remove(xmlns);
-                handler.endPrefixMapping(xmlns);
+            for (var xmlns : localMappings.entrySet()) {
+                var prefix = xmlns.getKey();
+                var previous = xmlns.getValue();
+
+                namespaceMappings.remove(prefix);
+                handler.endPrefixMapping(prefix);
+
+                if (previous != null) {
+                    // Restore the previous mapping in our internal map so that subsequent
+                    // siblings resolve prefixes correctly. Do NOT emit a startPrefixMapping
+                    // here because the handler already received the original start event
+                    // when the previous mapping was introduced.
+                    namespaceMappings.put(prefix, previous);
+                }
             }
         }
     }
@@ -125,11 +136,25 @@ public class Cas2SaxEvents
 
         if (namespaces) {
             for (var xmlns : prefixMappings(aElement).entrySet()) {
-                var oldValue = namespaceMappings.put(xmlns.getKey(), xmlns.getValue());
+                var prefix = xmlns.getKey();
+                var newValue = xmlns.getValue();
+                var oldValue = namespaceMappings.get(prefix);
+
                 if (oldValue == null) {
-                    localMappings.put(xmlns.getKey(), xmlns.getValue());
-                    handler.startPrefixMapping(xmlns.getKey(), xmlns.getValue());
+                    // Newly introduced mapping
+                    namespaceMappings.put(prefix, newValue);
+                    localMappings.put(prefix, null);
+                    handler.startPrefixMapping(prefix, newValue);
                 }
+                else if (!oldValue.equals(newValue)) {
+                    // Redeclaration/override: remember previous value so we can restore it
+                    // when closing the element, and emit a startPrefixMapping for the
+                    // new value so the SAX handler sees the change.
+                    namespaceMappings.put(prefix, newValue);
+                    localMappings.put(prefix, oldValue);
+                    handler.startPrefixMapping(prefix, newValue);
+                }
+                // If oldValue equals newValue then nothing to do.
             }
         }
         return localMappings;

@@ -36,9 +36,16 @@ import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.FSCollectionFactory.createFSArray;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.dkpro.core.api.xml.type.XmlAttribute;
 import org.dkpro.core.api.xml.type.XmlDocument;
@@ -240,5 +247,39 @@ class XmlNodeUtilsTest
         assertThat(mappings).containsEntry("a", "urn:a-child");
         assertThat(mappings).containsEntry("b", "urn:b");
         assertThat(mappings.keySet()).hasSize(3);
+    }
+
+    @Test
+    public void thatPrefixedQNameMatchesExpandedSelector() throws Exception
+    {
+        JCas jcas = JCasFactory.createJCas();
+
+        var element = new XmlElement(jcas);
+        element.setQName("m:math");
+        element.setLocalName("math");
+
+        var ns = Map.of("m", "http://www.w3.org/1998/Math/MathML");
+
+        var selectors = List.of("{http://www.w3.org/1998/Math/MathML}math");
+
+        assertTrue(XmlNodeUtils.matchesAny(element, ns, selectors));
+        assertFalse(XmlNodeUtils.matchesAny(element, ns, List.of("math")));
+    }
+
+    @Test
+    public void thatDefaultNamespaceMatchesExpandedSelector() throws Exception
+    {
+        var jcas = JCasFactory.createJCas();
+
+        var element = new XmlElement(jcas);
+        element.setQName("math");
+        element.setLocalName("math");
+        element.setUri("http://www.w3.org/1998/Math/MathML");
+
+        var ns = new HashMap<String, String>();
+
+        var selectors = List.of("{http://www.w3.org/1998/Math/MathML}math");
+
+        assertTrue(XmlNodeUtils.matchesAny(element, ns, selectors));
     }
 }

@@ -604,7 +604,12 @@ export class ApacheAnnotatorVisualizer {
         };
 
         this.toCleanUp.add(
-            safeHighlightText(range, this.protectedElementsMatcher, 'mark', attributes)
+            safeHighlightText(
+                range,
+                annotatorState.protectElements ? this.protectedElementsMatcher : undefined,
+                'mark',
+                attributes
+            )
         );
     }
 
@@ -701,7 +706,12 @@ export class ApacheAnnotatorVisualizer {
         }
 
         this.toCleanUp.add(
-            safeHighlightText(range, this.protectedElementsMatcher, 'mark', attributes)
+            safeHighlightText(
+                range,
+                annotatorState.protectElements ? this.protectedElementsMatcher : undefined,
+                'mark',
+                attributes
+            )
         );
     }
 
@@ -724,9 +734,14 @@ export class ApacheAnnotatorVisualizer {
             const pingRange = offsetToRange(this.root, pingOffset[0], pingOffset[1]);
             if (pingRange) {
                 this.removePingMarkers.push(
-                    safeHighlightText(pingRange, this.protectedElementsMatcher, 'mark', {
-                        class: 'iaa-ping-marker',
-                    })
+                    safeHighlightText(
+                        pingRange,
+                        annotatorState.protectElements ? this.protectedElementsMatcher : undefined,
+                        'mark',
+                        {
+                            class: 'iaa-ping-marker',
+                        }
+                    )
                 );
             }
         }
@@ -761,9 +776,14 @@ export class ApacheAnnotatorVisualizer {
         this.clearPingMarkers();
 
         // Add scroll marker
-        const removeScrollMarker = safeHighlightText(range, this.protectedElementsMatcher, 'mark', {
-            id: 'iaa-scroll-marker',
-        });
+        const removeScrollMarker = safeHighlightText(
+            range,
+            annotatorState.protectElements ? this.protectedElementsMatcher : undefined,
+            'mark',
+            {
+                id: 'iaa-scroll-marker',
+            }
+        );
         this.removeScrollMarkers = [removeScrollMarker];
 
         if (!annotatorState.showEmptyHighlights) {

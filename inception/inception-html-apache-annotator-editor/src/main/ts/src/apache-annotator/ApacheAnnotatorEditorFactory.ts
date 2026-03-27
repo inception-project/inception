@@ -78,12 +78,13 @@ export class ApacheAnnotatorEditorFactory implements AnnotationEditorFactory {
         }
 
         const sectionElementLocalNames = new Set<string>(props.sectionElements || []);
+        const protectedElements = new Set<string>(props.protectedElements || []);
 
         element[PROP_EDITOR] = new ApacheAnnotatorEditor(
             targetElement,
             ajax,
             props.userPreferencesKey,
-            protectedElementLocalNames,
+            protectedElements,
             sectionElementLocalNames
         );
         return element[PROP_EDITOR];

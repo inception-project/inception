@@ -19,7 +19,9 @@ package de.tudarmstadt.ukp.inception.annotation.layer.behavior;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.containsXmlDocumentStructure;
 import static de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils.matchesAny;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectOverlapping;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -27,7 +29,6 @@ import java.util.Arrays;
 import java.util.Set;
 
 import org.apache.uima.cas.CAS;
-import org.dkpro.core.api.xml.type.XmlDocument;
 import org.dkpro.core.api.xml.type.XmlElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,8 +123,10 @@ public class ProtectedElementBehavior
             var initialCas = documentService.createOrReadInitialCas(aRequest.getDocument(),
                     AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
 
-            // If the document does not contain XML structure, nothing to do here
-            if (initialCas.select(XmlDocument.class).isEmpty()) {
+            // If the document does not contain XML structure, nothing to do here.
+            // Use XmlNodeUtils.containsXmlDocumentStructure to guard against CASes
+            // that do not include the DKPro XML types in their type system.
+            if (!containsXmlDocumentStructure(initialCas)) {
                 return aRequest;
             }
 
@@ -139,30 +142,30 @@ public class ProtectedElementBehavior
                     aAdapter.getLayer().getAnchoringMode());
         }
         catch (IOException e) {
-            LOG.error("Unable to access XML structure in INITIAL_CAS", e);
-            return aRequest;
+            throw new AnnotationException("Unable to access XML structure in INITIAL_CAS", e);
         }
     }
 
-    static int[] adjust(CAS aCas, Set<String> aProtectedElements, int[] aOriginalRange)
+    static int[] adjust(CAS aCas, Set<String> aProtectedElements, int[] aOrigRange)
     {
-        var adjustedRange = new int[] { aOriginalRange[0], aOriginalRange[1] };
+        var adjustedRange = new int[] { aOrigRange[0], aOrigRange[1] };
 
-        for (var element : aCas.select(XmlElement.class).covering(aOriginalRange[0],
-                aOriginalRange[1])) {
+        for (var e : selectOverlapping(aCas, XmlElement.class, aOrigRange[0], aOrigRange[1])) {
 
             // It is quite inefficient to collect the mappings again for each element, but
             // currently we call adjust only on create/move actions and those usually do not
             // have to be very fast. Two options:
             // - Make collection more efficient
             // - Skip collection if none of the protected elements include a namespace ("{")
-            var namespaceMappings = XmlNodeUtils.allPrefixMappings(element);
+            var namespaceMappings = XmlNodeUtils.allPrefixMappings(e);
 
-            if (matchesAny(element, namespaceMappings, aProtectedElements)) {
+            if (matchesAny(e, namespaceMappings, aProtectedElements)) {
                 // Choose the element with the largest span (smallest begin, largest end)
-                if (element.getBegin() < adjustedRange[0] || element.getEnd() > adjustedRange[1]) {
-                    adjustedRange[0] = element.getBegin();
-                    adjustedRange[1] = element.getEnd();
+                if (e.getBegin() < adjustedRange[0]) {
+                    adjustedRange[0] = e.getBegin();
+                }
+                if (e.getEnd() > adjustedRange[1]) {
+                    adjustedRange[1] = e.getEnd();
                 }
             }
         }

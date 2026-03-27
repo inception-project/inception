@@ -19,6 +19,13 @@
 import { highlightText } from '@apache-annotator/dom';
 import type { VID } from '@inception-project/inception-js-api/src/model/VID';
 
+export interface SelectionLike {
+    anchorNode: Node | null | undefined;
+    anchorOffset: number;
+    focusNode: Node | null | undefined;
+    focusOffset: number;
+}
+
 /**
  * Return all Element nodes that match a CSS selector and intersect a given DOM Range.
  *
@@ -27,8 +34,20 @@ import type { VID } from '@inception-project/inception-js-api/src/model/VID';
  * @returns {Element[]} An array of elements that match `selector` and intersect the `range`.
  */
 export function querySelectorAllInRange(range: Range, selector: string): Element[] {
-    // console.log(`Searching in ${range.commonAncestorContainer.textContent}`)
-    var walker = document.createTreeWalker(range.commonAncestorContainer, NodeFilter.SHOW_ELEMENT, {
+    // Normalize the TreeWalker root to an Element. When the range's
+    // commonAncestorContainer is a Text node the TreeWalker would have no
+    // Element descendants and the function would return an empty list even
+    // though ancestor Elements (including the commonAncestorContainer's
+    // parent) may intersect the range. Using the parent Element as root
+    // ensures those ancestors are considered.
+    const walkerRoot: Node =
+        range.commonAncestorContainer instanceof Element
+            ? range.commonAncestorContainer
+            : (range.commonAncestorContainer.parentElement as Node) ||
+              range.commonAncestorContainer;
+
+    // console.log(`Searching in ${walkerRoot.textContent}`)
+    const walker = document.createTreeWalker(walkerRoot, NodeFilter.SHOW_ELEMENT, {
         acceptNode: (node: Node) => {
             return range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
         },
@@ -115,16 +134,36 @@ export function extendHighlightOverProtectedElements(
     const protectedElements = new Set<Element>();
     const highlights = querySelectorAllInRange(searchRange, highlightSelector);
     for (const highlight of highlights) {
-        const protectedElement = closestWithMatcher(highlight as Element, protectedElementsMatcher);
+        let protectedElement = closestWithMatcher(highlight as Element, protectedElementsMatcher);
         if (protectedElement == null) continue;
-        protectedElements.add(protectedElement);
+
+        // Climb to the outermost protected ancestor for this highlight so that
+        // nested protected elements yield only the outermost wrapper (avoid
+        // creating nested mark wrappers). This ensures highlights inside an
+        // inner protected element cause the outer protected ancestor to be
+        // wrapped instead of wrapping both inner and outer.
+        let outer = protectedElement;
+        let p = protectedElement.parentElement;
+        while (p && protectedElementsMatcher(p)) {
+            outer = p;
+            p = p.parentElement;
+        }
+        protectedElements.add(outer);
         highlight.after(...highlight.childNodes);
         highlight.remove();
     }
 
-    // Add new highlights surrounding the protected elements
+    // Filter protected elements to keep only the outermost ones. If protected
+    // elements are nested the inner ones should be discarded so we don't create
+    // nested wrappers (the backend expands to the outermost protected span).
+    const protectedElementsArr = Array.from(protectedElements);
+    const outerProtectedElements = protectedElementsArr.filter(
+        (el) => !protectedElementsArr.some((other) => other !== el && other.contains(el))
+    );
+
+    // Add new highlights surrounding the (outermost) protected elements
     const newHighlights: Element[] = [];
-    for (const protectedElement of protectedElements) {
+    for (const protectedElement of outerProtectedElements) {
         const highlight = document.createElement('mark');
         if (attributes) {
             for (const name in attributes) {
@@ -329,7 +368,7 @@ export function removeClassFromAncestors(start: Element, className: string, root
     while (current) {
         try {
             current.classList.remove(className);
-        } catch (e) {
+        } catch {
             // ignore errors removing class from exotic nodes
         }
         if (root && current === root) break;
@@ -356,9 +395,10 @@ export function removeClassFromAncestors(start: Element, className: string, root
  * @param {string} selector - Comma-separated list of CSS or namespace-aware selectors.
  * @returns {Element | null} The closest matching ancestor or `null` when none found.
  */
-export function closerNsAware(start: Element | null, selector: string): Element | null {
+export function closestNsAware(start: Element | null, selector: string): Element | null {
     if (!start || !selector) return null;
     const matcher = compileNsSelector(selector);
+    if (!matcher) return null;
     return closestWithMatcher(start, matcher);
 }
 
@@ -416,7 +456,7 @@ export function compileNsSelector(selector?: string | null): ((el: Element) => b
         const fn = (el: Element) => {
             try {
                 return el.matches(sel);
-            } catch (e) {
+            } catch {
                 return false;
             }
         };
@@ -429,7 +469,7 @@ export function compileNsSelector(selector?: string | null): ((el: Element) => b
             if (t.type === 'css') {
                 try {
                     if (el.matches(t.sel)) return true;
-                } catch (e) {
+                } catch {
                     // invalid selector -> ignore
                 }
             } else {
@@ -457,7 +497,7 @@ export function closestWithMatcher(
     if (cssSel && typeof cssSel === 'string') {
         try {
             return start.closest(cssSel);
-        } catch (e) {
+        } catch {
             // fall back to manual walk on invalid selector
         }
     }
@@ -468,4 +508,64 @@ export function closestWithMatcher(
         current = current.parentElement;
     }
     return null;
+}
+
+/**
+ * Expand a DOM Selection so that any selection boundary that lies inside
+ * (or on) a protected element is moved to cover the entire protected
+ * ancestor element.
+ *
+ * @param sel The DOM `Selection` to expand. Only `anchorNode`, `anchorOffset`,
+ *            `focusNode` and `focusOffset` are used.
+ * @param protectedElementsMatcher Optional matcher function that returns
+ *                                 `true` for elements that must be treated as
+ *                                 atomic/protected.
+ * @returns A `SelectionLike` with potentially adjusted boundary nodes and offsets.
+ */
+export function expandSelectionOverProtectedElements(
+    sel: Selection,
+    protectedElementsMatcher?: (el: Element) => boolean
+): SelectionLike {
+    // Use the boundary node itself when it's an Element; otherwise fall back
+    // to its parentElement (this handles Text nodes). Previously we always
+    // used `parentElement`, which skipped the element itself when the
+    // boundary was already an Element and could miss a protected ancestor.
+    let anchorNode: Node | null | undefined =
+        sel.anchorNode instanceof Element ? sel.anchorNode : sel.anchorNode?.parentElement;
+    let anchorOffset = sel.anchorOffset;
+
+    if (anchorNode instanceof Element && protectedElementsMatcher) {
+        const protectedAncestor = closestWithMatcher(anchorNode, protectedElementsMatcher);
+        if (protectedAncestor) {
+            anchorNode = protectedAncestor;
+            anchorOffset = 0;
+        }
+    }
+
+    if (anchorNode == null) {
+        anchorNode = sel.anchorNode;
+    }
+
+    // Same handling for the focus boundary: prefer the node itself when it's
+    // an Element so we don't skip checking it for protection.
+    let focusNode: Node | null | undefined =
+        sel.focusNode instanceof Element ? sel.focusNode : sel.focusNode?.parentElement;
+    let focusOffset = sel.focusOffset;
+
+    if (focusNode instanceof Element && protectedElementsMatcher) {
+        const protectedAncestor = closestWithMatcher(focusNode, protectedElementsMatcher);
+        if (protectedAncestor) {
+            focusNode = protectedAncestor;
+            focusOffset = protectedAncestor.textContent?.length || 0;
+        }
+    }
+
+    if (focusNode == null) {
+        focusNode = sel.focusNode;
+    }
+
+    // console.log(`Anchor node ${sel.anchorNode} ${sel.anchorOffset} -> ${anchorNode} ${anchorOffset}`)
+    // console.log(`Focus node ${sel.focusNode} ${sel.focusOffset} -> ${focusNode} ${focusOffset}`)
+
+    return { anchorNode, anchorOffset, focusNode, focusOffset };
 }
