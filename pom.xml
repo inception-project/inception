@@ -103,9 +103,9 @@
     <jboss.logging.version>3.6.2.Final</jboss.logging.version>
     <sentry.version>8.33.0</sentry.version>
 
-    <tomcat.version>10.1.52</tomcat.version>
+    <tomcat.version>11.0.20</tomcat.version>
     <jetty.version>12.1.6</jetty.version>
-    <servlet-api.version>6.0.0</servlet-api.version>
+    <servlet-api.version>6.1.0</servlet-api.version>
 
     <mariadb.driver.version>3.5.7</mariadb.driver.version>
     <mssql.driver.version>12.10.2.jre11</mssql.driver.version>
