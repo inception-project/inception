@@ -79,7 +79,7 @@ jobs:
     - name: Set up Maven
       uses: stCarolas/setup-maven@12eb41b233df95d49b0c11fc1b5bc8312e5d4ce0 # v5.1
       with:
-        maven-version: 3.9.9
+        maven-version: 3.9.14
 
 #    - name: Cache Docker layers
 #      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 #v5.0.4
@@ -97,7 +97,7 @@ jobs:
         restore-keys: |
           dkpro-dataset-cache-${{ runner.os }}-
 
-    - name: Cache Nodejs
+    - name: Cache Node.js
       uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 #v5.0.4
       with:
         path: inception/nodejs
