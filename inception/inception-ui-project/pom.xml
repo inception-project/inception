@@ -159,6 +159,11 @@
       <artifactId>inception-layer-span-api</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-dashboard-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     
     <!-- UIMA dependencies -->
 

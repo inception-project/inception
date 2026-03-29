@@ -32,8 +32,11 @@ import com.giffing.wicket.spring.boot.starter.configuration.extensions.core.csrf
 import de.tudarmstadt.ukp.inception.ui.core.config.DashboardPropertiesImpl;
 import de.tudarmstadt.ukp.inception.ui.core.config.ProjectUiPropertiesImpl;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.AdminDashboardPageMenuBarItemSupport;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet.NetworkAdminPageMenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet.SystemStatusService;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet.SystemStatusServiceImpl;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.log.LogPageMenuItem;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.users.ManageUsersPageMenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtension;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtensionPoint;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtensionPointImpl;
@@ -155,5 +158,23 @@ public class DashboardAutoConfiguration
     public ProjectUsersMenuItem projectUsersMenuItem()
     {
         return new ProjectUsersMenuItem();
+    }
+
+    @Bean
+    public NetworkAdminPageMenuItem networkAdminPageMenuItem()
+    {
+        return new NetworkAdminPageMenuItem();
+    }
+
+    @Bean
+    public LogPageMenuItem logPageMenuItem()
+    {
+        return new LogPageMenuItem();
+    }
+
+    @Bean
+    public ManageUsersPageMenuItem manageUsersPageMenuItem()
+    {
+        return new ManageUsersPageMenuItem();
     }
 }

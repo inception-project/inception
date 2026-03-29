@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
   Licensed to the Technische Universität Darmstadt under one
   or more contributor license agreements.  See the NOTICE file
@@ -15,23 +16,15 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <body>
-  <wicket:panel>
-    <h1>System Status</h1>
-
-    <div class="card m-2">
-      <div class="card-header">
-        Active Users 
-        <span class="badge rounded-pill text-bg-secondary float-end">
-          <wicket:container wicket:id="activeUsers" />
-        </span>
-      </div>
-      <div class="card-body">
-        <wicket:container wicket:id="activeUsersDetail" />
-      </div>
+  <wicket:extend>
+    <div wicket:id="menu" class="dashboard-menu"/>
+    <div class="flex-content flex-v-container">
+      <wicket:child>
+        [CONTENT]
+      </wicket:child>
     </div>
-  </wicket:panel>
+  </wicket:extend>
 </body>
 </html>
