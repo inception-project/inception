@@ -36,6 +36,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import org.apache.catalina.util.NetMaskSet;
 import org.apache.catalina.valves.RemoteIpValve;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -237,7 +238,7 @@ public class SystemStatusDashlet
         var trustedProxies = getTrustedProxies();
         if (isNotBlank(trustedProxies)) {
             try {
-                if (Pattern.matches(trustedProxies, remoteIp)) {
+                if (matchesProxies(remoteIp, trustedProxies)) {
                     LOG.debug("Proxy seems trusted by trustedProxies: [{}] matches [{}]", remoteIp,
                             trustedProxies);
                     return true;
@@ -251,7 +252,7 @@ public class SystemStatusDashlet
         var internalProxies = getInternalProxies();
         if (isNotBlank(internalProxies)) {
             try {
-                if (Pattern.matches(internalProxies, remoteIp)) {
+                if (matchesProxies(remoteIp, internalProxies)) {
                     LOG.debug("Proxy seems trusted by internalProxies: [{}] matches [{}]", remoteIp,
                             internalProxies);
                     return true;
@@ -266,6 +267,26 @@ public class SystemStatusDashlet
                 "Proxy seems not to be trusted: clientUrl [{}] and serverUrl [{}] do not match and remoteIP [] does"
                         + "not match trustedProxies [{}] or internalProxies [{}]",
                 clientUrl, getServerUrl(), remoteIp, trustedProxies, internalProxies);
+        return false;
+    }
+
+    private boolean matchesProxies(String aRemoteIp, String aProxyPattern)
+    {
+        try {
+            var pattern = NetMaskSet.parse(aProxyPattern);
+            return pattern.contains(aRemoteIp);
+        }
+        catch (Exception e) {
+            // Ignore
+        }
+
+        try {
+            return Pattern.matches(aProxyPattern, aRemoteIp);
+        }
+        catch (Exception e) {
+            // Ignore
+        }
+
         return false;
     }
 
@@ -425,9 +446,19 @@ public class SystemStatusDashlet
     {
         var context = ApplicationContextProvider.getApplicationContext();
         var factory = context.getBean(TomcatServletWebServerFactory.class);
+
         var maybeValve = factory.getEngineValves().stream() //
                 .filter(RemoteIpValve.class::isInstance) //
-                .map(v -> (RemoteIpValve) v).findFirst();
+                .map(v -> (RemoteIpValve) v) //
+                .findFirst();
+
+        if (maybeValve.isEmpty()) {
+            maybeValve = factory.getContextValves().stream() //
+                    .filter(RemoteIpValve.class::isInstance) //
+                    .map(v -> (RemoteIpValve) v) //
+                    .findFirst();
+        }
+
         return maybeValve;
     }
 }

@@ -103,9 +103,9 @@
     <jboss.logging.version>3.6.2.Final</jboss.logging.version>
     <sentry.version>8.33.0</sentry.version>
 
-    <tomcat.version>10.1.52</tomcat.version>
+    <tomcat.version>11.0.20</tomcat.version>
     <jetty.version>12.1.6</jetty.version>
-    <servlet-api.version>6.0.0</servlet-api.version>
+    <servlet-api.version>6.1.0</servlet-api.version>
 
     <mariadb.driver.version>3.5.7</mariadb.driver.version>
     <mssql.driver.version>12.10.2.jre11</mssql.driver.version>
@@ -194,7 +194,7 @@
     <javassist.version>3.30.2-GA</javassist.version>
     <openjson.version>1.0.13</openjson.version>
 
-    <node.version>22.21.1</node.version>
+    <node.version>24.14.1</node.version>
     <apache-annotator.version>^0.2.0</apache-annotator.version>
     <bootstrap.version>^5.3.8</bootstrap.version>
     <cross-env.version>^10.1.0</cross-env.version>

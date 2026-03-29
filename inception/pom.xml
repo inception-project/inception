@@ -33,7 +33,7 @@
     <maven.compiler.target>${maven.compiler.release}</maven.compiler.target>
     <maven.compiler.source>${maven.compiler.release}</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
-    <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
+    <dkpro.core.testCachePath>${session.executionRootDirectory}/inception/cache/dkpro-core-datasets</dkpro.core.testCachePath>
     <excludedTestCategories>slow</excludedTestCategories>
     <npm-install-command>ci</npm-install-command>
   </properties>
