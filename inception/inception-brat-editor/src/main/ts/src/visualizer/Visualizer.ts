@@ -97,7 +97,11 @@ import {
     type Offsets,
     Relation,
     Span,
+    bgToFgColor
 } from '@inception-project/inception-js-api';
+import { sentenceSplit, tokenise } from './Segmentation';
+import { findClosestHorizontalScrollable, findClosestVerticalScrollable, findClosestChunkElement } from './DomUtils';
+import { fastTranslate, fastTranslateGroup } from './SvgUtils';
 declare const $: JQueryStatic;
 
 /**
@@ -1433,16 +1437,6 @@ export class Visualizer {
         this.renderData(undefined);
     }
 
-    fastTranslateGroup(element: SVGTypeMapping<SVGGElement>, x: number, y: number) {
-        element.attr('transform', 'translate(' + x + ', ' + y + ')');
-        // element.translate(x, y);
-    }
-
-    fastTranslate(element: Row | Chunk, x: number, y: number) {
-        this.fastTranslateGroup(element.group, x, y);
-        element.translation = { x, y };
-    }
-
     addHeaderAndDefs(): Defs {
         const defs = this.svg.defs();
 
@@ -1526,76 +1520,82 @@ export class Visualizer {
         }
 
         return this.getTextMeasurements(chunkTexts, undefined, (fragment, text) =>
-            this.calculateChunkTextElementMeasure(fragment, text)
+            Visualizer.calculateChunkTextElementMeasure(fragment, text, this.rtlmode)
         );
     }
 
     /**
-     * measure the text position in pixels
+     * Calculate pixel positions and related measurements for a fragment or
+     * marker inside an SVG text element.
+     *
+     * Behavior:
+     * - If `fragment` is a `Marker` (marked-text tuple), this function
+     *   adjusts for browser-collapsed whitespace and writes the start X
+     *   coordinate into `fragment[3]`.
+     * - If `fragment` is a `Fragment`, this function computes the left and
+     *   right X pixel coordinates that correspond to the logical character
+     *   range covered by the fragment and stores them on
+     *   `fragment.curly = { from: number, to: number }`.
+     *
+     * Notes:
+     * - Coordinates are left-to-right pixel offsets relative to the start
+     *   of the supplied `text` element. Callers that render RTL text should
+     *   negate these values when necessary (the caller/wrapper handles
+     *   negation in the rendering path).
+     * - This method uses SVGTextContentElement metrics
+     *   (`getStartPositionOfChar`, `getEndPositionOfChar`,
+     *   `getComputedTextLength`) and mutates the passed `fragment` object.
+     *
+     * @param fragment - Fragment object or marker tuple.
+     * @param text - SVG text element used for measurements.
+     * @param rtlmode - Whether RTL measurement rules apply.
+     * @throws {Error} When the fragment's first character is not contained in
+     *   its declared chunk (indicates inconsistent source data).
      */
-    private calculateChunkTextElementMeasure(fragment: Fragment | Marker, text: SVGTextElement) {
-        if (!(fragment instanceof Fragment)) {
-            // it's markedText [id, start?, char#, offset]
-            if (fragment[2] < 0) {
-                fragment[2] = 0;
-            }
-
-            // Adjust for the browser collapsing whitespace
-            let lastCharSpace = true;
-            let collapsedSpaces = 0;
-            const tc = text.textContent || '';
-            for (let i = 0; i < fragment[2]; i++) {
-                const c = tc[i];
-                if (/\s/.test(c)) {
-                    if (lastCharSpace) {
-                        collapsedSpaces++;
-                    }
-                    lastCharSpace = true;
-                } else {
-                    lastCharSpace = false;
-                }
-            }
-
-            fragment[2] -= collapsedSpaces;
-
-            if (!fragment[2]) {
-                // start
-                fragment[3] = text.getStartPositionOfChar(fragment[2]).x;
-            } else {
-                fragment[3] = text.getEndPositionOfChar(fragment[2] - 1).x + 1;
-            }
-            return;
+    static calculateChunkTextElementMeasure(fragment: Fragment | Marker, text: SVGTextElement, rtlmode: boolean): void {
+        if (fragment instanceof Fragment) {
+            Visualizer.calculateFragmentTextElementMeasure(fragment, text, rtlmode);
         }
+        else {
+            // it's markedText [id, start?, char#, offset]
+            Visualizer.calculateMarkerTextElementMeasure(fragment, text);
+        }
+    }
 
+    /**
+     * Calculate pixel positions for a Fragment within an SVG text element.
+     *
+     * Side effects:
+     * - Mutates `fragment.curly` to an object `{ from: number, to: number }`.
+     * - Throws an Error when the fragment's first character is not contained in its chunk.
+     *
+     * Behavior:
+     * - Computes character indices relative to the containing `chunk` and
+     *   adjusts for XML whitespace collapsing.
+     * - Uses `calculateSubstringPositionRobust` in RTL mode and
+     *   `calculateSubstringPositionFast` in LTR mode.
+     *
+     * @param fragment - Fragment to measure (must have `from`, `to`, and `chunk`).
+     * @param text - SVG text element used for measurement.
+     * @param rtlmode - Whether RTL measurement rules apply.
+     * @throws {Error} When the fragment is not contained in its declared chunk.
+     */
+    static calculateFragmentTextElementMeasure(fragment: Fragment, text: SVGTextElement, rtlmode: boolean): void {
         let firstChar = fragment.from - fragment.chunk.from;
         if (firstChar < 0) {
-            firstChar = 0;
-            this.dispatcher.post('messages', [
-                [
-                    [
-                        '<strong>WARNING</strong>' +
-                            '<br/> ' +
-                            'The fragment [' +
-                            fragment.from +
-                            ', ' +
-                            fragment.to +
-                            '] (' +
-                            fragment.text +
-                            ') is not ' +
-                            'contained in its designated chunk [' +
-                            fragment.chunk.from +
-                            ', ' +
-                            fragment.chunk.to +
-                            '] most likely ' +
-                            'due to the fragment starting or ending with a space, please ' +
-                            'verify the sanity of your data since we are unable to ' +
-                            'visualise this fragment correctly and will drop leading ' +
-                            'space characters',
-                        'warning',
-                        15,
-                    ],
-                ],
-            ]);
+            throw new Error(
+                'Fragment [' +
+                    fragment.from +
+                    ', ' +
+                    fragment.to +
+                    '] (' +
+                    fragment.text +
+                    ') is not contained in its designated chunk [' +
+                    fragment.chunk.from +
+                    ', ' +
+                    fragment.chunk.to +
+                    ']. Aborting rendering due to inconsistent source data.'
+            );
         }
         let lastChar = fragment.to - fragment.chunk.from - 1;
 
@@ -1610,8 +1610,8 @@ export class Visualizer {
         // Handle zero-width or invalid ranges (e.g., lastChar < firstChar)
         // so we don't pass illegal ranges into the robust RTL routine.
         if (lastChar < firstChar) {
-            let [startPos, endPos] = this.calculateSubstringPositionFast(text, firstChar, lastChar);
-            if (this.rtlmode) {
+            let [startPos, endPos] = Visualizer.calculateSubstringPositionFast(text, firstChar, lastChar);
+            if (rtlmode) {
                 startPos = -startPos;
                 endPos = -endPos;
             }
@@ -1623,13 +1623,14 @@ export class Visualizer {
         }
 
         let startPos: number, endPos: number;
-        if (this.rtlmode) {
+        if (rtlmode) {
             // This rendering is much slower than the "old" version that brat uses, but it is more reliable in RTL mode.
-            [startPos, endPos] = this.calculateSubstringPositionRobust(
+            [startPos, endPos] = Visualizer.calculateSubstringPositionRobust(
                 fragment,
                 text,
                 firstChar,
-                lastChar
+                lastChar,
+                rtlmode
             );
             // In RTL mode, positions are negative (left to right)
             startPos = -startPos;
@@ -1642,7 +1643,7 @@ export class Visualizer {
             // measurement is more reliable.
             // Cannot use fragment.chunk.text.length here because invisible
             // characters do not count. Using text.getNumberOfChars() instead.
-            [startPos, endPos] = this.calculateSubstringPositionFast(text, firstChar, lastChar);
+            [startPos, endPos] = Visualizer.calculateSubstringPositionFast(text, firstChar, lastChar);
         }
 
         // Make sure that startPos and endPos are properly ordered on the X axis
@@ -1652,11 +1653,94 @@ export class Visualizer {
         };
     }
 
-    private calculateSubstringPositionRobust(
+    /**
+     * Calculate and assign the visual start X-coordinate for a marker tuple.
+     *
+     * This helper handles marked-text tuples of the form `[id, start?, char#, offset]`.
+     * It corrects the provided character index for browser-collapsed whitespace
+     * (consecutive spaces/tabs/newlines) and writes the starting X-coordinate
+     * (in pixels, relative to the start of `text`) into `fragment[3]`.
+     *
+     * Side effects:
+     * - Mutates `fragment[2]` to the adjusted character index.
+     * - Sets `fragment[3]` to the computed starting X-coordinate.
+     *
+     * Notes:
+     * - The function expects `text` to implement the relevant subset of
+     *   `SVGTextContentElement` (`getStartPositionOfChar`/`getEndPositionOfChar`).
+     * - This is a pure DOM-measurement helper and does not perform any
+     *   dispatcher calls or logging.
+     *
+     * @param marker - Marker tuple `[id, start?, char#, offset]`.
+     * @param text - SVG text element used for measurement.
+     */
+    static calculateMarkerTextElementMeasure(marker: Marker, text: SVGTextElement): void {
+        if (marker[2] < 0) {
+            marker[2] = 0;
+        }
+
+        // Adjust for the browser collapsing whitespace
+        let lastCharSpace = true;
+        let collapsedSpaces = 0;
+        const tc = text.textContent || '';
+        for (let i = 0; i < marker[2]; i++) {
+            const c = tc[i];
+            if (/\s/.test(c)) {
+                if (lastCharSpace) {
+                    collapsedSpaces++;
+                }
+                lastCharSpace = true;
+            } else {
+                lastCharSpace = false;
+            }
+        }
+
+        marker[2] -= collapsedSpaces;
+
+        if (!marker[2]) {
+            // start
+            marker[3] = text.getStartPositionOfChar(marker[2]).x;
+        } else {
+            marker[3] = text.getEndPositionOfChar(marker[2] - 1).x + 1;
+        }
+    }
+
+    /**
+     * Robust substring position measurement that maps logical character indices
+     * to visual glyph positions, handling BiDi reordering and mixed-direction blocks.
+     *
+     * Returns pixel X-coordinates `[startX, endX]` for the substring covering
+     * characters `firstChar..lastChar` within the given `text` element.
+     *
+     * Behavior:
+     * - Validates inputs and returns `[0,0]` for invalid/out-of-range indices or empty text.
+     * - Uses cached metrics stored on `fragment.chunk.rtlsizes` when present:
+     *   `{ charDirection, charAttrs, corrFactor }`.
+     * - Otherwise, computes per-glyph widths/directions via the SVG API,
+     *   optionally reorders visual blocks (for BiDi) and computes a correction
+     *   factor (`corrFactor = computedTextLength / sum(widths)`) to compensate for ligatures.
+     * - The returned coordinates are left-to-right pixel positions relative to
+     *   the start of the text element. In RTL rendering the caller negates values.
+     *
+     * Notes:
+     * - This algorithm expects `charAttrs` to include an entry for each glyph;
+     *   incorrect reordering or missing glyphs may cause undefined behavior.
+     * - The inclusion of the last character's width follows legacy logic and
+     *   depends on character directions and `rtlmode`.
+     *
+     * @param fragment - Fragment used for caching and chunk reference.
+     * @param text - SVG text element to measure (subset of SVGTextElement used).
+     * @param firstChar - Logical index of the first character (inclusive).
+     * @param lastChar - Logical index of the last character (inclusive).
+     * @param rtlmode - Whether RTL reordering rules apply.
+     * @returns A two-element array `[startX, endX]` with pixel X-coordinates.
+     */
+    static calculateSubstringPositionRobust(
         fragment: Fragment,
         text: SVGTextElement,
         firstChar: number,
-        lastChar: number
+        lastChar: number,
+        rtlmode: boolean
     ): [number, number] {
         if (firstChar < 0 || lastChar < 0 || firstChar >= text.getNumberOfChars() || lastChar >= text.getNumberOfChars()) {
             console.error(`Invalid range [${firstChar}, ${lastChar}]`);
@@ -1711,7 +1795,7 @@ export class Visualizer {
                         blockEnd++;
                     }
 
-                    if (charDirection[blockBegin] === (this.rtlmode ? 'ltr' : 'rtl')) {
+                    if (charDirection[blockBegin] === (rtlmode ? 'ltr' : 'rtl')) {
                         charAttrs = charAttrs
                             .slice(0, blockBegin)
                             .concat(charAttrs.slice(blockBegin, blockEnd).reverse())
@@ -1764,7 +1848,7 @@ export class Visualizer {
             // console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
         }
 
-        if (charDirection[i] === (this.rtlmode ? 'rtl' : 'ltr')) {
+        if (charDirection[i] === (rtlmode ? 'rtl' : 'ltr')) {
             // console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
             endPos += charAttrs[i].width;
         }
@@ -1776,23 +1860,35 @@ export class Visualizer {
         return [startPos, endPos];
     }
 
-    private calculateSubstringPositionFast(
+    /**
+     * Fast fallback measurement for substring positions (LTR-optimized).
+     *
+     * Uses SVG text metrics (`getStartPositionOfChar`, `getEndPositionOfChar`,
+     * `getComputedTextLength`) to compute the x-coordinates of a substring
+     * defined by `firstChar..lastChar`. This is a fast path and does not
+     * attempt to handle complex BiDi or grapheme-cluster cases — use the
+     * robust RTL routine for mixed-direction text.
+     *
+     * @param text - The SVG text element to measure (implements the subset of SVGTextContentElement used here).
+     * @param firstChar - Index of the first character (inclusive) in logical order.
+     * @param lastChar - Index of the last character (inclusive) in logical order.
+     * @returns A two-element array `[startX, endX]` with pixel X-coordinates for the substring.
+     */
+    static calculateSubstringPositionFast(
         text: SVGTextContentElement,
         firstChar: number,
         lastChar: number
     ) {
         try {
-            {
-                let startPos: number;
-                if (firstChar < text.getNumberOfChars()) {
-                    startPos = text.getStartPositionOfChar(firstChar).x;
-                } else {
-                    startPos = text.getComputedTextLength();
-                }
-                const endPos =
-                    lastChar < firstChar ? startPos : text.getEndPositionOfChar(lastChar).x;
-                return [startPos, endPos];
+            let startPos: number;
+            if (firstChar < text.getNumberOfChars()) {
+                startPos = text.getStartPositionOfChar(firstChar).x;
+            } else {
+                startPos = text.getComputedTextLength();
             }
+            const endPos =
+                lastChar < firstChar ? startPos : text.getEndPositionOfChar(lastChar).x;
+            return [startPos, endPos];
         } catch (e) {
             console.error(
                 `Unable to calculate width of range ${firstChar}-${lastChar} on [${text}]`,
@@ -2592,7 +2688,7 @@ export class Visualizer {
                     }
                     for (let chunkIndex = spacingChunkId; chunkIndex < chunk.index; chunkIndex++) {
                         const movedChunk = docData.chunks[chunkIndex];
-                        this.fastTranslate(movedChunk, movedChunk.translation.x + spacing, 0);
+                        fastTranslate(movedChunk, movedChunk.translation.x + spacing, 0);
                         movedChunk.textX += spacing;
                     }
                 }
@@ -2602,7 +2698,7 @@ export class Visualizer {
             row.chunks.push(chunk);
             chunk.row = row;
 
-            this.fastTranslate(chunk, currentX + (this.rtlmode ? -boxX : boxX), 0);
+            fastTranslate(chunk, currentX + (this.rtlmode ? -boxX : boxX), 0);
             chunk.textX = currentX + (this.rtlmode ? -boxX : boxX);
             currentX += this.rtlmode ? -boxWidth : boxWidth;
         }); // chunks
@@ -3742,7 +3838,7 @@ export class Visualizer {
             if (this.roundCoordinates) {
                 rowY = rowY | 0;
             }
-            this.fastTranslate(row, 0, rowY);
+            fastTranslate(row, 0, rowY);
 
             y += Configuration.visual.margin.y;
         }
@@ -3851,11 +3947,11 @@ export class Visualizer {
         const scrollable = findClosestHorizontalScrollable(this.svg.node);
 
         if (this.rtlmode) {
-            rows.map((row) => this.fastTranslate(row, oversized, row.translation.y));
+            rows.map((row) => fastTranslate(row, oversized, row.translation.y));
 
-            this.fastTranslateGroup(this.highlightGroup, oversized, 0);
-            this.fastTranslateGroup(textGroup, oversized, 0);
-            this.fastTranslateGroup(sentNumGroup, oversized, 0);
+            fastTranslateGroup(this.highlightGroup, oversized, 0);
+            fastTranslateGroup(textGroup, oversized, 0);
+            fastTranslateGroup(sentNumGroup, oversized, 0);
 
             if (scrollable) {
                 scrollable.scrollLeft = oversized + 4;
@@ -4965,6 +5061,7 @@ export class Visualizer {
 
         return overlappingChunks;
     }
+
     getChunkElementWithId(id: VID): Element | null {
         return this.svg.node.querySelector(`text:not(.spacing)[data-chunk-id="${id}"]`);
     }
@@ -5101,24 +5198,6 @@ export class Visualizer {
     }
 }
 
-/**
- * Utility function to find the closest highlight element to the given target.
- *
- * @param target a DOM node.
- * @returns the closest highlight element or null if none is found.
- */
-export function findClosestChunkElement(target: Node | null): Element | null {
-    if (target instanceof Text) {
-        target = target.parentElement;
-    }
-
-    if (target instanceof Element) {
-        return target.closest('[data-chunk-id]');
-    }
-
-    return null;
-}
-
 function isRTL(charCode: number): boolean {
     const t1 = charCode >= 0x0591 && charCode <= 0x07ff;
     const t2 = charCode === 0x200f;
@@ -5126,123 +5205,6 @@ function isRTL(charCode: number): boolean {
     const t4 = charCode >= 0xfb1d && charCode <= 0xfdfd;
     const t5 = charCode >= 0xfe70 && charCode <= 0xfefc;
     return t1 || t2 || t3 || t4 || t5;
-}
-
-// http://24ways.org/2010/calculating-color-contrast/
-// http://stackoverflow.com/questions/11867545/change-text-color-based-on-brightness-of-the-covered-background-area
-function bgToFgColor(hexcolor: ColorCode) {
-    const r = parseInt(hexcolor.substr(1, 2), 16);
-    const g = parseInt(hexcolor.substr(3, 2), 16);
-    const b = parseInt(hexcolor.substr(5, 2), 16);
-    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-    return yiq >= 128 ? '#000000' : '#ffffff';
-}
-
-function findClosestHorizontalScrollable(node: Element | null) {
-    if (node === null || node.tagName === 'HTML') {
-        return null;
-    }
-
-    if (
-        node instanceof HTMLElement &&
-        ((node.style.overflowX === 'auto' && node.scrollWidth > node.clientWidth) ||
-            node.style.overflowX === 'scroll')
-    ) {
-        return node;
-    }
-
-    // Abort if the node is marked as scrollable but does presently not have a scrollbar. This is
-    // to avoid that we consider scrollbars too far out
-    if (node.classList.contains('scrollable')) {
-        return null;
-    }
-
-    return findClosestHorizontalScrollable(node.parentElement);
-}
-
-function findClosestVerticalScrollable(node: Element | null) {
-    if (node === null || node.tagName === 'HTML') {
-        return null;
-    }
-
-    if (
-        node instanceof HTMLElement &&
-        ((node.style.overflowY === 'auto' && node.scrollHeight > node.clientHeight) ||
-            node.style.overflowY === 'scroll')
-    ) {
-        return node;
-    }
-
-    // Abort if the node is marked as scrollable but does presently not have a scrollbar. This is
-    // to avoid that we consider scrollbars too far out
-    if (node.classList.contains('scrollable')) {
-        return null;
-    }
-
-    return findClosestVerticalScrollable(node.parentElement);
-}
-
-/**
- * A naive whitespace tokeniser
- */
-function tokenise(text: string): Array<Offsets> {
-    const tokenOffsets: Array<Offsets> = [];
-    let tokenStart: number | null = null;
-    let lastCharPos: number | null = null;
-
-    for (let i = 0; i < text.length; i++) {
-        const c = text[i];
-        // Have we found the start of a token?
-        if (tokenStart == null && !/\s/.test(c)) {
-            tokenStart = i;
-            lastCharPos = i;
-            // Have we found the end of a token?
-        } else if (/\s/.test(c) && tokenStart != null) {
-            tokenOffsets.push([tokenStart, i]);
-            tokenStart = null;
-            // Is it a non-whitespace character?
-        } else if (!/\s/.test(c)) {
-            lastCharPos = i;
-        }
-    }
-
-    // Do we have a trailing token?
-    if (tokenStart !== null && lastCharPos !== null) {
-        tokenOffsets.push([tokenStart, lastCharPos + 1]);
-    }
-
-    return tokenOffsets;
-}
-
-/**
- * A naive newline sentence splitter
- */
-function sentenceSplit(text: string): Array<Offsets> {
-    const sentenceOffsets: Array<Offsets> = [];
-    let sentStart: number | null = null;
-    let lastCharPos = -1;
-
-    for (let i = 0; i < text.length; i++) {
-        const c = text[i];
-        // Have we found the start of a sentence?
-        if (sentStart == null && !/\s/.test(c)) {
-            sentStart = i;
-            lastCharPos = i;
-            // Have we found the end of a sentence?
-        } else if (c === '\n' && sentStart != null) {
-            sentenceOffsets.push([sentStart, i]);
-            sentStart = null;
-            // Is it a non-whitespace character?
-        } else if (!/\s/.test(c)) {
-            lastCharPos = i;
-        }
-    }
-    // Do we have a trailing sentence without a closing newline?
-    if (sentStart != null) {
-        sentenceOffsets.push([sentStart, lastCharPos + 1]);
-    }
-
-    return sentenceOffsets;
 }
 
 function overlapping(aXBegin: number, aXEnd: number, aYBegin: number, aYEnd: number): boolean {
