@@ -37,10 +37,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { DiamAjax } from '@inception-project/inception-js-api';
+import { type DiamAjax } from '@inception-project/inception-js-api';
 import { Box } from '@svgdotjs/svg.js';
 import { Dispatcher } from '../dispatcher/Dispatcher';
-import { EntityTypeDto, RelationTypeDto } from '../protocol/Protocol';
+import { type EntityTypeDto, type RelationTypeDto } from '../protocol/Protocol';
 import { Fragment } from '../visualizer/Fragment';
 import { Visualizer } from '../visualizer/Visualizer';
 import { VisualizerUI } from '../visualizer_ui/VisualizerUI';
