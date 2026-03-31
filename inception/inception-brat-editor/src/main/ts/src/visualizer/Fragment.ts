@@ -38,7 +38,7 @@
  * SOFTWARE.
  */
 
-import { SVGTypeMapping } from '@svgdotjs/svg.js';
+import { type SVGTypeMapping } from '@svgdotjs/svg.js';
 import { Chunk } from './Chunk';
 import { Entity } from './Entity';
 import { RectBox } from './RectBox';
