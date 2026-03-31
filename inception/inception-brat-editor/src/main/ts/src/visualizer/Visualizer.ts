@@ -1607,6 +1607,21 @@ export class Visualizer {
         firstChar -= textUpToFirstChar.length - textUpToFirstCharUnspaced.length;
         lastChar -= textUpToLastChar.length - textUpToLastCharUnspaced.length;
 
+        // Handle zero-width or invalid ranges (e.g., lastChar < firstChar)
+        // so we don't pass illegal ranges into the robust RTL routine.
+        if (lastChar < firstChar) {
+            let [startPos, endPos] = this.calculateSubstringPositionFast(text, firstChar, lastChar);
+            if (this.rtlmode) {
+                startPos = -startPos;
+                endPos = -endPos;
+            }
+            fragment.curly = {
+                from: Math.min(startPos, endPos),
+                to: Math.max(startPos, endPos),
+            };
+            return;
+        }
+
         let startPos: number, endPos: number;
         if (this.rtlmode) {
             // This rendering is much slower than the "old" version that brat uses, but it is more reliable in RTL mode.
@@ -1643,6 +1658,11 @@ export class Visualizer {
         firstChar: number,
         lastChar: number
     ): [number, number] {
+        if (firstChar < 0 || lastChar < 0 || firstChar >= text.getNumberOfChars() || lastChar >= text.getNumberOfChars()) {
+            console.error(`Invalid range [${firstChar}, ${lastChar}]`);
+            return [0, 0];
+        }
+
         if (text.textContent === null || text.textContent.length === 0) {
             return [0, 0];
         }
@@ -4119,7 +4139,7 @@ export class Visualizer {
         } catch (e) {
             // We are sure not to be drawing anymore, reset the state
             this.drawing = false;
-            console.error('Rendering terminated due to: ' + e, e.stack);
+            console.error('Rendering terminated', e);
         }
     }
 
