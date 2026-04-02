@@ -31,6 +31,7 @@ import { VisualizerUI } from './visualizer_ui/VisualizerUI';
 import './style-vis.scss';
 import { ResizeManager } from './annotator_ui/ResizeManager';
 import { mount, unmount } from 'svelte';
+import type { SegmenterAdapter } from './visualizer/SegmenterAnalysis';
 
 export class BratEditor implements AnnotationEditor {
     dispatcher: Dispatcher;
@@ -44,12 +45,38 @@ export class BratEditor implements AnnotationEditor {
 
         this.dispatcher = new Dispatcher();
         new Ajax(this.dispatcher, markupId, props.diamAjaxCallbackUrl);
-        this.visualizer = new Visualizer(this.dispatcher, markupId, ajax);
+
+        // Initialize platform `Intl.Segmenter` adapter per-editor and inject
+        // it into the Visualizer instance. This keeps adapter lifecycle with
+        // the editor and avoids global/static state.
+        let segmenterAdapter: SegmenterAdapter | undefined = undefined;
+        try {
+            if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+                const seg = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+                segmenterAdapter = {
+                    analyzeText(text: string) {
+                        const clusterStarts: number[] = [];
+                        for (const s of seg.segment(text)) {
+                            clusterStarts.push(s.index);
+                        }
+                        return { clusterStarts };
+                    },
+                };
+                console.info(
+                    'Using platform Intl.Segmenter API for grapheme cluster segmentation.'
+                );
+            }
+        } catch (e) {
+            console.warn(
+                'Error initializing Intl.Segmenter:',
+                e && (e as any).message ? (e as any).message : e
+            );
+        }
+
+        this.visualizer = new Visualizer(this.dispatcher, markupId, segmenterAdapter);
         new VisualizerUI(this.dispatcher, ajax);
         new AnnotatorUI(this.dispatcher, this.visualizer, ajax);
         this.dispatcher.post('init');
-        element.dispatcher = this.dispatcher;
-        element.visualizer = this.visualizer;
 
         // Ensure that the visualizer is resized when the container element size changes, e.g. when
         // the sidebars are opened or closed.

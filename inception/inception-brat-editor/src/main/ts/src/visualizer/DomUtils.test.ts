@@ -17,10 +17,7 @@
  */
 import { describe, it, expect } from 'vitest';
 
-import {
-    findClosestHorizontalScrollable,
-    findClosestVerticalScrollable,
-} from './DomUtils';
+import { findClosestHorizontalScrollable, findClosestVerticalScrollable } from './DomUtils';
 
 describe('findClosestHorizontalScrollable', () => {
     it('returns the closest ancestor with overflowX:auto and scrollWidth>clientWidth', () => {

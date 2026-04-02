@@ -21,15 +21,25 @@ import { tokenise, sentenceSplit } from './Segmentation';
 
 describe('Segmentation.tokenise', () => {
     it('splits on whitespace and returns exclusive end indices', () => {
-        expect(tokenise('Hello world')).toEqual([[0, 5], [6, 11]]);
+        expect(tokenise('Hello world')).toEqual([
+            [0, 5],
+            [6, 11],
+        ]);
     });
 
     it('handles leading, trailing and multiple whitespace', () => {
-        expect(tokenise('  Hello   world  ')).toEqual([[2, 7], [10, 15]]);
+        expect(tokenise('  Hello   world  ')).toEqual([
+            [2, 7],
+            [10, 15],
+        ]);
     });
 
     it('treats tabs and newlines as separators', () => {
-        expect(tokenise('a\tb\nc')).toEqual([[0, 1], [2, 3], [4, 5]]);
+        expect(tokenise('a\tb\nc')).toEqual([
+            [0, 1],
+            [2, 3],
+            [4, 5],
+        ]);
     });
 
     it('returns empty for empty or whitespace-only strings', () => {
@@ -40,15 +50,25 @@ describe('Segmentation.tokenise', () => {
 
 describe('Segmentation.sentenceSplit', () => {
     it('splits lines on newline and returns exclusive end indices', () => {
-        expect(sentenceSplit('Line1\nLine2\n')).toEqual([[0, 5], [6, 11]]);
+        expect(sentenceSplit('Line1\nLine2\n')).toEqual([
+            [0, 5],
+            [6, 11],
+        ]);
     });
 
     it('returns trailing text as last sentence when no final newline', () => {
-        expect(sentenceSplit('One\nTwo\nThree')).toEqual([[0, 3], [4, 7], [8, 13]]);
+        expect(sentenceSplit('One\nTwo\nThree')).toEqual([
+            [0, 3],
+            [4, 7],
+            [8, 13],
+        ]);
     });
 
     it('ignores blank lines and trims leading/trailing whitespace when locating sentences', () => {
-        expect(sentenceSplit('  First\n\nSecond\n  ')).toEqual([[2, 7], [9, 15]]);
+        expect(sentenceSplit('  First\n\nSecond\n  ')).toEqual([
+            [2, 7],
+            [9, 15],
+        ]);
     });
 
     it('returns empty for strings with no non-whitespace characters', () => {

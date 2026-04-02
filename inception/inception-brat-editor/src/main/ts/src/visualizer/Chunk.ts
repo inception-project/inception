@@ -37,9 +37,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { SVGTypeMapping, Svg } from '@svgdotjs/svg.js';
+import { type SVGTypeMapping, Svg } from '@svgdotjs/svg.js';
 import { Fragment } from './Fragment';
 import { Row } from './Row';
+import type { SegmenterAnalysis } from './SegmenterAnalysis';
 
 export type Marker = [textNo: number, start: boolean, offset: number, width: number, type: string];
 
@@ -72,6 +73,8 @@ export class Chunk {
         charAttrs: Array<{ order: number; width: number; direction: 'rtl' | 'ltr' }>;
         corrFactor: number;
     };
+    // Optional analysis produced by ICU/Segmenter adapters (grapheme clusters, visual order)
+    segmenterAnalysis?: SegmenterAnalysis;
 
     constructor(index: number, text: string, from: number, to: number, space: string) {
         this.index = index;

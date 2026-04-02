@@ -21,7 +21,6 @@ import type {
     DiamClientFactory,
 } from '@inception-project/inception-js-api';
 import { BratEditor } from './BratEditor';
-import { Visualizer } from './visualizer/Visualizer';
 
 const PROP_EDITOR = '__editor__';
 
@@ -35,7 +34,7 @@ export class BratEditorFactory implements AnnotationEditorFactory {
             return element[PROP_EDITOR];
         }
 
-        console.info('BratEditorFactory.getOrInitialize called for element', element);
+        // console.info('BratEditorFactory.getOrInitialize called for element', element);
 
         const ajax = diam.createAjaxClient(props.diamAjaxCallbackUrl);
 
@@ -55,43 +54,7 @@ export class BratEditorFactory implements AnnotationEditorFactory {
             targetElement = element as Element;
         }
 
-        // Use platform `Intl.Segmenter` synchronously for grapheme-cluster
-        // segmentation. We intentionally omit loading ICU/WASM here to avoid
-        // dragging the large WASM into the browser bundle; the browser's
-        // `Intl.Segmenter` is sufficient for grapheme clusters in modern
-        // browsers and keeps startup fast.
-        if (!(BratEditorFactory as any)._segmenterInitialized) {
-            (BratEditorFactory as any)._segmenterInitialized = true;
-            try {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const IntlSegmenter: any = (Intl as any).Segmenter;
-                if (typeof IntlSegmenter !== 'undefined') {
-                    const seg = new IntlSegmenter(undefined, { granularity: 'grapheme' });
-                    const adapter = {
-                        analyzeText(text: string) {
-                            const clusterStarts: number[] = [];
-                            const it = seg.segment(text);
-                            if (Symbol.iterator in Object(it)) {
-                                for (const s of it as Iterable<any>) {
-                                    if (typeof s.index === 'number') clusterStarts.push(s.index);
-                                }
-                            } else if (Array.isArray(it)) {
-                                for (const s of it as any[]) {
-                                    if (typeof s.index === 'number') clusterStarts.push(s.index);
-                                }
-                            }
-                            return { clusterStarts };
-                        },
-                    };
-                    Visualizer.setIcuAdapter(adapter);
-                    console.info('Using platform Intl.Segmenter API for grapheme cluster segmentation.');
-                } else {
-                    console.info('Intl.Segmenter not available; using legacy fallback algorithm for grapheme cluster segmentation.');
-                }
-            } catch (e) {
-                console.warn('Error initializing Intl.Segmenter:', e && e.message ? e.message : e);
-            }
-        }
+        // Segmenter initialization moved to `BratEditor` and injected into `Visualizer`.
 
         element[PROP_EDITOR] = new BratEditor(targetElement, ajax, props);
         return element[PROP_EDITOR];

@@ -38,7 +38,7 @@
  * SOFTWARE.
  */
 
-import type { Offsets } from "@inception-project/inception-js-api";
+import type { Offsets } from '@inception-project/inception-js-api';
 
 /**
  * Tokenise a string into whitespace-separated tokens and return their offsets.

@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { SVGTypeMapping } from "@svgdotjs/svg.js";
-import type { Chunk } from "./Chunk";
-import type { Row } from "./Row";
+import type { SVGTypeMapping } from '@svgdotjs/svg.js';
+import type { Chunk } from './Chunk';
+import type { Row } from './Row';
 
 /**
  * Apply a fast translation to an SVG group by setting its `transform`
@@ -31,7 +31,11 @@ import type { Row } from "./Row";
  * @param x - Horizontal translation in pixels.
  * @param y - Vertical translation in pixels.
  */
-export function fastTranslateGroup(element: SVGTypeMapping<SVGGElement>, x: number, y: number): void {
+export function fastTranslateGroup(
+    element: SVGTypeMapping<SVGGElement>,
+    x: number,
+    y: number
+): void {
     element.attr('transform', 'translate(' + x + ', ' + y + ')');
     // element.translate(x, y);
 }
