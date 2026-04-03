@@ -68,7 +68,7 @@ export class DocumentData {
      */
     spanAnnTexts: Record<string, SVGText> = {};
     towers: Record<string, Fragment[]> = {};
-    spanDrawOrderPermutation: Array<string> = [];
+    spanDrawOrderPermutation: Array<VID> = [];
     sizes: Sizes;
     exception = false;
 

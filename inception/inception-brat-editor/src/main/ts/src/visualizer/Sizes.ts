@@ -51,3 +51,23 @@ export class Sizes {
         Object.seal(this);
     }
 }
+
+/**
+ * Compute the maximum measured text width.
+ *
+ * Iterates over `sizes.texts.widths` and returns the largest width value.
+ * Uses `hasOwnProperty` to ignore inherited properties. Returns `0` if no
+ * widths are present.
+ *
+ * @param sizes - `Sizes` instance containing measured text widths.
+ * @returns The maximum width in pixels, or `0` when empty.
+ */
+export function calculateMaxTextWidth(sizes: Sizes): number {
+    let maxTextWidth = 0;
+    for (const text in sizes.texts.widths) {
+        if (Object.prototype.hasOwnProperty.call(sizes.texts.widths, text)) {
+            maxTextWidth = Math.max(maxTextWidth, sizes.texts.widths[text]);
+        }
+    }
+    return maxTextWidth;
+}

@@ -20,7 +20,7 @@
 
     import { caretRangeFromPoint } from '@inception-project/inception-js-api';
     import { createEventDispatcher, onMount } from 'svelte';
-    import { findClosestChunkElement } from '../visualizer/Visualizer';
+    import { findClosestChunkElement } from '../visualizer/DomUtils';
 
     interface Props {
         highlight?: Element;

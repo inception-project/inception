@@ -38,13 +38,14 @@
  * SOFTWARE.
  */
 import { Dispatcher } from '../dispatcher/Dispatcher';
-import { Box, Svg, SVGTypeMapping, Point } from '@svgdotjs/svg.js';
+import { Box, Svg, type SVGTypeMapping, Point } from '@svgdotjs/svg.js';
 import { DocumentData } from '../visualizer/DocumentData';
 import { INSTANCE as Configuration } from '../configuration/Configuration';
 import { INSTANCE as Util } from '../util/Util';
-import { DiamAjax } from '@inception-project/inception-js-api';
-import { EntityTypeDto, VID } from '../protocol/Protocol';
-import { findClosestChunkElement, Visualizer } from '../visualizer/Visualizer';
+import { type DiamAjax } from '@inception-project/inception-js-api';
+import { type EntityTypeDto, type VID } from '../protocol/Protocol';
+import { Visualizer } from '../visualizer/Visualizer';
+import { findClosestChunkElement } from '../visualizer/DomUtils';
 
 export class AnnotatorUI {
     private data: DocumentData;

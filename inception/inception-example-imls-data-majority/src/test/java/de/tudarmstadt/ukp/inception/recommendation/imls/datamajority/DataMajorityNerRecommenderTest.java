@@ -38,8 +38,6 @@ import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -151,13 +149,13 @@ public class DataMajorityNerRecommenderTest
     @Test
     public void thatEvaluationProducesSpecificResults() throws Exception
     {
-        String text = "Angela Dorothea Merkel ist eine deutsche Politikerin (CDU) und seit dem 22. "
+        var text = "Angela Dorothea Merkel ist eine deutsche Politikerin (CDU) und seit dem 22. "
                 + "November 2005 Bundeskanzlerin der Bundesrepublik Deutschland. "
                 + "Merkel wuchs in der DDR auf und war dort als Physikerin am Zentralinstitut "
                 + "für Physikalische Chemie wissenschaftlich tätig.";
-        String[] vals = new String[] { "PER", "LOC", "LOC", "PER", "LOC", "ORG" };
-        int[][] indices = new int[][] { { 0, 21 }, { 54, 56 }, { 110, 135 }, { 138, 143 },
-                { 158, 160 }, { 197, 236 } };
+        var vals = new String[] { "PER", "LOC", "LOC", "PER", "LOC", "ORG" };
+        var indices = new int[][] { { 0, 21 }, { 54, 56 }, { 110, 135 }, { 138, 143 }, { 158, 160 },
+                { 197, 236 } };
 
         List<CAS> testCas = getTestNECas(text, vals, indices);
 
@@ -180,12 +178,12 @@ public class DataMajorityNerRecommenderTest
     @Test
     public void thatEvaluationWithNoClassesWorks() throws Exception
     {
-        DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
-        DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);
+        var splitStrategy = new PercentageBasedSplitter(0.8, 10);
+        var sut = new DataMajorityNerRecommender(recommender);
         List<CAS> casList = new ArrayList<>();
         casList.add(getTestCasNoLabelLabels());
 
-        double score = sut.evaluate(casList, splitStrategy).computeF1Score();
+        var score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
         LOG.info("Score: {}", score);
 
@@ -195,10 +193,10 @@ public class DataMajorityNerRecommenderTest
     private CAS getTestCasNoLabelLabels() throws Exception
     {
         try {
-            Dataset ds = loader.load("germeval2014-de", CONTINUE);
-            CAS cas = loadData(ds, ds.getDataFiles()[0]).get(0);
-            Type neType = getAnnotationType(cas, NamedEntity.class);
-            Feature valFeature = neType.getFeatureByBaseName("value");
+            var ds = loader.load("germeval2014-de", CONTINUE);
+            var cas = loadData(ds, ds.getDataFiles()[0]).get(0);
+            var neType = getAnnotationType(cas, NamedEntity.class);
+            var valFeature = neType.getFeatureByBaseName("value");
             select(cas.getJCas(), NamedEntity.class)
                     .forEach(ne -> ne.setFeatureValueFromString(valFeature, null));
 
@@ -215,8 +213,8 @@ public class DataMajorityNerRecommenderTest
     @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
-        IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 5000, 10);
-        DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);
+        var splitStrategy = new IncrementalSplitter(0.8, 5000, 10);
+        var sut = new DataMajorityNerRecommender(recommender);
         List<CAS> casList = loadAllData();
 
         int i = 0;
@@ -252,7 +250,7 @@ public class DataMajorityNerRecommenderTest
     private List<CAS> loadAllData() throws IOException, UIMAException
     {
         try {
-            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            var ds = loader.load("germeval2014-de", CONTINUE);
             return loadData(ds, ds.getDataFiles());
         }
         catch (Exception e) {
@@ -265,7 +263,7 @@ public class DataMajorityNerRecommenderTest
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
         try {
-            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            var ds = loader.load("germeval2014-de", CONTINUE);
             return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
         }
         catch (Exception e) {

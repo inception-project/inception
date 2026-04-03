@@ -16,22 +16,21 @@
  * limitations under the License.
  */
 
-// =======================================================================
-// File lives in
-// /inception/inception-build/src/main/resources/inception/vite.config.js
-// =======================================================================
+/**
+ * Segmenter/ICU analysis shape used for grapheme cluster and bidi helpers.
+ */
+export interface SegmenterAnalysis {
+    // DOM character indices of grapheme cluster starts
+    clusterStarts: number[];
 
-import { defineConfig } from 'vite';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { svelteTesting } from '@testing-library/svelte/vite';
+    // Optional visual reordering mapping (adapter-specific)
+    visualOrder?: number[];
 
-export default defineConfig(({ mode }) => ({
-  plugins: [svelte(), svelteTesting()],
-  test: {
-    globals: true,
-    environment: 'jsdom',
-  },
-  resolve: {
-    conditions: mode === 'test' ? ['browser'] : [],
-  },
-}));
+    // Adapter-specific extras are intentionally not permitted here to preserve
+    // strict typing; add explicit fields if needed in future.
+}
+
+/** Adapter interface for grapheme-cluster / bidi analysis providers. */
+export interface SegmenterAdapter {
+    analyzeText(text: string): SegmenterAnalysis;
+}

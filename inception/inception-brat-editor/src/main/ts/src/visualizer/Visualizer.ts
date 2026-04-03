@@ -38,13 +38,18 @@
  * SOFTWARE.
  */
 
-import { Sizes } from './Sizes';
-import { Measurements } from './Measurements';
+import { calculateMaxTextWidth, Sizes } from './Sizes';
+import {
+    calculateChunkTextElementMeasure,
+    getTextMeasurements,
+    Measurements,
+} from './Measurements';
 import { DocumentData } from './DocumentData';
 import { ENTITY, Entity, TRIGGER } from './Entity';
 import { EQUIV, EventDesc, RELATION } from './EventDesc';
-import { Chunk, type Marker } from './Chunk';
+import { Chunk } from './Chunk';
 import { Fragment } from './Fragment';
+import type { SegmenterAdapter } from './SegmenterAnalysis';
 import { Arc } from './Arc';
 import { Row } from './Row';
 import { RectBox } from './RectBox';
@@ -59,7 +64,6 @@ import {
     type TriggerDto,
     type AttributeDto,
     type EquivDto,
-    type ColorCode,
     type MarkerType,
     type MarkerDto,
     type RelationDto,
@@ -80,8 +84,6 @@ import {
     SVG,
     Element as SVGJSElement,
     Svg,
-    Container,
-    Text as SVGText,
     type PathCommand,
     Rect,
     type ArrayXY,
@@ -97,8 +99,18 @@ import {
     type Offsets,
     Relation,
     Span,
+    bgToFgColor,
 } from '@inception-project/inception-js-api';
+import { sentenceSplit, tokenise } from './Segmentation';
+import {
+    findClosestHorizontalScrollable,
+    findClosestVerticalScrollable,
+    findClosestChunkElement,
+} from './DomUtils';
+import { fastTranslate, fastTranslateGroup } from './SvgUtils';
 declare const $: JQueryStatic;
+
+const TRACE_VISUALIZER = false;
 
 /**
  * [lastRow, textDesc[3], lastX - boxX, textDesc[4]]
@@ -106,6 +118,33 @@ declare const $: JQueryStatic;
 type MarkedTextHighlight = [row: Row, xBegin: number, xEnd: number, type: string];
 
 type MarkedText = [begin: number, end: number, type: string];
+
+type RowRenderContext = {
+    row: Row | undefined;
+    rows: Row[];
+    openTextHighlights: any;
+    currentX: number;
+    rowIndex: number;
+    fragmentHeights: number[];
+    sentenceToggle: number;
+    sentenceNumber: number;
+    maxTextWidth: number;
+    markedTextHighlights: Array<MarkedTextHighlight>;
+};
+
+type ChunkRenderContext = {
+    y: number;
+    hasLeftArcs: boolean;
+    hasRightArcs: boolean;
+    hasInternalArcs: boolean;
+    hasAnnotations: boolean;
+    chunkFrom: number;
+    chunkTo: number;
+    chunkHeight: number;
+    spacing: number;
+    spacingChunkId: number | undefined;
+    spacingRowBreak: number;
+};
 
 /**
  * Sets default values for a wide range of optional attributes.
@@ -159,6 +198,7 @@ function setCollectionDefaults(collectionData) {
 
 export class Visualizer {
     private dispatcher: Dispatcher;
+    private segmenterAdapter?: SegmenterAdapter;
 
     private rtlmode = false;
     private fontZoom = 100;
@@ -264,10 +304,11 @@ export class Visualizer {
         isDirectoryError: true,
     };
 
-    constructor(dispatcher, svgId: string) {
-        console.debug('Setting up brat visualizer module...');
+    constructor(dispatcher, svgId: string, segmenterAdapter?: SegmenterAdapter) {
+        // console.debug('Setting up brat visualizer module...');
 
         this.dispatcher = dispatcher;
+        this.segmenterAdapter = segmenterAdapter;
 
         const svgContainer = document.getElementById(svgId);
         if (!svgContainer) {
@@ -1433,16 +1474,6 @@ export class Visualizer {
         this.renderData(undefined);
     }
 
-    fastTranslateGroup(element: SVGTypeMapping<SVGGElement>, x: number, y: number) {
-        element.attr('transform', 'translate(' + x + ', ' + y + ')');
-        // element.translate(x, y);
-    }
-
-    fastTranslate(element: Row | Chunk, x: number, y: number) {
-        this.fastTranslateGroup(element.group, x, y);
-        element.translation = { x, y };
-    }
-
     addHeaderAndDefs(): Defs {
         const defs = this.svg.defs();
 
@@ -1457,46 +1488,6 @@ export class Visualizer {
     }
 
     /**
-     * @param cssClass arguments to the {@link SVGWrapper.group}} call creating the temporary group used for measurement
-     */
-    getTextMeasurements(
-        textsHash: Record<string, Array<unknown>>,
-        cssClass?: string,
-        callback?: Function
-    ): Measurements {
-        // make some text elements, find out the dimensions
-        const textMeasureGroup: Container = this.svg.group().addTo(this.svg);
-        if (cssClass) {
-            textMeasureGroup.addClass(cssClass);
-        }
-
-        for (const text in textsHash) {
-            if (Object.prototype.hasOwnProperty.call(textsHash, text)) {
-                this.svg.plain(text).addTo(textMeasureGroup);
-            }
-        }
-
-        // measuring goes on here
-        const widths: Record<string, number> = {};
-        for (const svgText of textMeasureGroup.children()) {
-            const text = (svgText as SVGText).text();
-            widths[text] = (svgText.node as SVGTextContentElement).getComputedTextLength();
-
-            if (callback) {
-                textsHash[text].map((object) => callback(object, svgText.node));
-            }
-        }
-
-        // Add dummy element used only to get the text height even if we have no chunks
-        this.svg.plain('TEXT').addTo(textMeasureGroup);
-
-        const bbox = textMeasureGroup.bbox();
-        textMeasureGroup.remove();
-
-        return new Measurements(widths, bbox.height, bbox.y);
-    }
-
-    /**
      * @return {Sizes}
      */
     calculateTextMeasurements(docData: DocumentData): Sizes {
@@ -1507,6 +1498,20 @@ export class Visualizer {
         return new Sizes(textSizes, arcSizes, fragmentSizes);
     }
 
+    /**
+     * Build and measure the rendered text for all chunks.
+     *
+     * This method collects, for every unique chunk text, the fragments and
+     * marker tuples that appear in chunks with that text and delegates the
+     * actual rendering/measurement to `getTextMeasurements`. The supplied
+     * callback will call `calculateChunkTextElementMeasure` for each
+     * fragment/marker and thus benefits from the instance's
+     * `segmenterAdapter` when available.
+     *
+     * @param docData - Document-level data containing the `chunks` array.
+     * @returns Measurements containing a map of per-text widths and the
+     *   computed text block `height` and baseline `y` coordinate.
+     */
     calculateChunkTextMeasures(docData: DocumentData): Measurements {
         // get the span text sizes
         const chunkTexts: Record<string, Array<unknown>> = {}; // set of span texts
@@ -1525,261 +1530,9 @@ export class Visualizer {
             chunkText.push(...chunk.markedTextEnd);
         }
 
-        return this.getTextMeasurements(chunkTexts, undefined, (fragment, text) =>
-            this.calculateChunkTextElementMeasure(fragment, text)
+        return getTextMeasurements(this.svg, chunkTexts, undefined, (fragment, text) =>
+            calculateChunkTextElementMeasure(fragment, text, this.rtlmode, this.segmenterAdapter)
         );
-    }
-
-    /**
-     * measure the text position in pixels
-     */
-    private calculateChunkTextElementMeasure(fragment: Fragment | Marker, text: SVGTextElement) {
-        if (!(fragment instanceof Fragment)) {
-            // it's markedText [id, start?, char#, offset]
-            if (fragment[2] < 0) {
-                fragment[2] = 0;
-            }
-
-            // Adjust for the browser collapsing whitespace
-            let lastCharSpace = true;
-            let collapsedSpaces = 0;
-            const tc = text.textContent || '';
-            for (let i = 0; i < fragment[2]; i++) {
-                const c = tc[i];
-                if (/\s/.test(c)) {
-                    if (lastCharSpace) {
-                        collapsedSpaces++;
-                    }
-                    lastCharSpace = true;
-                } else {
-                    lastCharSpace = false;
-                }
-            }
-
-            fragment[2] -= collapsedSpaces;
-
-            if (!fragment[2]) {
-                // start
-                fragment[3] = text.getStartPositionOfChar(fragment[2]).x;
-            } else {
-                fragment[3] = text.getEndPositionOfChar(fragment[2] - 1).x + 1;
-            }
-            return;
-        }
-
-        let firstChar = fragment.from - fragment.chunk.from;
-        if (firstChar < 0) {
-            firstChar = 0;
-            this.dispatcher.post('messages', [
-                [
-                    [
-                        '<strong>WARNING</strong>' +
-                            '<br/> ' +
-                            'The fragment [' +
-                            fragment.from +
-                            ', ' +
-                            fragment.to +
-                            '] (' +
-                            fragment.text +
-                            ') is not ' +
-                            'contained in its designated chunk [' +
-                            fragment.chunk.from +
-                            ', ' +
-                            fragment.chunk.to +
-                            '] most likely ' +
-                            'due to the fragment starting or ending with a space, please ' +
-                            'verify the sanity of your data since we are unable to ' +
-                            'visualise this fragment correctly and will drop leading ' +
-                            'space characters',
-                        'warning',
-                        15,
-                    ],
-                ],
-            ]);
-        }
-        let lastChar = fragment.to - fragment.chunk.from - 1;
-
-        // Adjust for XML whitespace (#832, #1009)
-        const textUpToFirstChar = fragment.chunk.text.substring(0, firstChar);
-        const textUpToLastChar = fragment.chunk.text.substring(0, lastChar);
-        const textUpToFirstCharUnspaced = textUpToFirstChar.replace(/\s\s+/g, ' ');
-        const textUpToLastCharUnspaced = textUpToLastChar.replace(/\s\s+/g, ' ');
-        firstChar -= textUpToFirstChar.length - textUpToFirstCharUnspaced.length;
-        lastChar -= textUpToLastChar.length - textUpToLastCharUnspaced.length;
-
-        let startPos: number, endPos: number;
-        if (this.rtlmode) {
-            // This rendering is much slower than the "old" version that brat uses, but it is more reliable in RTL mode.
-            [startPos, endPos] = this.calculateSubstringPositionRobust(
-                fragment,
-                text,
-                firstChar,
-                lastChar
-            );
-            // In RTL mode, positions are negative (left to right)
-            startPos = -startPos;
-            endPos = -endPos;
-        } else {
-            // Using the old faster method in LTR mode. YES, this means that subtoken annotations of RTL
-            // tokens in LTR mode will render incorrectly. If somebody needs that, we should do a smarter
-            // selection of the rendering mode. This is the old measurement code which doesn't work
-            // properly because browsers treat the x coordinate very differently. Our width-based
-            // measurement is more reliable.
-            // Cannot use fragment.chunk.text.length here because invisible
-            // characters do not count. Using text.getNumberOfChars() instead.
-            [startPos, endPos] = this.calculateSubstringPositionFast(text, firstChar, lastChar);
-        }
-
-        // Make sure that startPos and endPos are properly ordered on the X axis
-        fragment.curly = {
-            from: Math.min(startPos, endPos),
-            to: Math.max(startPos, endPos),
-        };
-    }
-
-    private calculateSubstringPositionRobust(
-        fragment: Fragment,
-        text: SVGTextElement,
-        firstChar: number,
-        lastChar: number
-    ): [number, number] {
-        if (text.textContent === null || text.textContent.length === 0) {
-            return [0, 0];
-        }
-
-        let charDirection: Array<'rtl' | 'ltr'>;
-        let charAttrs: Array<{ order: number; width: number; direction: 'rtl' | 'ltr' }>;
-        let corrFactor = 1;
-
-        if (fragment.chunk.rtlsizes) {
-            // Use cached metrics
-            charDirection = fragment.chunk.rtlsizes.charDirection;
-            charAttrs = fragment.chunk.rtlsizes.charAttrs;
-            corrFactor = fragment.chunk.rtlsizes.corrFactor;
-        } else {
-            // Calculate metrics
-            charDirection = [];
-            charAttrs = [];
-
-            // Cannot use fragment.chunk.text.length here because invisible characters do not count.
-            // Using text.getNumberOfChars() instead.
-            for (let idx = 0; idx < text.getNumberOfChars(); idx++) {
-                const cw = text.getEndPositionOfChar(idx).x - text.getStartPositionOfChar(idx).x;
-                const dir = isRTL(text.textContent.charCodeAt(idx)) ? 'rtl' : 'ltr';
-                charAttrs.push({
-                    order: idx,
-                    width: Math.abs(cw),
-                    direction: dir,
-                });
-                charDirection.push(dir);
-                // console.log("char " +  idx + " [" + text.textContent[idx] + "] " +
-                //   "begin:" + text.getStartPositionOfChar(idx).x +
-                //   " end:" + text.getEndPositionOfChar(idx).x +
-                //   " width:" + Math.abs(cw) +
-                //   " dir:" + charDirection[charDirection.length-1]);
-            }
-
-            // Re-order widths if necessary
-            if (charAttrs.length > 1) {
-                const idx = 0;
-                let blockBegin = idx;
-                let blockEnd = idx;
-
-                // Figure out next block
-                while (blockEnd < charAttrs.length) {
-                    while (charDirection[blockBegin] === charDirection[blockEnd]) {
-                        blockEnd++;
-                    }
-
-                    if (charDirection[blockBegin] === (this.rtlmode ? 'ltr' : 'rtl')) {
-                        charAttrs = charAttrs
-                            .slice(0, blockBegin)
-                            .concat(charAttrs.slice(blockBegin, blockEnd).reverse())
-                            .concat(charAttrs.slice(blockEnd));
-                    }
-
-                    blockBegin = blockEnd;
-                }
-            }
-
-            // console.log("order: " + charOrder);
-            // The actual character width on screen is not necessarily the width that can be
-            // obtained by subtracting start from end position. In particular Arabic connects
-            // characters quite a bit such that the width on screen may be less. Here we
-            // try to compensate for this using a correction factor.
-            let widthsSum = 0;
-            for (let idx = 0; idx < charAttrs.length; idx++) {
-                widthsSum += charAttrs[idx].width;
-            }
-            corrFactor = text.getComputedTextLength() / widthsSum;
-            // console.log("width sums: " + widthsSum);
-            // console.log("computed length: " + text.getComputedTextLength());
-            // console.log("corrFactor: " + corrFactor);
-            fragment.chunk.rtlsizes = {
-                charDirection,
-                charAttrs,
-                corrFactor,
-            };
-        }
-
-        // startPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
-        let startPos = 0;
-        // console.log("startPos[initial]: " + startPos);
-        for (let i = 0; i < charAttrs.length && i < firstChar; i++) {
-            // In RTL mode on RTL chars, for some reason we should not add the width of the first char.
-            // But if we are in RTL mode and hit an LTR char (i.e. displaying normal LTR text in RTL mode)
-            // when we need to include it... don't ask me why... REC 2021-11-27
-            if (charDirection[i] === 'ltr' || charAttrs[i].order !== firstChar) {
-                startPos += charAttrs[i].width;
-            }
-            // console.log("startPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + startPos);
-        }
-
-        // endPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
-        let endPos = 0;
-        // console.log("endPos[initial]: " + endPos);
-        let i = 0;
-        for (; charAttrs[i].order !== lastChar && i < charAttrs.length; i++) {
-            endPos += charAttrs[i].width;
-            // console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
-        }
-
-        if (charDirection[i] === (this.rtlmode ? 'rtl' : 'ltr')) {
-            // console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
-            endPos += charAttrs[i].width;
-        }
-
-        startPos = startPos * corrFactor;
-        endPos = endPos * corrFactor;
-        // console.log("startPos: " + startPos);
-        // console.log("endPos: " + endPos);
-        return [startPos, endPos];
-    }
-
-    private calculateSubstringPositionFast(
-        text: SVGTextContentElement,
-        firstChar: number,
-        lastChar: number
-    ) {
-        try {
-            {
-                let startPos: number;
-                if (firstChar < text.getNumberOfChars()) {
-                    startPos = text.getStartPositionOfChar(firstChar).x;
-                } else {
-                    startPos = text.getComputedTextLength();
-                }
-                const endPos =
-                    lastChar < firstChar ? startPos : text.getEndPositionOfChar(lastChar).x;
-                return [startPos, endPos];
-            }
-        } catch (e) {
-            console.error(
-                `Unable to calculate width of range ${firstChar}-${lastChar} on [${text}]`,
-                e
-            );
-            return [0, 0];
-        }
     }
 
     /**
@@ -1804,7 +1557,7 @@ export class Visualizer {
             fragmentTexts.$ = true; // dummy so we can at least get the height
         }
 
-        return this.getTextMeasurements(fragmentTexts, 'span');
+        return getTextMeasurements(this.svg, fragmentTexts, 'span');
     }
 
     /**
@@ -1844,7 +1597,7 @@ export class Visualizer {
             });
         }
 
-        return this.getTextMeasurements(arcTexts, 'arcs');
+        return getTextMeasurements(this.svg, arcTexts, 'arcs');
     }
 
     /**
@@ -1920,19 +1673,9 @@ export class Visualizer {
         return arrowId;
     }
 
-    calculateMaxTextWidth(sizes: Sizes): number {
-        let maxTextWidth = 0;
-        for (const text in sizes.texts.widths) {
-            if (Object.prototype.hasOwnProperty.call(sizes.texts.widths, text)) {
-                maxTextWidth = Math.max(maxTextWidth, sizes.texts.widths[text]);
-            }
-        }
-        return maxTextWidth;
-    }
-
-    private renderLayoutFloorsAndCurlies(
+    private renderLayoutFloorsAndCurlyHeights(
         docData: DocumentData,
-        spanDrawOrderPermutation: string[]
+        spanDrawOrderPermutation: VID[]
     ) {
         // reserve places for spans
         const floors: number[] = [];
@@ -1982,7 +1725,7 @@ export class Visualizer {
             // actual positions of curlies
             let carpet: number | null = 0;
             const thisCurlyHeight = span.drawCurly ? Configuration.visual.curlyHeight : 0;
-            const height =
+            const height: number =
                 docData.sizes.fragments.height +
                 thisCurlyHeight +
                 Configuration.visual.boxSpacing +
@@ -2088,32 +1831,155 @@ export class Visualizer {
         chunks: Chunk[],
         maxTextWidth: number
     ): [Row[], number[], MarkedTextHighlight[]] {
-        let currentX: number;
+        let rowCtx: RowRenderContext = {
+            currentX: 0,
+            fragmentHeights: [],
+            rowIndex: 0,
+            row: undefined,
+            sentenceToggle: 0,
+            sentenceNumber: sourceData.sentence_number_offset,
+            rows: [],
+            openTextHighlights: {},
+            maxTextWidth: maxTextWidth,
+            markedTextHighlights: [],
+        };
+
         if (this.rtlmode) {
-            currentX =
+            rowCtx.currentX =
                 this.canvasWidth -
                 (Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding);
         } else {
-            currentX = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding;
+            rowCtx.currentX = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding;
         }
 
-        const rows: Row[] = [];
-        const fragmentHeights: number[] = [];
-        const openTextHighlights = {};
+        rowCtx.row = new Row(this.svg);
+        rowCtx.row.sentence = rowCtx.sentenceNumber;
+        rowCtx.row.backgroundIndex = rowCtx.sentenceToggle;
+        rowCtx.row.index = 0;
 
-        let sentenceToggle = 0;
-        let sentenceNumber = sourceData.sentence_number_offset;
+        chunks.forEach((chunk) => {
+            this.renderChunk(docData, sourceData, rowCtx, chunk);
+        });
 
-        let row = new Row(this.svg);
-        row.sentence = sentenceNumber;
-        row.backgroundIndex = sentenceToggle;
-        row.index = 0;
+        // Add trailing empty rows
+        while (
+            rowCtx.sentenceNumber <
+            sourceData.sentence_offsets.length + sourceData.sentence_number_offset - 1
+        ) {
+            rowCtx.sentenceNumber++;
+            rowCtx.row.arcs = this.svg.group().addTo(rowCtx.row.group).addClass('arcs');
+            rowCtx.rows.push(rowCtx.row);
+            rowCtx.row = new Row(this.svg);
+            rowCtx.row.sentence = rowCtx.sentenceNumber;
+            rowCtx.sentenceToggle = 1 - rowCtx.sentenceToggle;
+            rowCtx.row.backgroundIndex = rowCtx.sentenceToggle;
+            rowCtx.row.index = ++rowCtx.rowIndex;
+        }
 
-        const markedTextHighlights: Array<MarkedTextHighlight> = [];
-        let rowIndex = 0;
+        // finish the last row
+        rowCtx.row.arcs = this.svg.group().addTo(rowCtx.row.group).addClass('arcs');
+        rowCtx.rows.push(rowCtx.row);
 
-        chunks.forEach((chunk: Chunk) => {
-            let spaceWidth = 0;
+        return [rowCtx.rows, rowCtx.fragmentHeights, rowCtx.markedTextHighlights];
+    }
+
+    private renderChunk(
+        docData: DocumentData,
+        sourceData: SourceData,
+        rowCtx: RowRenderContext,
+        chunk: Chunk
+    ) {
+        if (chunk.lastSpace) {
+            this.addSpaceAfterChunk(chunk, sourceData, rowCtx);
+        }
+
+        chunk.group = this.svg.group().addTo(rowCtx.row.group);
+        chunk.highlightGroup = this.svg.group().addClass('chunk-highlights').addTo(chunk.group);
+
+        let chunkCtx: ChunkRenderContext = {
+            y: 0,
+            hasLeftArcs: false,
+            hasRightArcs: false,
+            hasInternalArcs: false,
+            hasAnnotations: false,
+            chunkFrom: Infinity,
+            chunkTo: 0,
+            chunkHeight: 0,
+            spacing: 0,
+            spacingChunkId: undefined,
+            spacingRowBreak: 0,
+        };
+
+        // Render the fragments for the current chunk
+        chunk.fragments.forEach((fragment) => {
+            this.renderChunkFragment(docData, rowCtx, chunk, chunkCtx, fragment);
+        });
+
+        // positioning of the chunk
+        chunk.right = chunkCtx.chunkTo;
+        const textWidth = docData.sizes.texts.widths[chunk.text];
+        chunkCtx.chunkHeight += docData.sizes.texts.height;
+        // If chunkFrom becomes negative (LTR) or chunkTo becomes positive (RTL), then boxX becomes positive
+        const boxX = this.rtlmode ? chunkCtx.chunkTo : -Math.min(chunkCtx.chunkFrom, 0);
+
+        let boxWidth: number;
+        if (this.rtlmode) {
+            boxWidth = Math.max(textWidth, -chunkCtx.chunkFrom) - Math.min(0, -chunkCtx.chunkTo);
+        } else {
+            boxWidth = Math.max(textWidth, chunkCtx.chunkTo) - Math.min(0, chunkCtx.chunkFrom);
+        }
+
+        if (chunkCtx.spacing > 0) {
+            rowCtx.currentX += this.rtlmode ? -chunkCtx.spacing : chunkCtx.spacing;
+        }
+
+        const rightBorderForArcs = chunkCtx.hasRightArcs
+            ? this.arcHorizontalSpacing
+            : chunkCtx.hasInternalArcs
+              ? this.arcSlant
+              : 0;
+        const leftBorderForArcs = chunkCtx.hasLeftArcs
+            ? this.arcHorizontalSpacing
+            : chunkCtx.hasInternalArcs
+              ? this.arcSlant
+              : 0;
+        const lastX = rowCtx.currentX;
+        const lastRow = rowCtx.row;
+
+        // Is there a sentence break at the current chunk (i.e. it is the first chunk in a new
+        // sentence) - if yes and the current sentence is not the same as the sentence to which
+        // the chunk belongs, then fill in additional rows
+        if (chunk.sentence) {
+            while (rowCtx.sentenceNumber < chunk.sentence - 1) {
+                rowCtx.sentenceNumber++;
+                rowCtx.row.arcs = this.svg.group().addTo(rowCtx.row.group).addClass('arcs');
+                rowCtx.rows.push(rowCtx.row);
+
+                rowCtx.row = new Row(this.svg);
+                rowCtx.row.sentence = rowCtx.sentenceNumber;
+                rowCtx.sentenceToggle = 1 - rowCtx.sentenceToggle;
+                rowCtx.row.backgroundIndex = rowCtx.sentenceToggle;
+                rowCtx.row.index = ++rowCtx.rowIndex;
+            }
+            // Not changing row background color here anymore - we do this later now when the next
+            // row is added
+        }
+
+        let chunkDoesNotFit: boolean;
+        if (this.rtlmode) {
+            chunkDoesNotFit =
+                rowCtx.currentX - boxWidth - leftBorderForArcs <= 2 * Configuration.visual.margin.x;
+        } else {
+            chunkDoesNotFit =
+                rowCtx.currentX + boxWidth + rightBorderForArcs >=
+                this.canvasWidth - 2 * Configuration.visual.margin.x;
+        }
+
+        // Check if a new row needs to be started and if so start it
+        if (chunk.sentence > sourceData.sentence_number_offset || chunkDoesNotFit) {
+            // the chunk does not fit
+            rowCtx.row.arcs = this.svg.group().addTo(rowCtx.row.group).addClass('arcs');
+            let indent = 0;
             if (chunk.lastSpace) {
                 const spaceLen = chunk.lastSpace.length || 0;
                 let spacePos: number;
@@ -2129,484 +1995,423 @@ export class Visualizer {
                     spacePos = 0;
                 }
                 for (let i = spacePos; i < spaceLen; i++) {
-                    spaceWidth +=
-                        this.spaceWidths[chunk.lastSpace[i]] * (this.fontZoom / 100.0) || 0;
+                    indent += this.spaceWidths[chunk.lastSpace[i]] * (this.fontZoom / 100.0) || 0;
                 }
-                currentX += this.rtlmode ? -spaceWidth : spaceWidth;
             }
 
-            chunk.group = this.svg.group().addTo(row.group);
-            chunk.highlightGroup = this.svg.group().addClass('chunk-highlights').addTo(chunk.group);
+            if (this.rtlmode) {
+                rowCtx.currentX =
+                    this.canvasWidth -
+                    (Configuration.visual.margin.x +
+                        this.sentNumMargin +
+                        this.rowPadding +
+                        (chunkCtx.hasRightArcs
+                            ? this.arcHorizontalSpacing
+                            : chunkCtx.hasInternalArcs
+                              ? this.arcSlant
+                              : 0) /* +
+                        spaceWidth */ -
+                        indent);
+            } else {
+                rowCtx.currentX =
+                    Configuration.visual.margin.x +
+                    this.sentNumMargin +
+                    this.rowPadding +
+                    (chunkCtx.hasLeftArcs
+                        ? this.arcHorizontalSpacing
+                        : chunkCtx.hasInternalArcs
+                          ? this.arcSlant
+                          : 0) /* +
+                    spaceWidth */ +
+                    indent;
+            }
 
-            let y = 0;
-            let hasLeftArcs = false;
-            let hasRightArcs = false;
-            let hasInternalArcs = false;
-            let hasAnnotations = false;
-            let chunkFrom = Infinity;
-            let chunkTo = 0;
-            let chunkHeight = 0;
-            let spacing = 0;
-            let spacingChunkId: number | undefined = undefined;
-            let spacingRowBreak = 0;
+            if (chunkCtx.hasLeftArcs) {
+                const adjustedCurTextWidth =
+                    docData.sizes.texts.widths[chunk.text] + this.arcHorizontalSpacing;
+                if (adjustedCurTextWidth > rowCtx.maxTextWidth) {
+                    rowCtx.maxTextWidth = adjustedCurTextWidth;
+                }
+            }
 
-            // Render the fragments for the current chunk
-            chunk.fragments.forEach((fragment) => {
-                const span = fragment.span;
+            if (chunkCtx.spacingRowBreak > 0) {
+                rowCtx.currentX += this.rtlmode
+                    ? -chunkCtx.spacingRowBreak
+                    : chunkCtx.spacingRowBreak;
+                chunkCtx.spacing = 0; // do not center intervening elements
+            }
 
-                if (span.hidden || span.id === 'rel:0-before' || span.id === 'rel:1-after') {
+            // Finish up current row
+            rowCtx.rows.push(rowCtx.row);
+            chunk.group.remove();
+
+            // Start new row
+            rowCtx.row = new Row(this.svg);
+            if (chunk.sentence) {
+                // Change row background color if a new sentence is starting
+                rowCtx.sentenceToggle = 1 - rowCtx.sentenceToggle;
+            }
+            rowCtx.row.backgroundIndex = rowCtx.sentenceToggle;
+            rowCtx.row.index = ++rowCtx.rowIndex;
+            chunk.group.addTo(rowCtx.row.group);
+            // chunk.group = SVG(rowCtx.row.group.node.lastElementChild as SVGGElement);
+            // chunk.group.node.querySelectorAll('g.span').forEach((element, index) => {
+            //     chunk.fragments[index].group = SVG(element as SVGGElement);
+            // });
+            // chunk.group.node
+            //     .querySelectorAll('rect[data-span-id]')
+            //     .forEach((element, index) => {
+            //         chunk.fragments[index].rect = SVG(element as SVGElement);
+            //     });
+        }
+
+        // break the text highlights when the row breaks
+        if (rowCtx.row.index !== lastRow.index) {
+            $.each(rowCtx.openTextHighlights, (textId, textDesc) => {
+                if (textDesc[3] !== lastX) {
+                    let newDesc: MarkedTextHighlight;
+                    if (this.rtlmode) {
+                        newDesc = [lastRow, textDesc[3], lastX - boxX, textDesc[4]];
+                    } else {
+                        newDesc = [lastRow, textDesc[3], lastX + boxX, textDesc[4]];
+                    }
+                    rowCtx.markedTextHighlights.push(newDesc);
+                }
+                textDesc[3] = rowCtx.currentX;
+            });
+        }
+
+        // open text highlights
+        for (const textDesc of chunk.markedTextStart) {
+            textDesc[3] += rowCtx.currentX + (this.rtlmode ? -boxX : boxX);
+            rowCtx.openTextHighlights[textDesc[0]] = textDesc;
+        }
+
+        // close text highlights
+        for (const textDesc of chunk.markedTextEnd) {
+            textDesc[3] += rowCtx.currentX + (this.rtlmode ? -boxX : boxX);
+            const startDesc = rowCtx.openTextHighlights[textDesc[0]];
+            delete rowCtx.openTextHighlights[textDesc[0]];
+            rowCtx.markedTextHighlights.push([rowCtx.row, startDesc[3], textDesc[3], startDesc[4]]);
+        }
+
+        // XXX check this - is it used? should it be lastRow?
+        if (chunkCtx.hasAnnotations) {
+            rowCtx.row.hasAnnotations = true;
+        }
+
+        if (chunk.sentence > sourceData.sentence_number_offset) {
+            rowCtx.row.sentence = ++rowCtx.sentenceNumber;
+        }
+
+        // if we added a gap, center the intervening elements
+        if (chunkCtx.spacing > 0 && chunkCtx.spacingChunkId !== undefined) {
+            chunkCtx.spacing /= 2;
+            const firstChunkInRow = rowCtx.row.chunks[rowCtx.row.chunks.length - 1];
+            if (firstChunkInRow === undefined) {
+                console.warn('firstChunkInRow undefined, chunk:', chunk);
+            } else {
+                // valid firstChunkInRow
+                if (chunkCtx.spacingChunkId < firstChunkInRow.index) {
+                    chunkCtx.spacingChunkId = firstChunkInRow.index + 1;
+                }
+                for (
+                    let chunkIndex = chunkCtx.spacingChunkId;
+                    chunkIndex < chunk.index;
+                    chunkIndex++
+                ) {
+                    const movedChunk = docData.chunks[chunkIndex];
+                    fastTranslate(movedChunk, movedChunk.translation.x + chunkCtx.spacing, 0);
+                    movedChunk.textX += chunkCtx.spacing;
+                }
+            }
+        }
+
+        // Assign chunk to row
+        rowCtx.row.chunks.push(chunk);
+        chunk.row = rowCtx.row;
+
+        fastTranslate(chunk, rowCtx.currentX + (this.rtlmode ? -boxX : boxX), 0);
+        chunk.textX = rowCtx.currentX + (this.rtlmode ? -boxX : boxX);
+        rowCtx.currentX += this.rtlmode ? -boxWidth : boxWidth;
+    }
+
+    /**
+     * Render a single fragment (span segment) inside a chunk.
+     *
+     * Creates the fragment's SVG group, draws the box, label, curlies and
+     * decorations, and updates layout metadata (`fragment.rect`, `fragment.left`,
+     * `fragment.right`, `fragment.rectBox`, `fragment.height`) as well as
+     * `chunkSetCtx.fragmentHeights` and `chunkCtx` spacing/arc flags.
+     *
+     * @param docData - Document-level rendering data and cached label elements.
+     * @param chunk - Chunk that contains the fragment.
+     * @param chunkSetCtx - Chunk-set level render context (row index, fragment heights).
+     * @param fragment - Fragment to render; must include `span`, `curly` and layout info.
+     * @param chunkCtx - Chunk-level render context used to accumulate metrics and flags.
+     */
+    private renderChunkFragment(
+        docData: DocumentData,
+        chunkSetCtx: RowRenderContext,
+        chunk: Chunk,
+        chunkCtx: ChunkRenderContext,
+        fragment: Fragment
+    ) {
+        const span = fragment.span;
+
+        if (span.hidden || span.id === 'rel:0-before' || span.id === 'rel:1-after') {
+            return;
+        }
+
+        const spanDesc = this.entityTypes[span.type];
+        let bgColor = (spanDesc && spanDesc.bgColor) || '#ffffff';
+        let fgColor = (spanDesc && spanDesc.fgColor) || '#000000';
+        let borderColor = (spanDesc && spanDesc.borderColor) || '#000000';
+
+        if (span.color) {
+            bgColor = span.color;
+            fgColor = bgToFgColor(bgColor);
+            borderColor = 'darken';
+        }
+
+        // special case: if the border 'color' value is 'darken',
+        // then just darken the BG color a bit for the border.
+        if (borderColor === 'darken') {
+            borderColor = Util.adjustColorLightness(bgColor, -0.6);
+        }
+
+        fragment.group = this.svg.group().addTo(chunk.group).addClass('span');
+
+        if (!chunkCtx.y) {
+            chunkCtx.y = -docData.sizes.texts.height;
+        }
+        // x : center of fragment on x axis
+        let x = (fragment.curly.from + fragment.curly.to) / 2;
+
+        // XXX is it maybe sizes.texts?
+        let yy = chunkCtx.y + docData.sizes.fragments.y;
+        // hh : fragment height
+        let hh = docData.sizes.fragments.height;
+        // ww : fragment width
+        let ww = fragment.width;
+        // xx : left edge of fragment
+        let xx = x - ww / 2;
+
+        // text margin fine-tuning
+        yy += this.boxTextMargin.y;
+        hh -= 2 * this.boxTextMargin.y;
+        xx += this.boxTextMargin.x;
+        ww -= 2 * this.boxTextMargin.x;
+        // cue/type part required for adding reselect class when drawing arcs
+        let rectClass = 'span_' + (span.cue || span.type) + ' span_default';
+
+        // attach e.g. "False_positive" into the type
+        if (span.comment && span.comment.type) {
+            rectClass += ' ' + span.comment.type;
+        }
+
+        // inner coordinates of fragment (excluding margins)
+        let bx = xx - Configuration.visual.margin.x - this.boxTextMargin.x;
+        const by = yy - Configuration.visual.margin.y;
+        const bw = ww + 2 * Configuration.visual.margin.x;
+        const bh = hh + 2 * Configuration.visual.margin.y;
+
+        if (this.roundCoordinates) {
+            x = (x | 0) + 0.5;
+            bx = (bx | 0) + 0.5;
+        }
+
+        if (span.marked) {
+            this.renderSpanMarkedRect(yy, bx, by, bw, bh, fragment);
+        }
+
+        // Nicely spread out labels/text and leave space for mark highlight such that adding
+        // the mark doesn't change the overall layout
+        chunkCtx.chunkFrom = Math.min(bx - this.markedSpanSize, chunkCtx.chunkFrom);
+        chunkCtx.chunkTo = Math.max(bx + bw + this.markedSpanSize, chunkCtx.chunkTo);
+        let fragmentHeight = bh + 2 * this.markedSpanSize;
+        if (span.shadowClass && span.shadowClass.match(this.shadowClassPattern)) {
+            this.renderFragmentShadowRect(yy, bx, by, bw, bh, fragment);
+            chunkCtx.chunkFrom = Math.min(bx - this.rectShadowSize, chunkCtx.chunkFrom);
+            chunkCtx.chunkTo = Math.max(bx + bw + this.rectShadowSize, chunkCtx.chunkTo);
+            fragmentHeight = Math.max(bh + 2 * this.rectShadowSize, fragmentHeight);
+        }
+
+        fragment.rect = this.renderFragmentRect(
+            bx,
+            by,
+            bw,
+            bh,
+            yy,
+            fragment,
+            rectClass,
+            bgColor,
+            borderColor
+        );
+        fragment.left = bx; // TODO put it somewhere nicer?
+        fragment.right = bx + bw; // TODO put it somewhere nicer?
+        if (!(span.shadowClass || span.marked)) {
+            chunkCtx.chunkFrom = Math.min(bx, chunkCtx.chunkFrom);
+            chunkCtx.chunkTo = Math.max(bx + bw, chunkCtx.chunkTo);
+            fragmentHeight = Math.max(bh, fragmentHeight);
+        }
+
+        fragment.rectBox = new RectBox(bx, by - span.floor, bw, bh);
+        fragment.height =
+            span.floor +
+            hh +
+            3 * Configuration.visual.margin.y +
+            Configuration.visual.curlyHeight +
+            Configuration.visual.arcSpacing * (this.fontZoom / 100.0);
+        const spacedTowerId = fragment.towerId * 2;
+        if (
+            !chunkSetCtx.fragmentHeights[spacedTowerId] ||
+            chunkSetCtx.fragmentHeights[spacedTowerId] < fragment.height
+        ) {
+            chunkSetCtx.fragmentHeights[spacedTowerId] = fragment.height;
+        }
+
+        if (span.attributeMerge.box === 'crossed') {
+            this.renderFragmentCrossOut(xx, yy, hh, fragment);
+        }
+
+        fragment.group.add(
+            docData.spanAnnTexts[fragment.glyphedLabelText]
+                .clone()
+                .amove(x, chunkCtx.y - span.floor)
+                .fill(fgColor)
+        );
+
+        // Make curlies to show the fragment
+        if (fragment.drawCurly) {
+            this.renderCurly(fragment, x, yy, hh);
+            chunkCtx.chunkFrom = Math.min(fragment.curly.from, chunkCtx.chunkFrom);
+            chunkCtx.chunkTo = Math.max(fragment.curly.to, chunkCtx.chunkTo);
+            fragmentHeight = Math.max(Configuration.visual.curlyHeight, fragmentHeight);
+        }
+
+        if (fragment === span.headFragment) {
+            const checkLeftRightArcs = (arc: Arc, refSpan: Entity, leftSpan: Entity) => {
+                const refChunk = leftSpan.headFragment.chunk;
+                if (!refChunk || !refChunk.row) {
+                    chunkCtx.hasRightArcs = true;
                     return;
                 }
 
-                const spanDesc = this.entityTypes[span.type];
-                let bgColor = (spanDesc && spanDesc.bgColor) || '#ffffff';
-                let fgColor = (spanDesc && spanDesc.fgColor) || '#000000';
-                let borderColor = (spanDesc && spanDesc.borderColor) || '#000000';
-
-                if (span.color) {
-                    bgColor = span.color;
-                    fgColor = bgToFgColor(bgColor);
-                    borderColor = 'darken';
-                }
-
-                // special case: if the border 'color' value is 'darken',
-                // then just darken the BG color a bit for the border.
-                if (borderColor === 'darken') {
-                    borderColor = Util.adjustColorLightness(bgColor, -0.6);
-                }
-
-                fragment.group = this.svg.group().addTo(chunk.group).addClass('span');
-
-                if (!y) {
-                    y = -docData.sizes.texts.height;
-                }
-                // x : center of fragment on x axis
-                let x = (fragment.curly.from + fragment.curly.to) / 2;
-
-                // XXX is it maybe sizes.texts?
-                let yy = y + docData.sizes.fragments.y;
-                // hh : fragment height
-                let hh = docData.sizes.fragments.height;
-                // ww : fragment width
-                let ww = fragment.width;
-                // xx : left edge of fragment
-                let xx = x - ww / 2;
-
-                // text margin fine-tuning
-                yy += this.boxTextMargin.y;
-                hh -= 2 * this.boxTextMargin.y;
-                xx += this.boxTextMargin.x;
-                ww -= 2 * this.boxTextMargin.x;
-                // cue/type part required for adding reselect class when drawing arcs
-                let rectClass = 'span_' + (span.cue || span.type) + ' span_default';
-
-                // attach e.g. "False_positive" into the type
-                if (span.comment && span.comment.type) {
-                    rectClass += ' ' + span.comment.type;
-                }
-
-                // inner coordinates of fragment (excluding margins)
-                let bx = xx - Configuration.visual.margin.x - this.boxTextMargin.x;
-                const by = yy - Configuration.visual.margin.y;
-                const bw = ww + 2 * Configuration.visual.margin.x;
-                const bh = hh + 2 * Configuration.visual.margin.y;
-
-                if (this.roundCoordinates) {
-                    x = (x | 0) + 0.5;
-                    bx = (bx | 0) + 0.5;
-                }
-
-                if (span.marked) {
-                    this.renderSpanMarkedRect(yy, bx, by, bw, bh, fragment);
-                }
-
-                // Nicely spread out labels/text and leave space for mark highlight such that adding
-                // the mark doesn't change the overall layout
-                chunkFrom = Math.min(bx - this.markedSpanSize, chunkFrom);
-                chunkTo = Math.max(bx + bw + this.markedSpanSize, chunkTo);
-                let fragmentHeight = bh + 2 * this.markedSpanSize;
-                if (span.shadowClass && span.shadowClass.match(this.shadowClassPattern)) {
-                    this.renderFragmentShadowRect(yy, bx, by, bw, bh, fragment);
-                    chunkFrom = Math.min(bx - this.rectShadowSize, chunkFrom);
-                    chunkTo = Math.max(bx + bw + this.rectShadowSize, chunkTo);
-                    fragmentHeight = Math.max(bh + 2 * this.rectShadowSize, fragmentHeight);
-                }
-
-                fragment.rect = this.renderFragmentRect(
-                    bx,
-                    by,
-                    bw,
-                    bh,
-                    yy,
-                    fragment,
-                    rectClass,
-                    bgColor,
-                    borderColor
-                );
-                fragment.left = bx; // TODO put it somewhere nicer?
-                fragment.right = bx + bw; // TODO put it somewhere nicer?
-                if (!(span.shadowClass || span.marked)) {
-                    chunkFrom = Math.min(bx, chunkFrom);
-                    chunkTo = Math.max(bx + bw, chunkTo);
-                    fragmentHeight = Math.max(bh, fragmentHeight);
-                }
-
-                fragment.rectBox = new RectBox(bx, by - span.floor, bw, bh);
-                fragment.height =
-                    span.floor +
-                    hh +
-                    3 * Configuration.visual.margin.y +
-                    Configuration.visual.curlyHeight +
-                    Configuration.visual.arcSpacing * (this.fontZoom / 100.0);
-                const spacedTowerId = fragment.towerId * 2;
-                if (
-                    !fragmentHeights[spacedTowerId] ||
-                    fragmentHeights[spacedTowerId] < fragment.height
-                ) {
-                    fragmentHeights[spacedTowerId] = fragment.height;
-                }
-
-                if (span.attributeMerge.box === 'crossed') {
-                    this.renderFragmentCrossOut(xx, yy, hh, fragment);
-                }
-
-                fragment.group.add(
-                    docData.spanAnnTexts[fragment.glyphedLabelText]
-                        .clone()
-                        .amove(x, y - span.floor)
-                        .fill(fgColor)
-                );
-
-                // Make curlies to show the fragment
-                if (fragment.drawCurly) {
-                    this.renderCurly(fragment, x, yy, hh);
-                    chunkFrom = Math.min(fragment.curly.from, chunkFrom);
-                    chunkTo = Math.max(fragment.curly.to, chunkTo);
-                    fragmentHeight = Math.max(Configuration.visual.curlyHeight, fragmentHeight);
-                }
-
-                if (fragment === span.headFragment) {
-                    const checkLeftRightArcs = (arc: Arc, refSpan: Entity, leftSpan: Entity) => {
-                        const refChunk = leftSpan.headFragment.chunk;
-                        if (!refChunk || !refChunk.row) {
-                            hasRightArcs = true;
-                            return;
-                        }
-
-                        let border: number;
-                        if (refChunk.row.index === rowIndex) {
-                            border =
-                                refChunk.translation.x +
-                                leftSpan.fragments[leftSpan.fragments.length - 1].right;
-                        } else {
-                            if (this.rtlmode) {
-                                border = 0;
-                            } else {
-                                border =
-                                    Configuration.visual.margin.x +
-                                    this.sentNumMargin +
-                                    this.rowPadding;
-                            }
-                        }
-
-                        let labels = Util.getArcLabels(
-                            this.entityTypes,
-                            refSpan.type,
-                            arc.type,
-                            this.relationTypes
-                        );
-                        if (!labels.length) {
-                            labels = [arc.type];
-                        }
-
-                        if (arc.eventDescId && docData.eventDescs[arc.eventDescId]) {
-                            if (docData.eventDescs[arc.eventDescId].labelText) {
-                                labels = [docData.eventDescs[arc.eventDescId].labelText];
-                            }
-                        }
-
-                        const labelNo = Configuration.abbrevsOn ? labels.length - 1 : 0;
-                        const smallestLabelWidth =
-                            docData.sizes.arcs.widths[labels[labelNo]] + 2 * this.minArcSlant;
-
-                        const gap = Math.abs(currentX + (this.rtlmode ? -bx : bx) - border);
-
-                        let arcSpacing = smallestLabelWidth - gap;
-                        if (!hasLeftArcs || spacing < arcSpacing) {
-                            spacing = arcSpacing;
-                            spacingChunkId = refChunk.index + 1;
-                        }
-                        arcSpacing = smallestLabelWidth - bx;
-                        if (!hasLeftArcs || spacingRowBreak < arcSpacing) {
-                            spacingRowBreak = arcSpacing;
-                        }
-                        hasLeftArcs = true;
-                    };
-
-                    // find the gap to fit the backwards arcs, but only on
-                    // head fragment - other fragments don't have arcs
-                    for (const arc of span.incoming) {
-                        const leftSpan = docData.spans[arc.origin];
-                        checkLeftRightArcs(arc, leftSpan, leftSpan);
-                    }
-
-                    for (const arc of span.outgoing) {
-                        const leftSpan = docData.spans[arc.target];
-                        checkLeftRightArcs(arc, span, leftSpan);
-                    }
-
-                    for (const arc of span.incoming) {
-                        const origin = docData.spans[arc.origin].headFragment.chunk;
-                        if (origin && chunk.index === origin.index) {
-                            hasInternalArcs = true;
-                        }
-                    }
-                }
-
-                fragmentHeight += span.floor || Configuration.visual.curlyHeight;
-                if (fragmentHeight > chunkHeight) {
-                    chunkHeight = fragmentHeight;
-                }
-
-                hasAnnotations = true;
-            }); // fragments
-
-            // positioning of the chunk
-            chunk.right = chunkTo;
-            const textWidth = docData.sizes.texts.widths[chunk.text];
-            chunkHeight += docData.sizes.texts.height;
-            // If chunkFrom becomes negative (LTR) or chunkTo becomes positive (RTL), then boxX becomes positive
-            const boxX = this.rtlmode ? chunkTo : -Math.min(chunkFrom, 0);
-
-            let boxWidth: number;
-            if (this.rtlmode) {
-                boxWidth = Math.max(textWidth, -chunkFrom) - Math.min(0, -chunkTo);
-            } else {
-                boxWidth = Math.max(textWidth, chunkTo) - Math.min(0, chunkFrom);
-            }
-
-            if (spacing > 0) {
-                currentX += this.rtlmode ? -spacing : spacing;
-            }
-
-            const rightBorderForArcs = hasRightArcs
-                ? this.arcHorizontalSpacing
-                : hasInternalArcs
-                  ? this.arcSlant
-                  : 0;
-            const leftBorderForArcs = hasLeftArcs
-                ? this.arcHorizontalSpacing
-                : hasInternalArcs
-                  ? this.arcSlant
-                  : 0;
-            const lastX = currentX;
-            const lastRow = row;
-
-            // Is there a sentence break at the current chunk (i.e. it is the first chunk in a new
-            // sentence) - if yes and the current sentence is not the same as the sentence to which
-            // the chunk belongs, then fill in additional rows
-            if (chunk.sentence) {
-                while (sentenceNumber < chunk.sentence - 1) {
-                    sentenceNumber++;
-                    row.arcs = this.svg.group().addTo(row.group).addClass('arcs');
-                    rows.push(row);
-
-                    row = new Row(this.svg);
-                    row.sentence = sentenceNumber;
-                    sentenceToggle = 1 - sentenceToggle;
-                    row.backgroundIndex = sentenceToggle;
-                    row.index = ++rowIndex;
-                }
-                // Not changing row background color here anymore - we do this later now when the next
-                // row is added
-            }
-
-            let chunkDoesNotFit: boolean;
-            if (this.rtlmode) {
-                chunkDoesNotFit =
-                    currentX - boxWidth - leftBorderForArcs <= 2 * Configuration.visual.margin.x;
-            } else {
-                chunkDoesNotFit =
-                    currentX + boxWidth + rightBorderForArcs >=
-                    this.canvasWidth - 2 * Configuration.visual.margin.x;
-            }
-
-            // Check if a new row needs to be started and if so start it
-            if (chunk.sentence > sourceData.sentence_number_offset || chunkDoesNotFit) {
-                // the chunk does not fit
-                row.arcs = this.svg.group().addTo(row.group).addClass('arcs');
-                let indent = 0;
-                if (chunk.lastSpace) {
-                    const spaceLen = chunk.lastSpace.length || 0;
-                    let spacePos: number;
-                    if (chunk.sentence) {
-                        // If this is line-initial spacing, fetch the sentence to which the chunk belongs
-                        // so we can determine where it begins
-                        const sentFrom =
-                            sourceData.sentence_offsets[
-                                chunk.sentence - sourceData.sentence_number_offset
-                            ][0];
-                        spacePos = spaceLen - (chunk.from - sentFrom);
+                let border: number;
+                if (refChunk.row.index === chunkSetCtx.rowIndex) {
+                    border =
+                        refChunk.translation.x +
+                        leftSpan.fragments[leftSpan.fragments.length - 1].right;
+                } else {
+                    if (this.rtlmode) {
+                        border = 0;
                     } else {
-                        spacePos = 0;
-                    }
-                    for (let i = spacePos; i < spaceLen; i++) {
-                        indent +=
-                            this.spaceWidths[chunk.lastSpace[i]] * (this.fontZoom / 100.0) || 0;
+                        border =
+                            Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding;
                     }
                 }
 
-                if (this.rtlmode) {
-                    currentX =
-                        this.canvasWidth -
-                        (Configuration.visual.margin.x +
-                            this.sentNumMargin +
-                            this.rowPadding +
-                            (hasRightArcs
-                                ? this.arcHorizontalSpacing
-                                : hasInternalArcs
-                                  ? this.arcSlant
-                                  : 0) /* +
-                          spaceWidth */ -
-                            indent);
-                } else {
-                    currentX =
-                        Configuration.visual.margin.x +
-                        this.sentNumMargin +
-                        this.rowPadding +
-                        (hasLeftArcs
-                            ? this.arcHorizontalSpacing
-                            : hasInternalArcs
-                              ? this.arcSlant
-                              : 0) /* +
-                        spaceWidth */ +
-                        indent;
+                let labels = Util.getArcLabels(
+                    this.entityTypes,
+                    refSpan.type,
+                    arc.type,
+                    this.relationTypes
+                );
+                if (!labels.length) {
+                    labels = [arc.type];
                 }
 
-                if (hasLeftArcs) {
-                    const adjustedCurTextWidth =
-                        docData.sizes.texts.widths[chunk.text] + this.arcHorizontalSpacing;
-                    if (adjustedCurTextWidth > maxTextWidth) {
-                        maxTextWidth = adjustedCurTextWidth;
+                if (arc.eventDescId && docData.eventDescs[arc.eventDescId]) {
+                    if (docData.eventDescs[arc.eventDescId].labelText) {
+                        labels = [docData.eventDescs[arc.eventDescId].labelText];
                     }
                 }
 
-                if (spacingRowBreak > 0) {
-                    currentX += this.rtlmode ? -spacingRowBreak : spacingRowBreak;
-                    spacing = 0; // do not center intervening elements
+                const labelNo = Configuration.abbrevsOn ? labels.length - 1 : 0;
+                const smallestLabelWidth =
+                    docData.sizes.arcs.widths[labels[labelNo]] + 2 * this.minArcSlant;
+
+                const gap = Math.abs(chunkSetCtx.currentX + (this.rtlmode ? -bx : bx) - border);
+
+                let arcSpacing = smallestLabelWidth - gap;
+                if (!chunkCtx.hasLeftArcs || chunkCtx.spacing < arcSpacing) {
+                    chunkCtx.spacing = arcSpacing;
+                    chunkCtx.spacingChunkId = refChunk.index + 1;
                 }
-
-                // Finish up current row
-                rows.push(row);
-                chunk.group.remove();
-
-                // Start new row
-                row = new Row(this.svg);
-                if (chunk.sentence) {
-                    // Change row background color if a new sentence is starting
-                    sentenceToggle = 1 - sentenceToggle;
+                arcSpacing = smallestLabelWidth - bx;
+                if (!chunkCtx.hasLeftArcs || chunkCtx.spacingRowBreak < arcSpacing) {
+                    chunkCtx.spacingRowBreak = arcSpacing;
                 }
-                row.backgroundIndex = sentenceToggle;
-                row.index = ++rowIndex;
-                chunk.group.addTo(row.group);
-                chunk.group = SVG(row.group.node.lastElementChild as SVGGElement);
-                chunk.group.node.querySelectorAll('g.span').forEach((element, index) => {
-                    chunk.fragments[index].group = SVG(element as SVGGElement);
-                });
-                chunk.group.node
-                    .querySelectorAll('rect[data-span-id]')
-                    .forEach((element, index) => {
-                        chunk.fragments[index].rect = SVG(element as SVGElement);
-                    });
+                chunkCtx.hasLeftArcs = true;
+            };
+
+            // find the gap to fit the backwards arcs, but only on
+            // head fragment - other fragments don't have arcs
+            for (const arc of span.incoming) {
+                const leftSpan = docData.spans[arc.origin];
+                checkLeftRightArcs(arc, leftSpan, leftSpan);
             }
 
-            // break the text highlights when the row breaks
-            if (row.index !== lastRow.index) {
-                $.each(openTextHighlights, (textId, textDesc) => {
-                    if (textDesc[3] !== lastX) {
-                        let newDesc: MarkedTextHighlight;
-                        if (this.rtlmode) {
-                            newDesc = [lastRow, textDesc[3], lastX - boxX, textDesc[4]];
-                        } else {
-                            newDesc = [lastRow, textDesc[3], lastX + boxX, textDesc[4]];
-                        }
-                        markedTextHighlights.push(newDesc);
-                    }
-                    textDesc[3] = currentX;
-                });
+            for (const arc of span.outgoing) {
+                const leftSpan = docData.spans[arc.target];
+                checkLeftRightArcs(arc, span, leftSpan);
             }
 
-            // open text highlights
-            for (const textDesc of chunk.markedTextStart) {
-                textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX);
-                openTextHighlights[textDesc[0]] = textDesc;
-            }
-
-            // close text highlights
-            for (const textDesc of chunk.markedTextEnd) {
-                textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX);
-                const startDesc = openTextHighlights[textDesc[0]];
-                delete openTextHighlights[textDesc[0]];
-                markedTextHighlights.push([row, startDesc[3], textDesc[3], startDesc[4]]);
-            }
-
-            // XXX check this - is it used? should it be lastRow?
-            if (hasAnnotations) {
-                row.hasAnnotations = true;
-            }
-
-            if (chunk.sentence > sourceData.sentence_number_offset) {
-                row.sentence = ++sentenceNumber;
-            }
-
-            // if we added a gap, center the intervening elements
-            if (spacing > 0 && spacingChunkId !== undefined) {
-                spacing /= 2;
-                const firstChunkInRow = row.chunks[row.chunks.length - 1];
-                if (firstChunkInRow === undefined) {
-                    console.log('warning: firstChunkInRow undefined, chunk:', chunk);
-                } else {
-                    // valid firstChunkInRow
-                    if (spacingChunkId < firstChunkInRow.index) {
-                        spacingChunkId = firstChunkInRow.index + 1;
-                    }
-                    for (let chunkIndex = spacingChunkId; chunkIndex < chunk.index; chunkIndex++) {
-                        const movedChunk = docData.chunks[chunkIndex];
-                        this.fastTranslate(movedChunk, movedChunk.translation.x + spacing, 0);
-                        movedChunk.textX += spacing;
-                    }
+            for (const arc of span.incoming) {
+                const origin = docData.spans[arc.origin].headFragment.chunk;
+                if (origin && chunk.index === origin.index) {
+                    chunkCtx.hasInternalArcs = true;
                 }
             }
-
-            // Assign chunk to row
-            row.chunks.push(chunk);
-            chunk.row = row;
-
-            this.fastTranslate(chunk, currentX + (this.rtlmode ? -boxX : boxX), 0);
-            chunk.textX = currentX + (this.rtlmode ? -boxX : boxX);
-            currentX += this.rtlmode ? -boxWidth : boxWidth;
-        }); // chunks
-
-        // Add trailing empty rows
-        while (
-            sentenceNumber <
-            sourceData.sentence_offsets.length + sourceData.sentence_number_offset - 1
-        ) {
-            sentenceNumber++;
-            row.arcs = this.svg.group().addTo(row.group).addClass('arcs');
-            rows.push(row);
-            row = new Row(this.svg);
-            row.sentence = sentenceNumber;
-            sentenceToggle = 1 - sentenceToggle;
-            row.backgroundIndex = sentenceToggle;
-            row.index = ++rowIndex;
         }
 
-        // finish the last row
-        row.arcs = this.svg.group().addTo(row.group).addClass('arcs');
-        rows.push(row);
+        fragmentHeight += span.floor || Configuration.visual.curlyHeight;
+        if (fragmentHeight > chunkCtx.chunkHeight) {
+            chunkCtx.chunkHeight = fragmentHeight;
+        }
 
-        return [rows, fragmentHeights, markedTextHighlights];
+        chunkCtx.hasAnnotations = true;
+    }
+
+    /**
+     * Compute and apply the visual width of trailing whitespace for a chunk.
+     *
+     * Calculates the width of the characters in `chunk.lastSpace`, taking into
+     * account sentence-initial partial spaces (using `sourceData.sentence_offsets`)
+     * and the current `fontZoom`. Advances or retreats `ctx.currentX` by the
+     * computed space width depending on `this.rtlmode`.
+     *
+     * Side effects:
+     * - Mutates `ctx.currentX`.
+     *
+     * @param chunk - Chunk object containing `lastSpace`, `from`, and optional `sentence`.
+     * @param sourceData - Source document data with `sentence_offsets` for computing line-initial spacing.
+     * @param ctx - Chunk render state; `currentX` will be updated to account for the spacing.
+     */
+    private addSpaceAfterChunk(chunk: Chunk, sourceData: SourceData, ctx: RowRenderContext) {
+        let spaceWidth = 0;
+        const spaceLen = chunk.lastSpace.length || 0;
+        let spacePos: number;
+        if (chunk.sentence) {
+            // If this is line-initial spacing, fetch the sentence to which the chunk belongs
+            // so we can determine where it begins
+            const sentFrom =
+                sourceData.sentence_offsets[chunk.sentence - sourceData.sentence_number_offset][0];
+            spacePos = spaceLen - (chunk.from - sentFrom);
+        } else {
+            spacePos = 0;
+        }
+        for (let i = spacePos; i < spaceLen; i++) {
+            spaceWidth += this.spaceWidths[chunk.lastSpace[i]] * (this.fontZoom / 100.0) || 0;
+        }
+
+        if (TRACE_VISUALIZER) {
+            console.trace(
+                `Calculated space width for chunk ${chunk.text} with lastSpace "${chunk.lastSpace}" at position ${spacePos}: ${spaceWidth}px`
+            );
+        }
+        ctx.currentX += this.rtlmode ? -spaceWidth : spaceWidth;
     }
 
     private renderChunksPass2(
@@ -3518,7 +3323,7 @@ export class Visualizer {
         arc: Arc,
         to: number,
         from: number,
-        labelText: str,
+        labelText: string,
         height: number,
         arcGroup: G,
         shadowGroup: import('@svgdotjs/svg.js').G | undefined
@@ -3722,7 +3527,7 @@ export class Visualizer {
             if (this.roundCoordinates) {
                 rowY = rowY | 0;
             }
-            this.fastTranslate(row, 0, rowY);
+            fastTranslate(row, 0, rowY);
 
             y += Configuration.visual.margin.y;
         }
@@ -3831,11 +3636,11 @@ export class Visualizer {
         const scrollable = findClosestHorizontalScrollable(this.svg.node);
 
         if (this.rtlmode) {
-            rows.map((row) => this.fastTranslate(row, oversized, row.translation.y));
+            rows.map((row) => fastTranslate(row, oversized, row.translation.y));
 
-            this.fastTranslateGroup(this.highlightGroup, oversized, 0);
-            this.fastTranslateGroup(textGroup, oversized, 0);
-            this.fastTranslateGroup(sentNumGroup, oversized, 0);
+            fastTranslateGroup(this.highlightGroup, oversized, 0);
+            fastTranslateGroup(textGroup, oversized, 0);
+            fastTranslateGroup(sentNumGroup, oversized, 0);
 
             if (scrollable) {
                 scrollable.scrollLeft = oversized + 4;
@@ -3956,9 +3761,11 @@ export class Visualizer {
     renderDataReal(sourceData?: SourceData) {
         // Check if the SVG is actually on the page
         if (!this.svgContainer.ownerDocument.contains(this.svg.node)) {
-            console.trace(
-                'Recieved render request for stale SVG that is no longer on the page. Ignoring.'
-            );
+            if (TRACE_VISUALIZER) {
+                console.trace(
+                    'Recieved render request for stale SVG that is no longer on the page. Ignoring.'
+                );
+            }
             return;
         }
 
@@ -4044,11 +3851,11 @@ export class Visualizer {
             Util.profileStart('measures');
             this.data.sizes = this.calculateTextMeasurements(this.data);
             this.adjustTowerAnnotationSizes(this.data);
-            const maxTextWidth = this.calculateMaxTextWidth(this.data.sizes);
+            const maxTextWidth = calculateMaxTextWidth(this.data.sizes);
             Util.profileEnd('measures');
 
             Util.profileStart('chunks');
-            this.renderLayoutFloorsAndCurlies(this.data, this.data.spanDrawOrderPermutation);
+            this.renderLayoutFloorsAndCurlyHeights(this.data, this.data.spanDrawOrderPermutation);
             const [rows, fragmentHeights, markedTextHighlights] = this.renderChunks(
                 this.data,
                 this.sourceData,
@@ -4119,7 +3926,7 @@ export class Visualizer {
         } catch (e) {
             // We are sure not to be drawing anymore, reset the state
             this.drawing = false;
-            console.error('Rendering terminated due to: ' + e, e.stack);
+            console.error('Rendering terminated', e);
         }
     }
 
@@ -4945,6 +4752,7 @@ export class Visualizer {
 
         return overlappingChunks;
     }
+
     getChunkElementWithId(id: VID): Element | null {
         return this.svg.node.querySelector(`text:not(.spacing)[data-chunk-id="${id}"]`);
     }
@@ -5079,150 +4887,6 @@ export class Visualizer {
 
         return [selectedFrom, selectedTo];
     }
-}
-
-/**
- * Utility function to find the closest highlight element to the given target.
- *
- * @param target a DOM node.
- * @returns the closest highlight element or null if none is found.
- */
-export function findClosestChunkElement(target: Node | null): Element | null {
-    if (target instanceof Text) {
-        target = target.parentElement;
-    }
-
-    if (target instanceof Element) {
-        return target.closest('[data-chunk-id]');
-    }
-
-    return null;
-}
-
-function isRTL(charCode: number): boolean {
-    const t1 = charCode >= 0x0591 && charCode <= 0x07ff;
-    const t2 = charCode === 0x200f;
-    const t3 = charCode === 0x202e;
-    const t4 = charCode >= 0xfb1d && charCode <= 0xfdfd;
-    const t5 = charCode >= 0xfe70 && charCode <= 0xfefc;
-    return t1 || t2 || t3 || t4 || t5;
-}
-
-// http://24ways.org/2010/calculating-color-contrast/
-// http://stackoverflow.com/questions/11867545/change-text-color-based-on-brightness-of-the-covered-background-area
-function bgToFgColor(hexcolor: ColorCode) {
-    const r = parseInt(hexcolor.substr(1, 2), 16);
-    const g = parseInt(hexcolor.substr(3, 2), 16);
-    const b = parseInt(hexcolor.substr(5, 2), 16);
-    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-    return yiq >= 128 ? '#000000' : '#ffffff';
-}
-
-function findClosestHorizontalScrollable(node: Element | null) {
-    if (node === null || node.tagName === 'HTML') {
-        return null;
-    }
-
-    if (
-        node instanceof HTMLElement &&
-        ((node.style.overflowX === 'auto' && node.scrollWidth > node.clientWidth) ||
-            node.style.overflowX === 'scroll')
-    ) {
-        return node;
-    }
-
-    // Abort if the node is marked as scrollable but does presently not have a scrollbar. This is
-    // to avoid that we consider scrollbars too far out
-    if (node.classList.contains('scrollable')) {
-        return null;
-    }
-
-    return findClosestHorizontalScrollable(node.parentElement);
-}
-
-function findClosestVerticalScrollable(node: Element | null) {
-    if (node === null || node.tagName === 'HTML') {
-        return null;
-    }
-
-    if (
-        node instanceof HTMLElement &&
-        ((node.style.overflowY === 'auto' && node.scrollHeight > node.clientHeight) ||
-            node.style.overflowY === 'scroll')
-    ) {
-        return node;
-    }
-
-    // Abort if the node is marked as scrollable but does presently not have a scrollbar. This is
-    // to avoid that we consider scrollbars too far out
-    if (node.classList.contains('scrollable')) {
-        return null;
-    }
-
-    return findClosestVerticalScrollable(node.parentElement);
-}
-
-/**
- * A naive whitespace tokeniser
- */
-function tokenise(text: string): Array<Offsets> {
-    const tokenOffsets: Array<Offsets> = [];
-    let tokenStart: number | null = null;
-    let lastCharPos: number | null = null;
-
-    for (let i = 0; i < text.length; i++) {
-        const c = text[i];
-        // Have we found the start of a token?
-        if (tokenStart == null && !/\s/.test(c)) {
-            tokenStart = i;
-            lastCharPos = i;
-            // Have we found the end of a token?
-        } else if (/\s/.test(c) && tokenStart != null) {
-            tokenOffsets.push([tokenStart, i]);
-            tokenStart = null;
-            // Is it a non-whitespace character?
-        } else if (!/\s/.test(c)) {
-            lastCharPos = i;
-        }
-    }
-
-    // Do we have a trailing token?
-    if (tokenStart !== null && lastCharPos !== null) {
-        tokenOffsets.push([tokenStart, lastCharPos + 1]);
-    }
-
-    return tokenOffsets;
-}
-
-/**
- * A naive newline sentence splitter
- */
-function sentenceSplit(text: string): Array<Offsets> {
-    const sentenceOffsets: Array<Offsets> = [];
-    let sentStart: number | null = null;
-    let lastCharPos = -1;
-
-    for (let i = 0; i < text.length; i++) {
-        const c = text[i];
-        // Have we found the start of a sentence?
-        if (sentStart == null && !/\s/.test(c)) {
-            sentStart = i;
-            lastCharPos = i;
-            // Have we found the end of a sentence?
-        } else if (c === '\n' && sentStart != null) {
-            sentenceOffsets.push([sentStart, i]);
-            sentStart = null;
-            // Is it a non-whitespace character?
-        } else if (!/\s/.test(c)) {
-            lastCharPos = i;
-        }
-    }
-    // Do we have a trailing sentence without a closing newline?
-    if (sentStart != null) {
-        sentenceOffsets.push([sentStart, lastCharPos + 1]);
-    }
-
-    return sentenceOffsets;
 }
 
 function overlapping(aXBegin: number, aXEnd: number, aYBegin: number, aYEnd: number): boolean {

@@ -157,13 +157,13 @@ public class OpenNlpPosRecommenderTest
 
     private List<CAS> loadAllData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("gum-en-conll-3.0.0");
+        var ds = loader.load("gum-en-conll-3.0.0");
         return loadData(ds, ds.getDataFiles());
     }
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("gum-en-conll-3.0.0");
+        var ds = loader.load("gum-en-conll-3.0.0");
         return loadData(ds, ds.getSplit(0.2).getTrainingFiles());
     }
 

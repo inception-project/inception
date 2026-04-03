@@ -34,6 +34,8 @@ export class BratEditorFactory implements AnnotationEditorFactory {
             return element[PROP_EDITOR];
         }
 
+        // console.info('BratEditorFactory.getOrInitialize called for element', element);
+
         const ajax = diam.createAjaxClient(props.diamAjaxCallbackUrl);
 
         let targetElement: Element;
@@ -51,6 +53,8 @@ export class BratEditorFactory implements AnnotationEditorFactory {
         if (!targetElement) {
             targetElement = element as Element;
         }
+
+        // Segmenter initialization moved to `BratEditor` and injected into `Visualizer`.
 
         element[PROP_EDITOR] = new BratEditor(targetElement, ajax, props);
         return element[PROP_EDITOR];
