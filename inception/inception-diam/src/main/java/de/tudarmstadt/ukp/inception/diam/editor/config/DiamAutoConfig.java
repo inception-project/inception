@@ -225,17 +225,25 @@ public class DiamAutoConfig
         return (aBuilder, aMAH) -> {
             LOG.debug("Configuring websocket security for annotation editor controller");
 
-            final var annotationEditorTopic = "/*" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT
-                    + "}" + TOPIC_ELEMENT_DOCUMENT + "{" + PARAM_DOCUMENT + "}" + TOPIC_ELEMENT_USER
-                    + "{" + PARAM_USER + "}/**";
+            final var annotationEditorTopic = TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}"
+                    + TOPIC_ELEMENT_DOCUMENT + "{" + PARAM_DOCUMENT + "}" + TOPIC_ELEMENT_USER + "{"
+                    + PARAM_USER + "}/**";
 
-            aBuilder.simpSubscribeDestMatchers(annotationEditorTopic)
+            aBuilder.simpSubscribeDestMatchers("/app" + annotationEditorTopic)
                     .access(expression(aMAH, "@documentAccess.canViewAnnotationDocument(#"
                             + PARAM_PROJECT + ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ")"));
 
-            aBuilder.simpMessageDestMatchers(annotationEditorTopic)
-                    .access(expression(aMAH, "@documentAccess.canEditAnnotationDocument(#"
+            aBuilder.simpSubscribeDestMatchers("/topic" + annotationEditorTopic)
+                    .access(expression(aMAH, "@documentAccess.canViewAnnotationDocument(#"
                             + PARAM_PROJECT + ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ")"));
+
+            aBuilder.simpSubscribeDestMatchers("/user/queue" + annotationEditorTopic)
+                    .access(expression(aMAH, "@documentAccess.canViewAnnotationDocument(#"
+                            + PARAM_PROJECT + ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ")"));
+
+            // aBuilder.simpMessageDestMatchers(annotationEditorTopic)
+            // .access(expression(aMAH, "@documentAccess.canEditAnnotationDocument(#"
+            // + PARAM_PROJECT + ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ")"));
         };
     }
 }

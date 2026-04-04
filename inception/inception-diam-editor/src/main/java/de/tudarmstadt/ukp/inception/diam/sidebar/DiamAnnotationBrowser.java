@@ -85,8 +85,11 @@ public class DiamAnnotationBrowser
             return;
         }
 
-        var viewport = new ViewportDefinition(state.getDocument(), state.getUser().getUsername(), 0,
-                Integer.MAX_VALUE, CompactSerializerV2Impl.ID);
+        var viewport = ViewportDefinition.builder() //
+                .withDocument(state.getDocument()) //
+                .withDataOwner(state.getUser().getUsername()) //
+                .withFormat(CompactSerializerV2Impl.ID) //
+                .build();
 
         var managerPrefs = userPrefService
                 .loadDefaultTraitsForProject(KEY_DIAM_SIDEBAR_MANAGER_PREFS, state.getProject());
@@ -97,6 +100,7 @@ public class DiamAnnotationBrowser
                 "csrfToken", getCsrfTokenFromSession(), //
                 "topicChannel", viewport.getTopic(), //
                 "pinnedGroups", managerPrefs.getPinnedGroups(), //
+                "enableExtensions", state.getEnabledExtensions(), //
                 "userPreferencesKey", userPreferencesKey);
 
         // model will be added as props to Svelte component

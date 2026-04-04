@@ -187,8 +187,29 @@ public class WebSocketStompTestClient
      */
     public Subscription subscribe(String aTopic)
     {
+        return subscribe(aTopic, null);
+    }
+
+    /**
+     * Subscribes to a topic. Requires expected messages to be queued before.
+     * 
+     * @param aTopic
+     *            topic to subscribe to
+     * @param aHeaders
+     *            extra headers
+     * @return subscription.
+     */
+    public Subscription subscribe(String aTopic, Map<String, String> aHeaders)
+    {
+        var headers = new StompHeaders();
+        headers.setDestination(aTopic);
+
+        if (aHeaders != null) {
+            headers.setAll(aHeaders);
+        }
+
         var handler = new CapturingFrameHandler<>(Message.class, recieved);
-        var sub = session.subscribe(aTopic, handler);
+        var sub = session.subscribe(headers, handler);
 
         waitForMessages();
 
