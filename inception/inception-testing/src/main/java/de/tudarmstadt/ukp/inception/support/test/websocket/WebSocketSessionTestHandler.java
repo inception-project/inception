@@ -44,7 +44,7 @@ public class WebSocketSessionTestHandler
 {
     private static final Logger LOG = getLogger(lookup().lookupClass());
 
-    private final AtomicBoolean errorRecieved = new AtomicBoolean(false);
+    private final AtomicBoolean errorReceived = new AtomicBoolean(false);
 
     private final FailableRunnable<Throwable> afterConnectedAction;
     private final String destination;
@@ -85,7 +85,7 @@ public class WebSocketSessionTestHandler
     {
         LOG.error("Error: {}", aHeaders.get("message"));
         errorMsg = aHeaders.getFirst("message");
-        errorRecieved.set(true);
+        errorReceived.set(true);
     }
 
     @Override
@@ -94,7 +94,7 @@ public class WebSocketSessionTestHandler
     {
         LOG.error("Exception: {}", aException.getMessage(), aException);
         errorMsg = aException.getMessage();
-        errorRecieved.set(true);
+        errorReceived.set(true);
     }
 
     @Override
@@ -102,19 +102,19 @@ public class WebSocketSessionTestHandler
     {
         LOG.error("Transport error: {}", aException.getMessage());
         // errorMsg = aException.getMessage();
-        // errorRecieved.set(true);
-        // responseRecievedLatch.countDown();
+        // errorReceived.set(true);
+        // responseReceivedLatch.countDown();
     }
 
     public boolean messagesProcessed()
     {
-        return expectedMessages.isEmpty() || errorRecieved.get();
+        return expectedMessages.isEmpty() || errorReceived.get();
     }
 
     public void assertSuccess()
     {
         assertThat(errorMsg).isNull();
-        assertThat(errorRecieved).isFalse();
+        assertThat(errorReceived).isFalse();
     }
 
     public static Builder builder()
@@ -124,7 +124,7 @@ public class WebSocketSessionTestHandler
 
     public void assertError(Consumer<String> aErrorConsumer)
     {
-        assertThat(errorRecieved).as("error was detected").isTrue();
+        assertThat(errorReceived).as("error was detected").isTrue();
         aErrorConsumer.accept(errorMsg);
     }
 
@@ -145,7 +145,7 @@ public class WebSocketSessionTestHandler
         public void handleFrame(StompHeaders aHeaders, Object aPayload)
         {
             if (expectedMessages.isEmpty()) {
-                Assertions.fail("Recieved unexpected message: {}", aPayload);
+                Assertions.fail("Received unexpected message: {}", aPayload);
             }
 
             expectedMessages.peek().handler.accept(aHeaders, aPayload);

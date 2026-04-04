@@ -105,7 +105,7 @@ class MatomoTelemetrySupportImplTest
     }
 
     @Test
-    void thatAliveIsRecieved() throws Exception
+    void thatAliveIsReceived() throws Exception
     {
         assertThat(sut.isEnabled()).isTrue();
 
@@ -135,7 +135,7 @@ class MatomoTelemetrySupportImplTest
     }
 
     @Test
-    void thatPingIsRecieved() throws Exception
+    void thatPingIsReceived() throws Exception
     {
         assertThat(sut.isEnabled()).isTrue();
 

@@ -197,7 +197,7 @@ class AssistantServiceImplTest
     }
 
     @Test
-    void thatMessageSentIsRecieved() throws Exception
+    void thatMessageSentIsReceived() throws Exception
     {
         projectService.assignRole(project, user, ANNOTATOR);
 

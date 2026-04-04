@@ -58,6 +58,7 @@ public class RenderRequest
     private final Map<Long, Set<String>> hiddenFeatureValues;
     private final CAS cas;
     private final ColoringStrategy coloringStrategyOverride;
+    private final Set<String> enabledExtensions;
 
     private RenderRequest(Builder builder)
     {
@@ -78,6 +79,7 @@ public class RenderRequest
         sessionOwner = builder.sessionOwner;
         hiddenFeatures = builder.hiddenFeatures;
         hiddenFeatureValues = builder.hiddenFeatureValues;
+        enabledExtensions = builder.enabledExtensions;
     }
 
     public Optional<ColoringStrategy> getColoringStrategyOverride()
@@ -171,6 +173,11 @@ public class RenderRequest
         return state;
     }
 
+    public Set<String> getEnabledExtensions()
+    {
+        return enabledExtensions;
+    }
+
     public ParsedConstraints getConstraints()
     {
         return constraints;
@@ -205,6 +212,7 @@ public class RenderRequest
         private final Map<Long, Set<String>> hiddenFeatureValues = new HashMap<>();
         private ColoringStrategy coloringStrategyOverride;
         private ParsedConstraints constraints;
+        private final Set<String> enabledExtensions = new HashSet<>();
 
         private Builder()
         {
@@ -235,6 +243,7 @@ public class RenderRequest
             withVisibleLayers(aState.getAnnotationLayers());
             withHiddenFeatures(aState.getPreferences().getHiddenAnnotationFeatureIds());
             withHiddenFeatureValues(aState.getPreferences().getHiddenTags());
+            withEnabledExtensions(aState.getEnabledExtensions());
             sourceDocument = state.getDocument();
             annotationUser = state.getUser();
             constraints = state.getConstraints();
@@ -324,6 +333,15 @@ public class RenderRequest
         public Builder withColoringStrategyOverride(ColoringStrategy aColoringStrategyOverride)
         {
             coloringStrategyOverride = aColoringStrategyOverride;
+            return this;
+        }
+
+        public Builder withEnabledExtensions(Collection<String> aExtensions)
+        {
+            enabledExtensions.clear();
+            if (aExtensions != null) {
+                enabledExtensions.addAll(aExtensions);
+            }
             return this;
         }
 

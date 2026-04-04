@@ -17,15 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.diam.model.websocket;
 
+import static java.lang.String.join;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableSet;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.builder.ToStringStyle.NO_CLASS_NAME_STYLE;
+
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.uima.cas.text.AnnotationPredicates;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.diam.service.DiamWebsocketController;
 import de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants;
@@ -34,46 +44,30 @@ public class ViewportDefinition
 {
     private final long projectId;
     private final long documentId;
-    private final String user;
+    private final String dataOwner;
+
     private final int begin;
     private final int end;
+
+    private final Set<String> enabledExtensions;
     private final String format;
 
-    public ViewportDefinition(AnnotationDocument aDoc, int aBegin, int aEnd, String aFormat)
+    private ViewportDefinition(Builder builder)
     {
-        projectId = aDoc.getProject().getId();
-        documentId = aDoc.getDocument().getId();
-        user = aDoc.getUser();
-        begin = aBegin;
-        end = aEnd;
-        format = aFormat;
+        projectId = builder.projectId;
+        documentId = builder.documentId;
+        dataOwner = builder.dataOwner;
+        begin = builder.begin;
+        end = builder.end;
+        format = builder.format;
+        enabledExtensions = isNotEmpty(builder.enabledExtensions)
+                ? unmodifiableSet(new HashSet<>(builder.enabledExtensions))
+                : emptySet();
     }
 
-    public ViewportDefinition(SourceDocument aDoc, String aUser, int aBegin, int aEnd,
-            String aFormat)
+    public boolean matches(long aDocumentId, AnnotationSet aSet, int aBegin, int aEnd)
     {
-        projectId = aDoc.getProject().getId();
-        documentId = aDoc.getId();
-        user = aUser;
-        begin = aBegin;
-        end = aEnd;
-        format = aFormat;
-    }
-
-    public ViewportDefinition(long aProjectId, long aDocumentId, String aUser, int aBegin, int aEnd,
-            String aFormat)
-    {
-        projectId = aProjectId;
-        documentId = aDocumentId;
-        user = aUser;
-        begin = aBegin;
-        end = aEnd;
-        format = aFormat;
-    }
-
-    public boolean matches(long aDocumentId, String aUser, int aBegin, int aEnd)
-    {
-        if (aDocumentId != documentId || !user.equals(aUser)) {
+        if (aDocumentId != documentId || !dataOwner.equals(aSet.id())) {
             return false;
         }
 
@@ -92,7 +86,7 @@ public class ViewportDefinition
 
     public String getUser()
     {
-        return user;
+        return dataOwner;
     }
 
     public int getBegin()
@@ -110,15 +104,19 @@ public class ViewportDefinition
         return format;
     }
 
+    public Set<String> getEnabledExtensions()
+    {
+        return enabledExtensions;
+    }
+
     public String getTopic()
     {
         var properties = new Properties();
         properties.setProperty(WebSocketConstants.PARAM_PROJECT, String.valueOf(projectId));
         properties.setProperty(WebSocketConstants.PARAM_DOCUMENT, String.valueOf(documentId));
-        properties.setProperty(WebSocketConstants.PARAM_USER, user);
+        properties.setProperty(WebSocketConstants.PARAM_USER, dataOwner);
         properties.setProperty(DiamWebsocketController.PARAM_FROM, String.valueOf(begin));
         properties.setProperty(DiamWebsocketController.PARAM_TO, String.valueOf(end));
-        properties.setProperty(DiamWebsocketController.PARAM_FORMAT, String.valueOf(format));
         return DiamWebsocketController.PLACEHOLDER_RESOLVER.replacePlaceholders(
                 DiamWebsocketController.DOCUMENT_VIEWPORT_TOPIC_TEMPLATE, properties);
     }
@@ -129,24 +127,152 @@ public class ViewportDefinition
         if (!(other instanceof ViewportDefinition)) {
             return false;
         }
-        ViewportDefinition castOther = (ViewportDefinition) other;
-        return new EqualsBuilder().append(documentId, castOther.documentId)
-                .append(user, castOther.user).append(begin, castOther.begin)
-                .append(end, castOther.end).append(format, castOther.format).isEquals();
+        var castOther = (ViewportDefinition) other;
+        return new EqualsBuilder() //
+                .append(documentId, castOther.documentId) //
+                .append(dataOwner, castOther.dataOwner) //
+                .append(begin, castOther.begin) //
+                .append(end, castOther.end) //
+                .append(format, castOther.format) //
+                .append(enabledExtensions, castOther.enabledExtensions) //
+                .isEquals();
     }
 
     @Override
     public int hashCode()
     {
-        return new HashCodeBuilder().append(documentId).append(user).append(begin).append(end)
-                .append(format).toHashCode();
+        return new HashCodeBuilder() //
+                .append(documentId) //
+                .append(dataOwner) //
+                .append(begin) //
+                .append(end) //
+                .append(format) //
+                .append(enabledExtensions) //
+                .toHashCode();
     }
 
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE)
-                .append("documentId", documentId).append("user", user).append("begin", begin)
-                .append("end", end).append("format", format).toString();
+        return new ToStringBuilder(this, NO_CLASS_NAME_STYLE) //
+                .append("documentId", documentId) //
+                .append("user", dataOwner) //
+                .append("begin", begin) //
+                .append("end", end) //
+                .append("format", format) //
+                .append("extensions", "[" + join(",", enabledExtensions) + "]") //
+                .toString();
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private long projectId;
+        private long documentId;
+        private String dataOwner;
+        private int begin = 0;
+        private int end = Integer.MAX_VALUE;
+        private String format;
+        private Set<String> enabledExtensions = new HashSet<>();
+
+        private Builder()
+        {
+        }
+
+        public Builder withProjectId(long aProjectId)
+        {
+            projectId = aProjectId;
+            return this;
+        }
+
+        public Builder withDocumentId(long aDocumentId)
+        {
+            documentId = aDocumentId;
+            return this;
+        }
+
+        public Builder withDocument(SourceDocument aDocument)
+        {
+            projectId = aDocument.getProject().getId();
+            documentId = aDocument.getId();
+            return this;
+        }
+
+        public Builder withDocument(AnnotationDocument aDocument)
+        {
+            withDocument(aDocument.getDocument());
+            dataOwner = aDocument.getUser();
+            return this;
+        }
+
+        public Builder withDataOwner(String aDataOwner)
+        {
+            dataOwner = aDataOwner;
+            return this;
+        }
+
+        public Builder withBegin(int aBegin)
+        {
+            begin = aBegin;
+            return this;
+        }
+
+        public Builder withEnd(int aEnd)
+        {
+            end = aEnd;
+            return this;
+        }
+
+        public Builder withRange(int aBegin, int aEnd)
+        {
+            begin = aBegin;
+            end = aEnd;
+            return this;
+        }
+
+        public Builder withFormat(String aFormat)
+        {
+            format = aFormat;
+            return this;
+        }
+
+        public Builder enabledExtensions(Collection<String> aExtensions)
+        {
+            enabledExtensions.clear();
+            if (aExtensions != null) {
+                enabledExtensions.addAll(aExtensions);
+            }
+            return this;
+        }
+
+        public Builder enabledExtensions(String... aExtensions)
+        {
+            enabledExtensions.clear();
+            if (aExtensions != null) {
+                enabledExtensions.addAll(asList(aExtensions));
+            }
+            return this;
+        }
+
+        public ViewportDefinition build()
+        {
+            if (dataOwner == null) {
+                throw new IllegalStateException(
+                        "Cannot build ViewportDefinition: dataOwner must not be null");
+            }
+            if (format == null) {
+                throw new IllegalStateException(
+                        "Cannot build ViewportDefinition: format must not be null");
+            }
+            if (begin > end) {
+                throw new IllegalStateException(
+                        "Cannot build ViewportDefinition: begin must be less than or equal to end");
+            }
+            return new ViewportDefinition(this);
+        }
     }
 }

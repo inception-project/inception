@@ -3763,7 +3763,7 @@ export class Visualizer {
         if (!this.svgContainer.ownerDocument.contains(this.svg.node)) {
             if (TRACE_VISUALIZER) {
                 console.trace(
-                    'Recieved render request for stale SVG that is no longer on the page. Ignoring.'
+                    'Received render request for stale SVG that is no longer on the page. Ignoring.'
                 );
             }
             return;

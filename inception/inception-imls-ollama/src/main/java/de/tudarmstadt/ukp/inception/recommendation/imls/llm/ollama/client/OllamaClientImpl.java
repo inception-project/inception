@@ -192,7 +192,7 @@ public class OllamaClientImpl
             var theIs = is;
             if (LOG.isTraceEnabled() && aRequest.isStream() == false) {
                 var responseBytes = is.readAllBytes();
-                LOG.trace("Recieved chat response: {}", new String(responseBytes, UTF_8));
+                LOG.trace("Received chat response: {}", new String(responseBytes, UTF_8));
                 theIs = new ByteArrayInputStream(responseBytes);
             }
 

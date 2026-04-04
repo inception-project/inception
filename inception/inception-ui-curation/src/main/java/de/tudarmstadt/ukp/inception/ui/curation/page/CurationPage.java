@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
+import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarBehavior;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
@@ -56,6 +57,7 @@ public class CurationPage
 
         var sessionOwner = userRepository.getCurrentUsername();
         var state = getModelObject();
+        state.enableExtension(CurationEditorExtension.EXTENSION_ID);
 
         curationSessionService.startSession(sessionOwner, state.getProject(), false);
     }
@@ -73,11 +75,10 @@ public class CurationPage
     @Override
     public List<SourceDocument> getListOfDocs()
     {
-        var state = getModelObject();
         // Since the curatable documents depend on the document state, let's make sure the document
         // state is up-to-date
-        workloadManagementService.getWorkloadManagerExtension(state.getProject())
-                .freshenStatus(state.getProject());
-        return curationDocumentService.listCuratableSourceDocuments(state.getProject());
+        var project = getModelObject().getProject();
+        workloadManagementService.getWorkloadManagerExtension(project).freshenStatus(project);
+        return curationDocumentService.listCuratableSourceDocuments(project);
     }
 }

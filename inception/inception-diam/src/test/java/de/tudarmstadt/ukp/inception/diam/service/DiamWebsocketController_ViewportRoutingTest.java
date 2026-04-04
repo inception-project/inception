@@ -20,17 +20,23 @@ package de.tudarmstadt.ukp.inception.diam.service;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.diam.service.DiamWebsocketController.FORMAT_LEGACY;
+import static de.tudarmstadt.ukp.inception.diam.service.DiamWebsocketController.X_DIAM_FORMAT;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.messaging.simp.SimpMessageHeaderAccessor.DESTINATION_HEADER;
+import static org.springframework.messaging.simp.SimpMessageHeaderAccessor.SUBSCRIPTION_ID_HEADER;
 import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import java.io.File;
 import java.lang.invoke.MethodHandles;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -101,7 +107,6 @@ import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 import jakarta.persistence.EntityManager;
-import tools.jackson.databind.node.JsonNodeFactory;
 
 @SpringBootTest( //
         webEnvironment = RANDOM_PORT, //
@@ -152,11 +157,13 @@ public class DiamWebsocketController_ViewportRoutingTest
     private @Autowired RepositoryProperties repositoryProperties;
     private @Autowired EntityManager entityManager;
     private @Autowired UserDao userService;
+    private @Autowired TestPreRenderer testPreRenderer;
 
     private static @TempDir File repositoryDir;
 
     private static User user;
     private static Project testProject;
+    private static AnnotationLayer testLayer;
     private static SourceDocument testDoc;
     private static AnnotationDocument testAnnotationDocument;
 
@@ -185,6 +192,10 @@ public class DiamWebsocketController_ViewportRoutingTest
         projectService.createProject(testProject);
         projectService.assignRole(testProject, user, ANNOTATOR);
 
+        testLayer = new AnnotationLayer();
+        testLayer.setProject(testProject);
+        testLayer.setId(1L);
+
         testDoc = new SourceDocument("testDoc", testProject, "text");
         documentService.createSourceDocument(testDoc);
 
@@ -208,38 +219,147 @@ public class DiamWebsocketController_ViewportRoutingTest
     @Test
     public void thatViewportBasedMessageRoutingWorks() throws Exception
     {
-        var emptyListNode = JsonNodeFactory.instance.arrayNode();
+        var vpd1 = ViewportDefinition.builder() //
+                .withDocument(testAnnotationDocument) //
+                .withRange(10, 20) //
+                .withFormat(FORMAT_LEGACY) //
+                .build();
+        var vpd2 = ViewportDefinition.builder() //
+                .withDocument(testAnnotationDocument) //
+                .withRange(30, 40) //
+                .withFormat(FORMAT_LEGACY) //
+                .build();
 
-        var vpd1 = new ViewportDefinition(testAnnotationDocument, 10, 20, FORMAT_LEGACY);
-        var vpd2 = new ViewportDefinition(testAnnotationDocument, 30, 40, FORMAT_LEGACY);
+        testPreRenderer.setRenderFunc((aResponse, aRequest) -> {
+            aResponse.add(new VSpan(testLayer, new VID(1),
+                    new VRange(aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset()),
+                    emptyMap()));
+        });
 
         try (var client1 = new WebSocketStompTestClient(USER, PASS);
                 var client2 = new WebSocketStompTestClient(USER, PASS)) {
-            client1.expectSuccessfulConnection().connect(websocketUrl);
-            client1.subscribe("/topic" + vpd1.getTopic());
-            client1.expect(MViewportInit.class, msg -> {
+            var connection1 = client1.expectSuccessfulConnection().connect(websocketUrl);
+            var queueSub1 = client1.subscribe("/topic" + vpd1.getTopic(), Map.of( //
+                    X_DIAM_FORMAT, vpd1.getFormat(), //
+                    "selector", "headers['" + X_DIAM_FORMAT + "']=='" + vpd1.getFormat() + "'"));
+            client1.expectWithHeaders(MViewportInit.class, (message, msg) -> {
                 assertThat(msg.getText()).contains("test. This");
+                assertThat(message.getHeaders().get(DESTINATION_HEADER))
+                        .isEqualTo("/app" + vpd1.getTopic());
             });
-            client1.subscribe("/app" + vpd1.getTopic());
+            var appSub1 = client1.subscribe("/app" + vpd1.getTopic(), Map.of( //
+                    X_DIAM_FORMAT, vpd1.getFormat(), //
+                    "selector", "headers['" + X_DIAM_FORMAT + "']=='" + vpd1.getFormat() + "'"));
 
-            client2.expectSuccessfulConnection().connect(websocketUrl);
-            client2.subscribe("/topic" + vpd2.getTopic());
-            client2.expect(MViewportInit.class, msg -> {
+            var connection2 = client2.expectSuccessfulConnection().connect(websocketUrl);
+            var queueSub2 = client2.subscribe("/topic" + vpd2.getTopic(), Map.of( //
+                    X_DIAM_FORMAT, vpd2.getFormat(), //
+                    "selector", "headers['" + X_DIAM_FORMAT + "']=='" + vpd2.getFormat() + "'"));
+            client2.expectWithHeaders(MViewportInit.class, (message, msg) -> {
                 assertThat(msg.getText()).contains(". This is ");
+                assertThat(message.getHeaders().get(DESTINATION_HEADER))
+                        .isEqualTo("/app" + vpd2.getTopic());
             });
-            client2.subscribe("/app" + vpd2.getTopic());
+            var appSub2 = client2.subscribe("/app" + vpd2.getTopic(), Map.of( //
+                    X_DIAM_FORMAT, vpd2.getFormat(), //
+                    "selector", "headers['" + X_DIAM_FORMAT + "']=='" + vpd2.getFormat() + "'"));
 
-            client1.expect(new MViewportUpdate(12, 15, emptyListNode))
-                    .expect(new MViewportUpdate(15, 35, emptyListNode));
-            client2.expect(new MViewportUpdate(31, 33, emptyListNode))
-                    .expect(new MViewportUpdate(15, 35, emptyListNode));
+            assertThat(connection1.getSessionId()).isNotEqualTo(connection2.getSessionId());
 
+            // Verify that the queue and app subscriptions have distinct ids
+            assertThat(queueSub1.getSubscriptionId()).isNotNull();
+            assertThat(appSub1.getSubscriptionId()).isNotNull();
+            assertThat(queueSub1.getSubscriptionId()).isNotEqualTo(appSub1.getSubscriptionId());
+
+            assertThat(queueSub2.getSubscriptionId()).isNotNull();
+            assertThat(appSub2.getSubscriptionId()).isNotNull();
+            assertThat(queueSub2.getSubscriptionId()).isNotEqualTo(appSub2.getSubscriptionId());
+
+            var expected1 = new MViewportUpdate(12, 15, fromJsonString(
+                    "[{\"op\":\"replace\",\"path\":\"/spans/0/vid\",\"value\":\"2\"}]"));
+            var expected2 = new MViewportUpdate(15, 35, fromJsonString(
+                    "[{\"op\":\"replace\",\"path\":\"/spans/0/vid\",\"value\":\"4\"}]"));
+            client1.expectWithHeaders(MViewportUpdate.class, (message, update) -> {
+                assertThat(update).isEqualTo(expected1);
+                assertThat(message.getHeaders().get(DESTINATION_HEADER))
+                        .isEqualTo("/topic" + vpd1.getTopic());
+                assertThat(message.getHeaders().get(SUBSCRIPTION_ID_HEADER))
+                        .isEqualTo(queueSub1.getSubscriptionId());
+            }).expectWithHeaders(MViewportUpdate.class, (message, update) -> {
+                assertThat(update).isEqualTo(expected2);
+                assertThat(message.getHeaders().get(DESTINATION_HEADER))
+                        .isEqualTo("/topic" + vpd1.getTopic());
+                assertThat(message.getHeaders().get(SUBSCRIPTION_ID_HEADER))
+                        .isEqualTo(queueSub1.getSubscriptionId());
+            });
+
+            var expected3 = new MViewportUpdate(31, 33, fromJsonString(
+                    "[{\"op\":\"replace\",\"path\":\"/spans/0/vid\",\"value\":\"3\"}]"));
+            var expected4 = new MViewportUpdate(15, 35, fromJsonString(
+                    "[{\"op\":\"replace\",\"path\":\"/spans/0/vid\",\"value\":\"4\"}]"));
+            client2.expectWithHeaders(MViewportUpdate.class, (message, update) -> {
+                assertThat(update).isEqualTo(expected3);
+                assertThat(message.getHeaders().get(DESTINATION_HEADER))
+                        .isEqualTo("/topic" + vpd2.getTopic());
+                assertThat(message.getHeaders().get(SUBSCRIPTION_ID_HEADER))
+                        .isEqualTo(queueSub2.getSubscriptionId());
+            }).expectWithHeaders(MViewportUpdate.class, (message, update) -> {
+                assertThat(update).isEqualTo(expected4);
+                assertThat(message.getHeaders().get(DESTINATION_HEADER))
+                        .isEqualTo("/topic" + vpd2.getTopic());
+                assertThat(message.getHeaders().get(SUBSCRIPTION_ID_HEADER))
+                        .isEqualTo(queueSub2.getSubscriptionId());
+            });
+
+            testPreRenderer.setRenderFunc((aResponse, aRequest) -> {
+                aResponse.add(new VSpan(testLayer, new VID(2),
+                        new VRange(aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset()),
+                        emptyMap()));
+            });
             sut.sendUpdate(testAnnotationDocument, 12, 15);
+
+            testPreRenderer.setRenderFunc((aResponse, aRequest) -> {
+                aResponse.add(new VSpan(testLayer, new VID(3),
+                        new VRange(aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset()),
+                        emptyMap()));
+            });
             sut.sendUpdate(testAnnotationDocument, 31, 33);
+
+            testPreRenderer.setRenderFunc((aResponse, aRequest) -> {
+                aResponse.add(new VSpan(testLayer, new VID(4),
+                        new VRange(aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset()),
+                        emptyMap()));
+            });
             sut.sendUpdate(testAnnotationDocument, 15, 35);
 
             client1.assertExpectations();
             client2.assertExpectations();
+        }
+    }
+
+    static private class TestPreRenderer
+        implements PreRenderer
+    {
+        private BiConsumer<VDocument, RenderRequest> renderFunc;
+
+        @Override
+        public String getId()
+        {
+            return "TestPreRenderer";
+        }
+
+        @Override
+        public void render(VDocument aResponse, RenderRequest aRequest)
+        {
+            if (renderFunc == null) {
+                throw new IllegalStateException("renderFunc not set");
+            }
+            renderFunc.accept(aResponse, aRequest);
+        }
+
+        public void setRenderFunc(BiConsumer<VDocument, RenderRequest> aRenderFunc)
+        {
+            renderFunc = aRenderFunc;
         }
     }
 
@@ -293,26 +413,9 @@ public class DiamWebsocketController_ViewportRoutingTest
 
         @Primary
         @Bean
-        public PreRenderer testPreRenderer()
+        public TestPreRenderer testPreRenderer()
         {
-            return new PreRenderer()
-            {
-                @Override
-                public String getId()
-                {
-                    return "TestPreRenderer";
-                }
-
-                @Override
-                public void render(VDocument aResponse, RenderRequest aRequest)
-                {
-                    var layer = new AnnotationLayer();
-                    layer.setId(1l);
-                    aResponse.add(
-                            new VSpan(layer, new VID(1), new VRange(aRequest.getWindowBeginOffset(),
-                                    aRequest.getWindowEndOffset()), emptyMap()));
-                }
-            };
+            return new TestPreRenderer();
         }
     }
 }

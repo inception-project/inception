@@ -18,20 +18,20 @@
 package de.tudarmstadt.ukp.inception.diam.model.websocket;
 
 import static java.util.Collections.newSetFromMap;
+import static java.util.Collections.unmodifiableSet;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 import tools.jackson.databind.JsonNode;
 
 public class ViewportState
 {
+    public record Subscription(String sessionId, String subscriptionId) {}
+
     private final ViewportDefinition vpd;
 
-    private final Set<Pair<String, String>> subscriberSessionIds = newSetFromMap(
-            new ConcurrentHashMap<>());
+    private final Set<Subscription> subscriptions = newSetFromMap(new ConcurrentHashMap<>());
 
     private JsonNode json;
 
@@ -55,24 +55,29 @@ public class ViewportState
         return json;
     }
 
-    public void removeSubscriber(String aId)
+    public void removeSubscriptionsBySession(String aSessionId)
     {
-        subscriberSessionIds.removeIf(p -> p.getKey().equals(aId));
+        subscriptions.removeIf(p -> p.sessionId().equals(aSessionId));
     }
 
     public void addSubscription(String aSubscriberId, String aSubscriptionId)
     {
-        subscriberSessionIds.add(Pair.of(aSubscriberId, aSubscriptionId));
-    }
-
-    public boolean hasSubscribers()
-    {
-        return !subscriberSessionIds.isEmpty();
+        subscriptions.add(new Subscription(aSubscriberId, aSubscriptionId));
     }
 
     public void removeSubscription(String aSessionId, String aSubscriptionId)
     {
-        subscriberSessionIds.removeIf(
-                p -> p.getKey().equals(aSessionId) && p.getValue().equals(aSubscriptionId));
+        subscriptions.removeIf(p -> p.sessionId().equals(aSessionId)
+                && p.subscriptionId().equals(aSubscriptionId));
+    }
+
+    public boolean hasSubscriptions()
+    {
+        return !subscriptions.isEmpty();
+    }
+
+    public Set<Subscription> getSubscriptions()
+    {
+        return unmodifiableSet(subscriptions);
     }
 }
