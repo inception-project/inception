@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.diam.service;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.diam.service.DiamWebsocketController.FORMAT_LEGACY;
+import static de.tudarmstadt.ukp.inception.diam.service.DiamWebsocketController.X_DIAM_FORMAT;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
@@ -31,6 +33,8 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 
 import java.io.File;
 import java.lang.invoke.MethodHandles;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -152,11 +156,13 @@ public class DiamWebsocketController_ViewportRoutingTest
     private @Autowired RepositoryProperties repositoryProperties;
     private @Autowired EntityManager entityManager;
     private @Autowired UserDao userService;
+    private @Autowired TestPreRenderer testPreRenderer;
 
     private static @TempDir File repositoryDir;
 
     private static User user;
     private static Project testProject;
+    private static AnnotationLayer testLayer;
     private static SourceDocument testDoc;
     private static AnnotationDocument testAnnotationDocument;
 
@@ -185,6 +191,10 @@ public class DiamWebsocketController_ViewportRoutingTest
         projectService.createProject(testProject);
         projectService.assignRole(testProject, user, ANNOTATOR);
 
+        testLayer = new AnnotationLayer();
+        testLayer.setProject(testProject);
+        testLayer.setId(1l);
+
         testDoc = new SourceDocument("testDoc", testProject, "text");
         documentService.createSourceDocument(testDoc);
 
@@ -210,36 +220,98 @@ public class DiamWebsocketController_ViewportRoutingTest
     {
         var emptyListNode = JsonNodeFactory.instance.arrayNode();
 
-        var vpd1 = new ViewportDefinition(testAnnotationDocument, 10, 20, FORMAT_LEGACY);
-        var vpd2 = new ViewportDefinition(testAnnotationDocument, 30, 40, FORMAT_LEGACY);
+        var vpd1 = ViewportDefinition.builder() //
+                .withDocument(testAnnotationDocument) //
+                .withRange(10, 20) //
+                .withFormat(FORMAT_LEGACY) //
+                .build();
+        var vpd2 = ViewportDefinition.builder() //
+                .withDocument(testAnnotationDocument) //
+                .withRange(30, 40) //
+                .withFormat(FORMAT_LEGACY) //
+                .build();
+
+        testPreRenderer.setRenderFunc((aResponse, aRequest) -> {
+            aResponse.add(new VSpan(testLayer, new VID(1),
+                    new VRange(aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset()),
+                    emptyMap()));
+        });
 
         try (var client1 = new WebSocketStompTestClient(USER, PASS);
                 var client2 = new WebSocketStompTestClient(USER, PASS)) {
             client1.expectSuccessfulConnection().connect(websocketUrl);
-            client1.subscribe("/topic" + vpd1.getTopic());
+            client1.subscribe("/user/queue" + vpd1.getTopic(),
+                    Map.of(X_DIAM_FORMAT, vpd1.getFormat()));
             client1.expect(MViewportInit.class, msg -> {
                 assertThat(msg.getText()).contains("test. This");
             });
-            client1.subscribe("/app" + vpd1.getTopic());
+            client1.subscribe("/app" + vpd1.getTopic(), Map.of(X_DIAM_FORMAT, vpd1.getFormat()));
 
             client2.expectSuccessfulConnection().connect(websocketUrl);
-            client2.subscribe("/topic" + vpd2.getTopic());
+            client2.subscribe("/user/queue" + vpd2.getTopic(),
+                    Map.of(X_DIAM_FORMAT, vpd2.getFormat()));
             client2.expect(MViewportInit.class, msg -> {
                 assertThat(msg.getText()).contains(". This is ");
             });
-            client2.subscribe("/app" + vpd2.getTopic());
+            client2.subscribe("/app" + vpd2.getTopic(), Map.of(X_DIAM_FORMAT, vpd2.getFormat()));
 
-            client1.expect(new MViewportUpdate(12, 15, emptyListNode))
-                    .expect(new MViewportUpdate(15, 35, emptyListNode));
-            client2.expect(new MViewportUpdate(31, 33, emptyListNode))
-                    .expect(new MViewportUpdate(15, 35, emptyListNode));
+            client1.expect(new MViewportUpdate(12, 15,
+                    fromJsonString(
+                            "[{\"op\":\"replace\",\"path\":\"/spans/0/vid\",\"value\":\"2\"}]")))
+                    .expect(new MViewportUpdate(15, 35, fromJsonString(
+                            "[{\"op\":\"replace\",\"path\":\"/spans/0/vid\",\"value\":\"4\"}]")));
+            client2.expect(new MViewportUpdate(31, 33,
+                    fromJsonString(
+                            "[{\"op\":\"replace\",\"path\":\"/spans/0/vid\",\"value\":\"3\"}]")))
+                    .expect(new MViewportUpdate(15, 35, fromJsonString(
+                            "[{\"op\":\"replace\",\"path\":\"/spans/0/vid\",\"value\":\"4\"}]")));
 
+            testPreRenderer.setRenderFunc((aResponse, aRequest) -> {
+                aResponse.add(new VSpan(testLayer, new VID(2),
+                        new VRange(aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset()),
+                        emptyMap()));
+            });
             sut.sendUpdate(testAnnotationDocument, 12, 15);
+
+            testPreRenderer.setRenderFunc((aResponse, aRequest) -> {
+                aResponse.add(new VSpan(testLayer, new VID(3),
+                        new VRange(aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset()),
+                        emptyMap()));
+            });
             sut.sendUpdate(testAnnotationDocument, 31, 33);
+
+            testPreRenderer.setRenderFunc((aResponse, aRequest) -> {
+                aResponse.add(new VSpan(testLayer, new VID(4),
+                        new VRange(aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset()),
+                        emptyMap()));
+            });
             sut.sendUpdate(testAnnotationDocument, 15, 35);
 
             client1.assertExpectations();
             client2.assertExpectations();
+        }
+    }
+
+    static private class TestPreRenderer
+        implements PreRenderer
+    {
+        private BiConsumer<VDocument, RenderRequest> renderFunc;
+
+        @Override
+        public String getId()
+        {
+            return "TestPreRenderer";
+        }
+
+        @Override
+        public void render(VDocument aResponse, RenderRequest aRequest)
+        {
+            renderFunc.accept(aResponse, aRequest);
+        }
+
+        public void setRenderFunc(BiConsumer<VDocument, RenderRequest> aRenderFunc)
+        {
+            renderFunc = aRenderFunc;
         }
     }
 
@@ -293,26 +365,9 @@ public class DiamWebsocketController_ViewportRoutingTest
 
         @Primary
         @Bean
-        public PreRenderer testPreRenderer()
+        public TestPreRenderer testPreRenderer()
         {
-            return new PreRenderer()
-            {
-                @Override
-                public String getId()
-                {
-                    return "TestPreRenderer";
-                }
-
-                @Override
-                public void render(VDocument aResponse, RenderRequest aRequest)
-                {
-                    var layer = new AnnotationLayer();
-                    layer.setId(1l);
-                    aResponse.add(
-                            new VSpan(layer, new VID(1), new VRange(aRequest.getWindowBeginOffset(),
-                                    aRequest.getWindowEndOffset()), emptyMap()));
-                }
-            };
+            return new TestPreRenderer();
         }
     }
 }

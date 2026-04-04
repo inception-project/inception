@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Client, Stomp, StompSubscription, IFrame, frameCallbackType } from '@stomp/stompjs';
-import { DiamWebsocket, DiamWebsocketConnectOptions } from '@inception-project/inception-js-api';
+import { Client, Stomp, type StompSubscription, type IFrame, type frameCallbackType, type IMessage } from '@stomp/stompjs';
+import { type DiamWebsocket, type DiamWebsocketConnectOptions, type DiamWebsocketSubscribeOptions } from '@inception-project/inception-js-api';
 import * as jsonpatch from 'fast-json-patch';
 
 /**
@@ -25,19 +25,17 @@ import * as jsonpatch from 'fast-json-patch';
 export declare type dataCallback = (data: any) => void;
 
 export class DiamWebsocketImpl implements DiamWebsocket {
-    private stompClient: Client;
-    private webSocket: WebSocket;
-    private initSubscription: StompSubscription;
-    private updateSubscription: StompSubscription;
-    private diff: any;
+    private stompClient!: Client;
+    private initSubscription!: StompSubscription;
+    private updateSubscription!: StompSubscription;
 
     private data: any;
 
-    public onConnect: frameCallbackType;
+    public onConnect!: frameCallbackType;
 
     connect(options: string | DiamWebsocketConnectOptions) {
         if (this.stompClient) {
-            console.log('Already connected');
+            console.debug('Already connected');
             return;
         }
 
@@ -81,23 +79,36 @@ export class DiamWebsocketImpl implements DiamWebsocket {
         console.log('Additional details: ' + receipt.body);
     }
 
-    private handleProtocolError(msg) {
+    private handleProtocolError(msg: IMessage) {
         console.log(msg);
     }
 
-    subscribeToViewport(aViewportTopic: string, callback: dataCallback) {
+    subscribeToViewport(aViewportTopic: string, callback: dataCallback, options?: DiamWebsocketSubscribeOptions) {
+        let headers :Record<string, string> = {
+            'X-DIAM-FORMAT': 'compact_v2'
+        };
+
+        if (options) {
+            if (options.enableExtensions) {
+                headers['X-DIAM-EXTENSIONS'] = JSON.stringify(options.enableExtensions);
+            }
+            if (options.format) {
+                headers['X-DIAM-FORMAT'] = options.format;
+            }
+        }
+
         this.unsubscribeFromViewport();
+
         this.initSubscription = this.stompClient.subscribe('/app' + aViewportTopic, (msg) => {
             this.data = JSON.parse(msg.body);
-            this.diff = null;
             callback(this.data);
-        });
-        this.updateSubscription = this.stompClient.subscribe('/topic' + aViewportTopic, (msg) => {
+        }, headers);
+
+        this.updateSubscription = this.stompClient.subscribe('/user/queue' + aViewportTopic, (msg) => {
             const update = JSON.parse(msg.body);
             this.data = jsonpatch.applyPatch(this.data, update.diff).newDocument;
-            this.diff = update.diff;
             callback(this.data);
-        });
+        }, headers);
     }
 
     unsubscribeFromViewport() {

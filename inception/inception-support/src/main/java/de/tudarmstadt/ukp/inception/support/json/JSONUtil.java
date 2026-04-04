@@ -135,6 +135,15 @@ public class JSONUtil
         return aMapper.writeValueAsString(aObject);
     }
 
+    public static JsonNode fromJsonString(String aJSON) throws IOException
+    {
+        if (aJSON == null) {
+            return null;
+        }
+
+        return getObjectMapper().readTree(aJSON);
+    }
+
     public static <T> T fromJsonString(Class<T> aClass, String aJSON) throws IOException
     {
         if (aJSON == null) {
@@ -142,6 +151,21 @@ public class JSONUtil
         }
 
         return getObjectMapper().readValue(aJSON, aClass);
+    }
+
+    public static <T> T fromJsonString(Class<T> aClass, String aJSON, T aDefaultValue)
+        throws IOException
+    {
+        if (aJSON == null) {
+            return aDefaultValue;
+        }
+
+        try {
+            return getObjectMapper().readValue(aJSON, aClass);
+        }
+        catch (Exception e) {
+            return aDefaultValue;
+        }
     }
 
     public static <T> T fromValidatedJsonString(Class<T> aClass, String aJSON, Schema aSchema)
