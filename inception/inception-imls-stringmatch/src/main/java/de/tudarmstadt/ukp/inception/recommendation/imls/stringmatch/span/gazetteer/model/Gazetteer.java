@@ -19,7 +19,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model;
+package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.model;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
 
@@ -40,10 +40,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+// Historic typo in the table name - fix later
 @Entity
 @Table(name = "gazeteer", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "name", "recommender" }) })
-public class Gazeteer
+public class Gazetteer
     implements Serializable
 {
     private static final long serialVersionUID = 7310223920449064425L;
@@ -60,12 +61,12 @@ public class Gazeteer
     @JoinColumn(name = "recommender", nullable = false)
     private Recommender recommender;
 
-    public Gazeteer()
+    public Gazetteer()
     {
         // Required for JPA
     }
 
-    public Gazeteer(String aName, Recommender aRecommender)
+    public Gazetteer(String aName, Recommender aRecommender)
     {
         name = aName;
         recommender = aRecommender;
@@ -110,10 +111,10 @@ public class Gazeteer
     @Override
     public boolean equals(final Object other)
     {
-        if (!(other instanceof Gazeteer)) {
+        if (!(other instanceof Gazetteer)) {
             return false;
         }
-        Gazeteer castOther = (Gazeteer) other;
+        Gazetteer castOther = (Gazetteer) other;
         return new EqualsBuilder().append(name, castOther.name)
                 .append(recommender, castOther.recommender).isEquals();
     }
