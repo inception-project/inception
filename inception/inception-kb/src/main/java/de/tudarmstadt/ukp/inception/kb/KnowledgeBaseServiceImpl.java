@@ -509,6 +509,17 @@ public class KnowledgeBaseServiceImpl
         return countQuery.getSingleResult() > 1;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasEnabledKnowledgeBases(Project aProject)
+    {
+        var countQuery = entityManager.createQuery(
+                "SELECT COUNT(kb) FROM KnowledgeBase kb WHERE kb.project = :project AND kb.enabled = true",
+                Long.class);
+        countQuery.setParameter("project", aProject);
+        return countQuery.getSingleResult() > 0;
+    }
+
     @Transactional
     @Override
     public void removeKnowledgeBase(KnowledgeBase aKB)

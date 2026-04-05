@@ -67,7 +67,6 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.feature.SuggestionStatePanel;
 import de.tudarmstadt.ukp.inception.support.kendo.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.IriInfoBadge;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
@@ -141,7 +140,7 @@ public class ConceptFeatureEditor
         queue(dialog);
 
         queue(new LambdaAjaxLink("openBrowseDialog", this::actionOpenBrowseDialog)
-                .add(LambdaBehavior.visibleWhen(this::isBrowsingAllowed)));
+                .add(visibleWhen(this::isBrowsingAllowed)));
     }
 
     private boolean isBrowsingAllowed()
@@ -151,8 +150,13 @@ public class ConceptFeatureEditor
 
         // There is now KB selector in the browser yet, so we do not show it unless either the
         // feature is bound to a specific KB or there is only a single KB in the project.
-        if (traits.getRepositoryId() == null && knowledgeBaseService
-                .hasMoreThanOneEnabledKnowledgeBases(getModelObject().feature.getProject())) {
+        var project = getModelObject().feature.getProject();
+        if (traits.getRepositoryId() == null
+                && knowledgeBaseService.hasMoreThanOneEnabledKnowledgeBases(project)) {
+            return false;
+        }
+
+        if (!knowledgeBaseService.hasEnabledKnowledgeBases(project)) {
             return false;
         }
 
