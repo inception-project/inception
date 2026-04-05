@@ -408,8 +408,7 @@ public class ConceptLinkingServiceImpl
         var iriMatches = new LinkedHashSet<KBHandle>();
         if (aKB.isReadOnly() && !suffixSearch) {
             // We do not want to cache all kinds of almost empty results while the user is typing,
-            // so
-            // we do not enter this branch if we are in suffixSearch mode.
+            // so we do not enter this branch if we are in suffixSearch mode.
             iriMatches.addAll(kbService.listHandlesCaching(aKB, iriMatchBuilder, true));
         }
         else {
@@ -569,6 +568,20 @@ public class ConceptLinkingServiceImpl
         }
         else {
             knowledgeBases.addAll(kbService.getEnabledKnowledgeBases(aProject));
+        }
+
+        // If there are no knowledge bases at all but the user has entered a valid IRI
+        // then we still want to be able to accept it
+        if (knowledgeBases.isEmpty()) {
+            try {
+                var iri = new ParsedIRI(aQuery);
+                return asList(KBHandle.builder() //
+                        .withIdentifier(iri.toString()) //
+                        .build());
+            }
+            catch (URISyntaxException | NullPointerException e) {
+                // Ignore
+            }
         }
 
         // Query the knowledge bases for candidates
