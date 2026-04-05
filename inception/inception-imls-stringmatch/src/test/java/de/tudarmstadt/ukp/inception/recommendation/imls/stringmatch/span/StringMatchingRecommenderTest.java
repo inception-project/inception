@@ -64,7 +64,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBase
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.GazeteerEntry;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.model.GazetteerEntry;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
@@ -166,11 +166,11 @@ public class StringMatchingRecommenderTest
 
         RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
-        var gazeteer = asList( //
-                new GazeteerEntry("John Smith", "ORG"), //
-                new GazeteerEntry("Peter John", "LOC"));
+        var gazetteer = asList( //
+                new GazetteerEntry("John Smith", "ORG"), //
+                new GazetteerEntry("Peter John", "LOC"));
 
-        sut.pretrain(gazeteer, context);
+        sut.pretrain(gazetteer, context);
 
         sut.predict(new PredictionContext(context), cas);
 
@@ -196,9 +196,9 @@ public class StringMatchingRecommenderTest
 
         RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
-        var gazeteer = asList(new GazeteerEntry("Smith . Peter", "ORG"));
+        var gazetteer = asList(new GazetteerEntry("Smith . Peter", "ORG"));
 
-        sut.pretrain(gazeteer, context);
+        sut.pretrain(gazetteer, context);
 
         sut.predict(new PredictionContext(context), cas);
 
@@ -235,12 +235,12 @@ public class StringMatchingRecommenderTest
         var cas = casList.get(0);
         RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
-        var gazeteer = asList( //
-                new GazeteerEntry("Toyota", "ORG"), //
-                new GazeteerEntry("Deutschland", "LOC"), //
-                new GazeteerEntry("Deutschland", "GPE"));
+        var gazetteer = asList( //
+                new GazetteerEntry("Toyota", "ORG"), //
+                new GazetteerEntry("Deutschland", "LOC"), //
+                new GazetteerEntry("Deutschland", "GPE"));
 
-        sut.pretrain(gazeteer, context);
+        sut.pretrain(gazetteer, context);
 
         sut.train(context, emptyList());
 
@@ -268,12 +268,12 @@ public class StringMatchingRecommenderTest
         var cas = casList.get(0);
         RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
-        var gazeteer = asList( //
-                new GazeteerEntry("Toyota", "ORG"), //
-                new GazeteerEntry("deutschland", "LOC"), //
-                new GazeteerEntry("DEUTSCHLAND", "GPE"));
+        var gazetteer = asList( //
+                new GazetteerEntry("Toyota", "ORG"), //
+                new GazetteerEntry("deutschland", "LOC"), //
+                new GazetteerEntry("DEUTSCHLAND", "GPE"));
 
-        sut.pretrain(gazeteer, context);
+        sut.pretrain(gazetteer, context);
 
         sut.train(context, emptyList());
 

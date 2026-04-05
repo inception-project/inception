@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.GazetteerService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.settings.StringMatchingRecommenderTraitsEditor;
 
 /**
@@ -50,11 +50,11 @@ public class StringMatchingRecommenderFactory
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender";
 
-    private final GazeteerService gazeteerService;
+    private final GazetteerService gazetteerService;
 
-    public StringMatchingRecommenderFactory(GazeteerService aGazeteerService)
+    public StringMatchingRecommenderFactory(GazetteerService aGazetteerService)
     {
-        gazeteerService = aGazeteerService;
+        gazetteerService = aGazetteerService;
     }
 
     @Override
@@ -67,7 +67,7 @@ public class StringMatchingRecommenderFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         var traits = readTraits(aRecommender);
-        return new StringMatchingRecommender(aRecommender, traits, gazeteerService);
+        return new StringMatchingRecommender(aRecommender, traits, gazetteerService);
     }
 
     @Override

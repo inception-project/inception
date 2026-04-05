@@ -54,14 +54,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerService;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.exporter.GazeteerExporter;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.Gazeteer;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.GazetteerService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.exporter.GazetteerExporter;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.model.Gazetteer;
 
 @ExtendWith(MockitoExtension.class)
-public class GazeteerExporterTest
+public class GazetteerExporterTest
 {
-    private @Mock GazeteerService gazeteerService;
+    private @Mock GazetteerService gazetteerService;
     private @Mock RecommendationService recommendationService;
 
     private Project sourceProject;
@@ -76,7 +76,7 @@ public class GazeteerExporterTest
 
     public @TempDir File temporaryFolder;
 
-    private GazeteerExporter sut;
+    private GazetteerExporter sut;
 
     @BeforeEach
     public void setUp() throws Exception
@@ -105,10 +105,10 @@ public class GazeteerExporterTest
         targetRecommender = new Recommender("rec1", targetLayer);
         targetRecommender.setFeature(targetFeature);
 
-        when(gazeteerService.listGazeteers(sourceRecommender)).thenReturn(gazeteers());
+        when(gazetteerService.listGazetteers(sourceRecommender)).thenReturn(gazetteers());
 
-        when(gazeteerService.getGazeteerFile(Mockito.any())).thenAnswer(invocation -> {
-            Gazeteer gaz = invocation.getArgument(0);
+        when(gazetteerService.getGazetteerFile(Mockito.any())).thenAnswer(invocation -> {
+            Gazetteer gaz = invocation.getArgument(0);
             var gazFile = temporaryFolder.toPath().resolve(gaz.getId() + ".txt").toFile();
             var data = "John\tVAL" + gaz.getId();
             FileUtils.writeStringToFile(gazFile, data, UTF_8);
@@ -121,7 +121,7 @@ public class GazeteerExporterTest
         when(recommendationService.getRecommender(any(), any()))
                 .thenReturn(Optional.of(targetRecommender));
 
-        sut = new GazeteerExporter(recommendationService, gazeteerService);
+        sut = new GazetteerExporter(recommendationService, gazetteerService);
     }
 
     @Test
@@ -136,11 +136,11 @@ public class GazeteerExporterTest
         sut.exportData(exportRequest, monitor, exportedProject, stage);
 
         // Import the project again
-        var gazeteerCaptor = ArgumentCaptor.forClass(Gazeteer.class);
-        doNothing().when(gazeteerService).createOrUpdateGazeteer(gazeteerCaptor.capture());
+        var gazetteerCaptor = ArgumentCaptor.forClass(Gazetteer.class);
+        doNothing().when(gazetteerService).createOrUpdateGazetteer(gazetteerCaptor.capture());
 
-        var gazeteerFileCaptor = ArgumentCaptor.forClass(Gazeteer.class);
-        doNothing().when(gazeteerService).importGazeteerFile(gazeteerFileCaptor.capture(), any());
+        var gazetteerFileCaptor = ArgumentCaptor.forClass(Gazetteer.class);
+        doNothing().when(gazetteerService).importGazetteerFile(gazetteerFileCaptor.capture(), any());
 
         var importRequest = ProjectImportRequest.builder() //
                 .withCreateMissingUsers(true) //
@@ -150,21 +150,21 @@ public class GazeteerExporterTest
 
         sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
-        assertThat(gazeteerCaptor.getAllValues())
+        assertThat(gazetteerCaptor.getAllValues())
                 .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id", "project")
-                .containsExactlyInAnyOrderElementsOf(gazeteers());
+                .containsExactlyInAnyOrderElementsOf(gazetteers());
 
-        assertThat(gazeteerFileCaptor.getAllValues())
+        assertThat(gazetteerFileCaptor.getAllValues())
                 .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id", "project")
-                .containsExactlyInAnyOrderElementsOf(gazeteers());
+                .containsExactlyInAnyOrderElementsOf(gazetteers());
     }
 
-    private List<Gazeteer> gazeteers() throws Exception
+    private List<Gazetteer> gazetteers() throws Exception
     {
-        var gaz1 = new Gazeteer("gaz1", sourceRecommender);
+        var gaz1 = new Gazetteer("gaz1", sourceRecommender);
         gaz1.setId(1l);
 
-        var gaz2 = new Gazeteer("gaz2", sourceRecommender);
+        var gaz2 = new Gazetteer("gaz2", sourceRecommender);
         gaz2.setId(2l);
 
         return asList(gaz1, gaz2);

@@ -65,8 +65,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerService;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.GazeteerEntry;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.GazetteerService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.model.GazetteerEntry;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.text.KeySanitizerFactory;
 import de.tudarmstadt.ukp.inception.support.text.Trie;
@@ -88,7 +88,7 @@ public class StringMatchingRecommender
 
     private final StringMatchingRecommenderTraits traits;
 
-    private final GazeteerService gazeteerService;
+    private final GazetteerService gazetteerService;
 
     private final KeySanitizerFactory keySanitizerFactory;
 
@@ -102,12 +102,12 @@ public class StringMatchingRecommender
     }
 
     public StringMatchingRecommender(Recommender aRecommender,
-            StringMatchingRecommenderTraits aTraits, GazeteerService aGazeteerService)
+            StringMatchingRecommenderTraits aTraits, GazetteerService aGazetteerService)
     {
         super(aRecommender);
 
         traits = aTraits;
-        gazeteerService = aGazeteerService;
+        gazetteerService = aGazetteerService;
         keySanitizerFactory = WhitespaceNormalizingSanitizer.factory();
 
         if (traits != null && traits.getExcludePattern() != null) {
@@ -151,7 +151,7 @@ public class StringMatchingRecommender
         out.flush();
     }
 
-    public void pretrain(List<GazeteerEntry> aData, RecommenderContext aContext)
+    public void pretrain(List<GazetteerEntry> aData, RecommenderContext aContext)
     {
         var dict = aContext.get(KEY_MODEL).orElseGet(this::createTrie);
 
@@ -161,7 +161,7 @@ public class StringMatchingRecommender
             }
 
             aContext.log(LogMessage.info(getRecommender().getName(),
-                    "Loaded [%d] entries from gazeteer", aData.size()));
+                    "Loaded [%d] entries from gazetteer", aData.size()));
         }
 
         aContext.put(KEY_MODEL, dict);
@@ -180,16 +180,16 @@ public class StringMatchingRecommender
                     "Ignoring bad exclude pattern: %s", excludePatternError));
         }
 
-        // Pre-load the gazeteers into the model
-        if (gazeteerService != null) {
-            for (var gaz : gazeteerService.listGazeteers(recommender)) {
+        // Pre-load the gazetteers into the model
+        if (gazetteerService != null) {
+            for (var gaz : gazetteerService.listGazetteers(recommender)) {
                 try {
-                    pretrain(gazeteerService.readGazeteerFile(gaz), aContext);
+                    pretrain(gazetteerService.readGazetteerFile(gaz), aContext);
                 }
                 catch (IOException e) {
                     aContext.log(LogMessage.error(getRecommender().getName(),
-                            "Unable to load gazeteer [%s]: %s", gaz.getName(), e.getMessage()));
-                    LOG.error("Unable to load gazeteer [{}] for recommender {} in project {}",
+                            "Unable to load gazetteer [%s]: %s", gaz.getName(), e.getMessage()));
+                    LOG.error("Unable to load gazetteer [{}] for recommender {} in project {}",
                             gaz.getName(), gaz.getRecommender(), gaz.getRecommender().getProject(),
                             e);
                 }
@@ -351,10 +351,10 @@ public class StringMatchingRecommender
         final var minTrainingSetSize = 1;
         final var minTestSetSize = 1;
         if (trainingSetSize < minTrainingSetSize || testSetSize < minTestSetSize) {
-            if ((getRecommender().getThreshold() <= 0.0d) || (gazeteerService != null
-                    && !gazeteerService.listGazeteers(recommender).isEmpty())) {
+            if ((getRecommender().getThreshold() <= 0.0d) || (gazetteerService != null
+                    && !gazetteerService.listGazetteers(recommender).isEmpty())) {
                 // We cannot evaluate, but the user expects to see immediate results from the
-                // gazeteer - so we return with an "unknown" result but without marking it as
+                // gazetteer - so we return with an "unknown" result but without marking it as
                 // skipped so that the selection task allows the recommender to activate.
                 return new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
                         SAMPLE_UNIT.getSimpleName());

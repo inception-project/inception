@@ -19,18 +19,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model;
+package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.model;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-public class GazeteerEntry
+public class GazetteerEntry
 {
     public final String text;
     public final String label;
 
-    public GazeteerEntry(String aText, String aLabel)
+    public GazetteerEntry(String aText, String aLabel)
     {
         text = aText;
         label = aLabel;
@@ -39,10 +39,10 @@ public class GazeteerEntry
     @Override
     public boolean equals(final Object other)
     {
-        if (!(other instanceof GazeteerEntry)) {
+        if (!(other instanceof GazetteerEntry)) {
             return false;
         }
-        GazeteerEntry castOther = (GazeteerEntry) other;
+        GazetteerEntry castOther = (GazetteerEntry) other;
         return new EqualsBuilder() //
                 .append(text, castOther.text) //
                 .append(label, castOther.label) //

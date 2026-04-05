@@ -19,7 +19,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer;
+package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer;
 
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static java.lang.String.join;
@@ -45,18 +45,18 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.Gazeteer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.GazeteerEntry;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.model.Gazetteer;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.model.GazetteerEntry;
 import jakarta.persistence.EntityManager;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link StringMatchingRecommenderAutoConfiguration#gazeteerService}.
+ * {@link StringMatchingRecommenderAutoConfiguration#gazetteerService}.
  * </p>
  */
-public class GazeteerServiceImpl
-    implements GazeteerService
+public class GazetteerServiceImpl
+    implements GazetteerService
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -65,7 +65,7 @@ public class GazeteerServiceImpl
     private final RepositoryProperties repositoryProperties;
 
     @Autowired
-    public GazeteerServiceImpl(RepositoryProperties aRepositoryProperties,
+    public GazetteerServiceImpl(RepositoryProperties aRepositoryProperties,
             EntityManager aEntityManager)
     {
         repositoryProperties = aRepositoryProperties;
@@ -74,45 +74,45 @@ public class GazeteerServiceImpl
 
     @Override
     @Transactional
-    public List<Gazeteer> listGazeteers(Recommender aRecommender)
+    public List<Gazetteer> listGazetteers(Recommender aRecommender)
     {
         var query = join("\n", //
-                "FROM Gazeteer", //
+                "FROM Gazetteer", //
                 "WHERE recommender = :recommender ", //
                 "ORDER BY name ASC");
 
-        return entityManager.createQuery(query, Gazeteer.class) //
+        return entityManager.createQuery(query, Gazetteer.class) //
                 .setParameter("recommender", aRecommender) //
                 .getResultList();
     }
 
     @Override
     @Transactional
-    public void createOrUpdateGazeteer(Gazeteer aGazeteer)
+    public void createOrUpdateGazetteer(Gazetteer aGazetteer)
     {
-        try (var logCtx = withProjectLogger(aGazeteer.getRecommender().getProject())) {
-            if (aGazeteer.getId() == null) {
-                entityManager.persist(aGazeteer);
+        try (var logCtx = withProjectLogger(aGazetteer.getRecommender().getProject())) {
+            if (aGazetteer.getId() == null) {
+                entityManager.persist(aGazetteer);
 
-                LOG.info("Created gazeteer [{}] for recommender {} in project {}",
-                        aGazeteer.getName(), aGazeteer.getRecommender(),
-                        aGazeteer.getRecommender().getProject());
+                LOG.info("Created gazetteer [{}] for recommender {} in project {}",
+                        aGazetteer.getName(), aGazetteer.getRecommender(),
+                        aGazetteer.getRecommender().getProject());
             }
             else {
-                entityManager.merge(aGazeteer);
+                entityManager.merge(aGazetteer);
 
-                LOG.info("Updated gazeteer [{}] for recommender {} in project {}",
-                        aGazeteer.getName(), aGazeteer.getRecommender(),
-                        aGazeteer.getRecommender().getProject());
+                LOG.info("Updated gazetteer [{}] for recommender {} in project {}",
+                        aGazetteer.getName(), aGazetteer.getRecommender(),
+                        aGazetteer.getRecommender().getProject());
             }
         }
     }
 
     @Override
     @Transactional
-    public void importGazeteerFile(Gazeteer aGazeteer, InputStream aStream) throws IOException
+    public void importGazetteerFile(Gazetteer aGazetteer, InputStream aStream) throws IOException
     {
-        var gazFile = getGazeteerFile(aGazeteer);
+        var gazFile = getGazetteerFile(aGazetteer);
 
         if (!gazFile.getParentFile().exists()) {
             gazFile.getParentFile().mkdirs();
@@ -124,57 +124,58 @@ public class GazeteerServiceImpl
     }
 
     @Override
-    public File getGazeteerFile(Gazeteer aGazeteer) throws IOException
+    public File getGazetteerFile(Gazetteer aGazetteer) throws IOException
     {
         return repositoryProperties.getPath().toPath() //
                 .resolve("project") //
-                .resolve(String.valueOf(aGazeteer.getRecommender().getProject().getId())) //
-                .resolve("gazeteer") //
-                .resolve(aGazeteer.getId() + ".txt") //
+                .resolve(String.valueOf(aGazetteer.getRecommender().getProject().getId())) //
+                .resolve("gazeteer") // historic folder name typo - fix later
+                .resolve(aGazetteer.getId() + ".txt") //
                 .toFile();
     }
 
     @Override
     @Transactional
-    public void deleteGazeteers(Gazeteer aGazeteer) throws IOException
+    public void deleteGazetteers(Gazetteer aGazetteer) throws IOException
     {
-        try (var logCtx = withProjectLogger(aGazeteer.getRecommender().getProject())) {
-            entityManager.remove(entityManager.contains(aGazeteer) //
-                    ? aGazeteer //
-                    : entityManager.merge(aGazeteer));
+        try (var logCtx = withProjectLogger(aGazetteer.getRecommender().getProject())) {
+            entityManager.remove(entityManager.contains(aGazetteer) //
+                    ? aGazetteer //
+                    : entityManager.merge(aGazetteer));
 
-            var gaz = getGazeteerFile(aGazeteer);
+            var gaz = getGazetteerFile(aGazetteer);
             if (gaz.exists()) {
                 gaz.delete();
             }
 
-            LOG.info("Removed gazeteer [{}] for recommender {} in project {}", aGazeteer.getName(),
-                    aGazeteer.getRecommender(), aGazeteer.getRecommender().getProject());
+            LOG.info("Removed gazetteer [{}] for recommender {} in project {}",
+                    aGazetteer.getName(), aGazetteer.getRecommender(),
+                    aGazetteer.getRecommender().getProject());
         }
     }
 
     @Override
-    public List<GazeteerEntry> readGazeteerFile(Gazeteer aGaz) throws IOException
+    public List<GazetteerEntry> readGazetteerFile(Gazetteer aGaz) throws IOException
     {
-        var file = getGazeteerFile(aGaz);
+        var file = getGazetteerFile(aGaz);
 
-        var data = new ArrayList<GazeteerEntry>();
+        var data = new ArrayList<GazetteerEntry>();
 
         try (var is = new FileInputStream(file)) {
-            parseGazeteer(aGaz, is, data);
+            parseGazetteer(aGaz, is, data);
         }
 
         return data;
     }
 
-    public void parseGazeteer(Gazeteer aGaz, InputStream aStream, List<GazeteerEntry> aTarget)
+    public void parseGazetteer(Gazetteer aGaz, InputStream aStream, List<GazetteerEntry> aTarget)
         throws IOException
     {
         int lineNumber = 0;
         var i = IOUtils.lineIterator(aStream, UTF_8);
         while (i.hasNext()) {
             lineNumber++;
-            var line = i.nextLine().trim();
+            var line = i.next().trim();
 
             if (line.isEmpty() || line.startsWith("#")) {
                 // Ignore comment lines and empty lines
@@ -186,7 +187,7 @@ public class GazeteerServiceImpl
                 var text = trimToNull(fields[0]);
                 var label = trimToNull(fields[1]);
                 if (label != null && text != null) {
-                    aTarget.add(new GazeteerEntry(text, label));
+                    aTarget.add(new GazetteerEntry(text, label));
                 }
             }
             else {
@@ -198,16 +199,17 @@ public class GazeteerServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public boolean existsGazeteer(Recommender aRecommender, String aName)
+    public boolean existsGazetteer(Recommender aRecommender, String aName)
     {
         Validate.notNull(aRecommender, "Recommender must be specified");
-        Validate.notNull(aName, "Gazeteer name must be specified");
+        Validate.notNull(aName, "Gazetteer name must be specified");
 
         var query = "SELECT COUNT(*) " + //
-                "FROM Gazeteer " + //
+                "FROM Gazetteer " + //
                 "WHERE recommender = :recommender AND name = :name";
         var count = entityManager.createQuery(query, Long.class)
-                .setParameter("recommender", aRecommender).setParameter("name", aName)
+                .setParameter("recommender", aRecommender) //
+                .setParameter("name", aName) //
                 .getSingleResult();
 
         return count > 0;

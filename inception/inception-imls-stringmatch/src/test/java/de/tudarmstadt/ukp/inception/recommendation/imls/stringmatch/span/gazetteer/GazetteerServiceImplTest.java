@@ -19,7 +19,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer;
+package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
@@ -33,9 +33,7 @@ import static org.assertj.core.api.Assertions.contentOf;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,8 +54,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.Gazeteer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.GazeteerEntry;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.model.Gazetteer;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.model.GazetteerEntry;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
 import jakarta.persistence.EntityManager;
@@ -68,7 +66,7 @@ import jakarta.persistence.EntityManager;
                 "spring.main.banner-mode=off" })
 @Transactional
 @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception", "de.tudarmstadt.ukp.clarin.webanno" })
-public class GazeteerServiceImplTest
+public class GazetteerServiceImplTest
 {
     @TempDir
     public File temporaryFolder;
@@ -76,7 +74,7 @@ public class GazeteerServiceImplTest
     @Autowired
     private TestEntityManager testEntityManager;
 
-    private GazeteerServiceImpl sut;
+    private GazetteerServiceImpl sut;
 
     private Project project;
     private AnnotationLayer spanLayer;
@@ -92,7 +90,7 @@ public class GazeteerServiceImplTest
         repoProps.setPath(temporaryFolder);
         MDC.put(Logging.KEY_REPOSITORY_PATH, repoProps.getPath().toString());
 
-        sut = new GazeteerServiceImpl(repoProps, em);
+        sut = new GazetteerServiceImpl(repoProps, em);
 
         project = new Project();
         project.setName("test");
@@ -117,120 +115,120 @@ public class GazeteerServiceImplTest
     }
 
     @Test
-    public void thatCreateListAndDeleteGazeteerWorks() throws Exception
+    public void thatCreateListAndDeleteGazetteerWorks() throws Exception
     {
-        // Add first gazeteer
-        Gazeteer gaz1 = new Gazeteer("gaz1", rec1);
-        sut.createOrUpdateGazeteer(gaz1);
+        // Add first gazetteer
+        Gazetteer gaz1 = new Gazetteer("gaz1", rec1);
+        sut.createOrUpdateGazetteer(gaz1);
 
         assertThat(gaz1.getId())
                 .describedAs("After saving the gazetter to the DB, the ID should be set")
                 .isNotNull();
-        assertThat(sut.existsGazeteer(gaz1.getRecommender(), gaz1.getName()))
-                .describedAs("Gazeteers can be found using existsGazeteer").isTrue();
-        assertThat(sut.listGazeteers(rec1))
-                .describedAs("All gazeteers that have been created are returned by listGazeteers")
+        assertThat(sut.existsGazetteer(gaz1.getRecommender(), gaz1.getName()))
+                .describedAs("Gazetteers can be found using existsGazetteer").isTrue();
+        assertThat(sut.listGazetteers(rec1))
+                .describedAs("All gazetteers that have been created are returned by listGazetteers")
                 .containsExactly(gaz1);
 
-        // Add second gazeteer
-        Gazeteer gaz2 = new Gazeteer("gaz2", rec1);
-        sut.createOrUpdateGazeteer(gaz2);
+        // Add second gazetteer
+        Gazetteer gaz2 = new Gazetteer("gaz2", rec1);
+        sut.createOrUpdateGazetteer(gaz2);
 
         assertThat(gaz2.getId())
                 .describedAs("After saving the gazetter to the DB, the ID should be set")
                 .isNotNull();
-        assertThat(sut.existsGazeteer(gaz2.getRecommender(), gaz2.getName()))
-                .describedAs("Gazeteers can be found using existsGazeteer").isTrue();
-        assertThat(sut.listGazeteers(rec1))
-                .describedAs("All gazeteers that have been created are returned by listGazeteers")
+        assertThat(sut.existsGazetteer(gaz2.getRecommender(), gaz2.getName()))
+                .describedAs("Gazetteers can be found using existsGazetteer").isTrue();
+        assertThat(sut.listGazetteers(rec1))
+                .describedAs("All gazetteers that have been created are returned by listGazetteers")
                 .containsExactly(gaz1, gaz2);
 
-        // Remove first gazeteer
-        sut.deleteGazeteers(gaz1);
+        // Remove first gazetteer
+        sut.deleteGazetteers(gaz1);
 
-        assertThat(sut.listGazeteers(rec1))
-                .describedAs("A deleted gazeteer no longer returned by listGazeteers")
+        assertThat(sut.listGazetteers(rec1))
+                .describedAs("A deleted gazetteer no longer returned by listGazetteers")
                 .containsExactly(gaz2);
     }
 
     @Test
-    public void thatUpdatingGazeteerWorks() throws Exception
+    public void thatUpdatingGazetteerWorks() throws Exception
     {
-        Gazeteer gaz = new Gazeteer("foo", rec1);
-        sut.createOrUpdateGazeteer(gaz);
+        Gazetteer gaz = new Gazetteer("foo", rec1);
+        sut.createOrUpdateGazetteer(gaz);
 
-        assertThat(sut.listGazeteers(rec1))
-                .describedAs("Name of the gazeteer has the initial value")
-                .extracting(Gazeteer::getName).containsExactly("foo");
+        assertThat(sut.listGazetteers(rec1))
+                .describedAs("Name of the gazetteer has the initial value")
+                .extracting(Gazetteer::getName).containsExactly("foo");
 
         gaz.setName("bar");
-        sut.createOrUpdateGazeteer(gaz);
+        sut.createOrUpdateGazetteer(gaz);
 
-        assertThat(sut.listGazeteers(rec1))
-                .describedAs("Name of the gazeteer has the updated value")
-                .extracting(Gazeteer::getName).containsExactly("bar");
+        assertThat(sut.listGazetteers(rec1))
+                .describedAs("Name of the gazetteer has the updated value")
+                .extracting(Gazetteer::getName).containsExactly("bar");
     }
 
     @Test
-    public void thatImportGazeteerWorks() throws Exception
+    public void thatImportGazetteerWorks() throws Exception
     {
-        Gazeteer gaz = new Gazeteer("gaz", rec1);
-        sut.createOrUpdateGazeteer(gaz);
+        var gaz = new Gazetteer("gaz", rec1);
+        sut.createOrUpdateGazetteer(gaz);
 
-        File input = new File("src/test/resources/gazeteers/gaz1.txt");
+        var input = new File("src/test/resources/gazetteers/gaz1.txt");
 
         // Check that import works
-        try (InputStream is = new FileInputStream(input)) {
-            sut.importGazeteerFile(gaz, is);
+        try (var is = new FileInputStream(input)) {
+            sut.importGazetteerFile(gaz, is);
         }
 
-        File gazFile = sut.getGazeteerFile(gaz);
-        assertThat(gazFile.exists()).describedAs("Gazeteer data has been imported").isTrue();
-        assertThat(contentOf(sut.getGazeteerFile(gaz)))
+        var gazFile = sut.getGazetteerFile(gaz);
+        assertThat(gazFile.exists()).describedAs("Gazetteer data has been imported").isTrue();
+        assertThat(contentOf(sut.getGazetteerFile(gaz)))
                 .isEqualToNormalizingNewlines(contentOf(input));
 
         // Check that imported file matches the expectations
-        List<GazeteerEntry> gazData = sut.readGazeteerFile(gaz);
-        assertThat(gazData).containsExactlyInAnyOrder(new GazeteerEntry("John", "PER"),
-                new GazeteerEntry("London", "LOC"), new GazeteerEntry("London", "GPE"),
-                new GazeteerEntry("ACME", "ORG"));
+        var gazData = sut.readGazetteerFile(gaz);
+        assertThat(gazData).containsExactlyInAnyOrder(new GazetteerEntry("John", "PER"),
+                new GazetteerEntry("London", "LOC"), new GazetteerEntry("London", "GPE"),
+                new GazetteerEntry("ACME", "ORG"));
 
-        // Check that gazeteer file has been deleted along with the entity
-        sut.deleteGazeteers(gaz);
+        // Check that gazetteer file has been deleted along with the entity
+        sut.deleteGazetteers(gaz);
 
-        assertThat(gazFile.exists()).describedAs("Gazeteer data has been deleted").isFalse();
+        assertThat(gazFile.exists()).describedAs("Gazetteer data has been deleted").isFalse();
     }
 
     @Test
-    public void thatGazeteerCommentLineIsIgnored() throws Exception
+    public void thatGazetteerCommentLineIsIgnored() throws Exception
     {
-        Gazeteer gaz = new Gazeteer("gaz", rec1);
+        var gaz = new Gazetteer("gaz", rec1);
 
-        String gazeteer = String.join("\n", "# This is a comment", "John\tPER");
+        var gazetteer = String.join("\n", "# This is a comment", "John\tPER");
 
-        List<GazeteerEntry> data = new ArrayList<>();
-        sut.parseGazeteer(gaz, toInputStream(gazeteer, UTF_8), data);
+        var data = new ArrayList<GazetteerEntry>();
+        sut.parseGazetteer(gaz, toInputStream(gazetteer, UTF_8), data);
 
-        assertThat(data).containsExactlyInAnyOrder(new GazeteerEntry("John", "PER"));
+        assertThat(data).containsExactlyInAnyOrder(new GazetteerEntry("John", "PER"));
     }
 
     @Test
-    public void thatGazeteerWithExtraColumnsCanBeRead() throws Exception
+    public void thatGazetteerWithExtraColumnsCanBeRead() throws Exception
     {
-        Gazeteer gaz = new Gazeteer("gaz", rec1);
+        var gaz = new Gazetteer("gaz", rec1);
 
-        List<GazeteerEntry> data = new ArrayList<>();
+        var data = new ArrayList<GazetteerEntry>();
 
-        String gazeteer1 = String.join("\n", "Bill\tPER", "John PER");
+        var gazetteer1 = String.join("\n", "Bill\tPER", "John PER");
 
         assertThatExceptionOfType(IOException.class)
                 .describedAs("Line without tab generated exception")
-                .isThrownBy(() -> sut.parseGazeteer(gaz, toInputStream(gazeteer1, UTF_8), data))
+                .isThrownBy(() -> sut.parseGazetteer(gaz, toInputStream(gazetteer1, UTF_8), data))
                 .withMessageContaining("Unable to parse line 2");
 
-        String gazeteer2 = "Bill\tPER\t40";
+        var gazetteer2 = "Bill\tPER\t40";
 
-        sut.parseGazeteer(gaz, toInputStream(gazeteer2, UTF_8), data);
+        sut.parseGazetteer(gaz, toInputStream(gazetteer2, UTF_8), data);
     }
 
     @SpringBootConfiguration

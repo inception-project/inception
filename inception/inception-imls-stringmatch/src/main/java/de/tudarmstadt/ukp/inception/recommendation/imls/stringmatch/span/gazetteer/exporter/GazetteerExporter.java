@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.exporter;
+package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.exporter;
 
+import static java.nio.file.Files.newInputStream;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipFile;
@@ -39,33 +39,35 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.exporter.RecommenderExporter;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerService;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.Gazeteer;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.GazetteerService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.model.Gazetteer;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link StringMatchingRecommenderAutoConfiguration#gazeteerExporter}.
+ * {@link StringMatchingRecommenderAutoConfiguration#gazetteerExporter}.
  * </p>
  */
-public class GazeteerExporter
+public class GazetteerExporter
     implements ProjectExporter
 {
-    private static final Logger LOG = LoggerFactory.getLogger(GazeteerExporter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GazetteerExporter.class);
 
+    // Historic typo in the key name - fix later
     private static final String KEY = "gazeteers";
 
-    private static final String GAZETEERS_FOLDER = "gazeteers";
+    // Historic typo in the folder name - fix later
+    private static final String GAZETTEERS_FOLDER = "gazeteers";
 
     private final RecommendationService recommendationService;
-    private final GazeteerService gazeteerService;
+    private final GazetteerService gazetteerService;
 
     @Autowired
-    public GazeteerExporter(RecommendationService aRecommendationService,
-            GazeteerService aGazeteerService)
+    public GazetteerExporter(RecommendationService aRecommendationService,
+            GazetteerService aGazetteerService)
     {
         recommendationService = aRecommendationService;
-        gazeteerService = aGazeteerService;
+        gazetteerService = aGazetteerService;
     }
 
     @Override
@@ -81,28 +83,28 @@ public class GazeteerExporter
     {
         var project = aRequest.getProject();
 
-        var exportedGazeteers = new ArrayList<ExportedGazeteer>();
+        var exportedGazetteers = new ArrayList<ExportedGazetteer>();
         for (var recommender : recommendationService.listRecommenders(project)) {
-            for (var gazeteer : gazeteerService.listGazeteers(recommender)) {
-                var exportedGazeteer = new ExportedGazeteer();
-                exportedGazeteer.setId(gazeteer.getId());
-                exportedGazeteer.setName(gazeteer.getName());
-                exportedGazeteer.setRecommender(recommender.getName());
-                exportedGazeteers.add(exportedGazeteer);
+            for (var gazetteer : gazetteerService.listGazetteers(recommender)) {
+                var exportedGazetteer = new ExportedGazetteer();
+                exportedGazetteer.setId(gazetteer.getId());
+                exportedGazetteer.setName(gazetteer.getName());
+                exportedGazetteer.setRecommender(recommender.getName());
+                exportedGazetteers.add(exportedGazetteer);
 
                 ProjectExporter.writeEntry(aStage,
-                        GAZETEERS_FOLDER + "/" + gazeteer.getId() + ".txt", os -> {
-                            try (var is = Files.newInputStream(
-                                    gazeteerService.getGazeteerFile(gazeteer).toPath())) {
+                        GAZETTEERS_FOLDER + "/" + gazetteer.getId() + ".txt", os -> {
+                            try (var is = newInputStream(
+                                    gazetteerService.getGazetteerFile(gazetteer).toPath())) {
                                 is.transferTo(os);
                             }
                         });
             }
         }
 
-        aExProject.setProperty(KEY, exportedGazeteers);
+        aExProject.setProperty(KEY, exportedGazetteers);
 
-        LOG.info("Exported [{}] gazeteers for project [{}]", exportedGazeteers.size(),
+        LOG.info("Exported [{}] gazetteers for project [{}]", exportedGazetteers.size(),
                 project.getName());
     }
 
@@ -111,23 +113,23 @@ public class GazeteerExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        var gazeteers = aExProject.getArrayProperty(KEY, ExportedGazeteer.class);
+        var gazetteers = aExProject.getArrayProperty(KEY, ExportedGazetteer.class);
 
-        for (var exportedGazeteer : gazeteers) {
+        for (var exportedGazetteer : gazetteers) {
             var recommender = recommendationService
-                    .getRecommender(aProject, exportedGazeteer.getRecommender()).get();
+                    .getRecommender(aProject, exportedGazetteer.getRecommender()).get();
 
-            var gazeteer = new Gazeteer();
-            gazeteer.setName(exportedGazeteer.getName());
-            gazeteer.setRecommender(recommender);
-            gazeteerService.createOrUpdateGazeteer(gazeteer);
+            var gazetteer = new Gazetteer();
+            gazetteer.setName(exportedGazetteer.getName());
+            gazetteer.setRecommender(recommender);
+            gazetteerService.createOrUpdateGazetteer(gazetteer);
 
-            var entry = aZip.getEntry(GAZETEERS_FOLDER + "/" + exportedGazeteer.getId() + ".txt");
+            var entry = aZip.getEntry(GAZETTEERS_FOLDER + "/" + exportedGazetteer.getId() + ".txt");
             try (var is = aZip.getInputStream(entry)) {
-                gazeteerService.importGazeteerFile(gazeteer, is);
+                gazetteerService.importGazetteerFile(gazetteer, is);
             }
         }
 
-        LOG.info("Imported [{}] gazeteeres for project [{}]", gazeteers.length, aProject.getName());
+        LOG.info("Imported [{}] gazetteers for project [{}]", gazetteers.length, aProject.getName());
     }
 }
