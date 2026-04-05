@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
 
@@ -113,8 +114,11 @@ public class CurationSidebarRenderer
         var project = aRequest.getProject();
         var state = aRequest.getState();
 
-        // do not show predictions on the decicated curation page
         if (state != null && state.getMode() != ANNOTATION) {
+            return false;
+        }
+
+        if (!aRequest.getEnabledExtensions().contains(CurationEditorExtension.EXTENSION_ID)) {
             return false;
         }
 

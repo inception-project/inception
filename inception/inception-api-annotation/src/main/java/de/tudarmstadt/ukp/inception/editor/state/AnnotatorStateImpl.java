@@ -19,16 +19,19 @@ package de.tudarmstadt.ukp.inception.editor.state;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import org.apache.uima.cas.CAS;
@@ -167,6 +170,8 @@ public class AnnotatorStateImpl
      */
     @Deprecated
     private Mode mode;
+
+    private final Set<String> enabledExtensions = new HashSet<>();
 
     /**
      * The previously selected {@link TagSet} and {@link Tag} for a span/Arc annotation so as to
@@ -515,6 +520,30 @@ public class AnnotatorStateImpl
     public Mode getMode()
     {
         return mode;
+    }
+
+    @Override
+    public void enableExtension(String aExtension)
+    {
+        enabledExtensions.add(aExtension);
+    }
+
+    @Override
+    public void disableExtension(String aExtension)
+    {
+        enabledExtensions.remove(aExtension);
+    }
+
+    @Override
+    public boolean isExtensionEnabled(String aExtension)
+    {
+        return enabledExtensions.contains(aExtension);
+    }
+
+    @Override
+    public Set<String> getEnabledExtensions()
+    {
+        return unmodifiableSet(enabledExtensions);
     }
 
     @Override
