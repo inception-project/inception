@@ -26,7 +26,6 @@ import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -132,7 +131,7 @@ public abstract class ConceptFeatureEditor_ImplBase
             var repoId = traits.getRepositoryId();
             // Check if kb is actually enabled
             if (!(repoId == null || kbService.isKnowledgeBaseEnabled(feat.getProject(), repoId))) {
-                return Collections.emptyList();
+                return emptyList();
             }
 
             // If there is a selection, we try obtaining its text from the CAS and use it as an
