@@ -1037,6 +1037,9 @@ public class MatrixWorkloadManagementPage
                 .withTrigger("Workload configuration changed") //
                 .build());
 
+        success("Re-calculated state of the project and all documents");
+        aTarget.addChildren(getPage(), IFeedback.class);
+
         var newMatrix = createDocumentMatrix("documentMatrix", bulkChangeMode);
         documentMatrix.replaceWith(newMatrix);
         documentMatrix = newMatrix;

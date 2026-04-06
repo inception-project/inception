@@ -20,12 +20,15 @@ package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey.DOCUMENT_STATE;
 
+import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
 
@@ -43,8 +46,19 @@ public class DocumentMatrixStateColumn
     public void populateItem(Item<ICellPopulator<DocumentMatrixRow>> aItem, String aComponentId,
             IModel<DocumentMatrixRow> aRowModel)
     {
+        var dbState = aRowModel.map(DocumentMatrixRow::getSourceDocument)
+                .map(SourceDocument::getState);
         @SuppressWarnings("unchecked")
-        var documentState = (IModel<SourceDocumentState>) getDataModel(aRowModel);
-        aItem.add(new SymbolLabel(aComponentId, documentState.orElse(NEW)));
+        var state = (IModel<SourceDocumentState>) getDataModel(aRowModel);
+        aItem.add(new SymbolLabel(aComponentId, state.orElse(NEW)) //
+                .add(new AttributeAppender("class",
+                        () -> dbState.map(m -> m != state.getObject()).getObject() ? "state-diff"
+                                : ""))
+                .add(AttributeModifier
+                        .replace("title",
+                                () -> dbState.map(m -> m != state.getObject()).getObject()
+                                        ? "Persisted state " + dbState.getObject()
+                                                + " (delayed) - click 'Refresh' to force update"
+                                        : "")));
     }
 }
