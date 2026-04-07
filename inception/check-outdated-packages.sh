@@ -36,7 +36,9 @@ TS_MODULES="
 ./inception-ui-kb/src/main/ts
 ./inception-ui-search/src/main/ts
 ./inception-ui-scheduling/src/main/ts
+./inception-layer-docmetadata/src/main/ts
 ./inception-assistant/src/main/ts
+./inception-workload/src/main/ts
 "
 
 # Store the base directory
