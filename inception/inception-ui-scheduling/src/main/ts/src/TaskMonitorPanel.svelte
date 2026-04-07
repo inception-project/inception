@@ -143,6 +143,76 @@
         });
     }
 
+    async function downloadLog(item, ev?: MouseEvent) {
+        if (!endpointUrl) {
+            return;
+        }
+
+        const url = endpointUrl + '/tasks/' + item.id + '/log';
+
+        // Default format: plain text. Ctrl = raw JSON, Alt = JSONL (newline-delimited JSON)
+        let format: 'text' | 'json' | 'jsonl' = 'text';
+        if (ev && ev.ctrlKey) {
+            format = 'json';
+        }
+        else if (ev && ev.altKey) {
+            format = 'jsonl';
+        }
+
+        try {
+            const resp = await fetch(url, {
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                credentials: 'same-origin',
+            });
+
+            if (!resp.ok) {
+                console.error('Failed to fetch task log: ' + resp.status);
+                return;
+            }
+
+            const data = await resp.json();
+
+            let content: string;
+            let filename: string;
+            let mime = 'text/plain';
+
+            if (format === 'json') {
+                content = JSON.stringify(data, null, 2);
+                filename = `task-${item.id}-log.json`;
+                mime = 'application/json';
+            }
+            else if (format === 'jsonl') {
+                const lines = data.map((m) => JSON.stringify({ level: m.level, message: m.message, source: m.source }));
+                content = lines.join('\n');
+                filename = `task-${item.id}-log.jsonl`;
+                mime = 'application/x-ndjson';
+            }
+            else {
+                // Plain text: include source if present
+                content = data
+                    .map((m) => {
+                        const src = m.source ? `[${m.source}] ` : '';
+                        return `[${m.level}] ${src}${m.message}`;
+                    })
+                    .join('\n');
+
+                filename = `task-${item.id}.log`;
+                mime = 'text/plain';
+            }
+
+            const blob = new Blob([content], { type: mime });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(link.href);
+        } catch (e) {
+            console.error('Error downloading task log', e);
+        }
+    }
+
     onMount(async () => {
         connect();
     });
@@ -210,6 +280,15 @@
                                     ></div>
                                 {:else if item.state === 'COMPLETED'}
                                     <i class="text-success fas fa-check-circle"></i>
+                                {/if}
+                                {#if endpointUrl}
+                                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                    <i
+                                        class="fa-solid fa-scroll ms-2 text-secondary align-content-center"
+                                        style="cursor: pointer;"
+                                        title="Download log (Ctrl: JSON, Alt: JSONL)"
+                                        onclick={(e) => downloadLog(item, e)}
+                                    ></i>
                                 {/if}
                                 {#if endpointUrl && item.state !== 'RUNNING' && item.state !== 'NOT_STARTED'}
                                     <!-- svelte-ignore a11y_click_events_have_key_events -->

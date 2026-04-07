@@ -40,6 +40,7 @@ public class TaskMonitor
     private static final String ROOT_UNIT = "";
 
     private final Deque<LogMessage> messages = new ConcurrentLinkedDeque<>();
+    private int messageRepeat = 0;
 
     private final TaskHandle handle;
     private final Project project;
@@ -90,13 +91,35 @@ public class TaskMonitor
             @Override
             public MonitorUpdate addMessage(LogMessage aMessage)
             {
-                // Avoid repeating the same message over for different users
-                if (!messages.contains(aMessage)) {
-                    messages.add(aMessage);
-                }
+                _addMessage(aMessage);
                 return this;
             }
         };
+    }
+
+    private void _addMessage(LogMessage aMessage)
+    {
+        // Add message if it differs from the current last message.
+        // If the previous message was repeated, first add a summary message
+        // indicating how many times it repeated.
+        if (messages.isEmpty() || !messages.getLast().equals(aMessage)) {
+            _flushMessageRepeats();
+            messages.add(aMessage);
+        }
+        else {
+            // It is a repeated message
+            messageRepeat++;
+        }
+    }
+
+    private void _flushMessageRepeats()
+    {
+        if (messageRepeat > 0 && !messages.isEmpty()) {
+            var lm = messages.getLast();
+            messages.add(new LogMessage(lm.getSource(), lm.getLevel(),
+                    "... repeated " + messageRepeat + " times"));
+            messageRepeat = 0;
+        }
     }
 
     public TaskHandle getHandle()
@@ -163,6 +186,7 @@ public class TaskMonitor
 
     private synchronized void closeScope(ProgressScope aScope)
     {
+        _flushMessageRepeats();
         progresses.remove(aScope);
     }
 
@@ -294,10 +318,28 @@ public class TaskMonitor
                 @Override
                 public ProgressUpdate addMessage(LogMessage aMessage)
                 {
-                    // Avoid repeating the same message over for different users
-                    if (!messages.contains(aMessage)) {
-                        messages.add(aMessage);
-                    }
+                    _addMessage(aMessage);
+                    return this;
+                }
+
+                @Override
+                public ProgressUpdate info(String aFormat, Object... aValues)
+                {
+                    _addMessage(LogMessage.info(null, aFormat, aValues));
+                    return this;
+                }
+
+                @Override
+                public ProgressUpdate warn(String aFormat, Object... aValues)
+                {
+                    _addMessage(LogMessage.warn(null, aFormat, aValues));
+                    return this;
+                }
+
+                @Override
+                public ProgressUpdate error(String aFormat, Object... aValues)
+                {
+                    _addMessage(LogMessage.error(null, aFormat, aValues));
                     return this;
                 }
 

@@ -138,10 +138,9 @@ public class BulkPredictionTask
                     progress.update(up -> up //
                             .setProgress(maxProgress.get() - documentsToProcess.size()) //
                             .setMaxProgress(annotatableDocuments.size()) //
-                            .addMessage(LogMessage.info(this,
-                                    "%d annotations generated from %d suggestions in %d documents",
+                            .info("%d annotations generated from %d suggestions in %d documents",
                                     annotationsCount.get(), suggestionsCount.get(),
-                                    processedDocumentsCount.get())));
+                                    processedDocumentsCount.get()));
                     break;
                 }
 
@@ -152,7 +151,7 @@ public class BulkPredictionTask
                 progress.update(up -> up //
                         .setProgress(maxProgress.get() - documentsToProcess.size()) //
                         .setMaxProgress(annotatableDocuments.size()) //
-                        .addMessage(LogMessage.info(this, "%s", doc.getName())));
+                        .info("%s", doc.getName()));
 
                 try (var session = CasStorageSession.openNested()) {
                     var predictions = generatePredictions(doc);
@@ -191,10 +190,9 @@ public class BulkPredictionTask
 
             progress.update(up -> up.setProgress(processedDocumentsCount.get()) //
                     .setMaxProgress(maxProgress.get()) //
-                    .addMessage(LogMessage.info(this,
-                            "%d annotations generated from %d suggestions in %d documents",
+                    .info("%d annotations generated from %d suggestions in %d documents",
                             annotationsCount.get(), suggestionsCount.get(),
-                            processedDocumentsCount.get())));
+                            processedDocumentsCount.get()));
         }
     }
 

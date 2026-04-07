@@ -17,10 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.ui.scheduling.controller;
 
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
+import java.util.List;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +38,8 @@ import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.scheduling.controller.SchedulerController;
+import de.tudarmstadt.ukp.inception.support.logging.LogLevel;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 @ConditionalOnWebApplication
 @RestController
@@ -76,6 +83,33 @@ public class SchedulerControllerImpl
                 t -> t.getId() == aTaskId && canPerformActionOnTask(t, sessionOwner));
     }
 
+    @GetMapping(value = TASKS + "/{" + PARAM_TASK_ID + "}/log", produces = {
+            APPLICATION_JSON_VALUE })
+    public ResponseEntity<List<RTaskLogMessage>> taskLog(@PathVariable(PARAM_TASK_ID) int aTaskId)
+        throws Exception
+    {
+        var taskOpt = schedulingService.findTask(t -> t.getId() == aTaskId);
+        if (taskOpt.isEmpty()) {
+            return new ResponseEntity<>(NOT_FOUND);
+        }
+
+        var task = taskOpt.get();
+        var monitor = task.getMonitor();
+
+        if (monitor == null) {
+            return new ResponseEntity<>(NOT_FOUND);
+        }
+
+        var sessionOwner = userService.getCurrentUser();
+        if (!canPerformActionOnTask(task, sessionOwner)) {
+            return new ResponseEntity<>(NOT_FOUND);
+        }
+
+        return ResponseEntity.ok(monitor.getMessages().stream() //
+                .map(RTaskLogMessage::new) //
+                .toList());
+    }
+
     private boolean canPerformActionOnTask(Task aTask, User aUser)
     {
         if (aTask instanceof ProjectTask) {
@@ -83,5 +117,34 @@ public class SchedulerControllerImpl
         }
 
         return aTask.getUser().filter(aUser::equals).isPresent();
+    }
+
+    public static class RTaskLogMessage
+    {
+        private final LogLevel level;
+        private final String message;
+        private final String source;
+
+        public RTaskLogMessage(LogMessage aMessage)
+        {
+            level = aMessage.getLevel();
+            message = aMessage.getMessage();
+            source = aMessage.getSource();
+        }
+
+        public LogLevel getLevel()
+        {
+            return level;
+        }
+
+        public String getMessage()
+        {
+            return message;
+        }
+
+        public String getSource()
+        {
+            return source;
+        }
     }
 }
