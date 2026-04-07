@@ -55,8 +55,6 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.RecommendationTask_ImplBase;
 import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
-import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class BulkCurationTask
     extends RecommendationTask_ImplBase
@@ -70,7 +68,6 @@ public class BulkCurationTask
     private @Autowired CurationDocumentService curationDocumentService;
     private @Autowired CurationMergeService curationMergeService;
     private @Autowired CurationService curationService;
-    private @Autowired AnnotationSchemaService schemaService;
     private @Autowired DiffAdapterRegistry diffAdapterRegistry;
 
     private final List<AnnotationLayer> annotationLayers;
@@ -100,9 +97,18 @@ public class BulkCurationTask
 
         var curatableDocuments = curationDocumentService.listCuratableSourceDocuments(getProject());
         try (var progress = getMonitor().openScope(SCOPE_DOCUMENTS, curatableDocuments.size())) {
+
+            if (curatableDocuments.isEmpty()) {
+                progress.update(up -> up.info("No curatable documents"));
+                return;
+            }
+
+            progress.update(up -> up.info("Preparing to process %d curatable documents...",
+                    curatableDocuments.size()));
+
             for (var doc : curatableDocuments) {
                 progress.update(up -> up.increment() //
-                        .addMessage(LogMessage.info(this, "%s", doc.getName())));
+                        .info("%s", doc.getName()));
 
                 try (var session = CasStorageSession.openNested()) {
                     var users = curationDocumentService.listCuratableUsers(doc);
@@ -127,13 +133,18 @@ public class BulkCurationTask
 
                     var allIsCurated = noUncuratedDifferencesRemaining(targetCas, annotatorCasses);
                     if (allIsCurated) {
-                        LOG.info("{} has been fully curated", doc);
+                        progress.update(
+                                up -> up.info("[%s] has been fully curated", doc.getName()));
+                        LOG.debug("{} has been fully curated", doc);
                         documentService.setAnnotationDocumentState(targetAnnDoc, FINISHED,
                                 EXPLICIT_ANNOTATOR_USER_ACTION);
                         documentService.setSourceDocumentState(doc, CURATION_FINISHED);
                     }
                     else {
-                        LOG.info("{} has remaining differences that need to be curated manually",
+                        progress.update(up -> up.info(
+                                "[%s] has remaining differences that need to be curated manually",
+                                doc.getName()));
+                        LOG.debug("{} has remaining differences that need to be curated manually",
                                 doc);
                         documentService.setAnnotationDocumentState(targetAnnDoc, IN_PROGRESS,
                                 EXPLICIT_ANNOTATOR_USER_ACTION);
@@ -142,7 +153,7 @@ public class BulkCurationTask
                 }
             }
 
-            progress.update(up -> up.addMessage(LogMessage.info(this, "Curation complete")));
+            progress.update(up -> up.info("Curation complete"));
         }
     }
 

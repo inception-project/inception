@@ -30,4 +30,10 @@ public interface ProgressUpdate
     ProgressUpdate increment();
 
     ProgressUpdate increment(int aIncrement);
+
+    ProgressUpdate info(String aFormat, Object... aValues);
+
+    ProgressUpdate warn(String aFormat, Object... aValues);
+
+    ProgressUpdate error(String aFormat, Object... aValues);
 }
