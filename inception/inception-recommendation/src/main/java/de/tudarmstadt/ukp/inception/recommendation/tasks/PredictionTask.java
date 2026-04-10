@@ -232,14 +232,14 @@ public class PredictionTask
                     }
 
                     progress.update(up -> up.increment() //
-                            .addMessage(LogMessage.info(this, "%s", document.getName())));
+                            .status("%s", document.getName()).statusToLog());
 
                     applyActiveRecommendersToDocument(activePredictions, incomingPredictions,
                             casHolder.cas, document, -1, -1);
                 }
 
-                progress.update(up -> up.addMessage(
-                        LogMessage.info(this, "%d documents processed", monitor.getProgress())));
+                progress.update(up -> up.status("%d documents processed", monitor.getProgress())
+                        .statusToLog());
 
                 return incomingPredictions;
             }

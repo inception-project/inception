@@ -30,5 +30,5 @@ export interface MTaskStateUpdate {
     title: string;
     removed?: boolean;
     cancellable?: boolean;
-    latestMessage?: RLogMessage;
+    statusMessage?: RLogMessage;
 }

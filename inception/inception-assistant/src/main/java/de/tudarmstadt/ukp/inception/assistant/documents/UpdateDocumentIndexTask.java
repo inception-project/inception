@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
 import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.TaskScope;
-import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class UpdateDocumentIndexTask
     extends DebouncingTask
@@ -131,7 +130,7 @@ public class UpdateDocumentIndexTask
 
                 try (var progress = getMonitor().openScope(SCOPE_DOCUMENTS,
                         documentsToUnindex.size() + documentsToIndex.size())) {
-                    progress.update(up -> up.addMessage(LogMessage.info(this, "Unindexing...")));
+                    progress.update(up -> up.status("Unindexing...").statusToLog());
                     for (var sourceDocumentId : documentsToUnindex) {
                         if (monitor.isCancelled()) {
                             monitor.update(up -> up.setState(CANCELLED));
@@ -150,8 +149,8 @@ public class UpdateDocumentIndexTask
                             }
 
                             progress.update(up -> up.increment() //
-                                    .addMessage(LogMessage.info(this, "Indexing: %s",
-                                            sourceDocument.getName())));
+                                    .status("Indexing: %s", sourceDocument.getName())
+                                    .statusToLog());
                             indexDocument(index, chunker, sourceDocument);
                         }
                     }

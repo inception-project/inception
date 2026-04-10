@@ -136,7 +136,7 @@ public class TagSetExtractionTask
                 extractTagsFromDocument(tags, srcDoc);
             }
 
-            progress.update(up -> up.addMessage(LogMessage.info(this, "Tag extraction complete")));
+            progress.update(up -> up.status("Tag extraction complete"));
         }
 
         return tags;

@@ -55,7 +55,7 @@ public class MTaskStateUpdate
     private final int messageCount;
 
     @JsonInclude(Include.NON_EMPTY)
-    private final LogMessage latestMessage;
+    private final LogMessage statusMessage;
 
     public MTaskStateUpdate(TaskMonitor aMonitor)
     {
@@ -84,7 +84,7 @@ public class MTaskStateUpdate
         cancellable = aMonitor.isCancellable();
 
         messageCount = aMonitor.getMessages().size();
-        latestMessage = aMonitor.getMessages().peekLast();
+        statusMessage = aMonitor.getStatusMessage();
 
         removed = aRemoved;
     }
@@ -139,9 +139,9 @@ public class MTaskStateUpdate
         return type;
     }
 
-    public LogMessage getLatestMessage()
+    public LogMessage getStatusMessage()
     {
-        return latestMessage;
+        return statusMessage;
     }
 
     public int getMessageCount()
@@ -172,7 +172,7 @@ public class MTaskStateUpdate
                 .append(progress, castOther.progress) //
                 .append(maxProgress, castOther.maxProgress) //
                 .append(state, castOther.state) //
-                .append(latestMessage, castOther.latestMessage) //
+                .append(statusMessage, castOther.statusMessage) //
                 .append(progresses, castOther.progresses) //
                 .isEquals();
     }
@@ -185,7 +185,7 @@ public class MTaskStateUpdate
                 .append(progress) //
                 .append(maxProgress) //
                 .append(state) //
-                .append(latestMessage) //
+                .append(statusMessage) //
                 .append(progresses) //
                 .toHashCode();
     }
