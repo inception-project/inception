@@ -85,7 +85,7 @@ public class CheckTask
         try (var progress = getMonitor().openScope("documents", sourceDocuments.size())) {
             for (var sd : sourceDocuments) {
                 progress.update(up -> up.increment() //
-                        .addMessage(LogMessage.info(this, "Processing [%s]...", sd.getName())));
+                        .status("Processing [%s]...", sd.getName()).statusToLog());
 
                 if (getMonitor().isCancelled()) {
                     break;
@@ -174,7 +174,7 @@ public class CheckTask
                 }
             }
 
-            progress.update(up -> up.addMessage(LogMessage.info(this, "Checks complete")));
+            progress.update(up -> up.status("Checks complete").statusToLog());
         }
     }
 

@@ -99,7 +99,7 @@ public class BulkCurationTask
         try (var progress = getMonitor().openScope(SCOPE_DOCUMENTS, curatableDocuments.size())) {
 
             if (curatableDocuments.isEmpty()) {
-                progress.update(up -> up.info("No curatable documents"));
+                progress.update(up -> up.status("No curatable documents").statusToLog());
                 return;
             }
 
@@ -107,8 +107,14 @@ public class BulkCurationTask
                     curatableDocuments.size()));
 
             for (var doc : curatableDocuments) {
+                if (getMonitor().isCancelled()) {
+                    progress.update(up -> up.info("Task cancelled"));
+                    return;
+                }
+
                 progress.update(up -> up.increment() //
-                        .info("%s", doc.getName()));
+                        .status("%s", doc.getName()) //
+                        .info("Processing [%s]", doc.getName()));
 
                 try (var session = CasStorageSession.openNested()) {
                     var users = curationDocumentService.listCuratableUsers(doc);
@@ -153,7 +159,7 @@ public class BulkCurationTask
                 }
             }
 
-            progress.update(up -> up.info("Curation complete"));
+            progress.update(up -> up.status("Curation complete").statusToLog());
         }
     }
 

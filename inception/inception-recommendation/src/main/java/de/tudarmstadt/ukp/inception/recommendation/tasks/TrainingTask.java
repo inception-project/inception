@@ -117,8 +117,7 @@ public class TrainingTask
         try (var progress = getMonitor().openScope("recommenders", activeRecommenders.size())) {
             for (var activeRecommender : activeRecommenders) {
                 progress.update(up -> up.increment() //
-                        .addMessage(LogMessage.info(this, "%s",
-                                activeRecommender.getRecommender().getName())));
+                        .status("%s", activeRecommender.getRecommender().getName()).statusToLog());
 
                 // Make sure we have the latest recommender config from the DB - the one from
                 // the active recommenders list may be outdated

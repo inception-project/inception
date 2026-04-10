@@ -331,14 +331,14 @@
                                 {/if}
                             {/each}
                         {/if}
-                        {#if item.latestMessage}
+                        {#if item.statusMessage}
                             <div class="text-muted small">
-                                {#if item.latestMessage.level === 'ERROR'}
+                                {#if item.statusMessage.level === 'ERROR'}
                                     <i class="text-danger fas fa-exclamation-triangle"></i>
-                                {:else if item.latestMessage.level === 'WARN'}
+                                {:else if item.statusMessage.level === 'WARN'}
                                     <i class="text-warning fas fa-exclamation-triangle"></i>
                                 {/if}
-                                {item.latestMessage.message}
+                                {item.statusMessage.message}
                             </div>
                         {/if}
                     </li>
