@@ -36,6 +36,9 @@ import org.apache.uima.util.TypeSystemUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.io.pdf.visual.PdfVModelUtils;
+import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
 
 public class UimaJsonCasFormatSupport
@@ -125,5 +128,12 @@ public class UimaJsonCasFormatSupport
         throws ResourceInitializationException
     {
         return createReaderDescription(UimaJsonCasReader.class, aTSD);
+    }
+
+    @Override
+    public void prepareAnnotationCas(CAS aInitialCas, SourceDocument aDocument)
+    {
+        XmlNodeUtils.removeXmlDocumentStructure(aInitialCas);
+        PdfVModelUtils.removePdfLayout(aInitialCas);
     }
 }

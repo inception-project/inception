@@ -20,22 +20,18 @@ package de.tudarmstadt.ukp.inception.io.pdf;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
-import java.util.ArrayList;
-
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.dkpro.core.api.pdf.type.PdfChunk;
-import org.dkpro.core.api.pdf.type.PdfPage;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.io.pdf.config.PdfFormatAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.pdf.config.PdfFormatProperties;
+import de.tudarmstadt.ukp.inception.io.pdf.visual.PdfVModelUtils;
 
 /**
  * Support for PDF file format.
@@ -113,15 +109,6 @@ public class PdfFormatSupport
     @Override
     public void prepareAnnotationCas(CAS aCas, SourceDocument aDocument)
     {
-        removePdfLayout(aCas);
-    }
-
-    public static int removePdfLayout(CAS aCas)
-    {
-        var toDelete = new ArrayList<FeatureStructure>();
-        aCas.select(PdfChunk.class).forEach(toDelete::add);
-        aCas.select(PdfPage.class).forEach(toDelete::add);
-        toDelete.forEach(aCas::removeFsFromIndexes);
-        return toDelete.size();
+        PdfVModelUtils.removePdfLayout(aCas);
     }
 }

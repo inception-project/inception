@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.io.pdf.visual;
 
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -70,4 +71,12 @@ public class PdfVModelUtils
         return copied.get();
     }
 
+    public static int removePdfLayout(CAS aCas)
+    {
+        var toDelete = new ArrayList<FeatureStructure>();
+        aCas.select(PdfChunk.class).forEach(toDelete::add);
+        aCas.select(PdfPage.class).forEach(toDelete::add);
+        toDelete.forEach(aCas::removeFsFromIndexes);
+        return toDelete.size();
+    }
 }
