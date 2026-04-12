@@ -127,6 +127,7 @@ public class BulkPredictionTask
                 // last iteration)
                 var annotatableDocuments = documentService.listAnnotatableDocuments(getProject(),
                         dataOwnerUser);
+                maxProgress.set(annotatableDocuments.size());
 
                 var documentsToProcess = annotatableDocuments.entrySet().stream() //
                         .filter(e -> isInProcessableState(e.getKey(), e.getValue())) //
@@ -137,7 +138,7 @@ public class BulkPredictionTask
                 if (documentsToProcess.isEmpty() || monitor.isCancelled()) {
                     progress.update(up -> up //
                             .setProgress(maxProgress.get() - documentsToProcess.size()) //
-                            .setMaxProgress(annotatableDocuments.size()) //
+                            .setMaxProgress(maxProgress.get()) //
                             .info("%d annotations generated from %d suggestions in %d documents",
                                     annotationsCount.get(), suggestionsCount.get(),
                                     processedDocumentsCount.get()));

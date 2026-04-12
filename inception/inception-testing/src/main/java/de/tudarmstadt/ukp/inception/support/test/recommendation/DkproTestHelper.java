@@ -26,7 +26,10 @@ public class DkproTestHelper
     public static File getCacheFolder()
     {
         File folder;
-        if (isNotEmpty(System.getProperty("dkpro.core.testCachePath"))) {
+        if (isRunningInEclipse()) {
+            folder = new File("../cache");
+        }
+        else if (isNotEmpty(System.getProperty("dkpro.core.testCachePath"))) {
             folder = new File(System.getProperty("dkpro.core.testCachePath"));
         }
         else {
@@ -34,5 +37,20 @@ public class DkproTestHelper
         }
         folder.mkdirs();
         return folder;
+    }
+
+    public static boolean isRunningInEclipse()
+    {
+        for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
+            String className = ste.getClassName();
+            if (className == null) {
+                continue;
+            }
+            if (className.startsWith("org.eclipse.") || className.startsWith("eclipse.")
+                    || className.contains(".eclipse.")) {
+                return true;
+            }
+        }
+        return false;
     }
 }
