@@ -111,7 +111,7 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
                 }
 
                 progress.update(up -> up.increment() //
-                        .addMessage(LogMessage.info(this, doc.getName())));
+                        .status("%s", doc.getName()).statusToLog());
 
                 var fsAddedCount = 0;
                 var fsSeenCount = 0;

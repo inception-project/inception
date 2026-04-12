@@ -41,6 +41,7 @@ public class TaskMonitor
 
     private final Deque<LogMessage> messages = new ConcurrentLinkedDeque<>();
     private int messageRepeat = 0;
+    private LogMessage statusMessage;
 
     private final TaskHandle handle;
     private final Project project;
@@ -85,6 +86,13 @@ public class TaskMonitor
                 }
 
                 state = aState;
+                return this;
+            }
+
+            @Override
+            public MonitorUpdate setStatusMessage(LogMessage aMessage)
+            {
+                statusMessage = aMessage;
                 return this;
             }
 
@@ -235,6 +243,11 @@ public class TaskMonitor
         return messages;
     }
 
+    public LogMessage getStatusMessage()
+    {
+        return statusMessage;
+    }
+
     public synchronized void destroy()
     {
         if (!destroyed) {
@@ -302,14 +315,14 @@ public class TaskMonitor
             progressUpdater = new ProgressUpdate()
             {
                 @Override
-                public ProgressUpdate setProgress(int aProgress)
+                public ProgressUpdate progress(int aProgress)
                 {
                     progress = aProgress;
                     return this;
                 }
 
                 @Override
-                public ProgressUpdate setMaxProgress(int aMaxProgress)
+                public ProgressUpdate maxProgress(int aMaxProgress)
                 {
                     maxProgress = aMaxProgress;
                     return this;
@@ -319,6 +332,27 @@ public class TaskMonitor
                 public ProgressUpdate addMessage(LogMessage aMessage)
                 {
                     _addMessage(aMessage);
+                    return this;
+                }
+
+                @Override
+                public ProgressUpdate status(LogMessage aMessage)
+                {
+                    statusMessage = aMessage;
+                    return this;
+                }
+
+                @Override
+                public ProgressUpdate status(String aFormat, Object... aValues)
+                {
+                    status(LogMessage.info(null, aFormat, aValues));
+                    return this;
+                }
+
+                @Override
+                public ProgressUpdate statusToLog()
+                {
+                    addMessage(statusMessage);
                     return this;
                 }
 

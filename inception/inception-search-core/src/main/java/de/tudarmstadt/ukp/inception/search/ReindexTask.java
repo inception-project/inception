@@ -60,7 +60,6 @@ import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexingTask_ImplBase;
-import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import jakarta.persistence.NoResultException;
 
 /**
@@ -160,14 +159,14 @@ public class ReindexTask
                         }
 
                         if (getMonitor().isCancelled()) {
-                            progress.update(up -> up.addMessage(LogMessage.info(this,
-                                    "Indexing aborted. Search cannot be used.")));
+                            progress.update(
+                                    up -> up.status("Indexing aborted. Search cannot be used.")
+                                            .statusToLog());
                             break;
                         }
 
                         progress.update(up -> up.increment() //
-                                .addMessage(LogMessage.info(this, "Source document: %s",
-                                        doc.getName())));
+                                .status("Source document: %s", doc.getName()).statusToLog());
 
                         try (var session = CasStorageSession.openNested()) {
                             // Index source document
@@ -208,14 +207,16 @@ public class ReindexTask
                         }
 
                         if (getMonitor().isCancelled()) {
-                            progress.update(up -> up.addMessage(LogMessage.info(this,
-                                    "Indexing aborted. Search cannot be used.")));
+                            progress.update(
+                                    up -> up.status("Indexing aborted. Search cannot be used.")
+                                            .statusToLog());
                             break;
                         }
 
                         progress.update(up -> up.increment() //
-                                .addMessage(LogMessage.info(this, "Annotation document: %s @ %s",
-                                        doc.getUser(), doc.getName())));
+                                .status("Annotation document: %s @ %s", doc.getUser(),
+                                        doc.getName())
+                                .statusToLog());
 
                         try (var session = CasStorageSession.openNested()) {
                             var casAsByteArray = casToByteArray(documentService.readAnnotationCas(

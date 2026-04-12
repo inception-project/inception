@@ -91,7 +91,7 @@ public class RepairTask
                 }
 
                 progress.update(up -> up.increment() //
-                        .addMessage(LogMessage.info(this, "Processing [%s]...", sd.getName())));
+                        .status("Processing [%s]...", sd.getName()).statusToLog());
 
                 // Repair INITIAL CAS
                 {
@@ -179,7 +179,7 @@ public class RepairTask
                 }
             }
 
-            progress.update(up -> up.addMessage(LogMessage.info(this, "Repairs complete")));
+            progress.update(up -> up.status("Repairs complete").statusToLog());
         }
     }
 

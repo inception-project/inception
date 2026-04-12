@@ -136,12 +136,17 @@ public class BulkPredictionTask
                         .toList();
 
                 if (documentsToProcess.isEmpty() || monitor.isCancelled()) {
-                    progress.update(up -> up //
-                            .setProgress(maxProgress.get() - documentsToProcess.size()) //
-                            .setMaxProgress(maxProgress.get()) //
-                            .info("%d annotations generated from %d suggestions in %d documents",
-                                    annotationsCount.get(), suggestionsCount.get(),
-                                    processedDocumentsCount.get()));
+                    progress.update(up -> {
+                        if (monitor.isCancelled()) {
+                            up.status("Task cancelled");
+                        }
+                        up.progress(maxProgress.get() - documentsToProcess.size()) //
+                                .maxProgress(maxProgress.get()) //
+                                .status("%d annotations generated from %d suggestions in %d documents",
+                                        annotationsCount.get(), suggestionsCount.get(),
+                                        processedDocumentsCount.get())
+                                .statusToLog();
+                    });
                     break;
                 }
 
@@ -150,9 +155,10 @@ public class BulkPredictionTask
                 var annDoc = documentService.createOrGetAnnotationDocument(doc, dataOwnerUser);
 
                 progress.update(up -> up //
-                        .setProgress(maxProgress.get() - documentsToProcess.size()) //
-                        .setMaxProgress(annotatableDocuments.size()) //
-                        .info("%s", doc.getName()));
+                        .progress(maxProgress.get() - documentsToProcess.size()) //
+                        .maxProgress(annotatableDocuments.size()) //
+                        .info("Processing [%s]", doc.getName()) //
+                        .status("%s", doc.getName()));
 
                 try (var session = CasStorageSession.openNested()) {
                     var predictions = generatePredictions(doc);
@@ -182,18 +188,16 @@ public class BulkPredictionTask
                     processedDocumentsCount.incrementAndGet();
                 }
                 catch (IOException e) {
+                    progress.update(
+                            up -> up.error("Error saving CAS for document [%s]", doc.getName()));
                     LOG.error("Error loading/saving CAS for [{}]@{}: {}", dataOwner, doc);
                 }
                 catch (AnnotationException e) {
+                    progress.update(
+                            up -> up.error("Error creating processing metadata annotation"));
                     LOG.error("Error creating processing metadata annotation", e);
                 }
             }
-
-            progress.update(up -> up.setProgress(processedDocumentsCount.get()) //
-                    .setMaxProgress(maxProgress.get()) //
-                    .info("%d annotations generated from %d suggestions in %d documents",
-                            annotationsCount.get(), suggestionsCount.get(),
-                            processedDocumentsCount.get()));
         }
     }
 

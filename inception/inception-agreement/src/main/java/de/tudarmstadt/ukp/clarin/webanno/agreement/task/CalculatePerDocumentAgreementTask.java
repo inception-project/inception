@@ -53,7 +53,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
-import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class CalculatePerDocumentAgreementTask
@@ -100,7 +99,7 @@ public class CalculatePerDocumentAgreementTask
                 }
 
                 progress.update(up -> up.increment() //
-                        .addMessage(LogMessage.info(this, doc.getName())));
+                        .status("%", doc.getName()).statusToLog());
 
                 try (var session = CasStorageSession.openNested()) {
                     var casMap = new LinkedHashMap<String, CAS>();

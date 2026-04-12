@@ -43,7 +43,9 @@ import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
 public class XmlCas2SaxEvents
     extends Cas2SaxEvents
 {
-    public static final String DATA_CAPTURE_ROOT = "data-capture-root";
+    private static final String WRAPPER_ELEMENT = "wrapper";
+
+    public static final String DATA_CAPTURE_ROOT_ATTR = "data-capture-root";
 
     private final XmlDocument xml;
     private final Set<XmlNode> captureRoots;
@@ -71,7 +73,7 @@ public class XmlCas2SaxEvents
         th.getTransformer().setOutputProperty(INDENT, "no");
         th.setResult(new StreamResult(out));
 
-        ContentHandler sh = new TextSanitizingContentHandler(th);
+        var sh = new TextSanitizingContentHandler(th);
 
         return sh;
     }
@@ -82,13 +84,13 @@ public class XmlCas2SaxEvents
         // HACK: adding a wrapper because otherwise RecogitoJS cannot insert its own
         // wrapper...
         if (captureRoots != null && aElement == xml.getRoot() && captureRoots.contains(aElement)) {
-            handler.startElement(null, null, "wrapper", null);
+            handler.startElement(null, null, WRAPPER_ELEMENT, null);
         }
 
         super.process(aElement, aOptions);
 
         if (captureRoots != null && aElement == xml.getRoot() && captureRoots.contains(aElement)) {
-            handler.endElement(null, null, "wrapper");
+            handler.endElement(null, null, WRAPPER_ELEMENT);
         }
     }
 
@@ -97,7 +99,7 @@ public class XmlCas2SaxEvents
     {
         var attrs = super.attributes(aElement);
         if (captureRoots != null && captureRoots.contains(aElement)) {
-            attrs.addAttribute(null, null, DATA_CAPTURE_ROOT, null, "");
+            attrs.addAttribute(null, null, DATA_CAPTURE_ROOT_ATTR, null, "");
         }
         return attrs;
     }

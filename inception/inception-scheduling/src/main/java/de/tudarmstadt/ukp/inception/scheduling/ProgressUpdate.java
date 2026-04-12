@@ -21,15 +21,21 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public interface ProgressUpdate
 {
-    ProgressUpdate setProgress(int aProgress);
+    ProgressUpdate progress(int aProgress);
 
-    ProgressUpdate setMaxProgress(int aMaxProgress);
+    ProgressUpdate maxProgress(int aMaxProgress);
 
     ProgressUpdate addMessage(LogMessage aMessage);
 
     ProgressUpdate increment();
 
     ProgressUpdate increment(int aIncrement);
+
+    ProgressUpdate status(LogMessage aMessage);
+
+    ProgressUpdate status(String aFormat, Object... aValues);
+
+    ProgressUpdate statusToLog();
 
     ProgressUpdate info(String aFormat, Object... aValues);
 
