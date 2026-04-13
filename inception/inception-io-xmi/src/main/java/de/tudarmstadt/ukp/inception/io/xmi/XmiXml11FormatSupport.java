@@ -30,8 +30,11 @@ import org.dkpro.core.io.xmi.XmiWriter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.io.pdf.visual.PdfVModelUtils;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
+import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
 
 /**
  * <p>
@@ -102,5 +105,12 @@ public class XmiXml11FormatSupport
                 XmiWriter.PARAM_VERSION, "1.1", //
                 XmiWriter.PARAM_SANITIZE_ILLEGAL_CHARACTERS,
                 properties.isSanitizeIllegalCharacters());
+    }
+
+    @Override
+    public void prepareAnnotationCas(CAS aInitialCas, SourceDocument aDocument)
+    {
+        XmlNodeUtils.removeXmlDocumentStructure(aInitialCas);
+        PdfVModelUtils.removePdfLayout(aInitialCas);
     }
 }
