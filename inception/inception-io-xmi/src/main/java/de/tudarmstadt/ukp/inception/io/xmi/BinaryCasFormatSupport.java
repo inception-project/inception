@@ -29,8 +29,11 @@ import org.dkpro.core.io.bincas.BinaryCasWriter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.io.pdf.visual.PdfVModelUtils;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.xmi.dkprobackport.BinaryCasReader;
+import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
 
 /**
  * <p>
@@ -88,5 +91,12 @@ public class BinaryCasFormatSupport
         throws ResourceInitializationException
     {
         return createEngineDescription(BinaryCasWriter.class, aTSD);
+    }
+
+    @Override
+    public void prepareAnnotationCas(CAS aInitialCas, SourceDocument aDocument)
+    {
+        XmlNodeUtils.removeXmlDocumentStructure(aInitialCas);
+        PdfVModelUtils.removePdfLayout(aInitialCas);
     }
 }
