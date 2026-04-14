@@ -38,6 +38,63 @@ import { mount, unmount } from 'svelte';
 import RecogitoEditorToolbar from './RecogitoEditorToolbar.svelte';
 import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte';
 
+// Try to monkeypatch Recogito Highlighter as early as possible so it protects
+// any Recogito instances created later. This is best-effort and wrapped in
+// a try/catch because `require` may not be available in the runtime.
+try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const HighlighterModule = require('@recogito/recogito-js/src/highlighter/Highlighter');
+    const Highlighter = HighlighterModule && HighlighterModule.default ? HighlighterModule.default : HighlighterModule;
+    if (Highlighter && Highlighter.prototype && !Highlighter.prototype._inceptionPatched) {
+        const orig = Highlighter.prototype._addAnnotation;
+        Highlighter.prototype._addAnnotation = function (annotation) {
+            try {
+                const positions = this.charOffsetsToDOMPosition([annotation.start, annotation.end]);
+                if (!positions || positions.length < 2 || !positions[0] || !positions[1] || !positions[0].node || !positions[1].node) {
+                    console.warn('Skipping annotation due to missing DOM positions (early patch)', (annotation && annotation.underlying) || annotation);
+                    return;
+                }
+            } catch (e) {
+                console.warn('Highlighter mapping error (early patched)', e);
+                return;
+            }
+            return orig.call(this, annotation);
+        };
+        Highlighter.prototype._inceptionPatched = true;
+        console.debug('Recogito Highlighter patched (early)');
+    }
+} catch (err) {
+    // Non-fatal - best effort only
+    // console.debug('Could not apply early Recogito Highlighter patch', err);
+}
+
+// Wrap requestAnimationFrame callbacks to prevent uncaught exceptions
+// from bubbling out of rAF (e.g. errors thrown inside Highlighter's
+// per-frame render loop). This is a defensive, global measure.
+try {
+    const globalObj: any = typeof window !== 'undefined' ? window : globalThis;
+    const _origRaf = globalObj.requestAnimationFrame;
+    if (_origRaf && !_origRaf._inceptionWrapped) {
+        const wrapped = function (cb: FrameRequestCallback) {
+            return _origRaf.call(this, function (t: number) {
+                try {
+                    cb(t);
+                } catch (e) {
+                    // Log but swallow - prevents uncaught exceptions
+                    // from breaking the app when third-party code throws.
+                    console.error('requestAnimationFrame callback error (inception-patch)', e);
+                }
+            });
+        };
+        // preserve toString and other properties if necessary
+        wrapped._inceptionWrapped = true;
+        globalObj.requestAnimationFrame = wrapped;
+        console.debug('requestAnimationFrame wrapped by inception patch');
+    }
+} catch (e) {
+    // ignore
+}
+
 export const NO_LABEL = '◌';
 
 interface WebAnnotationBodyItem {
@@ -77,6 +134,7 @@ export class RecogitoEditor implements AnnotationEditor {
     private toolbar: RecogitoEditorToolbar;
     private popover: AnnotationDetailPopOver;
     private laskMouseMoveEvent: MouseEvent | undefined;
+    // rendering guard removed in favor of tracker.pause()/resume()
     private userPreferencesKey: string;
 
     public constructor(element: Element, ajax: DiamAjax, userPreferencesKey: string) {
@@ -102,6 +160,34 @@ export class RecogitoEditor implements AnnotationEditor {
                 const wrapper = element.ownerDocument.createElement('div');
                 Array.from(element.childNodes).forEach((child) => wrapper.appendChild(child));
                 element.appendChild(wrapper);
+ 
+                // Monkeypatch Recogito Highlighter at runtime to avoid uncaught
+                // errors when annotation char offsets cannot be mapped to DOM
+                // nodes. This is done at runtime (not by editing
+                // node_modules) so the fix survives rebuilds.
+                try {
+                    // eslint-disable-next-line @typescript-eslint/no-var-requires
+                    const Highlighter = require('@recogito/recogito-js/src/highlighter/Highlighter').default;
+                    if (Highlighter && Highlighter.prototype && !Highlighter.prototype._inceptionPatched) {
+                        const orig = Highlighter.prototype._addAnnotation;
+                        Highlighter.prototype._addAnnotation = function (annotation) {
+                            try {
+                                const positions = this.charOffsetsToDOMPosition([annotation.start, annotation.end]);
+                                if (!positions || positions.length < 2 || !positions[0] || !positions[1] || !positions[0].node || !positions[1].node) {
+                                    console.warn('Skipping annotation due to missing DOM positions', (annotation && annotation.underlying) || annotation);
+                                    return;
+                                }
+                            } catch (e) {
+                                console.warn('Highlighter mapping error (patched)', e);
+                                return;
+                            }
+                            return orig.call(this, annotation);
+                        };
+                        Highlighter.prototype._inceptionPatched = true;
+                    }
+                } catch (err) {
+                    console.warn('Could not patch Recogito Highlighter', err);
+                }
 
                 this.recogito = new Recogito({
                     content: wrapper,
@@ -181,9 +267,15 @@ export class RecogitoEditor implements AnnotationEditor {
                     this.removeAnnotationHighight(e as MouseEvent)
                 );
 
-                this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations(), {
-                    ignoreSelector: '.r6o-relations-layer',
-                });
+                this.tracker = new ViewportTracker(
+                    this.root,
+                    () => {
+                        this.loadAnnotations();
+                    },
+                    {
+                        ignoreSelector: '.r6o-relations-layer',
+                    }
+                );
 
                 this.popover = mount(AnnotationDetailPopOver, {
                     target: this.root.ownerDocument.body,
@@ -367,12 +459,12 @@ export class RecogitoEditor implements AnnotationEditor {
 
     public loadView(view?: Element, range?: [number, number]): Promise<void> {
         return new Promise((resolve, reject) => {
-            if (!view || !range) {
+            if (!view || !range || range[0] === range[1]) {
                 resolve();
                 return;
             }
 
-            console.log(`loadView(${range})`);
+            console.debug(`loadView(${range})`);
 
             const options: DiamLoadAnnotationsOptions = {
                 range,
@@ -395,7 +487,7 @@ export class RecogitoEditor implements AnnotationEditor {
         });
     }
 
-    private renderDocument(): void {
+    private async renderDocument(): Promise<void> {
         console.log('renderDocument');
 
         if (!this.recogito) {
@@ -412,7 +504,26 @@ export class RecogitoEditor implements AnnotationEditor {
         this.connections.canvas.connections = [];
         this.connections.canvas.config.showLabels = annotatorState.showLabels;
 
-        this.recogito.setAnnotations(this.annotations);
+        // Pause the viewport tracker while Recogito applies annotations and the
+        // DOM is post-processed to avoid the visibility feedback loop.
+        this.tracker?.pause();
+        try {
+            try {
+                await this.recogito.setAnnotations(this.annotations);
+            } catch (e) {
+                // setAnnotations may reject or throw asynchronously inside
+                // requestAnimationFrame callbacks. We log and swallow here to
+                // avoid the uncaught TypeError from bubbling up and breaking
+                // the host application. The rAF wrapper above will also
+                // prevent uncaught exceptions inside the highlighter's loop.
+                console.error('Recogito.setAnnotations failed (caught)', e);
+            }
+        } finally {
+            // Resume after two frames to allow layout to stabilise. Suppress the
+            // initial refresh because we've just applied the annotations and
+            // reloading immediately is unnecessary and can cause a feedback loop.
+            this.tracker?.resume({ waitFrames: 2, suppressInitialRefresh: true });
+        }
     }
 
     private convertAnnotations(doc: AnnotatedText) {
