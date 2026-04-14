@@ -89,7 +89,14 @@ export class ApacheAnnotatorVisualizer {
 
         this.optimizeLayout('constructor');
 
-        this.tracker = new ViewportTracker(this.root, () => this.loadAnnotations());
+        this.tracker = new ViewportTracker(
+                this.root, () => {
+                    this.loadAnnotations()
+                }, 
+                {
+                    ignoreSelector: '.iaa-section-control, .iaa-vertical-marker-focus, .iaa-ping-marker, iaa-visible-annotations-panel, iaa-visible-annotations-panel-spacer'
+                });
+
         this.resizer = new ResizeManager(this, this.ajax);
 
         this.sectionAnnotationCreator = new SectionAnnotationCreator(
@@ -372,48 +379,59 @@ export class ApacheAnnotatorVisualizer {
     }
 
     private renderAnnotations(doc: AnnotatedText): void {
-        console.log(`Client-side rendering started`);
-        const startTime = performance.now();
+        // Pause tracker while performing DOM writes to avoid visibility feedback loops.
+        this.tracker?.pause();
 
-        this.clearHighlights();
-        this.resizer.hide();
+        try {
+            console.log(`Client-side rendering started`);
+            const startTime = performance.now();
 
-        if (doc.spans) {
-            console.log(`Loaded ${doc.spans.size} span annotations`);
-            doc.spans.forEach((span) => this.renderSpanAnnotation(doc, span));
+            this.clearHighlights();
+            this.resizer.hide();
 
-            this.removeSpuriousZeroWidthHighlights();
-            if (!annotatorState.showEmptyHighlights) {
-                this.removeWhitepaceOnlyHighlights();
+            if (doc.spans) {
+                console.log(`Loaded ${doc.spans.size} span annotations`);
+                doc.spans.forEach((span) => this.renderSpanAnnotation(doc, span));
+
+                this.removeSpuriousZeroWidthHighlights();
+                if (!annotatorState.showEmptyHighlights) {
+                    this.removeWhitepaceOnlyHighlights();
+                }
+
+                this.postProcessHighlights();
             }
 
-            this.postProcessHighlights();
+            if (annotatorState.showAggregatedLabels) {
+                this.sectionAnnotationVisualizer.render(doc);
+            } else {
+                this.sectionAnnotationVisualizer.clear();
+            }
+
+            this.sectionAnnotationCreator.render(doc);
+
+            if (doc.textMarkers) {
+                doc.textMarkers.forEach((marker) => this.renderTextMarker(doc, marker));
+                this.getAllTextMarkers().forEach((e) => {
+                    if (!e.textContent) {
+                        e.remove();
+                    }
+                });
+                this.renderVerticalSelectionMarker(doc);
+            }
+
+            if (doc.relations) {
+                this.renderSelectedRelationEndpointHighlights(doc);
+            }
+
+            const endTime = performance.now();
+            console.log(`Client-side rendering took ${endTime - startTime}ms`);
+        } finally {
+            // Resume the tracker after a couple of frames so layout can stabilise.
+            // Suppress the initial refresh because the rendering pass already
+            // produced up-to-date annotations and an immediate reload can
+            // trigger a feedback loop.
+            this.tracker?.resume({ waitFrames: 2, suppressInitialRefresh: true });
         }
-
-        if (annotatorState.showAggregatedLabels) {
-            this.sectionAnnotationVisualizer.render(doc);
-        } else {
-            this.sectionAnnotationVisualizer.clear();
-        }
-
-        this.sectionAnnotationCreator.render(doc);
-
-        if (doc.textMarkers) {
-            doc.textMarkers.forEach((marker) => this.renderTextMarker(doc, marker));
-            this.getAllTextMarkers().forEach((e) => {
-                if (!e.textContent) {
-                    e.remove();
-                }
-            });
-            this.renderVerticalSelectionMarker(doc);
-        }
-
-        if (doc.relations) {
-            this.renderSelectedRelationEndpointHighlights(doc);
-        }
-
-        const endTime = performance.now();
-        console.log(`Client-side rendering took ${endTime - startTime}ms`);
     }
 
     private renderVerticalSelectionMarker(doc: AnnotatedText) {

@@ -31,7 +31,6 @@ public class FullProjectExportRequest
 
     private String format;
     private boolean includeInProgress;
-    private String filenameTag;
 
     /**
      * Create a new project export request. Use this constructor if the project is not known yet or
@@ -102,7 +101,7 @@ public class FullProjectExportRequest
     @Override
     public String getTitle()
     {
-        StringBuilder sb = new StringBuilder("Project backup");
+        var sb = new StringBuilder("Project backup");
         if (format != null) {
             sb.append(" (" + format + ")");
         }

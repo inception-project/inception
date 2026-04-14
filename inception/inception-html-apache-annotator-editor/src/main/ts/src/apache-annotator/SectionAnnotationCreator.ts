@@ -20,7 +20,7 @@ import {
     AnnotatedText,
     calculateEndOffset,
     calculateStartOffset,
-    DiamAjax,
+    type DiamAjax,
 } from '@inception-project/inception-js-api';
 import { getScrollY } from './SectionAnnotationVisualizer';
 
@@ -29,7 +29,7 @@ export class SectionAnnotationCreator {
     private ajax: DiamAjax;
     private root: Element;
 
-    private observer: IntersectionObserver;
+    private observer!: IntersectionObserver;
     private observerDebounceTimeout: number | undefined;
     private suspended = false;
 
@@ -81,7 +81,9 @@ export class SectionAnnotationCreator {
 
     render(doc: AnnotatedText) {
         if (this.sectionSelector) {
-            this.ensureVisibility();
+            if (!this.suspended) {
+                this.ensureVisibility();
+            }
         }
     }
 
