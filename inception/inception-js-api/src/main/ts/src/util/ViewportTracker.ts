@@ -32,14 +32,17 @@ export class ViewportTracker {
     private _currentRange: [number, number] = [0, 0];
 
     private root: Element;
-    private observer: IntersectionObserver;
+    private observer?: IntersectionObserver;
 
     private initialized = false;
-    private redrawTimeoutId: ReturnType<typeof setTimeout>;
+    private redrawTimeoutId?: ReturnType<typeof setTimeout>;
     private debounceDelay = 250;
     private callback: ViewportTrackerCallback;
 
     private options?: ViewportTrackerOptions;
+    private paused = false;
+    private pauseCount = 0;
+    private trackedElements: Element[] = [];
 
     /**
      * @param element the element containing the elemnts to track
@@ -62,6 +65,133 @@ export class ViewportTracker {
         }
 
         this.initializeElementTracking(this.root);
+    }
+
+    /**
+     * Pause observation and prevent callback scheduling. Observers are disconnected.
+     */
+    public pause(): void {
+        // Support nested pause calls by counting them. Only perform the actual
+        // disconnect on the transition from 0 -> 1.
+        this.pauseCount++;
+        if (this.pauseCount > 1) {
+            this.paused = true;
+            console.debug(`ViewportTracker pause count increased to ${this.pauseCount}; already paused`);
+            return;
+        }
+
+        console.debug('Pausing ViewportTracker');
+
+        this.paused = true;
+        if (this.observer) {
+            try {
+                this.observer.disconnect();
+            } catch (e) {
+                // ignore
+            }
+        }
+        // stop any pending callback
+        clearTimeout(this.redrawTimeoutId);
+        this.redrawTimeoutId = undefined;
+    }
+
+    /**
+     * Resume observation. Reinitializes tracking and triggers an immediate refresh.
+     *
+     * @param options optional settings: { waitFrames?: number } delays the actual
+     * resume by the given number of requestAnimationFrame ticks. Useful to allow
+     * the document layout to stabilise after large DOM writes.
+     */
+    public resume(options?: { waitFrames?: number; suppressInitialRefresh?: boolean }): void {
+        // If there are nested pauses, decrement the counter and only resume when
+        // the counter reaches zero.
+        if (this.pauseCount > 0) {
+            this.pauseCount--;
+            if (this.pauseCount > 0) {
+                this.paused = true;
+                console.debug(`ViewportTracker pause count decreased to ${this.pauseCount}; still paused`);
+                return;
+            }
+        }
+
+        if (!this.paused) return;
+
+        console.debug('Resuming ViewportTracker with options', options);
+
+        const waitFrames = options?.waitFrames ?? 0;
+        const suppressInitial = options?.suppressInitialRefresh ?? false;
+
+        const doResume = () => {
+            // If already resumed meanwhile, do nothing
+            if (!this.paused) return;
+            this.paused = false;
+            // Reinitialize tracking (recreates observer and observations)
+            this.initializeElementTracking(this.root);
+            // Immediately refresh range so caller can react right away unless
+            // explicitly suppressed (useful when resume is called after a
+            // rendering pass that already has up-to-date annotations).
+            if (!suppressInitial) {
+                this.forceRefresh();
+            }
+        };
+
+        if (waitFrames <= 0) {
+            doResume();
+            return;
+        }
+
+        // Use requestAnimationFrame if available, fall back to setTimeout for
+        // non-browser environments (tests, SSR).
+        const raf: (cb: FrameRequestCallback) => number =
+            typeof (globalThis as any).requestAnimationFrame === 'function'
+                ? (globalThis as any).requestAnimationFrame.bind(globalThis)
+                : (cb: FrameRequestCallback) => {
+                      return (setTimeout(() => cb(Date.now()), 16) as unknown) as number;
+                  };
+
+        let frames = 0;
+        const tick = () => {
+            frames++;
+            if (frames >= waitFrames) {
+                doResume();
+            } else {
+                raf(tick as FrameRequestCallback);
+            }
+        };
+
+        raf(tick as FrameRequestCallback);
+    }
+
+    /**
+     * Immediately recalculate the visible range and invoke the callback.
+     */
+    public forceRefresh(): void {
+        // If paused, do not call the callback.
+        if (this.paused) {
+            return;
+        }
+        clearTimeout(this.redrawTimeoutId);
+        this.redrawTimeoutId = undefined;
+        const newRange = this.calculateWindowRange();
+
+        // If we have already been initialized and the range did not change,
+        // there is no need to invoke the callback again — this avoids
+        // redundant loads when resuming the tracker after a rendering pass.
+        if (
+            this.initialized &&
+            this._currentRange[0] === newRange[0] &&
+            this._currentRange[1] === newRange[1]
+        ) {
+            return;
+        }
+
+        this._currentRange = newRange;
+        try {
+            this.callback(this._currentRange);
+        } catch (err) {
+            // Swallow callback errors to avoid breaking the tracker
+            console.error('ViewportTracker callback error', err);
+        }
     }
 
     public disconnect() {
@@ -151,12 +281,16 @@ export class ViewportTracker {
             threshold: 0.0,
         };
 
-        this.observer = new IntersectionObserver(
-            (e, o) => this.handleIntersectRange(e, o),
-            options
-        );
+        this.trackedElements = Array.from(leafTrackingCandidates);
 
-        leafTrackingCandidates.forEach((e) => this.observer.observe(e));
+        // If paused we do not create an observer now
+        if (this.paused) {
+            console.debug('ViewportTracker is paused; skipping observer creation');
+            return;
+        }
+
+        this.observer = new IntersectionObserver((e, o) => this.handleIntersectRange(e, o), options);
+        leafTrackingCandidates.forEach((e) => this.observer!.observe(e));
 
         const endTime = new Date().getTime();
         console.debug(
@@ -168,6 +302,10 @@ export class ViewportTracker {
         entries: IntersectionObserverEntry[],
         observer: IntersectionObserver
     ): void {
+        if (this.paused) {
+            // Ignore any entries while paused
+            return;
+        }
         // Avoid triggering the callback if no new elements have become visible
         let visibleElementsAdded = 0;
 
@@ -188,6 +326,7 @@ export class ViewportTracker {
             // the first time the callback is called, we want to make sure that the annotations are
             // loaded at least once
             this.initialized = true;
+            this._currentRange = this.calculateWindowRange();
             this.initiateAction();
         }
     }
@@ -196,6 +335,7 @@ export class ViewportTracker {
         clearTimeout(this.redrawTimeoutId);
         this.redrawTimeoutId = setTimeout(() => {
             this._currentRange = this.calculateWindowRange();
+            console.debug('Invoking ViewportTracker callback with range', this._currentRange);
             this.callback(this._currentRange);
         }, this.debounceDelay);
     }

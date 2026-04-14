@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 import { it, expect } from 'vitest';
-import { AnnotatedText, Span, Comment } from '../../../src/model';
+import { AnnotatedText, Span, Comment } from '..';
 import {
-    CompactComment,
+    type CompactComment,
     unpackCompactComments,
-} from '../../../src/model/compact_v2/CompactComment';
+} from './CompactComment';
 
 it('Unpacking works', async () => {
     const doc = new AnnotatedText();
