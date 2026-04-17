@@ -526,34 +526,35 @@ export function expandSelectionOverProtectedElements(
     sel: Selection,
     protectedElementsMatcher?: (el: Element) => boolean
 ): SelectionLike {
-    // Use the boundary node itself when it's an Element; otherwise fall back
-    // to its parentElement (this handles Text nodes). Previously we always
-    // used `parentElement`, which skipped the element itself when the
-    // boundary was already an Element and could miss a protected ancestor.
-    let anchorNode: Node | null | undefined =
+    // To decide whether a selection boundary lies within a protected element
+    // we check an element anchor: if the boundary node is an Element use it,
+    // otherwise use its parentElement. However, we must NOT overwrite the
+    // original selection node/offset because the selection offsets are
+    // relative to the original Text node. Only when we actually expand the
+    // boundary to a protected ancestor do we replace the node/offset.
+    const anchorBoundaryEl =
         sel.anchorNode instanceof Element ? sel.anchorNode : sel.anchorNode?.parentElement;
+    let anchorNode: Node | null | undefined = sel.anchorNode;
     let anchorOffset = sel.anchorOffset;
 
-    if (anchorNode instanceof Element && protectedElementsMatcher) {
-        const protectedAncestor = closestWithMatcher(anchorNode, protectedElementsMatcher);
+    if (anchorBoundaryEl instanceof Element && protectedElementsMatcher) {
+        const protectedAncestor = closestWithMatcher(anchorBoundaryEl, protectedElementsMatcher);
         if (protectedAncestor) {
             anchorNode = protectedAncestor;
             anchorOffset = 0;
         }
     }
 
-    if (anchorNode == null) {
-        anchorNode = sel.anchorNode;
-    }
-
-    // Same handling for the focus boundary: prefer the node itself when it's
-    // an Element so we don't skip checking it for protection.
-    let focusNode: Node | null | undefined =
+    // Same handling for the focus boundary: check a boundary element but
+    // preserve the original focus node/offset unless we expand to a protected
+    // ancestor.
+    const focusBoundaryEl =
         sel.focusNode instanceof Element ? sel.focusNode : sel.focusNode?.parentElement;
+    let focusNode: Node | null | undefined = sel.focusNode;
     let focusOffset = sel.focusOffset;
 
-    if (focusNode instanceof Element && protectedElementsMatcher) {
-        const protectedAncestor = closestWithMatcher(focusNode, protectedElementsMatcher);
+    if (focusBoundaryEl instanceof Element && protectedElementsMatcher) {
+        const protectedAncestor = closestWithMatcher(focusBoundaryEl, protectedElementsMatcher);
         if (protectedAncestor) {
             focusNode = protectedAncestor;
             focusOffset = protectedAncestor.textContent?.length || 0;

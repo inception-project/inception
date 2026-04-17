@@ -118,6 +118,34 @@ describe('expandSelectionOverProtectedElements', () => {
         expect(res.focusNode).toBe(prot);
         expect(res.focusOffset).toBe(prot.textContent?.length);
     });
+
+    it('preserves text-node selection offsets when parent element is not protected', () => {
+        document.body.innerHTML = `
+            <div id="root">
+                <div class="para">Beate</div>
+                <div class="other">Wir berichten</div>
+            </div>
+        `;
+
+        const para = document.querySelector('.para') as Element;
+        const other = document.querySelector('.other') as Element;
+        const textNode = para.firstChild as Text;
+        const otherText = other.firstChild as Text;
+
+        const sel: any = {
+            anchorNode: textNode,
+            anchorOffset: 1,
+            focusNode: otherText,
+            focusOffset: 3,
+        };
+
+        const res = expandSelectionOverProtectedElements(sel as Selection, (el) =>
+            el.classList.contains('protected')
+        );
+
+        expect(res.anchorNode).toBe(textNode);
+        expect(res.anchorOffset).toBe(1);
+    });
 });
 
 describe('querySelectorAllInRange', () => {
