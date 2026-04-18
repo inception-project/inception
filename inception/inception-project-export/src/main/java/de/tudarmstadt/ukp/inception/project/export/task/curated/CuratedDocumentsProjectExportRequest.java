@@ -80,7 +80,7 @@ public class CuratedDocumentsProjectExportRequest
     @Override
     public String getTitle()
     {
-        StringBuilder sb = new StringBuilder("Curated documents");
+        var sb = new StringBuilder("Curated documents");
         if (format != null) {
             sb.append(" (" + format + ")");
         }

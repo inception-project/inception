@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.project.export.task.curated;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.apache.commons.io.FileUtils.forceDelete;
@@ -37,11 +38,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.export.task.ProjectExportTask_ImplBase;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
@@ -177,8 +176,7 @@ public class CuratedDocumentsProjectExportTask
                         // Copy secondary export format for convenience - not used during import
                         try {
                             var curationFile = importExportService.exportAnnotationDocument(
-                                    sourceDocument, WebAnnoConst.CURATION_USER, format,
-                                    WebAnnoConst.CURATION_USER, Mode.CURATION);
+                                    sourceDocument, CURATION_USER, format, CURATION_USER, CURATION);
                             FileUtils.copyFileToDirectory(curationFile, curationDir);
                             forceDelete(curationFile);
                         }

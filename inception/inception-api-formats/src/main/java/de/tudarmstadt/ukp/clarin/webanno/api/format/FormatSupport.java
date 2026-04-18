@@ -184,6 +184,12 @@ public interface FormatSupport
         throw new UnsupportedOperationException("The format [" + getName() + "] cannot be written");
     }
 
+    default InputStream obfuscate(InputStream aSource) throws IOException
+    {
+        throw new UnsupportedOperationException(
+                "The format [" + getName() + "] cannot be obfuscated");
+    }
+
     default void read(Project aProject, CAS cas, File aFile)
         throws ResourceInitializationException, IOException, CollectionException
     {

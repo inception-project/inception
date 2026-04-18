@@ -17,7 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.text;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -26,6 +31,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 /**
  * <p>
@@ -55,6 +61,18 @@ public class PretokenizedTextFormatSupport
     public boolean isReadable()
     {
         return true;
+    }
+
+    @Override
+    public InputStream obfuscate(InputStream aSource) throws IOException
+    {
+        if (aSource == null) {
+            return null;
+        }
+
+        var s = new String(aSource.readAllBytes(), UTF_8);
+        var ob = TextUtils.obfuscate(s);
+        return new ByteArrayInputStream(ob.getBytes(UTF_8));
     }
 
     @Override

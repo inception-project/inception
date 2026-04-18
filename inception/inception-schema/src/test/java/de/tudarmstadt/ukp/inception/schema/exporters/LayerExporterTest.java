@@ -84,7 +84,7 @@ public class LayerExporterTest
 
         // Export the project and import it again
         // Export the project
-        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var exportRequest = FullProjectExportRequest.builder().withProject(sourceProject).build();
         var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test",
                 exportRequest.getFilenamePrefix());
         var exportedProject = new ExportedProject();

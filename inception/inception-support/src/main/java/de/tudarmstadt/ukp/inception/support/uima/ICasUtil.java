@@ -23,6 +23,8 @@ import static org.apache.uima.fit.util.FSCollectionFactory.createStringList;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
@@ -255,5 +257,12 @@ public class ICasUtil
 
         // Types must be the same
         return type1.getName().equals(type2.getName());
+    }
+
+    public static Set<FeatureStructure> findAllFeatureStructures(CAS aCas)
+    {
+        var allFSes = new LinkedHashSet<FeatureStructure>();
+        ((CASImpl) aCas).walkReachablePlusFSsSorted(allFSes::add, null, null, null);
+        return allFSes;
     }
 }

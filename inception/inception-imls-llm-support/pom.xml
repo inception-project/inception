@@ -64,12 +64,12 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-io-xml</artifactId>
+      <artifactId>inception-layer-span-api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-layer-span-api</artifactId>
+      <artifactId>inception-support-xml</artifactId>
       <version>${project.version}</version>
     </dependency>
 
