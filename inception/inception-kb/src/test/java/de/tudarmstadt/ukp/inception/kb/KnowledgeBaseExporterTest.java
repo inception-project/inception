@@ -108,7 +108,7 @@ public class KnowledgeBaseExporterTest
     public void thatExportingWorks() throws Exception
     {
         // Export the project
-        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var exportRequest = FullProjectExportRequest.builder().withProject(sourceProject).build();
         var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test",
                 exportRequest.getFilenamePrefix());
         var exportedProject = new ExportedProject();
@@ -148,7 +148,7 @@ public class KnowledgeBaseExporterTest
     public void thatRemappingConceptFeaturesOnImportWorks() throws Exception
     {
         // Export the project
-        var exportRequest = new FullProjectExportRequest(sourceProject, null, false);
+        var exportRequest = FullProjectExportRequest.builder().withProject(sourceProject).build();
         var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test",
                 exportRequest.getFilenamePrefix());
         var exportedProject = new ExportedProject();

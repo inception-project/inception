@@ -22,8 +22,10 @@
     <artifactId>inception-app</artifactId>
     <version>41.0-SNAPSHOT</version>
   </parent>
+
   <artifactId>inception-api-formats</artifactId>
   <name>INCEpTION - Core - Formats API</name>
+
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -33,6 +35,11 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-support-xml</artifactId>
       <version>${project.version}</version>
     </dependency>
 

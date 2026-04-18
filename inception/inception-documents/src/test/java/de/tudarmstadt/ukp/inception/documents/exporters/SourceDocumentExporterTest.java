@@ -97,7 +97,7 @@ public class SourceDocumentExporterTest
         }
 
         // Export the source files
-        var exportRequest = new FullProjectExportRequest(project, null, false);
+        var exportRequest = FullProjectExportRequest.builder().withProject(project).build();
         var monitor = mock(ProjectExportTaskMonitor.class);
         var exProject = new ExportedProject();
         var exportFile = new File(stage, "export.zip");

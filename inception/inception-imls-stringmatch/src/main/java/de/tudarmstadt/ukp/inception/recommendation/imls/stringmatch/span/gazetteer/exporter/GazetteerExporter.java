@@ -130,6 +130,7 @@ public class GazetteerExporter
             }
         }
 
-        LOG.info("Imported [{}] gazetteers for project [{}]", gazetteers.length, aProject.getName());
+        LOG.info("Imported [{}] gazetteers for project [{}]", gazetteers.length,
+                aProject.getName());
     }
 }

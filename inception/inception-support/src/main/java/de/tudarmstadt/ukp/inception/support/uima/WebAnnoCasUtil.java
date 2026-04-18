@@ -127,8 +127,7 @@ public class WebAnnoCasUtil
             return aCas;
         }
 
-        ThreadLockingInvocationHandler handler = (ThreadLockingInvocationHandler) Proxy
-                .getInvocationHandler(aCas);
+        var handler = (ThreadLockingInvocationHandler) Proxy.getInvocationHandler(aCas);
         return (CAS) handler.getTarget();
     }
 
@@ -142,8 +141,7 @@ public class WebAnnoCasUtil
             return;
         }
 
-        ThreadLockingInvocationHandler handler = (ThreadLockingInvocationHandler) Proxy
-                .getInvocationHandler(aCas);
+        var handler = (ThreadLockingInvocationHandler) Proxy.getInvocationHandler(aCas);
         handler.transferOwnershipToCurrentThread();
     }
 

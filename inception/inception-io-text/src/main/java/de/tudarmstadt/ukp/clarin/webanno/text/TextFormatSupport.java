@@ -17,8 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.text;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
@@ -30,6 +35,7 @@ import org.dkpro.core.io.text.TextWriter;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 /**
  * <p>
@@ -65,6 +71,18 @@ public class TextFormatSupport
     public boolean isWritable()
     {
         return true;
+    }
+
+    @Override
+    public InputStream obfuscate(InputStream aSource) throws IOException
+    {
+        if (aSource == null) {
+            return null;
+        }
+
+        var s = new String(aSource.readAllBytes(), UTF_8);
+        var ob = TextUtils.obfuscate(s);
+        return new ByteArrayInputStream(ob.getBytes(UTF_8));
     }
 
     @Override

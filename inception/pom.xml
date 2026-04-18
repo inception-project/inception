@@ -158,6 +158,7 @@
     <module>inception-support-bootstrap</module>
     <module>inception-support</module>
     <module>inception-support-standalone</module>
+    <module>inception-support-xml</module>
     <module>inception-model</module>
     <module>inception-model-vdoc</module>
     <module>inception-model-export</module>

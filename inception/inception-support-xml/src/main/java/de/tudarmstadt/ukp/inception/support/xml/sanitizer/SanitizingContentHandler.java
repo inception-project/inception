@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.support.xml.sanitizer;
 
-import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sanitizeIllegalXmlCharacters;
 import static de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils.getQName;
+import static de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils.sanitizeIllegalXmlCharacters;
 import static java.lang.System.arraycopy;
 import static java.util.Collections.emptyMap;
 import static java.util.Comparator.comparing;

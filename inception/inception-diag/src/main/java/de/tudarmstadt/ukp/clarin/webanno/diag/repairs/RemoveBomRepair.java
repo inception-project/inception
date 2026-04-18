@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
-import static de.tudarmstadt.ukp.clarin.webanno.diag.checks.UnreachableAnnotationsCheck.findAllFeatureStructures;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.findAllFeatureStructures;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.forceOverwriteSofa;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 

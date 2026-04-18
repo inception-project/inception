@@ -166,4 +166,53 @@ public class XmlParserUtils
         return aEvent.isStartElement()
                 && ((StartElement) aEvent).getName().getLocalPart().equals(aElement);
     }
+
+    public static void sanitizeIllegalXmlCharacters(char[] aText, char aReplacementCharacter,
+            int aStart, int aLength)
+    {
+        char whiteplaceReplacementChar = ' '; // SPACE
+        if (aReplacementCharacter > 0) {
+            whiteplaceReplacementChar = aReplacementCharacter;
+        }
+
+        for (int i = aStart; i < aLength; i++) {
+            switch (aText[i]) {
+            case '\u0000': // NULL
+            case '\u0001': // START OF HEADING
+            case '\u0002': // START OF TEXT
+            case '\u0003': // END OF TEXT
+            case '\u0004': // END OF TRANSMISSION
+            case '\u0005': // ENQUIRY
+            case '\u0006': // ACKNOWLEDGE
+            case '\u0007': // BELL
+            case '\b': // BACKSPACE '\u0008'
+            case '\u000B': // VERTICAL TAB
+            case '\f': // FORM FEED '\u000C'
+            case '\u000E': // SHIFT OUT
+            case '\u000F': // SHIFT IN
+            case '\u0010': // DATA LINK ESCAPE
+            case '\u0011': // DEVICE CONTROL ONE
+            case '\u0012': // DEVICE CONTROL TWO
+            case '\u0013': // DEVICE CONTROL THREE
+            case '\u0014': // DEVICE CONTROL FOUR
+            case '\u0015': // NEGATIVE ACKNOWLEDGE
+            case '\u0016': // SYNCHRONOUS IDLE
+            case '\u0017': // END OF TRANSMISSION BLOCK
+            case '\u0018': // CANCEL
+            case '\u0019': // END OF MEDIUM
+            case '\u001A': // SUBSTITUTE
+            case '\u001B': // ESCAPE
+            case '\u001C': // FILE SEPARATOR
+            case '\u001D': // GROUP SEPARATOR
+            case '\u001E': // RECORD SEPARATOR
+            case '\u001F': // UNIT SEPARATOR
+            case '\uFFFE': // NONCHARACTER U+FFFE
+            case '\uFFFF': // NONCHARACTER U+FFFF
+                aText[i] = whiteplaceReplacementChar;
+                break;
+            default:
+                // Nothing to do
+            }
+        }
+    }
 }

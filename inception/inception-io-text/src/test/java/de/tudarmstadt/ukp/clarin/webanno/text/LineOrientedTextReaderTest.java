@@ -17,26 +17,29 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.text;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.uima.collection.CollectionReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
-public class LineOrientedTextReaderTest
+class LineOrientedTextReaderTest
 {
     @Test
-    public void test() throws Exception
+    void test() throws Exception
     {
-        JCas doc = JCasFactory.createJCas();
+        var doc = JCasFactory.createJCas();
 
-        CollectionReader reader = createReader(LineOrientedTextReader.class,
+        var reader = createReader(LineOrientedTextReader.class,
                 LineOrientedTextReader.PARAM_SOURCE_LOCATION, "LICENSE.txt");
 
         reader.getNext(doc.getCas());
@@ -45,5 +48,31 @@ public class LineOrientedTextReaderTest
 
         assertThat(select(doc, Sentence.class)).hasSize(169);
         assertThat(select(doc, Token.class)).isEmpty();
+    }
+
+    @Test
+    void obfuscatedFileIsReadIntoCas() throws Exception
+    {
+        var fs = new TextFormatSupport();
+
+        var original = "My number is 555-1234.";
+
+        try (var in = new ByteArrayInputStream(original.getBytes(UTF_8));
+                var ob = fs.obfuscate(in)) {
+
+            var obBytes = ob.readAllBytes();
+
+            var tmp = File.createTempFile("text-format-support-test", ".txt");
+            tmp.deleteOnExit();
+            try (var out = new FileOutputStream(tmp)) {
+                out.write(obBytes);
+            }
+
+            var jcas = JCasFactory.createJCas();
+            fs.read(null, jcas.getCas(), tmp);
+
+            var casText = jcas.getDocumentText();
+            assertThat(casText).isEqualTo(new String(obBytes, UTF_8));
+        }
     }
 }

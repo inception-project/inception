@@ -78,7 +78,7 @@ public class DocumentRepositoryExporterTest
     private ArgumentCaptor<DocumentRepository> runExportImportAndFetchDocumentRepositories()
     {
         // Export the project
-        var exportRequest = new FullProjectExportRequest(project, null, false);
+        var exportRequest = FullProjectExportRequest.builder().withProject(project).build();
         var monitor = new ProjectExportTaskMonitor(project, null, "test",
                 exportRequest.getFilenamePrefix());
         var exportedProject = new ExportedProject();

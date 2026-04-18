@@ -70,8 +70,8 @@ public interface GazetteerService
     List<GazetteerEntry> readGazetteerFile(Gazetteer aGaz) throws IOException;
 
     /**
-     * Parse the gazetteer input stream into the provided target list. This can be
-     * used for validation before persisting the gazetteer.
+     * Parse the gazetteer input stream into the provided target list. This can be used for
+     * validation before persisting the gazetteer.
      */
     @SuppressWarnings("javadoc")
     void parseGazetteer(Gazetteer aGaz, InputStream aStream, List<GazetteerEntry> aTarget)
