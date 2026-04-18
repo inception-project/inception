@@ -111,12 +111,15 @@ export class ApacheAnnotatorVisualizer {
         this.optimizeLayout('constructor');
 
         this.tracker = new ViewportTracker(
-                this.root, () => {
-                    this.loadAnnotations()
-                }, 
-                {
-                    ignoreSelector: '.iaa-section-control, .iaa-vertical-marker-focus, .iaa-ping-marker, iaa-visible-annotations-panel, iaa-visible-annotations-panel-spacer'
-                });
+            this.root,
+            () => {
+                this.loadAnnotations();
+            },
+            {
+                ignoreSelector:
+                    '.iaa-section-control, .iaa-vertical-marker-focus, .iaa-ping-marker, iaa-visible-annotations-panel, iaa-visible-annotations-panel-spacer',
+            }
+        );
 
         this.resizer = new ResizeManager(this, this.ajax);
 

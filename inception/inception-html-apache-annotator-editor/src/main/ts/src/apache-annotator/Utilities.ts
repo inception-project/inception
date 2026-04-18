@@ -18,6 +18,7 @@
 
 import { highlightText } from '@apache-annotator/dom';
 import type { VID } from '@inception-project/inception-js-api/src/model/VID';
+import { calculateStartOffset, offsetToRange } from '@inception-project/inception-js-api';
 
 export interface SelectionLike {
     anchorNode: Node | null | undefined;
@@ -502,7 +503,7 @@ export function closestWithMatcher(
         }
     }
 
-    let current = start;
+    let current: Element | null = start;
     while (current) {
         if (matcher(current)) return current;
         current = current.parentElement;
@@ -569,4 +570,37 @@ export function expandSelectionOverProtectedElements(
     // console.log(`Focus node ${sel.focusNode} ${sel.focusOffset} -> ${focusNode} ${focusOffset}`)
 
     return { anchorNode, anchorOffset, focusNode, focusOffset };
+}
+
+/**
+ * Return a DOM Range that is safe to use for annotations based on a Selection.
+ * If `protectElements` is true, the selection boundaries are expanded over
+ * protected elements using `expandSelectionOverProtectedElements`.
+ */
+export function getSafeRangeForSelection(
+    sel: Selection,
+    contentRoot: Node,
+    protectedElementsMatcher?: (el: Element) => boolean,
+    protectElements: boolean = true
+): Range | null {
+    try {
+        if (!sel || sel.rangeCount === 0) return null;
+
+        if (!protectElements) return sel.rangeCount ? sel.getRangeAt(0) : null;
+
+        const safeSel = expandSelectionOverProtectedElements(sel, protectedElementsMatcher);
+        if (!safeSel || !safeSel.anchorNode || !safeSel.focusNode) return null;
+
+        const safeBegin =
+            calculateStartOffset(contentRoot, safeSel.anchorNode) + safeSel.anchorOffset;
+        const safeEnd = calculateStartOffset(contentRoot, safeSel.focusNode) + safeSel.focusOffset;
+
+        return offsetToRange(
+            contentRoot,
+            Math.min(safeBegin, safeEnd),
+            Math.max(safeBegin, safeEnd)
+        );
+    } catch (e) {
+        return null;
+    }
 }

@@ -74,7 +74,7 @@ export function calculateEndOffset(root: Node, element: Node): number {
     }
 }
 
-export function offsetToRange(root: Element, begin: number, end: number): Range | null {
+export function offsetToRange(root: Node, begin: number, end: number): Range | null {
     let base = 0;
 
     const ni = document.createNodeIterator(root, NodeFilter.SHOW_TEXT);
