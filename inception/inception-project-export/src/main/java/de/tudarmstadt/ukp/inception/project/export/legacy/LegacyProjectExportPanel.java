@@ -88,6 +88,7 @@ public class LegacyProjectExportPanel
 
         add(form = new Form<>("exportForm",
                 new CompoundPropertyModel<>(FullProjectExportRequest.builder() //
+                        .withTitle("Project backup") //
                         .withFormat(FullProjectExportRequest.FORMAT_AUTO) //
                         .withIncludeInProgress(true) //
                         .build())));

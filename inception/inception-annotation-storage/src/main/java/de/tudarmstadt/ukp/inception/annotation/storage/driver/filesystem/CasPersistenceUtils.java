@@ -137,7 +137,7 @@ public final class CasPersistenceUtils
         }
     }
 
-    private static void write(OutputStream aOut, CAS aCas) throws IOException, FileNotFoundException
+    static void write(OutputStream aOut, CAS aCas) throws IOException, FileNotFoundException
     {
         var serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
         write(aOut, serializer);

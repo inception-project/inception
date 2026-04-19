@@ -31,18 +31,17 @@ import java.io.IOException;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
-import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 
 public class UimaJsonCasStructureFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     public static final String ID = "jsoncas-struct";
     public static final String NAME = "UIMA CAS JSON 0.4.0 (XML/PDF structure)";
@@ -81,27 +80,19 @@ public class UimaJsonCasStructureFormatSupport
     @Override
     public File write(SourceDocument aDocument, CAS aCas, File aTargetFolder,
             boolean aStripExtension)
-        throws ResourceInitializationException, AnalysisEngineProcessException, IOException
+        throws UIMAException, IOException
     {
         var cas = aCas;
 
         if (!containsXmlDocumentStructure(aCas) || !containsPdfDocumentStructure(aCas)) {
-            try {
-                cas = createCasCopy(aCas);
-                var initialCas = documentService.createOrReadInitialCas(aDocument, AUTO_CAS_UPGRADE,
-                        SHARED_READ_ONLY_ACCESS);
-                transferPdfDocumentStructure(cas, initialCas);
-                transferXmlDocumentStructure(cas, initialCas);
-            }
-            catch (ResourceInitializationException | AnalysisEngineProcessException e) {
-                throw e;
-            }
-            catch (UIMAException e) {
-                throw new ResourceInitializationException(e);
-            }
+            cas = createCasCopy(aCas);
+            var initialCas = documentService.createOrReadInitialCas(aDocument, AUTO_CAS_UPGRADE,
+                    SHARED_READ_ONLY_ACCESS);
+            transferPdfDocumentStructure(cas, initialCas);
+            transferXmlDocumentStructure(cas, initialCas);
         }
 
-        return FormatSupport.super.write(aDocument, cas, aTargetFolder, aStripExtension);
+        return super.write(aDocument, cas, aTargetFolder, aStripExtension);
     }
 
     @Override

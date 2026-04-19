@@ -25,7 +25,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.io.pdf.config.PdfFormatAutoConfiguration;
 
@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.inception.io.pdf.config.PdfFormatAutoConfiguration;
  * </p>
  */
 public class PdfJsonCasFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     public static final String ID = "pdf2JsonCas";
     public static final String NAME = "PDF (with embedded JSON CAS)";

@@ -27,7 +27,7 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.request.resource.ResourceReference;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.io.intertext.config.IntertextAutoConfiguration;
 
@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.inception.io.intertext.config.IntertextAutoConfigurati
  * </p>
  */
 public class IntertextFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     public static final String ID = "intertext";
     public static final String NAME = "Intertext XML (experimental)";

@@ -24,7 +24,7 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.html.HtmlReader;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 /**
@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
  * </p>
  */
 public class LegacyHtmlFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     public static final String ID = "html";
     public static final String NAME = "HTML (legacy)";

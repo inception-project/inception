@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.export;
+package de.tudarmstadt.ukp.clarin.webanno.api.format;
 
-import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl.addOrUpdateDocumentMetadata;
+import static de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport.addOrUpdateDocumentMetadata;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.uima.fit.factory.JCasFactory;
@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
-public class DocumentImportExportSerivceImplStaticsTest
+public class FormatSupportTest
 {
     @Test
     void thatDocumentMetadataIsSetCorrectly() throws Exception
@@ -55,7 +55,5 @@ public class DocumentImportExportSerivceImplStaticsTest
         assertThat(dmd.getDocumentBaseUri()).as("documentBaseUri").isEqualTo(slug);
         assertThat(dmd.getCollectionId()).as("collectionId").isEqualTo(slug);
         assertThat(dmd.getDocumentId()).as("documentId").isEqualTo(username);
-
     }
-
 }

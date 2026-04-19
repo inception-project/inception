@@ -39,6 +39,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -57,6 +58,7 @@ public class SourceDocumentExporterTest
     private RepositoryProperties repositoryProperties;
 
     private @Mock DocumentService documentService;
+    private @Mock DocumentImportExportService documentImportExportService;
     private DocumentStorageService documentStorageService;
 
     private Project project;
@@ -79,7 +81,7 @@ public class SourceDocumentExporterTest
         });
 
         sut = new SourceDocumentExporter(documentService, documentStorageService,
-                repositoryProperties);
+                repositoryProperties, documentImportExportService);
     }
 
     @Test

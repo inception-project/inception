@@ -51,6 +51,9 @@ public interface CasStorageService
     void writeCas(SourceDocument aDocument, CAS aCas, AnnotationSet aSet)
         throws IOException, CasSessionException;
 
+    void serializeCas(SourceDocument aDocument, AnnotationSet aSet, CAS aCas, OutputStream aOs)
+        throws IOException;
+
     /**
      * Retrieve the annotation CAS of a given user for a given {@link SourceDocument}. By default
      * applies the CAS doctor. This uses {@link CasAccessMode#EXCLUSIVE_WRITE_ACCESS} and

@@ -38,7 +38,7 @@ import org.apache.wicket.resource.FileSystemResourceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlDocumentReader;
@@ -48,7 +48,7 @@ import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollectionIOUtils;
 
 public class CustomXmlFormatFactory
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 

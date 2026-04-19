@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.inception.project.export.legacy.LegacyExportProjectSet
 import de.tudarmstadt.ukp.inception.project.export.settings.ExportProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.project.export.task.backup.BackupProjectExportExtension;
 import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportExtension;
+import de.tudarmstadt.ukp.inception.project.export.task.export.TransformingProjectExportExtension;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.websocket.security.StompSecurityConfigurer;
 
@@ -98,6 +99,13 @@ public class ProjectExportServiceAutoConfiguration
     public BackupProjectExportExtension backupProjectExportExtension()
     {
         return new BackupProjectExportExtension();
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "dashboard.transforming-export.enabled", havingValue = "true", matchIfMissing = false)
+    public TransformingProjectExportExtension transformingProjectExportExtension()
+    {
+        return new TransformingProjectExportExtension();
     }
 
     @Bean

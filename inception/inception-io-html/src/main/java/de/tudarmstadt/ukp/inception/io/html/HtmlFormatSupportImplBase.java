@@ -23,14 +23,14 @@ import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.externaleditor.policy.DefaultHtmlDocumentPolicy;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 
 public abstract class HtmlFormatSupportImplBase
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     private static final Set<String> HTML_SECTION_ELEMENTS = Set.of("p");
     private static final Set<String> HTML_PROTECTED_ELEMENTS = Set.of( //

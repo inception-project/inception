@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.feature.bool.BooleanFeatureSupport;
@@ -130,10 +131,11 @@ public class AnnotationSchemaServiceAutoConfiguration
 
     @Bean
     public AnnotationDocumentExporter annotationDocumentExporter(DocumentService aDocumentService,
-            UserDao aUserRepository, DocumentImportExportService aImportExportService,
+            CasStorageService aCasStorageService, UserDao aUserRepository,
+            DocumentImportExportService aImportExportService,
             RepositoryProperties aRepositoryProperties)
     {
-        return new AnnotationDocumentExporter(aDocumentService, aUserRepository,
+        return new AnnotationDocumentExporter(aDocumentService, aCasStorageService, aUserRepository,
                 aImportExportService, aRepositoryProperties);
     }
 

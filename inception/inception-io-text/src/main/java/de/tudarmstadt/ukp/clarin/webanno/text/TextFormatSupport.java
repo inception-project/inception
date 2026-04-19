@@ -32,8 +32,9 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.text.TextWriter;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
@@ -44,7 +45,7 @@ import de.tudarmstadt.ukp.inception.support.text.TextUtils;
  * </p>
  */
 public class TextFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     public static final String ID = "text";
     public static final String NAME = "Plain text";
@@ -74,7 +75,7 @@ public class TextFormatSupport
     }
 
     @Override
-    public InputStream obfuscate(InputStream aSource) throws IOException
+    public InputStream obfuscate(SourceDocument aDocument, InputStream aSource) throws IOException
     {
         if (aSource == null) {
             return null;

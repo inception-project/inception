@@ -19,10 +19,12 @@ package de.tudarmstadt.ukp.inception.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport.addOrUpdateDocumentMetadata;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
+import static java.nio.file.Files.createTempDirectory;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
@@ -34,8 +36,6 @@ import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -46,7 +46,6 @@ import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
@@ -70,7 +69,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
@@ -318,7 +316,7 @@ public class DocumentImportExportServiceImpl
 
         // Prepare a CAS with the project type system
         var cas = WebAnnoCasUtil.createCas(tsd);
-        format.read(aDocument.getProject(), WebAnnoCasUtil.getRealCas(cas), aFile);
+        format.read(aDocument, getRealCas(cas), aFile);
 
         // Create sentence / token annotations if they are missing - sentences first because
         // tokens are then generated inside the sentences
@@ -452,13 +450,15 @@ public class DocumentImportExportServiceImpl
 
                 // Update the source file name in case it is changed for some reason. This is
                 // necessary for the writers to create the files under the correct names.
+                // NOTE: add metadata to the export CAS (not the source CAS) so writers
+                // receive the metadata when serializing the export CAS.
                 addOrUpdateDocumentMetadata(exportCas, aDocument, aDataOwner);
 
                 var features = listSupportedFeatures(project, aBulkOperationContext);
                 annotationService.addLayerAndFeatureDefinitionAnnotations(exportCas, features);
                 annotationService.addTagsetDefinitionAnnotations(exportCas, features);
 
-                var exportTempDir = Files.createTempDirectory("inception-export").toFile();
+                var exportTempDir = createTempDirectory("inception-export").toFile();
                 try {
                     return aFormat.write(aDocument, getRealCas(exportCas), exportTempDir,
                             aStripExtension);
@@ -539,17 +539,5 @@ public class DocumentImportExportServiceImpl
         }
 
         return features;
-    }
-
-    static void addOrUpdateDocumentMetadata(CAS aCas, SourceDocument aDocument, String aDataOwner)
-        throws MalformedURLException, CASException
-    {
-        var slug = aDocument.getProject().getSlug();
-        var documentMetadata = DocumentMetaData.get(aCas.getJCas());
-        documentMetadata.setDocumentTitle(aDocument.getName());
-        documentMetadata.setCollectionId(slug);
-        documentMetadata.setDocumentId(aDataOwner);
-        documentMetadata.setDocumentBaseUri(slug);
-        documentMetadata.setDocumentUri(slug + "/" + aDocument.getName());
     }
 }

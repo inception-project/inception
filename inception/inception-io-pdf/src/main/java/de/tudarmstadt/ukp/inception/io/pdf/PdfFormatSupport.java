@@ -26,7 +26,7 @@ import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.io.pdf.config.PdfFormatAutoConfiguration;
@@ -41,7 +41,7 @@ import de.tudarmstadt.ukp.inception.io.pdf.visual.PdfVModelUtils;
  * </p>
  */
 public class PdfFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     public static final String ID = "pdf2";
     public static final String NAME = "PDF";

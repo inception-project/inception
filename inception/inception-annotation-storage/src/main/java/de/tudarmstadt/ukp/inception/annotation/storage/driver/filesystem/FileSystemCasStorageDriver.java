@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.setDocumentId;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.file.Files.move;
+import static java.nio.file.Files.newInputStream;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.regex.Pattern.compile;
 import static java.util.regex.Pattern.quote;
@@ -164,6 +165,23 @@ public class FileSystemCasStorageDriver
         }
 
         return cas;
+    }
+
+    @Override
+    public void writeCas(SourceDocument aDocument, AnnotationSet aSet, CAS aCas, OutputStream aOS)
+        throws IOException
+    {
+        // Now write the new version to "<username>.ser" or CURATION_USER.ser
+        setDocumentId(aCas, aSet.id());
+        if (casStorageProperties.isParanoidCasSerialization()) {
+            CasPersistenceUtils.write(aOS, aCas);
+        }
+        else if (casStorageProperties.isCompressedCasSerialization()) {
+            CasPersistenceUtils.writeSnappyCompressed(aOS, aCas);
+        }
+        else {
+            CasPersistenceUtils.write(aOS, aCas);
+        }
     }
 
     @Override
@@ -402,7 +420,7 @@ public class FileSystemCasStorageDriver
         Validate.notNull(aDocument, "Source document must be specified");
         Validate.notNull(aSet, "Set must be specified");
 
-        try (var is = Files.newInputStream(getCasFile(aDocument, aSet).toPath())) {
+        try (var is = newInputStream(getCasFile(aDocument, aSet).toPath())) {
             IOUtils.copyLarge(is, aStream);
         }
     }

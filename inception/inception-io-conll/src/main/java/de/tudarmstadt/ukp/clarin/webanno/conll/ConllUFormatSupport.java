@@ -28,7 +28,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.conll.ConllUReader;
 import org.dkpro.core.io.conll.ConllUWriter;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.conll.config.ConllFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
@@ -39,7 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
  * </p>
  */
 public class ConllUFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     public static final String ID = "conllu";
     public static final String NAME = "CoNLL-U";

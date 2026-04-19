@@ -37,7 +37,6 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.xmi.XmiWriter;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -51,7 +50,7 @@ import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiF
  * </p>
  */
 public class XmiXmlStructureFormatSupport
-    implements FormatSupport
+    extends XmiFormatSupport_ImplBase
 {
     public static final String ID = "xmi-struct";
     public static final String NAME = "UIMA CAS XMI (XML 1.0 + XML/PDF structure)";
@@ -85,12 +84,6 @@ public class XmiXmlStructureFormatSupport
     }
 
     @Override
-    public boolean isProneToInconsistencies()
-    {
-        return true;
-    }
-
-    @Override
     public File write(SourceDocument aDocument, CAS aCas, File aTargetFolder,
             boolean aStripExtension)
         throws ResourceInitializationException, AnalysisEngineProcessException, IOException
@@ -113,7 +106,7 @@ public class XmiXmlStructureFormatSupport
             }
         }
 
-        return FormatSupport.super.write(aDocument, cas, aTargetFolder, aStripExtension);
+        return super.write(aDocument, cas, aTargetFolder, aStripExtension);
     }
 
     @Override

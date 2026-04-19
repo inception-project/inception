@@ -28,7 +28,6 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.xmi.XmiReader;
 import org.dkpro.core.io.xmi.XmiWriter;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.io.pdf.visual.PdfVModelUtils;
@@ -43,7 +42,7 @@ import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
  * </p>
  */
 public class XmiXml11FormatSupport
-    implements FormatSupport
+    extends XmiFormatSupport_ImplBase
 {
     public static final String ID = "xmi-xml1.1";
     public static final String NAME = "UIMA CAS XMI (XML 1.1)";
@@ -75,12 +74,6 @@ public class XmiXml11FormatSupport
 
     @Override
     public boolean isWritable()
-    {
-        return true;
-    }
-
-    @Override
-    public boolean isProneToInconsistencies()
     {
         return true;
     }
