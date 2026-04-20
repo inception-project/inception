@@ -47,6 +47,7 @@ public class BackupProjectExporterPanel
 
         var model = CompoundPropertyModel.of(FullProjectExportRequest.builder() //
                 .withProject(aModel.getObject()) //
+                .withTitle("Project backup") //
                 .withIncludeInProgress(true) //
                 .build());
 

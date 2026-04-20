@@ -28,6 +28,7 @@ public class FullProjectExportRequest
     private static final String FILENAME_PREFIX = "project";
     public static final String FORMAT_AUTO = "AUTO";
 
+    private String title;
     private String format;
     private boolean includeInProgress;
     private boolean obfuscate;
@@ -35,6 +36,7 @@ public class FullProjectExportRequest
     private FullProjectExportRequest(Builder aBuilder)
     {
         super(aBuilder.project);
+        title = aBuilder.title;
         format = aBuilder.format;
         includeInProgress = aBuilder.includeInProgress;
         obfuscate = aBuilder.obfuscate;
@@ -80,7 +82,7 @@ public class FullProjectExportRequest
     @Override
     public String getTitle()
     {
-        var sb = new StringBuilder("Project backup");
+        var sb = new StringBuilder(title);
         if (format != null) {
             sb.append(" (" + format + ")");
         }
@@ -95,6 +97,7 @@ public class FullProjectExportRequest
     public static final class Builder
     {
         private Project project;
+        private String title = "Project export";
         private String format;
         private boolean includeInProgress;
         private boolean obfuscate;
@@ -106,6 +109,12 @@ public class FullProjectExportRequest
         public Builder withProject(Project aProject)
         {
             project = aProject;
+            return this;
+        }
+
+        public Builder withTitle(String aTitle)
+        {
+            title = aTitle;
             return this;
         }
 

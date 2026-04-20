@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.project.export.task.curated;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -32,6 +33,7 @@ import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAu
  * {@link ProjectExportServiceAutoConfiguration#curatedDocumentsProjectExportExtension}.
  * </p>
  */
+@Order(300)
 public class CuratedDocumentsProjectExportExtension
     implements ProjectExportExtension
 {

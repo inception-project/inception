@@ -236,8 +236,7 @@ public class CasStorageServiceImpl
             // have broken their promise to not make any modifications to a CAS that was loaded in
             // read-only mode.
             // ... however, if the CAS has been obtained bypassing the session and caches, then no
-            // such
-            // promise has been made. So we can then try to get exclusive access and save it.
+            // such promise has been made. So we can then try to get exclusive access and save it.
             if (session.contains(aCas)) {
                 if (!session.isWritingPermitted(aCas)) {
                     throw new IOException("Session does not permit the CAS for set [" + aSet
@@ -290,6 +289,14 @@ public class CasStorageServiceImpl
 
             session.getManagedState(aCas).ifPresent(SessionManagedCas::incrementWriteCount);
         }
+    }
+
+    @Override
+    public void serializeCas(SourceDocument aDocument, AnnotationSet aSet, CAS aCas,
+            OutputStream aOs)
+        throws IOException
+    {
+        driver.writeCas(aDocument, aSet, aCas, aOs);
     }
 
     @Override

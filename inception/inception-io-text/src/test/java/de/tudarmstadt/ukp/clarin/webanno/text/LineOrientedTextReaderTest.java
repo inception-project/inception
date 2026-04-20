@@ -29,6 +29,7 @@ import java.io.FileOutputStream;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.junit.jupiter.api.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -58,7 +59,7 @@ class LineOrientedTextReaderTest
         var original = "My number is 555-1234.";
 
         try (var in = new ByteArrayInputStream(original.getBytes(UTF_8));
-                var ob = fs.obfuscate(in)) {
+                var ob = fs.obfuscate(null, in)) {
 
             var obBytes = ob.readAllBytes();
 
@@ -69,7 +70,7 @@ class LineOrientedTextReaderTest
             }
 
             var jcas = JCasFactory.createJCas();
-            fs.read(null, jcas.getCas(), tmp);
+            fs.read(new SourceDocument(), jcas.getCas(), tmp);
 
             var casText = jcas.getDocumentText();
             assertThat(casText).isEqualTo(new String(obBytes, UTF_8));

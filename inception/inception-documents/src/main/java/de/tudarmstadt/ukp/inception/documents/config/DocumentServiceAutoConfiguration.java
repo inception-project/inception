@@ -79,10 +79,11 @@ public class DocumentServiceAutoConfiguration
     @Bean
     public SourceDocumentExporter sourceDocumentExporter(DocumentService aDocumentService,
             RepositoryProperties aRepositoryProperties,
-            DocumentStorageService aDocumentStorageService)
+            DocumentStorageService aDocumentStorageService,
+            DocumentImportExportService aDocumentImportExportService)
     {
         return new SourceDocumentExporter(aDocumentService, aDocumentStorageService,
-                aRepositoryProperties);
+                aRepositoryProperties, aDocumentImportExportService);
     }
 
     @Bean

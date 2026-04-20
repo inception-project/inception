@@ -31,7 +31,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public class FormatSupportDescription
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     private final String id;
     private final String name;

@@ -43,6 +43,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -95,6 +96,7 @@ class AnnotationSchemaServiceImplTest
 
     private @MockitoBean DocumentService documentService;
     private @MockitoBean DocumentImportExportService documentImportExportService;
+    private @MockitoBean CasStorageService casStorageService;
 
     private @Autowired ProjectService projectService;
     private @Autowired UserDao userRepository;

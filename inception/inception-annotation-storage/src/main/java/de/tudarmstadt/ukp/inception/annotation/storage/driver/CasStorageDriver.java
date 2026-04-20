@@ -35,6 +35,9 @@ public interface CasStorageDriver
 
     void writeCas(SourceDocument aDocument, AnnotationSet aSet, CAS aCas) throws IOException;
 
+    void writeCas(SourceDocument aDocument, AnnotationSet aSet, CAS aCas, OutputStream aOS)
+        throws IOException;
+
     void exportCas(SourceDocument aDocument, AnnotationSet aSet, OutputStream aStream)
         throws IOException;
 

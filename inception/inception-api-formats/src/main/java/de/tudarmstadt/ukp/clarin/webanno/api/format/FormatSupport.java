@@ -17,47 +17,39 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.format;
 
-import static de.tudarmstadt.ukp.inception.support.io.ZipUtils.zipFolder;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static java.io.File.createTempFile;
+import static java.nio.file.Files.copy;
+import static java.nio.file.Files.createTempDirectory;
+import static java.nio.file.Files.readAllBytes;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.empty;
-import static org.apache.commons.io.FileUtils.copyFile;
-import static org.apache.commons.io.FilenameUtils.getBaseName;
+import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FilenameUtils.getExtension;
-import static org.apache.commons.lang3.StringUtils.rightPad;
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
-import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
-import static org.apache.uima.fit.factory.ConfigurationParameterFactory.addConfigurationParameters;
-import static org.apache.uima.fit.util.LifeCycleUtil.collectionProcessComplete;
-import static org.apache.uima.fit.util.LifeCycleUtil.destroy;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.uima.analysis_engine.AnalysisEngine;
-import org.apache.uima.analysis_engine.AnalysisEngineDescription;
-import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
+import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.collection.CollectionException;
-import org.apache.uima.collection.CollectionReader;
-import org.apache.uima.collection.CollectionReaderDescription;
-import org.apache.uima.fit.util.LifeCycleUtil;
-import org.apache.uima.resource.ResourceInitializationException;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.cas.CASException;
+import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.wicket.request.resource.ResourceReference;
-import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
-import org.dkpro.core.api.io.ResourceCollectionReaderBase;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
+import de.tudarmstadt.ukp.inception.support.uima.CasObfuscationUtils;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 
 public interface FormatSupport
@@ -150,114 +142,78 @@ public interface FormatSupport
         return empty();
     }
 
-    /**
-     * @param aProject
-     *            the project into which to import the document(s).
-     * @param aTSD
-     *            the project's type system
-     * @return a UIMA reader description.
-     * @throws ResourceInitializationException
-     *             if the reader could not be initialized
-     */
-    default CollectionReaderDescription getReaderDescription(Project aProject,
-            TypeSystemDescription aTSD)
-        throws ResourceInitializationException
+    default InputStream obfuscate(SourceDocument aDocument, InputStream aSource) throws IOException
     {
-        throw new UnsupportedOperationException("The format [" + getName() + "] cannot be read");
-    }
+        if (!(isReadable() && isWritable())) {
+            throw new UnsupportedOperationException(
+                    "The format [" + getName() + "] cannot be obfuscated");
+        }
 
-    /**
-     * @param aProject
-     *            the project
-     * @param aTSD
-     *            the project's type system
-     * @param aCAS
-     *            the CAS to be exported
-     * @return a UIMA reader description.
-     * @throws ResourceInitializationException
-     *             if the writer could not be initialized
-     */
-    default AnalysisEngineDescription getWriterDescription(Project aProject,
-            TypeSystemDescription aTSD, CAS aCAS)
-        throws ResourceInitializationException
-    {
-        throw new UnsupportedOperationException("The format [" + getName() + "] cannot be written");
-    }
+        if (aSource == null) {
+            return null;
+        }
 
-    default InputStream obfuscate(InputStream aSource) throws IOException
-    {
-        throw new UnsupportedOperationException(
-                "The format [" + getName() + "] cannot be obfuscated");
-    }
+        File srcFile = null;
+        File targetFolder = null;
 
-    default void read(Project aProject, CAS cas, File aFile)
-        throws ResourceInitializationException, IOException, CollectionException
-    {
-        var readerDescription = getReaderDescription(aProject, null);
-        addConfigurationParameters(readerDescription,
-                ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
-                aFile.getParentFile().getAbsolutePath(),
-                ResourceCollectionReaderBase.PARAM_PATTERNS, "[+]" + aFile.getName());
-
-        CollectionReader reader = null;
         try {
-            reader = createReader(readerDescription);
+            srcFile = createTempFile("inception-format-src", ".tmp");
+            copy(aSource, srcFile.toPath(), REPLACE_EXISTING);
 
-            if (!reader.hasNext()) {
-                throw new FileNotFoundException("Source file [" + aFile.getName()
-                        + "] not found in [" + aFile.getPath() + "]");
+            try (var session = CasStorageSession.openNested()) {
+                var jcas = JCasFactory.createJCas();
+                read(aDocument, jcas.getCas(), srcFile);
+
+                // Some exporters need access to the original source document in order
+                // to merge their data with the original data.
+                addOrUpdateDocumentMetadata(jcas.getCas(), aDocument, INITIAL_SET.id());
+
+                var obfCas = CasObfuscationUtils.obfuscate(jcas.getCas());
+
+                targetFolder = createTempDirectory("inception-format-obf").toFile();
+                var exportFile = write(aDocument, obfCas, targetFolder, false);
+
+                return new ByteArrayInputStream(readAllBytes(exportFile.toPath()));
             }
-            reader.getNext(cas);
+            catch (UIMAException e) {
+                throw new IOException(e);
+            }
         }
         finally {
-            LifeCycleUtil.close(reader);
-            LifeCycleUtil.destroy(reader);
+            deleteQuietly(srcFile);
+            deleteQuietly(targetFolder);
         }
     }
 
-    default File write(SourceDocument aDocument, CAS aCas, File aTargetFolder,
-            boolean aStripExtension)
-        throws ResourceInitializationException, AnalysisEngineProcessException, IOException
-    {
-        var writer = getWriterDescription(aDocument.getProject(), null, aCas);
-        addConfigurationParameters(writer, //
-                JCasFileWriter_ImplBase.PARAM_USE_DOCUMENT_ID, true,
-                JCasFileWriter_ImplBase.PARAM_ESCAPE_FILENAME, false,
-                JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, aTargetFolder,
-                JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
+    void read(SourceDocument aDocument, CAS cas, File aFile) throws UIMAException, IOException;
 
-        // Not using SimplePipeline.runPipeline here now because it internally works
-        // with an aggregate engine which is slow due to
-        // https://issues.apache.org/jira/browse/UIMA-6200
-        AnalysisEngine engine = null;
-        try {
-            engine = createEngine(writer);
-            engine.process(aCas);
-            collectionProcessComplete(engine);
-        }
-        finally {
-            destroy(engine);
-        }
+    File write(SourceDocument aDocument, CAS aCas, File aTargetFolder, boolean aStripExtension)
+        throws UIMAException, IOException;
 
-        // If the writer produced more than one file, we package it up as a ZIP file
-        if (aTargetFolder.listFiles().length > 1) {
-            var exportFile = createTempFile("inception-document", ".zip");
-            zipFolder(aTargetFolder, exportFile);
-            return exportFile;
-        }
-
-        // If the writer produced only a single file, then that is the result
-        var exportedFile = aTargetFolder.listFiles()[0];
-        // temp-file prefix must be at least 3 chars
-        var baseName = rightPad(getBaseName(exportedFile.getName()), 3, "_");
-        var extension = getExtension(exportedFile.getName());
-        var exportFile = createTempFile(baseName, "." + extension);
-        copyFile(exportedFile, exportFile);
-        return exportFile;
-    }
-
-    default void prepareAnnotationCas(CAS aInitialCas, SourceDocument aDocument)
+    /**
+     * Apply to an initial CAS created from a source document in order to prepare it for being an
+     * annotation CAS for an annotator. It will modify the provided CAS in place, so make sure it is
+     * already the copy that will be given to the annotator!
+     * 
+     * @param aCas
+     *            the annotators CAS copied from the initial CAS.
+     * @param aDocument
+     *            the source document this CAS belongs to
+     */
+    default void prepareAnnotationCas(CAS aCas, SourceDocument aDocument)
     {
         // Do nothing by default
+    }
+
+    static void addOrUpdateDocumentMetadata(CAS aCas, SourceDocument aDocument, String aDataOwner)
+        throws MalformedURLException, CASException
+    {
+        var slug = aDocument.getProject().getSlug();
+        var documentMetadata = DocumentMetaData.get(aCas.getJCas());
+        documentMetadata.setDocumentTitle(aDocument.getName());
+        documentMetadata.setCollectionId(slug);
+        documentMetadata.setDocumentId(aDataOwner);
+        documentMetadata.setDocumentBaseUri(slug);
+        documentMetadata.setDocumentUri(slug + "/" + aDocument.getName());
     }
 }

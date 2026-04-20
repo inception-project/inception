@@ -42,12 +42,21 @@
       <artifactId>inception-support-xml</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-annotation-storage-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-io-asl</artifactId>
     </dependency>
-    
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-metadata-asl</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>

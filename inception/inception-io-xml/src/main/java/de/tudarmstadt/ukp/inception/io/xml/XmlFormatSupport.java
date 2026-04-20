@@ -26,7 +26,7 @@ import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlDocumentReader;
@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlDocumentWriter;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
 
 public class XmlFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     public static final String ID = "dkpro-core-xml-document";
     public static final String NAME = "XML (generic)";

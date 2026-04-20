@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.schema.exporters;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
@@ -28,6 +29,7 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEU
 import static de.tudarmstadt.ukp.inception.support.io.FastIOUtils.copy;
 import static java.lang.Math.ceil;
 import static java.lang.System.currentTimeMillis;
+import static java.nio.file.Files.newInputStream;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
@@ -62,6 +64,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
@@ -84,6 +87,7 @@ import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.exporters.SourceDocumentExporter;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.support.uima.CasObfuscationUtils;
 
 /**
  * <p>
@@ -101,16 +105,19 @@ public class AnnotationDocumentExporter
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final DocumentService documentService;
+    private final CasStorageService casStorageService;
     private final UserDao userRepository;
     private final DocumentImportExportService importExportService;
     private final RepositoryProperties repositoryProperties;
 
     @Autowired
-    public AnnotationDocumentExporter(DocumentService aDocumentService, UserDao aUserRepository,
+    public AnnotationDocumentExporter(DocumentService aDocumentService,
+            CasStorageService aCasStorageService, UserDao aUserRepository,
             DocumentImportExportService aImportExportService,
             RepositoryProperties aRepositoryProperties)
     {
         documentService = aDocumentService;
+        casStorageService = aCasStorageService;
         userRepository = aUserRepository;
         importExportService = aImportExportService;
         repositoryProperties = aRepositoryProperties;
@@ -223,10 +230,7 @@ public class AnnotationDocumentExporter
                     documentService.createOrReadInitialCas(srcDoc);
                 }
 
-                ProjectExporter.writeEntry(
-                        aStage, ANNOTATION_CAS_FOLDER + srcDoc.getName() + "/"
-                                + INITIAL_CAS_PSEUDO_USER + ".ser",
-                        os -> documentService.exportCas(srcDoc, INITIAL_SET, os));
+                exportCas(aRequest, aStage, bulkOperationContext, srcDoc, INITIAL_SET);
 
                 if (format != null) {
                     exportAdditionalFormat(aStage, bulkOperationContext, srcDoc, format,
@@ -250,11 +254,8 @@ public class AnnotationDocumentExporter
                             && !annDoc.getState().equals(AnnotationDocumentState.NEW)
                             && !annDoc.getState().equals(AnnotationDocumentState.IGNORE)) {
 
-                        ProjectExporter.writeEntry(aStage, ANNOTATION_CAS_FOLDER + srcDoc.getName()
-                                + "/" + annDoc.getUser() + ".ser", os -> {
-                                    documentService.exportCas(srcDoc,
-                                            AnnotationSet.forUser(annDoc.getUser()), os);
-                                });
+                        exportCas(aRequest, aStage, bulkOperationContext, srcDoc,
+                                annDoc.getAnnotationSet());
 
                         if (format != null) {
                             exportAdditionalFormat(aStage, bulkOperationContext, srcDoc, format,
@@ -271,6 +272,35 @@ public class AnnotationDocumentExporter
             aMonitor.setProgress(initProgress + (int) ceil(((double) i) / documents.size() * 80.0));
             i++;
         }
+    }
+
+    private void exportCas(FullProjectExportRequest aRequest, ZipOutputStream aStage,
+            Map<Pair<Project, String>, Object> bulkOperationContext, SourceDocument aSrcDoc,
+            AnnotationSet aSet)
+        throws IOException
+    {
+        if (aRequest.isObfuscate()) {
+            ProjectExporter.writeEntry(aStage,
+                    ANNOTATION_CAS_FOLDER + aSrcDoc.getName() + "/" + aSet.id() + ".ser", os -> {
+                        try (var session = CasStorageSession.openNested()) {
+                            var cas = casStorageService.readCas(aSrcDoc, aSet,
+                                    UNMANAGED_NON_INITIALIZING_ACCESS);
+                            try {
+                                cas = CasObfuscationUtils.obfuscate(cas);
+                            }
+                            catch (UIMAException e) {
+                                throw new IOException("Obfuscation failed", e);
+                            }
+                            casStorageService.serializeCas(aSrcDoc, aSet, cas, os);
+                        }
+                    });
+
+            return;
+        }
+
+        ProjectExporter.writeEntry(aStage,
+                ANNOTATION_CAS_FOLDER + aSrcDoc.getName() + "/" + aSet.id() + ".ser",
+                os -> documentService.exportCas(aSrcDoc, aSet, os));
     }
 
     private void exportAdditionalFormat(ZipOutputStream aStage,
@@ -290,7 +320,7 @@ public class AnnotationDocumentExporter
                 var filename = aUsername + "." + getExtension(annFile.getName());
                 ProjectExporter.writeEntry(aStage,
                         ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName() + "/" + filename, os -> {
-                            try (var is = Files.newInputStream(finalAnnFile.toPath())) {
+                            try (var is = newInputStream(finalAnnFile.toPath())) {
                                 is.transferTo(os);
                             }
                         });
@@ -299,7 +329,7 @@ public class AnnotationDocumentExporter
                 ProjectExporter.writeEntry(aStage,
                         ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName() + "/" + annFile.getName(),
                         os -> {
-                            try (var is = Files.newInputStream(finalAnnFile.toPath())) {
+                            try (var is = newInputStream(finalAnnFile.toPath())) {
                                 is.transferTo(os);
                             }
                         });

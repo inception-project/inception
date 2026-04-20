@@ -118,8 +118,8 @@ public class AnnotationDocumentsExporterTest
                 casStorageService, schemaService, properties, checksRegistry, repairsRegistry,
                 xmiFormatSupport);
 
-        sut = new AnnotationDocumentExporter(documentService, userService, importExportSerivce,
-                repositoryProperties);
+        sut = new AnnotationDocumentExporter(documentService, casStorageService, userService,
+                importExportSerivce, repositoryProperties);
     }
 
     @Test

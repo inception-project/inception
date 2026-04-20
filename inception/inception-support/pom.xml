@@ -22,9 +22,17 @@
     <artifactId>inception-app</artifactId>
     <version>41.0-SNAPSHOT</version>
   </parent>
+
   <artifactId>inception-support</artifactId>
   <name>INCEpTION - Support library</name>
+
   <dependencies>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-support-xml</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  
     <dependency>
       <groupId>jakarta.annotation</groupId>
       <artifactId>jakarta.annotation-api</artifactId>

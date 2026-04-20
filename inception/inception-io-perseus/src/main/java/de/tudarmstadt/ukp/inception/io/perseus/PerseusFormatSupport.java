@@ -24,7 +24,7 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.perseus.PerseusReader;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.io.perseus.config.PerseusFormatAutoConfiguration;
 
@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.inception.io.perseus.config.PerseusFormatAutoConfigura
  * </p>
  */
 public class PerseusFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     public static final String ID = "perseus_2.1";
     public static final String NAME = "Perseus treebank XML (2.1)";
