@@ -25,6 +25,7 @@ import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.newInputStream;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
 import java.io.FileNotFoundException;
@@ -160,18 +161,23 @@ public class SourceDocumentExporter
         throws IOException
     {
         var is = newInputStream(documentStorageService.getSourceDocumentFile(aDoc).toPath());
+        if (!aRequest.isObfuscate()) {
+            return is;
+        }
 
-        if (aRequest.isObfuscate()) {
+        try {
             var maybeFS = documentImportExportService.getFormatById(aDoc.getFormat());
             if (maybeFS.isEmpty()) {
                 throw new IOException(
                         "Obfuscation failed. Unsupported format:[" + aDoc.getFormat() + "]");
             }
 
-            is = maybeFS.get().obfuscate(aDoc, is);
+            return maybeFS.get().obfuscate(aDoc, is);
         }
-
-        return is;
+        catch (Exception e) {
+            closeQuietly(is);
+            throw e;
+        }
     }
 
     @Override

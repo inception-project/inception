@@ -137,8 +137,8 @@ public abstract class UimaReaderWriterFormatSupport_ImplBase
         }
 
         if (aTargetFolder.listFiles().length > 1) {
-            throw new IOException("Writer are only allowed to produce exactly one output file. "
-                    + "Writers producing mutiple files need to override write() with a suitable implementation.");
+            throw new IOException("Writers are only allowed to produce exactly one output file. "
+                    + "Writers producing multiple files need to override write() with a suitable implementation.");
         }
 
         // If the writer produced only a single file, then that is the result

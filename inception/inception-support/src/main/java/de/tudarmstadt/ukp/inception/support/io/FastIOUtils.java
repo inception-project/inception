@@ -28,10 +28,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.util.Iterator;
-import java.util.stream.Stream;
 
 public final class FastIOUtils
 {
@@ -42,10 +38,10 @@ public final class FastIOUtils
 
     public static void delete(File aFile) throws IOException
     {
-        try (Stream<Path> walk = walk(aFile.toPath())) {
+        try (var walk = walk(aFile.toPath())) {
             // Walk returns the paths depth-first. So we reverse in order to get files first and
             // then the directories containing them
-            Iterator<Path> i = walk.sorted(reverseOrder()).iterator();
+            var i = walk.sorted(reverseOrder()).iterator();
             while (i.hasNext()) {
                 deleteIfExists(i.next());
             }
@@ -57,7 +53,7 @@ public final class FastIOUtils
         aTargetFile.getParentFile().mkdirs();
 
         try (var in = newChannel(aIS); var out = newChannel(new FileOutputStream(aTargetFile))) {
-            final ByteBuffer buffer = allocateDirect(8192);
+            final var buffer = allocateDirect(8192);
             while (in.read(buffer) != -1) {
                 // Cast to buffer to permit code to run on Java 8.
                 // See:

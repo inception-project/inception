@@ -173,8 +173,9 @@ public class FileSystemCasStorageDriver
     {
         // Now write the new version to "<username>.ser" or CURATION_USER.ser
         setDocumentId(aCas, aSet.id());
+
         if (casStorageProperties.isParanoidCasSerialization()) {
-            CasPersistenceUtils.write(aOS, aCas);
+            CasPersistenceUtils.writeSerializedCasParanoid(aCas, aOS);
         }
         else if (casStorageProperties.isCompressedCasSerialization()) {
             CasPersistenceUtils.writeSnappyCompressed(aOS, aCas);
