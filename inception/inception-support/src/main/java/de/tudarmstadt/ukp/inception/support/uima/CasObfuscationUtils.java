@@ -39,7 +39,19 @@ import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 public class CasObfuscationUtils
 {
-    public static CAS obfuscate(CAS aCas) throws UIMAException
+    public static void obfuscatedCasInPlace(CAS aCas) throws UIMAException
+    {
+        var originalDocumentLanguage = aCas.getDocumentLanguage();
+
+        // Obfuscate any primitive string features (and string arrays) on copied FSes.
+        obfuscateStringFeatures(aCas);
+
+        // Set obfuscated language after copying/obfuscating so it is not overwritten
+        // by the CasCopier.
+        aCas.setDocumentLanguage(TextUtils.obfuscate(originalDocumentLanguage));
+    }
+
+    public static CAS createObfuscatedClone(CAS aCas) throws UIMAException
     {
         if (aCas == null) {
             return null;
@@ -56,12 +68,7 @@ public class CasObfuscationUtils
         // Copy all feature structures (annotations, metadata) into the target CAS.
         CasCopier.copyCas(aCas, targetCas, false);
 
-        // Obfuscate any primitive string features (and string arrays) on copied FSes.
-        obfuscateStringFeatures(targetCas);
-
-        // Set obfuscated language after copying/obfuscating so it is not overwritten
-        // by the CasCopier.
-        targetCas.setDocumentLanguage(TextUtils.obfuscate(aCas.getDocumentLanguage()));
+        obfuscatedCasInPlace(targetCas);
 
         return targetCas;
     }

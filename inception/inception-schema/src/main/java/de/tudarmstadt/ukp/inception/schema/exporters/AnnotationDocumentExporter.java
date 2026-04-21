@@ -286,7 +286,7 @@ public class AnnotationDocumentExporter
                             var cas = casStorageService.readCas(aSrcDoc, aSet,
                                     UNMANAGED_NON_INITIALIZING_ACCESS);
                             try {
-                                cas = CasObfuscationUtils.obfuscate(cas);
+                                cas = CasObfuscationUtils.createObfuscatedClone(cas);
                             }
                             catch (UIMAException e) {
                                 throw new IOException("Obfuscation failed", e);

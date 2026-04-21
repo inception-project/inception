@@ -168,7 +168,7 @@ public interface FormatSupport
                 // to merge their data with the original data.
                 addOrUpdateDocumentMetadata(jcas.getCas(), aDocument, INITIAL_SET.id());
 
-                var obfCas = CasObfuscationUtils.obfuscate(jcas.getCas());
+                var obfCas = CasObfuscationUtils.createObfuscatedClone(jcas.getCas());
 
                 targetFolder = createTempDirectory("inception-format-obf").toFile();
                 var exportFile = write(aDocument, obfCas, targetFolder, false);

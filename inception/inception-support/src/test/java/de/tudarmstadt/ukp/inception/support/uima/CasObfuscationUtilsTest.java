@@ -41,7 +41,7 @@ public class CasObfuscationUtilsTest
         var ann = new Annotation(jcas, 0, 5);
         ann.addToIndexes();
 
-        var obfCas = CasObfuscationUtils.obfuscate(jcas.getCas());
+        var obfCas = CasObfuscationUtils.createObfuscatedClone(jcas.getCas());
 
         assertThat(obfCas).isNotNull();
         assertThat(obfCas.getDocumentText()).isNotNull();
