@@ -76,4 +76,10 @@ public class HtmlArchiveFormatSupport
     {
         return true;
     }
+
+    @Override
+    protected String getObfuscationStandinResourceName()
+    {
+        return "HtmlArchiveFormatSupport-obfuscation-standin.zip";
+    }
 }

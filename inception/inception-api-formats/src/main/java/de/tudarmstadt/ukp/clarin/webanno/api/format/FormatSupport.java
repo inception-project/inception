@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static java.io.File.createTempFile;
 import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createTempDirectory;
-import static java.nio.file.Files.readAllBytes;
+import static java.nio.file.Files.newInputStream;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -29,9 +29,10 @@ import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.empty;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.commons.io.FilenameUtils.getExtension;
+import static org.apache.commons.io.IOUtils.closeQuietly;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -145,6 +146,7 @@ public interface FormatSupport
     default InputStream obfuscate(SourceDocument aDocument, InputStream aSource) throws IOException
     {
         if (!(isReadable() && isWritable())) {
+            closeQuietly(aSource);
             throw new UnsupportedOperationException(
                     "The format [" + getName() + "] cannot be obfuscated");
         }
@@ -168,20 +170,45 @@ public interface FormatSupport
                 // to merge their data with the original data.
                 addOrUpdateDocumentMetadata(jcas.getCas(), aDocument, INITIAL_SET.id());
 
-                var obfCas = CasObfuscationUtils.obfuscate(jcas.getCas());
+                var obfCas = CasObfuscationUtils.createObfuscatedClone(jcas.getCas());
 
                 targetFolder = createTempDirectory("inception-format-obf").toFile();
                 var exportFile = write(aDocument, obfCas, targetFolder, false);
 
-                return new ByteArrayInputStream(readAllBytes(exportFile.toPath()));
+                // At this point, we don't need to delete the target folder anymore due to
+                // an exception. So we transfer responsibility for cleanup to the caller via the
+                // returned stream and set targetFolder to null to avoid double deletion in the
+                // finally block.
+                // Make sure we open the stream before setting targetFolder to null so we can still
+                // clean up if there is an error when opening the stream.
+                var cleanupFolder = targetFolder;
+                var exportIs = newInputStream(exportFile.toPath());
+                targetFolder = null;
+
+                // Stream from the temp file and defer cleanup to stream close so we
+                // don't need to buffer the entire obfuscated document in memory.
+                return new FilterInputStream(exportIs)
+                {
+                    @Override
+                    public void close() throws IOException
+                    {
+                        try {
+                            super.close();
+                        }
+                        finally {
+                            deleteQuietly(cleanupFolder);
+                        }
+                    }
+                };
             }
             catch (UIMAException e) {
                 throw new IOException(e);
             }
         }
         finally {
-            deleteQuietly(srcFile);
             deleteQuietly(targetFolder);
+            deleteQuietly(srcFile);
+            closeQuietly(aSource);
         }
     }
 

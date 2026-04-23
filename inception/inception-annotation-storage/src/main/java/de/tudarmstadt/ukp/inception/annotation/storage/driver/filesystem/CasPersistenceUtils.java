@@ -121,6 +121,31 @@ public final class CasPersistenceUtils
         }
     }
 
+    public static void writeSerializedCasParanoid(CAS aCas, OutputStream aOS) throws IOException
+    {
+        var realCas = getRealCas(aCas);
+        // UIMA-6162 Workaround: synchronize CAS during de/serialization
+        synchronized (((CASImpl) realCas).getBaseCAS()) {
+            CASCompleteSerializer serializer = null;
+            try {
+                serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
+
+                // BEGIN SAFEGUARD --------------
+                // Safeguard that we do NOT write a CAS which can afterwards not be read and thus
+                // would render the document broken within the project
+                // Reason we do this: https://issues.apache.org/jira/browse/UIMA-6162
+                CAS dummy = getRealCas(WebAnnoCasUtil.createCas());
+                deserializeCASComplete(serializer, (CASImpl) dummy);
+                // END SAFEGUARD --------------
+            }
+            catch (Exception e) {
+                throw new IOException(e);
+            }
+
+            write(aOS, serializer);
+        }
+    }
+
     public static byte[] writeToByteArray(CAS aCas) throws IOException
     {
         try (var bos = new ByteArrayOutputStream()) {

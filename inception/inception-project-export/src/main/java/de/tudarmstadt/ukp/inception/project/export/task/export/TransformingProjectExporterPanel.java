@@ -24,7 +24,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
@@ -38,7 +37,6 @@ public class TransformingProjectExporterPanel
     private static final long serialVersionUID = 4106224145358319779L;
 
     private @SpringBean ProjectExportService projectExportService;
-    private @SpringBean DocumentImportExportService importExportService;
 
     public TransformingProjectExporterPanel(String aId, IModel<Project> aModel)
     {

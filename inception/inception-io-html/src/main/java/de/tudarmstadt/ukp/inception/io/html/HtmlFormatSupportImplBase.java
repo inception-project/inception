@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.io.html;
 
+import static org.apache.commons.io.IOUtils.closeQuietly;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
 import java.util.Set;
 
@@ -67,4 +70,32 @@ public abstract class HtmlFormatSupportImplBase
     {
         return Optional.of(defaultPolicy.getPolicy());
     }
+
+    @Override
+    public InputStream obfuscate(SourceDocument aDocument, InputStream aSource) throws IOException
+    {
+        // HTML importers lift the document structure into the INITIAL_CAS, so on re-import the
+        // original source file is not consulted. We can therefore replace it with a minimal
+        // valid stand-in in the obfuscated export instead of having to produce a structure-
+        // preserving obfuscation of the original HTML/MHTML/ZIP bytes.
+        try {
+            var resourceName = getObfuscationStandinResourceName();
+            var standin = getClass().getResourceAsStream(resourceName);
+            if (standin == null) {
+                throw new IOException(
+                        "Missing obfuscation stand-in resource [" + resourceName + "]");
+            }
+            return standin;
+        }
+        finally {
+            closeQuietly(aSource);
+        }
+    }
+
+    /**
+     * @return the classpath resource name (resolved relative to the implementing class's package)
+     *         of a minimal valid document in this format that takes the place of the original
+     *         source in an obfuscated export.
+     */
+    protected abstract String getObfuscationStandinResourceName();
 }

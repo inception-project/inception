@@ -71,4 +71,10 @@ public class HtmlFormatSupport
     {
         return createReaderDescription(HtmlDocumentReader.class, aTSD);
     }
+
+    @Override
+    protected String getObfuscationStandinResourceName()
+    {
+        return "HtmlFormatSupport-obfuscation-standin.html";
+    }
 }
