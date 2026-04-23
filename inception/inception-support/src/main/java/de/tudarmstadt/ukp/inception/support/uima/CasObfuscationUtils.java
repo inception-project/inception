@@ -39,7 +39,7 @@ import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 public class CasObfuscationUtils
 {
-    public static void obfuscatedCasInPlace(CAS aCas) throws UIMAException
+    public static void obfuscateCasInPlace(CAS aCas) throws UIMAException
     {
         var originalDocumentLanguage = aCas.getDocumentLanguage();
 
@@ -68,7 +68,7 @@ public class CasObfuscationUtils
         // Copy all feature structures (annotations, metadata) into the target CAS.
         CasCopier.copyCas(aCas, targetCas, false);
 
-        obfuscatedCasInPlace(targetCas);
+        obfuscateCasInPlace(targetCas);
 
         return targetCas;
     }

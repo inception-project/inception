@@ -103,6 +103,12 @@ public class MHtmlFormatSupport
         }
     }
 
+    @Override
+    protected String getObfuscationStandinResourceName()
+    {
+        return "MHtmlFormatSupport-obfuscation-standin.mhtml";
+    }
+
     private static SingleBody getResourcePartBody(Message message, String aResourcePath)
         throws IOException
     {

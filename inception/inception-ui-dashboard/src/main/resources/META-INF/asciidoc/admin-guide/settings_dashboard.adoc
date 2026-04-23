@@ -22,6 +22,12 @@
 | User roles allowed to bulk-delete
 | `ROLE_ADMIN`
 | `ROLE_PROJECT_CREATOR`
+
+| `dashboard.transforming-export.enabled` 🧪
+| Enable the experimental *Transforming project export* option on the project export page, which
+  allows applying transformations such as text obfuscation to source documents during export
+| `false`
+| `true`
 |===
 
 NOTE: To specify multiple values of the `ui.dashboard.accessible-by-roles` in a `settings.properties`
