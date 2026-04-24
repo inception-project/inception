@@ -17,7 +17,8 @@
   "overrides": {
     "minimatch": "${minimatch.version}",
     "immutable": "${immutable.version}",
-    "undici": "${undici.version}"
+    "undici": "${undici.version}",
+    "uuid": "${uuid.version}"
   },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
