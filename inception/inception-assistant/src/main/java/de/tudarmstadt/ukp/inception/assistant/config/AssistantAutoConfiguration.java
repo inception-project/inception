@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,15 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.config;
 
-import static de.tudarmstadt.ukp.inception.websocket.config.MessageExpressionAuthorizationManager.expression;
-import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
-import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
-
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -39,10 +32,8 @@ import org.springframework.security.core.session.SessionRegistry;
 import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.EncodingRegistry;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.AssistantServiceImpl;
-import de.tudarmstadt.ukp.inception.assistant.contextmenu.CheckAnnotationContextMenuItem;
 import de.tudarmstadt.ukp.inception.assistant.documents.AssistantIndexFootprintProvider;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentContextRetriever;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService;
@@ -54,7 +45,6 @@ import de.tudarmstadt.ukp.inception.assistant.retriever.CurrentDateRetriever;
 import de.tudarmstadt.ukp.inception.assistant.retriever.Retriever;
 import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPoint;
 import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPointImpl;
-import de.tudarmstadt.ukp.inception.assistant.sidebar.AssistantSidebarFactory;
 import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideQueryService;
 import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideQueryServiceImpl;
 import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideRetriever;
@@ -63,8 +53,6 @@ import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibraryExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.websocket.security.StompSecurityConfigurer;
 
 @ConditionalOnWebApplication
 @Configuration
@@ -73,8 +61,6 @@ import de.tudarmstadt.ukp.inception.websocket.security.StompSecurityConfigurer;
         AssistantDocumentIndexPropertiesImpl.class, })
 public class AssistantAutoConfiguration
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
     @Bean
     public AssistantService assistantService(SessionRegistry aSessionRegistry,
             SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
@@ -84,12 +70,6 @@ public class AssistantAutoConfiguration
     {
         return new AssistantServiceImpl(aSessionRegistry, aMsgTemplate, aOllamaClient, aProperties,
                 aEncodingRegistry, aRetrieverExtensionPoint, aToolLibraryExtensionPoint);
-    }
-
-    @Bean
-    public AssistantSidebarFactory assistantSidebarFactory()
-    {
-        return new AssistantSidebarFactory();
     }
 
     @Bean
@@ -150,15 +130,6 @@ public class AssistantAutoConfiguration
     }
 
     @Bean
-    public CheckAnnotationContextMenuItem CheckAnnotationContextMenuItem(
-            SchedulingService aSchedulingService, AssistantSidebarFactory aAssistantSidebarFactory,
-            AnnotationSchemaService aSchemaService, UserDao aUserService)
-    {
-        return new CheckAnnotationContextMenuItem(aSchedulingService, aAssistantSidebarFactory,
-                aSchemaService, aUserService);
-    }
-
-    @Bean
     public AssistantIndexFootprintProvider assistantIndexFootprintProvider(
             RepositoryProperties aRepositoryProperties)
     {
@@ -169,18 +140,5 @@ public class AssistantAutoConfiguration
     public AssistantRecommenderFactory assistantRecommenderFactory()
     {
         return new AssistantRecommenderFactory();
-    }
-
-    @Bean
-    public StompSecurityConfigurer assistantWebsocketSecurity()
-    {
-        return (aBuilder, aMAH) -> {
-            LOG.debug("Configuring websocket security for assistant controller");
-
-            aBuilder.simpDestMatchers(
-                    "/*/assistant" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}")
-                    .access(expression(aMAH,
-                            "@projectAccess.canAccessProject(#" + PARAM_PROJECT + ")"));
-        };
     }
 }

@@ -375,7 +375,17 @@
 
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-assistant-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-assistant</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-assistant-ui</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -1139,7 +1149,9 @@
             </ignoredNonTestScopedDependencies>
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-assistant-api</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-assistant</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-assistant-ui</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-guidelines</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>

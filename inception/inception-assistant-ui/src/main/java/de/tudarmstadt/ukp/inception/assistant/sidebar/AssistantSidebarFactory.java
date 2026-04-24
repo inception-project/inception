@@ -27,15 +27,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
-import de.tudarmstadt.ukp.inception.assistant.config.AssistantAutoConfiguration;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 /**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link AssistantAutoConfiguration#assistantSidebarFactory}.
- * </p>
+ * Exposed as a Spring bean by the assistant UI auto-configuration.
  */
 @Order(5100)
 public class AssistantSidebarFactory

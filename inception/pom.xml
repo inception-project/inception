@@ -315,7 +315,9 @@
     <module>inception-versioning</module>
     <module>inception-websocket</module>
     <!-- Assistant -->
+    <module>inception-assistant-api</module>
     <module>inception-assistant</module>
+    <module>inception-assistant-ui</module>
   </modules>
 
   <build>
