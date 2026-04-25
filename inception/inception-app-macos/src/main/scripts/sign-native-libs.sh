@@ -14,8 +14,9 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-# limitations under the License.set -e
-set -e
+# limitations under the License.
+
+set -eu
 
 INPUT_DIR="$1"
 SIGNING_IDENTITY="$2"
@@ -32,11 +33,21 @@ fi
 
 echo "Hunting for native libraries in $INPUT_DIR..."
 
+# Fail loudly if no jars are present — something has gone wrong upstream.
+set +e
+ls "$INPUT_DIR"/*.jar >/dev/null 2>&1
+no_jars=$?
+set -e
+if [ "$no_jars" -ne 0 ]; then
+  echo "No JAR files found in $INPUT_DIR. Aborting."
+  exit 1
+fi
+
 TMP_DIR=$(mktemp -d)
 
 # Loop through every jar in the staging directory
 for jar_file in "$INPUT_DIR"/*.jar; do
-  
+
   # Quick check to see if the jar contains any native macOS libraries
   if unzip -l "$jar_file" | grep -E "\.dylib$|\.jnilib$" > /dev/null; then
     echo "--> Found native libraries in: $(basename "$jar_file")"
@@ -62,16 +73,18 @@ for jar_file in "$INPUT_DIR"/*.jar; do
     done
 
     # Find all extracted libs and codesign them
-    find "$TMP_DIR" -type f \( -name "*.dylib" -o -name "*.jnilib" \) -print0 | while IFS= read -r -d '' dylib; do
-      echo "    Signing: $(basename "$dylib")"
-      codesign --force -s "$SIGNING_IDENTITY" --options runtime --timestamp "$dylib"
-    done
-    
+    find "$TMP_DIR" -type f \( -name "*.dylib" -o -name "*.jnilib" \) -exec sh -c '
+      identity=$1; shift
+      for dylib do
+        echo "    Signing: $(basename "$dylib")"
+        codesign --force -s "$identity" --options runtime --timestamp "$dylib"
+      done
+    ' sh "$SIGNING_IDENTITY" {} +
+
     # Change into the temp directory and update the original jar with the signed files
     (
       cd "$TMP_DIR"
-      # Find all files and zip them back into the absolute jar path
-      find . -type f \( -name "*.dylib" -o -name "*.jnilib" \) -print0 | xargs -0 zip -q -u "$ABS_JAR"
+      find . -type f \( -name "*.dylib" -o -name "*.jnilib" \) -exec zip -q -u "$ABS_JAR" {} +
     )
     
     # Clean up the temp directory for the next jar

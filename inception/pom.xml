@@ -318,8 +318,6 @@
     <module>inception-assistant-ui</module>
     <!-- Application -->
     <module>inception-app-webapp</module>
-    <!-- Distributions -->
-    <module>inception-app-macos</module>
   </modules>
 
   <build>
@@ -678,6 +676,12 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>dist-macos</id>
+      <modules>
+        <module>inception-app-macos</module>
+      </modules>
+    </profile>
     <profile>
       <id>m2e</id>
       <activation>

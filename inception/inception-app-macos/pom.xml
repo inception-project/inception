@@ -26,17 +26,37 @@
 
   <profiles>
     <profile>
-      <activation>
-        <os>
-          <family>mac</family>
-        </os>
-        <property>
-          <name>mac.signing.identity</name>
-        </property>
-      </activation>
+      <id>dist-macos</id>
 
       <build>
         <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>enforce-dist-prerequisites</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>enforce</goal>
+                </goals>
+                <configuration>
+                  <rules>
+                    <requireOS>
+                      <family>mac</family>
+                      <message>The 'dist-macos' profile builds a macOS application bundle and must be run on macOS.</message>
+                    </requireOS>
+                    <requireProperty>
+                      <property>mac.signing.identity</property>
+                      <message>The 'dist-macos' profile requires the 'mac.signing.identity' property to be set, e.g. -Dmac.signing.identity="Developer ID Application: Your Name (TEAMID)". This identity is used to codesign native libraries and the resulting DMG.</message>
+                    </requireProperty>
+                  </rules>
+                  <fail>true</fail>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-dependency-plugin</artifactId>
