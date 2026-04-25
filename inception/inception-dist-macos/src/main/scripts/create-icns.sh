@@ -21,21 +21,28 @@ set -eu
 SOURCE_PNG="$1"
 OUTPUT_ICNS="$2"
 
+if [ ! -f "$SOURCE_PNG" ]; then
+  echo "ERROR: Source PNG not found at $SOURCE_PNG"
+  exit 1
+fi
+
 ICONSET_DIR="${OUTPUT_ICNS%.icns}.iconset"
 
+echo "Building macOS iconset from $SOURCE_PNG..."
 mkdir -p "$ICONSET_DIR"
 
-sips -z 16 16     "$SOURCE_PNG" --out "$ICONSET_DIR/icon_16x16.png"
-sips -z 32 32     "$SOURCE_PNG" --out "$ICONSET_DIR/icon_16x16@2x.png"
-sips -z 32 32     "$SOURCE_PNG" --out "$ICONSET_DIR/icon_32x32.png"
-sips -z 64 64     "$SOURCE_PNG" --out "$ICONSET_DIR/icon_32x32@2x.png"
-sips -z 128 128   "$SOURCE_PNG" --out "$ICONSET_DIR/icon_128x128.png"
-sips -z 256 256   "$SOURCE_PNG" --out "$ICONSET_DIR/icon_128x128@2x.png"
-sips -z 256 256   "$SOURCE_PNG" --out "$ICONSET_DIR/icon_256x256.png"
-sips -z 512 512   "$SOURCE_PNG" --out "$ICONSET_DIR/icon_256x256@2x.png"
-sips -z 512 512   "$SOURCE_PNG" --out "$ICONSET_DIR/icon_512x512.png"
-sips -z 1024 1024 "$SOURCE_PNG" --out "$ICONSET_DIR/icon_512x512@2x.png"
+# sips chatters file paths to stdout on success; redirect to keep the build log readable.
+for spec in "16:icon_16x16" "32:icon_16x16@2x" "32:icon_32x32" "64:icon_32x32@2x" \
+            "128:icon_128x128" "256:icon_128x128@2x" "256:icon_256x256" \
+            "512:icon_256x256@2x" "512:icon_512x512" "1024:icon_512x512@2x"; do
+  size=${spec%%:*}
+  name=${spec#*:}
+  echo "  -> ${name}.png (${size}x${size})"
+  sips -z "$size" "$size" "$SOURCE_PNG" --out "$ICONSET_DIR/${name}.png" >/dev/null
+done
 
+echo "Compiling iconset to $OUTPUT_ICNS..."
 iconutil -c icns "$ICONSET_DIR" -o "$OUTPUT_ICNS"
 
 rm -rf "$ICONSET_DIR"
+echo "Wrote $OUTPUT_ICNS"

@@ -28,6 +28,14 @@
     <profile>
       <id>dist-macos</id>
 
+      <properties>
+        <!-- Empty defaults so unset 'jdk.<arch>.home' properties resolve to
+             an empty string instead of the literal '${…}'. Override in
+             ~/.m2/settings.xml or via -D. -->
+        <jdk.aarch64.home></jdk.aarch64.home>
+        <jdk.x86_64.home></jdk.x86_64.home>
+      </properties>
+
       <build>
         <plugins>
           <plugin>
@@ -94,6 +102,20 @@
 
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>parse-version</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>parse-version</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
             <executions>
               <execution>
@@ -112,7 +134,7 @@
                 </configuration>
               </execution>
               <execution>
-                <id>sign-native-libs</id>
+                <id>process-native-libs</id>
                 <phase>prepare-package</phase>
                 <goals>
                   <goal>exec</goal>
@@ -120,54 +142,57 @@
                 <configuration>
                   <executable>bash</executable>
                   <arguments>
-                    <argument>${project.basedir}/src/main/scripts/sign-native-libs.sh</argument>
+                    <argument>${project.basedir}/src/main/scripts/process-native-libs.sh</argument>
                     <argument>${project.build.directory}/jpackage-input</argument>
                     <argument>${mac.signing.identity}</argument>
                   </arguments>
                 </configuration>
               </execution>
-            </executions>
-          </plugin>
-
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>build-helper-maven-plugin</artifactId>
-            <executions>
               <execution>
-                <id>parse-version</id>
-                <phase>initialize</phase>
-                <goals>
-                  <goal>parse-version</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          
-          <plugin>
-            <groupId>org.panteleyev</groupId>
-            <artifactId>jpackage-maven-plugin</artifactId>
-            <configuration>
-              <name>INCEpTION</name>
-              <appVersion>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}</appVersion>
-              <type>DMG</type>
-              <input>${project.build.directory}/jpackage-input</input>
-              <destination>${project.build.directory}/jpackage</destination>
-              <mainJar>inception-app-webapp-${project.version}-lib.jar</mainJar>
-              <mainClass>de.tudarmstadt.ukp.inception.INCEpTION</mainClass>
-              <javaOptions>
-                <javaOption>-Xmx4g</javaOption>
-              </javaOptions>
-              <icon>${project.build.directory}/icon.icns</icon>
-              <macSign>true</macSign>
-              <macSigningKeyUserName>${mac.signing.identity}</macSigningKeyUserName>
-              <macEntitlements>${project.basedir}/src/main/resources/entitlements.plist</macEntitlements>
-            </configuration>
-            <executions>
-              <execution>
+                <id>package-dmg-aarch64</id>
                 <phase>package</phase>
                 <goals>
-                  <goal>jpackage</goal>
+                  <goal>exec</goal>
                 </goals>
+                <configuration>
+                  <executable>bash</executable>
+                  <arguments>
+                    <argument>${project.basedir}/src/main/scripts/package-dmg.sh</argument>
+                    <argument>aarch64</argument>
+                    <argument>${jdk.aarch64.home}</argument>
+                    <argument>${mac.signing.identity}</argument>
+                    <argument>${project.build.directory}/jpackage-input</argument>
+                    <argument>${project.build.directory}/jpackage-aarch64</argument>
+                    <argument>inception-app-webapp-${project.version}-lib.jar</argument>
+                    <argument>de.tudarmstadt.ukp.inception.INCEpTION</argument>
+                    <argument>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}</argument>
+                    <argument>${project.build.directory}/icon.icns</argument>
+                    <argument>${project.basedir}/src/main/resources/entitlements.plist</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+              <execution>
+                <id>package-dmg-x86_64</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <executable>bash</executable>
+                  <arguments>
+                    <argument>${project.basedir}/src/main/scripts/package-dmg.sh</argument>
+                    <argument>x86_64</argument>
+                    <argument>${jdk.x86_64.home}</argument>
+                    <argument>${mac.signing.identity}</argument>
+                    <argument>${project.build.directory}/jpackage-input</argument>
+                    <argument>${project.build.directory}/jpackage-x86_64</argument>
+                    <argument>inception-app-webapp-${project.version}-lib.jar</argument>
+                    <argument>de.tudarmstadt.ukp.inception.INCEpTION</argument>
+                    <argument>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}</argument>
+                    <argument>${project.build.directory}/icon.icns</argument>
+                    <argument>${project.basedir}/src/main/resources/entitlements.plist</argument>
+                  </arguments>
+                </configuration>
               </execution>
             </executions>
           </plugin>

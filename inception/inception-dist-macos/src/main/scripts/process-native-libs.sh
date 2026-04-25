@@ -44,6 +44,7 @@ if [ "$no_jars" -ne 0 ]; then
 fi
 
 TMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TMP_DIR"' EXIT INT TERM
 
 # Loop through every jar in the staging directory
 for jar_file in "$INPUT_DIR"/*.jar; do
@@ -51,10 +52,22 @@ for jar_file in "$INPUT_DIR"/*.jar; do
   # Quick check to see if the jar contains any native macOS libraries
   if unzip -l "$jar_file" | grep -E "\.dylib$|\.jnilib$" > /dev/null; then
     echo "--> Found native libraries in: $(basename "$jar_file")"
-    
+
     # Get absolute path to the jar file to avoid relative path issues in subshells
     ABS_JAR=$(cd "$(dirname "$jar_file")"; pwd)/$(basename "$jar_file")
-    
+
+    # Strip native binaries for non-macOS platforms to slim down the bundle.
+    # Only act on jars that already contain macOS natives, so we know these
+    # entries are guaranteed-unused siblings rather than unrelated content.
+    foreign_natives=$(unzip -Z1 "$ABS_JAR" 2>/dev/null | grep -E '\.(so|so\.[0-9.]+|dll|lib|pdb)$' || true)
+    if [ -n "$foreign_natives" ]; then
+      printf '%s\n' "$foreign_natives" | while IFS= read -r entry; do
+        [ -z "$entry" ] && continue
+        echo "    Stripping foreign native: $entry"
+        zip -q -d "$ABS_JAR" -- "$entry"
+      done
+    fi
+
     # Extract just the native libraries into our temp folder
     # Build a list of entries in the jar that match .dylib or .jnilib
     native_files=$(unzip -Z1 "$ABS_JAR" 2>/dev/null | grep -E '\.dylib$|\.jnilib$' || true)
@@ -81,16 +94,18 @@ for jar_file in "$INPUT_DIR"/*.jar; do
       done
     ' sh "$SIGNING_IDENTITY" {} +
 
-    # Change into the temp directory and update the original jar with the signed files
-    (
-      cd "$TMP_DIR"
-      find . -type f \( -name "*.dylib" -o -name "*.jnilib" \) -exec zip -q -u "$ABS_JAR" {} +
-    )
-    
+    # Update the original jar with the signed files. Iterate the entry names
+    # we got from unzip -Z1 (no leading './') and feed them to zip from inside
+    # TMP_DIR so the archive entries match the originals exactly — otherwise
+    # 'find . -exec zip' would add './'-prefixed duplicate entries.
+    printf '%s\n' "$native_files" | while IFS= read -r entry; do
+      [ -z "$entry" ] && continue
+      (cd "$TMP_DIR" && zip -q -u "$ABS_JAR" -- "$entry")
+    done
+
     # Clean up the temp directory for the next jar
     rm -rf "$TMP_DIR"/*
   fi
 done
 
-rm -rf "$TMP_DIR"
-echo "Native library signing complete."
+echo "Native library processing complete."

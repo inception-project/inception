@@ -653,11 +653,6 @@
           <version>0.45.1</version>
         </plugin>
         <plugin>
-          <groupId>org.panteleyev</groupId>
-          <artifactId>jpackage-maven-plugin</artifactId>
-          <version>1.7.4</version>
-        </plugin>
-        <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>versions-maven-plugin</artifactId>
           <version>2.18.0</version>
