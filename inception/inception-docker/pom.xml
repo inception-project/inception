@@ -140,20 +140,25 @@
           <plugin>
             <groupId>io.fabric8</groupId>
             <artifactId>docker-maven-plugin</artifactId>
-            <configuration>
-              <images>
-                <image>
-                  <build>
-                    <buildx>
-                      <platforms combine.children="override">
-                        <platform>linux/amd64</platform>
-                        <platform>linux/arm64</platform>
-                      </platforms>
-                    </buildx>
-                  </build>
-                </image>
-              </images>
-            </configuration>
+            <executions>
+              <execution>
+                <id>push</id>
+                <configuration>
+                  <images>
+                    <image>
+                      <build>
+                        <buildx>
+                          <platforms combine.children="override">
+                            <platform>linux/amd64</platform>
+                            <platform>linux/arm64</platform>
+                          </platforms>
+                        </buildx>
+                      </build>
+                    </image>
+                  </images>
+                </configuration>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>
