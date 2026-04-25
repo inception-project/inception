@@ -58,7 +58,7 @@ public class LoadingSplashScreen
 {
     private static final Logger LOG = getLogger(MethodHandles.lookup().lookupClass());
 
-    public static Optional<SplashWindow> setupScreen(URL aSplashScreenImageUrl, URL aIconUrl,
+    private static Optional<SplashWindow> setupScreen(URL aSplashScreenImageUrl, URL aIconUrl,
             String aApplicationName)
     {
         if (GraphicsEnvironment.isHeadless()) {
@@ -114,6 +114,8 @@ public class LoadingSplashScreen
 
             var img = new ImageIcon(aIconUrl);
             setIconImage(img.getImage());
+
+            StandaloneUserInterface.setupDockIcon();
 
             setUndecorated(true);
             pack();
