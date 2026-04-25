@@ -682,6 +682,12 @@
       </modules>
     </profile>
     <profile>
+      <id>dist-win</id>
+      <modules>
+        <module>inception-dist-win</module>
+      </modules>
+    </profile>
+    <profile>
       <id>m2e</id>
       <activation>
         <property>
