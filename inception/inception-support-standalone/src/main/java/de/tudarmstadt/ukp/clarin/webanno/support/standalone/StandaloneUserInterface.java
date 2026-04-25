@@ -41,6 +41,7 @@ import java.awt.Image;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.SystemTray;
+import java.awt.Taskbar;
 import java.awt.Toolkit;
 import java.awt.TrayIcon;
 import java.awt.datatransfer.Clipboard;
@@ -316,20 +317,7 @@ public class StandaloneUserInterface
         trayIcon.setImageAutoSize(true);
 
         var popupMenu = new PopupMenu();
-
-        var logItem = new MenuItem("Log...");
-        logItem.addActionListener(e -> actionShowLog(applicationName));
-        popupMenu.add(logItem);
-
-        if (getSettingsFileLocation() != null) {
-            var settingsPropertiesItem = new MenuItem("Locate settings file");
-            settingsPropertiesItem.addActionListener(e -> actionLocateSettingsProperties());
-            popupMenu.add(settingsPropertiesItem);
-        }
-
-        var aboutItem = new MenuItem("About...");
-        aboutItem.addActionListener(e -> actionShowAbout(applicationName));
-        popupMenu.add(aboutItem);
+        addStandardMenuItems(popupMenu, applicationName);
 
         var shutdownItem = new MenuItem(ACTION_SHUTDOWN + " (may take a moment)");
         shutdownItem.addActionListener(e -> {
@@ -341,9 +329,30 @@ public class StandaloneUserInterface
         trayIcon.setToolTip(applicationName + " " + SettingsUtil.getVersionString());
         trayIcon.setPopupMenu(popupMenu);
 
+        var dockMenu = new PopupMenu();
+        addStandardMenuItems(dockMenu, applicationName);
+        setupDockMenu(dockMenu);
+
         tray.add(trayIcon);
 
         return trayIcon;
+    }
+
+    public static void addStandardMenuItems(PopupMenu aMenu, String applicationName)
+    {
+        var logItem = new MenuItem("Log...");
+        logItem.addActionListener(e -> actionShowLog(applicationName));
+        aMenu.add(logItem);
+
+        if (getSettingsFileLocation() != null) {
+            var settingsPropertiesItem = new MenuItem("Locate settings file");
+            settingsPropertiesItem.addActionListener(e -> actionLocateSettingsProperties());
+            aMenu.add(settingsPropertiesItem);
+        }
+
+        var aboutItem = new MenuItem("About...");
+        aboutItem.addActionListener(e -> actionShowAbout(applicationName));
+        aMenu.add(aboutItem);
     }
 
     public static Image getIconImage()
@@ -351,5 +360,25 @@ public class StandaloneUserInterface
         var iconUrl = LoadingSplashScreen.class.getResource("/icon.png");
         var icon = new ImageIcon(iconUrl);
         return icon.getImage();
+    }
+
+    public static void setupDockIcon()
+    {
+        if (Taskbar.isTaskbarSupported()) {
+            var taskbar = Taskbar.getTaskbar();
+            if (taskbar.isSupported(Taskbar.Feature.ICON_IMAGE)) {
+                taskbar.setIconImage(getIconImage());
+            }
+        }
+    }
+
+    public static void setupDockMenu(PopupMenu aMenu)
+    {
+        if (Taskbar.isTaskbarSupported()) {
+            var taskbar = Taskbar.getTaskbar();
+            if (taskbar.isSupported(Taskbar.Feature.MENU)) {
+                taskbar.setMenu(aMenu);
+            }
+        }
     }
 }

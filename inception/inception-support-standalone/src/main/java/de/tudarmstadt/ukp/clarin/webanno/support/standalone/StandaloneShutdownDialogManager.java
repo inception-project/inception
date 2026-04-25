@@ -19,11 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.ACTION_OPEN_BROWSER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.ACTION_SHUTDOWN;
-import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.actionLocateSettingsProperties;
-import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.actionShowAbout;
-import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.actionShowLog;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.bringToFront;
-import static de.tudarmstadt.ukp.inception.support.SettingsUtil.getSettingsFileLocation;
 import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 import static java.awt.BorderLayout.CENTER;
 import static java.awt.Component.CENTER_ALIGNMENT;
@@ -255,19 +251,7 @@ public class StandaloneShutdownDialogManager
         browseItem.addActionListener(e -> actionBrowse());
         popupMenu.add(browseItem);
 
-        var logItem = new MenuItem("Log...");
-        logItem.addActionListener(e -> actionShowLog(applicationName));
-        popupMenu.add(logItem);
-
-        if (getSettingsFileLocation() != null) {
-            MenuItem settingsPropertiesItem = new MenuItem("Locate settings file");
-            settingsPropertiesItem.addActionListener(e -> actionLocateSettingsProperties());
-            popupMenu.add(settingsPropertiesItem);
-        }
-
-        var aboutItem = new MenuItem("About...");
-        aboutItem.addActionListener(e -> actionShowAbout(applicationName));
-        popupMenu.add(aboutItem);
+        StandaloneUserInterface.addStandardMenuItems(popupMenu, applicationName);
 
         var shutdownItem = new MenuItem(ACTION_SHUTDOWN);
         shutdownItem.addActionListener(e -> {
@@ -277,6 +261,13 @@ public class StandaloneShutdownDialogManager
         popupMenu.add(shutdownItem);
 
         trayIcon.setPopupMenu(popupMenu);
+
+        var dockMenu = new PopupMenu();
+        var dockBrowseItem = new MenuItem(ACTION_OPEN_BROWSER);
+        dockBrowseItem.addActionListener(e -> actionBrowse());
+        dockMenu.add(dockBrowseItem);
+        StandaloneUserInterface.addStandardMenuItems(dockMenu, applicationName);
+        StandaloneUserInterface.setupDockMenu(dockMenu);
 
         tray.add(trayIcon);
     }
