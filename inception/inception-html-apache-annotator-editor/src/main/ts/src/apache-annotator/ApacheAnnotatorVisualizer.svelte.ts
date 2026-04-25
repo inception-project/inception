@@ -162,11 +162,11 @@ export class ApacheAnnotatorVisualizer {
                 if (this.optimizingLayout || entries.length === 0) return;
 
                 let dim = entries[0].contentRect; // Only observing one element
-                if (
-                    !this.rootDimensions ||
-                    dim.width !== this.rootDimensions.width ||
-                    dim.height !== this.rootDimensions.height
-                ) {
+                // Only re-optimize on width changes. Height fluctuates as annotations
+                // render into sections (materializeWidthAndHeight intentionally locks
+                // width but only sets minHeight, allowing height to grow), so reacting
+                // to height changes here would feed back into another optimizeLayout.
+                if (!this.rootDimensions || dim.width !== this.rootDimensions.width) {
                     console.log(
                         `Root resized from ${this.rootDimensions?.width}/${this.rootDimensions?.height} to ${dim.width}/${dim.height}`
                     );
