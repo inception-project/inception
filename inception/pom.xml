@@ -309,8 +309,6 @@
     <!-- Examples -->
     <module>inception-example-imls-data-majority</module>
     <!--<module>inception-imls-dl4j</module>-->
-    <!-- Packaging -->
-    <module>inception-docker</module>
     <!-- Versioning -->
     <module>inception-versioning</module>
     <module>inception-websocket</module>
@@ -671,6 +669,12 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>dist-docker</id>
+      <modules>
+        <module>inception-docker</module>
+      </modules>
+    </profile>
     <profile>
       <id>m2e</id>
       <activation>
