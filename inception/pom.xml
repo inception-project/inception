@@ -677,13 +677,13 @@
     <profile>
       <id>dist-macos</id>
       <modules>
-        <module>inception-app-macos</module>
+        <module>inception-dist-macos</module>
       </modules>
     </profile>
     <profile>
       <id>dist-docker</id>
       <modules>
-        <module>inception-docker</module>
+        <module>inception-dist-docker</module>
       </modules>
     </profile>
     <profile>

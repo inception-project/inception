@@ -10,7 +10,7 @@
     <relativePath>..</relativePath>
   </parent>
 
-  <artifactId>inception-app-macos</artifactId>
+  <artifactId>inception-dist-macos</artifactId>
   <name>INCEpTION - App - macOS application</name>
   <packaging>pom</packaging>
 

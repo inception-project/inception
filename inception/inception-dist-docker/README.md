@@ -50,12 +50,12 @@ Run the released image:
 
 ## Building only the docker module
 
-When invoking Maven from inside the `inception-docker/` directory, the
+When invoking Maven from inside the `inception-dist-docker/` directory, the
 `dist-docker` profile is not needed (it only gates module inclusion in the
 parent reactor). The `release-docker` profile is still required to enable
 multi-arch + push:
 
-    cd inception-docker
+    cd inception-dist-docker
     mvn install                         # local single-arch build
     mvn -Prelease-docker deploy         # multi-arch build + push
 
