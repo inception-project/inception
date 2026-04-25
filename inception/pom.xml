@@ -304,8 +304,6 @@
     <!-- Analytics and reporting -->
     <module>inception-pivot</module>
     <module>inception-pivot-api</module>
-    <!-- Application -->
-    <module>inception-app-webapp</module>
     <!-- Examples -->
     <module>inception-example-imls-data-majority</module>
     <!--<module>inception-imls-dl4j</module>-->
@@ -318,6 +316,10 @@
     <module>inception-assistant-api</module>
     <module>inception-assistant</module>
     <module>inception-assistant-ui</module>
+    <!-- Application -->
+    <module>inception-app-webapp</module>
+    <!-- Distributions -->
+    <module>inception-app-macos</module>
   </modules>
 
   <build>
@@ -653,6 +655,11 @@
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
           <version>0.45.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.panteleyev</groupId>
+          <artifactId>jpackage-maven-plugin</artifactId>
+          <version>1.7.4</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
