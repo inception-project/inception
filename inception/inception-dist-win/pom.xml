@@ -134,9 +134,9 @@
                   <goal>exec</goal>
                 </goals>
                 <configuration>
-                  <executable>bash</executable>
+                  <executable>python</executable>
                   <arguments>
-                    <argument>${project.basedir}/src/main/scripts/process-native-libs.sh</argument>
+                    <argument>${project.basedir}/src/main/scripts/process-native-libs.py</argument>
                     <argument>${project.build.directory}/jpackage-input</argument>
                   </arguments>
                 </configuration>
