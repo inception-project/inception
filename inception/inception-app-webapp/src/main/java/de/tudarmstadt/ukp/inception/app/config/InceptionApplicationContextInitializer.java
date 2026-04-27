@@ -50,6 +50,8 @@ public class InceptionApplicationContextInitializer
 
         applyDatabaseSpecificOverrides(aEnvironment);
 
+        applySentryReleaseOverride(aEnvironment);
+
         Runtime rt = Runtime.getRuntime();
         BOOT_LOG.info("Max. application memory: {}MB",
                 DataSize.ofBytes(rt.maxMemory()).toMegabytes());
@@ -72,6 +74,21 @@ public class InceptionApplicationContextInitializer
                 throw new IllegalStateException(e);
             }
         }
+    }
+
+    private void applySentryReleaseOverride(ConfigurableEnvironment aEnvironment)
+    {
+        var version = SettingsUtil.getVersion();
+        if (version == null || "unknown".equals(version)) {
+            return;
+        }
+
+        // Override any user-configured value so that the Sentry release always matches the
+        // running application version - otherwise Sentry's release history would be unreliable.
+        var overrides = new HashMap<String, Object>();
+        overrides.put("sentry.release", version);
+        aEnvironment.getPropertySources()
+                .addFirst(new MapPropertySource("Sentry-Overrides", overrides));
     }
 
     private void applyDatabaseSpecificOverrides(ConfigurableEnvironment aEnvironment)
