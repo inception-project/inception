@@ -386,6 +386,12 @@ public class MultiValueConceptFeatureSupport
     }
 
     @Override
+    public void clearFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        FSUtil.setFeature(aFS, aFeature.getName(), (Collection<String>) null);
+    }
+
+    @Override
     public String renderFeatureValue(AnnotationFeature aFeature, String aIdentifier)
     {
         if (aIdentifier == null) {

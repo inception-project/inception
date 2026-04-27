@@ -294,6 +294,12 @@ public class MultiValueStringFeatureSupport
     }
 
     @Override
+    public void clearFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        FSUtil.setFeature(aFS, aFeature.getName(), (Collection<String>) null);
+    }
+
+    @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
         return new MultiValueStringFeatureTraitsEditor(aId, this, aFeatureModel);
