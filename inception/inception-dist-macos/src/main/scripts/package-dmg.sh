@@ -98,6 +98,7 @@ echo "Building ${TARGET_ARCH} DMG via $JPACKAGE..."
   --main-jar "$MAIN_JAR" \
   --main-class "$MAIN_CLASS" \
   --java-options -Xmx4g \
+  --java-options -Dinception.app-bundle=true \
   --icon "$ICON" \
   --mac-sign \
   --mac-signing-key-user-name "$SIGNING_IDENTITY" \

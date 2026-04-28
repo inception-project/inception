@@ -23,6 +23,16 @@ public interface DeploymentModeService
 {
     String PROFILE_CLI_MODE = "cli";
     String PROFILE_APPLICATION_MODE = "app";
+    String PROFILE_APP_BUNDLE = "app-bundle";
+
+    /**
+     * System property set by the native launchers (MSI / macOS app bundle) via jpackage
+     * {@code --java-options} to indicate that the application is running from a packaged
+     * desktop bundle. When set to {@code true}, the {@link #PROFILE_APP_BUNDLE} profile is
+     * activated, which applies bundle-specific defaults (e.g. binding the web server to
+     * localhost only).
+     */
+    String SYSTEM_PROPERTY_APP_BUNDLE = "inception.app-bundle";
 
     String PROFILE_DEVELOPMENT_MODE = "development";
     String PROFILE_PRODUCTION_MODE = "production";

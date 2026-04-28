@@ -94,6 +94,7 @@ echo "Building ${TARGET_ARCH} MSI via $JPACKAGE..."
   --main-jar "$MAIN_JAR" \
   --main-class "$MAIN_CLASS" \
   --java-options -Xmx4g \
+  --java-options -Dinception.app-bundle=true \
   --icon "$ICON" \
   --win-dir-chooser \
   --win-menu \

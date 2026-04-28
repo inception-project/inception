@@ -1,0 +1,24 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_intro_closing]]
+= Thank You
+
+We hope the _Getting Started_ helped you with your first steps in {product-name} and gave you a general idea of how it works.
+For further reading and more details, we recommend the <<sect_core_funct, main documentation>>, starting right after this paragraph.
+
+Do not hesitate to xref:do_you_have_questions_or_feedback[contact us] if you struggle, have any questions or special requirements.
+We wish you success with your projects and you are welcome to let us know what you are working on.

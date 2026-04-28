@@ -1,0 +1,17 @@
+# ===================================================================
+# INCEpTION Properties — App Bundle Profile
+# ===================================================================
+#
+# Defaults applied when running from a packaged desktop bundle (Windows MSI
+# or macOS app bundle). Activated by the launcher via -Dinception.app-bundle=true
+# (passed through jpackage --java-options), which causes the "app-bundle"
+# Spring profile to be added in INCEpTION#start.
+#
+# Any value here can be overridden by command line arguments
+# (e.g. --server.address=0.0.0.0) or by entries in
+# ${app.home}/settings.properties or ${app.home}/settings.yml.
+
+server:
+  # Bind only to the loopback interface so the desktop application is not
+  # unintentionally exposed on the local network.
+  address: 127.0.0.1
