@@ -23,7 +23,19 @@ The {product-name} Team
 
 = Getting Started
 
-include::{include-dir}getting-started.adoc[leveloffset=+1]
+include::{include-dir}intro-introduction.adoc[leveloffset=+1]
+
+include::{include-dir}intro-installation.adoc[leveloffset=+1]
+
+include::{include-dir}intro-first-login.adoc[leveloffset=+1]
+
+include::{include-dir}intro-first-annotations.adoc[leveloffset=+1]
+
+include::{include-dir}intro-project-structure.adoc[leveloffset=+1]
+
+include::{include-dir}intro-project-settings.adoc[leveloffset=+1]
+
+include::{include-dir}intro-closing.adoc[leveloffset=+1]
 
 <<<
 

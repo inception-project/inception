@@ -14,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+[[sect_settings_server]]
 = Server Settings
 
 These settings relate to the embedded web server in the JAR version of {product-name}.
@@ -32,8 +33,11 @@ These settings relate to the embedded web server in the JAR version of {product-
 | `18080`
 
 | `server.address`
-| IP address on which the server listens
-| `0.0.0.0`
+| IP address on which the server listens. When running from the desktop
+  application bundle (Windows MSI / macOS DMG), this defaults to
+  `127.0.0.1` so the application is reachable only from the local
+  machine. See <<user-guide.adoc#sect_installation_app_bundle, Running as a desktop application>> in the User Guide for details.
+| `0.0.0.0` _(JAR / WAR);_ `127.0.0.1` _(desktop bundle)_
 | `127.0.0.1`
 
 | `server.ajp.port`
