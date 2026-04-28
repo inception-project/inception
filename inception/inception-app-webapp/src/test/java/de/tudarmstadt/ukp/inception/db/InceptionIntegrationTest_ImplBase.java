@@ -22,7 +22,9 @@ import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServ
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_INTERNAL_SERVER;
 import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_PRODUCTION_MODE;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
@@ -215,8 +217,7 @@ public abstract class InceptionIntegrationTest_ImplBase
     void testRebuildStateUpdatedSetsProjectStateUpdatedFromEvent() throws Exception
     {
         // Create a project and ensure the state_updated database field is null
-        var project = new Project("rebuild-state-test");
-        project = projectService.createProject(project);
+        var project = projectService.createProject(new Project("rebuild-state-test"));
 
         try {
             // Ensure the DB field is NULL
@@ -229,18 +230,22 @@ public abstract class InceptionIntegrationTest_ImplBase
             // Change the project state to generate an event
             projectService.setProjectState(project, ProjectState.ANNOTATION_IN_PROGRESS);
 
-            // Ensure events are flushed to the DB (EventLoggingListener schedules flushes)
-            eventLoggingListener.flush();
-
+            // The EventLoggingListener flushes asynchronously (~1s scheduler) and its explicit
+            // flush() may early-return if the scheduler is concurrently flushing. Poll until the
+            // event appears rather than relying on a single flush() call being synchronous.
             var eventsCreated = new ArrayList<LoggedEvent>();
-            eventRepository.forEachLoggedEvent(project, event -> {
-                if ("ProjectStateChangedEvent".equals(event.getEvent())) {
-                    eventsCreated.add(event);
-                }
+            await().atMost(10, SECONDS).untilAsserted(() -> {
+                eventLoggingListener.flush();
+                eventsCreated.clear();
+                eventRepository.forEachLoggedEvent(project, event -> {
+                    if ("ProjectStateChangedEvent".equals(event.getEvent())) {
+                        eventsCreated.add(event);
+                    }
+                });
+                assertThat(eventsCreated).hasSize(1);
             });
 
             assertThat(eventsCreated) //
-                    .hasSize(1) //
                     .allSatisfy(e -> assertThat(e.getCreated()).isNotNull());
 
             // Set the database field back to NULL to ensure it has to be rebuilt

@@ -36,6 +36,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportPropertiesImpl;
@@ -62,6 +63,7 @@ public class MultiValueStringFeatureSupportTest
 
         valueFeature = new AnnotationFeature("values", CAS.TYPE_NAME_STRING_ARRAY);
         valueFeature.setMode(MultiValueMode.ARRAY);
+        valueFeature.setLinkMode(LinkMode.NONE);
 
         valueTagset = new TagSet();
 
@@ -103,5 +105,22 @@ public class MultiValueStringFeatureSupportTest
 
         assertThat((List<String>) sut.getFeatureValue(valueFeature, spanFS)) //
                 .containsExactlyElementsOf(values);
+    }
+
+    @Test
+    public void thatClearFeatureValueDoesNotThrowOnMultiValuedStringFeature() throws Exception
+    {
+        // Reproduces issue where clearing a hidden multi-valued string feature
+        // (multiValueMode=ARRAY, linkMode=NONE) raised "Unsupported link mode [none]".
+        valueFeature.setTagset(valueTagset);
+        valueTagset.setCreateTag(true);
+
+        sut.setFeatureValue(jcas.getCas(), valueFeature, ICasUtil.getAddr(spanFS),
+                asList("value1", "value2"));
+
+        sut.clearFeatureValue(valueFeature, spanFS);
+
+        assertThat(FSUtil.getFeature(spanFS, valueFeature.getName(), String[].class)) //
+                .isNull();
     }
 }
