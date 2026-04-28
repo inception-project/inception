@@ -178,6 +178,13 @@ public class INCEpTION
             splash = LoadingSplashScreen.setupScreen("INCEpTION");
             builder.headless(splash.isEmpty());
             builder.profiles(DeploymentModeService.PROFILE_APPLICATION_MODE);
+
+            // Activated by the MSI / macOS app bundle launchers via -Dinception.app-bundle=true
+            // in jpackage --java-options. Applies desktop-bundle defaults from
+            // application-app-bundle.yml (e.g. binding the web server to localhost only).
+            if (Boolean.getBoolean(DeploymentModeService.SYSTEM_PROPERTY_APP_BUNDLE)) {
+                builder.profiles(DeploymentModeService.PROFILE_APP_BUNDLE);
+            }
         }
 
         init(builder);
