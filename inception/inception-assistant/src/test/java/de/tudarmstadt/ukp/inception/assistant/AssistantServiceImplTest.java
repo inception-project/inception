@@ -42,7 +42,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.web.server.context.WebServerApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.assistant.config.AssistantAutoConfiguration;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantToolsAutoConfiguration;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
@@ -94,6 +95,7 @@ import jakarta.persistence.EntityManager;
                 AssistantToolsAutoConfiguration.class, //
                 WorkloadManagementAutoConfiguration.class })
 @ImportAutoConfiguration({ //
+        AssistantAutoConfiguration.class, //
         EventLoggingAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
         WebsocketAutoConfiguration.class, //
@@ -115,14 +117,14 @@ class AssistantServiceImplTest
     private static final String USER = "user";
     private static final String PASS = "pass";
 
-    private @LocalServerPort int port;
     private String websocketUrl;
 
+    private @Autowired WebServerApplicationContext webServerAppCtxt;
     private @Autowired ProjectService projectService;
     private @Autowired RepositoryProperties repositoryProperties;
     private @Autowired EntityManager entityManager;
     private @Autowired UserDao userService;
-    private @Autowired AssistantServiceImpl assistantService;
+    private @Autowired AssistantService assistantService;
 
     private static @TempDir File repositoryDir;
 
@@ -132,7 +134,7 @@ class AssistantServiceImplTest
     @BeforeEach
     void setup() throws Exception
     {
-        websocketUrl = "ws://localhost:" + port + WS_ENDPOINT;
+        websocketUrl = "ws://localhost:" + webServerAppCtxt.getWebServer().getPort() + WS_ENDPOINT;
 
         setupOnce();
     }
