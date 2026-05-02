@@ -75,10 +75,10 @@
     <build-groovy-version>5.0.4</build-groovy-version>
 
     <junit.version>6.0.3</junit.version>
-    <mockito.version>5.22.0</mockito.version>
+    <mockito.version>5.23.0</mockito.version>
     <assertj.version>3.27.7</assertj.version>
     <xmlunit.version>2.11.0</xmlunit.version>
-    <testcontainers.version>1.21.4</testcontainers.version>
+    <testcontainers.version>2.0.5</testcontainers.version>
     <keycloak-admin-client.version>26.0.8</keycloak-admin-client.version>
     <testcontainers-keycloak.version>4.1.1</testcontainers-keycloak.version>
 
@@ -90,27 +90,27 @@
 
     <pdfbox.version>3.0.6</pdfbox.version>
 
-    <spring.version>7.0.5</spring.version>
-    <spring.boot.version>4.0.3</spring.boot.version>
-    <spring.data.version>4.0.3</spring.data.version>
-    <spring.security.version>7.0.3</spring.security.version>
+    <spring.version>7.0.7</spring.version>
+    <spring.boot.version>4.0.6</spring.boot.version>
+    <spring.data.version>4.0.5</spring.data.version>
+    <spring.security.version>7.0.5</spring.security.version>
     <springdoc.version>3.0.2</springdoc.version>
-    <swagger.version>2.2.43</swagger.version>
+    <swagger.version>2.2.49</swagger.version>
     <jjwt.version>0.13.0</jjwt.version>
 
     <slf4j.version>2.0.17</slf4j.version>
-    <log4j2.version>2.25.3</log4j2.version>
-    <jboss.logging.version>3.6.2.Final</jboss.logging.version>
-    <sentry.version>8.33.0</sentry.version>
+    <log4j2.version>2.25.4</log4j2.version>
+    <jboss.logging.version>3.6.3.Final</jboss.logging.version>
+    <sentry.version>8.40.0</sentry.version>
 
-    <tomcat.version>11.0.20</tomcat.version>
-    <jetty.version>12.1.6</jetty.version>
+    <tomcat.version>11.0.21</tomcat.version>
+    <jetty.version>12.1.8</jetty.version>
     <servlet-api.version>6.1.0</servlet-api.version>
 
     <mariadb.driver.version>3.5.7</mariadb.driver.version>
     <mssql.driver.version>12.10.2.jre11</mssql.driver.version>
     <mysql.driver.version>9.6.0</mysql.driver.version>
-    <postgres.driver.version>42.7.10</postgres.driver.version>
+    <postgres.driver.version>42.7.11</postgres.driver.version>
     <hibernate.version>7.2.6.Final</hibernate.version>
     <hibernate.validator.version>8.0.3.Final</hibernate.validator.version>
 
@@ -139,12 +139,12 @@
 
     <ant-version>1.10.15</ant-version>
     <json.version>20240303</json.version>
-    <jackson.version>2.21.1</jackson.version>
-    <jackson3.version>3.1.0</jackson3.version>
+    <jackson.version>2.21.3</jackson.version>
+    <jackson3.version>3.1.3</jackson3.version>
     <snakeyaml.version>2.6</snakeyaml.version>
     <okhttp.version>5.3.2</okhttp.version>
-    <okio.version>3.16.4</okio.version>
-    <byte-buddy.version>1.18.5</byte-buddy.version>
+    <okio.version>3.17.0</okio.version>
+    <byte-buddy.version>1.18.8</byte-buddy.version>
     <caffeine.version>3.2.3</caffeine.version>
     <commons-beanutils.version>1.11.0</commons-beanutils.version>
     <commons-collections4.version>4.5.0</commons-collections4.version>
@@ -153,13 +153,13 @@
     <commons-pool2.version>2.13.1</commons-pool2.version>
     <commons-lang3.version>3.20.0</commons-lang3.version>
     <commons-dbcp2.version>2.14.0</commons-dbcp2.version>
-    <commons-codec.version>1.21.0</commons-codec.version>
+    <commons-codec.version>1.22.0</commons-codec.version>
     <commons-compress.version>1.28.0</commons-compress.version>
     <commons-math3.version>3.6.1</commons-math3.version>
     <commons-text.version>1.15.0</commons-text.version>
     <commons-validator.version>1.10.1</commons-validator.version>
-    <commons-io.version>2.21.0</commons-io.version>
-    <commons-logging.version>1.3.5</commons-logging.version>
+    <commons-io.version>2.22.0</commons-io.version>
+    <commons-logging.version>1.3.6</commons-logging.version>
     <commons-logging-api.version>1.1</commons-logging-api.version>
     <dom4j.version>2.2.0</dom4j.version>
     <flexmark.version>0.64.8</flexmark.version>
@@ -172,16 +172,16 @@
     <zjsonpatch.version>0.6.2</zjsonpatch.version>
     <picocli.version>4.7.7</picocli.version>
     <woodstox-core.version>6.7.0</woodstox-core.version>
-    <nimbus-jose-jwt.version>10.8</nimbus-jose-jwt.version>
-    <json-schema-validator.version>3.0.0</json-schema-validator.version>
+    <nimbus-jose-jwt.version>10.9</nimbus-jose-jwt.version>
+    <json-schema-validator.version>3.0.2</json-schema-validator.version>
     <json-schema-generator.version>4.38.0</json-schema-generator.version>
     <jgit.version>6.10.1.202505221210-r</jgit.version>
     <javax.activation-api-version>1.2.0</javax.activation-api-version>
-    <jaxb.version>4.0.6</jaxb.version>
+    <jaxb.version>4.0.7</jaxb.version>
     <jaxb-impl-version>2.3.9</jaxb-impl-version>
     <jaxb-core-version>2.3.0.1</jaxb-core-version>
     <jaxb-api-version>2.3.1</jaxb-api-version>
-    <jakarta.xml.bind-api-version>4.0.4</jakarta.xml.bind-api-version>
+    <jakarta.xml.bind-api-version>4.0.5</jakarta.xml.bind-api-version>
     <snappy.version>1.1.10.8</snappy.version>
     <jsonld-java.version>0.13.6</jsonld-java.version>
     <jna.version>5.18.1</jna.version>
@@ -191,7 +191,7 @@
     <hsqldb.version>2.7.4</hsqldb.version>
     <opensaml.version>5.2.1</opensaml.version>
     <oauth2-oidc-sdk.version>9.43.6</oauth2-oidc-sdk.version>
-    <javassist.version>3.30.2-GA</javassist.version>
+    <javassist.version>3.31.0-GA</javassist.version>
     <openjson.version>1.0.13</openjson.version>
 
     <node.version>24.14.1</node.version>
