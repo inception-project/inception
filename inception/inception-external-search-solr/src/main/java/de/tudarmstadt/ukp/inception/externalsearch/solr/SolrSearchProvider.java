@@ -27,13 +27,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.conn.HttpHostConnectException;
-import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.RemoteSolrException;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.BaseHttpSolrClient;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.HttpJdkSolrClient;
+import org.apache.solr.client.solrj.request.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -78,8 +79,7 @@ public class SolrSearchProvider
     {
         List<ExternalSearchResult> results = new ArrayList<>();
         // build client
-        HttpSolrClient solrClient = makeClient(aTraits);
-        try {
+        try (HttpJdkSolrClient solrClient = makeClient(aTraits)) {
             try {
                 SolrQuery query = new SolrQuery();
                 query.setParam("qt", aTraits.getSearchPath());
@@ -144,17 +144,17 @@ public class SolrSearchProvider
                         results.add(result);
                     }
                 }
-                catch (BaseHttpSolrClient.RemoteSolrException e) {
+                catch (RemoteSolrException e) {
                     throw new IOException("Unable to get result : " + e.getMessage());
                 }
             }
-            catch (BaseHttpSolrClient.RemoteSolrException e) {
+            catch (RemoteSolrException e) {
                 throw new IOException("Unable to connect to " + aTraits.getRemoteUrl()
                         + aTraits.getIndexName() + aTraits.getSearchPath()
                         + " : Search path does not exist. \n" + e.getMessage());
             }
         }
-        catch (BaseHttpSolrClient.RemoteSolrException e) {
+        catch (RemoteSolrException e) {
             throw new IOException(
                     "HTTP ERROR 404 Not Found, incorrect URL : " + aTraits.getRemoteUrl()
                             + " : Are you sure both the host and collection name are correct ? \n"
@@ -244,12 +244,11 @@ public class SolrSearchProvider
         aDocumentId = escapeSolrSpecialCharacters(aDocumentId);
 
         SolrQuery getQuery = new SolrQuery(DOC_ID_KEY + ":" + aDocumentId);
-        HttpSolrClient client = makeClient(aTraits);
         ExternalSearchResult result = new ExternalSearchResult(aRepository, aCollectionId,
                 aDocumentId);
 
         // Send get query
-        try {
+        try (HttpJdkSolrClient client = makeClient(aTraits)) {
             QueryResponse response = client.query(aTraits.getIndexName(), getQuery);
             SolrDocumentList documents = response.getResults();
             SolrDocument document = documents.get(0);
@@ -290,8 +289,6 @@ public class SolrSearchProvider
         SolrQuery getQuery = new SolrQuery(DOC_ID_KEY + ":" + aDocumentId);
         getQuery.setRows(1);
 
-        HttpSolrClient client = makeClient(aTraits);
-
         QueryResponse response;
         SolrDocumentList documents;
         SolrDocument document;
@@ -300,7 +297,7 @@ public class SolrSearchProvider
         getQuery.setParam("collection", aTraits.getIndexName());
         getQuery.setParam("qt", aTraits.getSearchPath());
 
-        try {
+        try (HttpJdkSolrClient client = makeClient(aTraits)) {
             response = client.query(aTraits.getIndexName(), getQuery);
             documents = response.getResults();
             document = documents.get(0);
@@ -334,10 +331,11 @@ public class SolrSearchProvider
      *            parameters for the client
      * @return client object
      */
-    private HttpSolrClient makeClient(SolrSearchProviderTraits aTraits)
+    private HttpJdkSolrClient makeClient(SolrSearchProviderTraits aTraits)
     {
-        return new HttpSolrClient.Builder(aTraits.getRemoteUrl()).withConnectionTimeout(10000)
-                .withSocketTimeout(60000).build();
+        return new HttpJdkSolrClient.Builder(aTraits.getRemoteUrl())
+                .withConnectionTimeout(10000, TimeUnit.MILLISECONDS)
+                .withIdleTimeout(60000, TimeUnit.MILLISECONDS).build();
     }
 
     /**

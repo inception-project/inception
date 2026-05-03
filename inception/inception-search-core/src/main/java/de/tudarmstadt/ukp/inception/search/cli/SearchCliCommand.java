@@ -30,8 +30,9 @@ import picocli.CommandLine.Spec;
 @Component
 @Command( //
         name = "search", //
+        mixinStandardHelpOptions = true, //
         description = "commands related to search within projects", //
-        subcommands = { SearchReindexCliCommand.class })
+        subcommands = { SearchReindexCliCommand.class, SearchUpgradeIndexCliCommand.class })
 public class SearchCliCommand
     implements Callable<Integer>
 {

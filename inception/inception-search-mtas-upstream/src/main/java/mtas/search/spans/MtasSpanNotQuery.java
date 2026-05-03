@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermStates;
@@ -129,16 +128,16 @@ public class MtasSpanNotQuery
      * @see mtas.search.spans.util.MtasSpanQuery#rewrite(org.apache.lucene.index. IndexReader)
      */
     @Override
-    public MtasSpanQuery rewrite(IndexReader reader) throws IOException
+    public MtasSpanQuery rewrite(IndexSearcher searcher) throws IOException
     {
-        MtasSpanQuery newQ1 = (MtasSpanQuery) q1.rewrite(reader);
-        MtasSpanQuery newQ2 = (MtasSpanQuery) q2.rewrite(reader);
+        MtasSpanQuery newQ1 = (MtasSpanQuery) q1.rewrite(searcher);
+        MtasSpanQuery newQ2 = (MtasSpanQuery) q2.rewrite(searcher);
         if (!newQ1.equals(q1) || !newQ2.equals(q2)) {
-            return new MtasSpanNotQuery(newQ1, newQ2).rewrite(reader);
+            return new MtasSpanNotQuery(newQ1, newQ2).rewrite(searcher);
         }
         else {
-            baseQuery = (SpanNotQuery) baseQuery.rewrite(reader);
-            return super.rewrite(reader);
+            baseQuery = (SpanNotQuery) baseQuery.rewrite(searcher);
+            return super.rewrite(searcher);
         }
     }
 

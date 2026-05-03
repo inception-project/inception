@@ -593,6 +593,15 @@ public interface KnowledgeBaseService
     void rebuildFullTextIndex(KnowledgeBase aKb) throws Exception;
 
     /**
+     * Upgrades the on-disk full-text index of the given local KB to the current Lucene format
+     * without re-indexing the KB content. Cheaper than
+     * {@link #rebuildFullTextIndex(KnowledgeBase)}, but only works if the existing index format is
+     * still readable by the running Lucene version.
+     */
+    @SuppressWarnings("javadoc")
+    void upgradeFullTextIndex(KnowledgeBase aKb) throws Exception;
+
+    /**
      * Read the concept with the given identifier from the given knowledge base with a specific
      * query
      * 

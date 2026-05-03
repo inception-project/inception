@@ -25,10 +25,8 @@ import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWebApplication;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -36,10 +34,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-@ConditionalOnNotWebApplication
-@Component
 @Command( //
         name = "migrate-preauthenticated-users", //
+        mixinStandardHelpOptions = true, //
         description = { //
                 "Migrates all users that do not have a password and that do not have ROLE_REMOTE "
                         + "to the 'preauth' realm. This command should be run once after upgrading "

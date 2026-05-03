@@ -22,17 +22,17 @@ import java.io.IOException;
 import org.apache.lucene.codecs.KnnVectorsFormat;
 import org.apache.lucene.codecs.KnnVectorsReader;
 import org.apache.lucene.codecs.KnnVectorsWriter;
-import org.apache.lucene.codecs.lucene912.Lucene912Codec;
+import org.apache.lucene.codecs.lucene104.Lucene104Codec;
 import org.apache.lucene.codecs.lucene99.Lucene99HnswVectorsFormat;
 import org.apache.lucene.index.SegmentReadState;
 import org.apache.lucene.index.SegmentWriteState;
 
-public class HighDimensionLucene912Codec
-    extends Lucene912Codec
+public class HighDimensionLucene104Codec
+    extends Lucene104Codec
 {
     private final KnnVectorsFormat defaultKnnVectorsFormat;
 
-    public HighDimensionLucene912Codec(int aDimension)
+    public HighDimensionLucene104Codec(int aDimension)
     {
         var knnFormat = new Lucene99HnswVectorsFormat();
         defaultKnnVectorsFormat = new HighDimensionKnnVectorsFormat(knnFormat, aDimension);

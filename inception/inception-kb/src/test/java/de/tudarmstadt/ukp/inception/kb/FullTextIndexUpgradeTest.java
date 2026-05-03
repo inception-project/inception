@@ -109,6 +109,17 @@ public class FullTextIndexUpgradeTest
         sut.destroy();
     }
 
+    /**
+     * To regenerate reference data for a given Lucene version:
+     * <ol>
+     * <li>Check out a project revision that uses the desired Lucene version (e.g. the commit
+     * immediately before the Lucene 10 upgrade for Lucene 9 reference data).</li>
+     * <li>Un-disable this test and run it.</li>
+     * <li>Copy the resulting index from the {@link TempDir} (the path is logged at INFO; or set a
+     * breakpoint and inspect {@code temp}) into
+     * {@code src/test/resources/KnowledgeBaseUpgradeTest/lucene-X.Y.Z/}.</li>
+     * </ol>
+     */
     @Disabled("Only needed when we want to create new reference data")
     @Test
     void createKnowledgeBase() throws Exception
@@ -123,10 +134,15 @@ public class FullTextIndexUpgradeTest
         }
     }
 
+    // Lucene 10 can only read indexes from the previous major (Lucene 9).
+    // Indexes from Lucene 8.x and earlier can no longer be opened directly and
+    // require a two-step migration through an intermediate Lucene 9 build.
+    // The lucene-7.7.3 and lucene-8.11.3 reference data are kept for history.
+
     @Test
-    void thatExistingKnowledgeBaseCanBeRead() throws Exception
+    void thatExistingLucene9KnowledgeBaseCanBeRead() throws Exception
     {
-        copyDirectory(new File(REF_DIR, "lucene-8.11.3"), temp);
+        copyDirectory(new File(REF_DIR, "lucene-9.12.3"), temp);
 
         sut = new KnowledgeBaseServiceImpl(repoProperties, kbProperties, entityManager);
 
@@ -150,9 +166,9 @@ public class FullTextIndexUpgradeTest
     }
 
     @Test
-    void thatExistingKnowledgeBaseCanBeUpdated() throws Exception
+    void thatExistingLucene9KnowledgeBaseCanBeUpdated() throws Exception
     {
-        copyDirectory(new File(REF_DIR, "lucene-8.11.3"), temp);
+        copyDirectory(new File(REF_DIR, "lucene-9.12.3"), temp);
 
         sut = new KnowledgeBaseServiceImpl(repoProperties, kbProperties, entityManager);
 

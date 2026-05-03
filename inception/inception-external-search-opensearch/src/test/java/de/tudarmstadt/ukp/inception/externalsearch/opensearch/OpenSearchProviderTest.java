@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,81 +18,59 @@
 package de.tudarmstadt.ukp.inception.externalsearch.opensearch;
 
 import static java.lang.String.join;
+import static java.time.Duration.ofMinutes;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.codelibs.opensearch.runner.OpenSearchRunner.newConfigs;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublishers;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.util.List;
 
-import org.codelibs.opensearch.runner.OpenSearchRunner;
-import org.codelibs.opensearch.runner.OpenSearchRunnerException;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.opensearch.LegacyESVersion;
-import org.opensearch.client.Requests;
-import org.opensearch.cluster.health.ClusterHealthStatus;
-import org.opensearch.common.Priority;
-import org.opensearch.common.settings.Settings;
-import org.opensearch.common.settings.Settings.Builder;
-import org.opensearch.common.unit.TimeValue;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.externalsearch.opensearch.traits.OpenSearchProviderTraits;
 
+@Testcontainers(disabledWithoutDocker = true)
 public class OpenSearchProviderTest
 {
-    static {
-        // Disable asserts for LegacyESVersion because we use a slightly higher version of Lucene
-        // than OpenSearch expects
-        LegacyESVersion.class.getClassLoader()
-                .setClassAssertionStatus(LegacyESVersion.class.getName(), false);
-    }
+    private static final String INDEX = "test";
+    private static final int OPENSEARCH_PORT = 9200;
+    private static final String OPENSEARCH_VERSION = System
+            .getProperty("inception.opensearch.version", "3.6.0");
+
+    @Container
+    private static final GenericContainer<?> OPENSEARCH = new GenericContainer<>(
+            "opensearchproject/opensearch:" + OPENSEARCH_VERSION) //
+                    .withExposedPorts(OPENSEARCH_PORT) //
+                    .withEnv("discovery.type", "single-node") //
+                    .withEnv("plugins.security.disabled", "true") //
+                    .withEnv("DISABLE_INSTALL_DEMO_CONFIG", "true") //
+                    // Allow tests to run on machines with less than the default 90% high
+                    // watermark disk space free.
+                    .withEnv("cluster.routing.allocation.disk.threshold_enabled", "false") //
+                    .withEnv("OPENSEARCH_JAVA_OPTS", "-Xms512m -Xmx512m") //
+                    .waitingFor(Wait.forHttp("/_cluster/health?wait_for_status=yellow")
+                            .forPort(OPENSEARCH_PORT).withStartupTimeout(ofMinutes(2)));
 
     private OpenSearchProvider sut;
     private DocumentRepository repo;
     private OpenSearchProviderTraits traits;
-    private OpenSearchRunner osRunner;
 
     @BeforeEach
-    public void setup()
+    public void setup() throws Exception
     {
-        osRunner = new OpenSearchRunner()
-        {
-            @Override
-            public ClusterHealthStatus ensureYellow(final String... indices)
-            {
-                var actionGet = client().admin().cluster() //
-                        .health(Requests.clusterHealthRequest(indices)
-                                .waitForNoRelocatingShards(true).waitForYellowStatus()
-                                .waitForEvents(Priority.LANGUID))
-                        .actionGet(TimeValue.timeValueSeconds(60));
-                if (actionGet.isTimedOut()) {
-                    throw new OpenSearchRunnerException("ensureYellow timed out, cluster state:\n"
-                            + "\n" + client().admin().cluster().prepareState().get().getState()
-                            + "\n" + client().admin().cluster().preparePendingClusterTasks().get(),
-                            actionGet);
-                }
-                return actionGet.getStatus();
-            }
-        };
-        osRunner.onBuild(new OpenSearchRunner.Builder()
-        {
-            @Override
-            public void build(int aIndex, Builder aBuilder)
-            {
-                aBuilder.put("logger.level", "WARN");
-                // This should hopefully allow running tests on machines with less than the
-                // default 90% high watermark disk space free (e.g on a 1TB drive less than 100 GB).
-                aBuilder.put("cluster.routing.allocation.disk.threshold_enabled", false);
-            }
-        }).build(newConfigs());
-
-        var port = osRunner.client().settings().get("http.port");
-        osRunner.ensureYellow();
-
-        osRunner.createIndex("test", (Settings) null);
-        osRunner.insert("test", "1", join("\n", //
+        recreateIndex();
+        indexDocument("1", join("\n", //
                 "{", //
                 "  'metadata': {", //
                 "    'language': 'en',", //
@@ -111,20 +89,9 @@ public class OpenSearchProviderTest
         repo = new DocumentRepository("dummy", null);
 
         traits = new OpenSearchProviderTraits();
-        traits.setRemoteUrl("http://localhost:" + port);
-        traits.setIndexName("test");
+        traits.setRemoteUrl(opensearchUrl());
+        traits.setIndexName(INDEX);
         traits.setSearchPath("_search");
-    }
-
-    @AfterEach
-    public void tearDown() throws Exception
-    {
-        try {
-            osRunner.close();
-        }
-        finally {
-            osRunner.clean();
-        }
     }
 
     @Test
@@ -132,15 +99,46 @@ public class OpenSearchProviderTest
     {
         List<ExternalSearchResult> results = sut.executeQuery(repo, traits, "document");
 
-        System.out.println(results);
-
         assertThat(results).isNotEmpty();
     }
 
     @Test
     public void thatDocumentTextCanBeRetrieved() throws Exception
     {
-        String documentText = sut.getDocumentText(repo, traits, "test", "1");
+        String documentText = sut.getDocumentText(repo, traits, INDEX, "1");
         assertThat(documentText).isNotNull();
+    }
+
+    private static String opensearchUrl()
+    {
+        return "http://" + OPENSEARCH.getHost() + ":" + OPENSEARCH.getMappedPort(OPENSEARCH_PORT);
+    }
+
+    private static void recreateIndex() throws IOException, InterruptedException
+    {
+        var client = HttpClient.newHttpClient();
+        client.send(HttpRequest.newBuilder(URI.create(opensearchUrl() + "/" + INDEX)) //
+                .DELETE().build(), BodyHandlers.discarding());
+        var response = client.send(HttpRequest.newBuilder(URI.create(opensearchUrl() + "/" + INDEX)) //
+                .PUT(BodyPublishers.noBody()).build(), BodyHandlers.ofString());
+        if (response.statusCode() / 100 != 2) {
+            throw new IOException(
+                    "Failed to create index: " + response.statusCode() + " " + response.body());
+        }
+    }
+
+    private static void indexDocument(String id, String body)
+        throws IOException, InterruptedException
+    {
+        var client = HttpClient.newHttpClient();
+        var response = client.send(HttpRequest
+                .newBuilder(
+                        URI.create(opensearchUrl() + "/" + INDEX + "/_doc/" + id + "?refresh=true")) //
+                .header("Content-Type", "application/json") //
+                .PUT(BodyPublishers.ofString(body)).build(), BodyHandlers.ofString());
+        if (response.statusCode() / 100 != 2) {
+            throw new IOException(
+                    "Failed to index document: " + response.statusCode() + " " + response.body());
+        }
     }
 }

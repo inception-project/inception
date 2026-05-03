@@ -3,7 +3,6 @@ package mtas.search.spans;
 import java.io.IOException;
 import java.util.Objects;
 
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.spans.SpanMultiTermQueryWrapper;
 import org.apache.lucene.queries.spans.SpanOrQuery;
@@ -89,9 +88,9 @@ public class MtasSpanWildcardQuery
      * @see org.apache.lucene.search.Query#rewrite(org.apache.lucene.index.IndexReader)
      */
     @Override
-    public MtasSpanQuery rewrite(IndexReader reader) throws IOException
+    public MtasSpanQuery rewrite(IndexSearcher searcher) throws IOException
     {
-        Query q = query.rewrite(reader);
+        Query q = query.rewrite(searcher);
         if (q instanceof SpanOrQuery) {
             SpanQuery[] clauses = ((SpanOrQuery) q).getClauses();
             if (clauses.length > MTAS_WILDCARD_EXPAND_BOUNDARY) {
@@ -110,7 +109,7 @@ public class MtasSpanWildcardQuery
                     throw new IOException("no SpanTermQuery after rewrite");
                 }
             }
-            return new MtasSpanOrQuery(newClauses).rewrite(reader);
+            return new MtasSpanOrQuery(newClauses).rewrite(searcher);
         }
         else {
             throw new IOException("no SpanOrQuery after rewrite");

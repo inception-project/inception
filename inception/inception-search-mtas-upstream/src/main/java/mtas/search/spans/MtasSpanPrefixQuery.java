@@ -3,7 +3,6 @@ package mtas.search.spans;
 import java.io.IOException;
 import java.util.Objects;
 
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.spans.SpanMultiTermQueryWrapper;
 import org.apache.lucene.queries.spans.SpanOrQuery;
@@ -85,22 +84,22 @@ public class MtasSpanPrefixQuery
      * @see org.apache.lucene.search.Query#rewrite(org.apache.lucene.index.IndexReader)
      */
     @Override
-    public MtasSpanQuery rewrite(IndexReader reader) throws IOException
+    public MtasSpanQuery rewrite(IndexSearcher searcher) throws IOException
     {
-        Query q = query.rewrite(reader);
+        Query q = query.rewrite(searcher);
         if (q instanceof SpanOrQuery) {
             SpanQuery[] clauses = ((SpanOrQuery) q).getClauses();
             MtasSpanQuery[] newClauses = new MtasSpanQuery[clauses.length];
             for (int i = 0; i < clauses.length; i++) {
                 if (clauses[i] instanceof SpanTermQuery) {
                     newClauses[i] = new MtasSpanTermQuery((SpanTermQuery) clauses[i],
-                            singlePosition).rewrite(reader);
+                            singlePosition).rewrite(searcher);
                 }
                 else {
                     throw new IOException("no SpanTermQuery after rewrite");
                 }
             }
-            return new MtasSpanOrQuery(newClauses).rewrite(reader);
+            return new MtasSpanOrQuery(newClauses).rewrite(searcher);
         }
         else {
             throw new IOException("no SpanOrQuery after rewrite");

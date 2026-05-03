@@ -25,10 +25,6 @@
   <artifactId>inception-external-search-solr</artifactId>
   <name>INCEpTION - External Search - Solr</name>
 
-  <properties>
-    <jetty.version>10.0.22</jetty.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -100,13 +96,13 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.solr</groupId>
-      <artifactId>solr-core</artifactId>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.solr</groupId>
-      <artifactId>solr-test-framework</artifactId>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -117,15 +113,4 @@
     </dependency>
   </dependencies>
 
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-bom</artifactId>
-        <version>${jetty.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 </project>

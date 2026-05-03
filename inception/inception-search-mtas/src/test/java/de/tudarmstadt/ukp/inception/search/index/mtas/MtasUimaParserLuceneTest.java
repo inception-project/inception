@@ -187,7 +187,7 @@ public class MtasUimaParserLuceneTest
         ListIterator<LeafReaderContext> iterator = indexReader.leaves().listIterator();
         IndexSearcher searcher = new IndexSearcher(indexReader);
         final float boost = 0;
-        SpanWeight spanweight = q.rewrite(indexReader).createWeight(searcher, COMPLETE_NO_SCORES,
+        SpanWeight spanweight = q.rewrite(searcher).createWeight(searcher, COMPLETE_NO_SCORES,
                 boost);
 
         while (iterator.hasNext()) {
@@ -201,8 +201,8 @@ public class MtasUimaParserLuceneTest
                 while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
                     if (segmentReader.numDocs() == segmentReader.maxDoc()
                             || segmentReader.getLiveDocs().get(spans.docID())) {
-                        String idValue = segmentReader.document(spans.docID()).getField(FIELD_ID)
-                                .stringValue();
+                        String idValue = segmentReader.storedFields().document(spans.docID())
+                                .getField(FIELD_ID).stringValue();
                         System.out.println("********  New doc " + spans.docID() + "-" + idValue);
                         while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
                             System.out.println("------");

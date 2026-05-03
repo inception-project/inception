@@ -1461,11 +1461,6 @@
         <version>${opensearch.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.codelibs.opensearch</groupId>
-        <artifactId>opensearch-runner</artifactId>
-        <version>${opensearch-runner.version}</version>
-      </dependency>
-      <dependency>
         <groupId>net.java.dev.jna</groupId>
         <artifactId>jna</artifactId>
         <version>${jna.version}</version>

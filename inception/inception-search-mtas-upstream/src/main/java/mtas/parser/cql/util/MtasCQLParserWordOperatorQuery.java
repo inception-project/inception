@@ -3,7 +3,6 @@ package mtas.parser.cql.util;
 import java.io.IOException;
 import java.util.Objects;
 
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queries.spans.SpanWeight;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.QueryVisitor;
@@ -76,9 +75,9 @@ public class MtasCQLParserWordOperatorQuery
      * @see org.apache.lucene.search.Query#rewrite(org.apache.lucene.index.IndexReader)
      */
     @Override
-    public MtasSpanQuery rewrite(IndexReader reader) throws IOException
+    public MtasSpanQuery rewrite(IndexSearcher searcher) throws IOException
     {
-        return query.rewrite(reader);
+        return query.rewrite(searcher);
     }
 
     /*

@@ -57,7 +57,7 @@ public class MtasExtendedTermSpans
      */
     public MtasExtendedTermSpans(PostingsEnum postings, Term term, boolean assumeSinglePosition)
     {
-        super(null, postings, term, 1);
+        super(postings, term, 1f);
         payloadSpanCollector = new PayloadSpanCollector();
         this.assumeSinglePosition = assumeSinglePosition;
     }

@@ -828,6 +828,21 @@ public class SearchServiceImpl
                 .build());
     }
 
+    @Override
+    public void upgradeIndex(Project aProject) throws IOException
+    {
+        try (var pooledIndex = acquireIndex(aProject.getId())) {
+            pooledIndex.forceRecycle();
+            var physicalIndex = pooledIndex.get().getPhysicalIndex();
+            if (!physicalIndex.isCreated()) {
+                LOG.info("No index for project [{}]({}) - nothing to upgrade", aProject.getName(),
+                        aProject.getId());
+                return;
+            }
+            physicalIndex.upgrade();
+        }
+    }
+
     private void enqueueIndexDocument(SourceDocument aSourceDocument, String aTrigger)
     {
         enqueue(IndexSourceDocumentTask.builder() //

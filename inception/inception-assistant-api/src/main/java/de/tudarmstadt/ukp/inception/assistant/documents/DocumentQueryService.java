@@ -40,4 +40,10 @@ public interface DocumentQueryService
     SearchResult hybridQuery(Project aProject, String aQuery, int aTopN);
 
     void rebuildIndexAsync(Project aProject);
+
+    /**
+     * Upgrades the on-disk document embeddings index of the given project to the current Lucene
+     * format without re-generating embeddings.
+     */
+    void upgradeIndex(Project aProject) throws Exception;
 }

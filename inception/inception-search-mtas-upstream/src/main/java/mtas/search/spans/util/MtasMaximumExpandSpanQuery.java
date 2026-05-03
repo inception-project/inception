@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.apache.lucene.codecs.FieldsProducer;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.Term;
@@ -171,9 +170,9 @@ public class MtasMaximumExpandSpanQuery
      * @see mtas.search.spans.util.MtasSpanQuery#rewrite(org.apache.lucene.index. IndexReader)
      */
     @Override
-    public MtasSpanQuery rewrite(IndexReader reader) throws IOException
+    public MtasSpanQuery rewrite(IndexSearcher searcher) throws IOException
     {
-        MtasSpanQuery newQuery = query.rewrite(reader);
+        MtasSpanQuery newQuery = query.rewrite(searcher);
         if (maximumLeft == 0 && maximumRight == 0) {
             return newQuery;
         }
@@ -182,7 +181,7 @@ public class MtasMaximumExpandSpanQuery
                     maximumRight);
         }
         else {
-            return super.rewrite(reader);
+            return super.rewrite(searcher);
         }
     }
 

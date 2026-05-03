@@ -167,4 +167,16 @@ public interface SearchService
         throws ExecutionException, IOException;
 
     void enqueueReindexTask(Project aProject, User aUser, String aTrigger);
+
+    /**
+     * Upgrades the on-disk Lucene index of the given project to the current Lucene format without
+     * re-indexing the documents. This is much cheaper than a full re-index but only works if the
+     * existing segments are still readable by the running Lucene version.
+     *
+     * @param aProject
+     *            the project whose index should be upgraded
+     * @throws IOException
+     *             if there was an I/O-level problem
+     */
+    void upgradeIndex(Project aProject) throws IOException;
 }

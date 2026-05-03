@@ -12,7 +12,7 @@
             ];
           <http://www.openrdf.org/config/sail#sailType> "openrdf:LuceneSail";
           <http://www.openrdf.org/config/sail/lucene#fuzzyPrefixLength> "3";
-          <http://www.openrdf.org/config/sail/lucene#indexDir> "/var/folders/zd/493f9w953l12lkqhdsnjvwtr0000gt/T/junit14347330883550817196/kb/indexes/pid-1-kbid-";
+          <http://www.openrdf.org/config/sail/lucene#indexDir> "__MUST_BE_OVERRIDDEN_BY_reconfigureLocalKnowledgeBase__/kb/indexes/pid-1-kbid-";
           <http://www.openrdf.org/config/sail/lucene#maxDocuments> "2500"
         ]
     ] .
