@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "annotation.feature-support.lookup.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables the lookup feature type for annotation features."
+    }
+  ]
+}

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
 import javax.sql.DataSource;
 
+import org.springframework.boot.actuate.endpoint.SanitizingFunction;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -91,5 +92,37 @@ public class InceptionSecurityAutoConfiguration
         var authProvider = new InceptionDaoAuthenticationProvider(aUserDetails);
         authProvider.setPasswordEncoder(aPasswordEncoder);
         return authProvider;
+    }
+
+    /**
+     * Default redaction rules applied wherever a
+     * {@link org.springframework.boot.actuate.endpoint.Sanitizer} collects
+     * {@link SanitizingFunction} beans &mdash; both Spring Boot's actuator endpoints (e.g.
+     * {@code /env}, {@code /configprops}) and our admin Settings page. Mirrors the credential-style
+     * key list the actuator used to apply by default before Boot 3 made all sanitization opt-in.
+     * Other modules can contribute their own {@link SanitizingFunction} beans to extend redaction.
+     */
+    @Bean
+    public SanitizingFunction credentialSanitizingFunction()
+    {
+        // ifLikelyCredential already covers keys ending in password/secret/key/token and
+        // keys containing "credentials". The extra ifKeyContains entries make api-key
+        // matching explicit (in any common spelling) and add bearer/authorization which
+        // the default chain does not cover.
+        return SanitizingFunction.sanitizeValue() //
+                .ifLikelyCredential() //
+                .ifKeyContains("apikey", "api-key", "api_key", "bearer", "authorization");
+    }
+
+    /**
+     * Mask {@code repository.path}: the on-disk INCEpTION data directory leaks deployment-specific
+     * filesystem layout, so we redact it from any externally visible surface (actuator endpoints,
+     * admin Settings page).
+     */
+    @Bean
+    public SanitizingFunction repositoryPathSanitizingFunction()
+    {
+        return SanitizingFunction.sanitizeValue() //
+                .ifKeyEquals("repository.path");
     }
 }

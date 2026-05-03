@@ -22,7 +22,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("inception.scheduling")
 public class SchedulingProperties
 {
+    /**
+     * Number of threads the scheduler uses to run tasks. Should be less than the number of hardware
+     * threads available on the machine that runs the application. The higher the number, the more
+     * tasks can be run in parallel.
+     */
     private int numberOfThreads = 4;
+
+    /**
+     * Maximum number of tasks that can be waiting in the scheduler queue. If the queue is full,
+     * then no new tasks can be scheduled until running tasks are completed.
+     */
     private int queueSize = 100;
 
     public int getNumberOfThreads()

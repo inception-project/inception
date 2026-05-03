@@ -31,10 +31,22 @@ import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
 public class EventLoggingPropertiesImpl
     implements EventLoggingProperties
 {
-    private boolean enabled;
+    /**
+     * If enabled, application events are persisted to the event log so they can be reviewed later
+     * (e.g. for auditing or analytics).
+     */
+    private boolean enabled = EventLoggingProperties.DEFAULT_ENABLED;
 
+    /**
+     * Simple names of event classes to include in the event log. If empty, all events are included
+     * (subject to {@link #excludePatterns}).
+     */
     private Set<String> includePatterns = Collections.emptySet(); // Default include everything
 
+    /**
+     * Simple names of event classes to exclude from the event log. Applied after
+     * {@link #includePatterns} and used to suppress high-volume or uninteresting events.
+     */
     private Set<String> excludePatterns = Set.of( //
             AfterCasWrittenEvent.class.getSimpleName(), //
             AvailabilityChangeEvent.class.getSimpleName(), //

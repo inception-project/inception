@@ -26,6 +26,7 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 public class BratAnnotationEditorPropertiesImpl
     implements BratAnnotationEditorProperties
 {
+    /** Whether to select annotations with a single click. */
     private boolean singleClickSelection = true;
     private boolean clientSideProfiling = false;
     private String whiteSpaceReplacementCharacter = REPLACEMENT_CHARACTER;

@@ -24,12 +24,12 @@ public class WarningsPropertiesImpl
     implements WarningsProperties
 {
     /**
-     * If true the embedded database warning is shown. Default true to preserve current behavior.
+     * If {@code true}, the embedded database warning is shown.
      */
     private boolean embeddedDatabase = true;
 
     /**
-     * If true the unsupported browser warning is shown. Default true to preserve current behavior.
+     * Whether to warn about unsupported browsers.
      */
     private boolean unsupportedBrowser = true;
 

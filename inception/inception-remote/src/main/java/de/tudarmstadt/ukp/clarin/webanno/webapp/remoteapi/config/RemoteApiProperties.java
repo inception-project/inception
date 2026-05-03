@@ -22,7 +22,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("remote-api")
 public class RemoteApiProperties
 {
+    /**
+     * Enable the remote API. When enabled, the role {@code ROLE_REMOTE} can be assigned to a user
+     * to grant access to the remote API. The remote API is disabled by default.
+     */
     private boolean enabled = false;
+
     private HttpBasicProperties httpBasic = new HttpBasicProperties();
     private OAuth2Properties oauth2 = null;
 
@@ -61,6 +66,9 @@ public class RemoteApiProperties
 
     public static class HttpBasicProperties
     {
+        /**
+         * Enable HTTP basic authentication for the remote API.
+         */
         private boolean enabled = true;
 
         public boolean isEnabled()
@@ -76,8 +84,19 @@ public class RemoteApiProperties
 
     public static class OAuth2Properties
     {
+        /**
+         * Enable OAuth2 authentication for the remote API.
+         */
         private boolean enabled = false;
+
+        /**
+         * Claim containing the username. Defaults to {@code sub}.
+         */
         private String userNameAttribute;
+
+        /**
+         * Client ID used by the OAuth2 IdP. Mandatory if OAuth2 is enabled.
+         */
         private String realm;
 
         public boolean isEnabled()

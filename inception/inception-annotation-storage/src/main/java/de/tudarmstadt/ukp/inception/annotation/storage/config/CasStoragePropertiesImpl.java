@@ -33,9 +33,33 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 public class CasStoragePropertiesImpl
     implements CasStorageProperties
 {
+    /** Whether to compress annotation files. */
     private boolean compressedCasSerialization = true;
+
+    /**
+     * Verify CAS serializability before writing to disk. The serialized form is round-tripped into
+     * a dummy CAS first, and only written if the round-trip succeeds -- this guards against
+     * UIMA-6162-style breakage where an unreadable CAS would render the document broken in the
+     * project. Slower than the regular path; when enabled, the output is uncompressed regardless of
+     * {@code compressedCasSerialization}.
+     */
     private boolean paranoidCasSerialization = false;
+
+    /**
+     * Capture stack traces of the threads owning a CAS, and track per-file write attempts in an
+     * in-memory metadata cache. Useful for diagnosing concurrent-access or stuck-CAS-ownership
+     * issues; adds noticeable overhead per CAS borrow/release and per write, so leave disabled in
+     * production.
+     */
     private boolean traceAccess = false;
+
+    /**
+     * Leniency for file systems where timestamps are not exact. Use with extreme caution: if an
+     * editor accesses an annotation file out-of-sync with the editor, this can lead to unexpected
+     * behavior. However, when deploying on certain cloud storage facilities, file system timestamps
+     * may not be exact down to the millisecond, so configuring a slight leniency here may be
+     * helpful.
+     */
     private Duration fileSystemTimestampAccuracy = Duration.ofMillis(0);
 
     @ManagedAttribute

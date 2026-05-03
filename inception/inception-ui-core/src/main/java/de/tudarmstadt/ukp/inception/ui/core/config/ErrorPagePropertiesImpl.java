@@ -23,6 +23,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ErrorPagePropertiesImpl
     implements ErrorPageProperties
 {
+    /**
+     * Disable display of information about operating system, Java version, etc. on the error page.
+     * While this information is useful for local users when reporting bugs, security-conscious
+     * administrators running {product-name} as a service may want to enable hiding the details to
+     * avoid information about their system being exposed.
+     */
     private boolean hideDetails;
 
     @Override

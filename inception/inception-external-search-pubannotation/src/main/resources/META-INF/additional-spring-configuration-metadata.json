@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "external-search.pub-annotation.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables the PubAnnotation external document repository support."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "external-search.pmc.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables the PubMed Central (PMC) external document repository support."
+    }
+  ]
+}

@@ -28,8 +28,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class LinkFeatureSupportPropertiesImpl
     implements LinkFeatureSupportProperties
 {
+    /**
+     * If the tagset is larger than the threshold, an auto-complete field is used instead of a
+     * standard combobox.
+     */
     private int autoCompleteThreshold = 75;
 
+    /**
+     * When an auto-complete field is used, this determines the maximum number of items shown in the
+     * dropdown menu.
+     */
     private int autoCompleteMaxResults = 100;
 
     @Override

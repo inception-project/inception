@@ -1,0 +1,16 @@
+{
+  "properties": [
+    {
+      "name": "websocket.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables WebSocket support and endpoint."
+    },
+    {
+      "name": "websocket.recommender-events.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables push messages for recommender events over WebSocket."
+    }
+  ]
+}

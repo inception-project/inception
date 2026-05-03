@@ -36,7 +36,8 @@ import de.tudarmstadt.ukp.inception.externalsearch.exporter.DocumentRepositoryEx
  * Provides all back-end Spring beans for the external search functionality.
  */
 @Configuration
-@ConditionalOnProperty(prefix = "external-search", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "external-search", name = "enabled", havingValue = "true", //
+        matchIfMissing = ExternalSearchProperties.DEFAULT_ENABLED)
 public class ExternalSearchAutoConfiguration
 {
     @Bean

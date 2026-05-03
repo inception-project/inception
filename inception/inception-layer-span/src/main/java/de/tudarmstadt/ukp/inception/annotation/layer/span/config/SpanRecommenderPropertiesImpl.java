@@ -28,6 +28,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SpanRecommenderPropertiesImpl
     implements SpanRecommenderProperties
 {
+    /**
+     * If enabled, span recommendations rendered in the brat editor get hover-overlay Accept/Reject
+     * buttons in addition to the default click-to-accept / right-click-to-reject interaction.
+     */
     private boolean actionButtonsEnabled;
 
     @Override

@@ -48,6 +48,11 @@ CAUTION: Experimental feature.
 | Whether an extra LLM call should be made to generate a summary line for thinking sections.
 | `false`
 | `true`
+
+| `assistant.api-key`
+| API key sent to the Ollama service (or compatible service) when the service requires authentication. Leave empty if no key is required.
+| _empty_
+| `sk-...`
 |===
 
 .Settings related to the assistant chat functionality

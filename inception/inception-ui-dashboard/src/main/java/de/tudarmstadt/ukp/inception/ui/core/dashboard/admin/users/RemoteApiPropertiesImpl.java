@@ -25,6 +25,9 @@ import org.springframework.stereotype.Component;
 public class RemoteApiPropertiesImpl
     implements RemoteApiProperties
 {
+    /**
+     * Whether to enable the remote API.
+     */
     private boolean enabled = false;
 
     @Override

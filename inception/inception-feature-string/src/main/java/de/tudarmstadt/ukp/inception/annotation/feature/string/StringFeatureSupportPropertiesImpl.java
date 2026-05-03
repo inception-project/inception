@@ -28,10 +28,22 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class StringFeatureSupportPropertiesImpl
     implements StringFeatureSupportProperties
 {
+    /**
+     * If the tagset is larger than the threshold, an combo-box field is used instead of a
+     * radio-choice.
+     */
     private int comboBoxThreshold = 6;
 
+    /**
+     * If the tagset is larger than the threshold, an auto-complete field is used instead of a
+     * standard combobox.
+     */
     private int autoCompleteThreshold = 75;
 
+    /**
+     * When an auto-complete field is used, this determines the maximum number of items shown in the
+     * dropdown menu.
+     */
     private int autoCompleteMaxResults = 100;
 
     @Override

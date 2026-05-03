@@ -1,0 +1,34 @@
+{
+  "properties": [
+    {
+      "name": "format.uima-binary-cas.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables UIMA binary CAS format import/export support."
+    },
+    {
+      "name": "format.uima-inline-xml.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables UIMA inline XML format import/export support."
+    },
+    {
+      "name": "format.uima-xmi-struct.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables structured UIMA XMI format import/export support."
+    },
+    {
+      "name": "format.uima-xmi-xml1_1.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables UIMA XMI (XML 1.1) format import/export support."
+    },
+    {
+      "name": "format.uima-xmi.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables UIMA XMI format import/export support."
+    }
+  ]
+}

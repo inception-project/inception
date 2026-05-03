@@ -55,6 +55,11 @@ public class UimaFormatsPropertiesImpl
 
     public static class XmiFormatProperties
     {
+        /**
+         * If enabled, characters that are not allowed in XML (e.g. most control characters) are
+         * replaced with a placeholder when writing XMI files. This avoids producing XMI documents
+         * that cannot be parsed back, at the cost of altering the original text.
+         */
         private boolean sanitizeIllegalCharacters = true;
 
         public void setSanitizeIllegalCharacters(boolean aSanitizeIllegalCharacters)

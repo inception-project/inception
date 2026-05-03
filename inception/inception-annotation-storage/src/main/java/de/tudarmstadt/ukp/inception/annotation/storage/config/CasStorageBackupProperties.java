@@ -29,7 +29,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("backup")
 public class CasStorageBackupProperties
 {
+    /**
+     * Time between backups in seconds. Setting the interval to {@code 0} disables internal backups.
+     */
+    // Default value (86400 = 24 hours) is declared in
+    // META-INF/additional-spring-configuration-metadata.json because the metadata processor
+    // cannot extract values from method-call initializers.
     private long interval = Duration.ofHours(24).toSeconds();
+
     private final KeepOptions keep = new KeepOptions();
 
     public void setInterval(long aInterval)
@@ -49,7 +56,10 @@ public class CasStorageBackupProperties
 
     public static class KeepOptions
     {
+        /** Maximum age of backups to keep, in seconds. {@code 0} means unlimited. */
         private long time;
+
+        /** Maximum number of backups to keep. {@code 0} means unlimited. */
         private int number = 2;
 
         public long getTime()

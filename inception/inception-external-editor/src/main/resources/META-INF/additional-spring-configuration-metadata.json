@@ -1,0 +1,16 @@
+{
+  "properties": [
+    {
+      "name": "ui.external.allow-img-source",
+      "defaultValue": "LOCAL"
+    },
+    {
+      "name": "ui.external.allow-audio-source",
+      "defaultValue": "LOCAL"
+    },
+    {
+      "name": "ui.external.allow-video-source",
+      "defaultValue": "LOCAL"
+    }
+  ]
+}

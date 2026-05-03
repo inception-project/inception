@@ -66,7 +66,8 @@ class AgentLoopTest
     @BeforeEach
     void setUp()
     {
-        props = new AssistantPropertiesImpl(new AssistantDocumentIndexPropertiesImpl());
+        props = new AssistantPropertiesImpl();
+        props.setDocumentIndex(new AssistantDocumentIndexPropertiesImpl());
         props.setUrl(DEFAULT_OLLAMA_URL);
         props.getChat().setModel("gpt-oss:120b-cloud");
 

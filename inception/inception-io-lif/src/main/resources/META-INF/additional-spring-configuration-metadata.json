@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "format.lif.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables LAPPS Interchange Format (LIF) import/export support."
+    }
+  ]
+}

@@ -70,7 +70,7 @@ public class ProjectExportServiceAutoConfiguration
                 aSchedulingService, aApplicationEventPublisher);
     }
 
-    @ConditionalOnProperty(name = "dashboard.legacy-export", havingValue = "false", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "dashboard.legacy-export", name = "enabled", havingValue = "false", matchIfMissing = true)
     @Bean
     public ExportProjectSettingsPanelFactory exportProjectSettingsPanelFactory()
     {
@@ -81,7 +81,7 @@ public class ProjectExportServiceAutoConfiguration
      * @deprecated Old export page code - to be removed in a future release.
      */
     @Deprecated
-    @ConditionalOnProperty(name = "dashboard.legacy-export", havingValue = "true", matchIfMissing = false)
+    @ConditionalOnProperty(prefix = "dashboard.legacy-export", name = "enabled", havingValue = "true", matchIfMissing = false)
     @Bean
     public LegacyExportProjectSettingsPanelFactory legacyExportProjectSettingsPanelFactory()
     {

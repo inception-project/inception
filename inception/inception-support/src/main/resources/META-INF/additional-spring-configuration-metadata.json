@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "profiling.bean-initialization-timing",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables profiling and logging of Spring bean initialization timings."
+    }
+  ]
+}

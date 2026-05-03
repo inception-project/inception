@@ -69,7 +69,15 @@ public class ProjectUiPropertiesImpl
 
     public static class Action
     {
+        /** Whether the bulk action is enabled. */
         private boolean enabled;
+
+        /**
+         * User roles allowed to perform the bulk action.
+         */
+        // Default ([ROLE_ADMIN]) is declared in
+        // META-INF/additional-spring-configuration-metadata.json because the metadata
+        // processor cannot read constructor calls used as field initializers.
         private Set<Role> roles = new HashSet<>(asList(ROLE_ADMIN));
 
         public Action(boolean aEnabled)

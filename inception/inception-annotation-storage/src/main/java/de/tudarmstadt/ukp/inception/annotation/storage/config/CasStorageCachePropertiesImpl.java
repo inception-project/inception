@@ -30,10 +30,32 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class CasStorageCachePropertiesImpl
     implements CasStorageCacheProperties
 {
+    /**
+     * Periodic interval in which the system should check if CASes can be removed from the memory
+     * cache.
+     */
     private Duration idleCasEvictionDelay = Duration.ofMinutes(5);
+
+    /** Time a CAS should at least remain cached in memory to avoid loading from disk. */
     private Duration minIdleCasTime = Duration.ofMinutes(5);
+
+    /** Time for an exclusive action to wait for another exclusive action to finish. */
     private Duration casBorrowWaitTimeout = Duration.ofMinutes(3);
+
+    /**
+     * Number of shared read-only CASes to keep in memory. Defaults between {@code 10} and
+     * {@code 5000} depending on the heap size.
+     */
+    // Default value is computed at runtime based on the heap size and is declared in
+    // META-INF/additional-spring-configuration-metadata.json because the metadata processor
+    // cannot extract values from method-call initializers.
     private long sharedCasCacheSize = getDefaultCasCacheSize();
+
+    /**
+     * Whether to capture and record the stack trace each time a CAS is checked out from the
+     * exclusive pool so it can be included in diagnostics when errors occur. Capturing a stack
+     * trace on every checkout adds noticeable overhead!
+     */
     private boolean traceAccess = false;
 
     @Override

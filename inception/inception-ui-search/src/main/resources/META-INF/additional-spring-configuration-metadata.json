@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "search.statistics-sidebar.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables the statistics sidebar on the annotation page."
+    }
+  ]
+}

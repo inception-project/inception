@@ -1,0 +1,52 @@
+{
+  "properties": [
+    {
+      "name": "format.conll2000.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables CoNLL 2000 format import/export support."
+    },
+    {
+      "name": "format.conll2002.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables CoNLL 2002 format import/export support."
+    },
+    {
+      "name": "format.conll2003.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables CoNLL 2003 format import/export support."
+    },
+    {
+      "name": "format.conll2006.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables CoNLL 2006 format import/export support."
+    },
+    {
+      "name": "format.conll2009.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables CoNLL 2009 format import/export support."
+    },
+    {
+      "name": "format.conll2012.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables CoNLL 2012 format import/export support."
+    },
+    {
+      "name": "format.conllcorenlp.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables CoNLL CoreNLP format import/export support."
+    },
+    {
+      "name": "format.conllu.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables CoNLL-U format import/export support."
+    }
+  ]
+}
