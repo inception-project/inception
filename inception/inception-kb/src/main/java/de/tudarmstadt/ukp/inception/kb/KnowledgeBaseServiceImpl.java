@@ -71,6 +71,10 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.index.IndexFormatTooNewException;
+import org.apache.lucene.index.IndexFormatTooOldException;
+import org.apache.lucene.index.IndexUpgrader;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.FSDirectory;
 import org.eclipse.rdf4j.common.transaction.IsolationLevels;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -1652,9 +1656,10 @@ public class KnowledgeBaseServiceImpl
             conn.commit();
         }
         catch (SailException e) {
-            if (ExceptionUtils.hasCause(e, IndexFormatTooNewException.class)) {
+            if (ExceptionUtils.hasCause(e, IndexFormatTooNewException.class)
+                    || ExceptionUtils.hasCause(e, IndexFormatTooOldException.class)) {
                 LOG.warn("Unable to access index: {}", e.getMessage());
-                LOG.info("Downgrade detected - trying to rebuild index from scratch...");
+                LOG.info("Index format mismatch - rebuilding index from scratch...");
 
                 var luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
                 luceneSail.shutDown();
@@ -1666,6 +1671,65 @@ public class KnowledgeBaseServiceImpl
                     ReindexingUtils.reindex(luceneSail);
                     // luceneSail.reindex();
                     conn.commit();
+                }
+            }
+        }
+    }
+
+    @Override
+    public void upgradeFullTextIndex(KnowledgeBase aKB) throws Exception
+    {
+        if (LOCAL != aKB.getType()) {
+            throw new IllegalArgumentException("Index upgrade is only supported on local KBs");
+        }
+
+        var repo = repoManager.getRepository(aKB.getRepositoryId());
+
+        if (!(repo instanceof SailRepository)) {
+            throw new IllegalArgumentException(
+                    "Index upgrade is not supported on [" + repo.getClass() + "] repositories");
+        }
+
+        var sail = ((SailRepository) repo).getSail();
+        if (!(sail instanceof LuceneSail)) {
+            throw new IllegalArgumentException(
+                    "Index upgrade is not supported on [" + sail.getClass() + "] repositories");
+        }
+
+        var luceneSail = (LuceneSail) sail;
+        var luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
+        if (luceneDir == null) {
+            throw new IllegalStateException("LuceneSail has no '" + LuceneSail.LUCENE_DIR_KEY
+                    + "' configured - cannot upgrade index.");
+        }
+
+        var indexDir = new File(luceneDir);
+        if (!indexDir.isDirectory()) {
+            LOG.info("No KB index for [{}] at [{}] - nothing to upgrade.", aKB.getName(), indexDir);
+            return;
+        }
+
+        // Shut the sail down so the on-disk index can be rewritten exclusively. The sail will be
+        // reinitialised lazily on the next access.
+        luceneSail.shutDown();
+        Throwable upgradeError = null;
+        try (var dir = FSDirectory.open(indexDir.toPath())) {
+            new IndexUpgrader(dir, new IndexWriterConfig(), false).upgrade();
+        }
+        catch (Throwable e) {
+            upgradeError = e;
+            throw e;
+        }
+        finally {
+            try {
+                luceneSail.init();
+            }
+            catch (Throwable initError) {
+                if (upgradeError != null) {
+                    upgradeError.addSuppressed(initError);
+                }
+                else {
+                    throw initError;
                 }
             }
         }

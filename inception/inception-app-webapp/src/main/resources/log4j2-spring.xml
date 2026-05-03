@@ -100,6 +100,12 @@
       <Logger name="inception.boot" level="WARN"/>
       <Logger name="de.tudarmstadt.ukp.inception.support.spring.DatabaseInfoService" level="WARN"/>
       <Logger name="de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer" level="WARN"/>
+      <!-- Silence routine framework noise that surfaces on every CLI invocation -->
+      <Logger name="liquibase" level="ERROR"/>
+      <Logger name="org.springframework.boot" level="WARN"/>
+      <Logger name="org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer" level="ERROR"/>
+      <Logger name="de.tudarmstadt.ukp.inception.search.SearchServiceImpl" level="WARN"/>
+      <Logger name="de.tudarmstadt.ukp.inception.scheduling.SchedulingServiceImpl" level="WARN"/>
     </SpringProfile>
     
     <Root level="WARN">

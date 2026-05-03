@@ -127,7 +127,7 @@ public class LuceneIndex
     static {
         // do NOT set this to Integer.MAX_VALUE, because this breaks fuzzy
         // queries
-        BooleanQuery.setMaxClauseCount(1024 * 1024);
+        IndexSearcher.setMaxClauseCount(1024 * 1024);
     }
 
     private static final String GEO_FIELD_PREFIX = "_geo_";
@@ -1274,7 +1274,7 @@ public class LuceneIndex
         throws IOException
     {
         DocumentStoredFieldVisitor visitor = new DocumentStoredFieldVisitor(fieldsToLoad);
-        reader.document(docId, visitor);
+        reader.storedFields().document(docId, visitor);
         return visitor.getDocument();
     }
 

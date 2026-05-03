@@ -638,6 +638,9 @@
           <configuration>
             <systemPropertyVariables>
               <dkpro.core.testCachePath>${dkpro.core.testCachePath}</dkpro.core.testCachePath>
+              <inception.solr.version>${solr.version}</inception.solr.version>
+              <inception.opensearch.version>${opensearch.version}</inception.opensearch.version>
+              <inception.lucene.version>${lucene.version}</inception.lucene.version>
             </systemPropertyVariables>
             <excludedGroups>${excludedTestCategories}</excludedGroups>
           </configuration>

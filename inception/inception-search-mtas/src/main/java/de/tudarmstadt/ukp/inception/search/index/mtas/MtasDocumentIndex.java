@@ -72,6 +72,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.IndexUpgrader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
@@ -809,7 +810,7 @@ public class MtasDocumentIndex
                 .forEach(e -> sourceDocumentIndex.put(e.getKey().getId(), e.getKey()));
 
         final var boost = 0;
-        var spanweight = q.rewrite(indexReader).createWeight(searcher, COMPLETE_NO_SCORES, boost);
+        var spanweight = q.rewrite(searcher).createWeight(searcher, COMPLETE_NO_SCORES, boost);
 
         var numResults = 0;
         var limitedToDocument = aRequest.getLimitedToDocument();
@@ -938,8 +939,7 @@ public class MtasDocumentIndex
         List<Pair<LeafReaderContext, List<Long>>> mapToDocIds = new ArrayList<>();
 
         // Here, the query comes into play
-        var spanweight = aQuery.rewrite(aSearcher.getIndexReader()).createWeight(aSearcher,
-                COMPLETE_NO_SCORES, 0);
+        var spanweight = aQuery.rewrite(aSearcher).createWeight(aSearcher, COMPLETE_NO_SCORES, 0);
 
         // cycle through all the leaves
         for (var leafReaderContext : aLeaves) {
@@ -996,8 +996,8 @@ public class MtasDocumentIndex
                 .forEach(e -> sourceDocumentIndex.put(e.getKey().getId(), e.getKey()));
 
         final var boost = 0;
-        var spanweight = aQuery.rewrite(aSearcher.getIndexReader()).createWeight(aSearcher,
-                COMPLETE_NO_SCORES, boost);
+        var spanweight = aQuery.rewrite(aSearcher).createWeight(aSearcher, COMPLETE_NO_SCORES,
+                boost);
 
         var offset = aRequest.getOffset();
         var count = aRequest.getCount();
@@ -1445,6 +1445,27 @@ public class MtasDocumentIndex
         deindexDocument(aDocument.getDocument().getId(), aDocument.getId(), aDocument.getUser(),
                 aTimestamp);
         scheduleCommit();
+    }
+
+    @Override
+    public synchronized void upgrade() throws IOException
+    {
+        if (!isCreated()) {
+            LOG.debug("Index for project [{}]({}) does not exist - nothing to upgrade",
+                    project.getName(), project.getId());
+            return;
+        }
+
+        // Close any open writer/searcher so IndexUpgrader can take exclusive access
+        closeIndex();
+
+        try (var dir = FSDirectory.open(indexDir.toPath())) {
+            var config = new IndexWriterConfig();
+            config.setCodec(Codec.forName(MTAS_CODEC_NAME));
+            new IndexUpgrader(dir, config, false).upgrade();
+        }
+
+        LOG.info("Upgraded MTAS index for project [{}]({})", project.getName(), project.getId());
     }
 
     @Override

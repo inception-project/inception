@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermStates;
@@ -183,16 +182,16 @@ public class MtasSpanFullyAlignedWithQuery
      * @see mtas.search.spans.util.MtasSpanQuery#rewrite(org.apache.lucene.index. IndexReader)
      */
     @Override
-    public MtasSpanQuery rewrite(IndexReader reader) throws IOException
+    public MtasSpanQuery rewrite(IndexSearcher searcher) throws IOException
     {
-        MtasSpanQuery newQ1 = (MtasSpanQuery) q1.rewrite(reader);
-        MtasSpanQuery newQ2 = (MtasSpanQuery) q2.rewrite(reader);
+        MtasSpanQuery newQ1 = (MtasSpanQuery) q1.rewrite(searcher);
+        MtasSpanQuery newQ2 = (MtasSpanQuery) q2.rewrite(searcher);
         if (newQ1 == null || newQ1 instanceof MtasSpanMatchNoneQuery || newQ2 == null
                 || newQ2 instanceof MtasSpanMatchNoneQuery) {
             return new MtasSpanMatchNoneQuery(field);
         }
         else if (!newQ1.equals(q1) || !newQ2.equals(q2)) {
-            return new MtasSpanFullyAlignedWithQuery(newQ1, newQ2).rewrite(reader);
+            return new MtasSpanFullyAlignedWithQuery(newQ1, newQ2).rewrite(searcher);
         }
         else if (newQ1.equals(newQ2)) {
             return newQ1;
@@ -211,7 +210,7 @@ public class MtasSpanFullyAlignedWithQuery
                 return new MtasSpanMatchNoneQuery(this.getField());
             }
             else {
-                return super.rewrite(reader);
+                return super.rewrite(searcher);
             }
         }
     }

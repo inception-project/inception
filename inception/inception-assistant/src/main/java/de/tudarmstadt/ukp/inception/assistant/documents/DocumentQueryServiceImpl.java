@@ -258,8 +258,8 @@ public class DocumentQueryServiceImpl
             var top = searcher.search(parsed, aTopN);
 
             var totalMatches = top.totalHits == null ? top.scoreDocs.length
-                    : (int) top.totalHits.value;
-            var truncated = top.totalHits != null && top.totalHits.value > aTopN;
+                    : (int) top.totalHits.value();
+            var truncated = top.totalHits != null && top.totalHits.value() > aTopN;
 
             var documentNameCache = new HashMap<Long, String>();
             var chunks = new ArrayList<Chunk>();
@@ -441,6 +441,12 @@ public class DocumentQueryServiceImpl
         catch (Exception e) {
             LOG.error("Error clearing document index for project {}", aProject, e);
         }
+    }
+
+    @Override
+    public void upgradeIndex(Project aProject) throws Exception
+    {
+        indexPool.upgradeIndex(aProject);
     }
 
     @EventListener

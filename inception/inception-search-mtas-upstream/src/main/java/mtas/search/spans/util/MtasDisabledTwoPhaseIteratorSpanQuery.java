@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermStates;
@@ -57,9 +56,9 @@ public class MtasDisabledTwoPhaseIteratorSpanQuery
      * @see mtas.search.spans.util.MtasSpanQuery#rewrite(org.apache.lucene.index. IndexReader)
      */
     @Override
-    public MtasSpanQuery rewrite(IndexReader reader) throws IOException
+    public MtasSpanQuery rewrite(IndexSearcher searcher) throws IOException
     {
-        MtasSpanQuery newQ = subQuery.rewrite(reader);
+        MtasSpanQuery newQ = subQuery.rewrite(searcher);
         if (newQ == null) {
             newQ = new MtasSpanMatchNoneQuery(subQuery.getField());
             return new MtasDisabledTwoPhaseIteratorSpanQuery(newQ);
@@ -67,10 +66,10 @@ public class MtasDisabledTwoPhaseIteratorSpanQuery
         else {
             newQ.disableTwoPhaseIterator();
             if (!newQ.equals(subQuery)) {
-                return new MtasDisabledTwoPhaseIteratorSpanQuery(newQ).rewrite(reader);
+                return new MtasDisabledTwoPhaseIteratorSpanQuery(newQ).rewrite(searcher);
             }
             else {
-                return super.rewrite(reader);
+                return super.rewrite(searcher);
             }
         }
     }

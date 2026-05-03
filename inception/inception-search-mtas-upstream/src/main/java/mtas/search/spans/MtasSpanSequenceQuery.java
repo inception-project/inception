@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermStates;
@@ -199,7 +198,7 @@ public class MtasSpanSequenceQuery
      * @see org.apache.lucene.search.Query#rewrite(org.apache.lucene.index.IndexReader)
      */
     @Override
-    public MtasSpanQuery rewrite(IndexReader reader) throws IOException
+    public MtasSpanQuery rewrite(IndexSearcher searcher) throws IOException
     {
         if (items.size() == 1) {
             MtasSpanQuery singleQuery = items.get(0).getQuery();
@@ -207,7 +206,7 @@ public class MtasSpanSequenceQuery
                 singleQuery = new MtasExpandSpanQuery(singleQuery, leftMinimum, leftMaximum,
                         rightMinimum, rightMaximum);
             }
-            return singleQuery.rewrite(reader);
+            return singleQuery.rewrite(searcher);
         }
         else {
             MtasSpanSequenceItem newItem;
@@ -217,12 +216,12 @@ public class MtasSpanSequenceQuery
             int newLeftMaximum = leftMaximum;
             int newRightMinimum = rightMinimum;
             int newRightMaximum = rightMaximum;
-            MtasSpanQuery newIgnoreClause = ignoreQuery != null ? ignoreQuery.rewrite(reader)
+            MtasSpanQuery newIgnoreClause = ignoreQuery != null ? ignoreQuery.rewrite(searcher)
                     : null;
             boolean actuallyRewritten = ignoreQuery != null ? !newIgnoreClause.equals(ignoreQuery)
                     : false;
             for (int i = 0; i < items.size(); i++) {
-                newItem = items.get(i).rewrite(reader);
+                newItem = items.get(i).rewrite(searcher);
                 if (newItem.getQuery() instanceof MtasSpanMatchNoneQuery) {
                     if (!newItem.isOptional()) {
                         return new MtasSpanMatchNoneQuery(field);
@@ -339,17 +338,17 @@ public class MtasSpanSequenceQuery
                     rightMaximum = 0;
                     MtasSpanQuery finalQuery = new MtasExpandSpanQuery(this, newLeftMinimum,
                             newLeftMaximum, newRightMinimum, newRightMaximum);
-                    return finalQuery.rewrite(reader);
+                    return finalQuery.rewrite(searcher);
                 }
                 else {
-                    return super.rewrite(reader);
+                    return super.rewrite(searcher);
                 }
             }
             else {
                 if (!newItems.isEmpty()) {
                     return new MtasSpanSequenceQuery(newItems, newLeftMinimum, newLeftMaximum,
                             newRightMinimum, newRightMaximum, newIgnoreClause, maximumIgnoreLength)
-                                    .rewrite(reader);
+                                    .rewrite(searcher);
                 }
                 else {
                     return new MtasSpanMatchNoneQuery(field);

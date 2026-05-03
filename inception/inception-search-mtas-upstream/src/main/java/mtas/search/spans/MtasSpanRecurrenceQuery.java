@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermStates;
@@ -194,14 +193,14 @@ public class MtasSpanRecurrenceQuery
      * @see org.apache.lucene.search.Query#rewrite(org.apache.lucene.index.IndexReader)
      */
     @Override
-    public MtasSpanQuery rewrite(IndexReader reader) throws IOException
+    public MtasSpanQuery rewrite(IndexSearcher searcher) throws IOException
     {
-        MtasSpanQuery newQuery = query.rewrite(reader);
+        MtasSpanQuery newQuery = query.rewrite(searcher);
         if (maximumRecurrence == 1) {
             return newQuery;
         }
         else {
-            MtasSpanQuery newIgnoreQuery = (ignoreQuery != null) ? ignoreQuery.rewrite(reader)
+            MtasSpanQuery newIgnoreQuery = (ignoreQuery != null) ? ignoreQuery.rewrite(searcher)
                     : null;
             if (newQuery instanceof MtasSpanRecurrenceQuery) {
                 // for now too difficult, possibly merge later
@@ -209,10 +208,10 @@ public class MtasSpanRecurrenceQuery
             if (!newQuery.equals(query)
                     || (newIgnoreQuery != null && !newIgnoreQuery.equals(ignoreQuery))) {
                 return new MtasSpanRecurrenceQuery(newQuery, minimumRecurrence, maximumRecurrence,
-                        newIgnoreQuery, maximumIgnoreLength).rewrite(reader);
+                        newIgnoreQuery, maximumIgnoreLength).rewrite(searcher);
             }
             else {
-                return super.rewrite(reader);
+                return super.rewrite(searcher);
             }
         }
     }

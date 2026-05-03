@@ -617,8 +617,9 @@ public class CodecCollector
                                     if (docValues.advanceExact(docId)) {
                                         long tmpValue;
                                         String value;
-                                        while ((tmpValue = docValues
-                                                .nextOrd()) != SortedSetDocValues.NO_MORE_ORDS) {
+                                        int ordCount = docValues.docValueCount();
+                                        for (int ordIdx = 0; ordIdx < ordCount; ordIdx++) {
+                                            tmpValue = docValues.nextOrd();
                                             if (!dictionary.containsKey(tmpValue)) {
                                                 value = docValues.lookupOrd(tmpValue)
                                                         .utf8ToString();
@@ -1157,7 +1158,7 @@ public class CodecCollector
         for (GroupHit hit : occurences) {
             MtasSpanQuery queryHit = createQueryFromGroupHit(prefixes, field, hit);
             if (queryHit != null) {
-                MtasSpanQuery queryHitRewritten = queryHit.rewrite(reader);
+                MtasSpanQuery queryHitRewritten = queryHit.rewrite(searcher);
                 SpanWeight weight = queryHitRewritten.createWeight(searcher,
                         ScoreMode.COMPLETE_NO_SCORES, boost);
                 Spans spans = weight.getSpans(lrc, SpanWeight.Postings.POSITIONS);
@@ -1794,7 +1795,7 @@ public class CodecCollector
                                 }
                                 if (getDoc) {
                                     // get unique id
-                                    Document doc = searcher.doc(docId,
+                                    Document doc = searcher.storedFields().document(docId,
                                             new HashSet<String>(Arrays.asList(uniqueKeyField)));
                                     IndexableField indxfld = doc.getField(uniqueKeyField);
                                     if (indxfld != null) {
@@ -2500,7 +2501,7 @@ public class CodecCollector
                 // initialize
                 for (int docId : docList) {
                     // get unique id
-                    Document doc = searcher.doc(docId,
+                    Document doc = searcher.storedFields().document(docId,
                             new HashSet<String>(Arrays.asList(uniqueKeyField)));
                     IndexableField indxfld = doc.getField(uniqueKeyField);
                     // get other doc info
@@ -2628,7 +2629,7 @@ public class CodecCollector
                 // initialize
                 for (int docId : docList) {
                     // get unique id
-                    Document doc = searcher.doc(docId,
+                    Document doc = searcher.storedFields().document(docId,
                             new HashSet<String>(Arrays.asList(uniqueKeyField)));
                     IndexableField indxfld = doc.getField(uniqueKeyField);
                     // get other doc info
@@ -2805,7 +2806,7 @@ public class CodecCollector
                 // initialize
                 for (int docId : docList) {
                     // get unique id
-                    Document doc = searcher.doc(docId,
+                    Document doc = searcher.storedFields().document(docId,
                             new HashSet<String>(Arrays.asList(uniqueKeyField)));
                     IndexableField indxfld = doc.getField(uniqueKeyField);
                     // get other doc info
@@ -3042,7 +3043,7 @@ public class CodecCollector
                     for (int docId : docList) {
                         if (matchData != null && (matchList = matchData.get(docId)) != null) {
                             // get unique id
-                            Document doc = searcher.doc(docId,
+                            Document doc = searcher.storedFields().document(docId,
                                     new HashSet<String>(Arrays.asList(uniqueKeyField)));
                             IndexableField indxfld = doc.getField(uniqueKeyField);
                             // get other doc info
@@ -3108,7 +3109,7 @@ public class CodecCollector
                     for (int docId : docList) {
                         if (matchData != null && (matchList = matchData.get(docId)) != null) {
                             // get unique id
-                            Document doc = searcher.doc(docId,
+                            Document doc = searcher.storedFields().document(docId,
                                     new HashSet<String>(Arrays.asList(uniqueKeyField)));
                             // get other doc info
                             IndexableField indxfld = doc.getField(uniqueKeyField);

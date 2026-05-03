@@ -14,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+[[sect_cli]]
 = Command Line Interface
 
 {product-name} has a command line interface (CLI) that allows administrators to perform various tasks directly from the terminal. 
@@ -53,17 +54,78 @@ This command should be run once after upgrading from  a version <25.0 to a versi
 | `--dry-run` | If set, the command only simulates the migration without making any changes.
 |===
 
-== Search Index Commands
+== Reindexing Commands
 
-=== `search reindex``
+=== `reindex`
 
-Rebuilds the indexes of all projects.
+Rebuilds all indexes (document search and knowledge base full-text) for the matching projects. This is the umbrella command and is equivalent to running `search reindex` followed by `kb reindex`.
 
 .Parameters
 [options="header"]
 |===
 | Parameter | Description
 | `--project-slug` | Re-index only the given project
+|===
+
+=== `search reindex`
+
+Rebuilds the document (CAS) search indexes of all projects. Use this when only the document search index needs to be rebuilt.
+
+.Parameters
+[options="header"]
+|===
+| Parameter | Description
+| `--project-slug` | Re-index only the given project
+|===
+
+=== `kb reindex`
+
+Rebuilds the full-text indexes of local knowledge bases. Remote and non-Lucene knowledge bases are skipped. This is required when upgrading across a Lucene major version that drops support for the on-disk index format of an older release (for example, when upgrading from a version that used Lucene 9 to one that uses Lucene 10).
+
+.Parameters
+[options="header"]
+|===
+| Parameter | Description
+| `--project-slug` | Re-index only knowledge bases in the given project
+| `--kb-name` | Re-index only knowledge bases whose name matches the given value
+|===
+
+== Index Upgrade Commands
+
+These commands rewrite existing on-disk Lucene indexes into the current Lucene format _without_ re-indexing the underlying data. They are much cheaper than the corresponding `reindex` commands, but only work if the existing index segments are still readable by the running Lucene version. If the on-disk format is too old, the commands will fail and a full `reindex` is required instead.
+
+=== `upgrade-index`
+
+Upgrades all Lucene-based indexes for the matching projects (document search, knowledge base full-text and assistant document embeddings). Equivalent to running `search upgrade-index` followed by `kb upgrade-index` and the assistant index upgrade.
+
+.Parameters
+[options="header"]
+|===
+| Parameter | Description
+| `--project-slug` | Upgrade only the indexes of the given project
+|===
+
+=== `search upgrade-index`
+
+Upgrades the document (CAS) search indexes to the current Lucene format.
+
+.Parameters
+[options="header"]
+|===
+| Parameter | Description
+| `--project-slug` | Upgrade only the index of the given project
+|===
+
+=== `kb upgrade-index`
+
+Upgrades the full-text indexes of local knowledge bases to the current Lucene format. Remote and non-Lucene knowledge bases are skipped.
+
+.Parameters
+[options="header"]
+|===
+| Parameter | Description
+| `--project-slug` | Upgrade only knowledge bases in the given project
+| `--kb-name` | Upgrade only knowledge bases whose name matches the given value
 |===
 
 == Miscellaneous Commands

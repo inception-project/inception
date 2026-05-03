@@ -47,6 +47,7 @@ import picocli.CommandLine.Option;
 @Component
 @Command( //
         name = "rebuild-state-updated", //
+        mixinStandardHelpOptions = true, //
         description = { //
                 "Rebuilds the state-updated field of projects, documents and annotations based on the event log", //
                 "NOTE: This may take some time!" })

@@ -1036,7 +1036,7 @@ public class MtasSearchTestConsistency
         ListIterator<LeafReaderContext> iterator = indexReader.leaves().listIterator();
         IndexSearcher searcher = new IndexSearcher(indexReader);
         final float boost = 0;
-        SpanWeight spanweight = q.rewrite(indexReader).createWeight(searcher,
+        SpanWeight spanweight = q.rewrite(searcher).createWeight(searcher,
                 ScoreMode.COMPLETE_NO_SCORES, boost);
 
         while (iterator.hasNext()) {

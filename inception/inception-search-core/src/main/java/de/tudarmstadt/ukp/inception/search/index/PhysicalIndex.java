@@ -82,6 +82,17 @@ public interface PhysicalIndex
     void clear() throws IOException;
 
     /**
+     * Upgrades the on-disk index to the current Lucene format without re-indexing the data. This
+     * only works if the existing segments are still readable by the running Lucene version. If the
+     * index format is too old, callers must fall back to a full rebuild via {@link #clear()} +
+     * re-index.
+     *
+     * @throws IOException
+     *             if there was an I/O-level problem
+     */
+    void upgrade() throws IOException;
+
+    /**
      * Retrieve the timestamp of this annotation document
      * 
      * @param aSrcDocId

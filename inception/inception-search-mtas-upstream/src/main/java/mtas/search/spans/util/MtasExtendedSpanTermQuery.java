@@ -171,7 +171,8 @@ public class MtasExtendedSpanTermQuery
         public Spans getSpans(final LeafReaderContext context, Postings requiredPostings)
             throws IOException
         {
-            final TermState state = termStates.get(context);
+            final var stateSupplier = termStates.get(context);
+            final TermState state = stateSupplier == null ? null : stateSupplier.get();
             if (state == null) { // term is not present in that reader
                 assert context.reader().docFreq(
                         localTerm) == 0 : "no termstate found but term exists in reader term="
