@@ -49,11 +49,11 @@
             <execution>
               <id>default</id>
               <configuration>
-                <excludes combine.children="append">
-                  <exclude>src/main/java/**</exclude>
-                  <exclude>src/test/java/**</exclude>
-                  <exclude>docker/**</exclude>
-                </excludes>
+                <inputExcludes combine.children="append">
+                  <inputExclude>src/main/java/**</inputExclude>
+                  <inputExclude>src/test/java/**</inputExclude>
+                  <inputExclude>docker/**</inputExclude>
+                </inputExcludes>
               </configuration>
             </execution>
           </executions>

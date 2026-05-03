@@ -236,10 +236,10 @@
             <execution>
               <id>default</id>
               <configuration>
-                <excludes combine.children="append">
+                <inputExcludes combine.children="append">
                   <!-- Trivial template file which a license header would bloat too much-->
-                  <exclude>**/remove-input-behavior.js</exclude>
-                </excludes>
+                  <inputExclude>**/remove-input-behavior.js</inputExclude>
+                </inputExcludes>
               </configuration>
             </execution>
           </executions>
