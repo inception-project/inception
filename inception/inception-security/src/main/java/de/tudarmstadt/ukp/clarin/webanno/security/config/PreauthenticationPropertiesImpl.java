@@ -43,12 +43,21 @@ public class PreauthenticationPropertiesImpl
     implements PreauthenticationProperties
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    /**
+     * URL to call after logging out to also sign out of external authentication.
+     */
     private String logoutUrl;
 
     private NewUser newuser = new NewUser();
 
     public static class NewUser
     {
+        /**
+         * Default roles for new users (comma separated). The {@code ROLE_USER} role is always
+         * added, even if not specified explicitly. Adding {@code ROLE_PROJECT_CREATOR} allows all
+         * auto-created users to create their own projects.
+         */
         private List<String> roles = new ArrayList<>();
 
         public List<String> getRoles()

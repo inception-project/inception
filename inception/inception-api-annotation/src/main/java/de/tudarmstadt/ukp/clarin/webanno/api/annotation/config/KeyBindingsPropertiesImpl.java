@@ -76,13 +76,28 @@ public class KeyBindingsPropertiesImpl
     public static class NavigationShortcutsImpl
         implements NavigationShortcuts
     {
+        /** Keyboard shortcut to navigate to the next page. */
         private KeyCombo nextPage = new KeyCombo(Page_down);
+
+        /** Keyboard shortcut to navigate to the previous page. */
         private KeyCombo previousPage = new KeyCombo(Page_up);
+
+        /** Keyboard shortcut to navigate to the first page. */
         private KeyCombo firstPage = new KeyCombo(Home);
+
+        /** Keyboard shortcut to navigate to the last page. */
         private KeyCombo lastPage = new KeyCombo(End);
+
+        /** Keyboard shortcut to navigate to the next document. */
         private KeyCombo nextDocument = new KeyCombo(Shift, Page_down);
+
+        /** Keyboard shortcut to navigate to the previous document. */
         private KeyCombo previousDocument = new KeyCombo(Shift, Page_up);
+
+        /** Keyboard shortcut to jump to the next annotation. */
         private KeyCombo nextAnnotation = new KeyCombo(true, Shift, Right);
+
+        /** Keyboard shortcut to jump to the previous annotation. */
         private KeyCombo previousAnnotation = new KeyCombo(true, Shift, Left);
 
         @Override
@@ -177,10 +192,19 @@ public class KeyBindingsPropertiesImpl
     public static class EditingShortcutsImpl
         implements EditingShortcuts
     {
+        /** Keyboard shortcut to undo the last annotation action. */
         private KeyCombo undo = new KeyCombo(Ctrl, z);
+
+        /** Keyboard shortcut to redo an undone annotation action. */
         private KeyCombo redo = new KeyCombo(Shift, Ctrl, z);
+
+        /** Keyboard shortcut to delete the selected annotation. */
         private KeyCombo deleteAnnotation = new KeyCombo(Shift, Delete);
+
+        /** Keyboard shortcut to clear the annotation detail editor. */
         private KeyCombo clearSelection = new KeyCombo(Shift, Escape);
+
+        /** Keyboard shortcut to toggle selection mode. */
         private KeyCombo toggleSelection = new KeyCombo(Shift, Space);
 
         @Override
@@ -242,9 +266,16 @@ public class KeyBindingsPropertiesImpl
     public static class AnchoringModeShortcutsImpl
         implements AnchoringModeShortcuts
     {
+        /** Keyboard shortcut to switch to character-based selection mode. */
         private KeyCombo characters = new KeyCombo(true, Shift, one);
+
+        /** Keyboard shortcut to switch to single token selection mode. */
         private KeyCombo singleToken = new KeyCombo(true, Shift, two);
+
+        /** Keyboard shortcut to switch to multi-token selection mode. */
         private KeyCombo tokens = new KeyCombo(true, Shift, three);
+
+        /** Keyboard shortcut to switch to sentence selection mode. */
         private KeyCombo sentences = new KeyCombo(true, Shift, four);
 
         @Override
@@ -295,6 +326,7 @@ public class KeyBindingsPropertiesImpl
     public static class DialogShortcutsImpl
         implements DialogShortcuts
     {
+        /** Keyboard shortcut to close the currently open dialog. */
         private KeyCombo closeDialog = new KeyCombo(Escape);
 
         @Override

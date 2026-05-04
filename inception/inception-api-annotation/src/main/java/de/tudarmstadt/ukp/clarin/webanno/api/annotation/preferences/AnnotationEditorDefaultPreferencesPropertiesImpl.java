@@ -23,7 +23,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AnnotationEditorDefaultPreferencesPropertiesImpl
     implements AnnotationEditorDefaultPreferencesProperties
 {
+    /** The number of sentences to display per page. */
     private int pageSize = 10;
+
+    /** Whether to scroll the annotation being edited into the center of the page. */
     private boolean autoScroll = false;
 
     @Override

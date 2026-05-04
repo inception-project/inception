@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "workload.dynamic.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables the dynamic workload management strategy."
+    }
+  ]
+}

@@ -23,7 +23,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class InviteServicePropertiesImpl
     implements InviteServiceProperties
 {
+    /**
+     * Whether to enable guest annotators. When enabled, users can be invited via a password-less
+     * login. The user logging in chooses a login name and a project-bound password-less account is
+     * created for this user. The user can only log in to this account via the invite link. When the
+     * project is deleted, all the project-bound accounts are deleted as well.
+     */
     private boolean guestsEnabled;
+
+    /**
+     * Base URL used to generate invite links, e.g. when running behind a reverse proxy.
+     */
     private String inviteBaseUrl;
 
     @Override

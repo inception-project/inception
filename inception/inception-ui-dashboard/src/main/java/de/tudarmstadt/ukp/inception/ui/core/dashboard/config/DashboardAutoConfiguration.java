@@ -20,12 +20,14 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.config;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.endpoint.SanitizingFunction;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.env.Environment;
 
 import com.giffing.wicket.spring.boot.starter.configuration.extensions.core.csrf.CsrfAttacksPreventionProperties;
 
@@ -36,6 +38,11 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet.NetworkAdmin
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet.SystemStatusService;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.dashlet.SystemStatusServiceImpl;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.log.LogPageMenuItem;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.settings.SettingsPageMenuItem;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.settings.SettingsPageProperties;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.settings.SettingsPagePropertiesImpl;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.settings.SpringConfigurationMetadataService;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.settings.SpringConfigurationMetadataServiceImpl;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.users.ManageUsersPageMenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtension;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtensionPoint;
@@ -56,7 +63,8 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.users.ProjectUser
 
 @ConditionalOnWebApplication
 @Configuration
-@EnableConfigurationProperties({ DashboardPropertiesImpl.class, ProjectUiPropertiesImpl.class })
+@EnableConfigurationProperties({ DashboardPropertiesImpl.class, ProjectUiPropertiesImpl.class,
+        SettingsPagePropertiesImpl.class })
 public class DashboardAutoConfiguration
 {
     @Bean
@@ -176,5 +184,21 @@ public class DashboardAutoConfiguration
     public ManageUsersPageMenuItem manageUsersPageMenuItem()
     {
         return new ManageUsersPageMenuItem();
+    }
+
+    @Bean
+    public SettingsPageMenuItem settingsPageMenuItem()
+    {
+        return new SettingsPageMenuItem();
+    }
+
+    @Bean
+    public SpringConfigurationMetadataService springConfigurationMetadataService(
+            Environment aEnvironment, List<SanitizingFunction> aSanitizingFunctions,
+            SettingsPageProperties aSettingsProperties,
+            org.springframework.beans.factory.ListableBeanFactory aBeanFactory)
+    {
+        return new SpringConfigurationMetadataServiceImpl(aEnvironment, aSanitizingFunctions,
+                aSettingsProperties, aBeanFactory);
     }
 }

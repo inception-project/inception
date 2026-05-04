@@ -1,0 +1,16 @@
+{
+  "properties": [
+    {
+      "name": "format.bioc-xml.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables BioC XML import/export support."
+    },
+    {
+      "name": "format.bioc.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables BioC import/export support."
+    }
+  ]
+}

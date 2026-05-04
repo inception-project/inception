@@ -26,6 +26,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class TelemetryServicePropertiesImpl
     implements TelemetryServiceProperties
 {
+    /**
+     * Pre-configured response to telemetry submission requests. Setting this avoids the
+     * {@code admin} user being asked about telemetry submission on the first login. Valid values
+     * are {@code ACCEPT} and {@code REJECT}.
+     */
     private AutoResponse autoRespond;
 
     @Override

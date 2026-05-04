@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "monitoring.metrics.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables exposing application metrics for monitoring (e.g. via JMX)."
+    }
+  ]
+}

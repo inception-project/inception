@@ -23,6 +23,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class DocumentMetadataLayerSupportPropertiesImpl
     implements DocumentMetadataLayerSupportProperties
 {
+    /**
+     * Enable/disable document metadata layer support.
+     * <p>
+     * Disabling document metadata support prevents new document metadata layers from being created,
+     * but it does not prevent the use of existing document metadata layers in order not to break
+     * existing projects.
+     */
     private boolean enabled = true;
 
     @Override

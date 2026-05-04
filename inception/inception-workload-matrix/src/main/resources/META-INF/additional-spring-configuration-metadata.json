@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "workload.matrix.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables the matrix workload management strategy."
+    }
+  ]
+}

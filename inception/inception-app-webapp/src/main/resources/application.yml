@@ -89,5 +89,11 @@ wicket:
         compressCss: false
 
 springdoc:
+  # Tie the OpenAPI/Swagger endpoints to the remote API: when remote-api is on,
+  # SpringDoc serves the docs; when it's off, both endpoints are disabled. Setting
+  # these explicitly also suppresses SpringDoc's "enabled by default" startup warning.
+  api-docs:
+    enabled: ${remote-api.enabled:${webanno.remote-api.enable:false}}
   swagger-ui:
+    enabled: ${remote-api.enabled:${webanno.remote-api.enable:false}}
     tagsSorter: alpha

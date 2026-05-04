@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "recommender.hf.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables the HuggingFace recommender."
+    }
+  ]
+}

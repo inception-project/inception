@@ -1,0 +1,33 @@
+{
+  "properties": [
+    {
+      "name": "remote-api.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables the AERO-style remote API (project, document, permission, curation endpoints). Leave disabled unless an external client needs programmatic access to the application."
+    },
+    {
+      "name": "remote-api.tasks.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables the asynchronous task management endpoints of the remote API. Requires remote-api.enabled=true."
+    },
+    {
+      "name": "remote-api.tasks.bulk-prediction.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables bulk prediction submission via the remote API task endpoints. Requires remote-api.tasks.enabled=true."
+    },
+    {
+      "name": "webanno.remote-api.enable",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Legacy alias for remote-api.enabled, retained for backwards compatibility with WebAnno-era configurations.",
+      "deprecation": {
+        "level": "warning",
+        "replacement": "remote-api.enabled",
+        "reason": "Renamed when WebAnno was rebranded as INCEpTION."
+      }
+    }
+  ]
+}

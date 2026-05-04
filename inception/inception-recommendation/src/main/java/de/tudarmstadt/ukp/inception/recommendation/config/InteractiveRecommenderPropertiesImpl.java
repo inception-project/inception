@@ -30,6 +30,11 @@ import de.tudarmstadt.ukp.inception.recommendation.api.config.InteractiveRecomme
 public class InteractiveRecommenderPropertiesImpl
     implements InteractiveRecommenderProperties
 {
+    /**
+     * If enabled, LLM-based recommenders expose the "interactive" trait, allowing them to be
+     * configured to run on demand from the annotation page rather than only through the regular
+     * recommendation cycle.
+     */
     private boolean enabled;
 
     @Override

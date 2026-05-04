@@ -23,17 +23,53 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class PdfFormatPropertiesImpl
     implements PdfFormatProperties
 {
+    /**
+     * Try extracting a basic HTML structure (mainly paragraphs) to improve the rendering of the
+     * document in HTML-based editors.
+     */
     private boolean generateHtmlStructure = true;
 
+    /**
+     * Enable to order the text as it appears on screen. Disable to leave the text in the order it
+     * appears in the PDF file. In most cases, the order as it appears in the file is the correct
+     * order.
+     */
     private boolean sortByPosition = false;
+
+    /**
+     * Some PDFs overlap the same text multiple times to make it look bold. Keep the setting enabled
+     * to remove the duplicate text.
+     */
     private boolean suppressDuplicateOverlappingText = true;
+
+    /** Enable to respect the bead structures in the PDF file (if available). */
     private boolean shouldSeparateByBeads = true;
 
+    /**
+     * Enable to try preserving line breaks and using consecutive line breaks to identify
+     * paragraphs.
+     */
     private boolean addMoreFormatting = true;
+
+    /**
+     * Consider an indented line to be a new paragraph if the indentation is greater than this
+     * value.
+     */
     private float indentThreshold = 2.0f;
+
+    /** Lines further apart than this value are considered to be separate paragraphs. */
     private float dropThreshold = 2.5f;
 
+    /**
+     * Controls when spaces are introduced between characters. Increase to reduce the number of
+     * spaces. Reduce if spaces are missing between characters.
+     */
     private float averageCharTolerance = 0.3f;
+
+    /**
+     * Controls when spaces are introduced between characters. Increase to reduce the number of
+     * spaces. Reduce if spaces are missing between characters.
+     */
     private float spacingTolerance = 0.5f;
 
     @Override

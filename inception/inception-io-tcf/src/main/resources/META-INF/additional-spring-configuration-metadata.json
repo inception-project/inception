@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "format.tcf.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables Text Corpus Format (TCF) import/export support."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "format.imscwb.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables IMS Open Corpus Workbench (CWB) format import/export support."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "documentmetadata.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables the document-metadata layer support: per-document metadata sidebar, undo support, and (when the recommendation service is present) metadata-suggestion support."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "properties": [
+    {
+      "name": "format.text-line-oriented.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables line-oriented plain text format import/export support."
+    },
+    {
+      "name": "format.text-pretokenized.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables pre-tokenized plain text format import/export support."
+    },
+    {
+      "name": "format.text.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables plain text format import/export support."
+    }
+  ]
+}

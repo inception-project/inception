@@ -21,8 +21,6 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderPropertiesI
 
 public interface RecommenderProperties
 {
-    boolean isActionButtonsEnabled();
-
     boolean isEnabled();
 
     Messages getMessages();

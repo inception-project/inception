@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "format.nif.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables NLP Interchange Format (NIF) import/export support."
+    }
+  ]
+}

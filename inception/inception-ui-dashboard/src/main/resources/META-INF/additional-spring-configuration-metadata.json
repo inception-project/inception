@@ -1,0 +1,18 @@
+{
+  "properties": [
+    {
+      "name": "dashboard.admin-settings.hidden-namespaces",
+      "defaultValue": [
+        "spring",
+        "springdoc",
+        "wicket",
+        "sentry",
+        "management",
+        "server",
+        "endpoints",
+        "logging",
+        "telemetry.matomo"
+      ]
+    }
+  ]
+}

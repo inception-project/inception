@@ -26,6 +26,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class HeaderLinkPropertiesImpl
     implements HeaderLinkSettings
 {
+    /**
+     * Icons/links to display in the page header. Each entry is keyed by an identifier and contains
+     * a {@code linkUrl} (target page) and an {@code imageUrl} (icon image). Images are
+     * automatically resized via CSS; point to a reasonably small image to keep loading times low.
+     * The order of the icons is controlled by the ID, not by the order in the configuration file.
+     * {@code imageUrl} values may use a special {@code file:} prefix to refer to an image file
+     * placed under the {@code ${inception.home}/public} directory.
+     */
     private Map<String, HeaderLink> icon = new HashMap<>();
 
     @Override

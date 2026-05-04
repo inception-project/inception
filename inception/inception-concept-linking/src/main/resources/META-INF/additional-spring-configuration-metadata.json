@@ -1,0 +1,15 @@
+{
+  "properties": [
+    {
+      "name": "knowledge-base.entity-linking.signature-query-limit",
+      "type": "java.lang.Integer",
+      "defaultValue": 2147483647
+    },
+    {
+      "name": "knowledge-base.entity-linking.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables knowledge base entity linking support."
+    }
+  ]
+}

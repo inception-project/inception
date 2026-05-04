@@ -22,6 +22,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("format.json-cas-legacy")
 public class LegacyUimaJsonCasFormatProperties
 {
+    /**
+     * Whether to omit default values (e.g. {@code 0} for numbers or {@code false} for booleans)
+     * from the JSON output. By default, all values are written even when they equal the default.
+     */
     private boolean omitDefaultValues = false;
 
     public void setOmitDefaultValues(boolean aOmitDefaultValues)

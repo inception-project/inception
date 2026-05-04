@@ -23,6 +23,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class DebugPropertiesImpl
     implements DebugProperties
 {
+    /**
+     * If enabled, server-side request processing timings are measured and reported back to the
+     * browser via the {@code Server-Timing} HTTP response header so they show up in the browser
+     * developer tools. Intended for development and performance debugging.
+     */
     private boolean sendServerSideTimings = false;
 
     @Override

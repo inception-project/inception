@@ -1,0 +1,28 @@
+{
+  "properties": [
+    {
+      "name": "bulk-processing.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables the bulk processing page."
+    },
+    {
+      "name": "bulk-processing.process.apply-recommender.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables the bulk recommender (apply-recommender) process."
+    },
+    {
+      "name": "bulk-processing.process.auto-curation.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables the bulk auto-curation process."
+    },
+    {
+      "name": "bulk-processing.process.extract-tagset.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables the bulk tagset extraction process."
+    }
+  ]
+}

@@ -30,6 +30,10 @@ import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfigura
 public class CurationSidebarPropertiesImpl
     implements CurationSidebarProperties
 {
+    /**
+     * If enabled, annotators can choose to write the curated annotations into their own user's
+     * annotation document instead of into the shared curation document.
+     */
     private boolean ownUserCurationTargetEnabled;
 
     @Override

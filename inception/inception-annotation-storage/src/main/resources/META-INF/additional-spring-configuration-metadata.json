@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "backup.interval",
+      "type": "java.lang.Long",
+      "defaultValue": 86400
+    }
+  ]
+}

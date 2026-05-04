@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style>
+    .settings-list .property-name  { font-family: var(--bs-font-monospace); font-weight: 600; }
+    .settings-list .property-value { font-family: var(--bs-font-monospace); word-break: break-all; white-space: pre-line; }
+    .settings-list .property-meta  { color: var(--bs-secondary-color); font-size: 0.85em; }
+    .settings-list .property-desc  { color: var(--bs-secondary-color); font-size: 0.9em; }
+    .settings-list .deprecated .property-name { text-decoration: line-through; }
+  </style>
+</wicket:head>
+<body>
+  <wicket:extend>
+    <div class="flex-content flex-v-container flex-gutter">
+      <div class="text-muted text-center mx-3" role="alert">
+        <wicket:message key="read-only-note"/>
+      </div>
+      <div class="flex-content flex-h-container flex-gutter">
+        <div class="flex-v-container flex-gutter min-content-height flex-sidebar">
+          <div class="flex-content card">
+            <div class="card-header">
+              <wicket:message key="namespaces"/>
+            </div>
+            <div class="card-body scrolling">
+              <div wicket:id="tree"></div>
+            </div>
+          </div>
+        </div>
+        <div class="flex-content flex-v-container flex-gutter">
+          <div class="flex-content card">
+            <div class="card-header">
+              <span wicket:id="selectedPath"></span>
+            </div>
+            <div wicket:id="detail" class="card-body scrolling">
+              <div wicket:id="emptyState"
+                   class="d-flex flex-column justify-content-center align-items-center text-body-secondary h-100" style="white-space: pre-line;">
+                <wicket:message key="no-properties"/>
+              </div>
+              <div wicket:id="propertiesContainer" class="list-group settings-list">
+                <div wicket:id="properties" class="list-group-item">
+                  <div class="d-flex flex-row align-items-baseline justify-content-between">
+                    <span wicket:id="name" class="property-name"></span>
+                    <span wicket:id="type" class="badge text-bg-light property-meta ms-2"></span>
+                  </div>
+                  <div class="d-flex flex-row mt-1">
+                    <span wicket:id="effectiveValue" class="property-value flex-grow-1"></span>
+                    <span wicket:id="source" class="badge text-bg-secondary ms-2 align-self-center"></span>
+                  </div>
+                  <div class="property-meta mt-1" wicket:enclosure="defaultValue">
+                    default: <span wicket:id="defaultValue" class="property-value"></span>
+                  </div>
+                  <div class="property-desc mt-1" wicket:enclosure="description">
+                    <span wicket:id="description"></span>
+                  </div>
+                  <div class="text-warning property-meta mt-1" wicket:enclosure="deprecationNote">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    <span wicket:id="deprecationNote"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </wicket:extend>
+</body>
+</html>

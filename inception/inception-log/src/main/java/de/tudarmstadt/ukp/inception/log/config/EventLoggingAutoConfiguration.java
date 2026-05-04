@@ -41,7 +41,8 @@ import jakarta.persistence.EntityManager;
  * Provides support event logging.
  */
 @Configuration
-@ConditionalOnProperty(prefix = "event-logging", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "event-logging", name = "enabled", havingValue = "true", //
+        matchIfMissing = EventLoggingProperties.DEFAULT_ENABLED)
 @EnableConfigurationProperties(EventLoggingPropertiesImpl.class)
 public class EventLoggingAutoConfiguration
 {

@@ -27,6 +27,12 @@ public class UserSelectionPanelConfigurationImpl
 {
     public static final String PROPERTY_PREFIX = "user-selection";
 
+    /**
+     * Whether the list of users shown in the users tab of the project settings is restricted. If
+     * enabled, the full name of a user has to be entered into the input field before the user can
+     * be added. If disabled, it is possible to see all enabled users and to add any of them to the
+     * project.
+     */
     private boolean hideUsers;
 
     @Override

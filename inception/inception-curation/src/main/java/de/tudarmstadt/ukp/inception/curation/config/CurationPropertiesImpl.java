@@ -28,6 +28,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class CurationPropertiesImpl
     implements CurationProperties
 {
+    /**
+     * If enabled, a document is considered curatable when at least one annotator has finished
+     * working on it. Otherwise, a document is only considered curatable once it has reached the
+     * annotation-finished state at the document level.
+     */
     private boolean legacyCuratableDocumentsStrategy = false;
 
     @Override

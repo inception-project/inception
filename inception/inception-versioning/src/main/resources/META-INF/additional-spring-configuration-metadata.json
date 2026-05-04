@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "versioning.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables project versioning support."
+    }
+  ]
+}

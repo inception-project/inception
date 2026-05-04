@@ -1,0 +1,16 @@
+{
+  "properties": [
+    {
+      "name": "format.dkpro-core-tei.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables DKPro Core TEI format import/export support."
+    },
+    {
+      "name": "format.tei.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables TEI format import/export support."
+    }
+  ]
+}

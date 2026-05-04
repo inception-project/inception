@@ -44,7 +44,7 @@ import de.tudarmstadt.ukp.inception.search.log.SearchQueryEventAdapter;
 
 @Configuration
 @EnableConfigurationProperties(SearchServicePropertiesImpl.class)
-@ConditionalOnProperty(prefix = "search", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "search", name = "enabled", havingValue = "true", matchIfMissing = SearchServiceProperties.DEFAULT_ENABLED)
 public class SearchServiceAutoConfiguration
 {
     @Bean
