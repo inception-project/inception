@@ -421,9 +421,9 @@
               <groupId>org.apache.rat</groupId>
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
-                <excludes combine.children="append">
-                  <exclude>**/de/tudarmstadt/ukp/inception/kb/querybuilder/backport/Bind.java</exclude>
-                </excludes>
+                <inputExcludes combine.children="append">
+                  <inputExclude>**/de/tudarmstadt/ukp/inception/kb/querybuilder/backport/Bind.java</inputExclude>
+                </inputExcludes>
               </configuration>
             </plugin>
           </plugins>

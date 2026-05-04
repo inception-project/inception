@@ -600,17 +600,17 @@
         <plugin>
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
-          <version>0.16.1</version>
+          <version>0.18</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>exec-maven-plugin</artifactId>
-          <version>3.5.0</version>
+          <version>3.6.3</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>3.8.1</version>
+          <version>3.10.0</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.gmaven</groupId>
@@ -620,7 +620,7 @@
         <plugin>
           <groupId>com.github.eirslett</groupId>
           <artifactId>frontend-maven-plugin</artifactId>
-          <version>1.15.1</version>
+          <version>2.0.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -648,7 +648,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-war-plugin</artifactId>
-          <version>3.4.0</version>
+          <version>3.5.1</version>
         </plugin>
         <plugin>
           <groupId>io.fabric8</groupId>
@@ -658,7 +658,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>versions-maven-plugin</artifactId>
-          <version>2.18.0</version>
+          <version>2.21.0</version>
           <configuration>
             <rulesUri>file:${maven.multiModuleProjectDirectory}/inception/inception-build/src/main/resources/inception/rules.xml</rulesUri>
             <!--
@@ -770,41 +770,42 @@
                 </goals>
                 <configuration>
                   <consoleOutput>true</consoleOutput>
-                  <excludes combine.children="append">
-                    <exclude>.mvn/jvm.config</exclude>
-                    <exclude>.oracle_jre_usage/*.timestamp</exclude>
-                    <exclude>.factorypath</exclude>
-                    <exclude>.gitignore</exclude>
-                    <exclude>.checkstyle</exclude>
-                    <exclude>**/.asciidoctorconfig.adoc</exclude>
-                    <exclude>**/.vscode/**/*</exclude>
-                    <exclude>suppressions.xml</exclude>
-                    <exclude>marker-*</exclude>
+                  <inputExcludes combine.children="append">
+                    <inputExclude>/.mvn/jvm.config</inputExclude>
+                    <inputExclude>/.oracle_jre_usage/*.timestamp</inputExclude>
+                    <inputExclude>/.factorypath</inputExclude>
+                    <inputExclude>/.gitignore</inputExclude>
+                    <inputExclude>/**/.gitignore</inputExclude>
+                    <inputExclude>/.checkstyle</inputExclude>
+                    <inputExclude>/**/.asciidoctorconfig.adoc</inputExclude>
+                    <inputExclude>/**/.vscode/**</inputExclude>
+                    <inputExclude>/suppressions.xml</inputExclude>
+                    <inputExclude>/marker-*</inputExclude>
                     <!-- maven config files -->
-                    <exclude>src/main/filter/**/*</exclude>
+                    <inputExclude>/src/main/filter/**</inputExclude>
                     <!-- release generated artifact -->
-                    <exclude>release.properties</exclude>
+                    <inputExclude>/release.properties</inputExclude>
                     <!-- generated JCas wrappers -->
-                    <exclude>src/main/java/**/type/**/*</exclude>
+                    <inputExclude>/src/main/java/**/type/**</inputExclude>
                     <!-- other -->
-                    <exclude>CONTRIBUTORS.txt</exclude>
-                    <exclude>CHANGES</exclude>
-                    <exclude>CHANGES.txt</exclude>
-                    <exclude>NOTICE</exclude>
-                    <exclude>NOTICE.txt</exclude>
-                    <exclude>README</exclude>
-                    <exclude>README.txt</exclude>
-                    <exclude>README.md</exclude>
-                    <exclude>src/main/docker/**/*</exclude>
-                    <exclude>src/main/resources/**/*</exclude>
-                    <exclude>src/test/resources/**/*</exclude>
-                    <exclude>**/cache/**/*</exclude>
-                    <exclude>**/*.example</exclude>
-                    <exclude>doc/*.json</exclude>
-                    <exclude>licenses/**/*</exclude>
-                    <exclude>**/mocha-test-report.xml</exclude>
-                    <exclude>**/src/main/ts/node_modules/**/*</exclude>
-                  </excludes>
+                    <inputExclude>/CONTRIBUTORS.txt</inputExclude>
+                    <inputExclude>/CHANGES</inputExclude>
+                    <inputExclude>/CHANGES.txt</inputExclude>
+                    <inputExclude>/NOTICE</inputExclude>
+                    <inputExclude>/NOTICE.txt</inputExclude>
+                    <inputExclude>/README</inputExclude>
+                    <inputExclude>/README.txt</inputExclude>
+                    <inputExclude>/README.md</inputExclude>
+                    <inputExclude>/src/main/docker/**</inputExclude>
+                    <inputExclude>/src/main/resources/**</inputExclude>
+                    <inputExclude>/src/test/resources/**</inputExclude>
+                    <inputExclude>/**/cache/**</inputExclude>
+                    <inputExclude>/**/*.example</inputExclude>
+                    <inputExclude>/doc/*.json</inputExclude>
+                    <inputExclude>/licenses/**</inputExclude>
+                    <inputExclude>/**/mocha-test-report.xml</inputExclude>
+                    <inputExclude>/**/src/main/ts/node_modules/**</inputExclude>
+                  </inputExcludes>
                 </configuration>
               </execution>
             </executions>
@@ -1151,15 +1152,15 @@
               <groupId>org.apache.rat</groupId>
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
-                <excludes combine.children="append">
-                  <exclude>src/main/ts/.sass-cache/**</exclude>
-                  <exclude>src/main/ts/.eslintrc.yml</exclude>
-                  <exclude>src/main/ts/*.json</exclude>
-                  <exclude>src/main/ts_template/*.json</exclude>
-                  <exclude>src/main/ts/node_modules/**/*</exclude>
-                  <exclude>**/mocha-test-report.xml</exclude>
-                  <exclude>**/vite.config.js.timestamp*</exclude>
-                </excludes>
+                <inputExcludes combine.children="append">
+                  <inputExclude>src/main/ts/.sass-cache/**</inputExclude>
+                  <inputExclude>src/main/ts/.eslintrc.yml</inputExclude>
+                  <inputExclude>src/main/ts/*.json</inputExclude>
+                  <inputExclude>src/main/ts_template/*.json</inputExclude>
+                  <inputExclude>src/main/ts/node_modules/**/*</inputExclude>
+                  <inputExclude>**/mocha-test-report.xml</inputExclude>
+                  <inputExclude>**/vite.config.js.timestamp*</inputExclude>
+                </inputExcludes>
               </configuration>
             </plugin>
           </plugins>
