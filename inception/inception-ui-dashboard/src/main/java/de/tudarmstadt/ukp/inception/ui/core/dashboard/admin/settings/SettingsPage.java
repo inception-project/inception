@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.settings;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.settings.JavadocToMarkdownConverter.descriptionToMarkdown;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
@@ -234,39 +235,6 @@ public class SettingsPage
         }
         var dot = aName.lastIndexOf('.');
         return dot >= 0 ? aName.substring(dot + 1) : aName;
-    }
-
-    /**
-     * Best-effort conversion of common Javadoc constructs in Spring configuration descriptions to
-     * Markdown so they render nicely in {@link MarkdownLabel}.
-     */
-    private static String descriptionToMarkdown(String aText)
-    {
-        if (aText == null || aText.isEmpty()) {
-            return aText;
-        }
-        var s = aText;
-        // Inline Javadoc tags
-        s = s.replaceAll("\\{@code\\s+([^}]+)\\}", "`$1`");
-        s = s.replaceAll("\\{@link(?:plain)?\\s+([^}]+)\\}", "`$1`");
-        s = s.replaceAll("\\{@literal\\s+([^}]+)\\}", "$1");
-        // Block-level HTML
-        s = s.replaceAll("(?i)<br\\s*/?>", "\n");
-        s = s.replaceAll("(?i)<p>\\s*", "\n\n");
-        s = s.replaceAll("(?i)</p>", "");
-        // Lists: turn each <li>...</li> into "- ..." lines
-        s = s.replaceAll("(?i)<li>\\s*", "\n- ");
-        s = s.replaceAll("(?i)</li>", "");
-        s = s.replaceAll("(?is)</?[uo]l>\\s*", "\n");
-        // Strip any remaining tags defensively
-        s = s.replaceAll("<[^>]+>", "");
-        // Decode common HTML entities (decode &amp; last to avoid double-decoding)
-        s = s.replace("&lt;", "<") //
-                .replace("&gt;", ">") //
-                .replace("&quot;", "\"") //
-                .replace("&apos;", "'") //
-                .replace("&amp;", "&");
-        return s;
     }
 
     private void denyAccess()

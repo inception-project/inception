@@ -19,7 +19,7 @@
       "description": "Enables structured UIMA XMI format import/export support."
     },
     {
-      "name": "format.uima-xmi-xml1_1.enabled",
+      "name": "format.uima-xmi-xml1-1.enabled",
       "type": "java.lang.Boolean",
       "defaultValue": true,
       "description": "Enables UIMA XMI (XML 1.1) format import/export support."
