@@ -19,7 +19,9 @@ package de.tudarmstadt.ukp.inception.annotation.layer.document.recommender;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_ALL;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
+import static java.util.Arrays.asList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -30,7 +32,6 @@ import java.util.Optional;
 
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
 import org.apache.uima.jcas.cas.AnnotationBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +60,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 
 public class MetadataSuggestionSupport
     extends SuggestionSupport_ImplBase
@@ -68,13 +70,17 @@ public class MetadataSuggestionSupport
 
     public static final String TYPE = "META";
 
+    private final FeatureSupportRegistry featureSupportRegistry;
+
     public MetadataSuggestionSupport(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
-            AnnotationSchemaService aSchemaService)
+            AnnotationSchemaService aSchemaService,
+            FeatureSupportRegistry aFeatureSupportRegistry)
     {
         super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher,
                 aSchemaService);
+        featureSupportRegistry = aFeatureSupportRegistry;
     }
 
     @Override
@@ -85,7 +91,9 @@ public class MetadataSuggestionSupport
         }
 
         var feature = aContext.feature();
-        if (TYPE_NAME_STRING.equals(feature.getType()) || feature.isVirtualFeature()) {
+        if (TYPE_NAME_STRING.equals(feature.getType())
+                || TYPE_NAME_STRING_ARRAY.equals(feature.getType())
+                || feature.isVirtualFeature()) {
             return true;
         }
 
@@ -210,7 +218,7 @@ public class MetadataSuggestionSupport
                     .toList();
 
             hideSpanSuggestionsThatMatchAnnotations(traits.isSingleton(), annotations, feature,
-                    feat, suggestionsForFeature);
+                    suggestionsForFeature);
 
             // Anything that was not hidden so far might still have been rejected
             suggestionsForFeature.stream() //
@@ -222,26 +230,32 @@ public class MetadataSuggestionSupport
     }
 
     private void hideSpanSuggestionsThatMatchAnnotations(boolean singleton,
-            List<AnnotationBase> aAnnotations, AnnotationFeature aFeature, Feature aFeat,
+            List<AnnotationBase> aAnnotations, AnnotationFeature aFeature,
             List<SuggestionGroup<MetadataSuggestion>> aSuggestionsForFeature)
     {
+        var featureSupport = featureSupportRegistry.findExtension(aFeature).get();
 
         for (var annotation : aAnnotations) {
-            // FIXME: This will not work for multi-valued features
-            var label = annotation.getFeatureValueAsString(aFeat);
+            var wrappedValue = featureSupport.getFeatureValue(aFeature, annotation);
+            var value = featureSupport.unwrapFeatureValue(aFeature, wrappedValue);
+            var labelObjects = value instanceof Iterable values ? values : asList(value);
 
-            if (label == null) {
-                continue;
-            }
+            for (var labelObject : labelObjects) {
+                var label = Objects.toString(labelObject, null);
 
-            for (var sugGroup : aSuggestionsForFeature) {
-                if (singleton) {
-                    sugGroup.hideAll(FLAG_OVERLAP);
+                if (label == null) {
+                    continue;
                 }
-                else {
-                    for (var suggestion : sugGroup) {
-                        if (label.equals(suggestion.getLabel())) {
-                            suggestion.hide(FLAG_OVERLAP);
+
+                for (var sugGroup : aSuggestionsForFeature) {
+                    if (singleton) {
+                        sugGroup.hideAll(FLAG_OVERLAP);
+                    }
+                    else {
+                        for (var suggestion : sugGroup) {
+                            if (label.equals(suggestion.getLabel())) {
+                                suggestion.hide(FLAG_OVERLAP);
+                            }
                         }
                     }
                 }

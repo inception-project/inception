@@ -121,9 +121,10 @@ public class DocumentMetadataLayerSupportAutoConfiguration
             RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
-            AnnotationSchemaService aSchemaService)
+            AnnotationSchemaService aSchemaService,
+            FeatureSupportRegistry aFeatureSupportRegistry)
     {
         return new MetadataSuggestionSupport(aRecommendationService, aLearningRecordService,
-                aApplicationEventPublisher, aSchemaService);
+                aApplicationEventPublisher, aSchemaService, aFeatureSupportRegistry);
     }
 }
