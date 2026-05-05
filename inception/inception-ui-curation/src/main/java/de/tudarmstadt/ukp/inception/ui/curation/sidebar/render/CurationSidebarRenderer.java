@@ -26,6 +26,7 @@ import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
@@ -169,6 +171,8 @@ public class CurationSidebarRenderer
         var generatedCurationVids = new HashSet<VID>();
         var showAll = curationService.isShowAll(sessionOwner, project.getId());
         var showScore = curationService.isShowScore(sessionOwner, project.getId());
+        var constraintsEvaluator = new ConstraintsEvaluator();
+        var constraints = aRequest.getConstraints();
         for (var cfgSet : diff.getConfigurationSets()) {
             LOG.trace("Processing set: {}", cfgSet);
 
@@ -214,6 +218,21 @@ public class CurationSidebarRenderer
 
                 var objects = renderer.render(aRequest, layerSupportedFeatures, aVdoc, ann);
 
+                var adapter = renderer.getTypeAdapter();
+                var invalidFeatures = new ArrayList<String>();
+                for (var feature : layerSupportedFeatures) {
+                    if (!feature.isEnabled()) {
+                        continue;
+                    }
+                    if (constraintsEvaluator.isHiddenConditionalFeature(constraints, ann,
+                            feature)) {
+                        continue;
+                    }
+                    if (!adapter.isFeatureValueValid(feature, ann)) {
+                        invalidFeatures.add(feature.getUiName());
+                    }
+                }
+
                 for (var object : objects) {
                     if (!showAll && shouldBeHidden(aRequest, diff, cfg, layer, ann, object,
                             targetUser)) {
@@ -241,6 +260,11 @@ public class CurationSidebarRenderer
                     aVdoc.add(object);
 
                     aVdoc.add(new VComment(object.getVid(), VCommentType.INFO, "Curation item"));
+
+                    for (var name : invalidFeatures) {
+                        aVdoc.add(new VComment(object.getVid(), VCommentType.ERROR,
+                                "Feature [" + name + "] has no valid value."));
+                    }
 
                     if (object instanceof VArc arc) {
                         resolveArcEndpoints(targetUser, diff, showAll, cfg, arc);

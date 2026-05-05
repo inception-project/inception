@@ -250,9 +250,9 @@ export class Visualizer {
     commentPrioLevels: string[] = [
         'Unconfirmed',
         'Incomplete',
+        'AnnotatorNotes',
         'Warning',
         'Error',
-        'AnnotatorNotes',
         'AddedAnnotation',
         'MissingAnnotation',
         'ChangedAnnotation',

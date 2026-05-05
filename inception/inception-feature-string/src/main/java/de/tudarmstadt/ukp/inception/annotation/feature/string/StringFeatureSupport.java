@@ -130,8 +130,20 @@ public class StringFeatureSupport
     @Override
     public boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
     {
-        if (aFeature.isRequired()) {
-            return isNotBlank(FSUtil.getFeature(aFS, aFeature.getName(), String.class));
+        var value = FSUtil.getFeature(aFS, aFeature.getName(), String.class);
+
+        if (aFeature.isRequired() && !isNotBlank(value)) {
+            return false;
+        }
+
+        var tagset = aFeature.getTagset();
+        if (schemaService != null && tagset != null && !tagset.isCreateTag() && value != null) {
+            for (var tag : schemaService.listTagsImmutable(tagset)) {
+                if (tag.getName().equals(value)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         return true;

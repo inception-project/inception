@@ -283,6 +283,16 @@ export class ViewportTracker {
 
         this.trackedElements = Array.from(leafTrackingCandidates);
 
+        // Drop any element refs that are no longer tracked. Without this, the set grows
+        // unbounded as renders replace DOM nodes, and stale refs prevent the "added" count
+        // from reflecting reality. Prune in place so external references obtained via the
+        // public getter continue to observe updates.
+        this._visibleElements.forEach((e) => {
+            if (!leafTrackingCandidates.has(e)) {
+                this._visibleElements.delete(e)
+            }
+        })
+
         // If paused we do not create an observer now
         if (this.paused) {
             console.debug('ViewportTracker is paused; skipping observer creation');
@@ -323,11 +333,18 @@ export class ViewportTracker {
             console.debug(
                 `Visible elements changed: ${visibleElementsAdded} added, ${this._visibleElements.size} visible elements in total`
             );
-            // the first time the callback is called, we want to make sure that the annotations are
-            // loaded at least once
-            this.initialized = true;
-            this._currentRange = this.calculateWindowRange();
-            this.initiateAction();
+            const newRange = this.calculateWindowRange();
+            const rangeChanged =
+                newRange[0] !== this._currentRange[0] || newRange[1] !== this._currentRange[1];
+            this._currentRange = newRange;
+            // The first time the callback is called, we want to make sure that the annotations are
+            // loaded at least once. Subsequent fires only invoke the callback if the visible range
+            // actually changed - otherwise re-observed elements after a render pass can spuriously
+            // re-trigger a load even though there is nothing new to fetch.
+            if (!this.initialized || rangeChanged) {
+                this.initialized = true;
+                this.initiateAction();
+            }
         }
     }
 
