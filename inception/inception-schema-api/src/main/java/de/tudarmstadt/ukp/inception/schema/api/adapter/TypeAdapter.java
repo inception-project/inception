@@ -158,6 +158,10 @@ public interface TypeAdapter
             AnnotationFeature aFeature, Object aValue)
         throws AnnotationException;
 
+    FeatureValueUpdateContext updateFeatureValues(SourceDocument aDocument, String aUsername,
+            CAS aCas, int aAddress)
+        throws AnnotationException;
+
     default void setFeatureValue(SourceDocument aDocument, String aDocumentOwner,
             FeatureStructure aFs, AnnotationFeature aFeature, Object aValue)
         throws AnnotationException
