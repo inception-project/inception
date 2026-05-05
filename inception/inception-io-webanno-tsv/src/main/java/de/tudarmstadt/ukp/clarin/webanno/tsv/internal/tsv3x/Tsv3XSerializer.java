@@ -318,9 +318,23 @@ public class Tsv3XSerializer
         AnnotationFS targetFS = getFeature(aFS, FEAT_REL_TARGET, AnnotationFS.class);
         AnnotationFS sourceFS = getFeature(aFS, FEAT_REL_SOURCE, AnnotationFS.class);
 
+        if (sourceFS == null || targetFS == null) {
+            throw new IllegalStateException("Relation [" + aFS.getType().getName() + "@["
+                    + aFS.getBegin() + "-" + aFS.getEnd()
+                    + "]] has a null source or target. The CAS may contain a dangling relation - "
+                    + "try the RemoveDanglingRelationsRepair action in CAS Doctor.");
+        }
+
         // The column contains the ID of the unit from which the relation is pointing to the
         // current unit, i.e. the sourceUnit of the relation.
         TsvUnit sourceUnit = aDoc.findIdDefiningUnit(sourceFS);
+        if (sourceUnit == null) {
+            throw new IllegalStateException("Relation [" + aFS.getType().getName() + "@["
+                    + aFS.getBegin() + "-" + aFS.getEnd() + "]] points to source ["
+                    + sourceFS.getType().getName() + "@[" + sourceFS.getBegin() + "-"
+                    + sourceFS.getEnd() + "]] which is not indexed in the CAS. This is a dangling "
+                    + "relation - try the RemoveDanglingRelationsRepair action in CAS Doctor.");
+        }
         aOut.print(sourceUnit.getId());
 
         // If the source/target is ambiguous, add the disambiguation IDs

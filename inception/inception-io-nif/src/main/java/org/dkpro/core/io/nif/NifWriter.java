@@ -69,6 +69,24 @@ public class NifWriter
     @ConfigurationParameter(name = PARAM_FILENAME_EXTENSION, mandatory = true, defaultValue = ".ttl")
     private String filenameSuffix;
 
+    /**
+     * IRI prefix used to mint a {@code taClassRef} target when the named entity {@code value} is
+     * not itself a valid IRI. The non-IRI value is URL-encoded and appended to this prefix. If
+     * unset, non-IRI values are skipped (legacy behavior).
+     */
+    public static final String PARAM_DEFAULT_CLASS_IRI = "defaultClassIri";
+    @ConfigurationParameter(name = PARAM_DEFAULT_CLASS_IRI, mandatory = false)
+    private String defaultClassIri;
+
+    /**
+     * IRI prefix used to mint a {@code taIdentRef} target when the named entity {@code identifier}
+     * is not itself a valid IRI. The non-IRI value is URL-encoded and appended to this prefix. If
+     * unset, non-IRI values are skipped (legacy behavior).
+     */
+    public static final String PARAM_DEFAULT_IDENTIFIER_IRI = "defaultIdentifierIri";
+    @ConfigurationParameter(name = PARAM_DEFAULT_IDENTIFIER_IRI, mandatory = false)
+    private String defaultIdentifierIri;
+
     @Override
     public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
@@ -76,7 +94,7 @@ public class NifWriter
         model.setNsPrefix(NIF.PREFIX_NIF, NIF.NS_NIF);
         model.setNsPrefix(ITS.PREFIX_ITS, ITS.NS_ITS);
 
-        DKPro2Nif.convert(aJCas, model);
+        DKPro2Nif.convert(aJCas, model, defaultClassIri, defaultIdentifierIri);
 
         try (OutputStream docOS = getOutputStream(aJCas, filenameSuffix)) {
             RDFDataMgr.write(docOS, model.getBaseModel(),

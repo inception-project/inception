@@ -33,6 +33,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -68,6 +69,7 @@ import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.FeatureValueUpdateContext;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
@@ -219,22 +221,35 @@ public class BulkPredictionTask
         throws AnnotationException
     {
         var metadataAnnotationCache = new HashMap<AnnotationLayer, AnnotationBaseFS>();
-        for (var metadataEntry : processingMetadata.entrySet()) {
-            var layer = metadataEntry.getKey().getLayer();
-            if (!DocumentMetadataLayerSupport.TYPE.equals(layer.getType())) {
-                continue;
+        // One batched update context per layer so that multiple features written to the same
+        // metadata FS go through a single hidden-feature clearing pass on close.
+        var ctxCache = new LinkedHashMap<AnnotationLayer, FeatureValueUpdateContext>();
+        try {
+            for (var metadataEntry : processingMetadata.entrySet()) {
+                var layer = metadataEntry.getKey().getLayer();
+                if (!DocumentMetadataLayerSupport.TYPE.equals(layer.getType())) {
+                    continue;
+                }
+
+                var adapter = (DocumentMetadataLayerAdapter) schemaService.getAdapter(layer);
+
+                var anno = metadataAnnotationCache.get(layer);
+                if (anno == null) {
+                    anno = adapter.add(doc, dataOwner, cas);
+                    metadataAnnotationCache.put(layer, anno);
+                }
+
+                var ctx = ctxCache.get(layer);
+                if (ctx == null) {
+                    ctx = adapter.updateFeatureValues(doc, dataOwner, anno);
+                    ctxCache.put(layer, ctx);
+                }
+
+                ctx.setFeatureValue(metadataEntry.getKey(), metadataEntry.getValue());
             }
-
-            var adapter = (DocumentMetadataLayerAdapter) schemaService.getAdapter(layer);
-
-            var anno = metadataAnnotationCache.get(layer);
-            if (anno == null) {
-                anno = adapter.add(doc, dataOwner, cas);
-                metadataAnnotationCache.put(layer, anno);
-            }
-
-            adapter.setFeatureValue(doc, dataOwner, anno, metadataEntry.getKey(),
-                    metadataEntry.getValue());
+        }
+        finally {
+            ctxCache.values().forEach(FeatureValueUpdateContext::close);
         }
     }
 

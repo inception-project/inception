@@ -24,7 +24,9 @@ import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -35,8 +37,10 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -52,9 +56,11 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffSupportRegistryImp
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.ImmutableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.feature.bool.BooleanFeatureSupport;
@@ -63,6 +69,7 @@ import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureTraits;
 import de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportPropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistryImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
@@ -76,6 +83,7 @@ import de.tudarmstadt.ukp.inception.curation.api.CurationVID;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -119,6 +127,8 @@ class CurationSidebarRendererTest
     private AnnotationLayer spanLayer;
     private AnnotationLayer relationLayer;
     private AnnotationFeature spanLayerLinkFeature;
+    private AnnotationFeature spanLayerValueFeature;
+    private TagSet closedValueTagset;
     private SpanAdapter spanLayerAdapter;
     private DiffSupportRegistryImpl diffSupportRegistry;
     private DiffAdapterRegistry diffAdapterRegistry;
@@ -127,7 +137,7 @@ class CurationSidebarRendererTest
     void setup() throws Exception
     {
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList( //
-                new StringFeatureSupport(), //
+                new StringFeatureSupport(new StringFeatureSupportPropertiesImpl(), schemaService), //
                 new BooleanFeatureSupport(), //
                 new NumberFeatureSupport(), //
                 new LinkFeatureSupport(schemaService)));
@@ -197,6 +207,21 @@ class CurationSidebarRendererTest
                 .withMultiValueMode(ARRAY) //
                 .build();
 
+        closedValueTagset = new TagSet();
+        closedValueTagset.setName("values");
+        closedValueTagset.setProject(project);
+        closedValueTagset.setCreateTag(false);
+
+        spanLayerValueFeature = AnnotationFeature.builder() //
+                .withId(2l) //
+                .withProject(project) //
+                .withLayer(spanLayer) //
+                .withName("value") //
+                .withUiName("value") //
+                .withType(CAS.TYPE_NAME_STRING) //
+                .build();
+        spanLayerValueFeature.setTagset(closedValueTagset);
+
         relationLayer = AnnotationLayer.builder() //
                 .withId(2l) //
                 .withProject(project) //
@@ -209,7 +234,10 @@ class CurationSidebarRendererTest
         when(curationSessionService.listUsersReadyForCuration(curator.getUsername(), project, doc))
                 .thenReturn(asList(anno1, anno2));
 
-        var allFeaturesInProject = asList(spanLayerLinkFeature);
+        var allFeaturesInProject = asList(spanLayerLinkFeature, spanLayerValueFeature);
+
+        lenient().when(schemaService.listTagsImmutable(any()))
+                .thenReturn(asList(new ImmutableTag("known", "")));
         when(schemaService.getAdapter(any())).thenAnswer(call -> {
             var layer = call.getArgument(0, AnnotationLayer.class);
             var support = layerSupportRegistry.findExtension(layer).get();
@@ -584,6 +612,75 @@ class CurationSidebarRendererTest
 
         assertThat(vdoc.spans()).isEmpty();
         assertThat(vdoc.arcs()).isEmpty();
+    }
+
+    /**
+     * A closed-tagset feature value that is not part of the tagset must produce an ERROR comment on
+     * the rendered curation span.
+     */
+    @Test
+    void thatOutOfTagsetValueProducesErrorComment() throws Exception
+    {
+        spanLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        var request = renderRequest("anchor");
+
+        var anchorA = spanLayerAdapter.add(doc, anno1.getUsername(), anno1Cas, 0, 6);
+        FSUtil.setFeature(anchorA, spanLayerValueFeature.getName(), "out-of-tagset");
+        var anchorB = spanLayerAdapter.add(doc, anno2.getUsername(), anno2Cas, 0, 6);
+        FSUtil.setFeature(anchorB, spanLayerValueFeature.getName(), "out-of-tagset");
+
+        sut.render(vdoc, request);
+
+        assertThat(vdoc.comments()) //
+                .extracting(comment -> comment.getCommentType(), comment -> comment.getComment()) //
+                .contains( //
+                        tuple(VCommentType.INFO, "Curation item"), //
+                        tuple(VCommentType.ERROR, "Feature [value] has no valid value."));
+    }
+
+    /**
+     * A closed-tagset feature value that is part of the tagset must not produce an ERROR comment.
+     */
+    @Test
+    void thatInTagsetValueProducesNoErrorComment() throws Exception
+    {
+        spanLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        var request = renderRequest("anchor");
+
+        var anchorA = spanLayerAdapter.add(doc, anno1.getUsername(), anno1Cas, 0, 6);
+        FSUtil.setFeature(anchorA, spanLayerValueFeature.getName(), "known");
+        var anchorB = spanLayerAdapter.add(doc, anno2.getUsername(), anno2Cas, 0, 6);
+        FSUtil.setFeature(anchorB, spanLayerValueFeature.getName(), "known");
+
+        sut.render(vdoc, request);
+
+        assertThat(vdoc.comments()) //
+                .extracting(comment -> comment.getCommentType()) //
+                .doesNotContain(VCommentType.ERROR);
+    }
+
+    /**
+     * A disabled feature must not be validated and therefore not produce an ERROR comment, even if
+     * its value is not part of the closed tagset. Disabled features can be used to model
+     * conditionally hidden features whose values are intentionally ignored.
+     */
+    @Test
+    void thatDisabledFeatureWithInvalidValueProducesNoErrorComment() throws Exception
+    {
+        spanLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        spanLayerValueFeature.setEnabled(false);
+        var request = renderRequest("anchor");
+
+        var anchorA = spanLayerAdapter.add(doc, anno1.getUsername(), anno1Cas, 0, 6);
+        FSUtil.setFeature(anchorA, spanLayerValueFeature.getName(), "out-of-tagset");
+        var anchorB = spanLayerAdapter.add(doc, anno2.getUsername(), anno2Cas, 0, 6);
+        FSUtil.setFeature(anchorB, spanLayerValueFeature.getName(), "out-of-tagset");
+
+        sut.render(vdoc, request);
+
+        assertThat(vdoc.comments()) //
+                .extracting(comment -> comment.getCommentType()) //
+                .doesNotContain(VCommentType.ERROR);
     }
 
     private CurationVID curationVid(User aUser, AnnotationFS anchorA)

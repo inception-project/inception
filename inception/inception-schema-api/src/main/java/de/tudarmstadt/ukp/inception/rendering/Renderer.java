@@ -175,7 +175,7 @@ public interface Renderer
 
             if (!adapter.isFeatureValueValid(feature, aFS)) {
                 aResponse.add(new VComment(VID.of(aFS), ERROR,
-                        "Required feature [" + feature.getUiName() + "] not set."));
+                        "Feature [" + feature.getUiName() + "] has no valid value."));
             }
         }
     }

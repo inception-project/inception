@@ -28,7 +28,6 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -276,10 +275,10 @@ public class DocumentMetadataAnnotationDetailPanel
             getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
 
             // Load the boiler-plate
-            CAS cas = jcasProvider.get();
-            FeatureStructure fs = ICasUtil.selectFsByAddr(cas, getModelObject().getId());
-            AnnotationLayer layer = annotationService.findLayer(project.getObject(), fs);
-            TypeAdapter adapter = annotationService.getAdapter(layer);
+            var cas = jcasProvider.get();
+            var fs = ICasUtil.selectFsByAddr(cas, getModelObject().getId());
+            var layer = annotationService.findLayer(project.getObject(), fs);
+            var adapter = annotationService.getAdapter(layer);
 
             // Update the features of the selected annotation from the values presently in
             // the feature editors
@@ -302,28 +301,32 @@ public class DocumentMetadataAnnotationDetailPanel
         List<FeatureState> featureStates = featureList.getModelObject();
 
         LOG.trace("writeFeatureEditorModelsToCas()");
-        List<AnnotationFeature> features = new ArrayList<>();
-        for (FeatureState featureState : featureStates) {
-            features.add(featureState.feature);
+        var features = new ArrayList<AnnotationFeature>();
+        // Batch so that constraint-driven clearing of hidden conditional features happens once
+        // at close time, not after each individual setFeatureValue.
+        try (var ctx = aAdapter.updateFeatureValues(sourceDocument.getObject(),
+                user.getObject().getUsername(), aCas, getModelObject().getId())) {
+            for (var featureState : featureStates) {
+                features.add(featureState.feature);
 
-            // For string features with extensible tagsets, extend the tagset
-            if (CAS.TYPE_NAME_STRING.equals(featureState.feature.getType())) {
-                String value = (String) featureState.value;
+                // For string features with extensible tagsets, extend the tagset
+                if (CAS.TYPE_NAME_STRING.equals(featureState.feature.getType())) {
+                    var value = (String) featureState.value;
 
-                if (value != null && featureState.feature.getTagset() != null
-                        && featureState.feature.getTagset().isCreateTag()
-                        && !annotationService.existsTag(value, featureState.feature.getTagset())) {
-                    Tag selectedTag = new Tag();
-                    selectedTag.setName(value);
-                    selectedTag.setTagSet(featureState.feature.getTagset());
-                    annotationService.createTag(selectedTag);
+                    if (value != null && featureState.feature.getTagset() != null
+                            && featureState.feature.getTagset().isCreateTag() && !annotationService
+                                    .existsTag(value, featureState.feature.getTagset())) {
+                        var selectedTag = new Tag();
+                        selectedTag.setName(value);
+                        selectedTag.setTagSet(featureState.feature.getTagset());
+                        annotationService.createTag(selectedTag);
+                    }
                 }
-            }
 
-            LOG.trace("writeFeatureEditorModelsToCas() " + featureState.feature.getUiName() + " = "
-                    + featureState.value);
-            aAdapter.setFeatureValue(sourceDocument.getObject(), user.getObject().getUsername(),
-                    aCas, getModelObject().getId(), featureState.feature, featureState.value);
+                LOG.trace("writeFeatureEditorModelsToCas() " + featureState.feature.getUiName()
+                        + " = " + featureState.value);
+                ctx.setFeatureValue(featureState.feature, featureState.value);
+            }
         }
     }
 
@@ -344,11 +347,10 @@ public class DocumentMetadataAnnotationDetailPanel
     @OnEvent(stop = true)
     public void onLinkFeatureDeletedEvent(LinkFeatureDeletedEvent aEvent)
     {
-        AjaxRequestTarget target = aEvent.getTarget();
+        var target = aEvent.getTarget();
         try {
-            CAS cas = jcasProvider.get();
-            AnnotationFS fs = ICasUtil.selectAnnotationByAddr(cas,
-                    aEvent.getLinkWithRoleModel().targetAddr);
+            var cas = jcasProvider.get();
+            var fs = ICasUtil.selectAnnotationByAddr(cas, aEvent.getLinkWithRoleModel().targetAddr);
             state.getObject().getSelection().selectSpan(fs);
             if (state.getObject().getSelection().getAnnotation().isSet()) {
                 actionHandler.actionDelete(target);

@@ -15,23 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.io.nif.config;
+package de.tudarmstadt.ukp.inception.schema.api.adapter;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-import de.tudarmstadt.ukp.inception.io.nif.NifFormatSupport;
-
-@Configuration
-@ConditionalOnProperty(prefix = "format.nif", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties(NifFormatPropertiesImpl.class)
-public class NifFormatSupportAutoConfiguration
+public interface FeatureValueUpdateContext
+    extends AutoCloseable
 {
-    @Bean
-    public NifFormatSupport nifFormatSupport(NifFormatProperties aProperties)
-    {
-        return new NifFormatSupport(aProperties);
-    }
+    void setFeatureValue(AnnotationFeature aFeature, Object aValue) throws AnnotationException;
+
+    @Override
+    void close();
 }

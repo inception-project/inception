@@ -159,11 +159,13 @@ public class CreateRelationAnnotationHandler
         var ann = chainAdapter.handle(request);
         var selection = chainAdapter.selectLink(ann);
 
-        for (var feature : chainAdapter.listFeatures()) {
-            if (feature.isRemember()) {
-                var value = state.getRememberedArcFeatures().get(feature);
-                chainAdapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(),
-                        ann, feature, value);
+        try (var ctx = chainAdapter.updateFeatureValues(state.getDocument(),
+                state.getUser().getUsername(), ann)) {
+            for (var feature : chainAdapter.listFeatures()) {
+                if (feature.isRemember()) {
+                    var value = state.getRememberedArcFeatures().get(feature);
+                    ctx.setFeatureValue(feature, value);
+                }
             }
         }
 
@@ -234,11 +236,13 @@ public class CreateRelationAnnotationHandler
         var ann = relationAdapter.handle(request);
         var selection = relationAdapter.select(VID.of(ann), ann);
 
-        for (var feature : relationAdapter.listFeatures()) {
-            if (feature.isRemember()) {
-                var value = state.getRememberedArcFeatures().get(feature);
-                relationAdapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(),
-                        ann, feature, value);
+        try (var ctx = relationAdapter.updateFeatureValues(state.getDocument(),
+                state.getUser().getUsername(), ann)) {
+            for (var feature : relationAdapter.listFeatures()) {
+                if (feature.isRemember()) {
+                    var value = state.getRememberedArcFeatures().get(feature);
+                    ctx.setFeatureValue(feature, value);
+                }
             }
         }
 
