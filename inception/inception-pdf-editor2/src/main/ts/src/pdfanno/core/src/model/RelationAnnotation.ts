@@ -14,6 +14,8 @@ export default class RelationAnnotation extends AbstractAnnotation {
     x2: number;
     y2: number;
     zIndex: number;
+    stackIndex = 0;
+    stackSize = 1;
     _rel1Annotation: SpanAnnotation | null = null;
     _rel2Annotation: SpanAnnotation | null = null;
 
