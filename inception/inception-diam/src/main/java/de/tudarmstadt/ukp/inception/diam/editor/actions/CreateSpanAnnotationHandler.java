@@ -114,11 +114,13 @@ public class CreateSpanAnnotationHandler
                         + state.getDefaultAnnotationLayer().getType() + "]");
             }
 
-            for (var feature : adapter.listFeatures()) {
-                if (feature.isRemember()) {
-                    var value = state.getRememberedSpanFeatures().get(feature);
-                    adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), ann,
-                            feature, value);
+            try (var ctx = adapter.updateFeatureValues(state.getDocument(),
+                    state.getUser().getUsername(), ann)) {
+                for (var feature : adapter.listFeatures()) {
+                    if (feature.isRemember()) {
+                        var value = state.getRememberedSpanFeatures().get(feature);
+                        ctx.setFeatureValue(feature, value);
+                    }
                 }
             }
 

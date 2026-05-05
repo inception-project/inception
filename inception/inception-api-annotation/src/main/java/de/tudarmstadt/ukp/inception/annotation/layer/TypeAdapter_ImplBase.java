@@ -260,7 +260,6 @@ public abstract class TypeAdapter_ImplBase
     @Override
     public final FeatureValueUpdateContext updateFeatureValues(SourceDocument aDocument,
             String aUsername, CAS aCas, int aAddress)
-        throws AnnotationException
     {
         var fs = selectFsByAddr(aCas, aAddress);
         return new FeatureValueUpdateContextImpl(aDocument, aUsername, fs);
