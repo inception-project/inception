@@ -870,8 +870,8 @@ public class SearchAnnotationSidebar
             AnnotatorState state, AnnotationFS annoFS)
         throws AnnotationException
     {
-        try (var ctx = aAdapter.updateFeatureValues(aDocument, state.getUser().getUsername(),
-                aCas, ICasUtil.getAddr(annoFS))) {
+        try (var ctx = aAdapter.updateFeatureValues(aDocument, state.getUser().getUsername(), aCas,
+                ICasUtil.getAddr(annoFS))) {
             for (var featureState : state.getFeatureStates()) {
                 var featureValue = featureState.value;
                 var feature = featureState.feature;

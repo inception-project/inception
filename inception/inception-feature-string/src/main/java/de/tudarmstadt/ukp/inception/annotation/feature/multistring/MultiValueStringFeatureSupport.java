@@ -32,6 +32,7 @@ import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -285,9 +286,27 @@ public class MultiValueStringFeatureSupport
     @Override
     public boolean isFeatureValueValid(AnnotationFeature aFeature, FeatureStructure aFS)
     {
-        if (aFeature.isRequired()) {
-            var value = FSUtil.getFeature(aFS, aFeature.getName(), List.class);
-            return isNotEmpty(value);
+        var value = FSUtil.getFeature(aFS, aFeature.getName(), List.class);
+
+        if (aFeature.isRequired() && !isNotEmpty(value)) {
+            return false;
+        }
+
+        var tagset = aFeature.getTagset();
+        if (schemaService != null && tagset != null && !tagset.isCreateTag() && isNotEmpty(value)) {
+            var tags = schemaService.listTagsImmutable(tagset);
+            var tagNames = new HashSet<String>();
+            for (var tag : tags) {
+                tagNames.add(tag.getName());
+            }
+            for (var v : value) {
+                if (v == null) {
+                    continue;
+                }
+                if (!tagNames.contains(v)) {
+                    return false;
+                }
+            }
         }
 
         return true;

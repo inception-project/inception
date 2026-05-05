@@ -21,6 +21,7 @@ import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCasFromPath;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 
@@ -36,6 +37,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.ImmutableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -122,5 +124,73 @@ public class MultiValueStringFeatureSupportTest
 
         assertThat(FSUtil.getFeature(spanFS, valueFeature.getName(), String[].class)) //
                 .isNull();
+    }
+
+    @Test
+    public void thatRequiredFeatureWithEmptyValueIsInvalid()
+    {
+        valueFeature.setRequired(true);
+
+        FSUtil.setFeature(spanFS, valueFeature.getName(), new String[0]);
+
+        assertThat(sut.isFeatureValueValid(valueFeature, spanFS)).isFalse();
+    }
+
+    @Test
+    public void thatRequiredFeatureWithNullValueIsInvalid()
+    {
+        valueFeature.setRequired(true);
+
+        assertThat(sut.isFeatureValueValid(valueFeature, spanFS)).isFalse();
+    }
+
+    @Test
+    public void thatOptionalFeatureWithEmptyValueIsValid()
+    {
+        valueFeature.setRequired(false);
+
+        FSUtil.setFeature(spanFS, valueFeature.getName(), new String[0]);
+
+        assertThat(sut.isFeatureValueValid(valueFeature, spanFS)).isTrue();
+    }
+
+    @Test
+    public void thatClosedTagsetWithOutOfTagsetEntryIsInvalid()
+    {
+        valueTagset.setCreateTag(false);
+        valueFeature.setTagset(valueTagset);
+
+        when(schemaService.listTagsImmutable(valueTagset))
+                .thenReturn(asList(new ImmutableTag("known", "")));
+
+        FSUtil.setFeature(spanFS, valueFeature.getName(),
+                new String[] { "known", "out-of-tagset" });
+
+        assertThat(sut.isFeatureValueValid(valueFeature, spanFS)).isFalse();
+    }
+
+    @Test
+    public void thatClosedTagsetWithAllInTagsetEntriesIsValid()
+    {
+        valueTagset.setCreateTag(false);
+        valueFeature.setTagset(valueTagset);
+
+        when(schemaService.listTagsImmutable(valueTagset))
+                .thenReturn(asList(new ImmutableTag("known1", ""), new ImmutableTag("known2", "")));
+
+        FSUtil.setFeature(spanFS, valueFeature.getName(), new String[] { "known1", "known2" });
+
+        assertThat(sut.isFeatureValueValid(valueFeature, spanFS)).isTrue();
+    }
+
+    @Test
+    public void thatOpenTagsetWithOutOfTagsetEntryIsValid()
+    {
+        valueTagset.setCreateTag(true);
+        valueFeature.setTagset(valueTagset);
+
+        FSUtil.setFeature(spanFS, valueFeature.getName(), new String[] { "out-of-tagset" });
+
+        assertThat(sut.isFeatureValueValid(valueFeature, spanFS)).isTrue();
     }
 }

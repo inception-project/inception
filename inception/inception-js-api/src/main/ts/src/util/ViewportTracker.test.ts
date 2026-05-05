@@ -187,6 +187,76 @@ describe('ViewportTracker (pause/resume)', () => {
         tracker.disconnect();
     });
 
+    it('prunes stale visibleElements after DOM replacement on re-initialization', () => {
+        const container = document.createElement('div');
+        const childA = document.createElement('div');
+        childA.style.display = 'block';
+        childA.textContent = 'A';
+        container.appendChild(childA);
+        document.body.appendChild(container);
+
+        const cb = vi.fn();
+        const tracker = new ViewportTracker(container, cb);
+        const obs1 = MockIntersectionObserver.lastInstance!;
+
+        // Mark childA visible
+        obs1.simulate([{ isIntersecting: true, target: childA }]);
+        vi.advanceTimersByTime(300);
+        expect(tracker.visibleElements.has(childA)).toBe(true);
+
+        // Replace childA with childB to mimic a render replacing DOM nodes
+        container.removeChild(childA);
+        const childB = document.createElement('div');
+        childB.style.display = 'block';
+        childB.textContent = 'B';
+        container.appendChild(childB);
+
+        // Trigger re-initialization via pause/resume
+        tracker.pause();
+        tracker.resume();
+
+        // Stale ref to detached childA must be dropped
+        expect(tracker.visibleElements.has(childA)).toBe(false);
+
+        // The new element must now be observed
+        const obs2 = MockIntersectionObserver.lastInstance!;
+        expect(obs2.observed).toContain(childB);
+        expect(obs2.observed).not.toContain(childA);
+
+        tracker.disconnect();
+    });
+
+    it('does not schedule another callback when entries change but range stays the same', () => {
+        const container = document.createElement('div');
+        const child = document.createElement('div');
+        child.style.display = 'block';
+        child.textContent = 'abc';
+        container.appendChild(child);
+        document.body.appendChild(container);
+
+        const cb = vi.fn();
+        const tracker = new ViewportTracker(container, cb);
+        const obs = MockIntersectionObserver.lastInstance!;
+
+        // First intersection — initial callback fires regardless of range change
+        obs.simulate([{ isIntersecting: true, target: child }]);
+        vi.advanceTimersByTime(300);
+        expect(cb).toHaveBeenCalledTimes(1);
+
+        // Element leaves the viewport: no add → no callback scheduled
+        obs.simulate([{ isIntersecting: false, target: child }]);
+        vi.advanceTimersByTime(300);
+        expect(cb).toHaveBeenCalledTimes(1);
+
+        // Element re-enters: this counts as an add, but the computed range is identical
+        // to the current range, so no additional callback should be scheduled.
+        obs.simulate([{ isIntersecting: true, target: child }]);
+        vi.advanceTimersByTime(300);
+        expect(cb).toHaveBeenCalledTimes(1);
+
+        tracker.disconnect();
+    });
+
     it('forceRefresh does nothing while paused and resume triggers immediate callback', () => {
         const container = document.createElement('div');
         const child = document.createElement('div');

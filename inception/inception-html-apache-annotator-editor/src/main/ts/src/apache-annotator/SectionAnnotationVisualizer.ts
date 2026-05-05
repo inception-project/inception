@@ -375,6 +375,9 @@ export class SectionAnnotationVisualizer {
         if (selectedAnnotationVids.includes(ann.vid)) {
             e.classList.add('iaa-focussed');
         }
+        if (ann.comments?.find((c) => c.type === 'error')) {
+            e.classList.add('iaa-marker-error');
+        }
         e.textContent = ann.label || `[${ann.layer.name}]` || 'No label';
         if (ann.score && !ann.hideScore) {
             e.textContent += ` [${ann.score.toFixed(2)}]`;
