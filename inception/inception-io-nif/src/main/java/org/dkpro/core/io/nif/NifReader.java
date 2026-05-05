@@ -92,6 +92,26 @@ public class NifReader
     @ConfigurationParameter(name = PARAM_POS_MAPPING_LOCATION, mandatory = false)
     private String posMappingLocation;
 
+    /**
+     * If set, IRIs read from {@code taClassRef} starting with this prefix will have the prefix
+     * stripped (and the remainder URL-decoded) before being stored as the named entity
+     * {@code value}. This is the read-side counterpart of
+     * {@link NifWriter#PARAM_DEFAULT_CLASS_IRI}.
+     */
+    public static final String PARAM_STRIP_CLASS_IRI = "stripClassIri";
+    @ConfigurationParameter(name = PARAM_STRIP_CLASS_IRI, mandatory = false)
+    private String stripClassIri;
+
+    /**
+     * If set, IRIs read from {@code taIdentRef} starting with this prefix will have the prefix
+     * stripped (and the remainder URL-decoded) before being stored as the named entity
+     * {@code identifier}. This is the read-side counterpart of
+     * {@link NifWriter#PARAM_DEFAULT_IDENTIFIER_IRI}.
+     */
+    public static final String PARAM_STRIP_IDENTIFIER_IRI = "stripIdentifierIri";
+    @ConfigurationParameter(name = PARAM_STRIP_IDENTIFIER_IRI, mandatory = false)
+    private String stripIdentifierIri;
+
     private MappingProvider posMappingProvider;
 
     private Resource res;
@@ -137,6 +157,8 @@ public class NifReader
 
         Nif2DKPro converter = new Nif2DKPro();
         converter.setPosMappingProvider(posMappingProvider);
+        converter.setStripClassIri(stripClassIri);
+        converter.setStripIdentifierIri(stripIdentifierIri);
         converter.convert(context, aJCas);
 
         inFileCount++;
