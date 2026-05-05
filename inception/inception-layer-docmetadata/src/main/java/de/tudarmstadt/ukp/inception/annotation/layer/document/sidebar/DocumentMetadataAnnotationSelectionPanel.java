@@ -748,7 +748,7 @@ public class DocumentMetadataAnnotationSelectionPanel
                 .sorted() //
                 .toList();
 
-        Map<String, CAS> casses = new LinkedHashMap<>();
+        var casses = new LinkedHashMap<String, CAS>();
         casses.put(targetUser, aTargetCas);
 
         for (var user : selectedUsers) {
@@ -883,27 +883,29 @@ public class DocumentMetadataAnnotationSelectionPanel
             FeatureStructure aSourceAnnotation)
         throws AnnotationException
     {
-        for (var feature : annotationService.listSupportedFeatures(aAdapter.getLayer())) {
-            if (!feature.isCuratable()) {
-                continue;
-            }
+        try (var ctx = aAdapter.updateFeatureValues(aDocument, aDataOwner,
+                aTargetAnnotation.getCAS(), getAddr(aTargetAnnotation))) {
+            for (var feature : annotationService.listSupportedFeatures(aAdapter.getLayer())) {
+                if (!feature.isCuratable()) {
+                    continue;
+                }
 
-            var sourceType = aAdapter.getAnnotationType(aSourceAnnotation.getCAS())
-                    .orElseThrow(() -> new IllegalStateException(
-                            "Source CAS does not define the document metadata type"));
-            if (sourceType.getFeatureByBaseName(feature.getName()) == null) {
-                throw new IllegalStateException("Source CAS type [" + sourceType.getName()
-                        + "] does not define a feature named [" + feature.getName() + "]");
-            }
+                var sourceType = aAdapter.getAnnotationType(aSourceAnnotation.getCAS())
+                        .orElseThrow(() -> new IllegalStateException(
+                                "Source CAS does not define the document metadata type"));
+                if (sourceType.getFeatureByBaseName(feature.getName()) == null) {
+                    throw new IllegalStateException("Source CAS type [" + sourceType.getName()
+                            + "] does not define a feature named [" + feature.getName() + "]");
+                }
 
-            if (!aAdapter.getFeatureSupport(feature.getName())
-                    .map(fs -> fs.isCopyOnCurationMerge(feature)).orElse(false)) {
-                continue;
-            }
+                if (!aAdapter.getFeatureSupport(feature.getName())
+                        .map(fs -> fs.isCopyOnCurationMerge(feature)).orElse(false)) {
+                    continue;
+                }
 
-            var value = aAdapter.getFeatureValue(feature, aSourceAnnotation);
-            aAdapter.setFeatureValue(aDocument, aDataOwner, aTargetAnnotation.getCAS(),
-                    getAddr(aTargetAnnotation), feature, value);
+                var value = aAdapter.getFeatureValue(feature, aSourceAnnotation);
+                ctx.setFeatureValue(feature, value);
+            }
         }
     }
 

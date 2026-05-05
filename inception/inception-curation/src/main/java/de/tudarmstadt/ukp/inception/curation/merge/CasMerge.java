@@ -571,35 +571,37 @@ public class CasMerge
     {
         // Cache the feature list instead of hammering the database
         var features = aContext.listSupportedFeatures(aAdapter.getLayer());
-        for (var feature : features) {
-            if (!feature.isCuratable()) {
-                continue;
-            }
+        try (var featureUpdateCtx = aAdapter.updateFeatureValues(aDocument, aUsername,
+                aTargetFS.getCAS(), getAddr(aTargetFS))) {
+            for (var feature : features) {
+                if (!feature.isCuratable()) {
+                    continue;
+                }
 
-            var sourceFsType = aAdapter.getAnnotationType(aSourceFs.getCAS()).get();
-            var sourceFeature = sourceFsType.getFeatureByBaseName(feature.getName());
+                var sourceFsType = aAdapter.getAnnotationType(aSourceFs.getCAS()).get();
+                var sourceFeature = sourceFsType.getFeatureByBaseName(feature.getName());
 
-            if (sourceFeature == null) {
-                throw new IllegalStateException("Target CAS type [" + sourceFsType.getName()
-                        + "] does not define a feature named [" + feature.getName() + "]");
-            }
+                if (sourceFeature == null) {
+                    throw new IllegalStateException("Source CAS type [" + sourceFsType.getName()
+                            + "] does not define a feature named [" + feature.getName() + "]");
+                }
 
-            if (!aAdapter.getFeatureSupport(feature.getName())
-                    .map(fs -> fs.isCopyOnCurationMerge(feature)).orElse(false)) {
-                continue;
-            }
+                if (!aAdapter.getFeatureSupport(feature.getName())
+                        .map(fs -> fs.isCopyOnCurationMerge(feature)).orElse(false)) {
+                    continue;
+                }
 
-            var value = aAdapter.getFeatureValue(feature, aSourceFs);
+                var value = aAdapter.getFeatureValue(feature, aSourceFs);
 
-            try {
-                aAdapter.setFeatureValue(aDocument, aUsername, aTargetFS.getCAS(),
-                        getAddr(aTargetFS), feature, value);
-            }
-            catch (IllegalArgumentException e) {
-                // This happens e.g. if the value we try to set is not in the tagset and the tagset
-                // cannot be extended.
-                throw new IllegalFeatureValueException("Cannot set value of feature ["
-                        + feature.getUiName() + "] to [" + value + "]: " + e.getMessage(), e);
+                try {
+                    featureUpdateCtx.setFeatureValue(feature, value);
+                }
+                catch (IllegalArgumentException e) {
+                    // This happens e.g. if the value we try to set is not in the tagset and the
+                    // tagset cannot be extended.
+                    throw new IllegalFeatureValueException("Cannot set value of feature ["
+                            + feature.getUiName() + "] to [" + value + "]: " + e.getMessage(), e);
+                }
             }
         }
     }

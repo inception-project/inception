@@ -683,17 +683,19 @@ public abstract class AnnotationDetailEditorPanel
             CAS aTargetCas, int aTargetFsAddr, TypeAdapter aAdapter,
             List<FeatureState> aFeatureStates)
     {
-        for (var featureState : aFeatureStates) {
-            try {
-                LOG.trace("Committing feature states to CAS: {} = {}",
-                        featureState.feature.getUiName(), featureState.value);
-                aAdapter.setFeatureValue(aDocment, aDataOwner, aTargetCas, aTargetFsAddr,
-                        featureState.feature, featureState.value);
-            }
-            catch (Exception e) {
-                error("Cannot set feature [" + featureState.feature.getUiName() + "]: "
-                        + e.getMessage());
-                aTarget.addChildren(getPage(), IFeedback.class);
+        try (var ctx = aAdapter.updateFeatureValues(aDocment, aDataOwner, aTargetCas,
+                aTargetFsAddr)) {
+            for (var featureState : aFeatureStates) {
+                try {
+                    LOG.trace("Committing feature states to CAS: {} = {}",
+                            featureState.feature.getUiName(), featureState.value);
+                    ctx.setFeatureValue(featureState.feature, featureState.value);
+                }
+                catch (Exception e) {
+                    error("Cannot set feature [" + featureState.feature.getUiName() + "]: "
+                            + e.getMessage());
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                }
             }
         }
     }

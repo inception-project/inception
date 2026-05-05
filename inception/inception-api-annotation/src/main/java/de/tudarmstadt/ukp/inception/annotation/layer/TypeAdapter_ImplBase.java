@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer;
 
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.getAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static java.util.Collections.emptyList;
 
@@ -51,6 +52,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.FeatureValueUpdateContext;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
@@ -245,21 +247,33 @@ public abstract class TypeAdapter_ImplBase
         throws AnnotationException
     {
         var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
-
         var fs = selectFsByAddr(aCas, aAddress);
-
         var oldValue = featureSupport.getFeatureValue(aFeature, fs);
 
         featureSupport.setFeatureValue(aCas, aFeature, aAddress, aValue);
 
-        var newValue = featureSupport.getFeatureValue(aFeature, fs);
-
-        if (!Objects.equals(oldValue, newValue)) {
-            publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(),
-                    fs, aFeature, newValue, oldValue));
-        }
+        publishFeatureValueUpdated(aDocument, aUsername, fs, aFeature, featureSupport, oldValue);
 
         clearHiddenFeatures(aDocument, aUsername, fs);
+    }
+
+    @Override
+    public final FeatureValueUpdateContext updateFeatureValues(SourceDocument aDocument,
+            String aUsername, CAS aCas, int aAddress)
+    {
+        var fs = selectFsByAddr(aCas, aAddress);
+        return new FeatureValueUpdateContextImpl(aDocument, aUsername, fs);
+    }
+
+    private void publishFeatureValueUpdated(SourceDocument aDocument, String aUsername,
+            FeatureStructure fs, AnnotationFeature feature, FeatureSupport<Object> featureSupport,
+            Object oldValue)
+    {
+        var newValue = featureSupport.getFeatureValue(feature, fs);
+        if (!Objects.equals(oldValue, newValue)) {
+            publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(),
+                    fs, feature, newValue, oldValue));
+        }
     }
 
     private void clearHiddenFeatures(SourceDocument aDocument, String aUsername,
@@ -281,12 +295,8 @@ public abstract class TypeAdapter_ImplBase
 
                 featureSupport.clearFeatureValue(feature, aFS);
 
-                var newValue = featureSupport.getFeatureValue(feature, aFS);
-
-                if (!Objects.equals(oldValue, newValue)) {
-                    publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername,
-                            getLayer(), aFS, feature, newValue, oldValue));
-                }
+                publishFeatureValueUpdated(aDocument, aUsername, aFS, feature, featureSupport,
+                        oldValue);
             }
         }
 
@@ -299,19 +309,14 @@ public abstract class TypeAdapter_ImplBase
         throws AnnotationException
     {
         var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
-
         var fs = selectFsByAddr(aCas, aAddress);
-
         var oldValue = featureSupport.getFeatureValue(aFeature, fs);
 
         featureSupport.pushFeatureValue(aCas, aFeature, aAddress, aValue);
 
-        var newValue = featureSupport.getFeatureValue(aFeature, fs);
+        publishFeatureValueUpdated(aDocument, aUsername, fs, aFeature, featureSupport, oldValue);
 
-        if (!Objects.equals(oldValue, newValue)) {
-            publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(),
-                    fs, aFeature, newValue, oldValue));
-        }
+        clearHiddenFeatures(aDocument, aUsername, fs);
     }
 
     @SuppressWarnings("unchecked")
@@ -472,6 +477,46 @@ public abstract class TypeAdapter_ImplBase
             }
             finally {
                 TypeAdapter_ImplBase.this.applicationEventPublisher = delegate;
+            }
+        }
+    }
+
+    class FeatureValueUpdateContextImpl
+        implements FeatureValueUpdateContext
+    {
+        private final SourceDocument document;
+        private final String username;
+        private final FeatureStructure fs;
+
+        private boolean featureUpdated = false;
+
+        public FeatureValueUpdateContextImpl(SourceDocument aDocument, String aUsername,
+                FeatureStructure aFS)
+        {
+            document = aDocument;
+            username = aUsername;
+            fs = aFS;
+        }
+
+        @Override
+        public void setFeatureValue(AnnotationFeature aFeature, Object aValue)
+            throws AnnotationException
+        {
+            var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+            var oldValue = featureSupport.getFeatureValue(aFeature, fs);
+
+            featureSupport.setFeatureValue(fs.getCAS(), aFeature, getAddr(fs), aValue);
+
+            publishFeatureValueUpdated(document, username, fs, aFeature, featureSupport, oldValue);
+
+            featureUpdated = true;
+        }
+
+        @Override
+        public void close()
+        {
+            if (featureUpdated) {
+                clearHiddenFeatures(document, username, fs);
             }
         }
     }

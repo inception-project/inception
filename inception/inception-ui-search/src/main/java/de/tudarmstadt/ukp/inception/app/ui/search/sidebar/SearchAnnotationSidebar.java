@@ -870,19 +870,21 @@ public class SearchAnnotationSidebar
             AnnotatorState state, AnnotationFS annoFS)
         throws AnnotationException
     {
-        var addr = ICasUtil.getAddr(annoFS);
-        for (var featureState : state.getFeatureStates()) {
-            var featureValue = featureState.value;
-            var feature = featureState.feature;
+        try (var ctx = aAdapter.updateFeatureValues(aDocument, state.getUser().getUsername(),
+                aCas, ICasUtil.getAddr(annoFS))) {
+            for (var featureState : state.getFeatureStates()) {
+                var featureValue = featureState.value;
+                var feature = featureState.feature;
 
-            // Ignore slot features - cf. https://github.com/inception-project/inception/issues/2505
-            if (feature.getLinkMode() != LinkMode.NONE) {
-                continue;
-            }
+                // Ignore slot features - cf.
+                // https://github.com/inception-project/inception/issues/2505
+                if (feature.getLinkMode() != LinkMode.NONE) {
+                    continue;
+                }
 
-            if (featureValue != null) {
-                aAdapter.setFeatureValue(aDocument, state.getUser().getUsername(), aCas, addr,
-                        feature, featureValue);
+                if (featureValue != null) {
+                    ctx.setFeatureValue(feature, featureValue);
+                }
             }
         }
     }
