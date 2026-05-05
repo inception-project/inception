@@ -19,10 +19,10 @@ export function renderRelation(a: RelationAnnotation): HTMLDivElement {
     // if difference of x and difference of y is both 0 use 0 for atan
     const theta = Math.atan(xDiff === 0 && yDiff === 0 ? 0 : yDiff / xDiff);
     const sign = a.x1 < a.x2 ? 1 : -1;
-    a.x1 += DEFAULT_RADIUS * Math.cos(theta) * sign;
-    a.x2 -= DEFAULT_RADIUS * Math.cos(theta) * sign;
-    a.y1 += DEFAULT_RADIUS * Math.sin(theta) * sign;
-    a.y2 -= DEFAULT_RADIUS * Math.sin(theta) * sign;
+    a.x1 += (DEFAULT_RADIUS / 2) * Math.cos(theta) * sign;
+    a.x2 -= (DEFAULT_RADIUS / 2) * Math.cos(theta) * sign;
+    a.y1 += (DEFAULT_RADIUS / 2) * Math.sin(theta) * sign;
+    a.y2 -= (DEFAULT_RADIUS / 2) * Math.sin(theta) * sign;
 
     const top = Math.min(a.y1, a.y2);
     const left = Math.min(a.x1, a.x2);
@@ -79,8 +79,14 @@ export function renderRelation(a: RelationAnnotation): HTMLDivElement {
         marker.appendChild(polygon);
     }
 
-    // Find Control points.
-    const control = findBezierControlPoint(a.x1, a.y1, a.x2, a.y2);
+    // Find Control points. Fan stacked relations (same endpoint pair) by varying
+    // the perpendicular distance of the Bezier control point so each arc is
+    // independently visible and hoverable.
+    const BASE_DISTANCE = 30;
+    const STACK_SPACING = 12;
+    const distance =
+        BASE_DISTANCE + STACK_SPACING * (a.stackIndex - (a.stackSize - 1) / 2);
+    const control = findBezierControlPoint(a.x1, a.y1, a.x2, a.y2, distance);
 
     // Create Outline.
     const outline = document.createElementNS('http://www.w3.org/2000/svg', 'path');

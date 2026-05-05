@@ -15,9 +15,10 @@ export function findBezierControlPoint(
     x1: number,
     y1: number,
     x2: number,
-    y2: number
+    y2: number,
+    distance = 30
 ): { x: number; y: number } {
-    const DISTANCE = 30;
+    const DISTANCE = distance;
 
     // vertical line.
     if (x1 === x2) {

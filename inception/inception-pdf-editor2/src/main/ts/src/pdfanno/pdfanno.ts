@@ -383,7 +383,23 @@ function renderAnnotations(doc: AnnotatedText): void {
 
     if (doc.relations) {
         console.log(`Loaded ${doc.relations.size} relations annotations`);
-        doc.relations.forEach((relation) => renderRelation(doc, relation));
+        const stackBuckets = new Map<string, Relation[]>();
+        doc.relations.forEach((relation) => {
+            const a = relation.arguments[0].targetId;
+            const b = relation.arguments[1].targetId;
+            const key = String(a) < String(b) ? `${a}|${b}` : `${b}|${a}`;
+            const bucket = stackBuckets.get(key);
+            if (bucket) {
+                bucket.push(relation);
+            } else {
+                stackBuckets.set(key, [relation]);
+            }
+        });
+        stackBuckets.forEach((bucket) => {
+            bucket.forEach((relation, index) =>
+                renderRelation(doc, relation, index, bucket.length)
+            );
+        });
     }
 
     if (doc.textMarkers) {
@@ -427,7 +443,7 @@ function renderSpan(doc: AnnotatedText, span: Span) {
     spanAnnotation.save();
 }
 
-function renderRelation(doc: AnnotatedText, relation: Relation) {
+function renderRelation(doc: AnnotatedText, relation: Relation, stackIndex = 0, stackSize = 1) {
     const source = annotationContainer.findById(relation.arguments[0].targetId);
     const target = annotationContainer.findById(relation.arguments[1].targetId);
 
@@ -443,6 +459,8 @@ function renderRelation(doc: AnnotatedText, relation: Relation) {
     relationAnnotation.rel2Annotation = target as SpanAnnotation;
     relationAnnotation.color = relation.color || '#FFF';
     relationAnnotation.text = relation.label || '';
+    relationAnnotation.stackIndex = stackIndex;
+    relationAnnotation.stackSize = stackSize;
 
     const ms = doc.annotationMarkers.get(relationAnnotation.vid) || [];
     ms.forEach((m) => relationAnnotation.classList.push(`i7n-marker-${m.type}`));
