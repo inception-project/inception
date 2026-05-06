@@ -233,6 +233,17 @@ public class MetadataSuggestionSupport
             List<AnnotationBase> aAnnotations, AnnotationFeature aFeature,
             List<SuggestionGroup<MetadataSuggestion>> aSuggestionsForFeature)
     {
+        if (aSuggestionsForFeature.isEmpty() || aAnnotations.isEmpty()) {
+            return;
+        }
+
+        if (singleton) {
+            for (var sugGroup : aSuggestionsForFeature) {
+                sugGroup.hideAll(FLAG_OVERLAP);
+            }
+            return;
+        }
+
         var featureSupport = featureSupportRegistry.findExtension(aFeature).get();
 
         for (var annotation : aAnnotations) {
@@ -248,14 +259,9 @@ public class MetadataSuggestionSupport
                 }
 
                 for (var sugGroup : aSuggestionsForFeature) {
-                    if (singleton) {
-                        sugGroup.hideAll(FLAG_OVERLAP);
-                    }
-                    else {
-                        for (var suggestion : sugGroup) {
-                            if (label.equals(suggestion.getLabel())) {
-                                suggestion.hide(FLAG_OVERLAP);
-                            }
+                    for (var suggestion : sugGroup) {
+                        if (label.equals(suggestion.getLabel())) {
+                            suggestion.hide(FLAG_OVERLAP);
                         }
                     }
                 }
