@@ -138,21 +138,38 @@ public abstract class ArcSuggestionSupport_ImplBase
                 group.showAll(AnnotationSuggestion.FLAG_ALL);
 
                 var position = group.getPosition();
+                var stackingEnabled = aLayer.isAllowStacking();
 
-                // FIXME: Looks like we need to implement not hiding relations if stacking is
-                // enabled.
-
-                // If any annotation at this position has a non-null label for this feature,
-                // then we hide the suggestion group
+                // For each existing relation at the same (source, target) position decide whether
+                // each suggestion should still be visible. Relations that share a position are by
+                // definition co-located, so no extra geometry check is needed (unlike spans).
                 for (var annotationFS : groupedAnnotations.get(position)) {
                     var label = annotationFS.getFeatureValueAsString(feat);
-                    if (annotationFS.getFeatureValueAsString(feat) != null) {
-                        for (var suggestion : group) {
-                            if (suggestion.isCorrection() && !suggestion.labelEquals(label)) {
-                                continue;
-                            }
+                    for (var suggestion : group) {
+                        // Correction suggestions are only relevant when they would change the
+                        // label of an existing annotation; identical labels are not corrections.
+                        if (suggestion.isCorrection() && !suggestion.labelEquals(label)) {
+                            continue;
+                        }
 
+                        // A suggestion that would just create an annotation without setting a
+                        // feature value duplicates the existing relation - hide it.
+                        if (suggestion.getLabel() == null) {
                             suggestion.hide(FLAG_OVERLAP);
+                            continue;
+                        }
+
+                        // Suggestion duplicates an existing labeled relation - hide it.
+                        if (label != null && suggestion.labelEquals(label)) {
+                            suggestion.hide(FLAG_OVERLAP);
+                            continue;
+                        }
+
+                        // Suggestion would create a new relation at an already-occupied position.
+                        // Only allow this when stacking is enabled on the layer.
+                        if (label != null && !stackingEnabled) {
+                            suggestion.hide(FLAG_OVERLAP);
+                            continue;
                         }
                     }
                 }
