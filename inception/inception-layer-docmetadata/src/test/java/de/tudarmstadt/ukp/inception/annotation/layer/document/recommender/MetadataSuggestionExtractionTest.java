@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.MetadataSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.ExtractionContext;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.uima.SegmentationUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,6 +57,7 @@ class MetadataSuggestionExtractionTest
     private @Mock LearningRecordService learningRecordService;
     private @Mock ApplicationEventPublisher applicationEventPublisher;
     private @Mock AnnotationSchemaService schemaService;
+    private @Mock FeatureSupportRegistry featureSupportRegistry;
 
     private Project project;
     private SourceDocument document;
@@ -91,7 +93,7 @@ class MetadataSuggestionExtractionTest
         SegmentationUtils.tokenize(originalCas);
 
         sut = new MetadataSuggestionSupport(recommendationService, learningRecordService,
-                applicationEventPublisher, schemaService);
+                applicationEventPublisher, schemaService, featureSupportRegistry);
     }
 
     @Test
