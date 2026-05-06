@@ -17,25 +17,29 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.Page;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import wicket.contrib.input.events.key.KeyType;
 
-@Component
 @Order(100)
 public class ProjectPageMenuItem
     implements MenuItem
 {
-    private @Autowired UserDao userRepo;
-    private @Autowired ProjectService projectService;
+    private final UserDao userRepo;
+    private final ProjectService projectService;
+
+    public ProjectPageMenuItem(UserDao aUserRepo, ProjectService aProjectService)
+    {
+        userRepo = aUserRepo;
+        projectService = aProjectService;
+    }
 
     @Override
     public String getPath()
@@ -44,9 +48,9 @@ public class ProjectPageMenuItem
     }
 
     @Override
-    public IconType getIcon()
+    public Component getIcon(String aId)
     {
-        return FontAwesome5IconType.archive_s;
+        return new Icon(aId, FontAwesome5IconType.archive_s);
     }
 
     @Override

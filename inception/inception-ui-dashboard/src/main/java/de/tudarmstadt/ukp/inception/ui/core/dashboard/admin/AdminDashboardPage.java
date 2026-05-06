@@ -65,7 +65,7 @@ public class AdminDashboardPage
 
         add(new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems)));
 
-        add(new SystemStatusDashlet("systemStatusDashlet"));
+        queue(new SystemStatusDashlet("systemStatusDashlet"));
     }
 
     private List<MenuItem> getMenuItems()

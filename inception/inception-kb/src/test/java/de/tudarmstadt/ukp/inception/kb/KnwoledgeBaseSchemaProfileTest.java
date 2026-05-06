@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.inception.kb.SchemaProfile.OWLSCHEMA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
@@ -52,8 +53,7 @@ class KnwoledgeBaseSchemaProfileTest
         var testKb = new KnowledgeBase();
         testKb.applyMapping(testMapping);
 
-        assertThat(SchemaProfile.checkSchemaProfile(testProfile))
-                .isEqualTo(SchemaProfile.OWLSCHEMA);
-        assertThat(SchemaProfile.checkSchemaProfile(testKb)).isEqualTo(SchemaProfile.OWLSCHEMA);
+        assertThat(SchemaProfile.checkSchemaProfile(testProfile)).isEqualTo(OWLSCHEMA);
+        assertThat(SchemaProfile.checkSchemaProfile(testKb)).isEqualTo(OWLSCHEMA);
     }
 }

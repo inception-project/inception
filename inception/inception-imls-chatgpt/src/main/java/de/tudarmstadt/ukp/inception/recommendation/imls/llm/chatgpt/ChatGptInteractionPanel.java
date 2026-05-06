@@ -92,7 +92,7 @@ public class ChatGptInteractionPanel
                 _target -> applyPreset(form, presetSelect.getModelObject(), _target)));
         form.add(presetSelect);
 
-        form.add(new TextArea<String>(MID_PROMPT));
+        form.add(new TextArea<String>(MID_PROMPT).setOutputMarkupId(true));
 
         var markdownLabel = new MarkdownLabel(MID_PROMPT_HINTS,
                 LoadableDetachableModel.of(this::getPromptHints));
@@ -104,7 +104,7 @@ public class ChatGptInteractionPanel
                         _target -> _target.add(markdownLabel))));
 
         form.add(new ExtractionModeSelect(MID_EXTRACTION_MODE, traits.bind(MID_EXTRACTION_MODE),
-                getModel()));
+                getModel()).setOutputMarkupId(true));
 
         form.add(new CheckBox(MID_JUSTIFICATION_ENABLED) //
                 .setOutputMarkupId(true));

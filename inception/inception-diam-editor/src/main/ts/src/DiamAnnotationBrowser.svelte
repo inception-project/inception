@@ -22,15 +22,14 @@
         AnnotatedText,
         unpackCompactAnnotatedTextV2,
     } from "@inception-project/inception-js-api";
-    // import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
-    import AnnotationDetailPopOver from './AnnotationDetailPopOver.svelte'
+    import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte'
     import { factory } from "@inception-project/inception-diam";
     import { stateStore } from "./AnnotationBrowserState.svelte";
     import AnnotationsByPositionList from "./AnnotationsByPositionList.svelte";
     import AnnotationsByLabelList from "./AnnotationsByLabelList.svelte";
     import AnnotationsByLayerList from "./AnnotationsByLayerList.svelte";
 
-    let { wsEndpointUrl, csrfToken, topicChannel, ajaxEndpointUrl, pinnedGroups, userPreferencesKey } = $props();
+    let { wsEndpointUrl, csrfToken, topicChannel, ajaxEndpointUrl, pinnedGroups, userPreferencesKey, enableExtensions } = $props();
 
     let element: HTMLElement | undefined = $state(undefined);
     let connected = false;
@@ -52,13 +51,13 @@
 
     let wsClient = factory().createWebsocketClient();
     wsClient.onConnect = () =>
-        wsClient.subscribeToViewport(topicChannel, (d) => messageRecieved(d));
+        wsClient.subscribeToViewport(topicChannel, (d) => messageRecieved(d), {enableExtensions: enableExtensions});
 
     let ajaxClient = factory().createAjaxClient(ajaxEndpointUrl);
 
     ajaxClient.loadPreferences(userPreferencesKey).then((p) => {
         preferences = Object.assign(preferences, defaultPreferences, p);
-        console.log("Loaded preferences", preferences);
+        console.debug("Loaded preferences", preferences);
         stateStore.groupingMode = preferences.mode || defaultPreferences.mode;
         stateStore.sortByScore = preferences.sortByScore !== undefined
                 ? preferences.sortByScore

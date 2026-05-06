@@ -27,66 +27,68 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
-import java.io.File;
+import java.nio.file.Path;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.util.FileSystemUtils;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import com.giffing.wicket.spring.boot.starter.WicketAutoConfiguration;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.config.DashboardAutoConfiguration;
 
 /**
- * This is basically the same as {@link AeroRemoteApiController_Authentication_Test} but with the
- * {@link DeploymentModeServiceImpl#PROFILE_AUTH_MODE_EXTERNAL_PREAUTH} profile enabled. This test
- * should ensure that authentication for the remote API always uses the built-in user database and
- * does not care about the external pre-authentication.
+ * This is basically the same as {@link AeroRemoteApiController_Authentication_Test} but with
+ * {@code auth.mode=preauth} enabled. This test should ensure that authentication for the remote API
+ * always uses the built-in user database and does not care about the external pre-authentication.
  */
-@ActiveProfiles(DeploymentModeServiceImpl.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)
 @SpringBootTest( //
         webEnvironment = RANDOM_PORT, //
         properties = { //
+                "auth.mode=preauth", //
                 "server.address=127.0.0.1", //
                 "spring.main.banner-mode=off", //
-                "remote-api.enabled=true", //
-                "repository.path="
-                        + AeroRemoteApiController_Authentication_PreAuth_Test.TEST_OUTPUT_FOLDER })
+                "remote-api.enabled=true" })
 @EnableAutoConfiguration( //
         exclude = { //
-                LiquibaseAutoConfiguration.class, //
                 DashboardAutoConfiguration.class, //
-                EventLoggingAutoConfiguration.class, //
                 SearchServiceAutoConfiguration.class, //
                 WicketAutoConfiguration.class })
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //
         "de.tudarmstadt.ukp.clarin.webanno" })
 @TestMethodOrder(MethodOrderer.MethodName.class)
+@AutoConfigureTestRestTemplate
 class AeroRemoteApiController_Authentication_PreAuth_Test
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Authentication_Test";
+    static @TempDir Path tempFolder;
+
+    @DynamicPropertySource
+    static void registerDynamicProperties(DynamicPropertyRegistry registry)
+    {
+        registry.add("repository.path", () -> tempFolder.toAbsolutePath().toString());
+    }
 
     private @Autowired UserDao userRepository;
     private @Autowired ProjectService projectService;
@@ -98,12 +100,6 @@ class AeroRemoteApiController_Authentication_PreAuth_Test
     private static User remoteApiAdminUser;
     private static User remoteApiNormalUser;
     private static User nonRemoteNormalUser;
-
-    @BeforeAll
-    static void setupClass()
-    {
-        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
-    }
 
     @BeforeEach
     void setup() throws Exception
@@ -178,7 +174,11 @@ class AeroRemoteApiController_Authentication_PreAuth_Test
     @SpringBootConfiguration
     public static class TestContext
     {
-        // All handled by auto-config
+        @Bean
+        AuthenticationEventPublisher authenticationEventPublisher()
+        {
+            return new DefaultAuthenticationEventPublisher();
+        }
 
         @Bean
         public ApplicationContextProvider applicationContextProvider()

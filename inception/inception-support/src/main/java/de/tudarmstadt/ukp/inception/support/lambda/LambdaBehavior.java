@@ -92,6 +92,7 @@ public class LambdaBehavior
         {
             private static final long serialVersionUID = -1956074724077271777L;
 
+            @SuppressWarnings("unchecked")
             @Override
             public void onEvent(Component aComponent, IEvent<?> aEvent)
             {

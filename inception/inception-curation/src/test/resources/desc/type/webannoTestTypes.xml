@@ -166,5 +166,27 @@
         </featureDescription>
       </features>
     </typeDescription>
+    <typeDescription>
+      <name>webanno.custom.FeaturelessRelation</name>
+      <description>Test relation type with no features (only Governor and Dependent)</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>Governor</name>
+          <description />
+          <rangeTypeName>uima.tcas.Annotation</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>Dependent</name>
+          <description />
+          <rangeTypeName>uima.tcas.Annotation</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>webanno.custom.FeaturelessSpan</name>
+      <description>Test span type with no features</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+    </typeDescription>
   </types>
 </typeSystemDescription>

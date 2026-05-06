@@ -281,10 +281,9 @@ public class OverlapIteratorTest
         r1 = r1.stream().sorted().distinct().toList();
         r2 = r2.stream().sorted().distinct().toList();
 
-        System.out.println("Expected overlapping pairs: " + r1);
-        System.out.println("Actual overlapping pairs  : " + r2);
-
         if (!r1.equals(r2)) {
+            System.out.println("Expected overlapping pairs: " + r1);
+            System.out.println("Actual overlapping pairs  : " + r2);
             System.out.println("Comparing... Mismatch!");
             System.out.println("A        : " + a);
             System.out.println("B        : " + b);

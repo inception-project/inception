@@ -181,7 +181,7 @@ public class ImageFeatureSupport
 
     @SuppressWarnings("unchecked")
     @Override
-    public <V> V unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    public <V> V unwrapFeatureValue(AnnotationFeature aFeature, Object aValue)
     {
         return (V) aValue;
     }

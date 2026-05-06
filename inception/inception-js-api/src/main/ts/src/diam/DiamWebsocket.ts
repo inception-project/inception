@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { frameCallbackType } from '@stomp/stompjs'
+import { type frameCallbackType } from '@stomp/stompjs';
 
 /**
  * This callback will accept the annotation data.
@@ -23,18 +23,26 @@ import { frameCallbackType } from '@stomp/stompjs'
 export declare type dataCallback = (data: any) => void;
 
 export interface DiamWebsocketConnectOptions {
-    url: string,
-    csrfToken: string
+    url: string;
+    csrfToken: string;
 }
-  
+
+export interface DiamWebsocketSubscribeOptions {
+    /**
+     * List of additional extensions that should be enabled for this subscription.
+     */
+    enableExtensions?: string[];
+    format?: string;
+}
+
 export interface DiamWebsocket {
     connect(options: string | DiamWebsocketConnectOptions): void;
 
-    onConnect: frameCallbackType
+    onConnect: frameCallbackType;
 
     disconnect(): void;
 
-    subscribeToViewport(viewportTopic: string, callback: dataCallback): void;
+    subscribeToViewport(viewportTopic: string, callback: dataCallback, options?: DiamWebsocketSubscribeOptions): void;
 
     unsubscribeFromViewport(): void;
 }

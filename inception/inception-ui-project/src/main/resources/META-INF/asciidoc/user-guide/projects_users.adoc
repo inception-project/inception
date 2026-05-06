@@ -16,18 +16,35 @@
 
 = Users
 
-After clicking on the *Users* tab, you are displayed with a new pane in which you can add new users by clicking on the *Add users* text field. You get a dropdown list of enabled users in the system which can be added to the project. Any users which are already part of the project are not offered. As you type the dropdown list with the users is filtered to match your input. By clicking on a username or by pressing enter you can select the corresponding user. You can keep typing to add more users to the project. When you press the *Add* button the selected users are added to your project.
+This pane allows managing the users that have access to the project and their permissions.
+
+To add users:
+
+1. Click on the *Add users* text field.
+2. A dropdown list of enabled users in the system appears.
+   Users already in the project are not shown.
+3. Start typing to filter the list. Select a user by clicking on their name or pressing kbd:[Enter].
+4. Repeat to add more users.
+5. When finished, click the *Add* button to add the selected users to your project.
 
 image::images/new_userSelection.png[align="center"]
 
-NOTE: For privacy reasons, the administrator may choose to restrict the users shown in the dropdown. 
-      If this is the case, you have to enter the full name of a user before it appears in the dropdown and
-      can be added. 
+NOTE: For privacy reasons, the administrator may restrict the users shown in the dropdown.
+      In this case, you must enter the full name of a user before they appear in the dropdown and can be added.
 
-By default, the users are added to the project as annotators. If you want to assign additional roles,
-you can do so by clicking on the user and then on *Permissions* pane select the appropriate permissions.
+By default, users are added to the project as annotators.
+
+To assign additional roles or permissions:
+
+1. Click on the user in the list.
+2. In the *Permissions* pane, select the appropriate permissions.
+3. Click *Save* to apply the changes.
 
 image::images/new_userPermissions.png[align="center"]
 
-After ticking the wished permissions, click on *Save*.
-To remove a user, remove all the permissions and then click on *Save*.
+To remove a user from the project:
+
+1. Remove all permissions for the user in the *Permissions* pane.
+2. Click *Save*.
+
+This will remove the user from the project.

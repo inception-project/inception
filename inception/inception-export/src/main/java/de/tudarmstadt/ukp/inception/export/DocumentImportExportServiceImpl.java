@@ -19,28 +19,23 @@ package de.tudarmstadt.ukp.inception.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport.addOrUpdateDocumentMetadata;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
+import static java.nio.file.Files.createTempDirectory;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.FSUtil.setFeature;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -51,7 +46,6 @@ import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
@@ -67,19 +61,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
+import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties.CasDoctorOnImportPolicy;
@@ -98,14 +89,6 @@ import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 public class DocumentImportExportServiceImpl
     implements DocumentImportExportService
 {
-    static final String FEATURE_BASE_NAME_UI_NAME = "uiName";
-    static final String FEATURE_BASE_NAME_NAME = "name";
-    static final String FEATURE_BASE_NAME_LAYER = "layer";
-    static final String TYPE_NAME_FEATURE_DEFINITION = "de.tudarmstadt.ukp.clarin.webanno.api.type.FeatureDefinition";
-    static final String TYPE_NAME_LAYER_DEFINITION = "de.tudarmstadt.ukp.clarin.webanno.api.type.LayerDefinition";
-
-    private static final String EXPORT_CAS = "exportCas";
-
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final CasStorageService casStorageService;
@@ -198,37 +181,38 @@ public class DocumentImportExportServiceImpl
 
     @Override
     @Transactional
-    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
+    public File exportAnnotationDocument(SourceDocument aDocument, String aDataOwner,
             FormatSupport aFormat, Mode aMode)
         throws UIMAException, IOException
     {
-        return exportAnnotationDocument(aDocument, aUser, aFormat, aDocument.getName(), aMode, true,
+        return exportAnnotationDocument(aDocument, aDataOwner, aFormat, aDocument.getName(), aMode,
+                true, null);
+    }
+
+    @Override
+    @Transactional
+    public File exportAnnotationDocument(SourceDocument aDocument, String aDataOwner,
+            FormatSupport aFormat, String aFileName, Mode aMode)
+        throws UIMAException, IOException
+    {
+        return exportAnnotationDocument(aDocument, aDataOwner, aFormat, aFileName, aMode, true,
                 null);
     }
 
     @Override
     @Transactional
-    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
-            FormatSupport aFormat, String aFileName, Mode aMode)
-        throws UIMAException, IOException
-    {
-        return exportAnnotationDocument(aDocument, aUser, aFormat, aFileName, aMode, true, null);
-    }
-
-    @Override
-    @Transactional
-    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
+    public File exportAnnotationDocument(SourceDocument aDocument, String aDataOwner,
             FormatSupport aFormat, Mode aMode, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws IOException, UIMAException
     {
-        return exportAnnotationDocument(aDocument, aUser, aFormat, aDocument.getName(), aMode,
+        return exportAnnotationDocument(aDocument, aDataOwner, aFormat, aDocument.getName(), aMode,
                 aStripExtension, aBulkOperationContext);
     }
 
     @Override
     @Transactional
-    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
+    public File exportAnnotationDocument(SourceDocument aDocument, String aDataOwner,
             FormatSupport aFormat, String aFileName, Mode aMode, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws IOException, UIMAException
@@ -239,14 +223,14 @@ public class DocumentImportExportServiceImpl
                 bulkOperationContext = new HashMap<>();
             }
 
-            String username;
+            AnnotationSet set;
             switch (aMode) {
             case ANNOTATION:
-                username = aUser;
+                set = AnnotationSet.forUser(aDataOwner);
                 break;
             case CURATION:
                 // The merge result will be exported
-                username = CURATION_USER;
+                set = AnnotationSet.CURATION_SET;
                 break;
             default:
                 throw new IllegalArgumentException("Unknown mode [" + aMode + "]");
@@ -254,16 +238,16 @@ public class DocumentImportExportServiceImpl
 
             // Read file
             File exportFile;
-            try (CasStorageSession session = CasStorageSession.openNested()) {
+            try (var session = CasStorageSession.openNested()) {
                 // We do not want to add the CAS to the exclusive access pool here to avoid
                 // potentially running out of memory when exporting a large project
-                CAS cas = casStorageService.readCas(aDocument, username, UNMANAGED_ACCESS);
-                exportFile = exportCasToFile(cas, aDocument, aFileName, aFormat, aStripExtension,
+                var cas = casStorageService.readCas(aDocument, set, UNMANAGED_ACCESS);
+                exportFile = exportCasToFile(cas, aDocument, set.id(), aFormat, aStripExtension,
                         bulkOperationContext);
             }
 
-            LOG.info("Exported annotations for [{}]@{} in {} using format [{}]", aUser, aDocument,
-                    aDocument.getProject(), aFormat.getId());
+            LOG.info("Exported annotations for [{}]@{} in {} using format [{}]", aDataOwner,
+                    aDocument, aDocument.getProject(), aFormat.getId());
 
             return exportFile;
         }
@@ -332,7 +316,7 @@ public class DocumentImportExportServiceImpl
 
         // Prepare a CAS with the project type system
         var cas = WebAnnoCasUtil.createCas(tsd);
-        format.read(aDocument.getProject(), WebAnnoCasUtil.getRealCas(cas), aFile);
+        format.read(aDocument, getRealCas(cas), aFile);
 
         // Create sentence / token annotations if they are missing - sentences first because
         // tokens are then generated inside the sentences
@@ -361,7 +345,7 @@ public class DocumentImportExportServiceImpl
         }
 
         var messages = new ArrayList<LogMessage>();
-        var casDoctor = new CasDoctor(checksRegistry, repairsRegistry);
+        var casDoctor = new CasDoctorImpl(checksRegistry, repairsRegistry);
         casDoctor.setActiveChecks(
                 checksRegistry.getExtensions().stream().map(c -> c.getId()).toArray(String[]::new));
         casDoctor.analyze(aDocument, INITIAL_CAS_PSEUDO_USER, aCas, messages, true);
@@ -426,15 +410,15 @@ public class DocumentImportExportServiceImpl
     }
 
     @Override
-    public File exportCasToFile(CAS aCas, SourceDocument aDocument, String aFileName,
+    public File exportCasToFile(CAS aCas, SourceDocument aDocument, String aDataOwner,
             FormatSupport aFormat)
         throws IOException, UIMAException
     {
-        return exportCasToFile(aCas, aDocument, aFileName, aFormat, true, null);
+        return exportCasToFile(aCas, aDocument, aDataOwner, aFormat, true, null);
     }
 
     @Override
-    public File exportCasToFile(CAS aCas, SourceDocument aDocument, String aFileName,
+    public File exportCasToFile(CAS aCas, SourceDocument aDocument, String aDataOwner,
             FormatSupport aFormat, boolean aStripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws IOException, UIMAException
@@ -458,7 +442,7 @@ public class DocumentImportExportServiceImpl
 
             try (var session = CasStorageSession.openNested()) {
                 var exportCas = WebAnnoCasUtil.createCas();
-                session.add(EXPORT_CAS, EXCLUSIVE_WRITE_ACCESS, exportCas);
+                session.add(AnnotationSet.EXPORT_SET, EXCLUSIVE_WRITE_ACCESS, exportCas);
 
                 // Update type system the CAS, compact it (remove all non-reachable feature
                 // structures) and remove all internal feature structures in the process
@@ -466,13 +450,15 @@ public class DocumentImportExportServiceImpl
 
                 // Update the source file name in case it is changed for some reason. This is
                 // necessary for the writers to create the files under the correct names.
-                addOrUpdateDocumentMetadata(exportCas, aDocument, aFileName);
+                // NOTE: add metadata to the export CAS (not the source CAS) so writers
+                // receive the metadata when serializing the export CAS.
+                addOrUpdateDocumentMetadata(exportCas, aDocument, aDataOwner);
 
-                addLayerAndFeatureDefinitionAnnotations(exportCas, project, bulkOperationContext);
+                var features = listSupportedFeatures(project, aBulkOperationContext);
+                annotationService.addLayerAndFeatureDefinitionAnnotations(exportCas, features);
+                annotationService.addTagsetDefinitionAnnotations(exportCas, features);
 
-                addTagsetDefinitionAnnotations(exportCas, project, bulkOperationContext);
-
-                var exportTempDir = Files.createTempDirectory("inception-export").toFile();
+                var exportTempDir = createTempDirectory("inception-export").toFile();
                 try {
                     return aFormat.write(aDocument, getRealCas(exportCas), exportTempDir,
                             aStripExtension);
@@ -539,103 +525,19 @@ public class DocumentImportExportServiceImpl
     {
         var exportFeaturesKey = Pair.of(aProject, "exportFeatures");
         @SuppressWarnings("unchecked")
-        var features = (List<AnnotationFeature>) aBulkOperationContext.get(exportFeaturesKey);
+        var features = aBulkOperationContext != null
+                ? (List<AnnotationFeature>) aBulkOperationContext.get(exportFeaturesKey)
+                : null;
         if (features == null) {
             features = annotationService.listSupportedFeatures(aProject).stream() //
                     .filter(AnnotationFeature::isEnabled) //
                     .toList();
-            aBulkOperationContext.put(exportFeaturesKey, features);
+
+            if (aBulkOperationContext != null) {
+                aBulkOperationContext.put(exportFeaturesKey, features);
+            }
         }
 
         return features;
-    }
-
-    static void addOrUpdateDocumentMetadata(CAS aCas, SourceDocument aDocument, String aFileName)
-        throws MalformedURLException, CASException
-    {
-        var slug = aDocument.getProject().getSlug();
-        var documentMetadata = DocumentMetaData.get(aCas.getJCas());
-        documentMetadata.setDocumentTitle(aDocument.getName());
-        documentMetadata.setCollectionId(slug);
-        documentMetadata.setDocumentId(aFileName);
-        documentMetadata.setDocumentBaseUri(slug);
-        documentMetadata.setDocumentUri(slug + "/" + aFileName);
-    }
-
-    private void addLayerAndFeatureDefinitionAnnotations(CAS aCas, Project aProject,
-            Map<Pair<Project, String>, Object> aBulkOperationContext)
-    {
-        var allFeatures = listSupportedFeatures(aProject, aBulkOperationContext);
-
-        var layerDefType = aCas.getTypeSystem().getType(TYPE_NAME_LAYER_DEFINITION);
-        var featureDefType = aCas.getTypeSystem().getType(TYPE_NAME_FEATURE_DEFINITION);
-
-        var featuresGroupedByLayer = allFeatures.stream() //
-                .collect(groupingBy(AnnotationFeature::getLayer));
-
-        var layers = featuresGroupedByLayer.keySet().stream() //
-                .sorted(comparing(AnnotationLayer::getName)) //
-                .toList();
-
-        for (var layer : layers) {
-            final var layerDefFs = aCas.createFS(layerDefType);
-            setFeature(layerDefFs, FEATURE_BASE_NAME_NAME, layer.getName());
-            setFeature(layerDefFs, FEATURE_BASE_NAME_UI_NAME, layer.getUiName());
-            aCas.addFsToIndexes(layerDefFs);
-
-            var features = featuresGroupedByLayer.get(layer).stream() //
-                    .sorted(comparing(AnnotationFeature::getName)) //
-                    .toList();
-
-            for (var feature : features) {
-                final var featureDefFs = aCas.createFS(featureDefType);
-                setFeature(featureDefFs, FEATURE_BASE_NAME_LAYER, layerDefFs);
-                setFeature(featureDefFs, FEATURE_BASE_NAME_NAME, feature.getName());
-                setFeature(featureDefFs, FEATURE_BASE_NAME_UI_NAME, feature.getUiName());
-                aCas.addFsToIndexes(featureDefFs);
-            }
-        }
-    }
-
-    private void addTagsetDefinitionAnnotations(CAS aCas, Project aProject,
-            Map<Pair<Project, String>, Object> aBulkOperationContext)
-    {
-        var features = listSupportedFeatures(aProject, aBulkOperationContext);
-
-        for (var feature : features) {
-            var tagSet = feature.getTagset();
-            if (tagSet == null || ChainLayerSupport.TYPE.equals(feature.getLayer().getType())) {
-                continue;
-            }
-
-            var aLayer = feature.getLayer().getName();
-            var aTagSetName = tagSet.getName();
-            var tagsetType = getType(aCas, TagsetDescription.class);
-            var layerFeature = tagsetType.getFeatureByBaseName(FEATURE_BASE_NAME_LAYER);
-            var nameFeature = tagsetType.getFeatureByBaseName(FEATURE_BASE_NAME_NAME);
-
-            var tagSetModified = false;
-            // modify existing tagset Name
-            for (var fs : select(aCas, tagsetType)) {
-                var layer = fs.getStringValue(layerFeature);
-                var tagSetName = fs.getStringValue(nameFeature);
-                if (layer.equals(aLayer)) {
-                    // only if the tagset name is changed
-                    if (!aTagSetName.equals(tagSetName)) {
-                        fs.setStringValue(nameFeature, aTagSetName);
-                        aCas.addFsToIndexes(fs);
-                    }
-                    tagSetModified = true;
-                    break;
-                }
-            }
-
-            if (!tagSetModified) {
-                var fs = aCas.createFS(tagsetType);
-                fs.setStringValue(layerFeature, aLayer);
-                fs.setStringValue(nameFeature, aTagSetName);
-                aCas.addFsToIndexes(fs);
-            }
-        }
     }
 }

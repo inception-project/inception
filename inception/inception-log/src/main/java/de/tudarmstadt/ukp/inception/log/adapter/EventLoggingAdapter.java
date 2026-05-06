@@ -20,10 +20,10 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 import java.util.Date;
 
 import org.springframework.context.ApplicationEvent;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.model.LoggedEventEntity;
 
 public interface EventLoggingAdapter<T>
 {
@@ -73,7 +73,7 @@ public interface EventLoggingAdapter<T>
 
     default String getUser(T aEvent)
     {
-        SecurityContext context = SecurityContextHolder.getContext();
+        var context = SecurityContextHolder.getContext();
         if (context.getAuthentication() != null) {
             return context.getAuthentication().getName();
         }
@@ -84,8 +84,8 @@ public interface EventLoggingAdapter<T>
 
     default LoggedEvent toLoggedEvent(T aEvent) throws Exception
     {
-        var e = new LoggedEvent();
-        e.setCreated(getCreated(aEvent));
+        var e = new LoggedEventEntity();
+        e.setCreated(getCreated(aEvent).toInstant());
         e.setEvent(getEvent(aEvent));
         e.setUser(getUser(aEvent));
         e.setProject(getProject(aEvent));

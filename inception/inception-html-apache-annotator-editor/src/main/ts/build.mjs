@@ -39,16 +39,19 @@ const defaults = {
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
-  target: 'es2019',
+  target: 'es2020',
   loader: { '.ts': 'ts' },
   logLevel: 'info',
+  // Ensure Svelte runtime is shared across all components: Whenever you see an 
+  // "import from 'svelte'"", resolve it once and reuse that same resolution everywhere.
+  alias: {
+    'svelte': 'svelte'
+  },
   plugins: [
     sassPlugin(),
     esbuildSvelte({
       compilerOptions: { 
         dev: argv.live,
-        // See: https://github.com/sveltejs/svelte/issues/15799
-        // templatingMode: "functional"
       },
       preprocess: sveltePreprocess(),
       filterWarnings: (warning) => {

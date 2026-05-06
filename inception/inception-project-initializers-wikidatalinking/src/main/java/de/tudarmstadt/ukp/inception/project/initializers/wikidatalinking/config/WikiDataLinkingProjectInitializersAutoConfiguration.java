@@ -86,6 +86,15 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
                 aAnnotationService, aRecommenderFactory);
     }
 
+    @ConditionalOnBean(KnowledgeBaseService.class)
+    @Bean
+    public WikiDataKnowledgeBaseInitializer wikiDataKnowledgeBaseInitializer(
+            KnowledgeBaseService aKbService)
+    {
+        return new WikiDataKnowledgeBaseInitializer(aKbService);
+    }
+
+    // This must come after wikiDataKnowledgeBaseInitializer(...)
     @ConditionalOnBean(WikiDataKnowledgeBaseInitializer.class)
     @Bean
     public EntityLinkingProjectInitializer entityLinkingProjectInitializer(
@@ -218,14 +227,6 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
                 thumbnail)
         {
         };
-    }
-
-    @ConditionalOnBean(KnowledgeBaseService.class)
-    @Bean
-    public WikiDataKnowledgeBaseInitializer wikiDataKnowledgeBaseInitializer(
-            KnowledgeBaseService aKbService)
-    {
-        return new WikiDataKnowledgeBaseInitializer(aKbService);
     }
 
     @ConditionalOnBean(KnowledgeBaseService.class)

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.io.brat.dkprocore;
 
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
@@ -26,8 +28,6 @@ import org.apache.uima.UIMAFramework;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.junit.jupiter.api.Test;
-
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 
 class BratReaderTest
 {
@@ -77,8 +77,8 @@ class BratReaderTest
         customSpanType.addFeature("value", "", CAS.TYPE_NAME_STRING);
 
         var customRelationType = tsd.addType("custom.Relation", "", CAS.TYPE_NAME_ANNOTATION);
-        customRelationType.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", CAS.TYPE_NAME_ANNOTATION);
-        customRelationType.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", CAS.TYPE_NAME_ANNOTATION);
+        customRelationType.addFeature(FEAT_REL_SOURCE, "", CAS.TYPE_NAME_ANNOTATION);
+        customRelationType.addFeature(FEAT_REL_TARGET, "", CAS.TYPE_NAME_ANNOTATION);
         customRelationType.addFeature("value", "", CAS.TYPE_NAME_STRING);
 
         var fullTsd = mergeTypeSystems(asList(tsd, createTypeSystemDescription()));

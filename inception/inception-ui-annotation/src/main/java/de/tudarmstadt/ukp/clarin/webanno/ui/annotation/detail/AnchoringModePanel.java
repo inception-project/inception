@@ -19,10 +19,13 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
+import static wicket.contrib.input.events.EventType.click;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -33,9 +36,12 @@ import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyCombo;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.inception.support.lambda.AjaxPayloadCallback;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -52,6 +58,8 @@ public class AnchoringModePanel
     private static final String MID_LABEL = "label";
     private static final String MID_MODE = "mode";
     private static final String MID_MODE_LINK = "modeLink";
+
+    private @SpringBean KeyBindingsProperties keyBindings;
 
     private AjaxPayloadCallback<AnchoringMode> onApplied;
 
@@ -87,15 +95,29 @@ public class AnchoringModePanel
                 link.add(new AttributeAppender("class",
                         () -> AnchoringModePanel.this.getModelObject() == mode ? "active" : "",
                         " "));
+                var shortcutStr = " [" + Stream.of(getShortcutForMode(mode)).map(Object::toString)
+                        .collect(joining(" + ")) + "]";
                 link.add(AttributeModifier.replace("title",
-                        new ResourceModel(mode.getClass().getSimpleName() + "." + mode.name())));
+                        new ResourceModel(mode.getClass().getSimpleName() + "." + mode.name())
+                                .getObject() + shortcutStr));
                 link.add(enabledWhen(aAllowedModes.map(modes -> modes.contains(mode))));
+                link.add(getShortcutForMode(mode).toInputBehavior(click));
 
                 aItem.add(link);
             }
         };
 
         queue(listView);
+    }
+
+    private KeyCombo getShortcutForMode(AnchoringMode aMode)
+    {
+        return switch (aMode) {
+        case CHARACTERS -> keyBindings.getAnchoringMode().getCharacters();
+        case SINGLE_TOKEN -> keyBindings.getAnchoringMode().getSingleToken();
+        case TOKENS -> keyBindings.getAnchoringMode().getTokens();
+        case SENTENCES -> keyBindings.getAnchoringMode().getSentences();
+        };
     }
 
     private void applyMode(AjaxRequestTarget aTarget, AnchoringMode aMode)

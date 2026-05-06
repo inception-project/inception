@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.security.client.auth;
 
 public class NoAuthenticationTraitsEditor
-    extends AuthenticationTraitsEditor
+    extends AuthenticationTraitsEditor<NoAuthenticationTraits>
 {
     private static final long serialVersionUID = 2314779756017515092L;
 

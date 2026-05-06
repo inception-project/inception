@@ -16,11 +16,81 @@
 
 = Upgrade notes
 
-This section summarizes important upgrade notes from the release history of {product-name}. If you upgrade from any version `X`, carefully read all the upgrade notes for versions later than `X`. In particular, if any of the upgrade notes mentions that an intermediate upgrade to that version must be made before going to a higher version, then first perform all required intermediate upgrades in order. 
+This section summarizes important upgrade notes from the release history of {product-name}.
+If you upgrade from any version `X`, carefully read all the upgrade notes for versions later than `X`.
+In particular, if any of the upgrade notes mentions that an intermediate upgrade to that version must be made before going to a higher version, then first perform all required intermediate upgrades in order. 
 
 NOTE: It is a good idea to back up your installation and data before an upgrade. Also make sure that
       you can actually re-create a working installation by restoring your backup. A backup which cannot be
       successfully restored is worthless.
+
+== INCEpTION 41.0
+
+=== Lucene 10 upgrade
+
+This release upgrades the embedded Lucene library from 9.x to 10.x.
+Lucene 10 can read indexes written by Lucene 9, but it cannot read indexes from Lucene 8 or earlier.
+
+* Users upgrading from {product-name} 34.0 or later (Lucene 9):
+  no manual action is strictly required - document and knowledge base full-text indexes will be migrated automatically the first time they are opened.
+  However, on a server installation with many projects this lazy migration can cause noticeable delays the first time each project is opened.
+  Administrators are therefore recommended to run the new `upgrade-index` CLI command once after the upgrade to rewrite all indexes into the new format up-front.
+  This is significantly cheaper than `reindex` because it does not re-tokenize documents or re-fetch RDF triples - it only rewrites the on-disk segments. See <<sect_cli>>.
+* Users upgrading from {product-name} 33.x or earlier (Lucene 8 or older):
+  the on-disk index format from those releases cannot be read by Lucene 10, so `upgrade-index` will not work.
+  After upgrading to {product-name} 41.0, run the `reindex` CLI command to rebuild all document and knowledge base full-text indexes from scratch.
+  See <<sect_cli>>.
+
+== INCEpTION 40.0
+
+=== systemd changes
+
+Spring Boot 4.0 has removed the shell script prepended to the standalone JAR, so it can no longer be simply started as a shell command.
+Unfortunately, we relied on this script in our documentation on how to deploy {product-name} with systemd.
+Consequently, you have to make a few minor changes now:
+
+* Edit your service file which is typically at `/etc/systemd/system/inception.service`.
+* Add the `WorkingDirectory` as the path where {product-name} is installed.
+* Add the `EnvironmentFile` as well, but only if you actually have an `inception.conf` file.
+* Also insert `/usr/bin/java -jar` into the `ExecStart` line.
+
+[source,bash]
+----
+[Unit]
+Description=INCEpTION
+
+[Service]
+User=www-data
+WorkingDirectory=/srv/inception
+EnvironmentFile=/srv/inception/inception.conf
+ExecStart=/usr/bin/java $JAVA_OPTS -jar /srv/inception/inception.jar
+
+[Install]
+WantedBy=multi-user.target
+----
+
+If {product-name} or Java is installed in other paths, adjust accordingly.
+
+Note that the `inception.conf` is interpreted differently by systemd than it was previously by Spring Boot.
+If your file only contains lines in the following format, it should continue to work.
+
+----
+JAVA_OPTS="-Djava.awt.headless=true -Dinception.home=/srv/inception"
+----
+
+However, if you relied e.g. on extending variables over multiple assignments like this:
+
+----
+JAVA_OPTS="-Dinception.home=/srv/inception"
+JAVA_OPTS="-Djava.awt.headless=true $JAVA_OPTS"
+----
+
+then you need to flatten that out into:
+
+----
+JAVA_OPTS="-Djava.awt.headless=true -Dinception.home=/srv/inception"
+----
+
 
 == INCEpTION 34.0
 

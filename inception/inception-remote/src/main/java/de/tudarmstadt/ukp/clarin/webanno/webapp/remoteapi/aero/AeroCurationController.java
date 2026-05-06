@@ -135,12 +135,12 @@ public class AeroCurationController
             switch (state) {
             case CURATION_IN_PROGRESS:
                 resultState = AnnotationDocumentState.IN_PROGRESS;
-                document.setState(state);
+                document.updateState(state);
                 documentService.createSourceDocument(document);
                 break;
             case CURATION_FINISHED:
                 resultState = AnnotationDocumentState.FINISHED;
-                document.setState(state);
+                document.updateState(state);
                 documentService.createSourceDocument(document);
                 break;
             case NEW: // fallthrough
@@ -152,7 +152,7 @@ public class AeroCurationController
             }
         }
         else {
-            document.setState(SourceDocumentState.CURATION_IN_PROGRESS);
+            document.updateState(SourceDocumentState.CURATION_IN_PROGRESS);
             documentService.createSourceDocument(document);
         }
 
@@ -228,7 +228,7 @@ public class AeroCurationController
         switch (doc.getState()) {
         case CURATION_IN_PROGRESS: // Fall-through
         case CURATION_FINISHED:
-            doc.setState(SourceDocumentState.ANNOTATION_IN_PROGRESS);
+            doc.updateState(SourceDocumentState.ANNOTATION_IN_PROGRESS);
             documentService.createSourceDocument(doc);
             break;
         default:

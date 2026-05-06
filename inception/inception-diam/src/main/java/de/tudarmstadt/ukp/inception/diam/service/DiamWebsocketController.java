@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.diam.service;
 
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toJsonString;
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_USERNAME;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_DOCUMENT;
@@ -26,8 +28,10 @@ import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.T
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_USER;
 import static java.lang.Integer.MAX_VALUE;
+import static org.springframework.messaging.simp.SimpMessageType.MESSAGE;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.security.Principal;
 import java.time.Duration;
 
@@ -48,8 +52,7 @@ import org.springframework.util.PropertyPlaceholderHelper;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.flipkart.zjsonpatch.JsonDiff;
+import com.flipkart.zjsonpatch.Jackson3JsonDiff;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
@@ -58,8 +61,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSessio
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportInit;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
@@ -77,6 +82,7 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import jakarta.persistence.NoResultException;
 import jakarta.servlet.ServletContext;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Differential INCEpTION Annotation Messaging (DIAM) protocol controller.
@@ -86,7 +92,10 @@ import jakarta.servlet.ServletContext;
 @Controller
 public class DiamWebsocketController
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    public static final String X_DIAM_EXTENSIONS = "X-DIAM-EXTENSIONS";
+    public static final String X_DIAM_FORMAT = "X-DIAM-FORMAT";
 
     public static final String FORMAT_LEGACY = "legacy";
 
@@ -95,15 +104,14 @@ public class DiamWebsocketController
     public static final String PARAM_FORMAT = "format";
 
     public static final PropertyPlaceholderHelper PLACEHOLDER_RESOLVER = new PropertyPlaceholderHelper(
-            "{", "}", null, false);
+            "{", "}", null, '\\', false);
 
     public static final String DOCUMENT_BASE_TOPIC_TEMPLATE = TOPIC_ELEMENT_PROJECT + "{"
             + PARAM_PROJECT + "}" + TOPIC_ELEMENT_DOCUMENT + "{" + PARAM_DOCUMENT + "}"
             + TOPIC_ELEMENT_USER + "{" + PARAM_USER + "}";
 
     public static final String DOCUMENT_VIEWPORT_TOPIC_TEMPLATE = //
-            DOCUMENT_BASE_TOPIC_TEMPLATE + "/from/{" + PARAM_FROM + "}/to/{" + PARAM_TO
-                    + "}/format/{" + PARAM_FORMAT + "}";
+            DOCUMENT_BASE_TOPIC_TEMPLATE + "/from/{" + PARAM_FROM + "}/to/{" + PARAM_TO + "}";
 
     // public static final String ANNOTATION_COMMAND_DELETE_TOPIC_TEMPLATE = //
     // DOCUMENT_BASE_TOPIC_TEMPLATE + "/delete";
@@ -157,12 +165,16 @@ public class DiamWebsocketController
     @EventListener
     public void onSessionDisconnect(SessionDisconnectEvent aEvent)
     {
-        log.trace("Unsubscribing {} from all viewports", aEvent.getSessionId());
+        if (LOG.isTraceEnabled()) {
+            var user = aEvent.getUser();
+            LOG.trace("Unsubscribing [{}]({}:*) from all viewports",
+                    user != null ? user.getName() : "anonymous", aEvent.getSessionId());
+        }
 
         activeViewports.asMap().entrySet().stream() //
                 .filter(e -> {
-                    e.getValue().removeSubscriber(aEvent.getSessionId());
-                    return !e.getValue().hasSubscribers();
+                    e.getValue().removeSubscriptionsBySession(aEvent.getSessionId());
+                    return !e.getValue().hasSubscriptions();
                 }) //
                 .forEach(e -> closeViewport(e.getKey()));
     }
@@ -175,19 +187,23 @@ public class DiamWebsocketController
         var sessionId = headers.getSessionId();
         var subscriptionId = headers.getSubscriptionId();
 
-        log.trace("Unsubscribing {} from subscription {}", sessionId, subscriptionId);
+        if (LOG.isTraceEnabled()) {
+            var user = aEvent.getUser();
+            LOG.trace("Unsubscribing [{}]({}:{})", user != null ? user.getName() : "anonymous",
+                    sessionId, subscriptionId);
+        }
 
         activeViewports.asMap().entrySet().stream() //
                 .filter(e -> {
                     e.getValue().removeSubscription(sessionId, subscriptionId);
-                    return !e.getValue().hasSubscribers();
+                    return !e.getValue().hasSubscriptions();
                 }) //
                 .forEach(e -> closeViewport(e.getKey()));
     }
 
     private void closeViewport(ViewportDefinition aVpd)
     {
-        log.trace("Closing viewport {}", aVpd);
+        LOG.trace("Closing viewport {}", aVpd);
         activeViewports.invalidate(aVpd);
     }
 
@@ -201,18 +217,17 @@ public class DiamWebsocketController
     public void onTransientAnnotationStateChanged(TransientAnnotationStateChangedEvent aEvent)
     {
         var doc = aEvent.getDocument();
-        sendUpdate(doc.getProject().getId(), doc.getId(), aEvent.getUser(), 0, MAX_VALUE);
+        sendUpdate(doc, AnnotationSet.forUser(aEvent.getUser()), 0, MAX_VALUE);
     }
 
     @SubscribeMapping(DOCUMENT_VIEWPORT_TOPIC_TEMPLATE)
-    public JsonNode onSubscribeToAnnotationDocument(SimpMessageHeaderAccessor aHeaderAccessor,
+    public JsonNode onSubscribeToViewport(SimpMessageHeaderAccessor aHeaderAccessor,
             Principal aPrincipal, //
             @DestinationVariable(PARAM_PROJECT) long aProjectId,
             @DestinationVariable(PARAM_DOCUMENT) long aDocumentId,
             @DestinationVariable(PARAM_USER) String aDataOwner,
             @DestinationVariable(PARAM_FROM) int aViewportBegin,
-            @DestinationVariable(PARAM_TO) int aViewportEnd,
-            @DestinationVariable(PARAM_FORMAT) String aFormat)
+            @DestinationVariable(PARAM_TO) int aViewportEnd)
         throws IOException
     {
         var project = getProject(aProjectId);
@@ -221,18 +236,33 @@ public class DiamWebsocketController
             MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
             MDC.put(KEY_USERNAME, aPrincipal.getName());
 
-            var vpd = new ViewportDefinition(aProjectId, aDocumentId, aDataOwner, aViewportBegin,
-                    aViewportEnd, aFormat);
+            var format = aHeaderAccessor.getFirstNativeHeader(X_DIAM_FORMAT);
+            if (format == null) {
+                throw new IllegalArgumentException("Missing required websocket header ["
+                        + X_DIAM_FORMAT + "] specifying the DIAM format.");
+            }
+
+            var enabledExtensions = fromJsonString(String[].class,
+                    aHeaderAccessor.getFirstNativeHeader(X_DIAM_EXTENSIONS), new String[] {});
+
+            var vpd = ViewportDefinition.builder() //
+                    .withProjectId(aProjectId) //
+                    .withDocumentId(aDocumentId) //
+                    .withDataOwner(aDataOwner) //
+                    .withRange(aViewportBegin, aViewportEnd) //
+                    .withFormat(format) //
+                    .enabledExtensions(enabledExtensions) //
+                    .build();
 
             // Ensure that the viewport is registered
             var vps = activeViewports.get(vpd);
 
-            log.trace("Subscribing {} to {}", aHeaderAccessor.getSessionId(), vpd.getTopic());
+            LOG.trace("Subscribing [{}]({}:{}) to {}", aPrincipal.getName(),
+                    aHeaderAccessor.getSessionId(), aHeaderAccessor.getSubscriptionId(), vpd);
             vps.addSubscription(aHeaderAccessor.getSessionId(),
                     aHeaderAccessor.getSubscriptionId());
 
-            var json = render(project, aDocumentId, aDataOwner, aViewportBegin, aViewportEnd,
-                    aFormat);
+            var json = render(project, vpd);
             vps.setJson(json);
             return json;
         }
@@ -242,48 +272,15 @@ public class DiamWebsocketController
         }
     }
 
-    // @MessageMapping(ANNOTATION_COMMAND_DELETE_TOPIC_TEMPLATE)
-    // public void onDeleteAnnotationRequest(Principal aPrincipal,
-    // @DestinationVariable(PARAM_PROJECT) long aProjectId,
-    // @DestinationVariable(PARAM_DOCUMENT) long aDocumentId,
-    // @DestinationVariable(PARAM_USER) String aUser, @Header("vid") String aVid)
-    // throws IOException
-    // {
-    // Project project = getProject(aProjectId);
-    //
-    // try (CasStorageSession session = CasStorageSession.open()) {
-    // MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
-    // MDC.put(KEY_USERNAME, aPrincipal.getName());
-    //
-    // VID vid = VID.parse(aVid);
-    //
-    // SourceDocument doc = documentService.getSourceDocument(project.getId(), aDocumentId);
-    // CAS cas = documentService.readAnnotationCas(doc, aUser);
-    // AnnotationFS fs = selectAnnotationByAddr(cas, vid.getId());
-    // TypeAdapter adapter = schemaService.getAdapter(schemaService.findLayer(project, fs));
-    //
-    // // FIXME Does not delete/clear up related annotations (relations, slots, etc.)
-    // adapter.delete(doc, aUser, cas, vid);
-    //
-    // documentService.writeAnnotationCas(cas, doc, aUser, true);
-    // }
-    // finally {
-    // MDC.remove(KEY_REPOSITORY_PATH);
-    // MDC.remove(KEY_USERNAME);
-    // }
-    // }
-
-    private JsonNode render(Project aProject, long aDocumentId, String aDataOwner,
-            int aViewportBegin, int aViewportEnd, String aFormat)
-        throws IOException
+    private JsonNode render(Project aProject, ViewportDefinition aVpd) throws IOException
     {
-        var doc = documentService.getSourceDocument(aProject.getId(), aDocumentId);
+        var doc = documentService.getSourceDocument(aProject.getId(), aVpd.getDocumentId());
         var sessionOwner = userRepository.getCurrentUsername();
-        var dataOwner = userRepository.getUserOrCurationUser(aDataOwner);
+        var dataOwner = userRepository.getUserOrCurationUser(aVpd.getUser());
 
         var constraints = constraintsService.getMergedConstraints(aProject);
 
-        var cas = documentService.readAnnotationCas(doc, aDataOwner);
+        var cas = documentService.readAnnotationCas(doc, AnnotationSet.forUser(aVpd.getUser()));
 
         var prefs = userPreferencesService.loadPreferences(doc.getProject(), sessionOwner,
                 Mode.ANNOTATION);
@@ -299,20 +296,22 @@ public class DiamWebsocketController
                 .withSessionOwner(userRepository.getCurrentUser()) //
                 .withDocument(doc, dataOwner) //
                 .withConstraints(constraints) //
-                .withWindow(aViewportBegin, aViewportEnd) //
+                .withWindow(aVpd.getBegin(), aVpd.getEnd()) //
                 .withCas(cas) //
                 .withVisibleLayers(layers) //
                 .withAllLayers(allLayers) //
+                .withEnabledExtensions(aVpd.getEnabledExtensions()) //
                 .build();
 
         var vdoc = renderingPipeline.render(request);
 
-        if (FORMAT_LEGACY.equals(aFormat)) {
+        if (FORMAT_LEGACY.equals(aVpd.getFormat())) {
             return JSONUtil.getObjectMapper().valueToTree(new MViewportInit(vdoc));
         }
 
-        var serializer = vDocumentSerializerExtensionPoint.getExtension(aFormat).orElseThrow(
-                () -> new IllegalStateException("Unsupported format [" + aFormat + "]"));
+        var serializer = vDocumentSerializerExtensionPoint.getExtension(aVpd.getFormat())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Unsupported format [" + aVpd.getFormat() + "]"));
 
         return JSONUtil.getObjectMapper().valueToTree(serializer.render(vdoc, request));
     }
@@ -324,44 +323,58 @@ public class DiamWebsocketController
 
     private void sendUpdate(AnnotationDocument aDoc)
     {
-        sendUpdate(aDoc.getProject().getId(), aDoc.getDocument().getId(), aDoc.getUser(), 0,
-                MAX_VALUE);
+        sendUpdate(aDoc.getDocument(), aDoc.getAnnotationSet(), 0, MAX_VALUE);
     }
 
     void sendUpdate(AnnotationDocument aDoc, int aUpdateBegin, int aUpdateEnd)
     {
-        sendUpdate(aDoc.getProject().getId(), aDoc.getDocument().getId(), aDoc.getUser(),
-                aUpdateBegin, aUpdateEnd);
+        sendUpdate(aDoc.getDocument(), aDoc.getAnnotationSet(), aUpdateBegin, aUpdateEnd);
     }
 
-    private void sendUpdate(long aProjectId, long aDocumentId, String aUser, int aUpdateBegin,
+    private void sendUpdate(SourceDocument aDoc, AnnotationSet aSet, int aUpdateBegin,
             int aUpdateEnd)
     {
         activeViewports.asMap().entrySet().stream() //
-                .filter(e -> e.getKey().matches(aDocumentId, aUser, aUpdateBegin, aUpdateEnd)) //
-                .forEach(e -> sendUpdate(e.getKey(), e.getValue(), aProjectId, aDocumentId, aUser,
-                        aUpdateBegin, aUpdateEnd));
+                .filter(e -> e.getKey().matches(aDoc.getId(), aSet, aUpdateBegin, aUpdateEnd)) //
+                .forEach(e -> sendUpdate(e.getKey(), e.getValue(), aDoc, aUpdateBegin, aUpdateEnd));
     }
 
-    private void sendUpdate(ViewportDefinition vpd, ViewportState vps, long aProjectId,
-            long aDocumentId, String aUser, int aUpdateBegin, int aUpdateEnd)
+    private void sendUpdate(ViewportDefinition vpd, ViewportState vps, SourceDocument aDoc,
+            int aUpdateBegin, int aUpdateEnd)
     {
+        if (vps.getJson() == null) {
+            LOG.trace("Not sending update for document {} - viewport not initialized yet", aDoc);
+            return;
+        }
+
         // MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
         try (var session = CasStorageSession.openNested()) {
             var project = projectService.getProject(vpd.getProjectId());
-            var newJson = render(project, vpd.getDocumentId(), vpd.getUser(), vpd.getBegin(),
-                    vpd.getEnd(), vpd.getFormat());
+            var newJson = render(project, vpd);
 
-            var diff = JsonDiff.asJson(vps.getJson(), newJson);
+            if (newJson.equals(vps.getJson())) {
+                LOG.trace("Not sending update for document {} - no changes", aDoc);
+                return;
+            }
+
+            LOG.trace("Sending update for document {} - {}", aDoc, vpd);
+
+            var diff = Jackson3JsonDiff.asJson(vps.getJson(), newJson);
 
             vps.setJson(newJson);
 
+            var sha = SimpMessageHeaderAccessor.create(MESSAGE);
+            sha.setHeader(X_DIAM_FORMAT, vpd.getFormat());
+            sha.setHeader(X_DIAM_EXTENSIONS,
+                    toJsonString(vpd.getEnabledExtensions().stream().sorted().toList()));
+            sha.setLeaveMutable(true);
+
             msgTemplate.convertAndSend("/topic" + vpd.getTopic(),
-                    new MViewportUpdate(aUpdateBegin, aUpdateEnd, diff));
+                    new MViewportUpdate(aUpdateBegin, aUpdateEnd, diff), sha.getMessageHeaders());
         }
         catch (Exception ex) {
-            log.error("Unable to render update", ex);
+            LOG.error("Unable to render update", ex);
         }
 
         // finally {

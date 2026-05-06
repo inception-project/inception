@@ -1,0 +1,20 @@
+{
+  "properties": [
+    {
+      "name": "recommender.external.connect-timeout",
+      "type": "java.time.Duration",
+      "defaultValue": "30s"
+    },
+    {
+      "name": "recommender.external.read-timeout",
+      "type": "java.time.Duration",
+      "defaultValue": "30s"
+    },
+    {
+      "name": "recommender.external.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables external recommender support."
+    }
+  ]
+}

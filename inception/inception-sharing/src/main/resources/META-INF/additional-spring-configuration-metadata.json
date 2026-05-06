@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "sharing.invites.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables the project sharing / invite-link feature. When disabled, the InviteService and its associated UI components are not registered."
+    }
+  ]
+}

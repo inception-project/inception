@@ -1,0 +1,675 @@
+<script lang="ts">
+    /*
+     * Licensed to the Technische Universität Darmstadt under one
+     * or more contributor license agreements.  See the NOTICE file
+     * distributed with this work for additional information
+     * regarding copyright ownership.  The Technische Universität Darmstadt
+     * licenses this file to you under the Apache License, Version 2.0 (the
+     * "License"); you may not use this file except in compliance
+     * with the License.
+     *
+     * http://www.apache.org/licenses/LICENSE-2.0
+     *
+     * Unless required by applicable law or agreed to in writing, software
+     * distributed under the License is distributed on an "AS IS" BASIS,
+     * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     * See the License for the specific language governing permissions and
+     * limitations under the License.
+     */
+
+    import { onMount, onDestroy } from 'svelte';
+    import { Client, Stomp, type IFrame } from '@stomp/stompjs';
+    import { factory } from '@inception-project/inception-diam';
+    import { assistantState } from './AssistantState.svelte';
+    import { SpeechManager } from './AssistantPanelSpeech';
+    import { refIdReplacementPattern, docIdReplacementPattern } from './AssistantPanelReferences';
+    import { buildGroups, renderThinking, renderContent } from './AssistantPanelMessages';
+    import PerformanceFooter from './PerformanceFooter.svelte';
+    import MessageContent from './MessageContent.svelte';
+    import type {
+        MPerformanceMetrics,
+        MReference,
+        MChatMessage,
+        MTextMessage,
+        MCallResponse,
+        MGroupItem,
+        MGroupGroup,
+        MGroupSingle,
+    } from './AssistantPanelModels';
+
+    interface Props {
+        ajaxEndpointUrl?: string;
+        wsEndpointUrl: string; // should this be full ws://... url
+        csrfToken: string;
+        topicChannel: string;
+        dataOwner: string;
+        documentId: number;
+    }
+
+    let { ajaxEndpointUrl, wsEndpointUrl, csrfToken, topicChannel, dataOwner, documentId }: Props =
+        $props();
+
+    let socket: WebSocket = null;
+    let stompClient: Client = null;
+    // svelte-ignore state_referenced_locally
+    let ajaxClient = factory().createAjaxClient(ajaxEndpointUrl);
+    let connected = false;
+    let subscription = null;
+
+    let element = null;
+    let chatContainer = null;
+    let autoScroll = true;
+
+    let messages: MChatMessage[] = $state([]);
+    let messageInput;
+    let waitingForResponse = $state(false);
+
+    // Grouping state: keep collapsed state per group id
+    let groupCollapsed: Record<string, boolean> = $state({});
+    let grouped: MGroupItem[] = $derived.by(() => {
+        const result = buildGroups(messages);
+        console.debug('[assistant] Grouped updated:', result.length, 'items');
+        return result;
+    });
+
+    function isGroupCollapsed(id) {
+        return groupCollapsed[id] ?? true;
+    }
+
+    function toggleGroup(id) {
+        console.debug(`[assistant] toggleGroup called with id: ${id}`);
+        const newVal = !isGroupCollapsed(id);
+        console.debug(
+            `[assistant] toggleGroup: ${id} => ${newVal}, current state:`,
+            groupCollapsed
+        );
+        groupCollapsed[id] = newVal;
+        groupCollapsed = { ...groupCollapsed };
+        console.debug(`[assistant] toggleGroup: after update:`, groupCollapsed);
+    }
+
+    const speechManager = new SpeechManager(() => assistantState.speechSynthesisEnabled);
+    let speechAvailable = speechManager.isAvailable();
+
+    const userPreferencesKey = 'assistant/general';
+    const defaultPreferences = {
+        speechSynthesisEnabled: false,
+    };
+    let preferences = Object.assign({}, defaultPreferences);
+
+    ajaxClient.loadPreferences(userPreferencesKey).then((p) => {
+        preferences = Object.assign(preferences, defaultPreferences, p);
+        console.log('Loaded preferences', preferences);
+
+        assistantState.speechSynthesisEnabled =
+            preferences.speechSynthesisEnabled ?? defaultPreferences.speechSynthesisEnabled;
+    });
+
+    $effect(() => {
+        preferences.speechSynthesisEnabled = assistantState.speechSynthesisEnabled;
+        ajaxClient.savePreferences(userPreferencesKey, preferences);
+    });
+
+    $effect(() => {
+        if (!assistantState.speechSynthesisEnabled) {
+            speechManager.cancel();
+        }
+    });
+
+    export function connect(): void {
+        if (connected) return;
+
+        let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        let wsEndpoint = new URL(wsEndpointUrl);
+        wsEndpoint.protocol = protocol;
+
+        stompClient = Stomp.over(() => (socket = new WebSocket(wsEndpoint.toString())));
+        stompClient.connectHeaders = {
+            'X-CSRF-TOKEN': csrfToken,
+        };
+        stompClient.onConnect = () => onConnect();
+        stompClient.onStompError = handleBrokerError;
+        stompClient.activate();
+    }
+
+    export function onConnect() {
+        connected = true;
+        subscription = stompClient.subscribe('/user/queue/errors', function (msg) {
+            console.error('Websocket server error: ' + JSON.stringify(msg.body));
+        });
+        stompClient.subscribe('/app' + topicChannel, (msg) => onMessage(msg));
+        stompClient.subscribe('/topic' + topicChannel, (msg) => onMessage(msg));
+    }
+
+    export function disconnect() {
+        subscription.unsubscribe();
+        stompClient.deactivate();
+        socket.close();
+        connected = false;
+    }
+
+    function handleBrokerError(receipt: IFrame) {
+        console.log('Broker reported error: ' + receipt.headers.message);
+        console.log('Additional details: ' + receipt.body);
+    }
+
+    export function onMessage(msg) {
+        if (!document.body.contains(element)) {
+            console.debug(
+                '[assistant] Element is not part of the DOM anymore. Disconnecting and suiciding.'
+            );
+            disconnect();
+            return;
+        }
+
+        console.debug('[assistant] onMessage received:', msg);
+        var msgBody = JSON.parse(msg.body);
+        console.debug('[assistant] Parsed message body:', msgBody);
+
+        if (!(msgBody instanceof Array)) {
+            msgBody = [msgBody];
+        }
+
+        console.debug('[assistant] Processing', msgBody.length, 'messages');
+        msgBody.forEach((incomingMessage) => {
+            dispatchMessage(incomingMessage);
+        });
+    }
+
+    function dispatchMessage(incomingMessage: any) {
+        const type = incomingMessage['@type'];
+        console.log(`[assistant] Received message of type ${type} with id ${incomingMessage.id}`);
+        if (type === 'textMessage') {
+            onTextMessage(incomingMessage);
+        } else if (type === 'callResponse') {
+            onCallResponse(incomingMessage);
+        } else if (type === 'clearCmd') {
+            onClearCommand();
+        } else if (type === 'refreshCmd') {
+            onRefreshCommand();
+        }
+    }
+
+    function onClearCommand() {
+        messages = [];
+    }
+
+    function onRefreshCommand() {
+        ajaxClient.refreshAnnotations().catch((error) => {
+            console.error('Failed to refresh annotations', error);
+        });
+    }
+
+    function onTextMessage(msg: MTextMessage) {
+        console.debug('[assistant] onTextMessage called with:', msg);
+        if (waitingForResponse && msg.role === 'assistant' && !msg.internal) {
+            waitingForResponse = false;
+        }
+
+        const index = messages.findIndex((message) => message.id === msg.id);
+        console.debug(
+            '[assistant] Message index in array:',
+            index,
+            'total messages:',
+            messages.length
+        );
+
+        // If message is new, add it
+        if (index === -1) {
+            console.log(
+                `[assistant] Starting message ${msg.id} with message fragment: ${msg.thinking || msg.content}`
+            );
+            if (msg.context) {
+                // Insert before the message with id == msg.context
+                const ctxIndex = messages.findIndex((m) => m.id === msg.context);
+                if (ctxIndex !== -1) {
+                    messages = [
+                        ...messages.slice(0, ctxIndex),
+                        initMessage(msg),
+                        ...messages.slice(ctxIndex),
+                    ];
+                } else {
+                    // If context id not found, just append
+                    messages = [...messages, initMessage(msg)];
+                }
+            } else {
+                // If no context id also just append
+                messages = [...messages, initMessage(msg)];
+            }
+
+            console.debug('[assistant] Added new message. Total messages now:', messages.length);
+
+            if (msg.role == 'assistant' && msg.content && !msg.internal && !msg.done) {
+                speechManager.initializeBuffer(msg.content);
+            }
+            return;
+        }
+
+        // Merge with existing message
+        console.log(
+            `[assistant] Merging message ${msg.id} with message fragment: ${msg.thinking || msg.content}`
+        );
+        messages = [
+            ...messages.slice(0, index),
+            {
+                ...messages[index],
+                content: (messages[index].content || '') + (msg.content || ''),
+                thinking: (messages[index].thinking || '') + (msg.thinking || ''),
+                thinkingSummary:
+                    (messages[index].thinkingSummary || '') + (msg.thinkingSummary || ''),
+                references: [
+                    ...(messages[index].references || []),
+                    ...(msg.references || []).filter(
+                        (newRef) =>
+                            !(messages[index].references || []).some(
+                                (existingRef) => existingRef.id === newRef.id
+                            )
+                    ),
+                ],
+                performance: msg.performance,
+                done: msg.done,
+            },
+            ...messages.slice(index + 1),
+        ];
+
+        if (speechAvailable && msg.role == 'assistant' && msg.content && !msg.internal) {
+            speechManager.speak(msg);
+        }
+
+        if (msg.role == 'assistant' && msg.done) {
+            waitingForResponse = false;
+        }
+    }
+
+    function initMessage(msg: MChatMessage) {
+        const collapsed = !!msg.internal || (msg.role !== 'user' && msg.role !== 'assistant');
+        const collapsible = msg.internal || (msg.role !== 'user' && msg.role !== 'assistant');
+        const thinkingCollapsed = true;
+        return { ...msg, collapsed, collapsible, thinkingCollapsed };
+    }
+
+    function onCallResponse(msg: MCallResponse) {
+        if (msg.context) {
+            // Insert before the message with id == msg.context
+            const ctxIndex = messages.findIndex((m) => m.id === msg.context);
+            if (ctxIndex !== -1) {
+                messages = [
+                    ...messages.slice(0, ctxIndex),
+                    initMessage(msg),
+                    ...messages.slice(ctxIndex),
+                ];
+            } else {
+                // If context id not found, just append
+                messages = [...messages, initMessage(msg)];
+            }
+        } else {
+            // If no context id also just append
+            messages = [...messages, initMessage(msg)];
+        }
+    }
+
+    function toggleSpeechSynthesis() {
+        assistantState.speechSynthesisEnabled = !assistantState.speechSynthesisEnabled;
+    }
+
+    function handleScroll() {
+        let threshold = 16;
+        autoScroll =
+            chatContainer.scrollTop + chatContainer.clientHeight >=
+            chatContainer.scrollHeight - threshold;
+    }
+
+    function copyToClipboard(message: MTextMessage) {
+        let usedReferences = {};
+        let text = message.content.replace(
+            refIdReplacementPattern,
+            (match: string, refId: string, dots: string) => {
+                const refSelector = (ref) => ref.id === refId;
+                const reference = message.references.find(refSelector);
+                const refNum = message.references.findIndex(refSelector) + 1;
+
+                if (reference) {
+                    usedReferences[refNum] = reference;
+                    return `[^${refNum}]`;
+                }
+
+                return match;
+            }
+        );
+
+        if (Object.keys(usedReferences).length > 0) {
+            text += '\n\nReferences:';
+        }
+
+        for (let refNum in usedReferences) {
+            const reference = usedReferences[refNum];
+            text += `\n[^${refNum}]: ${reference.documentName}`;
+            if (Number.isFinite(reference.score)) {
+                text += ` (score: ${reference.score.toFixed(4)})`;
+            }
+        }
+
+        navigator.clipboard.writeText(text).then(
+            () => {
+                console.log('Copied to clipboard successfully!');
+            },
+            (err) => {
+                console.error('Could not copy text: ', err);
+            }
+        );
+    }
+
+    onMount(async () => {
+        connect();
+    });
+
+    onDestroy(async () => {
+        disconnect();
+    });
+
+    $effect(() => {
+        messages; // Just to trigger the effect
+        if (autoScroll && chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    });
+
+    function renderCallArguments(message: MCallResponse) {
+        if (!message?.arguments) {
+            return 'no arguments';
+        }
+
+        return JSON.stringify(message.arguments, null, 2);
+    }
+
+    function renderCallPayload(message: MCallResponse) {
+        if (!message?.payload) {
+            return 'no payload';
+        }
+
+        if (typeof message.payload === 'string') {
+            return message.payload;
+        }
+
+        return JSON.stringify(message.payload, null, 2);
+    }
+
+    function sendMessage(message: string, inputElement: HTMLInputElement) {
+        if (stompClient && stompClient.connected) {
+            // Cancel current speech synthesis and clear the utterance queue
+            speechManager.cancel();
+
+            stompClient.publish({
+                destination: '/app' + topicChannel,
+                headers: {
+                    user: dataOwner,
+                    document: documentId,
+                },
+                body: message,
+            });
+            inputElement.value = '';
+            waitingForResponse = true;
+            autoScroll = true;
+        }
+    }
+
+    function handleKeyDown(event) {
+        if (event.key === 'Enter') {
+            sendMessage(event.target.value, event.target);
+            messageInput.value = '';
+        }
+    }
+
+    function toggleCollapse(message: MChatMessage) {
+        messages = messages.map((m) =>
+            m.id === message.id ? { ...m, collapsed: !m.collapsed } : m
+        );
+    }
+
+    function toggleCollapseThinking(message: MChatMessage) {
+        messages = messages.map((m) =>
+            m.id === message.id ? { ...m, thinkingCollapsed: !m.thinkingCollapsed } : m
+        );
+    }
+
+    function handleClick(event) {
+        const target = event.target;
+        const msgId = target.getAttribute('data-msg');
+        const refId = target.getAttribute('data-ref');
+        if (msgId && refId) {
+            event.preventDefault();
+            const message = messages.find((msg) => msg.id === msgId);
+            const reference = message.references.find((ref) => ref.id === refId);
+            if (reference) {
+                ajaxClient.scrollTo({
+                    docId: reference.documentId,
+                    offset: [reference.begin, reference.end],
+                });
+            }
+        }
+    }
+</script>
+
+<div bind:this={element} class="d-flex flex-column flex-content chat">
+    <div class="scrolling flex-content px-3 py-1" bind:this={chatContainer} onscroll={handleScroll}>
+        {#each grouped as item}
+            {#if item.type === 'single'}
+                {@const message = item.message}
+                {@const thinking = renderThinking(message)}
+
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+                <div
+                    class="message"
+                    data-id={message.id}
+                    data-role={message.role}
+                    data-internal={message.internal}
+                    tabIndex={message.internal ? 0 : undefined}
+                >
+                    <MessageContent
+                        {message}
+                        thinkingHtml={thinking}
+                        onToggleThinking={toggleCollapseThinking}
+                        onToggleCollapse={toggleCollapse}
+                        onCopy={copyToClipboard}
+                        onClickHandler={handleClick}
+                    />
+
+                    <PerformanceFooter
+                        performance={message.performance}
+                        show={(((message.content || message.role !== 'assistant') && !message.collapsed) || (thinking && !message.thinkingCollapsed))}
+                    />
+                </div>
+            {:else}
+                <div class="message-group">
+                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                    <div
+                        class="message-group-header"
+                        onclick={() => toggleGroup(item.id)}
+                        role="button"
+                        tabindex="0"
+                    >
+                        {#if !item.closed}
+                            <div
+                                class="spinner-border spinner-border-sm me-1"
+                                role="status"
+                                aria-hidden="true"
+                            ></div>
+                            {#if item.lastCompletedThinkingMessage}
+                                {#if item.lastCompletedThinkingMessage.thinkingSummary}
+                                    {item.lastCompletedThinkingMessage.thinkingSummary}
+                                {:else}
+                                    Processed request
+                                {/if}
+                            {:else if item.activeThinkingMessage?.thinkingSummary}
+                                {item.activeThinkingMessage.thinkingSummary}
+                            {:else}
+                                Working<span class:dots={!item.activeThinkingMessage?.done}></span>
+                            {/if}
+                        {:else}
+                            <i class="fa-solid fa-check me-1"></i>
+                            {#if item.lastCompletedThinkingMessage}
+                                {#if item.lastCompletedThinkingMessage.thinkingSummary}
+                                    {item.lastCompletedThinkingMessage.thinkingSummary}
+                                {:else}
+                                    Processed request
+                                {/if}
+                            {:else}
+                                {item.messages[0].actor
+                                    ? item.messages[0].actor
+                                    : item.messages[0].role} group ({item.messages.length})
+                            {/if}
+                        {/if}
+                    </div>
+
+                    {#if item.lastHasThinkingAndContent && isGroupCollapsed(item.id)}
+                        <!-- Show the last message's content while group is collapsed -->
+                        <div
+                            class="message"
+                            data-id={item.lastMessage.id}
+                            data-role={item.lastMessage.role}
+                            data-internal={item.lastMessage.internal}
+                            tabIndex={item.lastMessage.internal ? 0 : undefined}
+                        >
+                            {#if item.lastMessage.content || item.lastMessage.role !== 'assistant'}
+                                    <MessageContent
+                                        message={item.lastMessage}
+                                        thinkingHtml={item.activeThinkingHtml}
+                                        onToggleThinking={toggleCollapseThinking}
+                                        onToggleCollapse={toggleCollapse}
+                                        onCopy={copyToClipboard}
+                                        onClickHandler={handleClick}
+                                    />
+                            {/if}
+
+                            <PerformanceFooter
+                                performance={item.lastMessage.performance}
+                                show={(((item.lastMessage.content || item.lastMessage.role !== 'assistant') && !item.lastMessage.collapsed) || (item.activeThinkingHtml && item.activeThinkingMessage && !item.activeThinkingMessage.thinkingCollapsed))}
+                            />
+                        </div>
+                    {/if}
+
+                    {#if !isGroupCollapsed(item.id)}
+                        {#each item.messages as message}
+                            {@const thinking = renderThinking(message)}
+
+                            <div
+                                class="message"
+                                data-id={message.id}
+                                data-role={message.role}
+                                data-internal={message.internal}
+                                tabIndex={message.internal ? 0 : undefined}
+                            >
+                                <MessageContent
+                                    {message}
+                                    thinkingHtml={thinking}
+                                    onToggleThinking={toggleCollapseThinking}
+                                    onToggleCollapse={toggleCollapse}
+                                    onCopy={copyToClipboard}
+                                    onClickHandler={handleClick}
+                                />
+
+                                <PerformanceFooter
+                                    performance={message.performance}
+                                    show={(((message.content || message.role !== 'assistant') && !message.collapsed) || (thinking && !message.thinkingCollapsed))}
+                                />
+                            </div>
+                        {/each}
+                    {/if}
+                </div>
+            {/if}
+        {/each}
+        {#if waitingForResponse}
+            <div class="message" data-role="assistant">
+                <div class="message-body"><span class="dots"></span></div>
+            </div>
+        {/if}
+    </div>
+    <div class="px-3 py-1">
+        {#if speechAvailable}
+            <!-- svelte-ignore a11y_consider_explicit_label -->
+            <button
+                class="float-end btn btn-sm btn-link text-body-secondary"
+                onclick={toggleSpeechSynthesis}
+            >
+                <i
+                    class="fas"
+                    class:fa-volume-up={assistantState.speechSynthesisEnabled}
+                    class:fa-volume-mute={!assistantState.speechSynthesisEnabled}
+                ></i>
+            </button>
+        {/if}
+        <div class="message composer" data-role="user">
+            <input
+                type="text"
+                placeholder="Type your message here..."
+                bind:this={messageInput}
+                onkeydown={handleKeyDown}
+            />
+        </div>
+    </div>
+</div>
+
+<!-- svelte-ignore css_unused_selector -->
+<style lang="scss">
+    .chat {
+        background-color: var(--bs-secondary-bg);
+    }
+
+    @keyframes dots {
+        0%,
+        20% {
+            content: '';
+        }
+        40% {
+            content: '.';
+        }
+        60% {
+            content: '..';
+        }
+        80%,
+        100% {
+            content: '...';
+        }
+    }
+
+    .dots::after {
+        content: '';
+        display: inline-block;
+        animation: dots 1.5s steps(1, end) infinite;
+    }
+
+    .message-group {
+        .message-group-header {
+            display: block;
+            font-size: smaller;
+            color: var(--bs-body-color-secondary);
+        }
+    }
+
+    .message {
+        color: var(--bs-body-color);
+        font-size: var(--bs-body-font-size);
+        line-height: var(--bs-body-line-height);
+        clear: both;
+        position: relative;
+        word-wrap: break-word;
+        width: 100%;
+        max-width: 100%;
+
+        &.composer {
+            border-radius: 5px;
+
+            input {
+                border: none;
+                background: transparent;
+                width: 100%;
+                padding: 8px;
+                outline: none;
+                border-radius: 5px;
+                margin: 0;
+                box-sizing: border-box;
+            }
+        }
+    }
+</style>

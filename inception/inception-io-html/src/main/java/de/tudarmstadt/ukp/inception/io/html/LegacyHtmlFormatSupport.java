@@ -17,15 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.io.html;
 
+import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.html.HtmlReader;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 /**
  * Support for HTML format.
@@ -35,7 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
  * </p>
  */
 public class LegacyHtmlFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     public static final String ID = "html";
     public static final String NAME = "HTML (legacy)";
@@ -65,4 +70,26 @@ public class LegacyHtmlFormatSupport
     {
         return createReaderDescription(HtmlReader.class, aTSD);
     }
+
+    @Override
+    public InputStream obfuscate(SourceDocument aDocument, InputStream aSource) throws IOException
+    {
+        // The HTML importer lifts the document structure into the INITIAL_CAS, so on re-import
+        // the original source file is not consulted. We replace it with a minimal valid stand-in
+        // in the obfuscated export.
+        try {
+            var standin = getClass().getResourceAsStream(OBFUSCATION_STANDIN_RESOURCE);
+            if (standin == null) {
+                throw new IOException("Missing obfuscation stand-in resource ["
+                        + OBFUSCATION_STANDIN_RESOURCE + "]");
+            }
+            return standin;
+        }
+        finally {
+            closeQuietly(aSource);
+        }
+    }
+
+    private static final String OBFUSCATION_STANDIN_RESOURCE = //
+            "LegacyHtmlFormatSupport-obfuscation-standin.html";
 }

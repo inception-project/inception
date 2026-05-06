@@ -23,24 +23,44 @@ To create an annotation over a span of text, click with the mouse on the text an
 Depending on the layer behavior configuration, span annotations can have any length, can overlap,
 can stack, can nest, and can cross sentence boundaries. 
 
-.Example
-For example, for NE annotation, select the options as shown below (red check mark):
+image::images/annotation_span.png[align="center"]
 
-image::images/annotation2.jpg[align="center"]
+== Granularity
 
-link:http://en.wikipedia.org/wiki/Named-entity_recognition[NE] annotation can be chosen from a tagset and can span over several tokens within one sentence. Nested NE annotations are also possible (in the example below: "Frankfurter" in "Frankfurter FC"). 
+In the upper part of the right sidebar in the annotation page, you can find the quick-access buttons for the annotation granularity.
 
-image::images/annotation_ner.jpg[align="center"]
+image::images/annotation_span_granularity.png[align="center"]
 
-link:http://en.wikipedia.org/wiki/Lemma_%28morphology%29[Lemma] annotation, as shown below, is freely selectable over a single token.
+You can choose between four different levels of granularity for selecting text spans to annotate:  
 
-image::images/annotation_lemma.jpg[align="center"]
+* characters - annotations can start and end at any character position
+* individual tokens - annotations only cover exactly one token
+* token sequences - annotations can cover sequences of whole tokens
+* sentence sequences - annotations can cover sequences of whole sentences
 
-link:http://en.wikipedia.org/wiki/Part_of_speech[POS] can be chosen over one token out of a tagset.
+E.g. if you select *token sequences*, the annotations you create will always snap to token boundaries.
+Note that the project manager can restrict the available granularity levels for a project in the project settings.  
 
-image::images/annotation_pos.jpg[align="center"]
+.Granularity key bindings
+|====
+| Key | Action 
 
-.Zero-width spans
+| kbd:[Shift + 1]
+| characters
+
+| kbd:[Shift + 2]
+| individual tokens
+
+| kbd:[Shift + 3]
+| tokens sequences
+
+| kbd:[Shift + 4]
+| sentence sequences
+|====
+
+
+== Zero-width spans
+
 To create a zero-length annotation, hold kbd:[Shift] and click on the position where you wish to create the annotation. To avoid accidental creations of zero-length annotations, a simple single-click triggers no action by default. The *lock to token* behavior cancels the ability to create zero-length annotations.
 
 NOTE: A zero-width span between two tokens that are directly adjacent, e.g. the full stop at the

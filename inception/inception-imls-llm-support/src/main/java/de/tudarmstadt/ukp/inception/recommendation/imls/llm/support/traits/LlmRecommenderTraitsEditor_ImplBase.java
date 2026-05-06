@@ -89,7 +89,7 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
     private final IModel<List<OptionSetting>> optionSettings;
     private final IModel<List<Option<?>>> options;
 
-    private final AuthenticationTraitsEditor authenticationTraitsEditor;
+    private final AuthenticationTraitsEditor<?> authenticationTraitsEditor;
 
     public LlmRecommenderTraitsEditor_ImplBase(String aId, IModel<Recommender> aRecommender,
             IModel<List<Preset>> aPresets, IModel<List<Option<?>>> aOptions)
@@ -161,7 +161,7 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
                 _target -> applyPreset(form, presetSelect.getModelObject(), _target)));
         promptContainer.add(presetSelect);
 
-        promptContainer.add(new TextArea<String>(MID_PROMPT));
+        promptContainer.add(new TextArea<String>(MID_PROMPT).setOutputMarkupId(true));
 
         var markdownLabel = new MarkdownLabel(MID_PROMPT_HINTS,
                 LoadableDetachableModel.of(this::getPromptHints));
@@ -173,7 +173,7 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
                         _target -> _target.add(markdownLabel))));
 
         promptContainer.add(new ExtractionModeSelect(MID_EXTRACTION_MODE,
-                traits.bind(MID_EXTRACTION_MODE), getModel()));
+                traits.bind(MID_EXTRACTION_MODE), getModel()).setOutputMarkupId(true));
 
         promptContainer.add(new CheckBox(MID_JUSTIFICATION_ENABLED) //
                 .setOutputMarkupId(true));
@@ -191,7 +191,7 @@ public abstract class LlmRecommenderTraitsEditor_ImplBase
                 .setOutputMarkupId(true));
     }
 
-    protected AuthenticationTraitsEditor createAuthenticationTraitsEditor(String aId)
+    protected AuthenticationTraitsEditor<?> createAuthenticationTraitsEditor(String aId)
     {
         var editor = new NoAuthenticationTraitsEditor(aId);
         editor.setVisible(false);

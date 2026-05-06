@@ -15,24 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { VID, Argument, AnnotatedText } from '..'
+import { VID, Argument, AnnotatedText } from '..';
 
 /**
  * Represents the endpoint of an arc.
  */
-export type CompactArgument = [
-  target: VID,
-  label?: string
-]
+export type CompactArgument = [target: VID, label?: string];
 
-export function unpackCompactArgument (doc: AnnotatedText, raw: CompactArgument): Argument | undefined {
-  const cooked = new Argument()
-  cooked.targetId = raw[0]
-  cooked.label = raw[1]
-  cooked.target = doc.spans.get(cooked.targetId)
-  if (!cooked.target) {
-    console.warn(`Target ${cooked.targetId} not found`)
-    return undefined
-  }
-  return cooked
+export function unpackCompactArgument(
+    doc: AnnotatedText,
+    raw: CompactArgument
+): Argument | undefined {
+    const cooked = new Argument();
+    cooked.targetId = raw[0];
+    cooked.label = raw[1];
+    cooked.target = doc.spans.get(cooked.targetId);
+    if (!cooked.target) {
+        console.warn(`Target ${cooked.targetId} not found`);
+        return undefined;
+    }
+    return cooked;
 }

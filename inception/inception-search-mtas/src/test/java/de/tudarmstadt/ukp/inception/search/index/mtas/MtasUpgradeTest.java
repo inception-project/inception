@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParserLuceneTest.createBinaryCasDocument;
 import static org.apache.commons.io.FileUtils.copyDirectory;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
@@ -32,9 +33,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfigur
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.io.xmi.config.UimaFormatsPropertiesImpl.XmiFormatProperties;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
@@ -77,6 +78,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 @EnableAutoConfiguration
 @ImportAutoConfiguration( //
         classes = { //
+                EventLoggingAutoConfiguration.class, //
                 ConstraintsServiceAutoConfiguration.class, //
                 PreferencesServiceAutoConfig.class, //
                 ProjectServiceAutoConfiguration.class, //
@@ -87,8 +89,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
                 DocumentImportExportServiceAutoConfiguration.class, //
                 SchedulingServiceAutoConfiguration.class, //
                 SecurityAutoConfiguration.class, //
-                SearchServiceAutoConfiguration.class }, //
-        exclude = LiquibaseAutoConfiguration.class)
+                SearchServiceAutoConfiguration.class })
 @EntityScan({ //
         "de.tudarmstadt.ukp.clarin.webanno.security.model", //
         "de.tudarmstadt.ukp.inception.preferences.model", //
@@ -132,9 +133,13 @@ public class MtasUpgradeTest
         documentService.createSourceDocument(srcDoc);
         documentService.createOrUpdateAnnotationDocument(annDoc);
 
-        index = new MtasDocumentIndex(project, documentService,
-                repositoryProperties.getPath().getAbsolutePath(), featureIndexingSupportRegistry,
-                featureSupportRegistry);
+        var indexDir = repositoryProperties.getPath().toPath() //
+                .resolve(PROJECT_FOLDER) //
+                .resolve(Long.toString(project.getId())) //
+                .resolve(MtasDocumentIndexFactory.INDEX) //
+                .toFile();
+        index = new MtasDocumentIndex(project, documentService, indexDir,
+                featureIndexingSupportRegistry, featureSupportRegistry);
     }
 
     @AfterEach

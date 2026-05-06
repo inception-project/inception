@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.misc;
 
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
+
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.util.convert.ConversionException;
 import org.apache.wicket.util.convert.IConverter;
@@ -30,8 +33,8 @@ import org.wicketstuff.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.inception.annotation.feature.string.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.support.kendo.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.support.kendo.KendoStyleUtils;
 
 public class ReorderableTagAutoCompleteField
@@ -59,11 +62,19 @@ public class ReorderableTagAutoCompleteField
     }
 
     @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+
+        aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
+    }
+
+    @Override
     protected List<ReorderableTag> getChoices(String aTerm)
     {
-        FeatureState state = featureState.getObject();
+        var state = featureState.getObject();
 
-        TagRanker ranker = new TagRanker();
+        var ranker = new TagRanker();
         ranker.setMaxResults(maxResults);
         ranker.setTagCreationAllowed(state.getFeature().getTagset().isCreateTag());
 

@@ -39,6 +39,8 @@ public interface AgreementMeasureSupport<//
     /**
      * Checks whether the given feature is supported by the current agreement measure support.
      * 
+     * @param aLayer
+     *            a layer definition.
      * @param aFeature
      *            a feature definition.
      * @return whether the given feature is supported by the current agreement measure support.

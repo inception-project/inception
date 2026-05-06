@@ -26,6 +26,7 @@ import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
+import de.tudarmstadt.ukp.inception.kb.footprint.KnowledgeBaseFootprintProvider;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -49,5 +50,12 @@ public class KnowledgeBaseServiceAutoConfiguration
             KnowledgeBaseProperties aKbProperties)
     {
         return new KnowledgeBaseServiceImpl(aRepoProperties, aKbProperties, entityManager);
+    }
+
+    @Bean
+    public KnowledgeBaseFootprintProvider KnowledgeBaseFootprintProvider(
+            KnowledgeBaseService aKnowledgeBaseService)
+    {
+        return new KnowledgeBaseFootprintProvider(aKnowledgeBaseService);
     }
 }

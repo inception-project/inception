@@ -15,27 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-function LogoutTimer(sessionTimeout) {
+function LogoutTimer(sessionTimeoutSeconds) {
   var instance = this;
 
-  var timeout = sessionTimeout;
-  var started = null;
+  var timeoutSeconds = sessionTimeoutSeconds;
+  var expirationTime = null;
   var timer = null;
 
   this.tick = function () {
-    var remaining = timeout - Math.floor((new Date() - started) / 1000);
-    var remaining2 = Math.max(0, remaining);
-    var min = Math.floor(remaining2 / 60).toString();
+    var now = new Date();
+    var remaining = Math.floor((expirationTime - now) / 1000);
+    var remainingClamped = Math.max(0, remaining);
+    var min = Math.floor(remainingClamped / 60).toString();
 
-    // Calling text(val) causes a redraw of the browser contents causing constant CPU
-    // load. Only calling the method if the text actually did change avoids this issue.
     var timerElement = $('#timer');
-    if (timerElement.text() != min) {
-      $('#timer').text(min);
+    if (timerElement.text() !== min) {
+      timerElement.text(min);
     }
 
-    // Wait an additional couple of seconds before reload to avoid reloading before the
-    // server-side session has *really* expired.
     if (remaining <= -10) {
       clearInterval(instance.timer);
       location.reload(true);
@@ -43,19 +40,28 @@ function LogoutTimer(sessionTimeout) {
   };
 
   this.start = function () {
-    const TICK_RATE = 1000; // 1 second
+    const TICK_RATE = 1000; // every second
     if (instance.timer) {
       clearInterval(instance.timer);
     }
-    started = new Date();
+    expirationTime = new Date(Date.now() + timeoutSeconds * 1000);
     instance.timer = setInterval(instance.tick, TICK_RATE);
     instance.tick();
   };
 
-  if (typeof Wicket != 'undefined') {
-    instance.start();
-    Wicket.Event.subscribe('/ajax/call/beforeSend', function (attr, xhr, status) {
-      instance.start()
+  if (typeof Wicket !== 'undefined') {
+    // Restart timer on Wicket AJAX calls
+    Wicket.Event.subscribe('/ajax/call/beforeSend', function () {
+      instance.start();
     });
   }
+
+  instance.start();
+  
+  // Also check immediately when the tab becomes visible again
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      instance.tick();
+    }
+  });
 }

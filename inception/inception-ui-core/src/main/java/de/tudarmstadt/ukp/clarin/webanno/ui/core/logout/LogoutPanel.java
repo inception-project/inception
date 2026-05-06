@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import org.apache.wicket.Component;
+import org.apache.wicket.Page;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
@@ -42,7 +43,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProper
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.ApplicationSession;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaStatelessLink;
 
 @StatelessComponent
@@ -66,15 +66,23 @@ public class LogoutPanel
         logoutTimer.add(visibleWhen(() -> getAutoLogoutTime() > 0));
         add(logoutTimer);
 
-        var profileLinkParameters = new PageParameters().add(ManageUsersPage.PARAM_USER,
-                getModel().map(User::getUsername).orElse("").getObject());
-        var profileLink = new BookmarkablePageLink<>("profile", ManageUsersPage.class,
-                profileLinkParameters);
-        profileLink.add(enabledWhen(
-                () -> userRepository.isProfileSelfServiceAllowed(getModel().getObject())));
-        profileLink.add(visibleWhen(getModel().isPresent()));
-        profileLink.add(new Label("username", getModel().map(User::getUiName)));
-        add(profileLink);
+        try {
+            @SuppressWarnings("unchecked")
+            var manageUsersPage = (Class<Page>) Class.forName(
+                    "de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.users.ManageUsersPage");
+            var profileLinkParameters = new PageParameters().add("user",
+                    getModel().map(User::getUsername).orElse("").getObject());
+            var profileLink = new BookmarkablePageLink<>("profile", manageUsersPage,
+                    profileLinkParameters);
+            profileLink.add(enabledWhen(
+                    () -> userRepository.isProfileSelfServiceAllowed(getModel().getObject())));
+            profileLink.add(visibleWhen(getModel().isPresent()));
+            profileLink.add(new Label("username", getModel().map(User::getUiName)));
+            add(profileLink);
+        }
+        catch (ClassNotFoundException e) {
+            throw new RuntimeException("Unable to find ManageUsersPage implementation", e);
+        }
 
         add(visibleWhen(
                 () -> ApplicationSession.exists() && ApplicationSession.get().isSignedIn()));

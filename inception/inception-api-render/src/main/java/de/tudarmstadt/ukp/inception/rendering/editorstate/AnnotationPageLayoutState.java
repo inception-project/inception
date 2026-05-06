@@ -37,6 +37,7 @@ public class AnnotationPageLayoutState
 
     private int sidebarSizeLeft;
     private int sidebarSizeRight;
+    private boolean actionBarCollapsed;
 
     public int getSidebarSizeLeft()
     {
@@ -82,5 +83,15 @@ public class AnnotationPageLayoutState
         else {
             sidebarSizeRight = aSidebarSize;
         }
+    }
+
+    public boolean isActionBarCollapsed()
+    {
+        return actionBarCollapsed;
+    }
+
+    public void setActionBarCollapsed(boolean aActionBarCollapsed)
+    {
+        actionBarCollapsed = aActionBarCollapsed;
     }
 }

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.footer;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommenderPredictionSources.RECOMMENDER_SOURCE;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_USER;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_RECOMMENDER;
@@ -86,7 +87,7 @@ public class RecommendationEventWebsocketControllerImpl
         if (aEvent.getSource() instanceof PredictionTask) {
             var sessionOwner = userService.get(aEvent.getUser());
             var predictions = recommendationService.getIncomingPredictions(sessionOwner,
-                    aEvent.getProject());
+                    aEvent.getProject(), RECOMMENDER_SOURCE);
 
             if (predictions != null && predictions.hasNewSuggestions()) {
                 return new RRecommenderLogMessage(messageLevel, messageBody,

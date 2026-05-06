@@ -36,13 +36,36 @@
   <div class="modal-body overflow-auto" style="width: 79vw;">
     <form wicket:id="form" class="container">
       <div>
-        <textarea wicket:id=query class="w-100" rows="10">
+        <textarea wicket:id=query class="form-control w-100" rows="10">
         </textarea>
       </div>
-      <button wicket:id="runQuery" class="btn btn-primary">Query</button>
+      <div class="d-flex justify-content-between mt-2">
+        <div class="d-flex gap-2">
+          <div class="input-group w-auto">
+            <span class="input-group-text">Explanation</span>
+            <select wicket:id="level" class="form-select"/>
+          </div>
+          <div class="input-group w-auto">
+            <span class="input-group-text">Timeout</span>
+            <input wicket:id="timeout" class="form-control" type="number"/>
+          </div>
+        </div>
+        <button wicket:id="runQuery" class="btn btn-primary">Query</button>
+      </div>
     </form>
-    <div wicket:id="resultsContainer">
+    <div wicket:id="resultsContainer" class="mt-2">
+      <div class="d-flex justify-content-between mt-2">
+        <div wicket:enclosure="duration" class="small text-end text-muted">
+          Query: <span wicket:id="duration"/>ms
+        </div>
+        <div wicket:enclosure="explanationDuration" class="small text-end text-muted">
+          Explanation: <span wicket:id="explanationDuration"/>ms
+        </div>
+      </div>
       <table wicket:id="results" class="results-table w-100"/>
+      <div class="form-control mt-2" wicket:enclosure="explanation">
+       <pre><code wicket:id="explanation"/></pre>
+      </div>
     </div>
   </div>
   <div class="modal-footer flex-column small">

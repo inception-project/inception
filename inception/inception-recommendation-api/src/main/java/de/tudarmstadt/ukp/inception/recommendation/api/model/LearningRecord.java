@@ -40,8 +40,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
 @Entity
 @Table(name = "learning_record")
@@ -94,9 +92,9 @@ public class LearningRecord
     @Type(LearningRecordChangeLocationType.class)
     private LearningRecordChangeLocation changeLocation;
 
+    @Column(name = "suggestionType", nullable = false)
     private String suggestionType;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
     private Date actionDate = new Date();
 
@@ -521,7 +519,7 @@ public class LearningRecord
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE).append("id", id)
+        return new ToStringBuilder(this, ToStringStyle.JSON_STYLE).append("id", id)
                 .append("sourceDocument", sourceDocument).append("layer", layer)
                 .append("annotationFeature", annotationFeature).append("offsetBegin", offsetBegin)
                 .append("offsetEnd", offsetEnd).append("offsetBegin2", offsetBegin2)

@@ -20,12 +20,11 @@ package de.tudarmstadt.ukp.inception.processing;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static java.lang.String.format;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -39,14 +38,14 @@ import wicket.contrib.input.events.key.KeyType;
 public class BulkProcessingPageMenuItem
     implements ProjectMenuItem
 {
-    private final UserDao userRepo;
+    private final UserDao userService;
     private final ProjectService projectService;
     private final ServletContext servletContext;
 
     public BulkProcessingPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
             ServletContext aServletContext)
     {
-        userRepo = aUserRepo;
+        userService = aUserRepo;
         projectService = aProjectService;
         servletContext = aServletContext;
     }
@@ -59,16 +58,16 @@ public class BulkProcessingPageMenuItem
 
     public String getUrl(Project aProject, long aDocumentId)
     {
-        String p = aProject.getSlug() != null ? aProject.getSlug()
-                : String.valueOf(aProject.getId());
+        var p = aProject.getSlug() != null ? aProject.getSlug() : String.valueOf(aProject.getId());
 
         return format("%s/p/%s%s/%d", servletContext.getContextPath(), p, getPath(), aDocumentId);
     }
 
     @Override
-    public IconType getIcon()
+    public Component getIcon(String aId)
     {
-        return FontAwesome5IconType.robot_s;
+        // return new Icon(aId, FontAwesome5IconType.robot_s);
+        return new BulkProcessingSidebarIcon(aId);
     }
 
     @Override
@@ -84,7 +83,7 @@ public class BulkProcessingPageMenuItem
             return false;
         }
 
-        User user = userRepo.getCurrentUser();
+        User user = userService.getCurrentUser();
         return projectService.hasRole(user, aProject, MANAGER);
     }
 

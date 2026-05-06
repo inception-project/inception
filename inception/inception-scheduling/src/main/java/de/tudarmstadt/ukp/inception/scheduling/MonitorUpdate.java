@@ -21,6 +21,8 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public interface MonitorUpdate
 {
+    MonitorUpdate setStatusMessage(LogMessage aMessage);
+
     MonitorUpdate addMessage(LogMessage aMessage);
 
     MonitorUpdate setState(TaskState aState);

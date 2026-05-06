@@ -4,7 +4,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>37.0-SNAPSHOT</version>
+    <version>41.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>inception-search-mtas-upstream</artifactId>
@@ -49,11 +49,11 @@
             <execution>
               <id>default</id>
               <configuration>
-                <excludes combine.children="append">
-                  <exclude>src/main/java/**</exclude>
-                  <exclude>src/test/java/**</exclude>
-                  <exclude>docker/**</exclude>
-                </excludes>
+                <inputExcludes combine.children="append">
+                  <inputExclude>src/main/java/**</inputExclude>
+                  <inputExclude>src/test/java/**</inputExclude>
+                  <inputExclude>docker/**</inputExclude>
+                </inputExcludes>
               </configuration>
             </execution>
           </executions>

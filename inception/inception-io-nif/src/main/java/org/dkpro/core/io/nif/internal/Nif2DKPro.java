@@ -17,6 +17,8 @@
  */
 package org.dkpro.core.io.nif.internal;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -46,10 +48,22 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class Nif2DKPro
 {
     private MappingProvider posMappingProvider;
+    private String stripClassIri;
+    private String stripIdentifierIri;
 
     public void setPosMappingProvider(MappingProvider aPosMappingProvider)
     {
         posMappingProvider = aPosMappingProvider;
+    }
+
+    public void setStripClassIri(String aStripClassIri)
+    {
+        stripClassIri = aStripClassIri;
+    }
+
+    public void setStripIdentifierIri(String aStripIdentifierIri)
+    {
+        stripIdentifierIri = aStripIdentifierIri;
     }
 
     public void convert(Statement aContext, JCas aJCas)
@@ -201,24 +215,35 @@ public class Nif2DKPro
 
             // If there is a most-specific class, then we use that
             if (nifNamedEntity.hasProperty(pTaMsClassRef)) {
-                uimaNamedEntity
-                        .setValue(nifNamedEntity.getProperty(pTaMsClassRef).getResource().getURI());
+                uimaNamedEntity.setValue(stripPrefix(
+                        nifNamedEntity.getProperty(pTaMsClassRef).getResource().getURI(),
+                        stripClassIri));
             }
             // ... else, we use some class
             else if (nifNamedEntity.hasProperty(pTaClassRef)) {
-                uimaNamedEntity
-                        .setValue(nifNamedEntity.getProperty(pTaClassRef).getResource().getURI());
+                uimaNamedEntity.setValue(
+                        stripPrefix(nifNamedEntity.getProperty(pTaClassRef).getResource().getURI(),
+                                stripClassIri));
             }
 
             // If the entity is linked, then we keep the identifier
             if (nifNamedEntity.hasProperty(pTaIdentRef)) {
                 uimaNamedEntity.setIdentifier(
-                        nifNamedEntity.getProperty(pTaIdentRef).getResource().getURI());
+                        stripPrefix(nifNamedEntity.getProperty(pTaIdentRef).getResource().getURI(),
+                                stripIdentifierIri));
             }
             uimaNamedEntity.addToIndexes();
 
             assert assertSanity(nifNamedEntity, uimaNamedEntity);
         }
+    }
+
+    private static String stripPrefix(String aValue, String aPrefix)
+    {
+        if (aValue == null || aPrefix == null || aPrefix.isEmpty() || !aValue.startsWith(aPrefix)) {
+            return aValue;
+        }
+        return URLDecoder.decode(aValue.substring(aPrefix.length()), StandardCharsets.UTF_8);
     }
 
     private static boolean assertSanity(Resource aNif, Annotation aUima)

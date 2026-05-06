@@ -38,20 +38,20 @@
  * SOFTWARE.
  */
 
-import { ColorCode } from '../protocol/Protocol'
+import { ColorCode } from '../protocol/Protocol';
 
 /**
  * Class currently defined only for documentation purposes
  */
 export type ValType = {
-  name: string,
-  glyph: string,
-  glyphColor: ColorCode,
-  position: 'left' | 'right'
-}
+    name: string;
+    glyph: string;
+    glyphColor: ColorCode;
+    position: 'left' | 'right';
+};
 
 export class AttributeType {
-  name: string
-  values: Record<string, ValType> = {}
-  bool: string
+    name: string;
+    values: Record<string, ValType> = {};
+    bool: string;
 }

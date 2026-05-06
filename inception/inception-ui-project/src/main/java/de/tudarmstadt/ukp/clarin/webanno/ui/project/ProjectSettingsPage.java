@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,18 +40,14 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectContext;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.detail.ProjectDetailPanel;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapAjaxTabbedPanel;
@@ -58,16 +55,17 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.wicket.ModelChangedVisitor;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.AdminSettingsDashboardPageBase;
 
 /**
  * This is the main page for Project Settings.
  */
 @MountPath(value = NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/settings", alt = "/admin/projects")
 public class ProjectSettingsPage
-    extends ApplicationPageBase
+    extends AdminSettingsDashboardPageBase
     implements ProjectContext
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectSettingsPage.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static final String NEW_PROJECT_ID = "__NEW__";
 
@@ -106,17 +104,17 @@ public class ProjectSettingsPage
         sidebar.setVisible(false);
 
         // Fetch project parameter
-        StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT);
+        var projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT);
         // Check if we are asked to create a new project
         if (projectParameter != null && NEW_PROJECT_ID.equals(projectParameter.toString())) {
             selectedProject.setObject(new Project());
         }
         // Check if we are asked to open an existing project
         else {
-            Project project = ProjectPageBase.getProjectFromParameters(this, projectService);
+            var project = ProjectPageBase.getProjectFromParameters(this, projectService);
 
             if (project != null) {
-                User user = userRepository.getCurrentUser();
+                var user = userRepository.getCurrentUser();
 
                 // Check access to project
                 if (!userRepository.isAdministrator(user)
@@ -210,9 +208,9 @@ public class ProjectSettingsPage
         });
 
         // Add the project settings panels from the registry
-        for (ProjectSettingsPanelFactory psp : projectSettingsPanelRegistry.getPanels()) {
-            String path = psp.getPath();
-            AbstractTab tab = new AbstractTab(Model.of(psp.getLabel()))
+        for (var psp : projectSettingsPanelRegistry.getPanels()) {
+            var path = psp.getPath();
+            var tab = new AbstractTab(Model.of(psp.getLabel()))
             {
                 private static final long serialVersionUID = -1503555976570640065L;
 
@@ -265,7 +263,7 @@ public class ProjectSettingsPage
         Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
                 "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
 
-        PageParameters pageParameters = new PageParameters();
+        var pageParameters = new PageParameters();
         ProjectPageBase.setProjectPageParameter(pageParameters, getProject());
         setResponsePage(projectDashboard, pageParameters);
     }

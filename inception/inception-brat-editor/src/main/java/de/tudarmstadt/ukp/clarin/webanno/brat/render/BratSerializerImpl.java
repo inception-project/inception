@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGeneratorImpl.getBratTypeName;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection.RTL;
 import static de.tudarmstadt.ukp.inception.support.text.TrimUtils.trim;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static java.lang.Character.isWhitespace;
 import static java.lang.Character.toTitleCase;
 import static java.util.Arrays.asList;
@@ -41,7 +42,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +68,6 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSentenceMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
-import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
  * Render documents using brat. This class converts a UIMA annotation representation into the object
@@ -176,15 +175,7 @@ public class BratSerializerImpl
     private void renderComments(GetDocumentResponse aResponse, VDocument aVDoc,
             RenderRequest aRequest)
     {
-        CAS cas = aRequest.getCas();
-
-        if (cas == null) {
-            // FIXME: In curation, rendering happens at a different time than serializing and
-            // we can not keep the CAS around all the time - for the moment, we also do not need
-            // the sentence comments on the annotators views in curation, so we ignore this.
-            // Eventually, it should be changed so that we do not need the CAS here.
-            return;
-        }
+        var cas = aRequest.getCas();
 
         Map<AnnotationFS, Integer> sentenceIndexes = null;
         for (var vcomment : aVDoc.comments()) {
@@ -194,10 +185,13 @@ public class BratSerializerImpl
             default -> AnnotationComment.ANNOTATOR_NOTES;
             };
 
+            // In curation, rendering happens at a different time than serializing and
+            // the CAS is not kept around. Without it we cannot resolve sentence-attached
+            // comments, but we can still emit annotation comments.
             AnnotationFS fs;
-            if (!vcomment.getVid().isSynthetic() && ((fs = ICasUtil.selectAnnotationByAddr(cas,
-                    vcomment.getVid().getId())) != null
-                    && fs.getType().getName().equals(Sentence.class.getName()))) {
+            if (cas != null && !vcomment.getVid().isSynthetic()
+                    && ((fs = selectAnnotationByAddr(cas, vcomment.getVid().getId())) != null
+                            && fs.getType().getName().equals(Sentence.class.getName()))) {
                 // Lazily fetching the sentences because we only need them for the comments
                 if (sentenceIndexes == null) {
                     sentenceIndexes = new HashMap<>();
@@ -281,7 +275,7 @@ public class BratSerializerImpl
                 while (tokenIterator.hasNext()) {
                     var token = tokenIterator.next();
                     if (prevToken.getEnd() == token.getBegin()) {
-                        extraSplits.add(token.getBegin());
+                        extraSplits.add(token.getBegin() - aVDoc.getWindowBegin());
                     }
                     prevToken = token;
                 }

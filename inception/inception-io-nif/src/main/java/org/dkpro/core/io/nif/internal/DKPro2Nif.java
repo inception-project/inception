@@ -22,6 +22,9 @@ import static org.apache.jena.datatypes.xsd.XSDDatatype.XSDstring;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 import org.apache.jena.irix.IRIs;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntModel;
@@ -39,6 +42,12 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class DKPro2Nif
 {
     public static void convert(JCas aJCas, OntModel aTarget)
+    {
+        convert(aJCas, aTarget, null, null);
+    }
+
+    public static void convert(JCas aJCas, OntModel aTarget, String aDefaultClassIri,
+            String aDefaultIdentifierIri)
     {
         // Shorten down variable name for model
         OntModel m = aTarget;
@@ -194,10 +203,10 @@ public class DKPro2Nif
             String neClass = uimaNamedEntity.getValue();
             String neIdentifier = uimaNamedEntity.getIdentifier();
 
-            boolean neClassIsUri = neClass != null && IRIs.check(neClass);
-            boolean neIdentifierIsUri = neIdentifier != null && IRIs.check(neIdentifier);
+            String neClassIri = toIri(neClass, aDefaultClassIri);
+            String neIdentifierIri = toIri(neIdentifier, aDefaultIdentifierIri);
 
-            if (!neClassIsUri && !neIdentifierIsUri) {
+            if (neClassIri == null && neIdentifierIri == null) {
                 continue;
             }
 
@@ -212,13 +221,28 @@ public class DKPro2Nif
             nifNamedEntity.addLiteral(pEndIndex,
                     m.createTypedLiteral(uimaNamedEntity.getEnd(), XSDnonNegativeInteger));
 
-            if (neClassIsUri) {
-                nifNamedEntity.addProperty(pTaClassRef, m.createResource(neClass));
+            if (neClassIri != null) {
+                nifNamedEntity.addProperty(pTaClassRef, m.createResource(neClassIri));
             }
 
-            if (neIdentifierIsUri) {
-                nifNamedEntity.addProperty(pTaIdentRef, m.createResource(neIdentifier));
+            if (neIdentifierIri != null) {
+                nifNamedEntity.addProperty(pTaIdentRef, m.createResource(neIdentifierIri));
             }
         }
+    }
+
+    private static String toIri(String aValue, String aDefaultPrefix)
+    {
+        if (aValue == null || aValue.isEmpty()) {
+            return null;
+        }
+        if (IRIs.check(aValue)) {
+            return aValue;
+        }
+        if (aDefaultPrefix == null || aDefaultPrefix.isEmpty()) {
+            return null;
+        }
+        String candidate = aDefaultPrefix + URLEncoder.encode(aValue, StandardCharsets.UTF_8);
+        return IRIs.check(candidate) ? candidate : null;
     }
 }

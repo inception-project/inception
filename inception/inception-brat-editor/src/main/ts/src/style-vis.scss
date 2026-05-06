@@ -40,329 +40,353 @@ $background_color_8: #ddddff;
 $background_color_9: #f5f5f9;
 $background_color_10: #ffcccc;
 
-
 .brat {
-  .center_wrapper {
-    display: table;
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    >div {
-      display: table-cell;
-      vertical-align: middle;
-      >div {
-        color: $color_1;
-        margin-left: auto;
-        margin-right: auto;
-        width: 30em;
-        font-size: 12px;
-        font-family: $font_family_1;
-        h1 {
-          text-align: center;
-          font-size: 14px;
+    .center_wrapper {
+        display: table;
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        > div {
+            display: table-cell;
+            vertical-align: middle;
+            > div {
+                color: $color_1;
+                margin-left: auto;
+                margin-right: auto;
+                width: 30em;
+                font-size: 12px;
+                font-family: $font_family_1;
+                h1 {
+                    text-align: center;
+                    font-size: 14px;
+                }
+            }
         }
-      }
     }
-  }
-  
-  svg {
-    border: 1px solid #7fa2ff;
-    font-size: 15px;
-  }
-  
-  text {
-    font-size: 100%;
-    font-family: $font_family_1;
-  }
-  
-  path {
-    pointer-events: none;
-  }
-  
-  .span {
+
+    svg {
+        border: 1px solid #7fa2ff;
+        font-size: 15px;
+    }
+
     text {
-      font-size: 75%;
-      text-anchor: middle;
-      font-family: $font_family_2;
-      pointer-events: none;
+        font-size: 100%;
+        font-family: $font_family_1;
     }
-    rect {
-      stroke-width: 0.75;
-    }
-    rect.False_positive {
-      stroke: #ff4141;
-      stroke-width: 2;
-    }
-    rect.False_negative {
-      stroke: #c20000;
-      fill: #ffffff;
-      stroke-width: 2;
-    }
-    rect.AnnotationError {
-      stroke-width: 1;
-    }
-    rect.AnnotationWarning {
-      stroke-width: 1;
-    }
-    rect.AnnotationIncomplete {
-      stroke: #002200;
-      stroke-width: 0.5;
-      fill: #ffffff;
-    }
-    rect.AnnotationUnconfirmed {
-      stroke: #002200;
-      stroke-width: 0.5;
-      opacity: 0.5;
-    }
-    path {
-      fill: none;
-    }
-    path.curly {
-      stroke-width: 0.5;
-    }
-    path.boxcross {
-      stroke: black;
-      opacity: 0.5;
-    }
-    .reselect {
-      stroke-width: 2px;
-    }
-    .reselectTarget {
-      stroke-width: 2px;
-    }
-    .badTarget {
-      stroke: #f00;
-    }
-    rect.AddedAnnotation {
-      stroke: #ff4141;
-      stroke-width: 2;
-    }
-    rect.MissingAnnotation {
-      stroke: #ffffff;
-      stroke-width: 2;
-      &+text {
-        opacity: 0.5;
-      }
-    }
-    rect.ChangedAnnotation {
-      stroke: #ffff99;
-      stroke-width: 2;
-    }
-  }
-  
-  .span_type_label {
-    font-size: 11px;
-    font-family: $font_family_2;
-  }
-  
-  .arc_type_label {
-    font-size: 11px;
-    font-family: $font_family_2;
-  }
-  
-  .attribute_type_label {
-    .ui-button-text {
-      font-size: 11px;
-      font-family: $font_family_2;
-    }
-  }
-  
-  .glyph {
-    fill: #444444;
-    font-family: $font_family_2;
-    font-weight: bold;
-  }
-  
-  .attribute_warning {
-    stroke: red;
-  }
 
-  .shadow {
-    -moz-box-shadow: 5px 5px 5px #444444;
-    -webkit-box-shadow: 5px 5px 5px #444444;
-    box-shadow: 5px 5px 5px #444444;
-
-    &_True_positive { fill: #00ff00; }
-    &_False_positive { fill: #ff4141; }
-    &_False_negative { fill: #c20000; }
-    &_AnnotationError { fill: #ff0000; }
-    &_AnnotationWarning { fill: #ff8800; }
-    &_AnnotatorNotes { fill: #3ab7ee; }
-    &_Normalized { fill: #3aee37; }
-    &_AnnotationIncomplete { fill: #aaaaaa; }
-    &_AnnotationUnconfirmed { fill: #eeeeee; }
-    &_AddedAnnotation { fill: #ff4141; }
-    &_MissingAnnotation { fill: #ff4141; opacity: 0.3; }
-    &_ChangedAnnotation { fill: #ff4141; }
-    &_EditHighlight_arc {
-      stroke: orange;
-      -webkit-animation-name: flash;
-      animation-name: flash;
-      -webkit-animation-duration: 1s;
-      animation-duration: 1s;
-      -webkit-animation-fill-mode: both;
-      animation-fill-mode: both;
-    }
-  }
-  
-  rect.Normalized {
-    stroke-width: 1.5;
-  }
-  
-  rect.shadow_EditHighlight {
-    fill: orange;
-    -webkit-animation-name: flash;
-    animation-name: flash;
-    -webkit-animation-duration: 1s;
-    animation-duration: 1s;
-    -webkit-animation-fill-mode: both;
-    animation-fill-mode: both;
-  }
-  
-  .arcs {
     path {
-      stroke: #989898;
-      fill: none;
-      stroke-width: 1;
+        pointer-events: none;
     }
-    .highlight {
-      path {
-        stroke: #000000;
+
+    .span {
+        text {
+            font-size: 75%;
+            text-anchor: middle;
+            font-family: $font_family_2;
+            pointer-events: none;
+        }
+        rect {
+            stroke-width: 0.75;
+        }
+        rect.False_positive {
+            stroke: #ff4141;
+            stroke-width: 2;
+        }
+        rect.False_negative {
+            stroke: #c20000;
+            fill: #ffffff;
+            stroke-width: 2;
+        }
+        rect.AnnotationError {
+            stroke-width: 1;
+        }
+        rect.AnnotationWarning {
+            stroke-width: 1;
+        }
+        rect.AnnotationIncomplete {
+            stroke: #002200;
+            stroke-width: 0.5;
+            fill: #ffffff;
+        }
+        rect.AnnotationUnconfirmed {
+            stroke: #002200;
+            stroke-width: 0.5;
+            opacity: 0.5;
+        }
+        path {
+            fill: none;
+        }
+        path.curly {
+            stroke-width: 0.5;
+        }
+        path.boxcross {
+            stroke: black;
+            opacity: 0.5;
+        }
+        .reselect {
+            stroke-width: 2px;
+        }
+        .reselectTarget {
+            stroke-width: 2px;
+        }
+        .badTarget {
+            stroke: #f00;
+        }
+        rect.AddedAnnotation {
+            stroke: #ff4141;
+            stroke-width: 2;
+        }
+        rect.MissingAnnotation {
+            stroke: #ffffff;
+            stroke-width: 2;
+            & + text {
+                opacity: 0.5;
+            }
+        }
+        rect.ChangedAnnotation {
+            stroke: #ffff99;
+            stroke-width: 2;
+        }
+    }
+
+    .span_type_label {
+        font-size: 11px;
+        font-family: $font_family_2;
+    }
+
+    .arc_type_label {
+        font-size: 11px;
+        font-family: $font_family_2;
+    }
+
+    .attribute_type_label {
+        .ui-button-text {
+            font-size: 11px;
+            font-family: $font_family_2;
+        }
+    }
+
+    .glyph {
+        fill: #444444;
+        font-family: $font_family_2;
+        font-weight: bold;
+    }
+
+    .attribute_warning {
+        stroke: red;
+    }
+
+    .shadow {
+        -moz-box-shadow: 5px 5px 5px #444444;
+        -webkit-box-shadow: 5px 5px 5px #444444;
+        box-shadow: 5px 5px 5px #444444;
+
+        &_True_positive {
+            fill: #00ff00;
+        }
+        &_False_positive {
+            fill: #ff4141;
+        }
+        &_False_negative {
+            fill: #c20000;
+        }
+        &_AnnotationError {
+            fill: #ff0000;
+        }
+        &_AnnotationWarning {
+            fill: #ff8800;
+        }
+        &_AnnotatorNotes {
+            fill: #3ab7ee;
+        }
+        &_Normalized {
+            fill: #3aee37;
+        }
+        &_AnnotationIncomplete {
+            fill: #aaaaaa;
+        }
+        &_AnnotationUnconfirmed {
+            fill: #eeeeee;
+        }
+        &_AddedAnnotation {
+            fill: #ff4141;
+        }
+        &_MissingAnnotation {
+            fill: #ff4141;
+            opacity: 0.3;
+        }
+        &_ChangedAnnotation {
+            fill: #ff4141;
+        }
+        &_EditHighlight_arc {
+            stroke: orange;
+            -webkit-animation-name: flash;
+            animation-name: flash;
+            -webkit-animation-duration: 1s;
+            animation-duration: 1s;
+            -webkit-animation-fill-mode: both;
+            animation-fill-mode: both;
+        }
+    }
+
+    rect.Normalized {
         stroke-width: 1.5;
-        opacity: 1;
-      }
-      text {
+    }
+
+    rect.shadow_EditHighlight {
+        fill: orange;
+        -webkit-animation-name: flash;
+        animation-name: flash;
+        -webkit-animation-duration: 1s;
+        animation-duration: 1s;
+        -webkit-animation-fill-mode: both;
+        animation-fill-mode: both;
+    }
+
+    .arcs {
+        path {
+            stroke: #989898;
+            fill: none;
+            stroke-width: 1;
+        }
+        .highlight {
+            path {
+                stroke: #000000;
+                stroke-width: 1.5;
+                opacity: 1;
+            }
+            text {
+                stroke: black;
+                fill: black;
+                stroke-width: 0.5;
+            }
+        }
+        .reselect {
+            path {
+                stroke-width: 2px;
+                stroke: #ff0000 !important;
+            }
+            text {
+                fill: #ff0000 !important;
+            }
+        }
+        text {
+            font-size: 70%;
+            text-anchor: middle;
+            font-family: $font_family_2;
+            cursor: default;
+        }
+    }
+
+    .span.highlight {
+        .span_default {
+            stroke-width: 2px;
+        }
+    }
+
+    .background0 {
+        stroke: none;
+        fill: #ffffff;
+    }
+
+    .background1 {
+        stroke: none;
+        fill: #eeeeee;
+    }
+
+    .backgroundHighlight {
+        stroke: none;
+        fill: #ffff99;
+    }
+
+    .sentnum {
+        text {
+            fill: #999999;
+            text-anchor: end;
+        }
+        path {
+            stroke: #999999;
+            stroke-width: 1px;
+        }
+    }
+
+    .span_cue {
+        fill: #eeeeee !important;
+    }
+
+    .drag_stroke {
         stroke: black;
+    }
+
+    .drag_fill {
         fill: black;
-        stroke-width: 0.5;
-      }
     }
-    .reselect {
-      path {
+
+    .label-like {
+        font-family: $font_family_3;
+        font-weight: bold;
+        font-size: 90%;
+        color: $color_1;
+    }
+
+    .accesskey {
+        text-decoration: underline;
+    }
+
+    .contain-selection {
+        -moz-user-select: -moz-contain;
+        -khtml-user-select: contain;
+        -webkit-user-select: contain;
+        -o-user-select: contain;
+        user-select: contain;
+    }
+
+    .unselectable {
+        -moz-user-select: -moz-none;
+        -khtml-user-select: none;
+        -webkit-user-select: none;
+        -o-user-select: none;
+        user-select: none;
+        cursor: default;
+    }
+
+    * {
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        select: none;
+    }
+
+    .highlights {
+        .matchfocus {
+            fill: var(--i7n-match-focus-color);
+            -webkit-animation-name: flash;
+            animation-name: flash;
+            -webkit-animation-duration: 1s;
+            animation-duration: 1s;
+            -webkit-animation-fill-mode: both;
+            animation-fill-mode: both;
+        }
+
+        .focus {
+            fill: var(--i7n-focus-color);
+            -webkit-animation-name: flash;
+            animation-name: flash;
+            -webkit-animation-duration: 1s;
+            animation-duration: 1s;
+            -webkit-animation-fill-mode: both;
+            animation-fill-mode: both;
+        }
+
+        rect.match {
+            fill: var(--i7n-match-color);
+            // opacity: 0.25;
+        }
+    }
+
+    .ping {
+        fill: none;
+        stroke: orange;
         stroke-width: 2px;
-        stroke: #ff0000 !important;
-      }
-      text {
-        fill: #ff0000 !important;
-      }
     }
-    text {
-      font-size: 70%;
-      text-anchor: middle;
-      font-family: $font_family_2;
-      cursor: default;
-    }
-  }
-  
-  .span.highlight {
-    .span_default {
-      stroke-width: 2px;
-    }
-  }
-  
-  .background0 {
-    stroke: none;
-    fill: #ffffff;
-  }
-  
-  .background1 {
-    stroke: none;
-    fill: #eeeeee;
-  }
-  
-  .backgroundHighlight {
-    stroke: none;
-    fill: #ffff99;
-  }
-  
-  .sentnum {
-    text {
-      fill: #999999;
-      text-anchor: end;
-    }
-    path {
-      stroke: #999999;
-      stroke-width: 1px;
-    }
-  }
-  
-  .span_cue {
-    fill: #eeeeee !important;
-  }
-  
-  .drag_stroke {
-    stroke: black;
-  }
-  
-  .drag_fill {
-    fill: black;
-  }
-  
-  .label-like {
-    font-family: $font_family_3;
-    font-weight: bold;
-    font-size: 90%;
-    color: $color_1;
-  }
-  
-  .accesskey {
-    text-decoration: underline;
-  }
-    
-  .contain-selection {
-    -moz-user-select: -moz-contain;
-    -khtml-user-select: contain;
-    -webkit-user-select: contain;
-    -o-user-select: contain;
-    user-select: contain;
-  }
-
-  .unselectable {
-    -moz-user-select: -moz-none;
-    -khtml-user-select: none;
-    -webkit-user-select: none;
-    -o-user-select: none;
-    user-select: none;
-    cursor: default;
-  }
-  
-  * {
-    -webkit-tap-highlight-color: rgba(0,0,0,0);
-    select: none;
-  }
-    
-  .highlights {
-    .matchfocus {
-      fill: var(--i7n-match-focus-color);
-      -webkit-animation-name: flash;
-      animation-name: flash;
-      -webkit-animation-duration: 1s;
-      animation-duration: 1s;
-      -webkit-animation-fill-mode: both;
-      animation-fill-mode: both;
-    }
-
-    .focus {
-      fill: var(--i7n-focus-color);
-      -webkit-animation-name: flash;
-      animation-name: flash;
-      -webkit-animation-duration: 1s;
-      animation-duration: 1s;
-      -webkit-animation-fill-mode: both;
-      animation-fill-mode: both;
-    }
-
-    rect.match {
-      fill: var(--i7n-match-color);
-      // opacity: 0.25;
-    }
-  }
-
-  .ping {
-    fill: none;
-    stroke: orange;
-    stroke-width: 2px;
-  }
 }

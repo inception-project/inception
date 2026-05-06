@@ -17,103 +17,95 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.ranking;
 
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_FREQUENCY;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_ID_RANK;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_NUM_RELATIONS;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_IS_LOWER_CASE;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_LEVENSHTEIN_MENTION;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_LEVENSHTEIN_MENTION_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_LEVENSHTEIN_QUERY;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_LEVENSHTEIN_QUERY_NC;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_SIGNATURE_OVERLAP;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.SCORE_TOKEN_OVERLAP_QUERY_NC;
+import static java.lang.Integer.MAX_VALUE;
 
 import java.util.Comparator;
-
-import org.apache.commons.lang3.builder.CompareToBuilder;
 
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 
 public class BaselineRankingStrategy
 {
-    private static final Comparator<CandidateEntity> INSTANCE = (e1, e2) -> new CompareToBuilder()
-            // Did the user enter an URI and does the candidate exactly match it?
+    private static final Comparator<CandidateEntity> INSTANCE = Comparator
+            // 1. Did the user enter an URI and does the candidate exactly match it?
             // Note that the comparator sorts ascending by value, so a match is represented using
             // a 0 while a mismatch is represented using 1. The typical case is that neither
-            // candidate matches the query which causes the next ranking criteria to be evaluated
-            .append(queryMatchesIri(e1), queryMatchesIri(e2))
-            // Require token overlap
-            .append(e1.get(SCORE_TOKEN_OVERLAP_QUERY_NC).get(),
-                    e2.get(SCORE_TOKEN_OVERLAP_QUERY_NC).get())
-            // Compare geometric mean of the Levenshtein distance to query and mention
+            .comparing(BaselineRankingStrategy::queryMatchesIri)
+            // 2. Require token overlap
+            .thenComparing(BaselineRankingStrategy::queryTokenOverlapNC)
+            // 3. Compare geometric mean of the Levenshtein distance to query and mention
             // since both are important and a very close similarity in say the mention outweighs
-            // a not so close similarity in the query
-            .append(weightedLevenshteinDistance(e1), weightedLevenshteinDistance(e2))
-            // Prefer good matches on the query over good matches on the mention
-            .append(queryOverMention(e1), queryOverMention(e2))
-            // Cased over caseless
-            .append(casedOverCaseless(e1), casedOverCaseless(e2))
-            // A high signature overlap score is preferred.
-            .append(e2.get(SCORE_SIGNATURE_OVERLAP).get(), e1.get(SCORE_SIGNATURE_OVERLAP).get())
-            // A low edit distance is preferred.
-            .append(e1.get(SCORE_LEVENSHTEIN_MENTION_CONTEXT).get(),
-                    e2.get(SCORE_LEVENSHTEIN_MENTION_CONTEXT).get())
-            // A high entity frequency is preferred.
-            .append(e2.get(KEY_FREQUENCY).get(), e1.get(KEY_FREQUENCY).get())
-            // A high number of related relations is preferred.
-            .append(e2.get(KEY_NUM_RELATIONS).get(), e1.get(KEY_NUM_RELATIONS).get())
-            // A low wikidata ID rank is preferred.
-            .append(e1.get(KEY_ID_RANK).get(), e2.get(KEY_ID_RANK).get())
-            // Finally order alphabetically
-            .append(e1.getLabel().toLowerCase(e1.getLocale()),
-                    e2.getLabel().toLowerCase(e2.getLocale()))
-            .toComparison();
+            // a not so close similarity in the query (lower distance is better)
+            .thenComparing(BaselineRankingStrategy::queryMentionWeightedLevenshteinDistance)
+            // 4. Prefer good matches on the query over good matches on the mention
+            .thenComparing(BaselineRankingStrategy::queryOverMention)
+            // 5. Cased over case-less
+            .thenComparing(BaselineRankingStrategy::queryCasedOverCaseless)
+            // 6. A low edit distance is preferred.
+            .thenComparing(BaselineRankingStrategy::mentionContextLevenshteinDistance)
+            // 7. Finally order alphabetically
+            .thenComparing(e -> e.getLabel().toLowerCase(e.getLocale()));
 
-    private static double queryMatchesIri(CandidateEntity aCandidate)
+    private static int queryMatchesIri(CandidateEntity aCandidate)
     {
         return aCandidate.get(KEY_QUERY).map(q -> q.equals(aCandidate.getIRI()) ? 0 : 1).orElse(1);
     }
 
-    private static double casedOverCaseless(CandidateEntity aCandidate)
+    private static int queryTokenOverlapNC(CandidateEntity aCandidate)
     {
-        int queryNC = aCandidate.get(SCORE_LEVENSHTEIN_QUERY_NC).get();
-        int query = aCandidate.get(SCORE_LEVENSHTEIN_QUERY).get();
+        return aCandidate.get(SCORE_TOKEN_OVERLAP_QUERY_NC).orElse(MAX_VALUE);
+    }
+
+    private static int mentionContextLevenshteinDistance(CandidateEntity aCandidate)
+    {
+        return aCandidate.get(SCORE_LEVENSHTEIN_MENTION_CONTEXT).orElse(MAX_VALUE);
+    }
+
+    private static int queryCasedOverCaseless(CandidateEntity aCandidate)
+    {
+        var queryNC = aCandidate.get(SCORE_LEVENSHTEIN_QUERY_NC).orElse(MAX_VALUE);
+        var query = aCandidate.get(SCORE_LEVENSHTEIN_QUERY).orElse(MAX_VALUE);
 
         return queryNC <= query ? 0 : 1;
     }
 
-    private static double queryOverMention(CandidateEntity aCandidate)
+    private static int queryOverMention(CandidateEntity aCandidate)
     {
-        boolean caseInsensitive = aCandidate.get(KEY_QUERY_IS_LOWER_CASE).orElse(true);
-        int query = aCandidate
+        var caseInsensitive = aCandidate.get(KEY_QUERY_IS_LOWER_CASE).orElse(true);
+        var query = aCandidate
                 .get(caseInsensitive ? SCORE_LEVENSHTEIN_QUERY_NC : SCORE_LEVENSHTEIN_QUERY).get();
-        int mention = aCandidate.get(SCORE_LEVENSHTEIN_MENTION).get();
+        var mention = aCandidate.get(SCORE_LEVENSHTEIN_MENTION).get();
 
         return query <= mention ? 0 : 1;
     }
 
-    private static double weightedLevenshteinDistance(CandidateEntity aCandidate)
+    private static double queryMentionWeightedLevenshteinDistance(CandidateEntity aCandidate)
     {
-        boolean caseInsensitive = aCandidate.get(KEY_QUERY_IS_LOWER_CASE).orElse(true);
+        var caseInsensitive = aCandidate.get(KEY_QUERY_IS_LOWER_CASE).orElse(true);
 
-        int query = aCandidate
+        var queryDistance = aCandidate
                 .get(caseInsensitive ? SCORE_LEVENSHTEIN_QUERY_NC : SCORE_LEVENSHTEIN_QUERY).get();
-        int mention = aCandidate.get(SCORE_LEVENSHTEIN_MENTION).get();
+        var mentionDistance = aCandidate.get(SCORE_LEVENSHTEIN_MENTION).get();
 
-        if (query == Integer.MAX_VALUE && mention == Integer.MAX_VALUE) {
+        if (queryDistance == MAX_VALUE && mentionDistance == MAX_VALUE) {
             return Double.MAX_VALUE;
         }
 
-        if (query == Integer.MAX_VALUE) {
-            return Math.sqrt(mention);
+        if (queryDistance == MAX_VALUE) {
+            return Math.sqrt(mentionDistance);
         }
 
-        if (mention == Integer.MAX_VALUE) {
-            return Math.sqrt(query);
+        if (mentionDistance == MAX_VALUE) {
+            return Math.sqrt(queryDistance);
         }
 
-        return Math.sqrt(query * mention);
+        return Math.sqrt(queryDistance * mentionDistance);
     }
 
     public static Comparator<CandidateEntity> getInstance()

@@ -1,0 +1,38 @@
+{
+  "decisions": {
+    "1102341|@sveltejs/vite-plugin-svelte>@sveltejs/vite-plugin-svelte-inspector>vite>esbuild": {
+      "decision": "postpone",
+      "madeAt": 1742938336154
+    },
+    "1113371|@typescript-eslint/eslint-plugin>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch": {
+      "decision": "postpone",
+      "madeAt": 1771696955316
+    },
+    "1113371|@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch": {
+      "decision": "postpone",
+      "madeAt": 1771696955316
+    },
+    "1113371|eslint>@eslint/config-array>minimatch": {
+      "decision": "postpone",
+      "madeAt": 1771696955316
+    },
+    "1113371|eslint-plugin-import>minimatch": {
+      "decision": "postpone",
+      "madeAt": 1771696955316
+    },
+    "1113371|eslint-plugin-promise>eslint>@eslint/config-array>minimatch": {
+      "decision": "postpone",
+      "madeAt": 1771696955316
+    },
+    "1113371|neostandard>@stylistic/eslint-plugin>@typescript-eslint/utils>@typescript-eslint/typescript-estree>minimatch": {
+      "decision": "postpone",
+      "madeAt": 1771696955316
+    },
+    "1113371|typescript-eslint>@typescript-eslint/eslint-plugin>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch": {
+      "decision": "postpone",
+      "madeAt": 1771696955316
+    }
+  },
+  "rules": {},
+  "version": 1
+}

@@ -24,7 +24,7 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.imscwb.ImsCwbReader;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.io.imscwb.config.ImsCwbFormatSupportAutoConfiguration;
 
@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.inception.io.imscwb.config.ImsCwbFormatSupportAutoConf
  * </p>
  */
 public class ImsCwbFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     public static final String ID = "imscwb";
     public static final String NAME = "Corpus Workbench Format (aka VRT)";

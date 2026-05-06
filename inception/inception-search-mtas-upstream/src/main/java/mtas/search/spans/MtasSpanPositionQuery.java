@@ -13,12 +13,10 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermStates;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.LeafSimScorer;
 import org.apache.lucene.search.QueryVisitor;
 import org.apache.lucene.search.ScoreMode;
 
 import mtas.codec.util.CodecInfo;
-import mtas.search.similarities.MtasSimScorer;
 import mtas.search.spans.util.MtasSpanQuery;
 import mtas.search.spans.util.MtasSpanWeight;
 import mtas.search.spans.util.MtasSpans;
@@ -179,18 +177,6 @@ public class MtasSpanPositionQuery
                 throw new IOException("Can't get reader", e);
             }
 
-        }
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see org.apache.lucene.search.spans.SpanWeight#getSimScorer(org.apache.lucene.
-         * index.LeafReaderContext)
-         */
-        @Override
-        public LeafSimScorer getSimScorer(LeafReaderContext context) throws IOException
-        {
-            return new LeafSimScorer(new MtasSimScorer(), context.reader(), field, true);
         }
 
         // @Override

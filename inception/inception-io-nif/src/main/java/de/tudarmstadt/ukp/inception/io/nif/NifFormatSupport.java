@@ -28,8 +28,9 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.nif.NifReader;
 import org.dkpro.core.io.nif.NifWriter;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.io.nif.config.NifFormatProperties;
 import de.tudarmstadt.ukp.inception.io.nif.config.NifFormatSupportAutoConfiguration;
 
 /**
@@ -40,10 +41,17 @@ import de.tudarmstadt.ukp.inception.io.nif.config.NifFormatSupportAutoConfigurat
  * </p>
  */
 public class NifFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     public static final String ID = "nif";
     public static final String NAME = "NLP Interchange Format (NIF)";
+
+    private final NifFormatProperties properties;
+
+    public NifFormatSupport(NifFormatProperties aProperties)
+    {
+        properties = aProperties;
+    }
 
     @Override
     public String getId()
@@ -74,7 +82,9 @@ public class NifFormatSupport
             TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(NifReader.class, aTSD);
+        return createReaderDescription(NifReader.class, aTSD, //
+                NifReader.PARAM_STRIP_CLASS_IRI, properties.getStripClassIri(), //
+                NifReader.PARAM_STRIP_IDENTIFIER_IRI, properties.getStripIdentifierIri());
     }
 
     @Override
@@ -82,6 +92,8 @@ public class NifFormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(NifWriter.class, aTSD);
+        return createEngineDescription(NifWriter.class, aTSD, //
+                NifWriter.PARAM_DEFAULT_CLASS_IRI, properties.getDefaultClassIri(), //
+                NifWriter.PARAM_DEFAULT_IDENTIFIER_IRI, properties.getDefaultIdentifierIri());
     }
 }

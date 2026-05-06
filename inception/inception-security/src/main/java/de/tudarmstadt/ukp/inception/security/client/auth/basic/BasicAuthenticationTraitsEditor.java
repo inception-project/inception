@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraitsEdi
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
 public class BasicAuthenticationTraitsEditor
-    extends AuthenticationTraitsEditor
+    extends AuthenticationTraitsEditor<BasicAuthenticationTraits>
 {
     private static final long serialVersionUID = -2171643131419507935L;
 
@@ -47,7 +47,7 @@ public class BasicAuthenticationTraitsEditor
 
         setOutputMarkupId(true);
 
-        editMode = Model.of(aModel.getObject().getUsername() == null);
+        editMode = Model.of(getModelObject().getUsername() == null);
 
         queue(new Label("status", LoadableDetachableModel.of(this::getStatus))
                 .add(visibleWhenNot(editMode)));
@@ -58,12 +58,6 @@ public class BasicAuthenticationTraitsEditor
                 .add(visibleWhen(editMode)));
         queue(new PasswordTextField("password", PropertyModel.of(this, "newPassword"))
                 .add(visibleWhen(editMode)));
-    }
-
-    @SuppressWarnings("unchecked")
-    IModel<BasicAuthenticationTraits> getModel()
-    {
-        return (IModel<BasicAuthenticationTraits>) getDefaultModel();
     }
 
     private String getStatus()

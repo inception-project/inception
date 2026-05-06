@@ -21,11 +21,15 @@ public interface AssistantProperties
 {
     String getUrl();
 
+    String getApiKey();
+
     AssistantChatProperties getChat();
 
     AssistantEmbeddingProperties getEmbedding();
 
     String getNickname();
+
+    boolean isSummarizeThoughts();
 
     AssitantUserGuideProperties getUserGuide();
 

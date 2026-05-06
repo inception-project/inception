@@ -26,6 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCoding
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class KrippendorffAlphaAgreementMeasureSupport
@@ -34,10 +35,13 @@ public class KrippendorffAlphaAgreementMeasureSupport
     public static final String ID = "KrippendorffAlpha";
 
     private final AnnotationSchemaService annotationService;
+    private final DiffAdapterRegistry diffAdapterRegistry;
 
-    public KrippendorffAlphaAgreementMeasureSupport(AnnotationSchemaService aAnnotationService)
+    public KrippendorffAlphaAgreementMeasureSupport(AnnotationSchemaService aAnnotationService,
+            DiffAdapterRegistry aDiffAdapterRegistry)
     {
         annotationService = aAnnotationService;
+        diffAdapterRegistry = aDiffAdapterRegistry;
     }
 
     @Override
@@ -56,7 +60,8 @@ public class KrippendorffAlphaAgreementMeasureSupport
     public AgreementMeasure<FullCodingAgreementResult> createMeasure(AnnotationLayer aLayer,
             AnnotationFeature aFeature, DefaultAgreementTraits aTraits)
     {
-        return new KrippendorffAlphaAgreementMeasure(aFeature, aTraits, annotationService);
+        return new KrippendorffAlphaAgreementMeasure(aFeature, aTraits, annotationService,
+                diffAdapterRegistry);
     }
 
     @Override

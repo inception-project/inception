@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.versioning.ui;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.springframework.core.annotation.Order;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration;
@@ -42,9 +43,9 @@ public class VersioningMenuItem
     }
 
     @Override
-    public IconType getIcon()
+    public Component getIcon(String aId)
     {
-        return FontAwesome5IconType.history_s;
+        return new Icon(aId, FontAwesome5IconType.history_s);
     }
 
     @Override

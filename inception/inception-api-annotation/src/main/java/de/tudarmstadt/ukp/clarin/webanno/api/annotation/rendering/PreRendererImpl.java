@@ -117,8 +117,9 @@ public class PreRendererImpl
 
         // Render (custom) layers
         for (var layer : aRequest.getVisibleLayers()) {
-            var layerSupportedFeatures = supportedFeatures.stream() //
+            var layerActiveFeatures = supportedFeatures.stream() //
                     .filter(feature -> feature.getLayer().equals(layer)) //
+                    .filter(feature -> !aRequest.getHiddenFeatures().contains(feature.getId()))
                     .toList();
             var layerAllFeatures = allFeatures.stream() //
                     .filter(feature -> feature.getLayer().equals(layer)) //
@@ -128,7 +129,7 @@ public class PreRendererImpl
             // the same because otherwise the IDs of armed slots would be inconsistent
             LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
             var renderer = layerSupport.createRenderer(layer, () -> layerAllFeatures);
-            renderer.render(aRequest, layerSupportedFeatures, aResponse);
+            renderer.render(aRequest, layerActiveFeatures, aResponse);
         }
 
         if (LOG.isTraceEnabled()) {

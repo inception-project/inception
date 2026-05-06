@@ -19,23 +19,23 @@ package de.tudarmstadt.ukp.inception.preferences;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Import;
-import org.springframework.util.FileSystemUtils;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
@@ -47,10 +47,8 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 @DataJpaTest( //
         showSql = false, //
-        excludeAutoConfiguration = LiquibaseAutoConfiguration.class, //
         properties = { //
-                "spring.main.banner-mode=off", //
-                "repository.path=" + PreferencesServiceImplIntegrationTest.TEST_OUTPUT_FOLDER })
+                "spring.main.banner-mode=off" })
 @EnableAutoConfiguration
 @EntityScan({ //
         "de.tudarmstadt.ukp.clarin.webanno.model", //
@@ -62,7 +60,13 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
         RepositoryAutoConfiguration.class })
 public class PreferencesServiceImplIntegrationTest
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/PreferencesServiceImplIntegrationTest";
+    static @TempDir Path tempFolder;
+
+    @DynamicPropertySource
+    static void registerDynamicProperties(DynamicPropertyRegistry registry)
+    {
+        registry.add("repository.path", () -> tempFolder.toAbsolutePath().toString());
+    }
 
     private static final PreferenceKey<TestTraits> KEY = new PreferenceKey<>(TestTraits.class,
             "test.traits");
@@ -72,12 +76,6 @@ public class PreferencesServiceImplIntegrationTest
     private @Autowired TestEntityManager testEntityManager;
     private @Autowired ProjectService projectService;
     private @Autowired UserDao userDao;
-
-    @BeforeAll
-    public static void setupClass()
-    {
-        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
-    }
 
     @BeforeEach
     public void setUp()

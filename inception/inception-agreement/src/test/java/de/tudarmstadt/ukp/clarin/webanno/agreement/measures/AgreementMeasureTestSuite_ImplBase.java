@@ -53,6 +53,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.FullAgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -65,9 +67,12 @@ import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistryImpl;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupportImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupportImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.curation.RelationDiffSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupportImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
@@ -82,6 +87,8 @@ public class AgreementMeasureTestSuite_ImplBase
     protected List<AnnotationLayer> layers;
     protected List<AnnotationFeature> features;
     protected LayerSupportRegistryImpl layerRegistry;
+    protected DiffSupportRegistryImpl diffSupportRegistry;
+    protected DiffAdapterRegistryImpl diffAdapterRegistry;
 
     @BeforeEach
     public void setup()
@@ -99,13 +106,20 @@ public class AgreementMeasureTestSuite_ImplBase
         layerBehaviorRegistry.init();
 
         layerRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new SpanLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService),
-                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new RelationLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService),
-                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new ChainLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService)));
         layerRegistry.init();
+
+        diffSupportRegistry = new DiffSupportRegistryImpl(asList( //
+                new SpanDiffSupport(), //
+                new RelationDiffSupport(annotationService)));
+        diffSupportRegistry.init();
+
+        diffAdapterRegistry = new DiffAdapterRegistryImpl(annotationService, diffSupportRegistry);
 
         lenient().when(annotationService.getAdapter(any())).thenAnswer(a -> {
             var layer = a.getArgument(0, AnnotationLayer.class);
@@ -115,8 +129,8 @@ public class AgreementMeasureTestSuite_ImplBase
     }
 
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R multiLinkWithRoleLabelDifferenceTest(AgreementMeasureSupport<T, R, S> aSupport)
-        throws Exception
+            R multiLinkWithRoleLabelDifferenceTest(AgreementMeasureSupport<T, R, S> aSupport)
+                throws Exception
     {
         var layer = AnnotationLayer.builder() //
                 .withId(1l) //
@@ -161,7 +175,8 @@ public class AgreementMeasureTestSuite_ImplBase
     }
 
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R multiValueStringPartialAgreement(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
+            R multiValueStringPartialAgreement(AgreementMeasureSupport<T, R, S> aSupport)
+                throws Exception
     {
         var layer = new AnnotationLayer(MULTI_VALUE_SPAN_TYPE, MULTI_VALUE_SPAN_TYPE,
                 SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
@@ -199,7 +214,7 @@ public class AgreementMeasureTestSuite_ImplBase
     }
 
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R selfOverlappingAgreement(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
+            R selfOverlappingAgreement(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
     {
         var layer = new AnnotationLayer(MULTI_VALUE_SPAN_TYPE, MULTI_VALUE_SPAN_TYPE,
                 SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
@@ -245,7 +260,7 @@ public class AgreementMeasureTestSuite_ImplBase
     }
 
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R twoEmptyCasTest(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
+            R twoEmptyCasTest(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
     {
         var layer = new AnnotationLayer(Lemma.class.getName(), Lemma.class.getSimpleName(),
                 SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
@@ -275,8 +290,8 @@ public class AgreementMeasureTestSuite_ImplBase
     }
 
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R threeCasesWithAnnotationOnlyInThird(AgreementMeasureSupport<T, R, S> aSupport)
-        throws Exception
+            R threeCasesWithAnnotationOnlyInThird(AgreementMeasureSupport<T, R, S> aSupport)
+                throws Exception
     {
         var layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
                 SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
@@ -304,7 +319,8 @@ public class AgreementMeasureTestSuite_ImplBase
     }
 
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R twoWithoutLabelTest(AgreementMeasureSupport<T, R, S> aSupport, T aTraits) throws Exception
+            R twoWithoutLabelTest(AgreementMeasureSupport<T, R, S> aSupport, T aTraits)
+                throws Exception
     {
         var layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
                 SpanLayerSupport.TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
@@ -342,8 +358,9 @@ public class AgreementMeasureTestSuite_ImplBase
     }
 
     public <R extends FullAgreementResult_ImplBase<S>, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
-    R fullSingleCategoryAgreementWithTagset(AgreementMeasureSupport<T, R, S> aSupport, T aTraits)
-        throws Exception
+            R fullSingleCategoryAgreementWithTagset(AgreementMeasureSupport<T, R, S> aSupport,
+                    T aTraits)
+                throws Exception
     {
         var tagset = new TagSet(project, "tagset");
 

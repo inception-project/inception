@@ -55,9 +55,8 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapter;
+import de.tudarmstadt.ukp.inception.curation.api.Position;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
@@ -147,7 +146,7 @@ public class CasDiff
         var adapter = diffAdapters.get(aType);
         if (adapter == null) {
             LOG.warn("No diff adapter for type [{}] -- treating as without features", aType);
-            adapter = new SpanDiffAdapter(aType, emptySet());
+            adapter = new AnnotationDiffAdapter(aType, emptySet());
             diffAdapters.put(aType, adapter);
         }
         return adapter;

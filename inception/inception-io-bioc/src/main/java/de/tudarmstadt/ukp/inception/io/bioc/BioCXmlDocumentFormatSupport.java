@@ -26,9 +26,11 @@ import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.io.bioc.config.BioCAutoConfiguration;
+import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
 
 /**
  * Support for BioC format.
@@ -41,35 +43,42 @@ import de.tudarmstadt.ukp.inception.io.bioc.config.BioCAutoConfiguration;
  */
 @Deprecated
 public class BioCXmlDocumentFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
+    @Deprecated
     public static final String ID = "bioc-xml";
+    @Deprecated
     public static final String NAME = "BioC XML Document (experimental)";
 
+    @Deprecated
     @Override
     public String getId()
     {
         return ID;
     }
 
+    @Deprecated
     @Override
     public String getName()
     {
         return NAME;
     }
 
+    @Deprecated
     @Override
     public boolean isReadable()
     {
         return true;
     }
 
+    @Deprecated
     @Override
     public boolean isWritable()
     {
         return true;
     }
 
+    @Deprecated
     @Override
     public CollectionReaderDescription getReaderDescription(Project aProject,
             TypeSystemDescription aTSD)
@@ -78,11 +87,19 @@ public class BioCXmlDocumentFormatSupport
         return createReaderDescription(BioCXmlDocumentReader.class, aTSD);
     }
 
+    @Deprecated
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
         return createEngineDescription(BioCXmlDocumentWriter.class, aTSD);
+    }
+
+    @Deprecated
+    @Override
+    public void prepareAnnotationCas(CAS aInitialCas, SourceDocument aDocument)
+    {
+        XmlNodeUtils.removeXmlDocumentStructure(aInitialCas);
     }
 }

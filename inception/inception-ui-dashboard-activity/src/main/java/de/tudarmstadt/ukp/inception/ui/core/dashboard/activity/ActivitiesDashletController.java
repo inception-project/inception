@@ -38,9 +38,11 @@ public interface ActivitiesDashletController
 
     String getActivityOverviewUrl(long aProjectId);
 
-    ActivityOverview activityOverview(long aProjectId, Optional<Integer> aYear);
+    ActivityOverview activityOverview(long aProjectId, Optional<Integer> aYear,
+            Optional<String> aDataOwner);
 
-    ActivitySummary activitySummary(long aProjectId, Optional<String> aFrom, Optional<String> aTo);
+    ActivitySummary activitySummary(long aProjectId, Optional<String> aFrom, Optional<String> aTo,
+            Optional<String> aDataOwner);
 
     String getActivitySummaryUrl(long aProjectId);
 }

@@ -17,5 +17,5 @@
  */
 
 export const annotatorState = $state({
-  showLabels: true
-})
+    showLabels: true,
+});

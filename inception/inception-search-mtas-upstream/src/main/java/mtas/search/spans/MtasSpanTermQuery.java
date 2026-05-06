@@ -2,7 +2,6 @@ package mtas.search.spans;
 
 import java.io.IOException;
 
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.spans.SpanTermQuery;
 import org.apache.lucene.queries.spans.SpanWeight;
@@ -80,10 +79,10 @@ public class MtasSpanTermQuery
      * @see mtas.search.spans.util.MtasSpanQuery#rewrite(org.apache.lucene.index. IndexReader)
      */
     @Override
-    public MtasSpanQuery rewrite(IndexReader reader) throws IOException
+    public MtasSpanQuery rewrite(IndexSearcher searcher) throws IOException
     {
-        baseQuery = (MtasExtendedSpanTermQuery) baseQuery.rewrite(reader);
-        return super.rewrite(reader);
+        baseQuery = (MtasExtendedSpanTermQuery) baseQuery.rewrite(searcher);
+        return super.rewrite(searcher);
     }
 
     /*

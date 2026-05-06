@@ -24,6 +24,7 @@ package de.tudarmstadt.ukp.inception.search;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.DISCARD_OR_QUEUE_THIS;
@@ -31,7 +32,6 @@ import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
 import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.casToByteArray;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toUnmodifiableSet;
@@ -60,7 +60,6 @@ import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexingTask_ImplBase;
-import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import jakarta.persistence.NoResultException;
 
 /**
@@ -125,14 +124,15 @@ public class ReindexTask
                 // We can ignore this since we are rebuilding the index already anyway
             }
 
-            var usersWithPermissions = projectService.listProjectUsersWithPermissions(project)
+            var usersWithPermissions = projectService.listUsersWithAnyRoleInProject(project)
                     .stream() //
                     .map(User::getUsername) //
                     .collect(toUnmodifiableSet());
+            var sourceDocuments = documentService.listSupportedSourceDocuments(project);
             var annotationDocuments = documentService.listAnnotationDocuments(project).stream()
                     .filter(annDoc -> usersWithPermissions.contains(annDoc.getUser())) //
+                    .filter(annDoc -> sourceDocuments.contains(annDoc.getDocument())) //
                     .toList();
-            var sourceDocuments = documentService.listSourceDocuments(project);
 
             // We do not need write access and do not want to add to the exclusive access CAS cache,
             // so we would normally use SHARED_READ_ONLY_ACCESS. However, that mode can only be used
@@ -159,14 +159,14 @@ public class ReindexTask
                         }
 
                         if (getMonitor().isCancelled()) {
-                            progress.update(up -> up.addMessage(LogMessage.info(this,
-                                    "Indexing aborted. Search cannot be used.")));
+                            progress.update(
+                                    up -> up.status("Indexing aborted. Search cannot be used.")
+                                            .statusToLog());
                             break;
                         }
 
                         progress.update(up -> up.increment() //
-                                .addMessage(LogMessage.info(this, "Source document: %s",
-                                        doc.getName())));
+                                .status("Source document: %s", doc.getName()).statusToLog());
 
                         try (var session = CasStorageSession.openNested()) {
                             // Index source document
@@ -176,14 +176,14 @@ public class ReindexTask
                             searchService.indexDocument(pooledIndex, doc, casAsByteArray);
 
                             // Index curation document (if available)
-                            if (documentService.existsCas(doc, CURATION_USER)
+                            if (documentService.existsCas(doc, CURATION_SET)
                                     && asList(CURATION_IN_PROGRESS, CURATION_FINISHED)
                                             .contains(doc.getState())) {
                                 try {
                                     var aDoc = documentService.getAnnotationDocument(doc,
-                                            CURATION_USER);
+                                            CURATION_SET);
                                     var curationCasAsByteArray = casToByteArray(
-                                            documentService.readAnnotationCas(doc, CURATION_USER,
+                                            documentService.readAnnotationCas(doc, CURATION_SET,
                                                     casUpgradeMode, accessModeInitialCas));
                                     searchService.indexDocument(pooledIndex, aDoc, "reindex",
                                             curationCasAsByteArray);
@@ -207,19 +207,20 @@ public class ReindexTask
                         }
 
                         if (getMonitor().isCancelled()) {
-                            progress.update(up -> up.addMessage(LogMessage.info(this,
-                                    "Indexing aborted. Search cannot be used.")));
+                            progress.update(
+                                    up -> up.status("Indexing aborted. Search cannot be used.")
+                                            .statusToLog());
                             break;
                         }
 
                         progress.update(up -> up.increment() //
-                                .addMessage(LogMessage.info(this, "Annotation document: %s @ %s",
-                                        doc.getUser(), doc.getName())));
+                                .status("Annotation document: %s @ %s", doc.getUser(),
+                                        doc.getName())
+                                .statusToLog());
 
                         try (var session = CasStorageSession.openNested()) {
                             var casAsByteArray = casToByteArray(documentService.readAnnotationCas(
-                                    doc.getDocument(), doc.getUser(), casUpgradeMode,
-                                    accessModeAnnotationCas));
+                                    doc, casUpgradeMode, accessModeAnnotationCas));
                             searchService.indexDocument(pooledIndex, doc, "reindex",
                                     casAsByteArray);
                         }

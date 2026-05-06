@@ -24,14 +24,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
 
 public class SearchQueryRequest
 {
     private final Project project;
     private final User user;
     private final String query;
-    private final AnnotationSearchState prefs;
 
     private final SourceDocument limitedToDocument;
 
@@ -40,38 +38,36 @@ public class SearchQueryRequest
 
     private final long offset;
     private final long limit;
+    private final boolean commitRequired;
 
-    private SearchQueryRequest(Builder builder)
+    private SearchQueryRequest(Builder aBuilder)
     {
-        this.project = builder.project;
-        this.user = builder.user;
-        this.query = builder.query;
-        this.prefs = builder.options;
-        this.limitedToDocument = builder.limitedToDocument;
-        this.annoationLayer = builder.annoationLayer;
-        this.annotationFeature = builder.annotationFeature;
-        this.offset = builder.offset;
-        this.limit = builder.limit;
+        project = aBuilder.project;
+        user = aBuilder.user;
+        query = aBuilder.query;
+        limitedToDocument = aBuilder.limitedToDocument;
+        annoationLayer = aBuilder.annoationLayer;
+        annotationFeature = aBuilder.annotationFeature;
+        offset = aBuilder.offset;
+        limit = aBuilder.limit;
+        commitRequired = aBuilder.commitRequired;
+    }
+
+    public SearchQueryRequest(Project aProject, User aUser, String aQuery)
+    {
+        this(aProject, aUser, aQuery, null);
     }
 
     public SearchQueryRequest(Project aProject, User aUser, String aQuery,
-            AnnotationSearchState aPrefs)
+            SourceDocument aLimitedToDocument)
     {
-        this(aProject, aUser, aQuery, null, aPrefs);
-    }
-
-    public SearchQueryRequest(Project aProject, User aUser, String aQuery,
-            SourceDocument aLimitedToDocument, AnnotationSearchState aPrefs)
-    {
-        this(aProject, aUser, aQuery, aLimitedToDocument, null, null, 0, Integer.MAX_VALUE, aPrefs);
+        this(aProject, aUser, aQuery, aLimitedToDocument, null, null, 0, Integer.MAX_VALUE);
     }
 
     public SearchQueryRequest(Project aProject, User aUser, String aQuery,
             SourceDocument aLimitedToDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature, long aOffset, long aCount,
-            AnnotationSearchState aPrefs)
+            AnnotationFeature aAnnotationFeature, long aOffset, long aCount)
     {
-        super();
         project = aProject;
         user = aUser;
         query = aQuery;
@@ -80,7 +76,7 @@ public class SearchQueryRequest
         annotationFeature = aAnnotationFeature;
         offset = aOffset;
         limit = aCount;
-        prefs = aPrefs;
+        commitRequired = true;
     }
 
     public Project getProject()
@@ -132,9 +128,9 @@ public class SearchQueryRequest
         return limit;
     }
 
-    public AnnotationSearchState getSearchSettings()
+    public boolean isCommitRequired()
     {
-        return prefs;
+        return commitRequired;
     }
 
     public static Builder builder()
@@ -147,12 +143,12 @@ public class SearchQueryRequest
         private Project project;
         private User user;
         private String query;
-        private AnnotationSearchState options;
         private SourceDocument limitedToDocument;
         private AnnotationLayer annoationLayer;
         private AnnotationFeature annotationFeature;
-        private long offset;
-        private long limit;
+        private long offset = 0;
+        private long limit = Long.MAX_VALUE;
+        private boolean commitRequired = true;
 
         private Builder()
         {
@@ -173,12 +169,6 @@ public class SearchQueryRequest
         public Builder withQuery(String aQuery)
         {
             this.query = aQuery;
-            return this;
-        }
-
-        public Builder withOptions(AnnotationSearchState aOptions)
-        {
-            this.options = aOptions;
             return this;
         }
 
@@ -209,6 +199,12 @@ public class SearchQueryRequest
         public Builder withLimit(long aLimit)
         {
             this.limit = aLimit;
+            return this;
+        }
+
+        public Builder withCommitRequired(boolean aRequire)
+        {
+            this.commitRequired = aRequire;
             return this;
         }
 

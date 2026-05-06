@@ -111,9 +111,9 @@ public class WeblichtChainServiceImpl
 
     @Override
     @Transactional
-    public void importChainFile(WeblichtChain aGazeteer, InputStream aStream) throws IOException
+    public void importChainFile(WeblichtChain aChain, InputStream aStream) throws IOException
     {
-        File gazFile = getChainFile(aGazeteer);
+        File gazFile = getChainFile(aChain);
 
         if (!gazFile.getParentFile().exists()) {
             gazFile.getParentFile().mkdirs();
@@ -154,7 +154,7 @@ public class WeblichtChainServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsChain(Recommender aRecommender)
     {
         Validate.notNull(aRecommender, "Recommender must be specified");

@@ -64,7 +64,7 @@ public class WebsocketConfig
         // broker will send to destinations with this prefix, queue is custom for user-specific
         // channels. client will subscribe to /queue/{subtopic} where subtopic is a specific topic
         // that controller or service will address messages to
-        aRegistry.enableSimpleBroker("/queue/", "/topic/");
+        aRegistry.enableSimpleBroker("/queue/", "/topic/").setSelectorHeaderName("selector");
         // clients should send messages to channels pre-fixed with this
         aRegistry.setApplicationDestinationPrefixes("/app/");
         aRegistry.setUserDestinationPrefix("/user/");

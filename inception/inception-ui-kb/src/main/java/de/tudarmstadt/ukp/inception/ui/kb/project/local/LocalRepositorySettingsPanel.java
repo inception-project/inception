@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb.project.local;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.rdf4j.rio.RDFFormat.NTRIPLES;
@@ -34,6 +35,7 @@ import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
@@ -104,6 +106,9 @@ public class LocalRepositorySettingsPanel
         super(aId, aModel);
 
         setOutputMarkupId(true);
+
+        queue(new WebMarkupContainer("wizardDescription")
+                .add(visibleWhenNot(aModel.map(KnowledgeBaseWrapper::isKbSaved))));
 
         queue(uploadForm("uploadForm", "uploadField"));
 

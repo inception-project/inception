@@ -19,10 +19,9 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import java.util.Set;
 
-import org.springframework.boot.web.context.WebServerInitializedEvent;
+import org.springframework.boot.web.server.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.ApplicationContextEvent;
-import org.springframework.security.access.event.AbstractAuthorizationEvent;
 import org.springframework.security.authentication.event.AbstractAuthenticationEvent;
 import org.springframework.security.authorization.event.AuthorizationEvent;
 import org.springframework.security.core.session.SessionCreationEvent;
@@ -45,7 +44,6 @@ public class GenericEventAdapter
             SessionCreationEvent.class, //
             SessionDestroyedEvent.class, //
             AuthorizationEvent.class, //
-            AbstractAuthorizationEvent.class, //
             AbstractAuthenticationEvent.class, //
             WebServerInitializedEvent.class, //
             // Websocket events

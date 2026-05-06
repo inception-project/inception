@@ -33,6 +33,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -51,10 +52,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupport;
+import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportQuery;
 import de.tudarmstadt.ukp.inception.recommendation.api.SuggestionSupportRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -64,10 +69,9 @@ import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.FeatureValueUpdateContext;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 public class BulkPredictionTask
     extends RecommendationTask_ImplBase
@@ -103,8 +107,9 @@ public class BulkPredictionTask
     @Override
     public String getTitle()
     {
-        return "Processing documents of user " + dataOwner + " using " + recommender.getName()
-                + "...";
+        var dataOwnerUser = userService.get(dataOwner);
+        return "Processing documents of user " + dataOwnerUser.toLongString() + " using "
+                + recommender.getName() + "...";
     }
 
     @Override
@@ -124,6 +129,7 @@ public class BulkPredictionTask
                 // last iteration)
                 var annotatableDocuments = documentService.listAnnotatableDocuments(getProject(),
                         dataOwnerUser);
+                maxProgress.set(annotatableDocuments.size());
 
                 var documentsToProcess = annotatableDocuments.entrySet().stream() //
                         .filter(e -> isInProcessableState(e.getKey(), e.getValue())) //
@@ -132,13 +138,17 @@ public class BulkPredictionTask
                         .toList();
 
                 if (documentsToProcess.isEmpty() || monitor.isCancelled()) {
-                    progress.update(up -> up //
-                            .setProgress(maxProgress.get() - documentsToProcess.size()) //
-                            .setMaxProgress(annotatableDocuments.size()) //
-                            .addMessage(LogMessage.info(this,
-                                    "%d annotations generated from %d suggestions in %d documents",
-                                    annotationsCount.get(), suggestionsCount.get(),
-                                    processedDocumentsCount.get())));
+                    progress.update(up -> {
+                        if (monitor.isCancelled()) {
+                            up.status("Task cancelled");
+                        }
+                        up.progress(maxProgress.get() - documentsToProcess.size()) //
+                                .maxProgress(maxProgress.get()) //
+                                .status("%d annotations generated from %d suggestions in %d documents",
+                                        annotationsCount.get(), suggestionsCount.get(),
+                                        processedDocumentsCount.get())
+                                .statusToLog();
+                    });
                     break;
                 }
 
@@ -147,9 +157,10 @@ public class BulkPredictionTask
                 var annDoc = documentService.createOrGetAnnotationDocument(doc, dataOwnerUser);
 
                 progress.update(up -> up //
-                        .setProgress(maxProgress.get() - documentsToProcess.size()) //
-                        .setMaxProgress(annotatableDocuments.size()) //
-                        .addMessage(LogMessage.info(this, "%s", doc.getName())));
+                        .progress(maxProgress.get() - documentsToProcess.size()) //
+                        .maxProgress(annotatableDocuments.size()) //
+                        .info("Processing [%s]", doc.getName()) //
+                        .status("%s", doc.getName()));
 
                 try (var session = CasStorageSession.openNested()) {
                     var predictions = generatePredictions(doc);
@@ -157,7 +168,8 @@ public class BulkPredictionTask
 
                     documentService.setAnnotationDocumentState(annDoc, IN_PROGRESS,
                             EXPLICIT_ANNOTATOR_USER_ACTION);
-                    var cas = documentService.readAnnotationCas(doc, dataOwner, AUTO_CAS_UPGRADE,
+                    var cas = documentService.readAnnotationCas(doc,
+                            AnnotationSet.forUser(dataOwner), AUTO_CAS_UPGRADE,
                             EXCLUSIVE_WRITE_ACCESS);
 
                     addProcessingMetadataAnnotation(doc, cas);
@@ -166,8 +178,8 @@ public class BulkPredictionTask
                     annotationsCount.addAndGet(autoAcceptedSuggestions);
 
                     if (autoAcceptedSuggestions > 0) {
-                        documentService.writeAnnotationCas(cas, doc, dataOwner,
-                                EXPLICIT_ANNOTATOR_USER_ACTION);
+                        documentService.writeAnnotationCas(cas, doc,
+                                AnnotationSet.forUser(dataOwner), EXPLICIT_ANNOTATOR_USER_ACTION);
                     }
 
                     if (autoAcceptedSuggestions > 0 || finishDocumentsWithoutRecommendations) {
@@ -178,19 +190,16 @@ public class BulkPredictionTask
                     processedDocumentsCount.incrementAndGet();
                 }
                 catch (IOException e) {
+                    progress.update(
+                            up -> up.error("Error saving CAS for document [%s]", doc.getName()));
                     LOG.error("Error loading/saving CAS for [{}]@{}: {}", dataOwner, doc);
                 }
                 catch (AnnotationException e) {
+                    progress.update(
+                            up -> up.error("Error creating processing metadata annotation"));
                     LOG.error("Error creating processing metadata annotation", e);
                 }
             }
-
-            progress.update(up -> up.setProgress(processedDocumentsCount.get()) //
-                    .setMaxProgress(maxProgress.get()) //
-                    .addMessage(LogMessage.info(this,
-                            "%d annotations generated from %d suggestions in %d documents",
-                            annotationsCount.get(), suggestionsCount.get(),
-                            processedDocumentsCount.get())));
         }
     }
 
@@ -212,22 +221,35 @@ public class BulkPredictionTask
         throws AnnotationException
     {
         var metadataAnnotationCache = new HashMap<AnnotationLayer, AnnotationBaseFS>();
-        for (var metadataEntry : processingMetadata.entrySet()) {
-            var layer = metadataEntry.getKey().getLayer();
-            if (!DocumentMetadataLayerSupport.TYPE.equals(layer.getType())) {
-                continue;
+        // One batched update context per layer so that multiple features written to the same
+        // metadata FS go through a single hidden-feature clearing pass on close.
+        var ctxCache = new LinkedHashMap<AnnotationLayer, FeatureValueUpdateContext>();
+        try {
+            for (var metadataEntry : processingMetadata.entrySet()) {
+                var layer = metadataEntry.getKey().getLayer();
+                if (!DocumentMetadataLayerSupport.TYPE.equals(layer.getType())) {
+                    continue;
+                }
+
+                var adapter = (DocumentMetadataLayerAdapter) schemaService.getAdapter(layer);
+
+                var anno = metadataAnnotationCache.get(layer);
+                if (anno == null) {
+                    anno = adapter.add(doc, dataOwner, cas);
+                    metadataAnnotationCache.put(layer, anno);
+                }
+
+                var ctx = ctxCache.get(layer);
+                if (ctx == null) {
+                    ctx = adapter.updateFeatureValues(doc, dataOwner, anno);
+                    ctxCache.put(layer, ctx);
+                }
+
+                ctx.setFeatureValue(metadataEntry.getKey(), metadataEntry.getValue());
             }
-
-            var adapter = (DocumentMetadataLayerAdapter) schemaService.getAdapter(layer);
-
-            var anno = metadataAnnotationCache.get(layer);
-            if (anno == null) {
-                anno = adapter.add(doc, dataOwner, cas);
-                metadataAnnotationCache.put(layer, anno);
-            }
-
-            adapter.setFeatureValue(doc, dataOwner, anno, metadataEntry.getKey(),
-                    metadataEntry.getValue());
+        }
+        finally {
+            ctxCache.values().forEach(FeatureValueUpdateContext::close);
         }
     }
 
@@ -246,17 +268,18 @@ public class BulkPredictionTask
         return predictionTask.getPredictions();
     }
 
-    private int autoAccept(SourceDocument aDocument, Predictions predictions, CAS cas)
+    private int autoAccept(SourceDocument aDocument, Predictions aPredictions, CAS aCas)
     {
         var accepted = 0;
-        var suggestionSupportCache = new HashMap<Recommender, Optional<SuggestionSupport>>();
+        var suggestionSupportCache = new HashMap<SuggestionSupportQuery, Optional<SuggestionSupport>>();
 
-        for (var prediction : predictions.getPredictionsByDocument(aDocument.getName())) {
+        for (var prediction : aPredictions.getPredictionsByDocument(aDocument.getId())) {
             if (!Objects.equals(prediction.getRecommenderId(), recommender.getId())) {
                 continue;
             }
 
-            var suggestionSupport = suggestionSupportCache.computeIfAbsent(recommender,
+            var suggestionSupport = suggestionSupportCache.computeIfAbsent(
+                    SuggestionSupportQuery.of(recommender),
                     suggestionSupportRegistry::findGenericExtension);
             if (suggestionSupport.isEmpty()) {
                 continue;
@@ -267,8 +290,8 @@ public class BulkPredictionTask
             adapter.silenceEvents();
 
             try {
-                suggestionSupport.get().acceptSuggestion(null, aDocument, dataOwner, cas, adapter,
-                        feature, prediction, AUTO_ACCEPT, ACCEPTED);
+                suggestionSupport.get().acceptSuggestion(null, aDocument, dataOwner, aCas, adapter,
+                        feature, aPredictions, prediction, AUTO_ACCEPT, ACCEPTED);
                 accepted++;
             }
             catch (AnnotationException e) {
@@ -276,7 +299,7 @@ public class BulkPredictionTask
             }
         }
 
-        predictions.log(LogMessage.info(this, "Auto-accepted [%d] suggestions", accepted));
+        aPredictions.log(LogMessage.info(this, "Auto-accepted [%d] suggestions", accepted));
         LOG.debug("Auto-accepted [{}] suggestions", accepted);
         return accepted;
     }

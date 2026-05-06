@@ -18,9 +18,8 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
@@ -57,7 +56,8 @@ import de.tudarmstadt.ukp.inception.annotation.feature.multistring.MultiValueStr
 import de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportPropertiesImpl;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapterImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
@@ -157,7 +157,7 @@ public class MtasUimaParserTest
 
         depLayer = AnnotationLayer.builder() //
                 .forJCasClass(Dependency.class) //
-                .withType(RELATION_TYPE) //
+                .withType(RelationLayerSupport.TYPE) //
                 .withProject(project) //
                 .withAnchoringMode(SINGLE_TOKEN) //
                 .withAttachFeature(tokenLayerPos) //
@@ -270,11 +270,10 @@ public class MtasUimaParserTest
         builder.add(" ");
         builder.add(".", Token.class);
 
-        MtasUimaParser sut = new MtasUimaParser(
-                asList(namedEntityValueFeature, namedEntityIdentifierFeature),
+        var sut = new MtasUimaParser(asList(namedEntityValueFeature, namedEntityIdentifierFeature),
                 annotationSchemaService, featureIndexingSupportRegistry, prefs);
 
-        MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
+        var tc = sut.createTokenCollection(jcas.getCas());
         // MtasUtils.print(tc);
 
         List<MtasToken> tokens = new ArrayList<>();
@@ -291,22 +290,20 @@ public class MtasUimaParserTest
     @Test
     void testMultiValueStringFeature() throws Exception
     {
-        TokenBuilder<Token, Sentence> builder = TokenBuilder.create(Token.class, Sentence.class);
+        var builder = TokenBuilder.create(Token.class, Sentence.class);
         builder.buildTokens(jcas, "test");
 
         var mvh = new MultiValueHost(jcas, 0, 4);
         mvh.setStringArray(StringArray.create(jcas, new String[] { "a", "b" }));
         mvh.addToIndexes();
 
-        MtasUimaParser sut = new MtasUimaParser(asList(multiValueHostStringArrayFeature),
+        var sut = new MtasUimaParser(asList(multiValueHostStringArrayFeature),
                 annotationSchemaService, featureIndexingSupportRegistry, prefs);
-        MtasTokenCollection result = sut.createTokenCollection(jcas.getCas());
+        var result = sut.createTokenCollection(jcas.getCas());
 
         // MtasUtils.print(result);
 
-        List<MtasToken> tokens = toList(result);
-
-        assertThat(tokens) //
+        assertThat(toList(result)) //
                 .filteredOn(t -> t.getPrefix().startsWith(multiValueHostLayer.getUiName())) //
                 .extracting(MtasToken::getPrefix, MtasToken::getPostfix) //
                 .containsExactly( //
@@ -318,7 +315,7 @@ public class MtasUimaParserTest
     @Test
     void testBooleanFeature() throws Exception
     {
-        TokenBuilder<Token, Sentence> builder = TokenBuilder.create(Token.class, Sentence.class);
+        var builder = TokenBuilder.create(Token.class, Sentence.class);
         builder.buildTokens(jcas, "test");
 
         var ph1 = new PrimitiveHost(jcas, 0, 4);
@@ -329,15 +326,13 @@ public class MtasUimaParserTest
         ph2.setBooleanFeature(false);
         ph2.addToIndexes();
 
-        MtasUimaParser sut = new MtasUimaParser(asList(primitiveHostBooleanFeature),
-                annotationSchemaService, featureIndexingSupportRegistry, prefs);
-        MtasTokenCollection result = sut.createTokenCollection(jcas.getCas());
+        var sut = new MtasUimaParser(asList(primitiveHostBooleanFeature), annotationSchemaService,
+                featureIndexingSupportRegistry, prefs);
+        var result = sut.createTokenCollection(jcas.getCas());
 
         // MtasUtils.print(result);
 
-        List<MtasToken> tokens = toList(result);
-
-        assertThat(tokens) //
+        assertThat(toList(result)) //
                 .filteredOn(t -> t.getPrefix().startsWith(primitiveHostLayer.getUiName())) //
                 .extracting(MtasToken::getPrefix, MtasToken::getPostfix) //
                 .containsExactly( //
@@ -350,21 +345,20 @@ public class MtasUimaParserTest
     @Test
     public void testZeroWidthSpanNotIndexed() throws Exception
     {
-        TokenBuilder<Token, Sentence> builder = TokenBuilder.create(Token.class, Sentence.class);
+        var builder = TokenBuilder.create(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test . \n This is sentence two .");
 
-        NamedEntity zeroWidthNe = new NamedEntity(jcas, 4, 4);
+        var zeroWidthNe = new NamedEntity(jcas, 4, 4);
         zeroWidthNe.setValue("OTH");
         zeroWidthNe.addToIndexes();
 
-        MtasUimaParser sut = new MtasUimaParser(
-                asList(namedEntityValueFeature, namedEntityIdentifierFeature),
+        var sut = new MtasUimaParser(asList(namedEntityValueFeature, namedEntityIdentifierFeature),
                 annotationSchemaService, featureIndexingSupportRegistry, prefs);
-        MtasTokenCollection result = sut.createTokenCollection(jcas.getCas());
+        var result = sut.createTokenCollection(jcas.getCas());
 
         // MtasUtils.print(result);
 
-        List<MtasToken> tokens = new ArrayList<>();
+        var tokens = new ArrayList<MtasToken>();
         result.iterator().forEachRemaining(tokens::add);
 
         assertThat(tokens) //
@@ -380,27 +374,27 @@ public class MtasUimaParserTest
         Token t1 = new Token(jcas, 0, 1);
         t1.addToIndexes();
 
-        POS p1 = new POS(jcas, t1.getBegin(), t1.getEnd());
+        var p1 = new POS(jcas, t1.getBegin(), t1.getEnd());
         p1.setPosValue("A");
         t1.setPos(p1);
         p1.addToIndexes();
 
-        Token t2 = new Token(jcas, 2, 3);
+        var t2 = new Token(jcas, 2, 3);
         t2.addToIndexes();
 
-        POS p2 = new POS(jcas, t2.getBegin(), t2.getEnd());
+        var p2 = new POS(jcas, t2.getBegin(), t2.getEnd());
         p2.setPosValue("B");
         t2.setPos(p2);
         p2.addToIndexes();
 
-        Dependency d1 = new Dependency(jcas, t2.getBegin(), t2.getEnd());
+        var d1 = new Dependency(jcas, t2.getBegin(), t2.getEnd());
         d1.setDependent(t2);
         d1.setGovernor(t1);
         d1.addToIndexes();
 
         when(annotationSchemaService.getAdapter(depLayer)) //
-                .thenReturn(new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                        depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+                .thenReturn(new RelationAdapterImpl(layerSupportRegistry, featureSupportRegistry,
+                        null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
                         () -> asList(dependencyLayerGovernor, dependencyLayerDependent),
                         emptyList(), constraintsService));
 

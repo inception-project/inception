@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "recommender.azureai-openai.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables the Azure AI OpenAI recommender."
+    }
+  ]
+}

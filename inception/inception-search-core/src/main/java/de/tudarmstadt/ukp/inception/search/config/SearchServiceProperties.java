@@ -21,6 +21,8 @@ import java.time.Duration;
 
 public interface SearchServiceProperties
 {
+    boolean DEFAULT_ENABLED = true;
+
     boolean isEnabled();
 
     /**

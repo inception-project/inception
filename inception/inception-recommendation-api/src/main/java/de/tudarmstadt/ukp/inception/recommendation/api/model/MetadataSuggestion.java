@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-
 public class MetadataSuggestion
     extends AnnotationSuggestion
     implements Serializable
@@ -29,11 +27,7 @@ public class MetadataSuggestion
 
     private MetadataSuggestion(Builder builder)
     {
-        super(builder.id, builder.generation, builder.age, builder.recommenderId,
-                builder.recommenderName, builder.layerId, builder.feature, builder.documentName,
-                builder.label, builder.uiLabel, builder.score, builder.scoreExplanation,
-                builder.autoAcceptMode, builder.hidingFlags, builder.correction,
-                builder.correctionExplanation);
+        super(builder);
     }
 
     @Override
@@ -75,7 +69,7 @@ public class MetadataSuggestion
                 .withRecommenderName(recommenderName) //
                 .withLayerId(layerId) //
                 .withFeature(feature) //
-                .withDocumentName(documentName) //
+                .withDocument(documentId) //
                 .withLabel(label) //
                 .withUiLabel(uiLabel) //
                 .withScore(score) //
@@ -87,142 +81,10 @@ public class MetadataSuggestion
     }
 
     public static final class Builder
+        extends AnnotationSuggestion.Builder<Builder>
     {
-        private int id;
-        private int generation;
-        private int age;
-        private long recommenderId;
-        private String recommenderName;
-        private long layerId;
-        private String feature;
-        private String documentName;
-        private String label;
-        private String uiLabel;
-        private double score;
-        private String scoreExplanation;
-        private AutoAcceptMode autoAcceptMode;
-        private int hidingFlags;
-        boolean correction;
-        private String correctionExplanation;
-
         private Builder()
         {
-        }
-
-        public Builder withId(int aId)
-        {
-            this.id = aId;
-            return this;
-        }
-
-        public Builder withAge(int aAge)
-        {
-            this.age = aAge;
-            return this;
-        }
-
-        public Builder withGeneration(int aGeneration)
-        {
-            this.generation = aGeneration;
-            return this;
-        }
-
-        public Builder withRecommender(Recommender aRecommender)
-        {
-            this.recommenderId = aRecommender.getId();
-            this.recommenderName = aRecommender.getName();
-            this.feature = aRecommender.getFeature().getName();
-            this.layerId = aRecommender.getLayer().getId();
-            return this;
-        }
-
-        @Deprecated
-        Builder withRecommenderId(long aRecommenderId)
-        {
-            this.recommenderId = aRecommenderId;
-            return this;
-        }
-
-        @Deprecated
-        Builder withRecommenderName(String aRecommenderName)
-        {
-            this.recommenderName = aRecommenderName;
-            return this;
-        }
-
-        @Deprecated
-        Builder withLayerId(long aLayerId)
-        {
-            this.layerId = aLayerId;
-            return this;
-        }
-
-        @Deprecated
-        Builder withFeature(String aFeature)
-        {
-            this.feature = aFeature;
-            return this;
-        }
-
-        public Builder withDocument(SourceDocument aDocument)
-        {
-            this.documentName = aDocument.getName();
-            return this;
-        }
-
-        @Deprecated
-        Builder withDocumentName(String aDocumentName)
-        {
-            this.documentName = aDocumentName;
-            return this;
-        }
-
-        public Builder withLabel(String aLabel)
-        {
-            this.label = aLabel;
-            return this;
-        }
-
-        public Builder withUiLabel(String aUiLabel)
-        {
-            this.uiLabel = aUiLabel;
-            return this;
-        }
-
-        public Builder withScore(double aScore)
-        {
-            this.score = aScore;
-            return this;
-        }
-
-        public Builder withScoreExplanation(String aScoreExplanation)
-        {
-            this.scoreExplanation = aScoreExplanation;
-            return this;
-        }
-
-        public Builder withAutoAcceptMode(AutoAcceptMode aAutoAcceptMode)
-        {
-            this.autoAcceptMode = aAutoAcceptMode;
-            return this;
-        }
-
-        public Builder withHidingFlags(int aFlags)
-        {
-            this.hidingFlags = aFlags;
-            return this;
-        }
-
-        public Builder withCorrection(boolean aCorrection)
-        {
-            this.correction = aCorrection;
-            return this;
-        }
-
-        public Builder withCorrectionExplanation(String aCorrectionExplanation)
-        {
-            this.correctionExplanation = aCorrectionExplanation;
-            return this;
         }
 
         public MetadataSuggestion build()

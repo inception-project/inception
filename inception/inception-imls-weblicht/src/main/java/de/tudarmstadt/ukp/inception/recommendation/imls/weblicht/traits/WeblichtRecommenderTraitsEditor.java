@@ -24,7 +24,6 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Date;
 import java.util.Optional;
 
@@ -37,7 +36,6 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -221,9 +219,9 @@ public class WeblichtRecommenderTraitsEditor
         aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(chainField, missingChainAlert);
 
-        for (FileUpload importedGazeteer : uploadField.getModelObject()) {
-            WeblichtChain chain = new WeblichtChain();
-            chain.setName(importedGazeteer.getClientFileName());
+        for (var importedChain : uploadField.getModelObject()) {
+            var chain = new WeblichtChain();
+            chain.setName(importedChain.getClientFileName());
             chain.setRecommender(getModelObject());
 
             // Make sure there is only one chain ever
@@ -238,7 +236,7 @@ public class WeblichtRecommenderTraitsEditor
                 }
             }
 
-            try (InputStream is = importedGazeteer.getInputStream()) {
+            try (var is = importedChain.getInputStream()) {
                 chainService.createOrUpdateChain(chain);
                 chainService.importChainFile(chain, is);
                 success("Imported chain: [" + chain.getName() + "]");

@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public class Metadata
 {

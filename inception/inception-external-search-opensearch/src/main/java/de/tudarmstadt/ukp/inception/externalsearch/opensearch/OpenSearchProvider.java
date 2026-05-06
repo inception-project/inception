@@ -35,13 +35,17 @@ import java.util.Map;
 import javax.net.ssl.SSLContext;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
-import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.impl.async.HttpAsyncClientBuilder;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
+import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.nio.AsyncClientConnectionManager;
+import org.apache.hc.client5.http.ssl.ClientTlsStrategyBuilder;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.nio.ssl.TlsStrategy;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.opensearch.action.get.GetRequest;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
@@ -238,7 +242,7 @@ public class OpenSearchProvider
     {
         URL hostUrl = new URL(aTraits.getRemoteUrl());
         RestClientBuilder builder = RestClient
-                .builder(new HttpHost(hostUrl.getHost(), hostUrl.getPort(), hostUrl.getProtocol()));
+                .builder(new HttpHost(hostUrl.getProtocol(), hostUrl.getHost(), hostUrl.getPort()));
 
         builder.setHttpClientConfigCallback(httpAsyncClientBuilder -> {
             maybeAuthenticate(aTraits, httpAsyncClientBuilder);
@@ -259,9 +263,9 @@ public class OpenSearchProvider
         BasicAuthenticationTraits authTraits = (BasicAuthenticationTraits) aTraits
                 .getAuthentication();
 
-        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(
-                authTraits.getUsername(), authTraits.getPassword()));
+        BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(new AuthScope(null, -1), new UsernamePasswordCredentials(
+                authTraits.getUsername(), authTraits.getPassword().toCharArray()));
 
         aClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
     }
@@ -288,7 +292,14 @@ public class OpenSearchProvider
             return;
         }
 
-        aClientBuilder.setSSLContext(sslContext);
-        aClientBuilder.setSSLHostnameVerifier((s, sslSession) -> true);
+        TlsStrategy tlsStrategy = ClientTlsStrategyBuilder.create() //
+                .setSslContext(sslContext) //
+                .setHostnameVerifier(NoopHostnameVerifier.INSTANCE) //
+                .build();
+        AsyncClientConnectionManager connectionManager = PoolingAsyncClientConnectionManagerBuilder
+                .create() //
+                .setTlsStrategy(tlsStrategy) //
+                .build();
+        aClientBuilder.setConnectionManager(connectionManager);
     }
 }

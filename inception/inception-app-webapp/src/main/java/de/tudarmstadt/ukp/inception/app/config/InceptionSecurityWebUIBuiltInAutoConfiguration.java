@@ -21,39 +21,40 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_
 import static de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIShared.accessToApplication;
 import static de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIShared.accessToRemoteApiAndSwagger;
 import static de.tudarmstadt.ukp.inception.app.config.InceptionSecurityWebUIShared.accessToStaticResources;
+import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 
 import java.util.Optional;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Profile;
-import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
-import org.springframework.security.saml2.provider.service.metadata.OpenSamlMetadataResolver;
+import org.springframework.security.saml2.provider.service.authentication.OpenSaml5AuthenticationProvider;
+import org.springframework.security.saml2.provider.service.metadata.OpenSaml5MetadataResolver;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.web.DefaultRelyingPartyRegistrationResolver;
-import org.springframework.security.saml2.provider.service.web.RelyingPartyRegistrationResolver;
 import org.springframework.security.saml2.provider.service.web.Saml2MetadataFilter;
 import org.springframework.security.saml2.provider.service.web.authentication.Saml2WebSsoAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 import de.tudarmstadt.ukp.inception.security.oauth.OAuth2Adapter;
 import de.tudarmstadt.ukp.inception.security.saml.Saml2Adapter;
-import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 
 @ConditionalOnWebApplication
+@ConditionalOnProperty(name = "auth.mode", havingValue = "database", matchIfMissing = true)
 @EnableWebSecurity
 public class InceptionSecurityWebUIBuiltInAutoConfiguration
 {
-    @Profile(DeploymentModeService.PROFILE_AUTH_MODE_DATABASE)
+    static {
+        BOOT_LOG.info("Authentication: database");
+    }
+
     @Bean
     public SecurityFilterChain webUiFilterChain(HttpSecurity aHttp,
             SessionRegistry aSessionRegistry, OAuth2Adapter aOAuth2Handling,
@@ -77,63 +78,56 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
             });
         });
 
-        var authorizations = aHttp.authorizeHttpRequests();
-        authorizations.requestMatchers("/login.html*").permitAll();
-        accessToStaticResources(authorizations);
-        accessToRemoteApiAndSwagger(authorizations);
-        authorizations.requestMatchers(NS_PROJECT + "/*/join-project/**").permitAll();
-        accessToApplication(authorizations);
-        authorizations.anyRequest().denyAll();
+        aHttp.authorizeHttpRequests(authz -> {
+            authz.requestMatchers("/login.html*").permitAll();
+            accessToStaticResources(authz);
+            accessToRemoteApiAndSwagger(authz);
+            authz.requestMatchers(NS_PROJECT + "/*/join-project/**").permitAll();
+            accessToApplication(authz);
+            authz.anyRequest().denyAll();
+        });
 
         // Must use "defaultAuthenticationEntryPointFor" instead of "formLogin" because
         // if we use formLogin, Spring will handle the form submit and we want the Wicket
         // login page to handle the form submit instead!
         // .formLogin(form -> form.loginPage("/login.html").permitAll())
-        aHttp.exceptionHandling().defaultAuthenticationEntryPointFor(
-                new LoginUrlAuthenticationEntryPoint("/login.html"),
-                new AntPathRequestMatcher("/**"));
+        aHttp.exceptionHandling(exceptions -> exceptions.defaultAuthenticationEntryPointFor(
+                new LoginUrlAuthenticationEntryPoint("/login.html"), request -> true));
 
         if (aClientRegistrationRepository.isPresent()) {
-            aHttp.oauth2Login() //
+            aHttp.oauth2Login(oauth2 -> oauth2 //
                     .loginPage("/login.html") //
-                    .userInfoEndpoint() //
-                    .oidcUserService(aOAuth2Handling::loadOidcUser) //
-                    .userService(aOAuth2Handling::loadUserOAuth2User);
+                    .userInfoEndpoint(userInfo -> userInfo //
+                            .oidcUserService(aOAuth2Handling::loadOidcUser) //
+                            .userService(aOAuth2Handling::loadUserOAuth2User)));
         }
 
         if (aRelyingPartyRegistrationRepository.isPresent()) {
-            RelyingPartyRegistrationResolver relyingPartyRegistrationResolver = //
+            var relyingPartyRegistrationResolver = //
                     new DefaultRelyingPartyRegistrationResolver(
                             aRelyingPartyRegistrationRepository.get());
-            Saml2MetadataFilter filter = new Saml2MetadataFilter(relyingPartyRegistrationResolver,
-                    new OpenSamlMetadataResolver());
+            var filter = new Saml2MetadataFilter(relyingPartyRegistrationResolver,
+                    new OpenSaml5MetadataResolver());
             aHttp.addFilterBefore(filter, Saml2WebSsoAuthenticationFilter.class);
 
-            aHttp.saml2Login(c -> {
-                c.loginPage("/login.html");
-                c.withObjectPostProcessor(new ObjectPostProcessor<Object>()
-                {
-                    @Override
-                    public <O> O postProcess(O aObject)
-                    {
-                        if (aObject instanceof OpenSaml4AuthenticationProvider) {
-                            var provider = (OpenSaml4AuthenticationProvider) aObject;
-                            var converter = OpenSaml4AuthenticationProvider
-                                    .createDefaultResponseAuthenticationConverter();
-                            provider.setResponseAuthenticationConverter(token -> {
-                                var authentication = converter.convert(token);
-                                authentication = aSaml2Handling.process(token, authentication);
-                                return authentication;
-                            });
-                        }
+            aHttp.saml2Login(saml2 -> {
+                saml2.loginPage("/login.html");
 
-                        return aObject;
-                    }
+                // Configure the authentication provider
+                var authProvider = new OpenSaml5AuthenticationProvider();
+                var converter = OpenSaml5AuthenticationProvider
+                        .createDefaultResponseAuthenticationConverter();
+                authProvider.setResponseAuthenticationConverter(token -> {
+                    var authentication = converter.convert(token);
+                    authentication = aSaml2Handling.process(token, authentication);
+                    return authentication;
                 });
+
+                saml2.authenticationManager(authProvider::authenticate);
             });
         }
 
-        aHttp.sessionManagement()
+        aHttp.sessionManagement(session -> session
                 // Configuring an unlimited session per-user maximum as a side-effect registers
                 // the ConcurrentSessionFilter which checks for valid sessions in the session
                 // registry. This allows us to indirectly invalidate a server session by marking
@@ -141,7 +135,7 @@ public class InceptionSecurityWebUIBuiltInAutoConfiguration
                 // mark the server session as invalid on the next request. This is used e.g. to
                 // force-sign-out users that are being deleted.
                 .maximumSessions(-1) //
-                .sessionRegistry(aSessionRegistry);
+                .sessionRegistry(aSessionRegistry));
 
         return aHttp.build();
     }

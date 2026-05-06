@@ -55,6 +55,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -63,7 +64,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBase
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.GazeteerEntry;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.model.GazetteerEntry;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
@@ -161,15 +162,15 @@ public class StringMatchingRecommenderTest
         var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "John Smith. Peter Johnheim .");
         var cas = jcas.getCas();
-        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
+        casStorageSession.add(AnnotationSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS, cas);
 
         RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
-        var gazeteer = asList( //
-                new GazeteerEntry("John Smith", "ORG"), //
-                new GazeteerEntry("Peter John", "LOC"));
+        var gazetteer = asList( //
+                new GazetteerEntry("John Smith", "ORG"), //
+                new GazetteerEntry("Peter John", "LOC"));
 
-        sut.pretrain(gazeteer, context);
+        sut.pretrain(gazetteer, context);
 
         sut.predict(new PredictionContext(context), cas);
 
@@ -191,13 +192,13 @@ public class StringMatchingRecommenderTest
         var builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "John Smith .\nPeter Johnheim .");
         var cas = jcas.getCas();
-        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
+        casStorageSession.add(AnnotationSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS, cas);
 
         RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
-        var gazeteer = asList(new GazeteerEntry("Smith . Peter", "ORG"));
+        var gazetteer = asList(new GazetteerEntry("Smith . Peter", "ORG"));
 
-        sut.pretrain(gazeteer, context);
+        sut.pretrain(gazetteer, context);
 
         sut.predict(new PredictionContext(context), cas);
 
@@ -234,12 +235,12 @@ public class StringMatchingRecommenderTest
         var cas = casList.get(0);
         RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
-        var gazeteer = asList( //
-                new GazeteerEntry("Toyota", "ORG"), //
-                new GazeteerEntry("Deutschland", "LOC"), //
-                new GazeteerEntry("Deutschland", "GPE"));
+        var gazetteer = asList( //
+                new GazetteerEntry("Toyota", "ORG"), //
+                new GazetteerEntry("Deutschland", "LOC"), //
+                new GazetteerEntry("Deutschland", "GPE"));
 
-        sut.pretrain(gazeteer, context);
+        sut.pretrain(gazetteer, context);
 
         sut.train(context, emptyList());
 
@@ -267,12 +268,12 @@ public class StringMatchingRecommenderTest
         var cas = casList.get(0);
         RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
 
-        var gazeteer = asList( //
-                new GazeteerEntry("Toyota", "ORG"), //
-                new GazeteerEntry("deutschland", "LOC"), //
-                new GazeteerEntry("DEUTSCHLAND", "GPE"));
+        var gazetteer = asList( //
+                new GazetteerEntry("Toyota", "ORG"), //
+                new GazetteerEntry("deutschland", "LOC"), //
+                new GazetteerEntry("DEUTSCHLAND", "GPE"));
 
-        sut.pretrain(gazeteer, context);
+        sut.pretrain(gazetteer, context);
 
         sut.train(context, emptyList());
 
@@ -476,7 +477,8 @@ public class StringMatchingRecommenderTest
             var cas = JCasFactory.createJCas();
             reader.getNext(cas.getCas());
             casList.add(cas.getCas());
-            casStorageSession.add("testDataCas" + n, EXCLUSIVE_WRITE_ACCESS, cas.getCas());
+            casStorageSession.add(AnnotationSet.forTest("testDataCas" + n), EXCLUSIVE_WRITE_ACCESS,
+                    cas.getCas());
         }
 
         return casList;

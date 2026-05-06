@@ -42,7 +42,6 @@ import org.wicketstuff.progressbar.ProgressBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -82,12 +81,17 @@ public class LegacyProjectExportPanel
     private boolean exportInProgress = false;
     private ProjectExportTaskHandle exportTask;
 
+    @Deprecated
     public LegacyProjectExportPanel(String id, final IModel<Project> aProjectModel)
     {
         super(id, aProjectModel);
 
-        add(form = new Form<>("exportForm", new CompoundPropertyModel<>(
-                new FullProjectExportRequest(FullProjectExportRequest.FORMAT_AUTO, true))));
+        add(form = new Form<>("exportForm",
+                new CompoundPropertyModel<>(FullProjectExportRequest.builder() //
+                        .withTitle("Project backup") //
+                        .withFormat(FullProjectExportRequest.FORMAT_AUTO) //
+                        .withIncludeInProgress(true) //
+                        .build())));
 
         form.add(createFormatDropdown("format"));
         form.add(createExportProjectLink("exportProject", form.getModel()));
@@ -155,7 +159,7 @@ public class LegacyProjectExportPanel
 
     private DropDownChoice<String> createFormatDropdown(String aId)
     {
-        DropDownChoice<String> format = new FormatDropdownChoice(aId);
+        var format = new FormatDropdownChoice(aId);
         // Needed to update the model with the selection because the DownloadLink does
         // not trigger a form submit.
         format.add(new FormComponentUpdatingBehavior());
@@ -203,7 +207,7 @@ public class LegacyProjectExportPanel
 
     private FileResourceStream getExport(ProjectExportTaskHandle aHandle)
     {
-        ProjectExportTaskMonitor monitor = exportService.getTaskMonitor(aHandle);
+        var monitor = exportService.getTaskMonitor(aHandle);
         return new FileResourceStream(monitor.getExportedFile());
     }
 
@@ -218,7 +222,7 @@ public class LegacyProjectExportPanel
         aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(form);
 
-        ProjectExportTaskMonitor monitor = exportService.getTaskMonitor(exportTask);
+        var monitor = exportService.getTaskMonitor(exportTask);
 
         monitor.getMessages().forEach(m -> m.toWicket(this));
 

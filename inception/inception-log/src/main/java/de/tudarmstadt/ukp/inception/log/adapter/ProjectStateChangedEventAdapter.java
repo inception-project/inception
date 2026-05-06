@@ -22,7 +22,7 @@ import java.util.Objects;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.inception.log.model.StateChangeDetails;
+import de.tudarmstadt.ukp.inception.log.api.model.StateChangeDetails;
 import de.tudarmstadt.ukp.inception.project.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 

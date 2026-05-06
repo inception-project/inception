@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_ALLEGRO_GRAPH;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_BLAZEGRAPH;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_GRAPHDB;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_STARDOG;
@@ -105,6 +106,7 @@ import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfValue;
 import org.eclipse.rdf4j.sparqlbuilder.util.SparqlBuilderUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -136,6 +138,7 @@ public class SPARQLQueryBuilder
 
     private final Set<Prefix> prefixes = new LinkedHashSet<>();
     private final Set<Projectable> projections = new LinkedHashSet<>();
+
     private final List<GraphPattern> primaryPatterns = new ArrayList<>();
     private final List<GraphPattern> primaryRestrictions = new ArrayList<>();
     private final List<GraphPattern> secondaryPatterns = new ArrayList<>();
@@ -160,6 +163,9 @@ public class SPARQLQueryBuilder
     private final Mode mode;
 
     private List<String> fallbackLanguages = emptyList();
+    private List<String> preResolvedPrefLabelProperties = emptyList();
+    private List<String> preResolvedAdditionalMatchingProperties = emptyList();
+    private boolean prefLabelPropertiesPreResolved = false;
 
     /**
      * Case-insensitive mode is a best-effort approach. Depending on the underlying FTS, it may or
@@ -235,7 +241,7 @@ public class SPARQLQueryBuilder
             case ITEM, CLASS, INSTANCE:
                 return aKb.getAdditionalMatchingProperties().stream() //
                         .map(Rdf::iri) //
-                        .collect(toList());
+                        .toList();
             case PROPERTY:
                 return emptyList();
             default:
@@ -263,7 +269,7 @@ public class SPARQLQueryBuilder
                     classPatterns.add(VAR_SUBJECT.has(OWL_INTERSECTIONOF_PATH, aContext));
                 }
 
-                return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
+                return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case CLASS: {
                 var classPatterns = new ArrayList<GraphPattern>();
@@ -273,7 +279,7 @@ public class SPARQLQueryBuilder
                     classPatterns.add(VAR_SUBJECT.has(OWL_INTERSECTIONOF_PATH, aContext));
                 }
 
-                return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
+                return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case INSTANCE:
                 return VAR_SUBJECT.has(PropertyPathBuilder.of(typeOfProperty).then(subClassProperty)
@@ -335,7 +341,7 @@ public class SPARQLQueryBuilder
                     classPatterns.add(VAR_SUBJECT.has(OWL_INTERSECTIONOF_PATH, aContext));
                 }
 
-                return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
+                return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case INSTANCE: {
                 return VAR_SUBJECT.has(typeOfProperty, aContext);
@@ -403,8 +409,8 @@ public class SPARQLQueryBuilder
 
                 var rootConcepts = aKb.getRootConcepts();
                 if (rootConcepts != null && !rootConcepts.isEmpty()) {
-                    rootPatterns.add(new ValuesPattern(VAR_SUBJECT, rootConcepts.stream()
-                            .map(iri -> iri(iri)).collect(Collectors.toList())));
+                    rootPatterns.add(new ValuesPattern(VAR_SUBJECT,
+                            rootConcepts.stream().map(iri -> iri(iri)).collect(toList())));
                 }
                 else {
                     var classPatterns = new ArrayList<GraphPattern>();
@@ -515,13 +521,16 @@ public class SPARQLQueryBuilder
             forceDisableFTS.add("Wikidata property query");
         }
 
+        var langs = new LinkedHashSet<String>();
+
         var appCtx = ApplicationContextProvider.getApplicationContext();
         if (appCtx != null) {
             var props = appCtx.getBean(KnowledgeBaseProperties.class);
-            var langs = new LinkedHashSet<>(props.getDefaultFallbackLanguages());
-            langs.addAll(aKB.getAdditionalLanguages());
-            withFallbackLanguages(langs);
+            langs.addAll(props.getDefaultFallbackLanguages());
         }
+
+        langs.addAll(aKB.getAdditionalLanguages());
+        withFallbackLanguages(langs);
     }
 
     void addPattern(Priority aPriority, GraphPattern aPattern)
@@ -564,6 +573,23 @@ public class SPARQLQueryBuilder
     boolean noResult()
     {
         return returnEmptyResult = true;
+    }
+
+    @Override
+    public SPARQLQueryPrimaryConditions withPrefLabelProperties(Collection<String> aProps)
+    {
+        preResolvedPrefLabelProperties = new ArrayList<>(aProps);
+        prefLabelPropertiesPreResolved = true;
+
+        return this;
+    }
+
+    @Override
+    public SPARQLQueryPrimaryConditions withAdditionalMatchingProperties(Collection<String> aProps)
+    {
+        preResolvedAdditionalMatchingProperties = new ArrayList<>(aProps);
+
+        return this;
     }
 
     @Override
@@ -663,13 +689,28 @@ public class SPARQLQueryBuilder
      * Generates a pattern which binds all sub-properties of the label property to the given
      * variable.
      */
-    private GraphPattern bindPrefLabelProperties(Variable aVariable)
+    GraphPattern bindPrefLabelProperties(Variable aVariable)
     {
+        if (!preResolvedPrefLabelProperties.isEmpty()) {
+            return bindPrefLabelProperties(aVariable, preResolvedPrefLabelProperties);
+        }
+
         var pLabel = mode.getLabelProperty(kb);
         var pSubProperty = iri(kb.getSubPropertyIri());
-        var primaryLabelPattern = aVariable
-                .has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(), pLabel);
-        return optional(primaryLabelPattern);
+        var pattern = aVariable.has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(),
+                pLabel);
+        return optional(pattern);
+    }
+
+    /**
+     * Generates a pattern which binds all sub-properties of the label property to the given
+     * variable.
+     */
+    private GraphPattern bindPrefLabelProperties(Variable aVariable,
+            Collection<String> aPrefLabelProperties)
+    {
+        return optional(new ValuesPattern(aVariable,
+                aPrefLabelProperties.stream().map(Rdf::iri).toArray(RdfValue[]::new)));
     }
 
     /**
@@ -678,22 +719,28 @@ public class SPARQLQueryBuilder
      */
     GraphPattern bindMatchTermProperties(Variable aVariable)
     {
+        if (!preResolvedPrefLabelProperties.isEmpty()) {
+            return bindMatchTermProperties(aVariable, preResolvedPrefLabelProperties,
+                    preResolvedAdditionalMatchingProperties);
+        }
+
         var pLabel = mode.getLabelProperty(kb);
         var pSubProperty = iri(kb.getSubPropertyIri());
-        var primaryLabelPattern = aVariable
-                .has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(), pLabel);
+        var pattern = aVariable.has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(),
+                pLabel);
 
-        if (mode.getAdditionalMatchingProperties(kb).isEmpty()) {
+        var additionalMatchingProperties = mode.getAdditionalMatchingProperties(kb);
+        if (additionalMatchingProperties.isEmpty()) {
             // If we only have a single label property, let's make the label optional
             // so that we also get a result for things that might potentially not have
             // any label at all.
-            return optional(primaryLabelPattern);
+            return optional(pattern);
         }
 
         var patterns = new ArrayList<TriplePattern>();
-        patterns.add(primaryLabelPattern);
+        patterns.add(pattern);
 
-        for (var pAddSearch : mode.getAdditionalMatchingProperties(kb)) {
+        for (var pAddSearch : additionalMatchingProperties) {
             patterns.add(aVariable.has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(),
                     pAddSearch));
         }
@@ -702,7 +749,28 @@ public class SPARQLQueryBuilder
         // becomes mandatory, otherwise we get one result for every label property and
         // additional label property and their sub-properties for every concept and that
         // is simply too much.
-        return GraphPatterns.union(patterns.stream().toArray(TriplePattern[]::new));
+        return union(patterns.stream().toArray(TriplePattern[]::new));
+    }
+
+    private GraphPattern bindMatchTermProperties(Variable aVariable,
+            Collection<String> aPrefLabelProperties, Collection<String> aAdditionalLabelProperties)
+    {
+        if (aAdditionalLabelProperties.isEmpty()) {
+            var pattern = new ValuesPattern(aVariable,
+                    aPrefLabelProperties.stream().map(Rdf::iri).toArray(RdfValue[]::new));
+            return pattern;
+        }
+
+        var allProps = new LinkedHashSet<String>();
+        allProps.addAll(aPrefLabelProperties);
+        allProps.addAll(aAdditionalLabelProperties);
+
+        // If additional label properties are specified, then having a label candidate
+        // becomes mandatory, otherwise we get one result for every label property and
+        // additional label property and their sub-properties for every concept and that
+        // is simply too much.
+        return new ValuesPattern(aVariable,
+                allProps.stream().map(Rdf::iri).toArray(RdfValue[]::new));
     }
 
     @Override
@@ -760,6 +828,8 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelMatchingExactlyAnyOf(String... aValues)
     {
+        checkPrefLabelPropertiesPreResolved();
+
         var values = Arrays.stream(aValues) //
                 .map(SPARQLQueryBuilder::trimQueryString) //
                 .filter(StringUtils::isNotBlank) //
@@ -788,6 +858,10 @@ public class SPARQLQueryBuilder
 
         if (FTS_BLAZEGRAPH.equals(ftsMode)) {
             return new FtsAdapterBlazegraph(this);
+        }
+
+        if (FTS_GRAPHDB.equals(ftsMode)) {
+            return new FtsAdapterGraphDb(this);
         }
 
         if (FTS_FUSEKI.equals(ftsMode)) {
@@ -859,9 +933,22 @@ public class SPARQLQueryBuilder
         return FTS_WIKIDATA.equals(ftsMode);
     }
 
+    private void checkPrefLabelPropertiesPreResolved()
+    {
+        if (!prefLabelPropertiesPreResolved) {
+            throw new IllegalStateException(
+                    "withPrefLabelProperties() must be called before any label-matching method. "
+                            + "Use resolvePrefLabelProperties(RepositoryConnection) to resolve "
+                            + "the effective label properties, then pass the result to "
+                            + "withPrefLabelProperties().");
+        }
+    }
+
     @Override
     public SPARQLQueryBuilder withLabelMatchingAnyOf(String... aValues)
     {
+        checkPrefLabelPropertiesPreResolved();
+
         var values = Arrays.stream(aValues) //
                 .map(SPARQLQueryBuilder::trimQueryString) //
                 .filter(StringUtils::isNotBlank) //
@@ -883,6 +970,8 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelContainingAnyOf(String... aValues)
     {
+        checkPrefLabelPropertiesPreResolved();
+
         var values = Arrays.stream(aValues) //
                 .map(SPARQLQueryBuilder::trimQueryString) //
                 .filter(StringUtils::isNotBlank) //
@@ -904,6 +993,8 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelStartingWith(String aPrefixQuery)
     {
+        checkPrefLabelPropertiesPreResolved();
+
         var value = trimQueryString(aPrefixQuery);
 
         if (value == null || value.length() == 0) {
@@ -986,6 +1077,9 @@ public class SPARQLQueryBuilder
                 value = Stream.of(TOKENKIZER_PATTERN.split(aValue)) //
                         .map(t -> "(?=.*" + asRegexp(t) + ")") //
                         .collect(joining());
+                // value = Stream.of(TOKENKIZER_PATTERN.split(aValue)) //
+                // .map(t -> asRegexp(t)) //
+                // .collect(joining("|"));
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -999,6 +1093,11 @@ public class SPARQLQueryBuilder
         expressions.add(matchKbLanguage(aVariable));
 
         return and(expressions.toArray(Expression[]::new)).parenthesize();
+    }
+
+    List<String> getFallbackLanguages()
+    {
+        return fallbackLanguages;
     }
 
     Expression<?> matchKbLanguage(Variable aVariable)
@@ -1233,13 +1332,12 @@ public class SPARQLQueryBuilder
         return limitOverride > 0 ? limitOverride : kb.getMaxResults();
     }
 
-    @Override
-    public SelectQuery selectQuery()
+    SelectQuery selectQuery()
     {
         // Must add it anyway because we group by it
         projections.add(VAR_SUBJECT);
 
-        SelectQuery query = Queries.SELECT().distinct();
+        var query = Queries.SELECT().distinct();
         prefixes.forEach(query::prefix);
         projections.forEach(query::select);
 
@@ -1291,8 +1389,6 @@ public class SPARQLQueryBuilder
         var queryId = toHexString(hashCode());
 
         var queryString = selectQuery().getQueryString();
-        // queryString = QueryParserUtil.parseQuery(QueryLanguage.SPARQL, queryString, null)
-        // .toString();
         LOG.trace("[{}] Query: {}", queryId, queryString);
 
         if (returnEmptyResult) {
@@ -1380,8 +1476,6 @@ public class SPARQLQueryBuilder
     {
         var startTime = currentTimeMillis();
         var queryId = toHexString(hashCode());
-
-        limit(1);
 
         var queryString = selectQuery().getQueryString();
         LOG.trace("[{}] Query: {}", queryId, queryString);
@@ -1524,7 +1618,7 @@ public class SPARQLQueryBuilder
         // If we have additional search properties, we need to store the label candidates
         // in the handle as well
         if (!mode.getAdditionalMatchingProperties(kb).isEmpty() && matchTerm != null) {
-            String language = extractLanguage(matchTerm).orElse(null);
+            var language = extractLanguage(matchTerm).orElse(null);
             aTargetHandle.addMatchTerm(matchTerm.getValue().stringValue(), language);
         }
 
@@ -1727,6 +1821,61 @@ public class SPARQLQueryBuilder
     }
 
     @Override
+    public Set<String> resolvePrefLabelProperties(RepositoryConnection aConnection)
+    {
+        var pLabel = mode.getLabelProperty(kb);
+        var properties = new LinkedHashSet<String>();
+
+        resolveSubProperties(aConnection, pLabel, properties);
+
+        return properties;
+    }
+
+    @Override
+    public Set<String> resolveAdditionalMatchingProperties(RepositoryConnection aConnection)
+    {
+        var properties = new LinkedHashSet<String>();
+
+        for (var pAddSearch : mode.getAdditionalMatchingProperties(kb)) {
+            resolveSubProperties(aConnection, pAddSearch, properties);
+        }
+
+        return properties;
+    }
+
+    private void resolveSubProperties(RepositoryConnection aConnection, Iri aRootProperty,
+            Set<String> properties)
+    {
+        var varProperty = var("property");
+        var pSubProperty = iri(kb.getSubPropertyIri());
+        var pattern = varProperty.has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(),
+                aRootProperty);
+
+        var query = Queries.SELECT().distinct().where(pattern);
+
+        var tupleQuery = aConnection.prepareTupleQuery(query.getQueryString());
+        tupleQuery.setIncludeInferred(includeInferred);
+
+        try (var result = tupleQuery.evaluate()) {
+            while (result.hasNext()) {
+                var bindings = result.next();
+                if (bindings.isEmpty()) {
+                    continue;
+                }
+
+                var property = bindings.getBinding(varProperty.getVarName());
+                if (property != null) {
+                    properties.add(property.getValue().stringValue());
+                }
+            }
+        }
+        catch (QueryEvaluationException e) {
+            throw new QueryEvaluationException(
+                    e.getMessage() + " while running query:\n" + query.getQueryString(), e);
+        }
+    }
+
+    @Override
     public boolean equals(final Object other)
     {
         if (!(other instanceof SPARQLQueryBuilder)) {
@@ -1743,6 +1892,13 @@ public class SPARQLQueryBuilder
     public int hashCode()
     {
         return selectQuery().getQueryString().hashCode();
+    }
+
+    @Override
+    public void logQueryString(Logger aLog, Level aLevel, String aPrefix)
+    {
+        Arrays.stream(selectQuery().getQueryString().split("\n"))
+                .forEachOrdered(l -> aLog.atLevel(aLevel).log("{}{}", aPrefix, l));
     }
 
     private static class PromotableExistsFilter

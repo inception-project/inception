@@ -54,8 +54,8 @@ public class MarkdownLabel
     @Override
     public void onComponentTagBody(final MarkupStream markupStream, final ComponentTag openTag)
     {
-        String markdownString = getDefaultModelObjectAsString();
-        String htmlString = MarkdownUtil.markdownToHtml(markdownString);
+        var markdownString = getDefaultModelObjectAsString();
+        var htmlString = MarkdownUtil.markdownToHtml(markdownString);
         replaceComponentTagBody(markupStream, openTag, htmlString);
     }
 }

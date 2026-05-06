@@ -30,6 +30,7 @@ import picocli.CommandLine.Spec;
 @Component
 @Command( //
         name = "users", //
+        mixinStandardHelpOptions = true, //
         description = "commands related to user management", //
         subcommands = { UsersMigratePreAuthenticatedToRealmCliCommand.class })
 public class UsersCliCommand

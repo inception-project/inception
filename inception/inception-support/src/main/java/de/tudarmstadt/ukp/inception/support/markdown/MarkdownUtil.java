@@ -19,13 +19,13 @@ package de.tudarmstadt.ukp.inception.support.markdown;
 
 import static java.util.Arrays.asList;
 import static java.util.regex.Pattern.compile;
+import static org.apache.commons.lang3.Strings.CS;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.HtmlStreamEventProcessor;
 import org.owasp.html.HtmlStreamEventReceiver;
@@ -123,7 +123,7 @@ public class MarkdownUtil
             for (int i = attribsCopy.size() - 2; i >= 0; i -= 2) {
                 if ("href".equalsIgnoreCase(attribs.get(i))) {
                     var link = attribs.get(i + 1);
-                    if (StringUtils.contains(link, "://")) {
+                    if (CS.contains(link, "://")) {
                         externalLink = true;
                         break;
                     }

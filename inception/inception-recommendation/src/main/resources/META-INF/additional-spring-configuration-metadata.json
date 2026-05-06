@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "recommender.sidebar.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables the recommender sidebar on the annotation page."
+    }
+  ]
+}

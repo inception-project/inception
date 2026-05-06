@@ -17,21 +17,31 @@
  */
 package de.tudarmstadt.ukp.inception.documents.config;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.DocumentAccessImpl;
+import de.tudarmstadt.ukp.inception.documents.DocumentFootprintProvider;
 import de.tudarmstadt.ukp.inception.documents.DocumentServiceImpl;
 import de.tudarmstadt.ukp.inception.documents.DocumentStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporter;
+import de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporterRegistry;
+import de.tudarmstadt.ukp.inception.documents.cli.StateUpdatedFieldsMigration;
+import de.tudarmstadt.ukp.inception.documents.exporters.CrossDocumentExporterRegistryImpl;
 import de.tudarmstadt.ukp.inception.documents.exporters.SourceDocumentExporter;
+import de.tudarmstadt.ukp.inception.log.api.EventRepository;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -40,6 +50,13 @@ import jakarta.persistence.PersistenceContext;
 public class DocumentServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
+
+    @Bean
+    public StateUpdatedFieldsMigration StateUpdatedFieldsMigration(ProjectService aProjectService,
+            EventRepository aEventRepository, DocumentService aDocumentService)
+    {
+        return new StateUpdatedFieldsMigration(aProjectService, aEventRepository, aDocumentService);
+    }
 
     @Bean
     public DocumentService documentService(RepositoryProperties aRepositoryProperties,
@@ -62,15 +79,30 @@ public class DocumentServiceAutoConfiguration
     @Bean
     public SourceDocumentExporter sourceDocumentExporter(DocumentService aDocumentService,
             RepositoryProperties aRepositoryProperties,
-            DocumentStorageService aDocumentStorageService)
+            DocumentStorageService aDocumentStorageService,
+            DocumentImportExportService aDocumentImportExportService)
     {
         return new SourceDocumentExporter(aDocumentService, aDocumentStorageService,
-                aRepositoryProperties);
+                aRepositoryProperties, aDocumentImportExportService);
     }
 
     @Bean
     public DocumentStorageService documentStorageService(RepositoryProperties aRepositoryProperties)
     {
         return new DocumentStorageServiceImpl(aRepositoryProperties);
+    }
+
+    @Bean
+    public DocumentFootprintProvider sourceDocumentFootprintProvider(
+            DocumentStorageServiceImpl aDocumentStorageService)
+    {
+        return new DocumentFootprintProvider(aDocumentStorageService);
+    }
+
+    @Bean
+    public CrossDocumentExporterRegistry crossDocumentExporterRegistry(
+            @Lazy @Autowired(required = false) List<CrossDocumentExporter> aExtensions)
+    {
+        return new CrossDocumentExporterRegistryImpl(aExtensions);
     }
 }

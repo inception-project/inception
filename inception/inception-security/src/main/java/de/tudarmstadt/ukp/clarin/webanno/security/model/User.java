@@ -18,16 +18,20 @@
 package de.tudarmstadt.ukp.clarin.webanno.security.model;
 
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static jakarta.persistence.FetchType.EAGER;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.hibernate.annotations.CacheConcurrencyStrategy.READ_WRITE;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -40,14 +44,11 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 
 /**
@@ -61,7 +62,7 @@ import jakarta.persistence.Transient;
 @Entity
 @Table(name = "users")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cache(usage = READ_WRITE)
 public class User
     implements Serializable
 {
@@ -82,28 +83,28 @@ public class User
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date lastLogin;
 
     @Column(nullable = true)
     private String email;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = EAGER)
     @CollectionTable(name = "authorities", joinColumns = {
             @JoinColumn(name = "username", referencedColumnName = "username") })
     @Column(nullable = true, name = "authority")
     @Enumerated(EnumType.STRING)
-    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+    @Cache(usage = READ_WRITE)
     private Set<Role> roles = new HashSet<>();
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date created;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date updated;
+
+    @Column(name = "opt_unique_key", nullable = true, length = 64)
+    private String optUniqueKey;
 
     public User()
     {
@@ -137,23 +138,23 @@ public class User
 
     private User(Builder builder)
     {
-        this.username = builder.username;
-        this.password = builder.password;
-        this.realm = builder.realm;
-        this.uiName = builder.uiName;
-        this.enabled = builder.enabled;
-        this.lastLogin = builder.lastLogin;
-        this.email = builder.email;
-        this.roles = builder.roles;
-        this.created = builder.created;
-        this.updated = builder.updated;
+        username = builder.username;
+        realm = builder.realm;
+        uiName = builder.uiName;
+        enabled = builder.enabled;
+        lastLogin = builder.lastLogin;
+        email = builder.email;
+        roles = builder.roles;
+        created = builder.created;
+        updated = builder.updated;
+        setPassword(builder.password);
     }
 
     private synchronized PasswordEncoder getPasswordEncoder()
     {
         if (passwordEncoder == null) {
             var context = ApplicationContextProvider.getApplicationContext();
-            passwordEncoder = context.getBean("passwordEncoder", PasswordEncoder.class);
+            passwordEncoder = context.getBean(PasswordEncoder.class);
         }
         return passwordEncoder;
     }
@@ -208,7 +209,7 @@ public class User
 
     public void setPassword(String aPassword)
     {
-        password = getPasswordEncoder().encode(aPassword);
+        password = aPassword != null ? getPasswordEncoder().encode(aPassword) : null;
     }
 
     public void setEncodedPassword(String aPassword)
@@ -298,12 +299,14 @@ public class User
             created = new Date();
             updated = created;
         }
+        updateOptUniqueKey();
     }
 
     @PreUpdate
     protected void onUpdate()
     {
         updated = new Date();
+        updateOptUniqueKey();
     }
 
     public Date getCreated()
@@ -324,6 +327,45 @@ public class User
     public void setUpdated(Date aUpdated)
     {
         updated = aUpdated;
+    }
+
+    public void updateOptUniqueKey()
+    {
+        // For project-bound users, the UI name must be unique because in the guest annotator mode,
+        // we use the UI name during "authentication".
+        if (realm != null && realm.startsWith(Realm.REALM_PROJECT_PREFIX)) {
+            var digest = DigestUtils.getSha256Digest();
+            digest.update(realm.getBytes(UTF_8));
+            digest.update((byte) 0x01);
+            digest.update(getUiName().getBytes(UTF_8));
+            optUniqueKey = Hex.encodeHexString(digest.digest());
+        }
+        else {
+            optUniqueKey = null;
+        }
+    }
+
+    public String toLongString()
+    {
+        var builder = new StringBuilder();
+
+        if (uiName != null) {
+            builder.append(uiName);
+            if (!username.equals(uiName)) {
+                builder.append(" (");
+                builder.append(username);
+                builder.append(")");
+            }
+        }
+        else {
+            builder.append(username);
+        }
+
+        if (!isEnabled()) {
+            builder.append(" (deactivated)");
+        }
+
+        return builder.toString();
     }
 
     @Override

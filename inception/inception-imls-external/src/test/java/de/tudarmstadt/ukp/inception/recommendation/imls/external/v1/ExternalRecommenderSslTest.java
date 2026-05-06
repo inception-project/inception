@@ -35,6 +35,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
@@ -45,7 +48,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config.ExternalRecommenderPropertiesImpl;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
+@ExtendWith(MockitoExtension.class)
 public class ExternalRecommenderSslTest
 {
     private static final String TYPE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
@@ -54,6 +59,8 @@ public class ExternalRecommenderSslTest
     private static final long PROJECT_ID = 42L;
     private static final boolean CROSS_SENTENCE = true;
     private static final AnchoringMode ANCHORING_MODE = AnchoringMode.TOKENS;
+
+    private @Mock AnnotationSchemaService schemaService;
 
     private Recommender recommender;
     private RecommenderContext context;
@@ -93,13 +100,15 @@ public class ExternalRecommenderSslTest
         traits.setRemoteUrl("https://expired.badssl.com/");
 
         traits.setVerifyCertificates(true);
-        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
+        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits,
+                schemaService);
         assertThatExceptionOfType(RecommendationException.class) //
                 .isThrownBy(() -> sut.train(context, data)) //
                 .withMessageContaining("PKIX path validation failed");
 
         traits.setVerifyCertificates(false);
-        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
+        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits,
+                schemaService);
         assertThatExceptionOfType(RecommendationException.class) //
                 .isThrownBy(() -> sut.train(context, data)) //
                 .withMessageContaining("404 Not Found");
@@ -114,7 +123,8 @@ public class ExternalRecommenderSslTest
         traits.setRemoteUrl("https://wrong.host.badssl.com/");
 
         traits.setVerifyCertificates(true);
-        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
+        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits,
+                schemaService);
         assertThatExceptionOfType(RecommendationException.class) //
                 .isThrownBy(() -> sut.train(context, data)) //
                 .withMessageContaining("No subject alternative DNS name matching");
@@ -140,13 +150,15 @@ public class ExternalRecommenderSslTest
         traits.setRemoteUrl("https://self-signed.badssl.com/");
 
         traits.setVerifyCertificates(true);
-        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
+        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits,
+                schemaService);
         assertThatExceptionOfType(RecommendationException.class) //
                 .isThrownBy(() -> sut.train(context, data)) //
                 .withMessageContaining("PKIX path building failed");
 
         traits.setVerifyCertificates(false);
-        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
+        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits,
+                schemaService);
         assertThatExceptionOfType(RecommendationException.class) //
                 .isThrownBy(() -> sut.train(context, data)) //
                 .withMessageContaining("404 Not Found");
@@ -161,13 +173,15 @@ public class ExternalRecommenderSslTest
         traits.setRemoteUrl("https://untrusted-root.badssl.com/");
 
         traits.setVerifyCertificates(true);
-        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
+        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits,
+                schemaService);
         assertThatExceptionOfType(RecommendationException.class) //
                 .isThrownBy(() -> sut.train(context, data)) //
                 .withMessageContaining("PKIX path building failed");
 
         traits.setVerifyCertificates(false);
-        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
+        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits,
+                schemaService);
         assertThatExceptionOfType(RecommendationException.class) //
                 .isThrownBy(() -> sut.train(context, data)) //
                 .withMessageContaining("404 Not Found");
@@ -183,13 +197,15 @@ public class ExternalRecommenderSslTest
         traits.setRemoteUrl("https://revoked.badssl.com/");
 
         traits.setVerifyCertificates(true);
-        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
+        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits,
+                schemaService);
         assertThatExceptionOfType(RecommendationException.class) //
                 .isThrownBy(() -> sut.train(context, data)) //
                 .withMessageContaining("PKIX path validation failed");
 
         traits.setVerifyCertificates(false);
-        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
+        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits,
+                schemaService);
         assertThatExceptionOfType(RecommendationException.class) //
                 .isThrownBy(() -> sut.train(context, data)) //
                 .withMessageContaining("404 Not Found");
@@ -204,7 +220,8 @@ public class ExternalRecommenderSslTest
         traits.setRemoteUrl("https://tls-v1-2.badssl.com:1012/");
 
         traits.setVerifyCertificates(true);
-        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
+        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits,
+                schemaService);
         assertThatExceptionOfType(RecommendationException.class) //
                 .isThrownBy(() -> sut.train(context, data)) //
                 .withMessageContaining("404 Not Found");

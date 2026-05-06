@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizi
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.PairwiseUnitizingAgreementTable;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 
 public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     extends AgreementMeasureSupport_ImplBase<//

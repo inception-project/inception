@@ -1,0 +1,16 @@
+{
+  "properties": [
+    {
+      "name": "format.brat-basic.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables basic brat format import/export support."
+    },
+    {
+      "name": "format.brat-custom.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables custom brat format import/export support."
+    }
+  ]
+}

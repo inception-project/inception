@@ -21,6 +21,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.AzureAiOpenAiRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiOpenAiClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiOpenAiClientImpl;
@@ -39,8 +40,10 @@ public class AzureAiOpenAiRecommenderAutoConfiguration
 
     @Bean
     public AzureAiOpenAiRecommenderFactory azureAiOpenAiRecommenderFactory(
-            AzureAiOpenAiClient aClient, AnnotationSchemaService aSchemaService)
+            AzureAiOpenAiClient aClient, AnnotationSchemaService aSchemaService,
+            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint)
     {
-        return new AzureAiOpenAiRecommenderFactory(aClient, aSchemaService);
+        return new AzureAiOpenAiRecommenderFactory(aClient, aSchemaService,
+                aResponseExtractorExtensionPoint);
     }
 }

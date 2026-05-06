@@ -138,6 +138,7 @@ innodb_file_format=barracuda        # Removed in MariaDB 10.6.0
 innodb_file_per_table=1             # Deprecated in MariaDB 11.0.1
 innodb_strict_mode=1
 innodb_default_row_format='dynamic'
+innodb_snapshot_isolation=0         # Probably required with MariaDB >= 11.6.2
 ----
 
 

@@ -181,7 +181,7 @@ public class AeroProjectController
         project.setSlug(aSlug);
         project.setName(projectName);
         project.setScriptDirection(ScriptDirection.LTR);
-        project.setState(ProjectState.NEW);
+        project.updateState(ProjectState.NEW);
         projectService.createProject(project);
         projectService.initializeProject(project);
 
@@ -359,7 +359,11 @@ public class AeroProjectController
                                     .toString()));
         }
 
-        var request = new FullProjectExportRequest(project, aFormat.orElse(null), true);
+        var request = FullProjectExportRequest.builder() //
+                .withProject(project) //
+                .withFormat(aFormat.orElse(null)) //
+                .withIncludeInProgress(true) //
+                .build();
         var monitor = new ProjectExportTaskMonitor(project, null, "report-export", "");
         var exportedFile = exportService.exportProject(request, monitor);
 

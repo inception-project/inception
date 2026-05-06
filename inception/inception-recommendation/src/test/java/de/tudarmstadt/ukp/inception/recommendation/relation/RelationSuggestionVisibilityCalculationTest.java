@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.relation;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getInvisibleSuggestions;
 import static de.tudarmstadt.ukp.inception.recommendation.service.Fixtures.getVisibleSuggestions;
 import static java.util.Arrays.asList;
@@ -28,7 +29,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -41,15 +41,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistry;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupportImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.recommender.RelationSuggestionSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
@@ -90,9 +94,9 @@ public class RelationSuggestionVisibilityCalculationTest
     public void setUp() throws Exception
     {
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new SpanLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService),
-                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry,
+                new RelationLayerSupportImpl(featureSupportRegistry, null, layerBehaviorRegistry,
                         constraintsService)));
         layerSupportRegistry.init();
 
@@ -208,18 +212,209 @@ public class RelationSuggestionVisibilityCalculationTest
     static SuggestionDocumentGroup<RelationSuggestion> makeRelationSuggestionGroup(
             SourceDocument doc, AnnotationFeature aFeat, int[][] vals)
     {
+        return makeRelationSuggestionGroup(doc, aFeat, vals, null);
+    }
+
+    static SuggestionDocumentGroup<RelationSuggestion> makeRelationSuggestionGroup(
+            SourceDocument doc, AnnotationFeature aFeat, int[][] vals, String[] labels)
+    {
         var rec = Recommender.builder().withId(RECOMMENDER_ID).withName(RECOMMENDER_NAME)
                 .withLayer(aFeat.getLayer()).withFeature(aFeat).build();
 
-        List<RelationSuggestion> suggestions = new ArrayList<>();
-        for (int[] val : vals) {
-            var suggestion = RelationSuggestion.builder().withId(val[0]).withRecommender(rec)
-                    .withDocument(doc)
+        var suggestions = new ArrayList<RelationSuggestion>();
+        for (int i = 0; i < vals.length; i++) {
+            var val = vals[i];
+            var builder = RelationSuggestion.builder() //
+                    .withId(val[0]) //
+                    .withRecommender(rec) //
+                    .withDocument(doc) //
                     .withPosition(new RelationPosition(val[1], val[2], val[3], val[4]))
-                    .withScore(CONFIDENCE).withScoreExplanation(CONFIDENCE_EXPLANATION).build();
-            suggestions.add(suggestion);
+                    .withScore(CONFIDENCE).withScoreExplanation(CONFIDENCE_EXPLANATION);
+            if (labels != null && labels[i] != null) {
+                builder.withLabel(labels[i]);
+            }
+            suggestions.add(builder.build());
         }
 
         return SuggestionDocumentGroup.groupsOfType(RelationSuggestion.class, suggestions);
+    }
+
+    @Test
+    public void thatSuggestionAtFreePositionIsVisible() throws Exception
+    {
+        doReturn(emptyList()).when(learningRecordService).listLearningRecords(TEST_USER, TEST_USER,
+                layer);
+
+        // Existing relation in CAS spans (0,3) -> (13,20). Suggestion endpoints differ.
+        var cas = getTestCas();
+        var suggestions = makeRelationSuggestionGroup(doc, feature,
+                new int[][] { { 1, 26, 30, 36, 41 } }, new String[] { "DEP" });
+
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                100);
+
+        assertThat(getVisibleSuggestions(suggestions)) //
+                .as("Suggestion at a free position should be visible") //
+                .hasSize(1);
+        assertThat(getInvisibleSuggestions(suggestions)) //
+                .as("No suggestions hidden when no overlap exists") //
+                .isEmpty();
+    }
+
+    @Test
+    public void thatSuggestionWithSameLabelAsExistingRelationIsHidden() throws Exception
+    {
+        doReturn(emptyList()).when(learningRecordService).listLearningRecords(TEST_USER, TEST_USER,
+                layer);
+
+        // Existing relation has label "DEP". Suggestion duplicates it.
+        var cas = getTestCas();
+        var suggestions = makeRelationSuggestionGroup(doc, feature,
+                new int[][] { { 1, 0, 3, 13, 20 } }, new String[] { "DEP" });
+
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                25);
+
+        assertThat(getVisibleSuggestions(suggestions)) //
+                .as("Duplicate suggestion should be hidden") //
+                .isEmpty();
+        assertThat(getInvisibleSuggestions(suggestions)) //
+                .extracting(AnnotationSuggestion::getReasonForHiding) //
+                .extracting(String::trim) //
+                .containsExactly("overlapping");
+    }
+
+    @Test
+    public void thatSuggestionWithDifferentLabelHiddenWhenStackingDisabled() throws Exception
+    {
+        layer.setOverlapMode(OverlapMode.NO_OVERLAP);
+        doReturn(emptyList()).when(learningRecordService).listLearningRecords(TEST_USER, TEST_USER,
+                layer);
+
+        // Existing relation has label "DEP". Suggestion has different label, but stacking off.
+        var cas = getTestCas();
+        var suggestions = makeRelationSuggestionGroup(doc, feature,
+                new int[][] { { 1, 0, 3, 13, 20 } }, new String[] { "OTHER" });
+
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                25);
+
+        assertThat(getVisibleSuggestions(suggestions)) //
+                .as("Different-label suggestion must be hidden when stacking is disabled") //
+                .isEmpty();
+        assertThat(getInvisibleSuggestions(suggestions)) //
+                .as("Hidden because no stacking is allowed") //
+                .isNotEmpty();
+    }
+
+    @Test
+    public void thatSuggestionWithDifferentLabelVisibleWhenStackingEnabled() throws Exception
+    {
+        layer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        doReturn(emptyList()).when(learningRecordService).listLearningRecords(TEST_USER, TEST_USER,
+                layer);
+
+        // Existing relation has label "DEP". Suggestion has different label, stacking on.
+        var cas = getTestCas();
+        var suggestions = makeRelationSuggestionGroup(doc, feature,
+                new int[][] { { 1, 0, 3, 13, 20 } }, new String[] { "OTHER" });
+
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                25);
+
+        assertThat(getVisibleSuggestions(suggestions)) //
+                .as("Different-label suggestion must remain visible when stacking is enabled") //
+                .hasSize(1);
+        assertThat(getInvisibleSuggestions(suggestions)) //
+                .as("Nothing should be hidden when stacking permits a new differently-labeled "
+                        + "relation at the same endpoints") //
+                .isEmpty();
+    }
+
+    @Test
+    public void thatSuggestionWithSameLabelHiddenEvenWhenStackingEnabled() throws Exception
+    {
+        layer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        doReturn(emptyList()).when(learningRecordService).listLearningRecords(TEST_USER, TEST_USER,
+                layer);
+
+        var cas = getTestCas();
+        var suggestions = makeRelationSuggestionGroup(doc, feature,
+                new int[][] { { 1, 0, 3, 13, 20 } }, new String[] { "DEP" });
+
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                25);
+
+        assertThat(getVisibleSuggestions(suggestions)) //
+                .as("Duplicate-label suggestion must be hidden even with stacking enabled") //
+                .isEmpty();
+    }
+
+    @Test
+    public void thatRejectedSuggestionWithMatchingLabelIsHidden() throws Exception
+    {
+        var rejected = LearningRecord.builder() //
+                .withSourceDocument(doc) //
+                .withLayer(layer) //
+                .withAnnotationFeature(feature) //
+                .withOffsetBegin(0).withOffsetEnd(3) // source
+                .withOffsetBegin2(13).withOffsetEnd2(20) // target
+                .withAnnotation("DEP") //
+                .withUserAction(REJECTED) //
+                .build();
+        doReturn(asList(rejected)).when(learningRecordService).listLearningRecords(TEST_USER,
+                TEST_USER, layer);
+
+        // Use endpoints with no existing relation in the CAS so the only reason to hide is the
+        // learning record.
+        var cas = getEmptyCasWithTokens();
+        var suggestions = makeRelationSuggestionGroup(doc, feature,
+                new int[][] { { 1, 0, 3, 13, 20 } }, new String[] { "DEP" });
+
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                25);
+
+        assertThat(getVisibleSuggestions(suggestions)) //
+                .as("Suggestion matching a rejected learning record must be hidden") //
+                .isEmpty();
+        assertThat(getInvisibleSuggestions(suggestions)).isNotEmpty();
+    }
+
+    @Test
+    public void thatRejectedSuggestionWithDifferentLabelStaysVisible() throws Exception
+    {
+        var rejected = LearningRecord.builder() //
+                .withSourceDocument(doc) //
+                .withLayer(layer) //
+                .withAnnotationFeature(feature) //
+                .withOffsetBegin(0).withOffsetEnd(3) //
+                .withOffsetBegin2(13).withOffsetEnd2(20) //
+                .withAnnotation("OTHER") //
+                .withUserAction(REJECTED) //
+                .build();
+        doReturn(asList(rejected)).when(learningRecordService).listLearningRecords(TEST_USER,
+                TEST_USER, layer);
+
+        var cas = getEmptyCasWithTokens();
+        var suggestions = makeRelationSuggestionGroup(doc, feature,
+                new int[][] { { 1, 0, 3, 13, 20 } }, new String[] { "DEP" });
+
+        sut.calculateSuggestionVisibility(TEST_USER, doc, cas, TEST_USER, layer, suggestions, 0,
+                25);
+
+        assertThat(getVisibleSuggestions(suggestions)) //
+                .as("Suggestion with different label than rejected record must remain visible") //
+                .hasSize(1);
+    }
+
+    private CAS getEmptyCasWithTokens() throws Exception
+    {
+        var jcas = JCasFactory.createText("Dies ist ein Testtext, ach ist der schoen, "
+                + "der schoenste von allen Testtexten.", "de");
+        new Token(jcas, 0, 3).addToIndexes();
+        new Token(jcas, 13, 20).addToIndexes();
+        new Token(jcas, 26, 30).addToIndexes();
+        new Token(jcas, 36, 41).addToIndexes();
+        return jcas.getCas();
     }
 }

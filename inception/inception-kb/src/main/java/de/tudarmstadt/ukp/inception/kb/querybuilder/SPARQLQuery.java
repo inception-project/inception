@@ -19,21 +19,16 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery;
+import org.slf4j.Logger;
+import org.slf4j.event.Level;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 
 public interface SPARQLQuery
 {
-    /**
-     * Assemble the current configuration into a SELECT query.
-     * 
-     * @return SELECT query.
-     */
-    SelectQuery selectQuery();
-
     /**
      * Execute the query and retrieve the results as {@link KBHandle KBHandles}.
      * 
@@ -78,4 +73,10 @@ public interface SPARQLQuery
 
     // This has been moved to NoReification
     // List<KBStatement> asStatements(RepositoryConnection aConnection, boolean aAll);
+
+    void logQueryString(Logger aLog, Level aLevel, String aPrefix);
+
+    Set<String> resolvePrefLabelProperties(RepositoryConnection aConnection);
+
+    Set<String> resolveAdditionalMatchingProperties(RepositoryConnection aConnection);
 }

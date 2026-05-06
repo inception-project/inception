@@ -1,0 +1,18 @@
+@prefix config: <tag:rdf4j.org,2023:config/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<#pid-1-kbid-> a config:Repository;
+  config:rep.id "pid-1-kbid-";
+  config:rep.impl [
+      config:rep.type "openrdf:SailRepository";
+      config:sail.impl [
+          config:delegate [
+              config:sail.type "openrdf:NativeStore"
+            ];
+          config:lucene.fuzzyPrefixLength "3";
+          config:lucene.indexDir "__MUST_BE_OVERRIDDEN_BY_reconfigureLocalKnowledgeBase__/kb/indexes/pid-1-kbid-";
+          config:lucene.maxDocuments "2500";
+          config:sail.type "openrdf:LuceneSail"
+        ]
+    ] .

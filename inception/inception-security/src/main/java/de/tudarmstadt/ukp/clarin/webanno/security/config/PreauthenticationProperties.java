@@ -18,6 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
 import java.util.Optional;
+import java.util.Set;
+
+import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface PreauthenticationProperties
 {
@@ -25,4 +29,9 @@ public interface PreauthenticationProperties
 
     void setLogoutUrl(String aLogoutUrl);
 
+    /**
+     * Returns the set of roles to assign to a newly auto-created pre-auth user. Always includes
+     * {@link Role#ROLE_USER}.
+     */
+    Set<Role> getNewUserRoles(User aUser);
 }

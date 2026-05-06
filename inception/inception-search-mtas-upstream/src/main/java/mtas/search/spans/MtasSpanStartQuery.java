@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermStates;
@@ -46,13 +45,13 @@ public class MtasSpanStartQuery
      * @see org.apache.lucene.search.Query#rewrite(org.apache.lucene.index.IndexReader)
      */
     @Override
-    public MtasSpanQuery rewrite(IndexReader reader) throws IOException
+    public MtasSpanQuery rewrite(IndexSearcher searcher) throws IOException
     {
         // rewrite the main query
-        MtasSpanQuery newClause = clause.rewrite(reader);
+        MtasSpanQuery newClause = clause.rewrite(searcher);
         // if something changed, retry
         if (!newClause.equals(clause)) {
-            return new MtasSpanStartQuery(newClause).rewrite(reader);
+            return new MtasSpanStartQuery(newClause).rewrite(searcher);
             // if main query has maximum width zero, just use this query instead
         }
         else if (newClause.getMaximumWidth() != null && newClause.getMaximumWidth() == 0) {
@@ -60,7 +59,7 @@ public class MtasSpanStartQuery
             // otherwise continue as normal
         }
         else {
-            return super.rewrite(reader);
+            return super.rewrite(searcher);
         }
     }
 

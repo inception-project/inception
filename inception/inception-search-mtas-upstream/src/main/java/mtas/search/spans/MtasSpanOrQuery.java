@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Objects;
 
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queries.spans.SpanOrQuery;
 import org.apache.lucene.queries.spans.SpanQuery;
 import org.apache.lucene.queries.spans.SpanWeight;
@@ -97,7 +96,7 @@ public class MtasSpanOrQuery
      * @see mtas.search.spans.util.MtasSpanQuery#rewrite(org.apache.lucene.index. IndexReader)
      */
     @Override
-    public MtasSpanQuery rewrite(IndexReader reader) throws IOException
+    public MtasSpanQuery rewrite(IndexSearcher searcher) throws IOException
     {
         if (clauses.size() > 1) {
             // rewrite, count MtasSpanMatchAllQuery and check for
@@ -109,7 +108,7 @@ public class MtasSpanOrQuery
             int matchNoneQueries = 0;
             boolean actuallyRewritten = false;
             for (int i = 0; i < oldClauses.length; i++) {
-                newClauses[i] = oldClauses[i].rewrite(reader);
+                newClauses[i] = oldClauses[i].rewrite(searcher);
                 actuallyRewritten |= !oldClauses[i].equals(newClauses[i]);
                 if (newClauses[i] instanceof MtasSpanMatchNoneQuery) {
                     matchNoneQueries++;
@@ -147,23 +146,23 @@ public class MtasSpanOrQuery
                 newClauses = newFilteredClauses;
             }
             if (newClauses.length == 0) {
-                return (new MtasSpanMatchNoneQuery(this.getField())).rewrite(reader);
+                return (new MtasSpanMatchNoneQuery(this.getField())).rewrite(searcher);
             }
             else if (newClauses.length == 1) {
-                return newClauses[0].rewrite(reader);
+                return newClauses[0].rewrite(searcher);
             }
             else if (actuallyRewritten || newClauses.length != clauses.size()) {
-                return new MtasSpanOrQuery(newClauses).rewrite(reader);
+                return new MtasSpanOrQuery(newClauses).rewrite(searcher);
             }
             else {
-                return super.rewrite(reader);
+                return super.rewrite(searcher);
             }
         }
         else if (clauses.size() == 1) {
-            return clauses.iterator().next().rewrite(reader);
+            return clauses.iterator().next().rewrite(searcher);
         }
         else {
-            return (new MtasSpanMatchNoneQuery(this.getField())).rewrite(reader);
+            return (new MtasSpanMatchNoneQuery(this.getField())).rewrite(searcher);
         }
     }
 

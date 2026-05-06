@@ -17,8 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.support.wicket;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import java.io.IOException;
+
+import org.apache.commons.io.IOUtils;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 
 public class SymbolLabel
     extends Label
@@ -33,6 +40,18 @@ public class SymbolLabel
     public SymbolLabel(String aId, HasSymbol aLabel)
     {
         super(aId, aLabel.symbol());
+    }
+
+    public SymbolLabel(String aId, PackageResourceReference aResourceRef)
+    {
+        this(aId, () -> {
+            try (var is = aResourceRef.getResource().getResourceStream().getInputStream()) {
+                return IOUtils.toString(is, UTF_8);
+            }
+            catch (IOException | ResourceStreamNotFoundException e) {
+                return "";
+            }
+        });
     }
 
     @Override

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.processing.curation;
 import java.io.Serializable;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -35,6 +36,7 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaForm;
 
 public class BulkCurationPanel
@@ -67,10 +69,21 @@ public class BulkCurationPanel
 
         queue(new LambdaAjaxButton<>("startProcessing", this::actionStartProcessing)
                 .triggerAfterSubmit());
+
+        var closeDialogButton = new LambdaAjaxLink("closeDialog", this::actionCancel);
+        closeDialogButton.setOutputMarkupId(true);
+        queue(closeDialogButton);
+    }
+
+    protected void actionCancel(AjaxRequestTarget aTarget)
+    {
+        findParent(ModalDialog.class).close(aTarget);
     }
 
     private void actionStartProcessing(AjaxRequestTarget aTarget, Form<FormData> aForm)
     {
+        findParent(ModalDialog.class).close(aTarget);
+
         var formData = aForm.getModelObject();
 
         var layers = schemaService.listSupportedLayers(getModelObject());

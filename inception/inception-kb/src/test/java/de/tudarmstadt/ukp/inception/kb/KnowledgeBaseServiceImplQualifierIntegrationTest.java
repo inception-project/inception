@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.kb;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
 import java.io.File;
 import java.io.StringWriter;
@@ -33,15 +34,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.parallel.Execution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -63,14 +64,14 @@ import jakarta.persistence.EntityManager;
 @DataJpaTest( //
         showSql = false, //
         properties = { //
-                "spring.main.banner-mode=off" }, //
-        excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+                "spring.main.banner-mode=off" })
+@Execution(SAME_THREAD)
 public class KnowledgeBaseServiceImplQualifierIntegrationTest
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     static {
-        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
+        // System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
         System.setProperty("spring.main.banner-mode", "off");
     }
 

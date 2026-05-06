@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionCon
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.client.HfInferenceClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfEntityGroup;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public class HfRecommender
     extends NonTrainableRecommenderEngineImplBase

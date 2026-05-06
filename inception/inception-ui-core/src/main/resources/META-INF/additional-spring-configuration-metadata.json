@@ -1,0 +1,27 @@
+{
+  "properties": [
+    {
+      "name": "ui.dashboard.accessible-by-roles",
+      "defaultValue": [
+        "ANNOTATOR",
+        "CURATOR"
+      ]
+    },
+    {
+      "name": "ui.project.bulk-actions.delete.enabled",
+      "defaultValue": false
+    },
+    {
+      "name": "ui.project.bulk-actions.delete.roles",
+      "defaultValue": [
+        "ROLE_ADMIN"
+      ]
+    },
+    {
+      "name": "ui.dark-mode.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables the dark-mode toggle in the menu bar."
+    }
+  ]
+}

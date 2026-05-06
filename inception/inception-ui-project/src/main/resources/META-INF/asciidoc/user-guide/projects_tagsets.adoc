@@ -17,20 +17,42 @@
 [[sect_projects_tagsets]]
 = Tagsets
 
-To manager the tagsets, click on the tab *Tagsets* in the project pane. 
+To manage the tagsets, click on the *Tagsets* tab in the project pane.
 
 image::images/project7.jpg[align="center"]
 
-To edit one of the existing tagsets, select it by a click. Then, the tagset characteristics are displayed.
+== Editing Tagsets
+
+To edit an existing tagset:
+
+1. Select the tagset by clicking on it. The tagset details will be displayed.
+2. In the *Tagset details* frame, you can:
+   - Change the tagset characteristics
+   - Export the tagset
+   - Save your changes
+   - Delete the tagset by clicking *Delete tagset*
 
 image::images/project8.jpg[align="center"]
 
-In the Frame *Tagset details*, you can change them,  export a tagset, save the changes you made on it or delete it by clicking on *Delete tagset*.
-To change an individual tag, you select one in the list displayed in the frame *Tags*. You can then change its description or name or delete it by clicking *Delete tag* in *Tag details*.  Please do not forget to save your changes by clicking on *Save tag*.
-To add a new tag, you have to click on *Create tag* in *Tag details*. Then you add the name and the description, which is optional. Again, do not forget to click *Save tag* or the new tag will not be created.
+== Managing Tags
 
-To create an own tagset, click on *Create tagset* and fill in the fields that will be displayed in the new frame. Only the first field is obligatory. Adding new tags works the same way as described for already existing tagsets. If you want to have a free annotation, as it could be used for lemma or meta information annotation, do not add any tags. 
+- To edit a tag, select it from the list in the *Tags* frame.
+  You can then change its name or description, or delete it by clicking *Delete tag* in *Tag details*. 
+  Remember to save your changes by clicking *Save tag*.
+- To add a new tag, click *Create tag* in *Tag details*.
+  Enter the name and (optionally) a description.
+  Click *Save tag* to create the new tag.
+
+== Creating a New Tagset
+
+To create a new tagset:
+
+1. Click on *Create tagset*.
+2. Fill in the fields in the new frame. Only the first field is required.
+3. Add new tags as described above. If you want a free annotation (e.g., for lemma or meta information), do not add any tags.
 
 image::images/project_tagset_new.jpg[align="center"]
 
-To export a tagset, choose the format of the export at the bottom of the frame and click *Export tagset*.
+== Exporting a Tagset
+
+To export a tagset, select the desired export format at the bottom of the frame and click *Export tagset*.

@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.config;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -24,19 +28,35 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AssistantPropertiesImpl
     implements AssistantProperties
 {
+    /** URL of the Ollama service. */
     private String url = "http://localhost:11434";
+
+    /** The name by which the assistant identifies itself. */
     private String nickname = "INCEpTION";
 
-    private final AssistantChatProperties chat = new AssistantChatPropertiesImpl();
-    private final AssistantEmbeddingProperties embedding = new AssistantEmbeddingPropertiesImpl();
-    private final AssitantUserGuidePropertiesImpl userGuide = new AssitantUserGuidePropertiesImpl();
-    private final AssistantToolPropertiesImpl tool = new AssistantToolPropertiesImpl();
-    private final AssistantDocumentIndexProperties documentIndex;
+    /** API key sent to the Ollama service, when required. Empty by default. */
+    private String apiKey = null;
 
-    @Autowired
-    public AssistantPropertiesImpl(AssistantDocumentIndexProperties aDocumentIndex)
+    /**
+     * Whether an extra LLM call should be made to generate a summary line for thinking sections.
+     */
+    private boolean summarizeThoughts = false;
+
+    private final AssistantChatPropertiesImpl chat = new AssistantChatPropertiesImpl();
+    private final AssistantEmbeddingPropertiesImpl embedding = new AssistantEmbeddingPropertiesImpl();
+    private final AssistantUserGuidePropertiesImpl userGuide = new AssistantUserGuidePropertiesImpl();
+
+    private @Autowired AssistantDocumentIndexProperties documentIndex;
+
+    public void setApiKey(String aApiKey)
     {
-        documentIndex = aDocumentIndex;
+        apiKey = aApiKey;
+    }
+
+    @Override
+    public String getApiKey()
+    {
+        return apiKey;
     }
 
     @Override
@@ -48,6 +68,17 @@ public class AssistantPropertiesImpl
     public void setNickname(String aNickname)
     {
         nickname = aNickname;
+    }
+
+    public void setSummarizeThoughts(boolean aSummarizeThoughts)
+    {
+        summarizeThoughts = aSummarizeThoughts;
+    }
+
+    @Override
+    public boolean isSummarizeThoughts()
+    {
+        return summarizeThoughts;
     }
 
     @Override
@@ -62,26 +93,26 @@ public class AssistantPropertiesImpl
     }
 
     @Override
-    public AssistantChatProperties getChat()
+    public AssistantChatPropertiesImpl getChat()
     {
         return chat;
     }
 
     @Override
-    public AssistantEmbeddingProperties getEmbedding()
+    public AssistantEmbeddingPropertiesImpl getEmbedding()
     {
         return embedding;
     }
 
     @Override
-    public AssitantUserGuideProperties getUserGuide()
+    public AssistantUserGuidePropertiesImpl getUserGuide()
     {
         return userGuide;
     }
 
-    public AssistantToolPropertiesImpl getTool()
+    public void setDocumentIndex(AssistantDocumentIndexProperties aDocumentIndex)
     {
-        return tool;
+        documentIndex = aDocumentIndex;
     }
 
     @Override
@@ -90,11 +121,21 @@ public class AssistantPropertiesImpl
         return documentIndex;
     }
 
-    public class AssitantUserGuidePropertiesImpl
+    public static class AssistantUserGuidePropertiesImpl
         implements AssitantUserGuideProperties
     {
+        /**
+         * Maximum number of relevant chunks from the user guide to pass to the LLM service.
+         */
         private int maxChunks = 3;
+
+        /**
+         * Minimum relevance score for chunks to be considered. Should be a positive number not
+         * larger than {@code 1.0}.
+         */
         private double minScore = 0.8;
+
+        /** Whether to re-build the user manual index when the application starts. */
         private boolean rebuildIndexOnBoot = false;
 
         @Override
@@ -134,13 +175,76 @@ public class AssistantPropertiesImpl
     public static class AssistantChatPropertiesImpl
         implements AssistantChatProperties
     {
+        /** The model used to drive the chat functionality of the assistant. */
         private String model = "llama3.2";
+
+        /**
+         * The capabilities of the model. Relevant values are {@code auto}, {@code completion} and
+         * {@code tools}. With {@code auto} the system queries the LLM service during startup to
+         * determine the model's capabilities; setting this manually overrides the detection and
+         * avoids the startup query.
+         */
+        // Default ([auto]) is declared in META-INF/additional-spring-configuration-metadata.json
+        // because the metadata processor cannot read instance initializer blocks.
+        private final Set<String> capabilities = new HashSet<>();
+
+        /**
+         * The token encoding used by the model. Used to estimate token counts so that text can be
+         * chunked accurately. Leave at the default if in doubt.
+         */
         private String encoding = "cl100k_base";
-        private int contextLength = 4096;
+
+        /**
+         * The context length supported by the model. Controls how much chat history is preserved.
+         * With {@code 0} (the default), the LLM service is queried during startup to detect the
+         * value automatically. Setting it manually avoids the startup query.
+         */
+        private int contextLength = AUTO_DETECT;
+
+        /**
+         * Diversity of output: tokens are sampled from the smallest set whose probabilities sum to
+         * this threshold. Tune the balance between diversity (high, 0.9) and coherence (low,
+         * 0.3-0.5).
+         */
         private double topP = 0.3;
+
+        /**
+         * Number of top-ranked tokens considered for sampling during text generation. Tune the
+         * balance between diversity (high &gt;= 50) and coherence (low, e.g. 5).
+         */
         private int topK = 25;
+
+        /**
+         * Discourages the model from repeating the same words or phrases by reducing the
+         * probability of already-generated tokens, promoting more varied and coherent output. Tune
+         * the balance between less repetition (high &gt;= 1.5) and more repetition (low, 1.0).
+         */
         private double repeatPenalty = 1.1;
+
+        /**
+         * Randomness of the model's output, by adjusting the probability distribution of the next
+         * word. Tune the balance between more randomness (high &gt;= 1.0) and less randomness (low,
+         * 0.5).
+         */
         private double temperature = 0.1;
+
+        {
+            capabilities.add(AUTO_DETECT_CAPABILITIES);
+        }
+
+        public void setCapabilities(Collection<String> aCapabilities)
+        {
+            capabilities.clear();
+            if (aCapabilities != null) {
+                capabilities.addAll(aCapabilities);
+            }
+        }
+
+        @Override
+        public Set<String> getCapabilities()
+        {
+            return capabilities;
+        }
 
         @Override
         public String getModel()
@@ -223,12 +327,38 @@ public class AssistantPropertiesImpl
     public static class AssistantEmbeddingPropertiesImpl
         implements AssistantEmbeddingProperties
     {
+        /** The model used to drive the search functionality of the assistant. */
         private String model = "granite-embedding";
 
+        /** Random number generator seed used to ensure repeatable retrieval results. */
         private int seed = 0xDEADBEEF;
+
+        /**
+         * Context length supported by the model in LLM tokens. Controls how much of a chunk is used
+         * to calculate the embedding. Should not be lower than
+         * {@code assistant.documents.chunk-size}.
+         */
         private int contextLength = 768;
+
+        /**
+         * Maximum number of chunks sent together to the LLM service when generating embeddings.
+         * Batching multiple chunks in a single request increases indexing speed.
+         */
         private int batchSize = 16;
+
+        /**
+         * The token encoding used by the model. Used to estimate token counts so that text can be
+         * chunked accurately. Leave at the default if in doubt.
+         */
         private String encoding = "cl100k_base";
+
+        /**
+         * Dimension of the embedding vectors created by the model. With {@code 0} (the default),
+         * the LLM service is queried during startup to auto-detect the vector size; setting this
+         * manually is helpful when the LLM service may be unavailable during startup. Changing the
+         * value requires indexes to be rebuilt. Dimensions higher than 1024 are not recommended due
+         * to memory usage and reduced performance.
+         */
         private int dimension = AUTO_DETECT_DIMENSION;
 
         @Override
@@ -296,23 +426,6 @@ public class AssistantPropertiesImpl
         public void setDimension(int aDimension)
         {
             dimension = aDimension;
-        }
-    }
-
-    public static class AssistantToolPropertiesImpl
-        implements AssistantToolProperties
-    {
-        private String model = "granite3-dense";
-
-        @Override
-        public String getModel()
-        {
-            return model;
-        }
-
-        public void setModel(String aModel)
-        {
-            model = aModel;
         }
     }
 }

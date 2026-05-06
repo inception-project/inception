@@ -14,12 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_bulk_processing]]
-= 🧪 Bulk Processing Settings
-
-====
-CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `bulk-processing.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
-====
+[[sect_settings_bulk_processing]]
+= Bulk Processing Settings
 
 This section describes the global settings related to the bulk processing module.
 
@@ -36,12 +32,27 @@ This section describes the global settings related to the bulk processing module
 | `false`
 | `true`
 
-| `remote-api.tasks.enabled`
+| 🧪 `bulk-processing.process.apply-recommender.enabled`
+| Enable the bulk recommender process
+| `false`
+| `true`
+
+| 🧪 `bulk-processing.process.auto-curation.enabled`
+| Enable the auto-curation process
+| `false`
+| `true`
+
+| `bulk-processing.process.extract-tagset`
+| Enable the tagset extraction process
+| `true`
+| `false`
+
+| 🧪 `remote-api.tasks.enabled`
 | Enable managing bulk processing tasks via remote API
 | `false`
 | `true`
 
-| `remote-api.tasks.bulk-prediction.enabled`
+| 🧪 `remote-api.tasks.bulk-prediction.enabled`
 | Enable triggering bulk prediction via remote API
 | `false`
 | `true`

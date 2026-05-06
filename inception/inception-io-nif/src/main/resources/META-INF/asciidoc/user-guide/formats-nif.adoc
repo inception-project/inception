@@ -69,3 +69,45 @@ The link:https://persistence.uni-leipzig.org/nlp2rdf/[NLP Interchange Format] (N
         a                  nif:Annotation ;
         itsrdf:taIdentRef  <http://example.org/Geography> .
 ----
+
+The `itsrdf:taClassRef` and `itsrdf:taIdentRef` properties require their values to be valid IRIs. INCEpTION normally uses plain string tags (e.g. `LOC`, `PER`) for the named entity `value` and `identifier`, which are not valid IRIs and would otherwise be skipped on export. To support this case, INCEpTION mints IRIs for non-IRI values on export by URL-encoding them and prepending a configurable prefix (default: `urn:inception:`). On import, IRIs starting with the same prefix are stripped back to plain values, allowing a clean round-trip. Values that are already valid IRIs are written and read verbatim.
+
+To restore the strict legacy behavior of skipping non-IRI values on export, set the corresponding prefix to an empty string.
+
+.NIF export settings
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `format.nif.default-class-iri`
+| IRI prefix used to mint a `taClassRef` target when the named entity `value` is not a valid IRI. The non-IRI value is URL-encoded and appended to this prefix. If set to an empty string, non-IRI values are skipped on export.
+| `urn:inception:`
+| `http://example.org/ne/class/`
+
+| `format.nif.default-identifier-iri`
+| IRI prefix used to mint a `taIdentRef` target when the named entity `identifier` is not a valid IRI. The non-IRI value is URL-encoded and appended to this prefix. If set to an empty string, non-IRI values are skipped on export.
+| `urn:inception:`
+| `http://example.org/ne/instance/`
+|===
+
+.NIF import settings
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `format.nif.strip-class-iri`
+| If set, IRIs read from `taClassRef` starting with this prefix have the prefix stripped (and the remainder URL-decoded) before being stored as the named entity `value`. Enables a clean round-trip with `format.nif.default-class-iri`.
+| `urn:inception:`
+| `http://example.org/ne/class/`
+
+| `format.nif.strip-identifier-iri`
+| If set, IRIs read from `taIdentRef` starting with this prefix have the prefix stripped (and the remainder URL-decoded) before being stored as the named entity `identifier`. Enables a clean round-trip with `format.nif.default-identifier-iri`.
+| `urn:inception:`
+| `http://example.org/ne/instance/`
+|===

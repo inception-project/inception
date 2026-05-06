@@ -24,16 +24,48 @@
       flex-direction: column !important;
       overflow: hidden;
     }
-  </style>
+    
+    .thumbnail {
+      height: auto;
+      object-fit: scale-down;
+    }
+    
+    .thumbnail-wrapper {
+      height: 125px;
+      width: 125px;
+    }
+    
+    .processor-card {
+      transition: box-shadow .3s;
+      border-color: var(--bs-secondary-color) !important;
+    }
+
+    .processor-card:hover {
+      box-shadow: 0 0 10px var(--bs-tertiary-color); 
+    }
+  </style>  
 </wicket:head>
 </head>
 <body>
   <wicket:extend>
-    <div class="d-flex flex-row flex-grow-1 overflow-hidden">
+     <div class="d-flex flex-row flex-grow-1 overflow-hidden">
+      <div wicket:id="dialog"/>
       <div class="d-flex flex-grow-1 flex-column p-3 scrolling">
-        <div wicket:id="bulkRecommenderPanel" class="d-flex flex-column mb-3"/>
-        <div wicket:id="tagSetExtractionPanel" class="d-flex flex-column mb-3"/>
-        <div wicket:id="bulkCurationPanel" class="d-flex flex-column"/>
+        <div wicket:id="processorsContainer" class="row m-0 g-3">
+          <div wicket:id="processors" class="d-flex">
+            <button wicket:id="create" class="card processor-card d-flex flex-row flex-grow-1 p-0 overflow-hidden">
+              <div class="bg-light d-flex flex-grow-0 align-content-center justify-content-center thumbnail-wrapper">
+                <img wicket:id="thumbnail" type="button" class="thumbnail">
+              </div>
+              <div class="card-body w-100">
+                <h5 wicket:id="name" class="card-title text-start"/>
+                <div class="card-text text-start">
+                  <wicket:container wicket:id="description"/>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="d-flex flex-sidebar flex-column border-start scrolling" style="min-width: 30rem;">

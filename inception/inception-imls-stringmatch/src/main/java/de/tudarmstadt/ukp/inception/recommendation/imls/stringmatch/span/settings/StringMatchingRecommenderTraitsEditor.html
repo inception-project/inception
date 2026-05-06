@@ -58,21 +58,21 @@
     <wicket:remove>
       <!-- 
         NOTE: The enclosure needs to be defined on the upload field. Defining it on the
-        gazeteers field does not work properly. I.e. when uploading a file or when removing
-        a gazeteer, the upload field/and are not re-rendered.
+        gazetteers field does not work properly. I.e. when uploading a file or when removing
+        a gazetteer, the upload field/and are not re-rendered.
        -->
     </wicket:remove>
     <div class="row form-row" wicket:enclosure="upload">
       <label class="col-sm-3 col-form-label">
-        <wicket:message key="gazeteers"/>
+        <wicket:message key="gazetteers"/>
       </label>
       <div class="col-sm-9">
         <input type="file" wicket:id="upload" class="form-control" multiple="multiple"/>
 
         <div class="flex-h-container pt-2">
-          <div wicket:id="gazeteers" class="flex-content list-group">
-            <!-- <div wicket:id="gazeteers" class="flex-content list-group"> -->
-            <div wicket:id="gazeteer" class="input-group">
+          <div wicket:id="gazetteers" class="flex-content list-group">
+            <!-- <div wicket:id="gazetteers" class="flex-content list-group"> -->
+            <div wicket:id="gazetteer" class="input-group">
               <span wicket:id="name" class="form-control"/>
               <button wicket:id="download" type="button" class="btn btn-secondary">
                 <i class="fas fa-download"></i>

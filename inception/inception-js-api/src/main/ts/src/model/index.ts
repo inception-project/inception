@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { AnnotatedText } from './AnnotatedText'
-export { type Annotation } from './Annotation'
-export {type Offsets } from './Offsets'
-export { Relation } from './Relation'
-export { Span } from './Span'
-export { type VID } from './VID'
-export { AnnotationMarker } from './AnnotationMarker'
-export { TextMarker } from './TextMarker'
-export { Argument } from './Argument'
-export { Comment } from './Comment'
-export { Layer } from './Layer'
-export { type LazyDetail } from './LazyDetail'
-export { type LazyDetailGroup } from './LazyDetailGroup'
-export * from './Offsets'
+export { AnnotatedText } from './AnnotatedText';
+export { type Annotation } from './Annotation';
+export { type Offsets } from './Offsets';
+export { Relation } from './Relation';
+export { Span } from './Span';
+export { type VID } from './VID';
+export { AnnotationMarker } from './AnnotationMarker';
+export { TextMarker } from './TextMarker';
+export { Argument } from './Argument';
+export { Comment } from './Comment';
+export { Layer } from './Layer';
+export { type LazyDetail } from './LazyDetail';
+export { type LazyDetailGroup } from './LazyDetailGroup';
+export * from './Offsets';

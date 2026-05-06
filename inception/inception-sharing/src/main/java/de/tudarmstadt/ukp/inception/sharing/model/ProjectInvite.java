@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.sharing.model;
 
 import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.NOT_ALLOWED;
+import static jakarta.persistence.GenerationType.IDENTITY;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -29,15 +30,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
 @Entity
 @Table(name = "project_invite")
@@ -47,7 +45,7 @@ public class ProjectInvite
     private static final long serialVersionUID = -2795919324253421263L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = IDENTITY)
     private Long id;
 
     @OneToOne
@@ -60,18 +58,15 @@ public class ProjectInvite
     @Column(nullable = true)
     private String userIdPlaceholder;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
     private Date expirationDate;
 
     @Column(length = 64000)
     private String invitationText;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date created;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date updated;
 
@@ -95,7 +90,6 @@ public class ProjectInvite
 
     public ProjectInvite(Project aProject, String aInviteId, Date aExpirationDate)
     {
-        super();
         project = aProject;
         inviteId = aInviteId;
         expirationDate = aExpirationDate;

@@ -27,6 +27,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ConstraintsPropertiesImpl
     implements ConstraintsProperties
 {
+    /** Time after which entries in the constraints cache expire and are removed. */
     private Duration cacheExpireDelay = ofMinutes(30);
 
     @Override

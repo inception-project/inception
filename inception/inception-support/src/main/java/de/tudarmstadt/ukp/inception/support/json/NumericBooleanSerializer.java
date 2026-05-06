@@ -17,19 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.support.json;
 
-import java.io.IOException;
-
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueSerializer;
 
 public class NumericBooleanSerializer
-    extends JsonSerializer<Boolean>
+    extends ValueSerializer<Boolean>
 {
     @Override
     public void serialize(Boolean aValue, JsonGenerator aGenerator,
-            SerializerProvider aSerializerProvider)
-        throws IOException
+            SerializationContext aSerializerProvider)
     {
         aGenerator.writeNumber(aValue ? 1 : 0);
     }

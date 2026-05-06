@@ -82,11 +82,13 @@ public class ConceptLabelCache
                         aKey.getLabel());
 
             }
+
             return kbHandle.orElseThrow(NoSuchElementException::new);
         }
         catch (NoSuchElementException e) {
-            LOG.error("No label for feature value [{}]", aKey.getLabel());
-            return new KBErrorHandle("NO LABEL (" + aKey.getLabel() + ")", e);
+            return KBHandle.builder() //
+                    .withIdentifier(aKey.getLabel()) //
+                    .build();
         }
         catch (Exception e) {
             LOG.error("Unable to obtain label value for feature value [{}]", aKey.getLabel(), e);

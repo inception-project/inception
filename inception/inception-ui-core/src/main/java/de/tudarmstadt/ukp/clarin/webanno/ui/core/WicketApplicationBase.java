@@ -48,17 +48,16 @@ import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.regex.Pattern;
 
 import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
-import org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration;
 import org.apache.wicket.coep.CrossOriginEmbedderPolicyRequestCycleListener;
 import org.apache.wicket.csp.CSPDirective;
 import org.apache.wicket.csp.CSPRenderable;
 import org.apache.wicket.csp.FixedCSPValue;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
+import org.apache.wicket.markup.html.SecurePackageResourceGuard;
 import org.apache.wicket.protocol.http.ResourceIsolationRequestCycleListener;
 import org.apache.wicket.request.Response;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
@@ -90,7 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.theme.CustomThemeCssResourceBeh
 import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapCssReference;
 import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapResourceReference;
 import de.tudarmstadt.ukp.inception.security.config.CspProperties;
-import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.jquery.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.inception.support.jquery.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.inception.support.kendo.KendoFixDisabledInputComponentStylingBehavior;
@@ -101,6 +99,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.ContextSensitivePackageStringResourceLoader;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorListener;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorTestPage;
+import de.tudarmstadt.ukp.inception.ui.core.config.DebugProperties;
 
 /**
  * The Wicket application class. Sets up pages, authentication, theme, and other application-wide
@@ -112,6 +111,7 @@ public abstract class WicketApplicationBase
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired CspProperties cspProperties;
+    private @Autowired DebugProperties debugProperties;
 
     @Override
     protected void init()
@@ -122,7 +122,11 @@ public abstract class WicketApplicationBase
         authorizationStrategy.add(new RoleAuthorizationStrategy(this));
         getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);
 
-        var imgSrcValue = new ArrayList<>(asList(SELF, new FixedCSPValue("data:")));
+        var imgSrcValue = new ArrayList<>(asList( //
+                SELF, //
+                new FixedCSPValue("data:"), //
+                // blob needed by pdf.js for the thumbnails
+                new FixedCSPValue("blob:")));
         cspProperties.getAllowedImageSources().stream() //
                 .map(FixedCSPValue::new) //
                 .forEachOrdered(imgSrcValue::add);
@@ -175,13 +179,11 @@ public abstract class WicketApplicationBase
 
     private void installTimingListener()
     {
-        var settings = SettingsUtil.getSettings();
-        if (!"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
+        if (!debugProperties.isSendServerSideTimings()) {
             return;
         }
 
         WicketUtil.installTimingListeners(this);
-
     }
 
     @Override
@@ -207,13 +209,12 @@ public abstract class WicketApplicationBase
 
     private void installPatternMatchingCrossOriginEmbedderPolicyRequestCycleListener()
     {
-        CrossOriginEmbedderPolicyConfiguration coepConfig = getSecuritySettings()
-                .getCrossOriginEmbedderPolicyConfiguration();
+        var coepConfig = getSecuritySettings().getCrossOriginEmbedderPolicyConfiguration();
         if (coepConfig.isEnabled()) {
             // Remove the CrossOriginEmbedderPolicyRequestCycleListener that was configured
             // by Wicket
-            List<IRequestCycleListener> toRemove = new ArrayList<>();
-            for (IRequestCycleListener listener : getRequestCycleListeners()) {
+            var toRemove = new ArrayList<IRequestCycleListener>();
+            for (var listener : getRequestCycleListeners()) {
                 if (listener instanceof CrossOriginEmbedderPolicyRequestCycleListener) {
                     toRemove.add(listener);
                 }
@@ -242,6 +243,17 @@ public abstract class WicketApplicationBase
         initNonCachingInDevEnvironment();
 
         initErrorPage();
+
+        initPackageResourceGuard();
+    }
+
+    private void initPackageResourceGuard()
+    {
+        // Allow .mjs (ES module) files to be served as package resources
+        var guard = getResourceSettings().getPackageResourceGuard();
+        if (guard instanceof SecurePackageResourceGuard secureGuard) {
+            secureGuard.addPattern("+*.mjs");
+        }
     }
 
     private void initNonCachingInDevEnvironment()
@@ -407,8 +419,7 @@ public abstract class WicketApplicationBase
 
     protected void initServerTimeReporting()
     {
-        Properties settings = SettingsUtil.getSettings();
-        if (!"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
+        if (!debugProperties.isSendServerSideTimings()) {
             return;
         }
 

@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.preferences;
 import java.io.IOException;
 import java.util.Optional;
 
-import com.networknt.schema.JsonSchema;
+import com.networknt.schema.Schema;
 
 public interface ClientSideUserPreferencesProvider
 {
@@ -29,7 +29,7 @@ public interface ClientSideUserPreferencesProvider
      * @throws IOException
      *             if the schema cannot be loaded.
      */
-    Optional<JsonSchema> getUserPreferencesSchema() throws IOException;
+    Optional<Schema> getUserPreferencesSchema() throws IOException;
 
     /**
      * @return the key under which to store the preferences.

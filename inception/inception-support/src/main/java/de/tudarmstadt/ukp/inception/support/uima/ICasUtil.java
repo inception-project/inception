@@ -23,6 +23,8 @@ import static org.apache.uima.fit.util.FSCollectionFactory.createStringList;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
@@ -66,21 +68,22 @@ public class ICasUtil
      * Copied from {@link FSUtil#setFeature(FeatureStructure, Feature, String...)} but changed it to
      * allow setting any primitive feature value from a string value.
      */
-    public static void setFeature(FeatureStructure aFS, Feature feat, String... aValue)
+    @SuppressWarnings("javadoc")
+    public static void setFeature(FeatureStructure aFS, Feature aFeature, String... aValue)
     {
-        if (feat.getRange().isPrimitive()) {
+        if (aFeature.getRange().isPrimitive()) {
             // requireSingleValue(feat, aValue);
-            aFS.setFeatureValueFromString(feat, aValue[0]);
+            aFS.setFeatureValueFromString(aFeature, aValue[0]);
             // aFS.setStringValue(feat, aValue[0]);
         }
         else if (aValue == null) {
-            aFS.setFeatureValue(feat, null);
+            aFS.setFeatureValue(aFeature, null);
         }
-        else if (feat.getRange().isArray()) {
-            aFS.setFeatureValue(feat, createStringArrayFS(aFS.getCAS(), aValue));
+        else if (aFeature.getRange().isArray()) {
+            aFS.setFeatureValue(aFeature, createStringArrayFS(aFS.getCAS(), aValue));
         }
         else {
-            aFS.setFeatureValue(feat, createStringList(aFS.getCAS(), aValue));
+            aFS.setFeatureValue(aFeature, createStringList(aFS.getCAS(), aValue));
         }
     }
 
@@ -254,5 +257,12 @@ public class ICasUtil
 
         // Types must be the same
         return type1.getName().equals(type2.getName());
+    }
+
+    public static Set<FeatureStructure> findAllFeatureStructures(CAS aCas)
+    {
+        var allFSes = new LinkedHashSet<FeatureStructure>();
+        ((CASImpl) aCas).walkReachablePlusFSsSorted(allFSes::add, null, null, null);
+        return allFSes;
     }
 }

@@ -2,7 +2,7 @@ package mtas.search.spans;
 
 import java.io.IOException;
 
-import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.IndexSearcher;
 
 import mtas.search.spans.util.MtasSpanQuery;
 
@@ -103,9 +103,9 @@ public class MtasSpanSequenceItem
      * @throws IOException
      *             Signals that an I/O exception has occurred.
      */
-    public MtasSpanSequenceItem rewrite(IndexReader reader) throws IOException
+    public MtasSpanSequenceItem rewrite(IndexSearcher searcher) throws IOException
     {
-        MtasSpanQuery newSpanQuery = spanQuery.rewrite(reader);
+        MtasSpanQuery newSpanQuery = spanQuery.rewrite(searcher);
         if (!newSpanQuery.equals(spanQuery)) {
             return new MtasSpanSequenceItem(newSpanQuery, optional);
         }

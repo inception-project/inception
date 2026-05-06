@@ -16,44 +16,44 @@
  * limitations under the License.
  */
 TEI {
-  note {
-    position: relative;
-    color: #999;
-    font-size: small;
-    font-weight: lighter;
-    width: 0px;
+    note {
+        position: relative;
+        color: #999;
+        font-size: small;
+        font-weight: lighter;
+        width: 0px;
 
-    &::before {
-      vertical-align: super;
-      font-size: smaller;
-      content: attr(n);
-    }
+        &::before {
+            vertical-align: super;
+            font-size: smaller;
+            content: attr(n);
+        }
 
-    &[place="left"] {
-      clear: both;
-      float: left;
-      margin-left: calc(0em - var(--page-margin));
-    }
+        &[place='left'] {
+            clear: both;
+            float: left;
+            margin-left: calc(0em - var(--page-margin));
+        }
 
-    &[place="right"] {
-      clear: both;
-      float: right;
-      margin-right: calc(0em - var(--page-margin));
-    }
+        &[place='right'] {
+            clear: both;
+            float: right;
+            margin-right: calc(0em - var(--page-margin));
+        }
 
-    &[place="foot"] {
-      clear: both;
-      display: block;
-    }
+        &[place='foot'] {
+            clear: both;
+            display: block;
+        }
 
-    &:not([place]) {
-      &::before {
-        content: " ( " attr(n) " ";
-      }
-    
-      &::after {
-        content: ") ";
-      }
+        &:not([place]) {
+            &::before {
+                content: ' ( ' attr(n) ' ';
+            }
+
+            &::after {
+                content: ') ';
+            }
+        }
     }
-  }
 }

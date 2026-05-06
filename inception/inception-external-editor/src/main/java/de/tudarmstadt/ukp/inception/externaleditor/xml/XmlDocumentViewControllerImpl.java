@@ -151,7 +151,7 @@ public class XmlDocumentViewControllerImpl
                 ch.startDocument();
                 ch.startElement(null, null, DOCUMENT, null);
                 var attrs = new AttributesImpl();
-                attrs.addAttribute(null, null, XmlCas2SaxEvents.DATA_CAPTURE_ROOT, null, "");
+                attrs.addAttribute(null, null, XmlCas2SaxEvents.DATA_CAPTURE_ROOT_ATTR, null, "");
                 ch.startElement(null, null, BODY, attrs);
                 var text = cas.getDocumentText();
                 ch.characters(text.toCharArray(), 0, text.length());

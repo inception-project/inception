@@ -17,19 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.editor.state;
 
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import org.apache.uima.cas.CAS;
@@ -54,8 +56,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs;
@@ -68,6 +68,7 @@ import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderSlotsEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerTypes;
 
 /**
  * Data model for annotation editors
@@ -164,8 +165,13 @@ public class AnnotatorStateImpl
     /**
      * The Mode of the current operations as either {@link Mode#ANNOTATION} or as
      * {@link Mode#CURATION}
+     * 
+     * @deprecated Should no longer be used
      */
+    @Deprecated
     private Mode mode;
+
+    private final Set<String> enabledExtensions = new HashSet<>();
 
     /**
      * The previously selected {@link TagSet} and {@link Tag} for a span/Arc annotation so as to
@@ -207,9 +213,18 @@ public class AnnotatorStateImpl
 
     private AnchoringMode anchoringMode;
 
+    /**
+     * @deprecated Use {@link #AnnotatorStateImpl()} instead.
+     */
+    @Deprecated
     public AnnotatorStateImpl(Mode aMode)
     {
         mode = aMode;
+    }
+
+    public AnnotatorStateImpl()
+    {
+        mode = Mode.ANNOTATION;
     }
 
     @Override
@@ -358,10 +373,9 @@ public class AnnotatorStateImpl
     @Override
     public void setPageBegin(CAS aCas, int aOffset)
     {
-        PagingStrategy ps = getPagingStrategy();
-
-        setVisibleUnits(ps.unitsStartingAtOffset(aCas, aOffset, getPreferences().getWindowSize()),
-                ps.unitCount(aCas));
+        var ps = getPagingStrategy();
+        var units = ps.unitsStartingAtOffset(aCas, aOffset, getPreferences().getWindowSize());
+        setVisibleUnits(units, ps.unitCount(aCas));
     }
 
     @Override
@@ -438,7 +452,7 @@ public class AnnotatorStateImpl
         // Make sure the currently selected layer is actually visible/exists
         if (!annotationLayers.contains(selectedAnnotationLayer)) {
             selectedAnnotationLayer = annotationLayers.stream() //
-                    .filter(layer -> layer.getType().equals(SPAN_TYPE)) //
+                    .filter(layer -> layer.getType().equals(LayerTypes.SPAN_LAYER_TYPE)) //
                     .findFirst() //
                     .orElse(null);
             defaultAnnotationLayer = selectedAnnotationLayer;
@@ -466,8 +480,8 @@ public class AnnotatorStateImpl
                 continue;
             }
 
-            if (layer.getType().equals(SpanLayerSupport.TYPE)
-                    || layer.getType().equals(ChainLayerSupport.TYPE)) {
+            if (layer.getType().equals(LayerTypes.SPAN_LAYER_TYPE)
+                    || layer.getType().equals(LayerTypes.CHAIN_LAYER_TYPE)) {
                 selectableLayers.add(layer);
             }
         }
@@ -506,6 +520,30 @@ public class AnnotatorStateImpl
     public Mode getMode()
     {
         return mode;
+    }
+
+    @Override
+    public void enableExtension(String aExtension)
+    {
+        enabledExtensions.add(aExtension);
+    }
+
+    @Override
+    public void disableExtension(String aExtension)
+    {
+        enabledExtensions.remove(aExtension);
+    }
+
+    @Override
+    public boolean isExtensionEnabled(String aExtension)
+    {
+        return enabledExtensions.contains(aExtension);
+    }
+
+    @Override
+    public Set<String> getEnabledExtensions()
+    {
+        return unmodifiableSet(enabledExtensions);
     }
 
     @Override

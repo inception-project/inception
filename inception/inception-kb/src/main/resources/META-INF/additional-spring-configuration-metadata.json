@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "knowledge-base.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables knowledge base support."
+    }
+  ]
+}

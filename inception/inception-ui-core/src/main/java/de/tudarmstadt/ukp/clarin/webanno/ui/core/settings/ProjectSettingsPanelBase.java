@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.settings;
 
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public abstract class ProjectSettingsPanelBase
-    extends Panel
+    extends GenericPanel<Project>
 {
     private static final long serialVersionUID = -6844742938608503193L;
 
@@ -38,26 +38,4 @@ public abstract class ProjectSettingsPanelBase
         super(id, aProjectModel);
         setOutputMarkupId(true);
     }
-
-    public void setModel(IModel<Project> aModel)
-    {
-        setDefaultModel(aModel);
-    }
-
-    @SuppressWarnings("unchecked")
-    public IModel<Project> getModel()
-    {
-        return (IModel<Project>) getDefaultModel();
-    }
-
-    public void setModelObject(Project aModel)
-    {
-        setDefaultModelObject(aModel);
-    }
-
-    public Project getModelObject()
-    {
-        return (Project) getDefaultModelObject();
-    }
-
 }

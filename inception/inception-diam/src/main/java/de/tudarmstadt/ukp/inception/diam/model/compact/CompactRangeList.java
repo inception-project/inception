@@ -21,7 +21,7 @@ import static java.util.Arrays.asList;
 
 import java.util.ArrayList;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
  * List of {@link CompactRange}. Required so Jackson knows the generic type of the list when

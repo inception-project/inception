@@ -34,7 +34,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class InceptionMySql_8_0_IntegrationTest
 {
     @SuppressWarnings("resource")
-    static final MySQLContainer<?> dbContainer = new MySQLContainer<>("mysql:8.0") //
+    static final MySQLContainer<?> dbContainer = new MySQLContainer<>("mysql:8.0.43") //
             .withDatabaseName("testdb") //
             .withUsername("test") //
             .withPassword("test");

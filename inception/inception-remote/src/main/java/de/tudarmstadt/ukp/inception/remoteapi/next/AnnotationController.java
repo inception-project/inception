@@ -60,7 +60,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class AnnotationController
     extends Controller_ImplBase
 {
-    private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Operation(summary = "Update annotation state for a document in a project (non-AERO)")
     @PostMapping( //

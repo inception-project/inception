@@ -136,7 +136,7 @@ public class TagSetExtractionTask
                 extractTagsFromDocument(tags, srcDoc);
             }
 
-            progress.update(up -> up.addMessage(LogMessage.info(this, "Tag extraction complete")));
+            progress.update(up -> up.status("Tag extraction complete"));
         }
 
         return tags;
@@ -157,8 +157,8 @@ public class TagSetExtractionTask
             }
             else {
                 for (var annDoc : annDocs) {
-                    var cas = documentService.readAnnotationCas(annDoc.getDocument(),
-                            annDoc.getUser(), AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+                    var cas = documentService.readAnnotationCas(annDoc, AUTO_CAS_UPGRADE,
+                            SHARED_READ_ONLY_ACCESS);
 
                     extractTagsFromCas(cas, tags);
                 }

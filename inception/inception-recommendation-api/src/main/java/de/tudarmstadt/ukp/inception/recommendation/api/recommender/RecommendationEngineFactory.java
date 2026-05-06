@@ -120,4 +120,9 @@ public interface RecommendationEngineFactory<T>
     {
         return new EmptyPanel(aId);
     }
+
+    default boolean isIncludeXmlStructure(Recommender aRecommender)
+    {
+        return false;
+    }
 }

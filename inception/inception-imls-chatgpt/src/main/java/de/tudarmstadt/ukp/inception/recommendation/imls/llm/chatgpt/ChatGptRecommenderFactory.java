@@ -25,15 +25,16 @@ import org.apache.wicket.model.util.ListModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatCompletionRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Presets;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 public class ChatGptRecommenderFactory
     extends RecommendationEngineFactoryImplBase<ChatGptRecommenderTraits>
@@ -44,11 +45,14 @@ public class ChatGptRecommenderFactory
 
     private final ChatGptClient client;
     private final AnnotationSchemaService schemaService;
+    private final AnnotationTaskCodecExtensionPoint responseExtractorExtensionPoint;
 
-    public ChatGptRecommenderFactory(ChatGptClient aClient, AnnotationSchemaService aSchemaService)
+    public ChatGptRecommenderFactory(ChatGptClient aClient, AnnotationSchemaService aSchemaService,
+            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint)
     {
         client = aClient;
         schemaService = aSchemaService;
+        responseExtractorExtensionPoint = aResponseExtractorExtensionPoint;
     }
 
     @Override
@@ -66,8 +70,9 @@ public class ChatGptRecommenderFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        ChatGptRecommenderTraits traits = readTraits(aRecommender);
-        return new ChatGptRecommender(aRecommender, traits, client, schemaService);
+        var traits = readTraits(aRecommender);
+        return new ChatGptRecommender(aRecommender, traits, client, schemaService,
+                responseExtractorExtensionPoint);
     }
 
     @Override

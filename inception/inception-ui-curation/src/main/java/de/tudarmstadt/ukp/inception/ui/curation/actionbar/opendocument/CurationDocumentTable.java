@@ -54,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentFilterStateChanged;
 import de.tudarmstadt.ukp.inception.annotation.filters.SourceDocumentStateFilterPanel;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.EmptyStateToolbar;
 import de.tudarmstadt.ukp.inception.support.wicket.SymbolLambdaColumn;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
@@ -88,6 +89,8 @@ public class CurationDocumentTable
         table = new DataTable<>(CID_DATA_TABLE, columns, dataProvider, 100);
         table.addTopToolbar(new AjaxNavigationToolbar(table));
         table.addTopToolbar(new AjaxFallbackHeadersToolbar<>(table, dataProvider));
+        table.addBottomToolbar(
+                new EmptyStateToolbar(table, new ResourceModel("curationTable.no-records-found")));
         queue(table);
 
         queue(new SourceDocumentStateFilterPanel(CID_STATE_FILTERS,

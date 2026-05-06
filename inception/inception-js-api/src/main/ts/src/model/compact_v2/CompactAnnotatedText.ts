@@ -15,66 +15,66 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AnnotatedText, Offsets, VID, AnnotationMarker } from '..'
-import { MarkerType } from '../Marker'
-import { CompactAnnotationMarker, unpackCompactAnnotationMarker } from './CompactAnnotationMarker'
-import { CompactLayer, unpackCompactLayer } from './CompactLayer'
-import { CompactRelation, unpackCompactRelation } from './CompactRelation'
-import { CompactSpan, unpackCompactSpan } from './CompactSpan'
-import { CompactTextMarker, unpackCompactTextMarker } from './CompactTextMarker'
+import { AnnotatedText, Offsets, VID, AnnotationMarker } from '..';
+import { MarkerType } from '../Marker';
+import { CompactAnnotationMarker, unpackCompactAnnotationMarker } from './CompactAnnotationMarker';
+import { CompactLayer, unpackCompactLayer } from './CompactLayer';
+import { CompactRelation, unpackCompactRelation } from './CompactRelation';
+import { CompactSpan, unpackCompactSpan } from './CompactSpan';
+import { CompactTextMarker, unpackCompactTextMarker } from './CompactTextMarker';
 
 export interface CompactAnnotatedText {
-  text?: string
-  layers?: Array<CompactLayer>
-  window: Offsets
-  relations?: Array<CompactRelation>
-  spans?: Array<CompactSpan>
-  annotationMarkers?: Array<CompactAnnotationMarker>
-  textMarkers?: Array<CompactTextMarker>
+    text?: string;
+    layers?: Array<CompactLayer>;
+    window: Offsets;
+    relations?: Array<CompactRelation>;
+    spans?: Array<CompactSpan>;
+    annotationMarkers?: Array<CompactAnnotationMarker>;
+    textMarkers?: Array<CompactTextMarker>;
 }
 
-export function unpackCompactAnnotatedText (raw: CompactAnnotatedText): AnnotatedText {
-  const cooked = new AnnotatedText()
-  cooked.text = raw.text
-  cooked.window = raw.window
-  raw.layers?.forEach(layer => cooked.layers.set(layer.id, unpackCompactLayer(layer)))
+export function unpackCompactAnnotatedText(raw: CompactAnnotatedText): AnnotatedText {
+    const cooked = new AnnotatedText();
+    cooked.text = raw.text;
+    cooked.window = raw.window;
+    raw.layers?.forEach((layer) => cooked.layers.set(layer.id, unpackCompactLayer(layer)));
 
-  for (const span of raw.spans || []) {
-    const cookedSpan = unpackCompactSpan(cooked, span)
-    if (cookedSpan) {
-      cooked.spans.set(cookedSpan.vid, cookedSpan)
-    }
-  }
-
-  for (const rel of raw.relations || []) {
-    const cookedRel = unpackCompactRelation(cooked, rel)
-    if (cookedRel) {
-      cooked.relations.set(cookedRel.vid, cookedRel)
-    }
-  }
-
-  const annotationMarkers = raw.annotationMarkers?.map(unpackCompactAnnotationMarker)
-  cooked.annotationMarkers = makeMarkerMap(annotationMarkers)
-  cooked.markedAnnotations = makeMarkedAnnotationsMap(annotationMarkers)
-  cooked.textMarkers = raw.textMarkers?.map(unpackCompactTextMarker) || []
-  return cooked
-}
-
-function makeMarkedAnnotationsMap (annotationMarkers?: AnnotationMarker[]) : Map<MarkerType, VID[]> {
-  const markedAnnotations = new Map<MarkerType, VID[]>()
-  if (annotationMarkers) {
-    for (const marker of annotationMarkers) {
-      for (const vid of marker.vid) {
-        let ms = markedAnnotations.get(marker.type)
-        if (!ms) {
-          ms = []
-          markedAnnotations.set(marker.type, ms)
+    for (const span of raw.spans || []) {
+        const cookedSpan = unpackCompactSpan(cooked, span);
+        if (cookedSpan) {
+            cooked.spans.set(cookedSpan.vid, cookedSpan);
         }
-        ms.push(vid)
-      }
     }
-  }
-  return markedAnnotations
+
+    for (const rel of raw.relations || []) {
+        const cookedRel = unpackCompactRelation(cooked, rel);
+        if (cookedRel) {
+            cooked.relations.set(cookedRel.vid, cookedRel);
+        }
+    }
+
+    const annotationMarkers = raw.annotationMarkers?.map(unpackCompactAnnotationMarker);
+    cooked.annotationMarkers = makeMarkerMap(annotationMarkers);
+    cooked.markedAnnotations = makeMarkedAnnotationsMap(annotationMarkers);
+    cooked.textMarkers = raw.textMarkers?.map(unpackCompactTextMarker) || [];
+    return cooked;
+}
+
+function makeMarkedAnnotationsMap(annotationMarkers?: AnnotationMarker[]): Map<MarkerType, VID[]> {
+    const markedAnnotations = new Map<MarkerType, VID[]>();
+    if (annotationMarkers) {
+        for (const marker of annotationMarkers) {
+            for (const vid of marker.vid) {
+                let ms = markedAnnotations.get(marker.type);
+                if (!ms) {
+                    ms = [];
+                    markedAnnotations.set(marker.type, ms);
+                }
+                ms.push(vid);
+            }
+        }
+    }
+    return markedAnnotations;
 }
 
 /**
@@ -84,19 +84,21 @@ function makeMarkedAnnotationsMap (annotationMarkers?: AnnotationMarker[]) : Map
  * @param markerList a list of {@link CompactAnnotationMarker}s
  * @returns the map
  */
-export function makeMarkerMap (markerList: AnnotationMarker[] | undefined): Map<VID, Array<AnnotationMarker>> {
-  const markerMap = new Map<VID, Array<AnnotationMarker>>()
-  if (markerList) {
-    markerList.forEach(marker => {
-      marker.vid.forEach(vid => {
-        let ms = markerMap.get(vid)
-        if (!ms) {
-          ms = []
-          markerMap.set(vid, ms)
-        }
-        ms.push(marker)
-      })
-    })
-  }
-  return markerMap
+export function makeMarkerMap(
+    markerList: AnnotationMarker[] | undefined
+): Map<VID, Array<AnnotationMarker>> {
+    const markerMap = new Map<VID, Array<AnnotationMarker>>();
+    if (markerList) {
+        markerList.forEach((marker) => {
+            marker.vid.forEach((vid) => {
+                let ms = markerMap.get(vid);
+                if (!ms) {
+                    ms = [];
+                    markerMap.set(vid, ms);
+                }
+                ms.push(marker);
+            });
+        });
+    }
+    return markerMap;
 }

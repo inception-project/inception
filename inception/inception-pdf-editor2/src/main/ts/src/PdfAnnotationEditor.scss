@@ -19,25 +19,25 @@
 @import '~@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss';
 
 :root {
-  --marker-focus-width: 2px;
+    --marker-focus-width: 2px;
 }
 
 .anno-span {
-  .i7n-marker-match {
-    background-color: var(--i7n-match-color);
-    opacity: 0.4;
-  }
+    .i7n-marker-match {
+        background-color: var(--i7n-match-color);
+        opacity: 0.4;
+    }
 
-  .i7n-marker-matchfocus {
-    background-color: var(--i7n-match-focus-color);
-    opacity: 0.4;
-  }
+    .i7n-marker-matchfocus {
+        background-color: var(--i7n-match-focus-color);
+        opacity: 0.4;
+    }
 
-  .i7n-marker-focus {
-    box-shadow: 0 var(--marker-focus-width) 0px 0px rgba(255, 165, 0, 0.6) !important;
-  }}
-
-.anno-knob.i7n-marker-focus {
-  box-shadow: 0 0px 2px 2px rgba(255, 165, 0, 1.0) !important;
+    .i7n-marker-focus {
+        box-shadow: 0 var(--marker-focus-width) 0px 0px rgba(255, 165, 0, 0.6) !important;
+    }
 }
 
+.anno-knob.i7n-marker-focus {
+    box-shadow: 0 0px 2px 2px rgba(255, 165, 0, 1) !important;
+}

@@ -53,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.annotation.filters.AnnotationDocumentFilterStateChanged;
 import de.tudarmstadt.ukp.inception.annotation.filters.AnnotationDocumentStateFilterPanel;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.EmptyStateToolbar;
 import de.tudarmstadt.ukp.inception.support.wicket.SymbolLambdaColumn;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
@@ -88,6 +89,8 @@ public class AnnotationDocumentTable
         table.setOutputMarkupId(true);
         table.addTopToolbar(new AjaxNavigationToolbar(table));
         table.addTopToolbar(new AjaxFallbackHeadersToolbar<>(table, dataProvider));
+        table.addBottomToolbar(new EmptyStateToolbar(table,
+                new ResourceModel("annotationDocumentTable.no-records-found")));
         queue(table);
 
         nameFilter = new TextField<>("nameFilter",

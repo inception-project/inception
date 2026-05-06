@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
-import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
-
 import javax.sql.DataSource;
 
+import org.springframework.boot.actuate.endpoint.SanitizingFunction;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -33,6 +33,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
@@ -40,7 +41,6 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 
 import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
-import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -62,7 +62,7 @@ public class InceptionSecurityAutoConfiguration
         return new GlobalAuthenticationConfigurerAdapter()
         {
             @Override
-            public void configure(AuthenticationManagerBuilder aAuth) throws Exception
+            public void configure(AuthenticationManagerBuilder aAuth)
             {
                 aAuth.authenticationProvider(authenticationProvider);
                 aAuth.authenticationEventPublisher(aAuthenticationEventPublisher);
@@ -71,11 +71,12 @@ public class InceptionSecurityAutoConfiguration
     }
 
     @Bean(name = "authenticationProvider")
-    @Profile(PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)
+    @ConditionalOnProperty(name = "auth.mode", havingValue = "preauth")
+    @ConditionalOnMissingBean(name = "authenticationProvider")
     public PreAuthenticatedAuthenticationProvider externalAuthenticationProvider(
             @Lazy UserDetailsManager aUserDetails)
     {
-        PreAuthenticatedAuthenticationProvider authProvider = new PreAuthenticatedAuthenticationProvider();
+        var authProvider = new PreAuthenticatedAuthenticationProvider();
         authProvider.setPreAuthenticatedUserDetailsService(
                 new UserDetailsByNameServiceWrapper<PreAuthenticatedAuthenticationToken>(
                         aUserDetails));
@@ -83,13 +84,45 @@ public class InceptionSecurityAutoConfiguration
     }
 
     @Bean(name = "authenticationProvider")
-    @Profile(DeploymentModeService.PROFILE_AUTH_MODE_DATABASE)
+    @ConditionalOnProperty(name = "auth.mode", havingValue = "database", matchIfMissing = true)
+    @ConditionalOnMissingBean(name = "authenticationProvider")
     public DaoAuthenticationProvider internalAuthenticationProvider(
-            @Lazy UserDetailsManager aUserDetails, PasswordEncoder aPasswordEncoder)
+            @Lazy UserDetailsService aUserDetails, PasswordEncoder aPasswordEncoder)
     {
-        DaoAuthenticationProvider authProvider = new InceptionDaoAuthenticationProvider();
-        authProvider.setUserDetailsService(aUserDetails);
+        var authProvider = new InceptionDaoAuthenticationProvider(aUserDetails);
         authProvider.setPasswordEncoder(aPasswordEncoder);
         return authProvider;
+    }
+
+    /**
+     * Default redaction rules applied wherever a
+     * {@link org.springframework.boot.actuate.endpoint.Sanitizer} collects
+     * {@link SanitizingFunction} beans &mdash; both Spring Boot's actuator endpoints (e.g.
+     * {@code /env}, {@code /configprops}) and our admin Settings page. Mirrors the credential-style
+     * key list the actuator used to apply by default before Boot 3 made all sanitization opt-in.
+     * Other modules can contribute their own {@link SanitizingFunction} beans to extend redaction.
+     */
+    @Bean
+    public SanitizingFunction credentialSanitizingFunction()
+    {
+        // ifLikelyCredential already covers keys ending in password/secret/key/token and
+        // keys containing "credentials". The extra ifKeyContains entries make api-key
+        // matching explicit (in any common spelling) and add bearer/authorization which
+        // the default chain does not cover.
+        return SanitizingFunction.sanitizeValue() //
+                .ifLikelyCredential() //
+                .ifKeyContains("apikey", "api-key", "api_key", "bearer", "authorization");
+    }
+
+    /**
+     * Mask {@code repository.path}: the on-disk INCEpTION data directory leaks deployment-specific
+     * filesystem layout, so we redact it from any externally visible surface (actuator endpoints,
+     * admin Settings page).
+     */
+    @Bean
+    public SanitizingFunction repositoryPathSanitizingFunction()
+    {
+        return SanitizingFunction.sanitizeValue() //
+                .ifKeyEquals("repository.path");
     }
 }

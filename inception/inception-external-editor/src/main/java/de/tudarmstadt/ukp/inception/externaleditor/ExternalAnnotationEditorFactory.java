@@ -22,7 +22,7 @@ import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
 
-import com.networknt.schema.JsonSchema;
+import com.networknt.schema.Schema;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
@@ -47,7 +47,7 @@ public class ExternalAnnotationEditorFactory
     private final ExternalEditorPluginDescripion description;
 
     private WatchedResourceFile<PolicyCollection> policyResource;
-    private WatchedResourceFile<JsonSchema> userPreferencesSchema;
+    private WatchedResourceFile<Schema> userPreferencesSchema;
 
     public ExternalAnnotationEditorFactory(ExternalEditorPluginDescripion aDescription)
     {
@@ -105,7 +105,7 @@ public class ExternalAnnotationEditorFactory
     }
 
     @Override
-    public Optional<JsonSchema> getUserPreferencesSchema() throws IOException
+    public Optional<Schema> getUserPreferencesSchema() throws IOException
     {
         return userPreferencesSchema.get();
     }

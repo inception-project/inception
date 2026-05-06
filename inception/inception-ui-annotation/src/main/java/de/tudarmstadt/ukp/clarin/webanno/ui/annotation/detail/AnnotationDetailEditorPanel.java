@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs.KEY_ANNOTATION_EDITOR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs.KEY_ANCHORING_MODE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
@@ -30,10 +31,6 @@ import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.isSame;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static wicket.contrib.input.events.EventType.click;
-import static wicket.contrib.input.events.key.KeyType.Delete;
-import static wicket.contrib.input.events.key.KeyType.Left;
-import static wicket.contrib.input.events.key.KeyType.Right;
-import static wicket.contrib.input.events.key.KeyType.Shift;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -54,6 +51,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -61,7 +59,7 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -71,6 +69,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsEvaluator;
@@ -85,13 +85,13 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDeletedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.CreateRelationAnnotationRequest;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.CreateSpanAnnotationRequest;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.CreateRelationAnnotationRequest;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.CreateSpanAnnotationRequest;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
@@ -100,6 +100,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.AttachedAnnotation;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -111,21 +112,20 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import jakarta.persistence.NoResultException;
-import wicket.contrib.input.events.key.KeyType;
 
 /**
  * Annotation Detail Editor Panel.
  */
 public abstract class AnnotationDetailEditorPanel
-    extends Panel
+    extends GenericPanel<AnnotatorState>
     implements AnnotationActionHandler
 {
     private static final long serialVersionUID = 7324241992353693848L;
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    private @SpringBean KeyBindingsProperties keyBindings;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaProperties schemaProperties;
@@ -198,14 +198,27 @@ public abstract class AnnotationDetailEditorPanel
     private LambdaAjaxLink createNextAnnotationButton()
     {
         var link = new LambdaAjaxLink("nextAnnotation", this::actionNextAnnotation);
-        link.add(new InputBehavior(new KeyType[] { Shift, Right }, click));
+        link.add(keyBindings.getNavigation().getNextAnnotation().toInputBehavior(click));
+        link.add(
+                AttributeModifier
+                        .append("title",
+                                () -> " ("
+                                        + KeyBindingsUtil.formatShortcut(
+                                                keyBindings.getNavigation().getNextAnnotation())
+                                        + ")"));
         return link;
     }
 
     private LambdaAjaxLink createPreviousAnnotationButton()
     {
         var link = new LambdaAjaxLink("previousAnnotation", this::actionPreviousAnnotation);
-        link.add(new InputBehavior(new KeyType[] { Shift, Left }, click));
+        link.add(keyBindings.getNavigation().getPreviousAnnotation().toInputBehavior(click));
+        link.add(
+                AttributeModifier.append("title",
+                        () -> " ("
+                                + KeyBindingsUtil.formatShortcut(
+                                        keyBindings.getNavigation().getPreviousAnnotation())
+                                + ")"));
         return link;
     }
 
@@ -443,8 +456,23 @@ public abstract class AnnotationDetailEditorPanel
         throws IOException, AnnotationException
     {
         actionSelect(aTarget, annoFs);
-        editorPage.actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
-                annoFs.getBegin(), annoFs.getEnd());
+
+        var state = getModelObject();
+        var doc = state.getDocument();
+
+        // For arcs, pass the endpoint ranges as additional ping ranges
+        if (state.getSelection().isArc()) {
+            var cas = editorPage.getEditorCas();
+            var originFs = ICasUtil.selectAnnotationByAddr(cas, state.getSelection().getOrigin());
+            var targetFs = ICasUtil.selectAnnotationByAddr(cas, state.getSelection().getTarget());
+            var endpointRanges = List.of(new VRange(originFs.getBegin(), originFs.getEnd()),
+                    new VRange(targetFs.getBegin(), targetFs.getEnd()));
+            editorPage.actionShowSelectedDocument(aTarget, doc, annoFs.getBegin(), annoFs.getEnd(),
+                    endpointRanges);
+        }
+        else {
+            editorPage.actionShowSelectedDocument(aTarget, doc, annoFs.getBegin(), annoFs.getEnd());
+        }
     }
 
     @Override
@@ -655,17 +683,19 @@ public abstract class AnnotationDetailEditorPanel
             CAS aTargetCas, int aTargetFsAddr, TypeAdapter aAdapter,
             List<FeatureState> aFeatureStates)
     {
-        for (var featureState : aFeatureStates) {
-            try {
-                LOG.trace("Committing feature states to CAS: {} = {}",
-                        featureState.feature.getUiName(), featureState.value);
-                aAdapter.setFeatureValue(aDocment, aDataOwner, aTargetCas, aTargetFsAddr,
-                        featureState.feature, featureState.value);
-            }
-            catch (Exception e) {
-                error("Cannot set feature [" + featureState.feature.getUiName() + "]: "
-                        + e.getMessage());
-                aTarget.addChildren(getPage(), IFeedback.class);
+        try (var ctx = aAdapter.updateFeatureValues(aDocment, aDataOwner, aTargetCas,
+                aTargetFsAddr)) {
+            for (var featureState : aFeatureStates) {
+                try {
+                    LOG.trace("Committing feature states to CAS: {} = {}",
+                            featureState.feature.getUiName(), featureState.value);
+                    ctx.setFeatureValue(featureState.feature, featureState.value);
+                }
+                catch (Exception e) {
+                    error("Cannot set feature [" + featureState.feature.getUiName() + "]: "
+                            + e.getMessage());
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                }
             }
         }
     }
@@ -739,11 +769,17 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         if (adapter instanceof SpanAdapter && attachStatus.attachCount > 0) {
-            var dialogContent = new DeleteAnnotationConfirmationDialogPanel(
-                    BootstrapModalDialog.CONTENT_ID, Model.of(layer), Model.of(attachStatus));
-            dialogContent.setConfirmAction(_target -> doDelete(_target, layer, vid));
-            confirmationDialog.open(dialogContent, aTarget);
-            return;
+            var sessionOwner = userService.getCurrentUser();
+            var confirmationPrefs = preferencesService.loadTraitsForUserAndProject(
+                    KEY_ANNOTATION_EDITOR_MANAGER_PREFS, sessionOwner, state.getProject());
+
+            if (confirmationPrefs.isShowDeleteAnnotationConfirmation()) {
+                var dialogContent = new DeleteAnnotationConfirmationDialogPanel(
+                        BootstrapModalDialog.CONTENT_ID, Model.of(layer), Model.of(attachStatus));
+                dialogContent.setConfirmAction(_target -> doDelete(_target, layer, vid));
+                confirmationDialog.open(dialogContent, aTarget);
+                return;
+            }
         }
 
         doDelete(aTarget, layer, vid);
@@ -1023,6 +1059,8 @@ public abstract class AnnotationDetailEditorPanel
 
         state.getFeatureStates().clear();
 
+        var adapter = annotationService.getAdapter(aLayer);
+
         for (var feature : annotationService.listEnabledFeatures(aLayer)) {
             if (isFeatureSuppressed(state, feature)) {
                 continue;
@@ -1035,18 +1073,20 @@ public abstract class AnnotationDetailEditorPanel
                 return;
             }
 
-            Serializable value = null;
-            VID vid = null;
+            FeatureState featureState;
             if (aFS != null) {
-                value = annotationService.getAdapter(aLayer).getFeatureValue(feature, aFS);
-                vid = VID.of(aFS);
+                featureState = adapter.getFeatureState(feature, aFS);
             }
             else if (aRemembered != null) {
-                value = aRemembered.get(feature);
+                var value = aRemembered.get(feature);
+                featureState = new FeatureState(null, feature, value);
+            }
+            else {
+                featureState = new FeatureState(null, feature, null);
             }
 
-            var featureState = new FeatureState(vid, feature, value);
             populateTagset(aCas, state, featureState);
+
             state.getFeatureStates().add(featureState);
         }
     }
@@ -1151,33 +1191,22 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public IModel<AnnotatorState> getModel()
+    private void populateTagset(CAS aCas, AnnotatorState aState, FeatureState aFeatureState)
     {
-        return (IModel<AnnotatorState>) getDefaultModel();
-    }
-
-    public AnnotatorState getModelObject()
-    {
-        return (AnnotatorState) getDefaultModelObject();
-    }
-
-    private void populateTagset(CAS aCas, AnnotatorState state, FeatureState featureState)
-    {
-        if (featureState.feature.getTagset() == null) {
+        var tagset = aFeatureState.feature.getTagset();
+        if (tagset == null) {
             return;
         }
 
         // verification to check whether constraints exist for this project or NOT
-        if (state.getConstraints() != null && state.getSelection().getAnnotation().isSet()) {
+        if (aState.getConstraints() != null && aState.getSelection().getAnnotation().isSet()) {
             // indicator.setRulesExist(true);
-            populateTagsetBasedOnRules(aCas, featureState);
+            populateTagsetBasedOnRules(aCas, aFeatureState);
             return;
         }
 
         // indicator.setRulesExist(false);
-        featureState.tagset = annotationService
-                .listTagsReorderable(featureState.feature.getTagset());
+        aFeatureState.tagset = annotationService.listTagsReorderable(tagset);
     }
 
     /**
@@ -1352,6 +1381,14 @@ public abstract class AnnotationDetailEditorPanel
         link.setOutputMarkupPlaceholderTag(true);
         link.setAlwaysEnabled(true); // Not to be disabled when document is read-only
         link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        link.add(keyBindings.getEditing().getClearSelection().toInputBehavior(click));
+        link.add(
+                AttributeModifier
+                        .append("title",
+                                () -> " ("
+                                        + KeyBindingsUtil.formatShortcut(
+                                                keyBindings.getEditing().getClearSelection())
+                                        + ")"));
         return link;
     }
 
@@ -1368,6 +1405,14 @@ public abstract class AnnotationDetailEditorPanel
                                     .equals(state.getSelectedAnnotationLayer().getType())
                             && editorPage.isEditable());
         }));
+        link.add(keyBindings.getEditing().getToggleSelection().toInputBehavior(click));
+        link.add(
+                AttributeModifier
+                        .append("title",
+                                () -> " ("
+                                        + KeyBindingsUtil.formatShortcut(
+                                                keyBindings.getEditing().getToggleSelection())
+                                        + ")"));
         return link;
     }
 
@@ -1377,7 +1422,14 @@ public abstract class AnnotationDetailEditorPanel
         link.setOutputMarkupPlaceholderTag(true);
         link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
                 && editorPage.isEditable()));
-        link.add(new InputBehavior(new KeyType[] { Shift, Delete }, click));
+        link.add(keyBindings.getEditing().getDeleteAnnotation().toInputBehavior(click));
+        link.add(
+                AttributeModifier
+                        .append("title",
+                                () -> " ("
+                                        + KeyBindingsUtil.formatShortcut(
+                                                keyBindings.getEditing().getDeleteAnnotation())
+                                        + ")"));
         return link;
     }
 

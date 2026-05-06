@@ -18,10 +18,11 @@
 
 export const annotatorState = $state({
     showLabels: true,
-    showAggregatedLabels: true,
+    showAggregatedLabels: false,
     showEmptyHighlights: false,
     showDocumentStructure: false,
     documentStructureWidth: 0.2,
     showImages: true,
-    showTables: true
-})
+    showTables: true,
+    protectElements: true,
+});

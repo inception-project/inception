@@ -57,7 +57,7 @@ public class Authority
     private String authority;
 
     @ManyToOne
-    @JoinColumn(name = "username")
+    @JoinColumn(name = "username", nullable = false)
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private User username;
 

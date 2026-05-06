@@ -23,6 +23,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class DarkModePropertiesImpl
     implements DarkModeProperties
 {
+    /**
+     * Whether to enable the ability to switch between light and dark mode (experimental).
+     */
     private boolean enabled;
 
     @Override

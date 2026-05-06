@@ -244,4 +244,27 @@ class MockAeroClient
                 .with(csrf().asHeader()) //
                 .with(user(username).roles(roles)));
     }
+
+    ResultActions listUsers(long aProjectId) throws Exception
+    {
+        return mvc.perform(get(API_BASE + "/projects/" + aProjectId + "/users") //
+                .with(csrf().asHeader()) //
+                .with(user(username).roles(roles)));
+    }
+
+    ResultActions createUser(long aProjectId, String aDisplayName) throws Exception
+    {
+        return mvc.perform(post(API_BASE + "/projects/" + aProjectId + "/users") //
+                .with(csrf().asHeader()) //
+                .with(user(username).roles(roles)) //
+                .param("name", aDisplayName));
+    }
+
+    ResultActions deleteUser(long aProjectId, String aDisplayName) throws Exception
+    {
+        return mvc.perform(delete(API_BASE + "/projects/" + aProjectId + "/users") //
+                .with(csrf().asHeader()) //
+                .with(user(username).roles(roles)) //
+                .param("name", aDisplayName));
+    }
 }

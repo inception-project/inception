@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "format.perseus.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables Perseus format import/export support."
+    }
+  ]
+}

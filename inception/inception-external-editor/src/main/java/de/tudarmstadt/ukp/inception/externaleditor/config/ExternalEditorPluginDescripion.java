@@ -17,10 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.config;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
+
 import java.io.Serializable;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -34,9 +37,9 @@ public class ExternalEditorPluginDescripion
     private String name;
     private String view;
 
-    private List<String> scripts = Collections.emptyList();
-    private List<String> stylesheets = Collections.emptyList();
-    private List<String> sectionElements = Collections.emptyList();
+    private List<String> scripts = emptyList();
+    private List<String> stylesheets = emptyList();
+    private Set<String> sectionElements = emptySet();
 
     private @JsonIgnore Path basePath;
 
@@ -110,12 +113,12 @@ public class ExternalEditorPluginDescripion
         stylesheets = aStylesheets;
     }
 
-    public List<String> getSectionElements()
+    public Set<String> getSectionElements()
     {
         return sectionElements;
     }
 
-    public void setSectionElements(List<String> aSectionElements)
+    public void setSectionElements(Set<String> aSectionElements)
     {
         sectionElements = aSectionElements;
     }

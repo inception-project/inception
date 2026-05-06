@@ -23,23 +23,29 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDe
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.request.resource.ResourceReference;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollectionIOUtils;
 
 public class TeiXmlDocumentFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     public static final String ID = "tei-xml-document";
     public static final String NAME = "TEI P5 XML (experimental)";
+
+    private static final Set<String> TEI_SECTION_ELEMENTS = Set.of("p", "lg", "biblStruct");
 
     @Override
     public String getId()
@@ -66,9 +72,9 @@ public class TeiXmlDocumentFormatSupport
     }
 
     @Override
-    public List<String> getSectionElements()
+    public Set<String> getSectionElements()
     {
-        return asList("p", "lg", "biblStruct");
+        return TEI_SECTION_ELEMENTS;
     }
 
     @Override
@@ -85,5 +91,11 @@ public class TeiXmlDocumentFormatSupport
         return new WatchedResourceFile<PolicyCollection>(
                 getClass().getResource("TeiXmlDocumentPolicy.yaml"),
                 PolicyCollectionIOUtils::loadPolicies).get();
+    }
+
+    @Override
+    public void prepareAnnotationCas(CAS aInitialCas, SourceDocument aDocument)
+    {
+        XmlNodeUtils.removeXmlDocumentStructure(aInitialCas);
     }
 }

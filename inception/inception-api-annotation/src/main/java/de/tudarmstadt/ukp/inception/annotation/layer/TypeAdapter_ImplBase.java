@@ -17,8 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer;
 
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.getAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
+import static java.util.Collections.emptyList;
 
+import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,12 +47,17 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.type.ResumptionLocation;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.FeatureValueUpdateContext;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public abstract class TypeAdapter_ImplBase
     implements TypeAdapter
@@ -138,6 +146,70 @@ public abstract class TypeAdapter_ImplBase
         return getFeature(aName).flatMap(featureSupportRegistry::findExtension);
     }
 
+    @Override
+    public <T> Optional<FeatureSupport<T>> getFeatureSupport(AnnotationFeature aFeature)
+    {
+        return getFeature(aFeature.getName()).flatMap(featureSupportRegistry::findExtension);
+    }
+
+    public static int getResumptionLocation(CAS aCAS)
+    {
+        List<ResumptionLocation> candidates = emptyList();
+
+        if (aCAS.getTypeSystem().getType(ResumptionLocation._TypeName) == null) {
+            LOG.warn(
+                    "Unable to fetch resuption location. CAS type system does not include [{}] yet",
+                    ResumptionLocation._TypeName);
+        }
+        else {
+            candidates = aCAS.select(ResumptionLocation.class).asList();
+        }
+
+        // Create new instance of necessary
+        if (candidates.isEmpty()) {
+
+            // Heuristic: let's assume that annotation with the highest address is the latest one
+            org.apache.uima.jcas.tcas.Annotation latest = null;
+            for (var ann : aCAS.select(org.apache.uima.jcas.tcas.Annotation.class)) {
+                var addr = ICasUtil.getAddr(ann);
+                if (latest == null || addr < ICasUtil.getAddr(latest)) {
+                    latest = ann;
+                }
+            }
+
+            return latest == null ? 0 : latest.getBegin();
+        }
+
+        // Get offset from first instance
+        return candidates.get(0).getOffset();
+    }
+
+    public static void setResumptionLocation(CAS aCAS, int aOffset)
+    {
+        if (aCAS.getTypeSystem().getType(ResumptionLocation._TypeName) == null) {
+            LOG.warn(
+                    "Unable to store resuption location. CAS type system does not include [{}] yet",
+                    ResumptionLocation._TypeName);
+            return;
+        }
+
+        var candidates = aCAS.select(ResumptionLocation.class).asList();
+
+        // Create new instance of necessary
+        if (candidates.isEmpty()) {
+            var loc = new ResumptionLocation(aCAS.getJCasImpl());
+            loc.setOffset(aOffset);
+            aCAS.addFsToIndexes(loc);
+            return;
+        }
+
+        // Update first instance
+        candidates.get(0).setOffset(aOffset);
+
+        // Remove any further instances (there shouldn't be any really - just in case)
+        candidates.stream().skip(1).forEach(aCAS::removeFsFromIndexes);
+    }
+
     private void initFeaturesCacheIfNecessary()
     {
         if (features == null) {
@@ -175,21 +247,33 @@ public abstract class TypeAdapter_ImplBase
         throws AnnotationException
     {
         var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
-
         var fs = selectFsByAddr(aCas, aAddress);
-
         var oldValue = featureSupport.getFeatureValue(aFeature, fs);
 
         featureSupport.setFeatureValue(aCas, aFeature, aAddress, aValue);
 
-        var newValue = featureSupport.getFeatureValue(aFeature, fs);
-
-        if (!Objects.equals(oldValue, newValue)) {
-            publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(),
-                    fs, aFeature, newValue, oldValue));
-        }
+        publishFeatureValueUpdated(aDocument, aUsername, fs, aFeature, featureSupport, oldValue);
 
         clearHiddenFeatures(aDocument, aUsername, fs);
+    }
+
+    @Override
+    public final FeatureValueUpdateContext updateFeatureValues(SourceDocument aDocument,
+            String aUsername, CAS aCas, int aAddress)
+    {
+        var fs = selectFsByAddr(aCas, aAddress);
+        return new FeatureValueUpdateContextImpl(aDocument, aUsername, fs);
+    }
+
+    private void publishFeatureValueUpdated(SourceDocument aDocument, String aUsername,
+            FeatureStructure fs, AnnotationFeature feature, FeatureSupport<Object> featureSupport,
+            Object oldValue)
+    {
+        var newValue = featureSupport.getFeatureValue(feature, fs);
+        if (!Objects.equals(oldValue, newValue)) {
+            publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(),
+                    fs, feature, newValue, oldValue));
+        }
     }
 
     private void clearHiddenFeatures(SourceDocument aDocument, String aUsername,
@@ -211,12 +295,8 @@ public abstract class TypeAdapter_ImplBase
 
                 featureSupport.clearFeatureValue(feature, aFS);
 
-                var newValue = featureSupport.getFeatureValue(feature, aFS);
-
-                if (!Objects.equals(oldValue, newValue)) {
-                    publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername,
-                            getLayer(), aFS, feature, newValue, oldValue));
-                }
+                publishFeatureValueUpdated(aDocument, aUsername, aFS, feature, featureSupport,
+                        oldValue);
             }
         }
 
@@ -229,19 +309,14 @@ public abstract class TypeAdapter_ImplBase
         throws AnnotationException
     {
         var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
-
         var fs = selectFsByAddr(aCas, aAddress);
-
         var oldValue = featureSupport.getFeatureValue(aFeature, fs);
 
         featureSupport.pushFeatureValue(aCas, aFeature, aAddress, aValue);
 
-        var newValue = featureSupport.getFeatureValue(aFeature, fs);
+        publishFeatureValueUpdated(aDocument, aUsername, fs, aFeature, featureSupport, oldValue);
 
-        if (!Objects.equals(oldValue, newValue)) {
-            publishEvent(() -> new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(),
-                    fs, aFeature, newValue, oldValue));
-        }
+        clearHiddenFeatures(aDocument, aUsername, fs);
     }
 
     @SuppressWarnings("unchecked")
@@ -252,6 +327,17 @@ public abstract class TypeAdapter_ImplBase
                 .orElseThrow(() -> new NoSuchElementException(
                         "Unsupported feature type [" + aFeature.getType() + "]"))
                 .getFeatureValue(aFeature, aFs);
+    }
+
+    @Override
+    public FeatureState getFeatureState(AnnotationFeature aFeature, FeatureStructure aFS)
+    {
+        Serializable value = getFeatureValue(aFeature, aFS);
+        var vid = VID.of(aFS);
+        var suggestionStates = getFeatureSupport(aFeature).get().getSuggestions(aFS, aFeature);
+        var state = new FeatureState(vid, aFeature, value);
+        state.setSuggestions(suggestionStates);
+        return state;
     }
 
     @Deprecated
@@ -391,6 +477,46 @@ public abstract class TypeAdapter_ImplBase
             }
             finally {
                 TypeAdapter_ImplBase.this.applicationEventPublisher = delegate;
+            }
+        }
+    }
+
+    class FeatureValueUpdateContextImpl
+        implements FeatureValueUpdateContext
+    {
+        private final SourceDocument document;
+        private final String username;
+        private final FeatureStructure fs;
+
+        private boolean featureUpdated = false;
+
+        public FeatureValueUpdateContextImpl(SourceDocument aDocument, String aUsername,
+                FeatureStructure aFS)
+        {
+            document = aDocument;
+            username = aUsername;
+            fs = aFS;
+        }
+
+        @Override
+        public void setFeatureValue(AnnotationFeature aFeature, Object aValue)
+            throws AnnotationException
+        {
+            var featureSupport = featureSupportRegistry.findExtension(aFeature).orElseThrow();
+            var oldValue = featureSupport.getFeatureValue(aFeature, fs);
+
+            featureSupport.setFeatureValue(fs.getCAS(), aFeature, getAddr(fs), aValue);
+
+            publishFeatureValueUpdated(document, username, fs, aFeature, featureSupport, oldValue);
+
+            featureUpdated = true;
+        }
+
+        @Override
+        public void close()
+        {
+            if (featureUpdated) {
+                clearHiddenFeatures(document, username, fs);
             }
         }
     }

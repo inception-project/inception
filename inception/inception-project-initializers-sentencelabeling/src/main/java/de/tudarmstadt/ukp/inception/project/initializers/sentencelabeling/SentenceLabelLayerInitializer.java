@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.project.initializers.sentencelabeling;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SENTENCES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -38,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.sentencelabeling.config.InceptionSentenceLabelingProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -109,7 +109,7 @@ public class SentenceLabelLayerInitializer
     public void configure(Project aProject) throws IOException
     {
         AnnotationLayer sentTagLayer = new AnnotationLayer(SENTENCE_LABEL_LAYER_NAME,
-                "Sentence Label", SPAN_TYPE, aProject, false, SENTENCES, NO_OVERLAP);
+                "Sentence Label", SpanLayerSupport.TYPE, aProject, false, SENTENCES, NO_OVERLAP);
         annotationSchemaService.createOrUpdateLayer(sentTagLayer);
 
         TagSet sentLabelTagSet = annotationSchemaService

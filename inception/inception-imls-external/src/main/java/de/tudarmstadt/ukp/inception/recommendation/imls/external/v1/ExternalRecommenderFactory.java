@@ -21,13 +21,14 @@ import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config.ExternalRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config.ExternalRecommenderProperties;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 /**
  * <p>
@@ -43,10 +44,13 @@ public class ExternalRecommenderFactory
     public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.external.ExternalClassificationTool";
 
     private final ExternalRecommenderProperties properties;
+    private final AnnotationSchemaService schemaService;
 
-    public ExternalRecommenderFactory(ExternalRecommenderProperties aProperties)
+    public ExternalRecommenderFactory(ExternalRecommenderProperties aProperties,
+            AnnotationSchemaService aSchemaService)
     {
         properties = aProperties;
+        schemaService = aSchemaService;
     }
 
     @Override
@@ -58,14 +62,14 @@ public class ExternalRecommenderFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        ExternalRecommenderTraits traits = readTraits(aRecommender);
-        return new ExternalRecommender(properties, aRecommender, traits);
+        var traits = readTraits(aRecommender);
+        return new ExternalRecommender(properties, aRecommender, traits, schemaService);
     }
 
     @Override
     public String getName()
     {
-        return "Remote classifier";
+        return "External recommender";
     }
 
     @Override
@@ -113,5 +117,12 @@ public class ExternalRecommenderFactory
     {
         var traits = readTraits(aRecommender);
         return traits.isRanker();
+    }
+
+    @Override
+    public boolean isIncludeXmlStructure(Recommender aRecommender)
+    {
+        var traits = readTraits(aRecommender);
+        return traits.isIncludeXmlStructure();
     }
 }

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.project.export.task.backup;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportExtension;
@@ -30,6 +31,7 @@ import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAu
  * {@link ProjectExportServiceAutoConfiguration#backupProjectExportExtension()}.
  * </p>
  */
+@Order(100)
 public class BackupProjectExportExtension
     implements ProjectExportExtension
 {

@@ -29,13 +29,13 @@ The recommender can be used for span layers that anchor to single or multiple to
 cross-sentence annotations are not allowed. It can be used for string features or features which get
 internally represented as strings (e.g. concept features).
 
-=== Gazeteers
+=== Gazetteers
 
-It is possible to pre-load gazeteers into string matching recommenders. A gazeteer is a simple text
+It is possible to pre-load gazetteers into string matching recommenders. A gazetteer is a simple text
 file where each line consists of a text and a label separated by a tab character. The order of 
-items in the gazeteer does not matter. Suggestions are generated considering the longest match. Comment lines start with a `#`. Empty lines are ignored.
+items in the gazetteer does not matter. Suggestions are generated considering the longest match. Comment lines start with a `#`. Empty lines are ignored.
 
-.Gazeteer example
+.Gazetteer example
 ----
 # This is a comment
 Obama	PER

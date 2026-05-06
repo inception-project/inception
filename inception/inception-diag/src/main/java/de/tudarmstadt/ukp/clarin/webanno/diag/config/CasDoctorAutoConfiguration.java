@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
+import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
@@ -42,11 +43,12 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.checks.LinksReachableThroughChains
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.NegativeSizeAnnotationsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.NoMultipleIncomingRelationsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.NoZeroSizeTokensAndSentencesCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.PdfStructurePresentInNonInitialCasCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.RelationOffsetsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.TokensAndSententencedDoNotOverlapCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UniqueDocumentAnnotationCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UnreachableAnnotationsCheck;
-import de.tudarmstadt.ukp.clarin.webanno.diag.checks.XmlStructurePresentInCurationCasCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.XmlStructurePresentInNonInitialCasCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.CoverAllTextInSentencesRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsRepair;
@@ -56,13 +58,13 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveBomRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingChainLinksRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingFeatureAttachedSpanAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingRelationsRepair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemovePdfStructureFromNonInitialCasRepair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveXmlStructureFromNonInitialCasRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveZeroSizeTokensAndSentencesRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
-import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReplaceXmlStructureInCurationCasRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.SwitchBeginAndEndOnNegativeSizedAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.TrimAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.UpgradeCasRepair;
-import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
@@ -73,7 +75,7 @@ public class CasDoctorAutoConfiguration
     CasDoctor casDoctor(CasDoctorProperties aProperties, ChecksRegistry aChecksRegistry,
             RepairsRegistry aRepairsRegistry)
     {
-        return new CasDoctor(aProperties, aChecksRegistry, aRepairsRegistry);
+        return new CasDoctorImpl(aProperties, aChecksRegistry, aRepairsRegistry);
     }
 
     @Bean
@@ -270,16 +272,26 @@ public class CasDoctorAutoConfiguration
     }
 
     @Bean
-    public XmlStructurePresentInCurationCasCheck xmlStructurePresentInCurationCasCheck(
-            DocumentService aDocumentService)
+    public XmlStructurePresentInNonInitialCasCheck xmlStructurePresentInNonInitialCasCheck()
     {
-        return new XmlStructurePresentInCurationCasCheck(aDocumentService);
+        return new XmlStructurePresentInNonInitialCasCheck();
     }
 
     @Bean
-    public ReplaceXmlStructureInCurationCasRepair replaceXmlStructureInCurationCasRepair(
-            DocumentService aDocumentService)
+    public RemoveXmlStructureFromNonInitialCasRepair removeXmlStructureFromNonInitialCasRepair()
     {
-        return new ReplaceXmlStructureInCurationCasRepair(aDocumentService);
+        return new RemoveXmlStructureFromNonInitialCasRepair();
+    }
+
+    @Bean
+    public PdfStructurePresentInNonInitialCasCheck pdfStructurePresentInNonInitialCasCheck()
+    {
+        return new PdfStructurePresentInNonInitialCasCheck();
+    }
+
+    @Bean
+    public RemovePdfStructureFromNonInitialCasRepair removePdfStructureFromNonInitialCasRepair()
+    {
+        return new RemovePdfStructureFromNonInitialCasRepair();
     }
 }

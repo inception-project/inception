@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.context.WebServerInitializedEvent;
+import org.springframework.boot.web.server.context.WebServerInitializedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -140,9 +140,11 @@ public class DeploymentModeServiceImpl
     }
 
     /**
+     * @param aActiveProfiles
+     *            list of currently active profiles
      * @return if the embedded server was used (i.e. not running as a WAR).
      */
-    public static boolean isEmbeddedServerDeployment(String... aActiveProfiles)
+    static boolean isEmbeddedServerDeployment(String... aActiveProfiles)
     {
         return Set.of(aActiveProfiles)
                 .containsAll(asList(PROFILE_APPLICATION_MODE, PROFILE_INTERNAL_SERVER));

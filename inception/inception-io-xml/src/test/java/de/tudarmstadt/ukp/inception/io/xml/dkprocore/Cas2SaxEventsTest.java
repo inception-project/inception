@@ -19,8 +19,10 @@ package de.tudarmstadt.ukp.inception.io.xml.dkprocore;
 
 import static org.apache.uima.fit.util.FSCollectionFactory.createFSArray;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.StringWriter;
+import java.util.ArrayList;
 
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -29,7 +31,9 @@ import org.dkpro.core.api.xml.type.XmlDocument;
 import org.dkpro.core.api.xml.type.XmlElement;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
+import de.tudarmstadt.ukp.inception.support.xml.ContentHandlerAdapter;
 import de.tudarmstadt.ukp.inception.support.xml.XmlEventLoggingFilter;
 import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
 
@@ -134,5 +138,56 @@ class Cas2SaxEventsTest
                 "[END-ELEMENT [ns:root] {http://namespace.org}[root]]", //
                 "[END-PREFIX-MAPPING [ns]]", //
                 "[END-DOCUMENT]");
+    }
+
+    @Test
+    public void testPrefixRedefinitionEmitsStartPrefixMapping() throws Exception
+    {
+        var jCas = JCasFactory.createJCas();
+
+        var xml = "<root xmlns:p=\"uri1\">" + "<p:child1/>" + "<p:child2 xmlns:p=\"uri2\"/>"
+                + "<p:child3/>" + "</root>";
+
+        // Parse XML into the CAS (package-private helper in XmlNodeUtils)
+        XmlNodeUtils.parseXmlStringToCas(jCas, xml);
+
+        var events = new ArrayList<String>();
+
+        var handler = new ContentHandlerAdapter()
+        {
+            @Override
+            public void startPrefixMapping(String prefix, String uri) throws SAXException
+            {
+                events.add("start:" + prefix + "=" + uri);
+            }
+
+            @Override
+            public void endPrefixMapping(String prefix) throws SAXException
+            {
+                events.add("end:" + prefix);
+            }
+
+            @Override
+            public void startElement(String uri, String localName, String qName,
+                    org.xml.sax.Attributes atts)
+                throws SAXException
+            {
+                events.add("elem:" + qName);
+            }
+
+            @Override
+            public void endElement(String uri, String localName, String qName) throws SAXException
+            {
+                events.add("endElem:" + qName);
+            }
+        };
+
+        var serializer = new Cas2SaxEvents(handler);
+        serializer.setNamespaces(true);
+        serializer.process(jCas);
+
+        // Expect that the redeclared prefix p -> uri2 results in an explicit startPrefixMapping
+        assertTrue(events.contains("start:p=uri2"),
+                "Expected startPrefixMapping for redeclared prefix p=uri2");
     }
 }

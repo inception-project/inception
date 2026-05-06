@@ -61,4 +61,22 @@ public class PooledCasHolderFactory
 
         return true;
     }
+
+    @Override
+    public void activateObject(CasKey aKey, PooledObject<CasHolder> aP) throws Exception
+    {
+        // When the pool hands out the holder, mark the current thread as owner for diagnostics
+        var h = aP.getObject();
+        h.setOwner(Thread.currentThread());
+        super.activateObject(aKey, aP);
+    }
+
+    @Override
+    public void passivateObject(CasKey aKey, PooledObject<CasHolder> aP) throws Exception
+    {
+        // Clear owner info when the holder is returned to the pool
+        var h = aP.getObject();
+        h.clearOwner();
+        super.passivateObject(aKey, aP);
+    }
 }
