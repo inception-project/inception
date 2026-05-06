@@ -168,7 +168,7 @@ public class RelationSuggestionSupport
 
         // The begin and end feature of a relation in the CAS are of the dependent/target
         // annotation. See also RelationAdapter::createRelationAnnotation.
-        // We use that fact to search for existing relations for this relation suggestion
+        // We use that fact to search for existing relations for this relation suggestion.
         var candidates = new ArrayList<AnnotationFS>();
         for (var relationCandidate : selectAt(aCas, type, targetBegin, targetEnd)) {
             var source = (AnnotationFS) relationCandidate.getFeatureValue(sourceFeature);
@@ -184,26 +184,34 @@ public class RelationSuggestionSupport
             }
         }
 
+        var stackingEnabled = aAdapter.getLayer().isAllowStacking();
+        var candidateWithEmptyLabel = candidates.stream() //
+                .filter(c -> aAdapter.getFeatureValue(aFeature, c) == null) //
+                .findFirst();
+
         try (var eventBatch = aAdapter.batchEvents()) {
             var annotationCreated = false;
-            AnnotationFS annotation = null;
-            if (candidates.size() == 1) {
-                // One candidate, we just return it
-                annotation = candidates.get(0);
+            AnnotationFS annotation;
+            if (candidateWithEmptyLabel.isPresent()) {
+                // If there is a relation where the predicted feature is unset, use it ...
+                annotation = candidateWithEmptyLabel.get();
             }
-            else if (candidates.size() > 1) {
-                LOG.warn(
-                        "Found multiple candidates for upserting relation from suggestion, using first one");
+            else if (candidates.isEmpty() || (stackingEnabled && !suggestion.isCorrection())) {
+                // ... otherwise, if stacking is allowed and this is not a correction, create a
+                // new (stacked) relation
+                annotation = null;
+            }
+            else {
+                // ... otherwise update the feature on the existing relation
+                if (candidates.size() > 1) {
+                    LOG.warn(
+                            "Found multiple candidates for upserting relation from suggestion, using first one");
+                }
                 annotation = candidates.get(0);
             }
 
             // We did not find a relation for this suggestion, so we create a new one
             if (annotation == null) {
-                // FIXME: We get the first match for the (begin, end) span. With stacking, there can
-                // be more than one and we need to get the right one then which does not need to be
-                // the first. We wait for #2135 to fix this. When stacking is enabled, then also
-                // consider creating a new relation instead of upserting an existing one.
-
                 var source = selectAt(aCas, attachType, sourceBegin, sourceEnd).stream().findFirst()
                         .orElse(null);
                 var target = selectAt(aCas, attachType, targetBegin, targetEnd).stream().findFirst()
