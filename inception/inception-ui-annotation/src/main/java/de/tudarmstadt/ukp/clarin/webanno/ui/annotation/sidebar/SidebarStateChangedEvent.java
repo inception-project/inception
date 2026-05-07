@@ -21,18 +21,30 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
 /**
- * Fired when the sidebar gets expanded or collapsed.
+ * Fired when a sidebar gets expanded or collapsed.
  */
 public class SidebarStateChangedEvent
     extends AbstractAjaxAwareEvent
 {
+    public enum Side
+    {
+        LEFT, RIGHT
+    }
+
+    private final Side side;
     private final boolean collapsed;
 
-    public SidebarStateChangedEvent(AjaxRequestTarget aTarget, boolean aCollapsed)
+    public SidebarStateChangedEvent(AjaxRequestTarget aTarget, Side aSide, boolean aCollapsed)
     {
         super(aTarget);
 
+        side = aSide;
         collapsed = aCollapsed;
+    }
+
+    public Side getSide()
+    {
+        return side;
     }
 
     public boolean isCollapsed()

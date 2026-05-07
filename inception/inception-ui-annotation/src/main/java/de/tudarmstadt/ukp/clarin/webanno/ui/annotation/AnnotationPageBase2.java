@@ -30,7 +30,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPageLayoutState.KEY_LAYOUT_STATE;
-import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference.SIDEBAR_SIZE_DEFAULT;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
@@ -200,10 +199,12 @@ public abstract class AnnotationPageBase2
         leftSplitterContainer = new WebMarkupContainer("splitter-left");
         leftSplitterContainer.setOutputMarkupId(true);
 
+        var prefs = getModelObject().getPreferences();
         leftSplitterBehavior = new SplitterBehavior("#" + leftSplitterContainer.getMarkupId(),
                 new Options("orientation", Options.asString("horizontal")) //
                         .set("panes", //
-                                new Options("size", Options.asString(SIDEBAR_SIZE_DEFAULT + "%")), //
+                                new Options("size",
+                                        Options.asString(prefs.getSidebarSizeLeft() + "%")), //
                                 new Options()), //
                 new SplitterAdapter());
 
@@ -242,7 +243,8 @@ public abstract class AnnotationPageBase2
                 new Options("orientation", Options.asString("horizontal")) //
                         .set("panes", //
                                 new Options(), //
-                                new Options("size", Options.asString(SIDEBAR_SIZE_DEFAULT + "%"))), //
+                                new Options("size",
+                                        Options.asString(prefs.getSidebarSizeRight() + "%"))), //
                 new SplitterAdapter()));
 
         rightSplitterContainer.add(leftSplitterContainer);
@@ -328,24 +330,13 @@ public abstract class AnnotationPageBase2
         aTarget.add(actionBar, actionBarToggle);
     }
 
-    private WebMarkupContainer buildRightSplitter()
-    {
-        var splitter = new WebMarkupContainer("splitter-right");
-        splitter.setOutputMarkupId(true);
-
-        splitter.add(new SplitterBehavior("#" + splitter.getMarkupId(),
-                new Options("orientation", Options.asString("horizontal")) //
-                        .set("panes", //
-                                new Options("size", Options.asString("80%")), //
-                                new Options("size", Options.asString("20%"))), //
-                new SplitterAdapter()));
-
-        return splitter;
-    }
-
     @OnEvent
     public void onSidebarStateChanged(SidebarStateChangedEvent aEvent)
     {
+        if (aEvent.getSide() != SidebarStateChangedEvent.Side.LEFT) {
+            return;
+        }
+
         if (aEvent.isCollapsed()) {
             leftSplitterContainer.remove(leftSplitterBehavior);
         }
