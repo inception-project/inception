@@ -108,7 +108,11 @@ public class SidebarTabbedPanel<T extends SidebarTab>
             // re-render the sidebar panel.
             // See: #5810 - Document scrolls up when opening search sidebar
             // aTarget.ifPresent(_target -> WicketUtil.refreshPage(_target, getPage()));
-            aTarget.ifPresent(_target -> _target.add(findParent(SidebarPanel.class)));
+            aTarget.ifPresent(_target -> {
+                _target.add(findParent(SidebarPanel.class));
+                send(this, BUBBLE, new SidebarStateChangedEvent(_target,
+                        SidebarStateChangedEvent.Side.LEFT, false));
+            });
         }
     }
 

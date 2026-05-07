@@ -157,7 +157,8 @@ public class MetadataSuggestionSupportTest
         adapter = new DocumentMetadataLayerAdapterImpl(layerSupportRegistry, featureSupportRegistry,
                 null, metaLayer, () -> asList(valueFeature), constraintsService, behaviors);
 
-        sut = new MetadataSuggestionSupport(null, learningRecordService, null, schemaService);
+        sut = new MetadataSuggestionSupport(null, learningRecordService, null, schemaService,
+                featureSupportRegistry);
     }
 
     @Test

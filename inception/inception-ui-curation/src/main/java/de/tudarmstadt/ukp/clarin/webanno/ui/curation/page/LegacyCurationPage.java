@@ -286,7 +286,7 @@ public class LegacyCurationPage
                 () -> getModelObject() != null && getModelObject().getDocument() != null));
         // Override sidebar width from preferences
         sidebar.add(new AttributeModifier("style",
-                () -> format("flex-basis: %d%%;",
+                () -> format("flex-basis: %s%%;",
                         getModelObject() != null
                                 ? getModelObject().getPreferences().getSidebarSizeLeft()
                                 : 10)));
@@ -299,7 +299,7 @@ public class LegacyCurationPage
         sidebar.setOutputMarkupPlaceholderTag(true);
         // Override sidebar width from preferences
         sidebar.add(new AttributeModifier("style",
-                () -> format("flex-basis: %d%%;",
+                () -> format("flex-basis: %s%%;",
                         getModelObject() != null
                                 ? getModelObject().getPreferences().getSidebarSizeRight()
                                 : 10)));

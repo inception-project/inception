@@ -56,11 +56,12 @@ public class AnnotationPreference
 
     // BEGIN: Settings specific to the AnnotationPage layout
     public static final int SIDEBAR_SIZE_MIN = 5;
-    public static final int SIDEBAR_SIZE_MAX = 50;
+    public static final int CENTER_SIZE_MIN = 10;
+    public static final int SIDEBAR_SIZE_MAX = (100 - CENTER_SIZE_MIN) / 2;
     public static final int SIDEBAR_SIZE_DEFAULT = 20;
     private @Deprecated int sidebarSize;
-    private int sidebarSizeLeft;
-    private int sidebarSizeRight;
+    private double sidebarSizeLeft;
+    private double sidebarSizeRight;
     // END: Settings specific to the AnnotationPage layout
 
     // BEGIN: Settings specific to the AnnotationDetailPanel
@@ -266,7 +267,7 @@ public class AnnotationPreference
         }
     }
 
-    public int getSidebarSizeLeft()
+    public double getSidebarSizeLeft()
     {
         if (sidebarSizeLeft < SIDEBAR_SIZE_MIN || sidebarSizeLeft > SIDEBAR_SIZE_MAX) {
             return SIDEBAR_SIZE_DEFAULT;
@@ -276,20 +277,12 @@ public class AnnotationPreference
         }
     }
 
-    public void setSidebarSizeLeft(int aSidebarSize)
+    public void setSidebarSizeLeft(double aSidebarSize)
     {
-        if (aSidebarSize > SIDEBAR_SIZE_MAX) {
-            sidebarSizeLeft = SIDEBAR_SIZE_MAX;
-        }
-        else if (aSidebarSize < SIDEBAR_SIZE_MIN) {
-            sidebarSizeLeft = SIDEBAR_SIZE_MIN;
-        }
-        else {
-            sidebarSizeLeft = aSidebarSize;
-        }
+        sidebarSizeLeft = clampSidebarSize(aSidebarSize);
     }
 
-    public int getSidebarSizeRight()
+    public double getSidebarSizeRight()
     {
         if (sidebarSizeRight < SIDEBAR_SIZE_MIN || sidebarSizeRight > SIDEBAR_SIZE_MAX) {
             return SIDEBAR_SIZE_DEFAULT;
@@ -299,17 +292,25 @@ public class AnnotationPreference
         }
     }
 
-    public void setSidebarSizeRight(int aSidebarSize)
+    public void setSidebarSizeRight(double aSidebarSize)
     {
-        if (aSidebarSize > SIDEBAR_SIZE_MAX) {
-            sidebarSizeRight = SIDEBAR_SIZE_MAX;
+        sidebarSizeRight = clampSidebarSize(aSidebarSize);
+    }
+
+    private static double clampSidebarSize(double aValue)
+    {
+        double clamped;
+        if (aValue > SIDEBAR_SIZE_MAX) {
+            clamped = SIDEBAR_SIZE_MAX;
         }
-        else if (aSidebarSize < SIDEBAR_SIZE_MIN) {
-            sidebarSizeRight = SIDEBAR_SIZE_MIN;
+        else if (aValue < SIDEBAR_SIZE_MIN) {
+            clamped = SIDEBAR_SIZE_MIN;
         }
         else {
-            sidebarSizeRight = aSidebarSize;
+            clamped = aValue;
         }
+        // Round to 4 decimal places to keep persisted values tidy.
+        return Math.round(clamped * 10_000d) / 10_000d;
     }
 
     public int getFontZoom()
