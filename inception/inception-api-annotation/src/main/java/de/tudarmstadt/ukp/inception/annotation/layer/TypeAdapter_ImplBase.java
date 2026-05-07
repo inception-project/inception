@@ -36,6 +36,7 @@ import java.util.function.Supplier;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEvent;
@@ -169,10 +170,10 @@ public abstract class TypeAdapter_ImplBase
         if (candidates.isEmpty()) {
 
             // Heuristic: let's assume that annotation with the highest address is the latest one
-            org.apache.uima.jcas.tcas.Annotation latest = null;
-            for (var ann : aCAS.select(org.apache.uima.jcas.tcas.Annotation.class)) {
+            Annotation latest = null;
+            for (var ann : aCAS.select(Annotation.class)) {
                 var addr = ICasUtil.getAddr(ann);
-                if (latest == null || addr < ICasUtil.getAddr(latest)) {
+                if (latest == null || addr > ICasUtil.getAddr(latest)) {
                     latest = ann;
                 }
             }
@@ -253,6 +254,10 @@ public abstract class TypeAdapter_ImplBase
         featureSupport.setFeatureValue(aCas, aFeature, aAddress, aValue);
 
         publishFeatureValueUpdated(aDocument, aUsername, fs, aFeature, featureSupport, oldValue);
+
+        if (fs instanceof Annotation ann) {
+            setResumptionLocation(aCas, ann.getBegin());
+        }
 
         clearHiddenFeatures(aDocument, aUsername, fs);
     }
@@ -508,6 +513,10 @@ public abstract class TypeAdapter_ImplBase
             featureSupport.setFeatureValue(fs.getCAS(), aFeature, getAddr(fs), aValue);
 
             publishFeatureValueUpdated(document, username, fs, aFeature, featureSupport, oldValue);
+
+            if (fs instanceof Annotation ann) {
+                setResumptionLocation(fs.getCAS(), ann.getBegin());
+            }
 
             featureUpdated = true;
         }

@@ -29,6 +29,7 @@ export class SectionAnnotationVisualizer {
     private ajax: DiamAjax;
     private root: Element;
     private suspended = false;
+    private lastFingerprint: string | undefined = undefined;
 
     public constructor(root: Element, ajax: DiamAjax, sectionSelector: string) {
         this.root = root;
@@ -60,15 +61,29 @@ export class SectionAnnotationVisualizer {
     }
 
     render(doc: AnnotatedText) {
-        if (this.sectionSelector) {
-            this.clear();
-            this.renderSectionGroups(doc);
-            this.ensurePanelVisibility('render');
+        if (!this.sectionSelector) return;
+
+        // Skip rerendering if the visible section headers did not change.
+        const fingerprint = this.computeFingerprint(doc);
+        if (fingerprint === this.lastFingerprint) {
+            this.ensurePanelVisibility('render-skipped');
+            return;
         }
+
+        this.clear();
+        this.renderSectionGroups(doc);
+        this.ensurePanelVisibility('render');
+        this.lastFingerprint = fingerprint;
+    }
+
+    private computeFingerprint(doc: AnnotatedText): string {
+        if (!doc.spans) return '';
+        return Array.from(doc.spans.keys()).sort().join(',');
     }
 
     clear() {
         if (this.sectionSelector) {
+            this.lastFingerprint = undefined;
             this.root.parentElement
                 ?.querySelectorAll('.iaa-visible-annotations-panel')
                 .forEach((e) => e.remove());
