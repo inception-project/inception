@@ -75,8 +75,7 @@ public class MetadataSuggestionSupport
     public MetadataSuggestionSupport(RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
-            AnnotationSchemaService aSchemaService,
-            FeatureSupportRegistry aFeatureSupportRegistry)
+            AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry)
     {
         super(aRecommendationService, aLearningRecordService, aApplicationEventPublisher,
                 aSchemaService);
@@ -92,8 +91,7 @@ public class MetadataSuggestionSupport
 
         var feature = aContext.feature();
         if (TYPE_NAME_STRING.equals(feature.getType())
-                || TYPE_NAME_STRING_ARRAY.equals(feature.getType())
-                || feature.isVirtualFeature()) {
+                || TYPE_NAME_STRING_ARRAY.equals(feature.getType()) || feature.isVirtualFeature()) {
             return true;
         }
 

@@ -79,13 +79,18 @@ After changing this setting, best do a fresh clone and check-out of the project.
 
 == Code style
 
-We use a style for formatting the source code in {product-name}. Our approach consists of two steps:
+We use a style for formatting the source code in {product-name}. Our approach consists of three
+parts:
 
-* DKPro code formatting profile - the profile configures your IDE to auto-format the code according to
-  our guidelines as you go.
-* Checkstyle - this tool is used to check if the source code is actually formatted according to our
-  guidelines. It is run as part of a Maven build and the build fails if the code is not formatted
-  properly.
+* DKPro code formatting profile - the profile configures your IDE to auto-format the code according
+  to our guidelines as you go.
+* Spotless - applies the DKPro formatter, removes unused imports and ensures files end with a
+  newline. Run `mvn -Pspotless spotless:apply` to auto-format the code, or
+  `mvn -Pspotless spotless:check` to verify it. The check is part of the Maven `verify` phase and
+  the build fails if the code is not formatted properly.
+* Checkstyle - enforces structural and naming rules that Spotless does not cover (e.g. star
+  imports, package and type-parameter naming, empty catch blocks, `equals`/`hashCode` consistency).
+  It is also run as part of the Maven `verify` phase.
 
 Here is a brief summary of the formatting rules:
 
@@ -94,4 +99,17 @@ Here is a brief summary of the formatting rules:
 * maximum 100 characters per line (with a few exceptions)
 * curly braces on the next line for class/method declarations, same line for logic blocks (if/for/...)
 * parameter names start with `a` (e.g. `void foo(String aValue)`)
+
+=== Pre-commit hook
+
+The repository ships a pre-commit hook in `.githooks/pre-commit` that runs `spotless:check` and
+`checkstyle:check` against the Maven modules containing staged Java files. The first time you run
+any Maven build (e.g. `mvn install`) the `git-build-hook-maven-plugin` configures git to use this
+hooks directory by setting `core.hooksPath` automatically — no manual setup is required.
+
+The hook is a no-op when no Java files are staged. If a check fails, run
+`mvn -Pspotless spotless:apply` to auto-fix formatting issues, re-stage the changes and commit
+again. As a last resort you can bypass the hook for a single commit with `git commit --no-verify`.
+
+To disable the hook entirely, unset `core.hooksPath` in your local git config.
 
