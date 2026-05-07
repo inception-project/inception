@@ -125,8 +125,7 @@ class MetadataSuggestionVisibilityCalculationTest
         cas = CasFactory.createCas(tsd);
 
         when(schemaService.getAdapter(layer)).thenReturn(adapter);
-        when(adapter.getTraits(DocumentMetadataLayerTraits.class))
-                .thenReturn(Optional.of(traits));
+        when(adapter.getTraits(DocumentMetadataLayerTraits.class)).thenReturn(Optional.of(traits));
 
         var featureSupportRegistry = new FeatureSupportRegistryImpl(
                 asList(new StringFeatureSupport(), new MultiValueStringFeatureSupport()));
