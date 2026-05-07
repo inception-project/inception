@@ -61,6 +61,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.wicketstuff.event.annotation.OnEvent;
+import org.wicketstuff.jquery.core.Options;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
@@ -80,13 +81,13 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarStateChangedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.BeforeDocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.PreparingToOpenDocumentEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.TypeAdapter_ImplBase;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
@@ -104,10 +105,10 @@ import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChanged
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.support.kendo.AjaxSplitterBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
-import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 public abstract class AnnotationPageBase2
     extends AnnotationPageBase
@@ -118,6 +119,9 @@ public abstract class AnnotationPageBase2
 
     private static final String MID_EDITOR = "editor";
     private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
+
+    private static final String LEFT_SIDEBAR_COLLAPSED_SIZE = "52px";
+    private static final String RIGHT_SIDEBAR_HIDDEN_SIZE = "0px";
 
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
@@ -132,6 +136,8 @@ public abstract class AnnotationPageBase2
     private @SpringBean DocumentAccess documentAccess;
     private @SpringBean EventRepository eventRepository;
 
+    private WebMarkupContainer splitterContainer;
+    private AjaxSplitterBehavior splitterBehavior;
     private WebMarkupContainer centerArea;
     private ActionBar actionBar;
     private AnnotationEditorBase annotationEditor;
@@ -182,10 +188,90 @@ public abstract class AnnotationPageBase2
     {
         add(createUrlFragmentBehavior());
 
+        splitterContainer = new WebMarkupContainer("splitter");
+        splitterContainer.setOutputMarkupId(true);
+        splitterContainer.add(AttributeModifier.replace("style", "width:100%;height:100%"));
+        add(splitterContainer);
+
+        splitterBehavior = new AjaxSplitterBehavior("#" + splitterContainer.getMarkupId(),
+                AjaxSplitterBehavior.Orientation.HORIZONTAL, new Options())
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void renderHead(org.apache.wicket.Component aComponent,
+                    IHeaderResponse aResponse)
+            {
+                // Read sidebar sizes from KEY_LAYOUT_STATE directly. Going via
+                // AnnotatorState.getPreferences() returns defaults at page construction time,
+                // because the user preferences are not loaded until actionLoadDocument runs via
+                // the URL fragment behavior — that would init the splitter at 20%, then the
+                // URL-fragment-driven re-render would shift it to the persisted value, producing
+                // a visible jump. KEY_LAYOUT_STATE is per-project and available immediately.
+                double sizeLeft = AnnotationPreference.SIDEBAR_SIZE_DEFAULT;
+                double sizeRight = AnnotationPreference.SIDEBAR_SIZE_DEFAULT;
+                var project = getProject();
+                if (project != null) {
+                    var layoutState = preferencesService.loadTraitsForUserAndProject(
+                            KEY_LAYOUT_STATE, userRepository.getCurrentUser(), project);
+                    sizeLeft = layoutState.getSidebarSizeLeft();
+                    sizeRight = layoutState.getSidebarSizeRight();
+                }
+
+                var minSize = Options.asString(AnnotationPreference.SIDEBAR_SIZE_MIN + "%");
+                var maxSize = Options.asString(AnnotationPreference.SIDEBAR_SIZE_MAX + "%");
+                Options leftPane;
+                if (leftSidebar.isCollapsed()) {
+                    leftPane = new Options("size", Options.asString(LEFT_SIDEBAR_COLLAPSED_SIZE)) //
+                            .set("resizable", false);
+                }
+                else {
+                    leftPane = new Options("size", Options.asString(sizeLeft + "%")) //
+                            .set("min", minSize) //
+                            .set("max", maxSize);
+                }
+                Options rightPane;
+                if (isRightSidebarVisible()) {
+                    rightPane = new Options("size", Options.asString(sizeRight + "%")) //
+                            .set("min", minSize) //
+                            .set("max", maxSize);
+                }
+                else {
+                    rightPane = new Options("size",
+                            Options.asString(RIGHT_SIDEBAR_HIDDEN_SIZE)) //
+                                    .set("resizable", false);
+                }
+                setOption("panes", leftPane, //
+                        new Options(), //
+                        rightPane);
+                super.renderHead(aComponent, aResponse);
+            }
+
+            @Override
+            protected void onResize(AjaxRequestTarget aTarget, double[] aSizes)
+            {
+                if (aSizes.length >= 1 && !leftSidebar.isCollapsed()) {
+                    persistSidebarSize(SidebarStateChangedEvent.Side.LEFT, aSizes[0]);
+                }
+                if (aSizes.length >= 3 && isRightSidebarVisible()) {
+                    persistSidebarSize(SidebarStateChangedEvent.Side.RIGHT, aSizes[2]);
+                }
+            }
+        };
+        splitterContainer.add(splitterBehavior);
+
+        // Create the right sidebar first because it initializes the detailEditor field which the
+        // left sidebar needs as its action handler. The DOM order is dictated by the markup, not
+        // the add() order, so the splitter still sees panes in left/center/right order.
+        splitterContainer.add(createRightSidebar("rightSidebar"));
+
+        leftSidebar = createLeftSidebar("leftSidebar");
+        splitterContainer.add(leftSidebar);
+
         centerArea = new WebMarkupContainer("centerArea");
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
         centerArea.setOutputMarkupPlaceholderTag(true);
-        add(centerArea);
+        splitterContainer.add(centerArea);
 
         centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
 
@@ -195,18 +281,42 @@ public abstract class AnnotationPageBase2
                 LambdaModel.of(() -> actionBarCollapsed ? " visually-hidden" : "")));
         centerArea.add(actionBar);
 
-        add(createRightSidebar("rightSidebar"));
-
-        createAnnotationEditor(MID_EDITOR);
-
-        leftSidebar = createLeftSidebar("leftSidebar");
-        add(leftSidebar);
-
         actionBarToggle = new LambdaAjaxLink("toggleActionBar", this::toggleActionBar);
         actionBarToggle.add(new Icon("toggleActionBarIcon",
                 LambdaModel.of(() -> actionBarCollapsed ? chevron_down_s : chevron_up_s)));
         actionBarToggle.setOutputMarkupId(true);
         centerArea.add(actionBarToggle);
+
+        createAnnotationEditor(MID_EDITOR);
+    }
+
+    private void persistSidebarSize(SidebarStateChangedEvent.Side aSide, double aSize)
+    {
+        var project = getProject();
+        if (project == null) {
+            return;
+        }
+        if (aSize < AnnotationPreference.SIDEBAR_SIZE_MIN
+                || aSize > AnnotationPreference.SIDEBAR_SIZE_MAX) {
+            return;
+        }
+
+        var sessionOwner = userRepository.getCurrentUser();
+        var layoutState = preferencesService.loadTraitsForUserAndProject(KEY_LAYOUT_STATE,
+                sessionOwner, project);
+        var sessionPrefs = getModelObject().getPreferences();
+        switch (aSide) {
+        case LEFT:
+            layoutState.setSidebarSizeLeft(aSize);
+            sessionPrefs.setSidebarSizeLeft(aSize);
+            break;
+        case RIGHT:
+            layoutState.setSidebarSizeRight(aSize);
+            sessionPrefs.setSidebarSizeRight(aSize);
+            break;
+        }
+        preferencesService.saveTraitsForUserAndProject(KEY_LAYOUT_STATE, sessionOwner, project,
+                layoutState);
     }
 
     private void toggleActionBar(AjaxRequestTarget aTarget)
@@ -221,6 +331,19 @@ public abstract class AnnotationPageBase2
         preferencesService.saveTraitsForUserAndProject(KEY_LAYOUT_STATE, sessionOwner, project,
                 layoutState);
         aTarget.add(actionBar, actionBarToggle);
+    }
+
+    @OnEvent
+    public void onSidebarStateChanged(SidebarStateChangedEvent aEvent)
+    {
+        if (aEvent.getSide() != SidebarStateChangedEvent.Side.LEFT) {
+            return;
+        }
+
+        // Re-render the splitter so its renderHead recomputes the panes config
+        // (left pane fixed and non-resizable when collapsed; restored otherwise).
+        splitterBehavior.destroy(aEvent.getTarget());
+        aEvent.getTarget().add(splitterContainer);
     }
 
     @Override
@@ -388,27 +511,29 @@ public abstract class AnnotationPageBase2
 
     private SidebarPanel createLeftSidebar(String aId)
     {
-        return new SidebarPanel(aId,
-                getModel().map(AnnotatorState::getPreferences)
-                        .map(AnnotationPreference::getSidebarSizeLeft),
-                detailEditor, () -> getEditorCas(), AnnotationPageBase2.this);
+        return new SidebarPanel(aId, detailEditor, () -> getEditorCas(),
+                AnnotationPageBase2.this);
     }
 
     private WebMarkupContainer createRightSidebar(String aId)
     {
         var rightSidebar = new WebMarkupContainer(aId);
         rightSidebar.setOutputMarkupPlaceholderTag(true);
-        // Override sidebar width from preferences
-        rightSidebar.add(new AttributeModifier("style",
-                LoadableDetachableModel.of(() -> String.format("flex-basis: %d%%;",
-                        getModelObject().getPreferences().getSidebarSizeRight()))));
+
         detailEditor = createDetailEditor();
         rightSidebar.add(detailEditor);
-        rightSidebar.add(visibleWhen(getModel() //
-                .map(AnnotatorState::getAnnotationLayers) //
-                .map(layers -> layers.stream()
-                        .anyMatch(l -> SpanLayerSupport.TYPE.equals(l.getType())))));
+        rightSidebar.add(visibleWhen(this::isRightSidebarVisible));
         return rightSidebar;
+    }
+
+    private boolean isRightSidebarVisible()
+    {
+        var state = getModelObject();
+        if (state == null) {
+            return false;
+        }
+        var layers = state.getSelectableLayers();
+        return layers != null && !layers.isEmpty();
     }
 
     @Override
@@ -606,7 +731,9 @@ public abstract class AnnotationPageBase2
             if (aTarget != null) {
                 // Update URL for current document
                 updateUrlFragment(aTarget);
-                WicketUtil.refreshPage(aTarget, getPage());
+                // WicketUtil.refreshPage(aTarget, getPage());
+                splitterBehavior.destroy(aTarget);
+                aTarget.add(splitterContainer);
             }
 
             LOG.trace("Document opened {}@{}", state.getUser(), state.getDocument());

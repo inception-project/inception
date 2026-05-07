@@ -33,11 +33,11 @@
 }
 
 .k-splitbar {
-    background-color: var(--bs-secondary-border-subtle) !important;
+    background-color: var(--bs-body-bg) !important;
 }
 
 .k-splitbar .k-resize-handle {
-    background-color: var(--bs-body-bg) !important;
+    background-color: var(--bs-secondary-border-subtle) !important;
 }
 
 // Adjust the Kendo dropdowns (i.e. the combo box) to use less vertical space and be more in line

@@ -17,18 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
-import static java.lang.String.format;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -50,15 +46,13 @@ public class SidebarPanel
     private AnnotationPageBase2 annotationPage;
     private SidebarTabbedPanel<SidebarTab> tabsPanel;
 
-    public SidebarPanel(String aId, IModel<Integer> aWidthModel,
-            final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider,
-            AnnotationPageBase2 aAnnotationPage)
+    public SidebarPanel(String aId, final AnnotationActionHandler aActionHandler,
+            final CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
     {
         super(aId);
 
         Validate.notNull(aActionHandler, "Action handler must not be null");
 
-        setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
 
         actionHandler = aActionHandler;
@@ -71,12 +65,11 @@ public class SidebarPanel
 
         add(new AttributeAppender("class",
                 LoadableDetachableModel.of(() -> tabsPanel.isExpanded() ? "" : "collapsed"), " "));
+    }
 
-        // Override sidebar width from preferences
-        add(new AttributeModifier("style",
-                LoadableDetachableModel.of(() -> tabsPanel.isExpanded()
-                        ? format("flex-basis: %d%%;", aWidthModel.orElse(20).getObject())
-                        : "")));
+    public boolean isCollapsed()
+    {
+        return !tabsPanel.isExpanded();
     }
 
     @Override

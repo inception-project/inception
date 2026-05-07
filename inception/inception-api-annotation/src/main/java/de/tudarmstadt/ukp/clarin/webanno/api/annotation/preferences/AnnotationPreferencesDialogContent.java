@@ -235,8 +235,8 @@ public class AnnotationPreferencesDialogContent
         // Import current settings from the annotator
         var model = new Preferences();
         model.windowSize = Math.max(prefs.getWindowSize(), 1);
-        model.sidebarSizeLeft = prefs.getSidebarSizeLeft();
-        model.sidebarSizeRight = prefs.getSidebarSizeRight();
+        model.sidebarSizeLeft = (int) Math.round(prefs.getSidebarSizeLeft());
+        model.sidebarSizeRight = (int) Math.round(prefs.getSidebarSizeRight());
         model.fontZoom = prefs.getFontZoom();
         model.scrollPage = prefs.isScrollPage();
         model.colorPerLayer = prefs.getColorPerLayer();
