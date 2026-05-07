@@ -80,9 +80,8 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     {
         expanded = !expanded;
         saveSidebarState();
-        send(this, BUBBLE,
-                new SidebarStateChangedEvent(aTarget, SidebarStateChangedEvent.Side.LEFT,
-                        !expanded));
+        send(this, BUBBLE, new SidebarStateChangedEvent(aTarget, SidebarStateChangedEvent.Side.LEFT,
+                !expanded));
     }
 
     public boolean isExpanded()

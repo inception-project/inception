@@ -932,6 +932,51 @@
       </build>
     </profile>
     <profile>
+      <id>spotless</id>
+      <activation>
+        <property>
+          <name>!m2e.version</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.diffplug.spotless</groupId>
+            <artifactId>spotless-maven-plugin</artifactId>
+          </plugin>
+        </plugins>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>com.diffplug.spotless</groupId>
+              <artifactId>spotless-maven-plugin</artifactId>
+              <version>2.46.1</version>
+              <inherited>true</inherited>
+              <configuration>
+                <java>
+                  <eclipse>
+                    <version>4.39</version>
+                    <file>${maven.multiModuleProjectDirectory}/inception/inception-build/src/main/resources/inception/DKProStyle_latest.xml</file>
+                  </eclipse>
+                  <removeUnusedImports/>
+                  <endWithNewline/>
+                </java>
+              </configuration>
+              <executions>
+                <execution>
+                  <id>spotless-check</id>
+                  <phase>verify</phase>
+                  <goals>
+                    <goal>check</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+    <profile>
       <id>doc-only</id>
       <properties>
         <mdep.analyze.skip>true</mdep.analyze.skip>
@@ -940,6 +985,7 @@
         <rat.skip>true</rat.skip>
         <maven.buildNumber.skip>true</maven.buildNumber.skip>
         <checkstyle.skip>true</checkstyle.skip>
+        <spotless.check.skip>true</spotless.check.skip>
         <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
         <maven.war.skip>true</maven.war.skip>
         <remoteresources.skip>true</remoteresources.skip>

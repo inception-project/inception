@@ -237,9 +237,8 @@ public abstract class AnnotationPageBase2
                             .set("max", maxSize);
                 }
                 else {
-                    rightPane = new Options("size",
-                            Options.asString(RIGHT_SIDEBAR_HIDDEN_SIZE)) //
-                                    .set("resizable", false);
+                    rightPane = new Options("size", Options.asString(RIGHT_SIDEBAR_HIDDEN_SIZE)) //
+                            .set("resizable", false);
                 }
                 setOption("panes", leftPane, //
                         new Options(), //
@@ -511,8 +510,7 @@ public abstract class AnnotationPageBase2
 
     private SidebarPanel createLeftSidebar(String aId)
     {
-        return new SidebarPanel(aId, detailEditor, () -> getEditorCas(),
-                AnnotationPageBase2.this);
+        return new SidebarPanel(aId, detailEditor, () -> getEditorCas(), AnnotationPageBase2.this);
     }
 
     private WebMarkupContainer createRightSidebar(String aId)

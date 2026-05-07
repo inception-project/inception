@@ -32,8 +32,8 @@ import org.wicketstuff.kendo.ui.widget.splitter.SplitterBehavior;
  * A {@link SplitterBehavior} that additionally reports pane size changes back to the server via an
  * Ajax callback. Subclasses implement {@link #onResize(AjaxRequestTarget, double[])} to react.
  * <p>
- * Sizes are reported as fractional percentages of the splitter's total width (or height), one
- * entry per pane, in DOM order. The callback is invoked only when the size vector actually changes
+ * Sizes are reported as fractional percentages of the splitter's total width (or height), one entry
+ * per pane, in DOM order. The callback is invoked only when the size vector actually changes
  * compared to the previous report, so layout reflows do not generate spurious requests.
  */
 public abstract class AjaxSplitterBehavior
@@ -87,8 +87,8 @@ public abstract class AjaxSplitterBehavior
             @Override
             protected void respond(AjaxRequestTarget aTarget)
             {
-                var raw = aComponent.getRequest().getRequestParameters()
-                        .getParameterValue("sizes").toString("");
+                var raw = aComponent.getRequest().getRequestParameters().getParameterValue("sizes")
+                        .toString("");
                 if (raw.isEmpty()) {
                     return;
                 }
@@ -139,8 +139,7 @@ public abstract class AjaxSplitterBehavior
         aResponse.render(JavaScriptHeaderItem.forReference(AjaxSplitterJavaScriptReference.get()));
 
         var script = String.format("initInceptionAjaxSplitter(%s, %s, %s);",
-                Options.asString(selector),
-                Options.asString(resizeBehavior.getCallbackUrl()),
+                Options.asString(selector), Options.asString(resizeBehavior.getCallbackUrl()),
                 Options.asString(orientation.optionValue()));
         aResponse.render(OnDomReadyHeaderItem.forScript(script));
     }

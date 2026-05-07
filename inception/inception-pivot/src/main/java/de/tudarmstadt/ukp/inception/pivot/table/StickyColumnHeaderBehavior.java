@@ -46,37 +46,37 @@ public class StickyColumnHeaderBehavior
         super.renderHead(component, response);
 
         var script = """
-                     (function() {
-                     var table = document.querySelector('#%s');
-                     if (!table) return;
+                (function() {
+                var table = document.querySelector('#%s');
+                if (!table) return;
 
-                     var targets = document.querySelectorAll('%s');
-                     if (!targets.length) return;
+                var targets = document.querySelectorAll('%s');
+                if (!targets.length) return;
 
-                     function updateStickyLeft() {
-                         var thead = table.querySelector('thead tr:first-child th:first-child');
-                         if (!thead) return;
-                         var width = thead.getBoundingClientRect().width;
-                         targets.forEach(function(el) {
-                             el.style.position = 'sticky';
-                             el.style.left = width + 'px';
-                         });
-                     }
+                function updateStickyLeft() {
+                    var thead = table.querySelector('thead tr:first-child th:first-child');
+                    if (!thead) return;
+                    var width = thead.getBoundingClientRect().width;
+                    targets.forEach(function(el) {
+                        el.style.position = 'sticky';
+                        el.style.left = width + 'px';
+                    });
+                }
 
-                     // Initial calculation
-                     updateStickyLeft();
+                // Initial calculation
+                updateStickyLeft();
 
-                     // Observe changes in thead size
-                     if (window.ResizeObserver) {
-                         var observer = new ResizeObserver(updateStickyLeft);
-                         var thead = table.querySelector('thead');
-                         if (thead) observer.observe(thead);
-                     }
+                // Observe changes in thead size
+                if (window.ResizeObserver) {
+                    var observer = new ResizeObserver(updateStickyLeft);
+                    var thead = table.querySelector('thead');
+                    if (thead) observer.observe(thead);
+                }
 
-                     // Also recalc on window resize
-                     window.addEventListener('resize', updateStickyLeft);
-                     })();
-                     """;
+                // Also recalc on window resize
+                window.addEventListener('resize', updateStickyLeft);
+                })();
+                """;
         var js = String.format(script, component.getMarkupId(), targetSelector);
 
         response.render(OnDomReadyHeaderItem.forScript(js));
