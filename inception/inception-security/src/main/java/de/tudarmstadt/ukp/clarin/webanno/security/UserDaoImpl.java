@@ -28,6 +28,7 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEU
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCharacterMatching;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveDuplicateCharacters;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
+import static jakarta.persistence.FlushModeType.COMMIT;
 import static java.lang.String.join;
 import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.containsAny;
@@ -52,6 +53,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
@@ -223,17 +225,61 @@ public class UserDaoImpl
     @Transactional
     public User update(User aUser)
     {
-        return entityManager.merge(aUser);
+        // Read previous roles directly from DB so we can detect role removal regardless of
+        // whether aUser is detached or already in the persistence context.
+        var oldRoles = getCommittedRoles(aUser.getUsername());
+        var merged = entityManager.merge(aUser);
+
+        // If any role was *removed*, kick the affected user out of all their sessions so the
+        // revocation takes effect immediately. Pure role grants don't trigger this — the user
+        // can keep working and only needs to re-login to start exercising the new role.
+        // Don't kick the admin doing the change out of their own session.
+        var removed = EnumSet.copyOf(oldRoles);
+        removed.removeAll(merged.getRoles());
+        if (!removed.isEmpty() && !Objects.equals(getCurrentUsername(), merged.getUsername())) {
+            expireAllSessionsFor(merged.getUsername());
+        }
+
+        return merged;
+    }
+
+    /**
+     * Expire all active sessions for the given username so any pending authentication-derived state
+     * (roles, account validity) takes effect on the next request. Sessions are looked up by
+     * username because {@code SpringAuthenticatedWebSession} registers sessions with
+     * {@code Authentication.getName()} regardless of the authentication mechanism (form,
+     * OAuth2/OIDC, SAML2, pre-auth) — so a username-keyed lookup covers all login methods.
+     */
+    private void expireAllSessionsFor(String aUsername)
+    {
+        if (sessionRegistry == null) {
+            return;
+        }
+        sessionRegistry.getAllSessions(aUsername, false).forEach(SessionInformation::expireNow);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<Role> getCommittedRoles(String aUsername)
+    {
+        // FlushModeType.COMMIT: do not auto-flush the persistence context before this query.
+        // The caller may have already mutated the managed user entity in memory; we want the
+        // DB-committed roles, not the about-to-be-flushed in-memory ones, so we can detect a
+        // role removal by comparing the pre-update DB state to the post-merge entity state.
+        var rows = entityManager
+                .createQuery("SELECT r FROM User u JOIN u.roles r WHERE u.username = :u",
+                        Role.class)
+                .setParameter("u", aUsername) //
+                .setFlushMode(COMMIT) //
+                .getResultList();
+        return rows.isEmpty() ? EnumSet.noneOf(Role.class) : EnumSet.copyOf(rows);
     }
 
     @Override
     @Transactional
     public int delete(String aUsername)
     {
-        if (sessionRegistry != null) {
-            sessionRegistry.getAllSessions(aUsername, false)
-                    .forEach(_session -> _session.expireNow());
-        }
+        expireAllSessionsFor(aUsername);
 
         var toDelete = get(aUsername);
         if (toDelete == null) {
@@ -249,10 +295,7 @@ public class UserDaoImpl
     @Transactional
     public void delete(User aUser)
     {
-        if (sessionRegistry != null) {
-            sessionRegistry.getAllSessions(aUser.getUsername(), false)
-                    .forEach(_session -> _session.expireNow());
-        }
+        expireAllSessionsFor(aUser.getUsername());
 
         entityManager.remove(entityManager.merge(aUser));
     }
@@ -285,8 +328,7 @@ public class UserDaoImpl
             List<User> usersInRealm = listAllUsersFromRealm(aRealm);
 
             for (User user : usersInRealm) {
-                sessionRegistry.getAllSessions(user.getUsername(), false)
-                        .forEach(_session -> _session.expireNow());
+                expireAllSessionsFor(user.getUsername());
                 entityManager.remove(user);
             }
 
