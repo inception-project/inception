@@ -57,7 +57,9 @@ public class NumberFeatureEditor<T extends Number>
             break;
         }
         case CAS.TYPE_NAME_FLOAT: {
-            field = new NumberTextField<>("value", Float.class);
+            var options = NumberFeatureTraitsEditor.buildNumericOptions(Float.class,
+                    aTraits.getDecimals());
+            field = new NumberTextField<>("value", Float.class, options);
             if (aTraits.isLimited()) {
                 field.setMinimum(aTraits.getMinimum().floatValue());
                 field.setMaximum(aTraits.getMaximum().floatValue());

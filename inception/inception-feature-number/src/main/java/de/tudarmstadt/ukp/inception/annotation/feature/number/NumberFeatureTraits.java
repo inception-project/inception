@@ -34,6 +34,8 @@ public class NumberFeatureTraits
 {
     private static final long serialVersionUID = -2395185084802071593L;
 
+    public static final int MAX_DECIMALS = 10;
+
     public enum EditorType
     {
         @JsonEnumDefaultValue
@@ -58,6 +60,7 @@ public class NumberFeatureTraits
     private Number minimum = 0;
     private Number maximum = 0;
     private EditorType editorType = SPINNER;
+    private int decimals = 3;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Number defaultValue;
@@ -105,6 +108,16 @@ public class NumberFeatureTraits
     public void setEditorType(EditorType aEditorType)
     {
         editorType = aEditorType;
+    }
+
+    public int getDecimals()
+    {
+        return decimals;
+    }
+
+    public void setDecimals(int aDecimals)
+    {
+        decimals = Math.max(0, Math.min(MAX_DECIMALS, aDecimals));
     }
 
     public Number getDefaultValue()
