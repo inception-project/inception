@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 
 public class FullProjectExportRequest
     extends ProjectExportRequest_ImplBase
@@ -29,32 +28,18 @@ public class FullProjectExportRequest
     private static final String FILENAME_PREFIX = "project";
     public static final String FORMAT_AUTO = "AUTO";
 
+    private String title;
     private String format;
     private boolean includeInProgress;
-    private String filenameTag;
+    private boolean obfuscate;
 
-    /**
-     * Create a new project export request. Use this constructor if the project is not known yet or
-     * may change. Make sure to set the project via the setter before starting the export.
-     * 
-     * @param aFormat
-     *            the ID of the export format.
-     * @param aIncludeInProgress
-     *            whether to include documents that are
-     *            {@link SourceDocumentState#CURATION_IN_PROGRESS}
-     */
-    public FullProjectExportRequest(String aFormat, boolean aIncludeInProgress)
+    private FullProjectExportRequest(Builder aBuilder)
     {
-        super(null);
-        format = aFormat;
-        includeInProgress = aIncludeInProgress;
-    }
-
-    public FullProjectExportRequest(Project aProject, String aFormat, boolean aIncludeInProgress)
-    {
-        super(aProject);
-        format = aFormat;
-        includeInProgress = aIncludeInProgress;
+        super(aBuilder.project);
+        title = aBuilder.title;
+        format = aBuilder.format;
+        includeInProgress = aBuilder.includeInProgress;
+        obfuscate = aBuilder.obfuscate;
     }
 
     /**
@@ -78,19 +63,14 @@ public class FullProjectExportRequest
         return format;
     }
 
-    /**
-     * @param aIncludeInProgress
-     *            whether to include documents that are
-     *            {@link SourceDocumentState#CURATION_IN_PROGRESS}
-     */
-    public void setIncludeInProgress(boolean aIncludeInProgress)
-    {
-        includeInProgress = aIncludeInProgress;
-    }
-
     public boolean isIncludeInProgress()
     {
         return includeInProgress;
+    }
+
+    public boolean isObfuscate()
+    {
+        return obfuscate;
     }
 
     @Override
@@ -102,10 +82,63 @@ public class FullProjectExportRequest
     @Override
     public String getTitle()
     {
-        StringBuilder sb = new StringBuilder("Project backup");
+        var sb = new StringBuilder(title);
         if (format != null) {
             sb.append(" (" + format + ")");
         }
         return sb.toString();
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private Project project;
+        private String title = "Project export";
+        private String format;
+        private boolean includeInProgress;
+        private boolean obfuscate;
+
+        private Builder()
+        {
+        }
+
+        public Builder withProject(Project aProject)
+        {
+            project = aProject;
+            return this;
+        }
+
+        public Builder withTitle(String aTitle)
+        {
+            title = aTitle;
+            return this;
+        }
+
+        public Builder withFormat(String aFormat)
+        {
+            format = aFormat;
+            return this;
+        }
+
+        public Builder withIncludeInProgress(boolean aIncludeInProgress)
+        {
+            includeInProgress = aIncludeInProgress;
+            return this;
+        }
+
+        public Builder withObfuscate(boolean aObfuscate)
+        {
+            obfuscate = aObfuscate;
+            return this;
+        }
+
+        public FullProjectExportRequest build()
+        {
+            return new FullProjectExportRequest(this);
+        }
     }
 }

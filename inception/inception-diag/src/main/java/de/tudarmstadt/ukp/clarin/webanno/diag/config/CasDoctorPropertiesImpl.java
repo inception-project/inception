@@ -26,8 +26,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class CasDoctorPropertiesImpl
     implements CasDoctorProperties
 {
+    /**
+     * Extra checks to perform when a CAS is saved (also on load if any repairs are enabled).
+     */
     private List<String> checks = Collections.emptyList();
+
+    /** Repairs to be performed when a CAS is loaded - order matters! */
     private List<String> repairs = Collections.emptyList();
+
+    /** If the extra checks trigger an exception. */
     private boolean fatal = true;
     // private boolean forceReleaseBehavior = false;
 

@@ -89,6 +89,10 @@ public class KeyBindingsConfigurationPanel
         var fs = featureSupportRegistry.findExtension(feature).orElseThrow();
         featureState = Model.of(new FeatureState(VID.NONE_ID, feature, null));
         if (feature.getTagset() != null) {
+            // Make sure editor is not hidden if hideUnconstraintFeature is enabled
+            featureState.getObject().indicator.setAffected(true);
+            featureState.getObject().indicator.rulesApplied();
+            // Load tagset
             featureState.getObject().tagset = schemaService
                     .listTagsReorderable(feature.getTagset());
         }
@@ -147,7 +151,7 @@ public class KeyBindingsConfigurationPanel
         // to the list
         var feature = getModelObject();
         FeatureSupport<?> fs = featureSupportRegistry.findExtension(feature).orElseThrow();
-        keyBinding.setValue(fs.unwrapFeatureValue(feature, null, featureState.getObject().value));
+        keyBinding.setValue(fs.unwrapFeatureValue(feature, featureState.getObject().value));
         keyBindings.getObject().add(keyBinding);
 
         // Clear form and value editor

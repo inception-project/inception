@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+  <Appenders>
+    <Console name="ConsoleAppender" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{HH:mm:ss} %level{length=5} %25logger{1}:%-4L - [%thread] %msg%n" />
+    </Console>
+  </Appenders>
+  <Loggers>
+    <Logger name="de.tudarmstadt" level="INFO"/>
+    <Root level="warn">
+      <AppenderRef ref="ConsoleAppender" />
+    </Root>
+  </Loggers>
+</Configuration>

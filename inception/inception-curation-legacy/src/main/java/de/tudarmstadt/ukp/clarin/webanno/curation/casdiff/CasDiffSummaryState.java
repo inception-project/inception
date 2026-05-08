@@ -21,8 +21,8 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 
 import java.util.HashSet;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosition;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationPosition;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanPosition;
 
 /**
  * An enumeration to differentiate sentences in a document with different colors so as to easily

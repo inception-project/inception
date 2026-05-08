@@ -23,8 +23,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class DocumentImportExportServicePropertiesImpl
     implements DocumentImportExportServiceProperties
 {
+    /**
+     * Whether to run the CAS Doctor on every imported document. {@code AUTO} enables checks for
+     * formats that give the user a lot of flexibility but also have great potential for importing
+     * inconsistent data. {@code OFF} disables all checks on import; {@code ON} checks all formats,
+     * even the more rigid ones.
+     */
     private CasDoctorOnImportPolicy runCasDoctorOnImport = CasDoctorOnImportPolicy.AUTO;
+
+    /** Token-count limit for imported documents. {@code 0} means no limit. */
     private int maxTokens = 2_000_000;
+
+    /** Sentence-count limit for imported documents. {@code 0} means no limit. */
     private int maxSentences = 20_000;
 
     @Override

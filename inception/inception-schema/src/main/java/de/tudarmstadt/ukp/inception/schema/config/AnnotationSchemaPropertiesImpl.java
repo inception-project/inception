@@ -34,7 +34,21 @@ public class AnnotationSchemaPropertiesImpl
     implements AnnotationSchemaProperties
 {
     private boolean tokenLayerEditable;
+
+    /**
+     * Enable/disable editing sentences.
+     * <p>
+     * Highly experimental. Expect strange things to happen if you start adding/removing/changing
+     * segmentation annotations (i.e. sentences or tokens).
+     */
     private boolean sentenceLayerEditable;
+
+    /**
+     * Enable/disable cross-layer relations.
+     * <p>
+     * Experimental feature. While this feature introduces a new level of flexibility, it can also
+     * interact with existing features in unexpected and untested ways.
+     */
     private boolean crossLayerRelationsEnabled;
 
     @ManagedAttribute

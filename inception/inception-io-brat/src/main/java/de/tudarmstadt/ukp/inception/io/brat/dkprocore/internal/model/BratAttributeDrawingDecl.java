@@ -21,7 +21,7 @@ import java.io.IOException;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonGenerator;
 
 public class BratAttributeDrawingDecl
     extends BratDrawingDecl
@@ -42,12 +42,12 @@ public class BratAttributeDrawingDecl
     @Override
     public void write(JsonGenerator aJG) throws IOException
     {
-        aJG.writeFieldName("values");
+        aJG.writeName("values");
         aJG.writeStartObject();
         for (String value : attributeDecl.getValues()) {
-            aJG.writeFieldName(value);
+            aJG.writeName(value);
             aJG.writeStartObject();
-            aJG.writeStringField("glyph", value);
+            aJG.writeStringProperty("glyph", value);
             aJG.writeEndObject();
         }
         aJG.writeEndObject();

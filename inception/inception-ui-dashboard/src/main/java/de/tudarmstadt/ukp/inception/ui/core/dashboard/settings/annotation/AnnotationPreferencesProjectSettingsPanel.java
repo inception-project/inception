@@ -25,6 +25,7 @@ import org.apache.wicket.model.IModel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.preferences.BratAnnotationEditorManagerPrefPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.inception.diam.sidebar.preferences.DiamSidebarFactoryUserPrefsPanel;
 import de.tudarmstadt.ukp.inception.diam.sidebar.preferences.DiamSidebarManagerPrefPanel;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaForm;
@@ -37,26 +38,29 @@ public class AnnotationPreferencesProjectSettingsPanel
     private static final String CID_FORM = "form";
     private static final String CID_SAVE = "save";
     private static final String CID_ANNOTATION_SIDEBAR = "annotationSidebar";
-    private static final String CID_ANNOTATION_EDITOR = "annotationEditor";
+    private static final String CID_ANNOTATION_EDITOR_MANAGER_PREFS = "annotationEditorManagerPrefsPanel";
+    private static final String CID_NAVIGATION_PREFS = "navigationPrefs";
     private static final String CID_BRAT_ANNOTATION_EDITOR_MANAGER_PREFS = "bratAnnotationEditorManagerPrefs";
     private static final String CID_DIAM_ANNOTATION_SIDEBAR_MANAGER_PREFS = "diamAnnotationSidebarManagerPrefs";
+    private static final String CID_DIAM_SIDEBAR_USER_PREFS = "diamSidebarUserPrefs";
     private static final String CID_ANNOTATION_SEARCH = "annotationSearch";
 
-    public AnnotationPreferencesProjectSettingsPanel(String aId, IModel<Project> aProjectModel)
+    public AnnotationPreferencesProjectSettingsPanel(String aId, IModel<Project> aProject)
     {
-        super(aId, aProjectModel);
+        super(aId, aProject);
         setOutputMarkupPlaceholderTag(true);
 
         queue(new LambdaForm<>(CID_FORM));
         queue(new LambdaAjaxButton<>(CID_SAVE, this::actionSave));
 
-        queue(new DefaultAnnotationSidebarStatePanel(CID_ANNOTATION_SIDEBAR, aProjectModel));
-        queue(new DiamSidebarManagerPrefPanel(CID_DIAM_ANNOTATION_SIDEBAR_MANAGER_PREFS,
-                aProjectModel));
-        queue(new DefaultAnnotationEditorStatePanel(CID_ANNOTATION_EDITOR, aProjectModel));
+        queue(new DefaultAnnotationSidebarStatePanel(CID_ANNOTATION_SIDEBAR, aProject));
+        queue(new DiamSidebarManagerPrefPanel(CID_DIAM_ANNOTATION_SIDEBAR_MANAGER_PREFS, aProject));
+        queue(new DiamSidebarFactoryUserPrefsPanel(CID_DIAM_SIDEBAR_USER_PREFS, aProject));
+        queue(new AnnotationEditorManagerPrefsPanel(CID_ANNOTATION_EDITOR_MANAGER_PREFS, aProject));
+        queue(new AnnotationNavigationUserPrefsPanel(CID_NAVIGATION_PREFS, aProject));
         queue(new BratAnnotationEditorManagerPrefPanel(CID_BRAT_ANNOTATION_EDITOR_MANAGER_PREFS,
-                aProjectModel));
-        queue(new AnnotationSearchStatePanel(CID_ANNOTATION_SEARCH, aProjectModel));
+                aProject));
+        queue(new AnnotationSearchStatePanel(CID_ANNOTATION_SEARCH, aProject));
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Void> aDummy)

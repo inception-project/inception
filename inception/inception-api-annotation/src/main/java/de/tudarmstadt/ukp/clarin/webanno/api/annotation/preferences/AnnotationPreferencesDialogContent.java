@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState.KEY_EDITOR_STATE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs.KEY_ANNOTATION_EDITOR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs.KEY_ANCHORING_MODE;
@@ -132,8 +132,8 @@ public class AnnotationPreferencesDialogContent
         fontZoomField.setMaximum(FONT_ZOOM_MAX);
         form.add(fontZoomField);
 
-        var state = preferencesService.loadDefaultTraitsForProject(KEY_EDITOR_STATE,
-                stateModel.getObject().getProject());
+        var state = preferencesService.loadDefaultTraitsForProject(
+                KEY_ANNOTATION_EDITOR_MANAGER_PREFS, stateModel.getObject().getProject());
 
         var editor = new DropDownChoice<Pair<String, String>>("editor");
         editor.setChoiceRenderer(new ChoiceRenderer<>("value"));
@@ -235,8 +235,8 @@ public class AnnotationPreferencesDialogContent
         // Import current settings from the annotator
         var model = new Preferences();
         model.windowSize = Math.max(prefs.getWindowSize(), 1);
-        model.sidebarSizeLeft = prefs.getSidebarSizeLeft();
-        model.sidebarSizeRight = prefs.getSidebarSizeRight();
+        model.sidebarSizeLeft = (int) Math.round(prefs.getSidebarSizeLeft());
+        model.sidebarSizeRight = (int) Math.round(prefs.getSidebarSizeRight());
         model.fontZoom = prefs.getFontZoom();
         model.scrollPage = prefs.isScrollPage();
         model.colorPerLayer = prefs.getColorPerLayer();

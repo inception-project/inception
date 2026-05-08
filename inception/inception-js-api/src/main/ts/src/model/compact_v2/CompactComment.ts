@@ -15,44 +15,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AnnotatedText, Comment, Annotation } from '..'
+import { AnnotatedText, Comment, Annotation } from '..';
 
 /**
  * Represents the endpoint of an arc.
  */
-export type CompactComment = [
-  comment: string,
-  type?: 'I' | 'E'
-]
+export type CompactComment = [comment: string, type?: 'I' | 'E'];
 
-export function unpackCompactComments (doc: AnnotatedText, ann: Annotation, raws: CompactComment[] | undefined): Comment[] {
-  if (!raws) {
-    return []
-  }
-
-  const cookeds : Comment[] = []
-  for (const raw of raws) {
-    const cooked = new Comment()
-    cooked.targetId = ann.vid
-    cooked.target = ann
-    cooked.comment = raw[0]
-    if (raw[1]) {
-      switch (raw[1]) {
-        case 'I':
-          cooked.type = 'info'
-          break
-        case 'E':
-          cooked.type = 'error'
-          break
-        default:
-          console.warn(`Unsupported comment type [${raw[1]}]`)
-      }
-    } else {
-      cooked.type = 'info'
+export function unpackCompactComments(
+    doc: AnnotatedText,
+    ann: Annotation,
+    raws: CompactComment[] | undefined
+): Comment[] {
+    if (!raws) {
+        return [];
     }
 
-    cookeds.push(cooked)
-  }
+    const cookeds: Comment[] = [];
+    for (const raw of raws) {
+        const cooked = new Comment();
+        cooked.targetId = ann.vid;
+        cooked.target = ann;
+        cooked.comment = raw[0];
+        if (raw[1]) {
+            switch (raw[1]) {
+                case 'I':
+                    cooked.type = 'info';
+                    break;
+                case 'E':
+                    cooked.type = 'error';
+                    break;
+                default:
+                    console.warn(`Unsupported comment type [${raw[1]}]`);
+            }
+        } else {
+            cooked.type = 'info';
+        }
 
-  return cookeds
+        cookeds.push(cooked);
+    }
+
+    return cookeds;
 }

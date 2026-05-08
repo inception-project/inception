@@ -36,6 +36,9 @@ public interface SearchService
     List<SearchResult> query(User aUser, Project aProject, String aQuery)
         throws IOException, ExecutionException;
 
+    Map<String, List<SearchResult>> query(SearchQueryRequest aRequest)
+        throws ExecutionException, IOException;
+
     /**
      * @param aUser
      *            the current user
@@ -164,4 +167,16 @@ public interface SearchService
         throws ExecutionException, IOException;
 
     void enqueueReindexTask(Project aProject, User aUser, String aTrigger);
+
+    /**
+     * Upgrades the on-disk Lucene index of the given project to the current Lucene format without
+     * re-indexing the documents. This is much cheaper than a full re-index but only works if the
+     * existing segments are still readable by the running Lucene version.
+     *
+     * @param aProject
+     *            the project whose index should be upgraded
+     * @throws IOException
+     *             if there was an I/O-level problem
+     */
+    void upgradeIndex(Project aProject) throws IOException;
 }

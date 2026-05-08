@@ -33,7 +33,7 @@ public class DocxToCas
 {
     public void loadXml(JCas aJCas, InputStream aInputStream) throws IOException
     {
-        CasXmlHandler handler = new CasXmlHandler(aJCas);
+        var handler = new CasXmlHandler(aJCas);
         handler.captureText(true);
 
         try {

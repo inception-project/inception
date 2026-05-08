@@ -17,26 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.config;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.closesession.CloseSessionActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.AnnotationUndoActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.ChainAnnotationActionUndoSupport;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.FeatureValueActionUndoSupport;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.RelationAnnotationActionUndoSupport;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.SpanAnnotationActionUndoSupport;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableActionSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableAnnotationActionSupport;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UnitAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.layer.LayerVisibilitySidebarFactory;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.undo.AnnotationUndoActionBarExtension;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.servlet.ServletContext;
 
@@ -55,43 +44,6 @@ public class AnnotationUIAutoConfiguration
     public AnnotationUndoActionBarExtension annotationUndoActionBarExtension()
     {
         return new AnnotationUndoActionBarExtension();
-    }
-
-    @Bean
-    public UndoableActionSupportRegistryImpl undoableActionSupportRegistry(
-            @Lazy @Autowired(required = false) List<UndoableAnnotationActionSupport> aExtensions)
-    {
-        return new UndoableActionSupportRegistryImpl(aExtensions);
-    }
-
-    @Bean
-    public SpanAnnotationActionUndoSupport spanAnnotationActionUndoSupport()
-    {
-        return new SpanAnnotationActionUndoSupport();
-    }
-
-    @Bean
-    public UnitAnnotationActionUndoSupport unitAnnotationActionUndoSupport()
-    {
-        return new UnitAnnotationActionUndoSupport();
-    }
-
-    @Bean
-    public RelationAnnotationActionUndoSupport relationAnnotationActionUndoSupport()
-    {
-        return new RelationAnnotationActionUndoSupport();
-    }
-
-    @Bean
-    public ChainAnnotationActionUndoSupport chainAnnotationActionUndoSupport()
-    {
-        return new ChainAnnotationActionUndoSupport();
-    }
-
-    @Bean
-    public FeatureValueActionUndoSupport featureValueActionUndoSupport()
-    {
-        return new FeatureValueActionUndoSupport();
     }
 
     @Bean

@@ -24,7 +24,7 @@ Also, losing the connection through network issues or timeouts does not cause da
 To obtain a local copy of the current document, click on the *Export* button.
 The following dialog will appear:
 
-image::images/annotation_export.jpg[align="center"]
+image::images/annotation_export.png[align="center"]
 
 Choose your preferred format.
 Please take note of the facts that the plain text format does not contain any annotations and that the files in the binary format need to be unpacked before further usage.

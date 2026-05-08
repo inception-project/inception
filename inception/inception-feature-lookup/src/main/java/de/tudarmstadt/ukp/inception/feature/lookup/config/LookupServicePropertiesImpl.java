@@ -34,18 +34,34 @@ public class LookupServicePropertiesImpl
     public static final int HARD_QUERY_CONTEXT_LENGTH = 200;
     public static final int HARD_MIN_RESULTS = 10;
 
+    /** Default maximum number of results returned by a lookup query. */
     private int defaultMaxResults = 1_000;
+
+    /** Hard upper bound on the maximum number of results returned by a lookup query. */
     private int hardMaxResults = 10_000;
 
+    /** Maximum number of entries kept in the lookup cache. */
     private long cacheSize = 100_000;
+
+    /** Time after which entries in the lookup cache expire and are removed. */
     private @DurationUnit(MINUTES) Duration cacheExpireDelay = ofMinutes(15);
+
+    /** Time after which entries in the lookup cache are refreshed in the background. */
     private @DurationUnit(MINUTES) Duration cacheRefreshDelay = ofMinutes(5);
 
+    /** Maximum number of entries kept in the render cache. */
     private long renderCacheSize = 10_000;
+
+    /** Time after which entries in the render cache expire and are removed. */
     private @DurationUnit(MINUTES) Duration renderCacheExpireDelay = ofMinutes(10);
+
+    /** Time after which entries in the render cache are refreshed in the background. */
     private @DurationUnit(MINUTES) Duration renderCacheRefreshDelay = ofMinutes(1);
 
+    /** Timeout for establishing a connection to the remote lookup service. */
     private Duration connectTimeout = Duration.of(10, SECONDS);
+
+    /** Timeout for reading a response from the remote lookup service. */
     private Duration readTimeout = Duration.of(10, SECONDS);
 
     @Override

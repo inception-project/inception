@@ -229,10 +229,11 @@ image::images/layer_properties.png[align="center"]
 | Whether the text covered by the annotation is shown in the popup panel that appears when hovering with the mouse over an annotation label. 
 Note that this popup may not be supported by all annotation editors.
 
-| Render mode (relation)
-| Determines when to render relations as arcs. 
-Possible settings are **Always** (always render arcs), **Never** (never render arcs), and **When selected** (render arcs only when one of the relation endpoints or the relation itself is selected). 
-Note that this setting is only available for relation layers.
+| Render mode
+_(relation / chain)_
+| Determines when to render relation or chain arcs. 
+Possible settings are **Always** (always render arcs), **Never** (never render arcs), and **When selected** (render arcs only when one of the relation endpoints or the relation itself is selected - or in case of chains, when some element of the chain is selected). 
+Note that this setting is only available for relation and chain layers.
 
 | Validation
 | When pre-annotated data is imported or when the  behaviors settings are changed, it is possible that annotations exist which are not conforming to the current behavior settings. This setting controls when a validation of annotations is performed. Possible settings are **Never** (no validation when a user marks a document as finished) and **Always** (validation is performed when a user marks a document as finished). Mind that changing the document state via the Monitoring page does not trigger a validation. Also, problematic annotations are highlighted using an error marker in the annotation interface. **NOTE:** the default setting for new projects/layers is **Always**, but for any existing projects or for projects imported from versions of {product-name} where this setting did not exist yet, the setting is initialized with **Never**.

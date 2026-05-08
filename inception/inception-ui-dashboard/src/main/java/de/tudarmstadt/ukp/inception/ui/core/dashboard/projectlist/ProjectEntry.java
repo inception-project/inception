@@ -38,13 +38,26 @@ public class ProjectEntry
 {
     private static final long serialVersionUID = -5715212313329449759L;
 
+    private boolean selected;
     private final Project project;
     private final List<PermissionLevel> levels;
 
     public ProjectEntry(Project aProject, Collection<PermissionLevel> aLevels)
     {
         project = aProject;
-        levels = aLevels.stream().sorted(comparing(PermissionLevel::getName)).collect(toList());
+        levels = aLevels.stream() //
+                .sorted(comparing(PermissionLevel::getName)) //
+                .collect(toList());
+    }
+
+    public boolean isSelected()
+    {
+        return selected;
+    }
+
+    public void setSelected(boolean aSelected)
+    {
+        selected = aSelected;
     }
 
     public String getName()

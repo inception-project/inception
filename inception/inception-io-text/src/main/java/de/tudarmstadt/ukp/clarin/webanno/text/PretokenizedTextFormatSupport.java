@@ -17,15 +17,22 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.text;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 /**
  * <p>
@@ -34,7 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguratio
  * </p>
  */
 public class PretokenizedTextFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     public static final String ID = "pretokenized-textlines";
     public static final String NAME = "Plain text (space-separated tokens, one sentence per line)";
@@ -55,6 +62,18 @@ public class PretokenizedTextFormatSupport
     public boolean isReadable()
     {
         return true;
+    }
+
+    @Override
+    public InputStream obfuscate(SourceDocument aDocument, InputStream aSource) throws IOException
+    {
+        if (aSource == null) {
+            return null;
+        }
+
+        var s = new String(aSource.readAllBytes(), UTF_8);
+        var ob = TextUtils.obfuscate(s);
+        return new ByteArrayInputStream(ob.getBytes(UTF_8));
     }
 
     @Override

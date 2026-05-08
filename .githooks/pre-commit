@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#
+# Pre-commit hook: runs Spotless and Checkstyle on the Maven modules that
+# contain staged Java files. Bypass with `git commit --no-verify` if needed.
+#
+
+set -euo pipefail
+
+# Collect staged Java files (Added / Copied / Modified / Renamed targets).
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR -- '*.java' || true)
+if [ -z "$STAGED" ]; then
+    exit 0
+fi
+
+# Derive the set of Maven modules. Each staged file lives under
+# <module-path>/src/..., so the part before "/src/" is the module path that
+# Maven understands via -pl.
+MODULES=$(printf '%s\n' "$STAGED" | awk -F'/src/' 'NF>1 {print $1}' | sort -u | paste -sd, -)
+if [ -z "$MODULES" ]; then
+    exit 0
+fi
+
+echo "[pre-commit] Verifying Spotless + Checkstyle on modules:"
+printf '%s\n' "$MODULES" | tr ',' '\n' | sed 's/^/  - /'
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT"
+
+if ! mvn -q -pl "$MODULES" -Pspotless,checkstyle spotless:check checkstyle:check; then
+    cat >&2 <<'EOF'
+
+[pre-commit] Verification failed.
+  - Run `mvn -Pspotless spotless:apply` to auto-fix formatting.
+  - Re-stage the changes and commit again.
+  - To bypass this hook for an in-progress commit, use `git commit --no-verify`.
+EOF
+    exit 1
+fi

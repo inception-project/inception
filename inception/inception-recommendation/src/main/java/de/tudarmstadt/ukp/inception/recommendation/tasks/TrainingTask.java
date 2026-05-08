@@ -117,8 +117,7 @@ public class TrainingTask
         try (var progress = getMonitor().openScope("recommenders", activeRecommenders.size())) {
             for (var activeRecommender : activeRecommenders) {
                 progress.update(up -> up.increment() //
-                        .addMessage(LogMessage.info(this, "%s",
-                                activeRecommender.getRecommender().getName())));
+                        .status("%s", activeRecommender.getRecommender().getName()).statusToLog());
 
                 // Make sure we have the latest recommender config from the DB - the one from
                 // the active recommenders list may be outdated
@@ -188,6 +187,7 @@ public class TrainingTask
         var ctx = engine
                 .newContext(recommenderService.getContext(sessionOwner.getUsername(), aRecommender)
                         .orElse(RecommenderContext.emptyContext()));
+        ctx.setProject(aRecommender.getProject());
         ctx.setUser(sessionOwner);
 
         // If engine does not support training, mark engine ready and skip to
@@ -414,7 +414,8 @@ public class TrainingTask
 
         appEventPublisher.publishEvent(RecommenderTaskNotificationEvent
                 .builder(this, getProject(), getMandatorySessionOwner().getUsername()) //
-                .withMessage(LogMessage.error(this, "Training failed with %s", e.getMessage()))
+                .withMessage(LogMessage.error(this, "Training [%s] failed: %s",
+                        recommender.getName(), e.getMessage()))
                 .build());
     }
 

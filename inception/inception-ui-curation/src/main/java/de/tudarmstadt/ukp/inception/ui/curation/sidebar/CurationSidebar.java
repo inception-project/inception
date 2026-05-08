@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog.State;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
@@ -91,6 +92,7 @@ public class CurationSidebar
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean CurationSessionService curationSessionService;
     private @SpringBean CurationSidebarService curationSidebarService;
     private @SpringBean CurationService curationService;
     private @SpringBean CurationMergeService curationMergeService;
@@ -234,7 +236,7 @@ public class CurationSidebar
             curationTargetChoice.setModel(Model.of(curationTargets.get(0)));
         }
         else {
-            curationTargetChoice.setModel(Model.of(curationSidebarService.getCurationTarget(
+            curationTargetChoice.setModel(Model.of(curationSessionService.getCurationTarget(
                     userRepository.getCurrentUsername(), getModelObject().getProject().getId())));
         }
         curationTargetChoice.setChoices(curationTargets);
@@ -255,29 +257,43 @@ public class CurationSidebar
 
     private boolean isSessionActive()
     {
-        return curationSidebarService.existsSession(userRepository.getCurrentUsername(),
+        return curationSessionService.existsSession(userRepository.getCurrentUsername(),
                 getModelObject().getProject().getId());
     }
 
+    /**
+     * @deprecated Curation is a permanent feature on the curation page, so it no longer needs to be
+     *             startable/stoppable as it way on the annotation page. We keep this only as long
+     *             until we have resolved how to deal with changing the curation target without
+     *             creating inconsistencies.
+     */
+    @Deprecated
     private void actionStartSession(AjaxRequestTarget aTarget, Form<?> form)
     {
         var sessionOwner = userRepository.getCurrentUsername();
         var state = getModelObject();
         var project = state.getProject().getId();
 
-        curationSidebarService.startSession(sessionOwner, state.getProject(),
+        curationSessionService.startSession(sessionOwner, state.getProject(),
                 !curationTargetChoice.getModelObject().equals(CURATION_USER));
-        curationSidebarService.setDefaultSelectedUsersForDocument(sessionOwner,
+        curationSessionService.setDefaultSelectedUsersForDocument(sessionOwner,
                 getModelObject().getDocument());
 
         showMerged.setModelObject(curationSidebarService.isShowAll(sessionOwner, project));
 
-        state.setUser(curationSidebarService.getCurationTargetUser(sessionOwner, project));
+        state.setUser(curationSessionService.getCurationTargetUser(sessionOwner, project));
         state.getSelection().clear();
 
         getAnnotationPage().actionLoadDocument(aTarget);
     }
 
+    /**
+     * @deprecated Curation is a permanent feature on the curation page, so it no longer needs to be
+     *             startable/stoppable as it way on the annotation page. We keep this only as long
+     *             until we have resolved how to deal with changing the curation target without
+     *             creating inconsistencies.
+     */
+    @Deprecated
     private void actionStopSession(AjaxRequestTarget aTarget)
     {
         var state = getModelObject();
@@ -286,7 +302,7 @@ public class CurationSidebar
         state.setUser(userRepository.getCurrentUser());
         state.getSelection().clear();
 
-        curationSidebarService.closeSession(sessionOwner.getUsername(), state.getProject().getId());
+        curationSessionService.closeSession(sessionOwner.getUsername(), state.getProject().getId());
 
         getAnnotationPage().actionLoadDocument(aTarget);
     }
@@ -317,8 +333,8 @@ public class CurationSidebar
 
         selectedUsers = new CheckGroup<User>("selectedUsers");
         selectedUsers.setModel(new LambdaModelAdapter<>( //
-                () -> curationSidebarService.getSelectedUsers(sessionOwner, project.getId()), //
-                (_users) -> curationSidebarService.setSelectedUsers(sessionOwner, project.getId(),
+                () -> curationSessionService.getSelectedUsers(sessionOwner, project.getId()), //
+                (_users) -> curationSessionService.setSelectedUsers(sessionOwner, project.getId(),
                         _users)));
         selectedUsers.add(
                 new LambdaAjaxFormChoiceComponentUpdatingBehavior(this::actionChangeVisibleUsers));
@@ -349,7 +365,7 @@ public class CurationSidebar
             return Collections.emptyList();
         }
 
-        return curationSidebarService.listCuratableUsers(userRepository.getCurrentUsername(), doc);
+        return curationSessionService.listCuratableUsers(userRepository.getCurrentUsername(), doc);
     }
 
     private void actionChangeVisibleUsers(AjaxRequestTarget aTarget)

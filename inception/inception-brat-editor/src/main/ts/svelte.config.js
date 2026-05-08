@@ -1,4 +1,3 @@
-
 /*
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,6 +18,5 @@
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 export default {
-  preprocess: [vitePreprocess()]
-}
-
+  preprocess: [vitePreprocess()],
+};

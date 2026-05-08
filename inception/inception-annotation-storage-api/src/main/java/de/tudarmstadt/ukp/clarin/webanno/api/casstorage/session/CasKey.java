@@ -22,6 +22,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -29,7 +30,7 @@ public class CasKey
 {
     private final long projectId;
     private final long documentId;
-    private final String userId;
+    private final AnnotationSet set;
 
     // These are just for information and are not included when checking for equality or building a
     // hash. Mind that the name of a project (possibly the name of a document) might change during
@@ -37,20 +38,20 @@ public class CasKey
     private String projectName;
     private String documentName;
 
-    public CasKey(SourceDocument aDocument, String aUserId)
+    public CasKey(SourceDocument aDocument, AnnotationSet aSet)
     {
         projectName = aDocument.getProject().getName();
         projectId = aDocument.getProject().getId();
         documentName = aDocument.getName();
         documentId = aDocument.getId();
-        userId = aUserId;
+        set = aSet;
     }
 
-    public CasKey(long aProjectId, long aDocumentId, String aUserId)
+    public CasKey(long aProjectId, long aDocumentId, AnnotationSet aSet)
     {
         projectId = aProjectId;
         documentId = aDocumentId;
-        userId = aUserId;
+        set = aSet;
     }
 
     public long getProjectId()
@@ -63,9 +64,9 @@ public class CasKey
         return documentId;
     }
 
-    public String getUserId()
+    public AnnotationSet getSet()
     {
-        return userId;
+        return set;
     }
 
     public String getProjectName()
@@ -98,7 +99,7 @@ public class CasKey
         return new EqualsBuilder() //
                 .append(projectId, castOther.projectId) //
                 .append(documentId, castOther.documentId) //
-                .append(userId, castOther.userId) //
+                .append(set, castOther.set) //
                 .isEquals();
     }
 
@@ -108,7 +109,7 @@ public class CasKey
         return new HashCodeBuilder() //
                 .append(projectId) //
                 .append(documentId) //
-                .append(userId) //
+                .append(set) //
                 .toHashCode();
     }
 
@@ -118,7 +119,7 @@ public class CasKey
         return new ToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE) //
                 .append("p", projectId) //
                 .append("d", documentId) //
-                .append("u", userId) //
+                .append("s", set) //
                 .toString();
     }
 

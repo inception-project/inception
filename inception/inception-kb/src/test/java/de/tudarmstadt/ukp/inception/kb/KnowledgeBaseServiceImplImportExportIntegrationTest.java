@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,17 +28,16 @@ import java.util.stream.Stream;
 
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.parallel.Execution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
@@ -54,12 +54,12 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @DataJpaTest( //
         showSql = false, //
         properties = { //
-                "spring.main.banner-mode=off" }, //
-        excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+                "spring.main.banner-mode=off" })
 @EnableAutoConfiguration
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception.kb.model", //
         "de.tudarmstadt.ukp.clarin.webanno.model" })
+@Execution(SAME_THREAD)
 public class KnowledgeBaseServiceImplImportExportIntegrationTest
 {
     private static final String PROJECT_NAME = "Test project";
@@ -74,11 +74,11 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
     private Project project;
     private KnowledgeBase kb;
 
-    @BeforeAll
-    public static void setUpOnce()
-    {
-        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
-    }
+    // @BeforeAll
+    // public static void setUpOnce()
+    // {
+    // System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
+    // }
 
     @BeforeEach
     public void setUp()

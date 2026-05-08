@@ -51,7 +51,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.External
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.ExternalRecommenderV2Api;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.api.FormatConverter;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.config.ExternalRecommenderProperties;
-import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public class ExternalRecommender
     extends RecommendationEngine

@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,11 +29,37 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class EntityLinkingPropertiesImpl
     implements EntityLinkingProperties
 {
+    /**
+     * Size of the candidate cache, which stores a set of candidates for a mention. Increasing the
+     * cache size will reduce the number of queries that have to be made against the KB and
+     * therefore increase average retrieval time.
+     */
     private int cacheSize = 1024;
 
+    /**
+     * Size {@code k} of the mention context, where the context is defined as the words included in
+     * a window with {@code k} words to both left and right.
+     */
     private int mentionContextSize = 5;
+
+    /**
+     * Candidate retrieval limit. Defines how many concepts should be retrieved for the candidate
+     * retrieval step. Increasing this parameter will lead to a longer time to retrieve candidates
+     * from the KB.
+     */
     private int candidateQueryLimit = 2500;
+
+    /**
+     * Candidate display limit. Regulates how many candidates will be displayed for a mention in the
+     * concept selector UI.
+     */
     private int candidateDisplayLimit = 100;
+
+    /**
+     * Semantic signature query limit. Defines how many concepts should be retrieved for the
+     * semantic signature of a candidate. Increasing this parameter will lead to a longer time to
+     * retrieve concepts for constructing the semantic signature.
+     */
     private int signatureQueryLimit = Integer.MAX_VALUE;
 
     @Override

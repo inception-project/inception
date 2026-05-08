@@ -101,10 +101,10 @@ public class ExternalSearchServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public boolean existsEnabledDocumentRepository(Project aProject)
     {
-        String query = String.join("\n", //
+        var query = String.join("\n", //
                 "SELECT COUNT(*)", //
                 "FROM DocumentRepository", //
                 "WHERE project = :project");

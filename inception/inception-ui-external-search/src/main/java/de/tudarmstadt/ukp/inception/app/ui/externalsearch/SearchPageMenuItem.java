@@ -21,11 +21,12 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
@@ -53,9 +54,9 @@ public class SearchPageMenuItem
     }
 
     @Override
-    public IconType getIcon()
+    public Component getIcon(String aId)
     {
-        return FontAwesome5IconType.database_s;
+        return new Icon(aId, FontAwesome5IconType.database_s);
     }
 
     @Override

@@ -1,0 +1,16 @@
+{
+  "properties": [
+    {
+      "name": "format.custom-xml.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables custom XML format import/export support."
+    },
+    {
+      "name": "format.generic-xml.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables generic XML format import/export support."
+    }
+  ]
+}

@@ -32,7 +32,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ExternalRecommenderPropertiesImpl
     implements ExternalRecommenderProperties
 {
+    /** Duration of connect timeout. */
+    // Default (30s) is declared in META-INF/additional-spring-configuration-metadata.json
+    // because the metadata processor cannot read method-call initializers.
     private Duration connectTimeout = Duration.of(30, SECONDS);
+
+    /** Duration of read timeout. */
+    // Default (30s) is declared in META-INF/additional-spring-configuration-metadata.json
+    // because the metadata processor cannot read method-call initializers.
     private Duration readTimeout = Duration.of(30, SECONDS);
 
     @Override

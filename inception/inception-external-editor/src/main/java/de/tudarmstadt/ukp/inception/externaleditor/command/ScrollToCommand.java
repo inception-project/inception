@@ -65,6 +65,18 @@ public class ScrollToCommand
         pingRanges = asList(new CompactRange(aRange.getBegin(), aRange.getEnd()));
     }
 
+    public void setPingRanges(List<VRange> aRanges)
+    {
+        if (aRanges == null || aRanges.isEmpty()) {
+            pingRanges = null;
+            return;
+        }
+
+        pingRanges = aRanges.stream() //
+                .map(range -> new CompactRange(range.getBegin(), range.getEnd())) //
+                .toList();
+    }
+
     @Override
     public String command(String aEditorVariable)
     {

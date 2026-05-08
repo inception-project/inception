@@ -45,13 +45,13 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.ColoringPreferences;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
+import de.tudarmstadt.ukp.inception.schema.api.layer.LayerTypes;
 import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
 
 /**
@@ -103,7 +103,7 @@ public class ColoringServiceImpl
         switch (colortype) {
         case STATIC_PASTELLE: { // ignore for the moment and fall through
             int threshold;
-            if (SpanLayerSupport.TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
+            if (LayerTypes.SPAN_LAYER_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
                 threshold = MAX_VALUE; // No filtering
             }
             else {
@@ -120,7 +120,7 @@ public class ColoringServiceImpl
         }
         case STATIC: {
             int threshold;
-            if (SpanLayerSupport.TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
+            if (LayerTypes.SPAN_LAYER_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
                 threshold = MAX_VALUE; // No filtering
             }
             else {
@@ -136,7 +136,7 @@ public class ColoringServiceImpl
             return new LabelHashBasedColoringStrategy(aPalette);
         }
         case DYNAMIC_PASTELLE: {
-            if (SpanLayerSupport.TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
+            if (LayerTypes.SPAN_LAYER_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
                 return new LabelHashBasedColoringStrategy(PALETTE_PASTEL);
             }
 
@@ -146,7 +146,7 @@ public class ColoringServiceImpl
             return new LabelHashBasedColoringStrategy(PALETTE_NORMAL_FILTERED);
         }
         case DYNAMIC: {
-            if (SpanLayerSupport.TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
+            if (LayerTypes.SPAN_LAYER_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
                 return new LabelHashBasedColoringStrategy(PALETTE_NORMAL);
             }
 

@@ -32,6 +32,15 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 public class DashboardPropertiesImpl
     implements DashboardProperties
 {
+    /**
+     * System roles able to access project dashboards.
+     * <p>
+     * Project managers can always access the project dashboard, even if they are not included in
+     * this setting.
+     */
+    // Default ([ANNOTATOR, CURATOR]) is declared in
+    // META-INF/additional-spring-configuration-metadata.json because the metadata
+    // processor cannot read constructor calls used as field initializers.
     private Set<PermissionLevel> accessibleByRoles = new HashSet<>(asList(ANNOTATOR, CURATOR));
 
     @Override

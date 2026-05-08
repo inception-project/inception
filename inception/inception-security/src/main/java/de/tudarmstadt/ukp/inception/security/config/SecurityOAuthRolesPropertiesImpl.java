@@ -1,0 +1,116 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.inception.security.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+@ConfigurationProperties("security.oauth2.roles")
+public class SecurityOAuthRolesPropertiesImpl
+    implements SecurityOAuthRolesProperties
+{
+    /**
+     * Set to {@code true} to activate group-to-role mapping. When disabled, all authenticated users
+     * receive {@code ROLE_USER} regardless of their group memberships.
+     */
+    private boolean enabled = false;
+
+    /** Name of the OIDC token claim that contains the user's group memberships. */
+    private String claim = "groups";
+
+    /**
+     * Group name (or path) that grants {@code ROLE_ADMIN}. Note that {@code ROLE_ADMIN} does
+     * <b>not</b> imply {@code ROLE_USER}. An admin who also needs to use the application as a
+     * regular user must be placed in both the admin group and the user group.
+     */
+    private String admin;
+
+    /** Group name (or path) that grants {@code ROLE_USER}. */
+    private String user;
+
+    /** Group name (or path) that grants {@code ROLE_PROJECT_CREATOR}. */
+    private String projectCreator;
+
+    /** Group name (or path) that grants {@code ROLE_REMOTE}. */
+    private String remote;
+
+    @Override
+    public boolean isEnabled()
+    {
+        return enabled;
+    }
+
+    public void setEnabled(boolean aEnabled)
+    {
+        enabled = aEnabled;
+    }
+
+    @Override
+    public String getClaim()
+    {
+        return claim;
+    }
+
+    public void setClaim(String aClaim)
+    {
+        claim = aClaim;
+    }
+
+    @Override
+    public String getAdmin()
+    {
+        return admin;
+    }
+
+    public void setAdmin(String aAdmin)
+    {
+        admin = aAdmin;
+    }
+
+    @Override
+    public String getUser()
+    {
+        return user;
+    }
+
+    public void setUser(String aUser)
+    {
+        user = aUser;
+    }
+
+    @Override
+    public String getProjectCreator()
+    {
+        return projectCreator;
+    }
+
+    public void setProjectCreator(String aProjectCreator)
+    {
+        projectCreator = aProjectCreator;
+    }
+
+    @Override
+    public String getRemote()
+    {
+        return remote;
+    }
+
+    public void setRemote(String aRemote)
+    {
+        remote = aRemote;
+    }
+}

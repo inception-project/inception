@@ -31,6 +31,8 @@ import java.net.http.HttpResponse;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import javax.net.ssl.SSLHandshakeException;
+
 public class HttpTestUtils
 {
     public static boolean checkURL(String urlString)
@@ -76,6 +78,11 @@ public class HttpTestUtils
 
             UNREACHABLE_ENDPOINTS.add(aUrl);
             return false;
+        }
+        catch (SSLHandshakeException e) {
+            // We ignore SSL handshake exceptions here because they usually indicate that the server
+            // is there but that there is a certificate problem (e.g. self-signed certificate)
+            return true;
         }
         catch (Exception e) {
             System.out.printf("[%s] Network-level check: %s%n", aUrl, e.getMessage());

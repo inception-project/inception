@@ -25,7 +25,10 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties("external-search")
 public class ExternalSearchProperties
 {
-    private boolean enabled = false;
+    public static final boolean DEFAULT_ENABLED = true;
+
+    /** Enable/disable document repository support. */
+    private boolean enabled = DEFAULT_ENABLED;
 
     public boolean isEnabled()
     {

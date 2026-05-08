@@ -18,5 +18,5 @@
 
 // Fix that kv-hidden can be overwritten by display property of BT5 btn class
 .kv-hidden {
-	@extend .d-none;
+    @extend .d-none;
 }

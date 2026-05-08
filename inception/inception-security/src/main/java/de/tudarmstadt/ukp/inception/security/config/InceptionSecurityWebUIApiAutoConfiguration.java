@@ -22,6 +22,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static org.apache.wicket.csp.CSPDirectiveSrcValue.SELF;
 import static org.springframework.security.config.http.SessionCreationPolicy.NEVER;
+import static org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher.pathPattern;
 
 import java.util.ArrayList;
 
@@ -33,7 +34,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @EnableConfigurationProperties({ CspPropertiesImpl.class })
 @ConditionalOnWebApplication
@@ -57,12 +57,18 @@ public class InceptionSecurityWebUIApiAutoConfiguration
     public SecurityFilterChain uiViewFilterChain(HttpSecurity aHttp, CspProperties aCspProperties)
         throws Exception
     {
-        var imgSrcValue = new ArrayList<>(asList(SELF, new FixedCSPValue("data:")));
+        var imgSrcValue = new ArrayList<>(asList( //
+                SELF, //
+                new FixedCSPValue("data:"), //
+                // blob needed by pdf.js for the thumbnails
+                new FixedCSPValue("blob:")));
         aCspProperties.getAllowedImageSources().stream() //
                 .map(FixedCSPValue::new) //
                 .forEachOrdered(imgSrcValue::add);
 
-        var mediaSrcValue = new ArrayList<>(asList(SELF, new FixedCSPValue("data:")));
+        var mediaSrcValue = new ArrayList<>(asList( //
+                SELF, //
+                new FixedCSPValue("data:")));
         aCspProperties.getAllowedMediaSources().stream() //
                 .map(FixedCSPValue::new) //
                 .forEachOrdered(mediaSrcValue::add);
@@ -107,7 +113,7 @@ public class InceptionSecurityWebUIApiAutoConfiguration
         aHttp.exceptionHandling(exceptionHandling -> {
             exceptionHandling.defaultAuthenticationEntryPointFor( //
                     new Http403ForbiddenEntryPoint(), //
-                    new AntPathRequestMatcher("/**"));
+                    pathPattern("/**"));
         });
     }
 }

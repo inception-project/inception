@@ -32,6 +32,10 @@ public class SearchPropertiesImpl
 {
     public static final String ALL = "all";
 
+    /**
+     * List of possible numbers of results per page for in-project search. Users can pick a value
+     * from this list in the search sidebar to determine how many results are displayed per page.
+     */
     long[] pagesSizes = { 10, 20, 50, 100, 500, 1000 };
 
     @Override

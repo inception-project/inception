@@ -2,18 +2,18 @@ package mtas.search.spans.util;
 
 import java.io.IOException;
 
+import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.queries.spans.SpanScorer;
-import org.apache.lucene.queries.spans.SpanWeight;
 import org.apache.lucene.queries.spans.Spans;
-import org.apache.lucene.search.LeafSimScorer;
+import org.apache.lucene.search.similarities.Similarity.SimScorer;
 
 public class MtasSpanScorer
     extends SpanScorer
 {
 
-    public MtasSpanScorer(SpanWeight weight, Spans spans, LeafSimScorer docScorer)
+    public MtasSpanScorer(Spans spans, SimScorer scorer, NumericDocValues norms)
     {
-        super(weight, spans, docScorer);
+        super(spans, scorer, norms);
     }
 
     protected float scoreCurrentDoc() throws IOException

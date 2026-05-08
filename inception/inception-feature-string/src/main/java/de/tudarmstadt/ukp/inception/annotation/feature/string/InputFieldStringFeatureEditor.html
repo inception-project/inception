@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:panel>
+  <div class="row form-row fe-input" wicket:enclosure="value">
+    <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label col-form-label">
+      <span wicket:id="feature"/>
+      <span class="float-end">
+        <span wicket:id="textIndicator"/>
+      </span>
+      <a wicket:id="openIri" class="float-end" target="_blank">
+        <i class="fas fa-external-link-alt"/>
+      </a>
+    </label>
+    <div class="feature-editor-value">
+      <input class="flex-content" wicket:id="value" type="text"/>
+      <div wicket:id="suggestionInfo" class="d-flex"/>
+      <div wicket:id="keyBindings" class="col-sm-12"/>
+    </div>
+  </div>
+</wicket:panel>
+</html>

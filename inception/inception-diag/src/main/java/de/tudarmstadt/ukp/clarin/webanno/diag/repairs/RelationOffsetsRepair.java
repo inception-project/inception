@@ -31,8 +31,8 @@ import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.logging.LogLevel;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
@@ -58,7 +58,7 @@ public class RelationOffsetsRepair
     {
         var fixedRels = new ArrayList<AnnotationFS>();
         for (var layer : annotationService.listAnnotationLayer(aDocument.getProject())) {
-            if (!WebAnnoConst.RELATION_TYPE.equals(layer.getType())) {
+            if (!RelationLayerSupport.TYPE.equals(layer.getType())) {
                 continue;
             }
 
@@ -73,7 +73,8 @@ public class RelationOffsetsRepair
             }
 
             for (var rel : select(aCas, type)) {
-                var target = getFeature(rel, WebAnnoConst.FEAT_REL_TARGET, AnnotationFS.class);
+                var target = getFeature(rel, RelationLayerSupport.FEAT_REL_TARGET,
+                        AnnotationFS.class);
                 if ((rel.getBegin() != target.getBegin()) || (rel.getEnd() != target.getEnd())) {
                     fixedRels.add(rel);
                     setFeature(rel, CAS.FEATURE_BASE_NAME_BEGIN, target.getBegin());

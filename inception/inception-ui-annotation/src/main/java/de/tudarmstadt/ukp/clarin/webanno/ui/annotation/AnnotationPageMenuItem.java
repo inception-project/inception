@@ -22,10 +22,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static java.lang.String.format;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.springframework.core.annotation.Order;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -79,9 +80,9 @@ public class AnnotationPageMenuItem
     }
 
     @Override
-    public IconType getIcon()
+    public Component getIcon(String aId)
     {
-        return FontAwesome5IconType.highlighter_s;
+        return new Icon(aId, FontAwesome5IconType.highlighter_s);
     }
 
     @Override

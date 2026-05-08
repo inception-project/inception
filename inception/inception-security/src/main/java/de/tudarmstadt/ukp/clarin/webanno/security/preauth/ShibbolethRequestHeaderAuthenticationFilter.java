@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security.preauth;
 
-import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
+import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.NO_PASSWORD;
 import static java.util.stream.Collectors.joining;
 
 import java.lang.invoke.MethodHandles;
@@ -29,7 +29,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.Realm;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -39,15 +41,16 @@ public class ShibbolethRequestHeaderAuthenticationFilter
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private UserDao userRepository;
+    private PreauthenticationProperties preauthenticationProperties;
 
     private void newUserLogin(String aUsername)
     {
-        User u = new User();
+        var u = new User();
         u.setUsername(aUsername);
-        u.setPassword(EMPTY_PASSWORD);
+        u.setPassword(NO_PASSWORD);
         u.setEnabled(true);
-        u.setRealm(UserDao.REALM_PREAUTH);
-        u.setRoles(PreAuthUtils.getPreAuthenticationNewUserRoles(u));
+        u.setRealm(Realm.REALM_PREAUTH);
+        u.setRoles(preauthenticationProperties.getNewUserRoles(u));
 
         userRepository.create(u);
     }
@@ -55,6 +58,12 @@ public class ShibbolethRequestHeaderAuthenticationFilter
     public void setUserRepository(UserDao aUserRepository)
     {
         userRepository = aUserRepository;
+    }
+
+    public void setPreauthenticationProperties(
+            PreauthenticationProperties aPreauthenticationProperties)
+    {
+        preauthenticationProperties = aPreauthenticationProperties;
     }
 
     @Override
@@ -69,9 +78,9 @@ public class ShibbolethRequestHeaderAuthenticationFilter
     {
         denyAccessToUsersWithIllegalUsername(username);
 
-        User user = userRepository.get(username);
+        var user = userRepository.get(username);
         if (user != null) {
-            denyAccessOfRealmsDoNotMatch(UserDao.REALM_PREAUTH, user);
+            denyAccessOfRealmsDoNotMatch(Realm.REALM_PREAUTH, user);
             denyAccessToDeactivatedUsers(user);
         }
         else {
@@ -89,7 +98,7 @@ public class ShibbolethRequestHeaderAuthenticationFilter
 
         var userNameValidationResult = userRepository.validateUsername(aUsername);
         if (!userNameValidationResult.isEmpty()) {
-            String messages = userNameValidationResult.stream() //
+            var messages = userNameValidationResult.stream() //
                     .map(ValidationError::getMessage) //
                     .collect(joining("\n- ", "\n- ", ""));
             LOG.info("Prevented login of user [{}] with illegal username: {}", aUsername, messages);

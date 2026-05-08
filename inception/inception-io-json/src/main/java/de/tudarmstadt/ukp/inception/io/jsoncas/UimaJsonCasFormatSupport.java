@@ -32,22 +32,23 @@ import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.TypeSystemUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.io.pdf.visual.PdfVModelUtils;
+import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
 
 public class UimaJsonCasFormatSupport
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     public static final String ID = "jsoncas";
     public static final String NAME = "UIMA CAS JSON 0.4.0";
 
     private final DocumentImportExportService documentImportExportService;
 
-    @Autowired
     public UimaJsonCasFormatSupport(DocumentImportExportService aDocumentImportExportService)
     {
         documentImportExportService = aDocumentImportExportService;
@@ -92,7 +93,7 @@ public class UimaJsonCasFormatSupport
     }
 
     @Override
-    public void read(Project aProject, CAS aCas, File aFile)
+    public void read(SourceDocument aDocument, CAS aCas, File aFile)
         throws ResourceInitializationException, IOException, CollectionException
     {
         // We need to perform a little hack here because the JSON CAS IO does not support lenient
@@ -104,7 +105,7 @@ public class UimaJsonCasFormatSupport
 
         upgradeCas(aCas, tsd);
 
-        FormatSupport.super.read(aProject, aCas, aFile);
+        super.read(aDocument, aCas, aFile);
 
         // No need to go back to the original CAS TS because another upgrade happens after
         // project import anyway.
@@ -127,5 +128,12 @@ public class UimaJsonCasFormatSupport
         throws ResourceInitializationException
     {
         return createReaderDescription(UimaJsonCasReader.class, aTSD);
+    }
+
+    @Override
+    public void prepareAnnotationCas(CAS aInitialCas, SourceDocument aDocument)
+    {
+        XmlNodeUtils.removeXmlDocumentStructure(aInitialCas);
+        PdfVModelUtils.removePdfLayout(aInitialCas);
     }
 }

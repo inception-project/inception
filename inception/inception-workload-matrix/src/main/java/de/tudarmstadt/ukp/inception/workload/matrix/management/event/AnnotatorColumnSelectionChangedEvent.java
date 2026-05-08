@@ -21,22 +21,24 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.model.IModel;
 import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+
 /**
  * Fired when a user selects or de-selects a column.
  */
 public class AnnotatorColumnSelectionChangedEvent
     extends AbstractAjaxAwareEvent
 {
-    private final String username;
+    private final AnnotationSet annotationSet;
     private final IModel<Boolean> selected;
 
-    public AnnotatorColumnSelectionChangedEvent(AjaxRequestTarget aTarget, String aUsername,
+    public AnnotatorColumnSelectionChangedEvent(AjaxRequestTarget aTarget, AnnotationSet aSet,
             IModel<Boolean> aSelected)
     {
         super(aTarget);
 
         selected = aSelected;
-        username = aUsername;
+        annotationSet = aSet;
     }
 
     public IModel<Boolean> getSelected()
@@ -44,8 +46,8 @@ public class AnnotatorColumnSelectionChangedEvent
         return selected;
     }
 
-    public String getUsername()
+    public AnnotationSet getAnnotationSet()
     {
-        return username;
+        return annotationSet;
     }
 }

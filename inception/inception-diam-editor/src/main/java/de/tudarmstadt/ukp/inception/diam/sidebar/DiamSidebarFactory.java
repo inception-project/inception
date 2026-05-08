@@ -23,7 +23,7 @@ import java.util.Optional;
 import org.apache.wicket.model.IModel;
 import org.springframework.core.annotation.Order;
 
-import com.networknt.schema.JsonSchema;
+import com.networknt.schema.Schema;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
@@ -34,7 +34,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar
 import de.tudarmstadt.ukp.inception.diam.sidebar.config.AnnotationBrowserSidebarAutoConfiguration;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceKey;
-import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceMapValue;
 import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
@@ -51,10 +50,10 @@ public class DiamSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
     implements ClientSideUserPreferencesProvider
 {
-    private static final ClientSidePreferenceKey<ClientSidePreferenceMapValue> KEY_ANNOTATION_BROWSER_SIDEBAR_PREFS = //
-            new ClientSidePreferenceKey<>(ClientSidePreferenceMapValue.class,
+    private static final ClientSidePreferenceKey<DiamSidebarFactoryUserPreferences> KEY_ANNOTATION_BROWSER_SIDEBAR_PREFS = //
+            new ClientSidePreferenceKey<>(DiamSidebarFactoryUserPreferences.class,
                     "annotation/annotation-browser-sidebar");
-    private WatchedResourceFile<JsonSchema> userPreferencesSchema;
+    private WatchedResourceFile<Schema> userPreferencesSchema;
 
     public DiamSidebarFactory()
     {
@@ -92,13 +91,13 @@ public class DiamSidebarFactory
 
     @SuppressWarnings({ "unchecked" })
     @Override
-    public Optional<ClientSidePreferenceKey<ClientSidePreferenceMapValue>> getUserPreferencesKey()
+    public Optional<ClientSidePreferenceKey<DiamSidebarFactoryUserPreferences>> getUserPreferencesKey()
     {
         return Optional.of(KEY_ANNOTATION_BROWSER_SIDEBAR_PREFS);
     }
 
     @Override
-    public Optional<JsonSchema> getUserPreferencesSchema() throws IOException
+    public Optional<Schema> getUserPreferencesSchema() throws IOException
     {
         return userPreferencesSchema.get();
     }

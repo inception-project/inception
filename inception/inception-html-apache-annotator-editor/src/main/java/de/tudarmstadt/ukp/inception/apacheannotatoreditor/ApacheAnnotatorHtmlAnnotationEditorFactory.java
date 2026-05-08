@@ -22,7 +22,7 @@ import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
 
-import com.networknt.schema.JsonSchema;
+import com.networknt.schema.Schema;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
@@ -60,7 +60,7 @@ public class ApacheAnnotatorHtmlAnnotationEditorFactory
             new ClientSidePreferenceKey<>(ClientSidePreferenceMapValue.class,
                     "annotation/apache-annotator-editor");
 
-    private WatchedResourceFile<JsonSchema> userPreferencesSchema;
+    private WatchedResourceFile<Schema> userPreferencesSchema;
 
     public ApacheAnnotatorHtmlAnnotationEditorFactory()
     {
@@ -117,7 +117,7 @@ public class ApacheAnnotatorHtmlAnnotationEditorFactory
     }
 
     @Override
-    public Optional<JsonSchema> getUserPreferencesSchema() throws IOException
+    public Optional<Schema> getUserPreferencesSchema() throws IOException
     {
         return userPreferencesSchema.get();
     }

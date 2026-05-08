@@ -21,13 +21,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.core.session.SessionRegistry;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.curation.service.CurationSessionServiceImpl;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -36,43 +37,39 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarApplicationInitializer;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarDocumentNavigatorActionBarExtension;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarFactory;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarServiceImpl;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationSidebarRenderer;
-import jakarta.persistence.EntityManager;
 
 @ConditionalOnWebApplication
 @Configuration
 public class CurationSidebarAutoConfiguration
 {
     @Bean
-    public CurationSidebarService curationSidebarService(EntityManager aEntityManager,
-            DocumentService aDocumentService, SessionRegistry aSessionRegistry,
-            ProjectService aProjectService, UserDao aUserRegistry,
-            CasStorageService aCasStorageService, CurationService aCurationService,
-            CurationMergeService aCurationMergeService,
-            CurationSidebarProperties aCurationSidebarProperties,
-            CurationDocumentService aCurationDocumentService)
+    public CurationSidebarService curationSidebarService(DocumentService aDocumentService,
+            UserDao aUserRegistry, CasStorageService aCasStorageService,
+            CurationService aCurationService, CurationMergeService aCurationMergeService,
+            CurationSessionServiceImpl aCurationSessionService)
     {
-        return new CurationSidebarServiceImpl(aEntityManager, aDocumentService, aSessionRegistry,
-                aProjectService, aUserRegistry, aCasStorageService, aCurationService,
-                aCurationMergeService, aCurationSidebarProperties, aCurationDocumentService);
+        return new CurationSidebarServiceImpl(aDocumentService, aUserRegistry, aCasStorageService,
+                aCurationService, aCurationMergeService, aCurationSessionService);
     }
 
     @Bean(CurationEditorExtension.EXTENSION_ID)
     public CurationEditorExtension curationEditorExtension(
             AnnotationSchemaService aAnnotationService, DocumentService aDocumentService,
             ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserRepository,
+            CurationSessionService aCurationSessionService,
             CurationSidebarService aCurationSidebarService,
             FeatureSupportRegistry aFeatureSupportRegistry,
-            LazyDetailsLookupService aDetailsLookupService)
+            LazyDetailsLookupService aDetailsLookupService,
+            DiffAdapterRegistry aDiffAdapterRegistry)
     {
         return new CurationEditorExtension(aAnnotationService, aDocumentService,
-                aApplicationEventPublisher, aUserRepository, aCurationSidebarService,
-                aFeatureSupportRegistry, aDetailsLookupService);
+                aApplicationEventPublisher, aUserRepository, aCurationSessionService,
+                aCurationSidebarService, aFeatureSupportRegistry, aDetailsLookupService,
+                aDiffAdapterRegistry);
     }
 
     @Bean("curationSidebar")
@@ -84,27 +81,14 @@ public class CurationSidebarAutoConfiguration
     }
 
     @Bean
-    public CurationSidebarRenderer curationSidebarRenderer(CurationSidebarService aCurationService,
+    public CurationSidebarRenderer curationSidebarRenderer(
+            CurationSessionService aCurationSessionService, CurationSidebarService aCurationService,
             LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
-            UserDao aUserRepository, AnnotationSchemaService aAnnotationService)
+            UserDao aUserRepository, AnnotationSchemaService aAnnotationService,
+            DiffAdapterRegistry aDiffAdapterRegistry)
     {
-        return new CurationSidebarRenderer(aCurationService, aLayerSupportRegistry,
-                aDocumentService, aUserRepository, aAnnotationService);
-    }
-
-    @Deprecated
-    @Bean
-    public CurationSidebarApplicationInitializer curationSidebarApplicationInitializer()
-    {
-        return new CurationSidebarApplicationInitializer();
-    }
-
-    @Deprecated
-    @Bean
-    public CurationSidebarDocumentNavigatorActionBarExtension curationSidebarDocumentNavigatorActionBarExtension(
-            CurationSidebarService aCurationSidebarService, UserDao aUserRepository)
-    {
-        return new CurationSidebarDocumentNavigatorActionBarExtension(aCurationSidebarService,
-                aUserRepository);
+        return new CurationSidebarRenderer(aCurationSessionService, aCurationService,
+                aLayerSupportRegistry, aDocumentService, aUserRepository, aAnnotationService,
+                aDiffAdapterRegistry);
     }
 }

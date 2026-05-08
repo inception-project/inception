@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.task;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
@@ -48,10 +49,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSessio
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
-import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class CalculatePerDocumentAgreementTask
@@ -63,7 +64,7 @@ public class CalculatePerDocumentAgreementTask
 
     private @Autowired DocumentService documentService;
 
-    private final Set<String> annotators;
+    private final Set<AnnotationSet> annotators;
     private final DefaultAgreementTraits traits;
     private final AnnotationFeature feature;
     private final AgreementMeasure<?> measure;
@@ -98,21 +99,21 @@ public class CalculatePerDocumentAgreementTask
                 }
 
                 progress.update(up -> up.increment() //
-                        .addMessage(LogMessage.info(this, doc.getName())));
+                        .status("%", doc.getName()).statusToLog());
 
                 try (var session = CasStorageSession.openNested()) {
                     var casMap = new LinkedHashMap<String, CAS>();
                     for (var annDoc : allAnnDocs.get(doc)) {
-                        var dataOwner = annDoc.getUser();
+                        var dataOwner = annDoc.getAnnotationSet();
                         if (!annotators.contains(dataOwner)) {
                             continue;
                         }
 
-                        casMap.put(dataOwner, loadCas(annDoc.getDocument(), dataOwner));
+                        casMap.put(dataOwner.id(), loadCas(annDoc.getDocument(), dataOwner));
                     }
 
-                    if (annotators.contains(CURATION_USER)) {
-                        casMap.put(CURATION_USER, loadCas(doc, CURATION_USER));
+                    if (annotators.contains(CURATION_SET)) {
+                        casMap.put(CURATION_USER, loadCas(doc, CURATION_SET));
                     }
 
                     LOG.trace("Calculating agreement on {} for [{}] annotators", doc,
@@ -141,9 +142,9 @@ public class CalculatePerDocumentAgreementTask
         return cas;
     }
 
-    private CAS loadCas(SourceDocument aDocument, String aDataOwner) throws IOException
+    private CAS loadCas(SourceDocument aDocument, AnnotationSet aDataOwner) throws IOException
     {
-        if (CURATION_USER.equals(aDataOwner)) {
+        if (CURATION_SET.equals(aDataOwner)) {
             if (!asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(aDocument.getState())) {
                 return loadInitialCas(aDocument);
             }
@@ -178,7 +179,7 @@ public class CalculatePerDocumentAgreementTask
     public static class Builder<T extends Builder<?>>
         extends Task.Builder<T>
     {
-        private List<String> annotators;
+        private List<AnnotationSet> annotators;
         private DefaultAgreementTraits traits;
         private AnnotationFeature feature;
         private AgreementMeasure<?> measure;
@@ -191,7 +192,7 @@ public class CalculatePerDocumentAgreementTask
         }
 
         @SuppressWarnings("unchecked")
-        public T withAnnotators(List<String> aAnnotators)
+        public T withAnnotators(List<AnnotationSet> aAnnotators)
         {
             annotators = aAnnotators;
             return (T) this;

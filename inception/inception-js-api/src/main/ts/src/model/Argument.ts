@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Span, VID } from '.'
+import { Span, VID } from '.';
 
 /**
  * Represents the endpoint of a relation.
  */
 export class Argument {
-  targetId: VID
-  target?: Span
-  label?: string
+    targetId: VID;
+    target?: Span;
+    label?: string;
 }

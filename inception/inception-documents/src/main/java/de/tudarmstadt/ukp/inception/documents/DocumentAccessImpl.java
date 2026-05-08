@@ -20,18 +20,23 @@ package de.tudarmstadt.ukp.inception.documents;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static org.apache.commons.collections4.CollectionUtils.containsAny;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -74,47 +79,49 @@ public class DocumentAccessImpl
 
     @Override
     public boolean canViewAnnotationDocument(String aSessionOwner, String aProjectId,
-            long aDocumentId, String aAnnotator)
+            long aDocumentId, String aDataOwner)
     {
         LOG.trace(
                 "Permission check: canViewAnnotationDocument [aSessionOwner: {}] [project: {}] "
                         + "[document: {}] [annotator: {}]",
-                aSessionOwner, aProjectId, aDocumentId, aAnnotator);
+                aSessionOwner, aProjectId, aDocumentId, aDataOwner);
 
         try {
-            var user = getUser(aSessionOwner);
+            var sessionOwner = getUser(aSessionOwner);
             var project = getProject(aProjectId);
 
-            var permissionLevels = projectService.listRoles(project, user);
+            var permissionLevels = projectService.listRoles(project, sessionOwner);
 
             // Does the user have the permission to access the project at all?
             if (permissionLevels.isEmpty()) {
-                LOG.trace("Access denied: User {} has no acccess to project {}", user, project);
+                LOG.trace("Access denied: User {} has no acccess to project {}", sessionOwner,
+                        project);
                 return false;
             }
 
             // Managers and curators can see anything
             if (containsAny(permissionLevels, MANAGER, CURATOR)) {
                 LOG.trace("Access granted: User {} can view annotations [{}] as MANGER or CURATOR",
-                        user, aDocumentId);
+                        sessionOwner, aDocumentId);
                 return true;
             }
 
             // Annotators can only see their own documents
-            if (!aSessionOwner.equals(aAnnotator)) {
+            if (!aSessionOwner.equals(aDataOwner)) {
                 LOG.trace(
                         "Access denied: User {} tries to see annotations from [{}] but can only see own annotations",
-                        user, aAnnotator);
+                        sessionOwner, aDataOwner);
                 return false;
             }
 
             // Annotators cannot view blocked documents
             var doc = documentService.getSourceDocument(project.getId(), aDocumentId);
-            if (documentService.existsAnnotationDocument(doc, aAnnotator)) {
-                var aDoc = documentService.getAnnotationDocument(doc, aAnnotator);
+            var dataOwnerSet = AnnotationSet.forUser(aDataOwner);
+            if (documentService.existsAnnotationDocument(doc, dataOwnerSet)) {
+                var aDoc = documentService.getAnnotationDocument(doc, dataOwnerSet);
                 if (aDoc.getState() == AnnotationDocumentState.IGNORE) {
                     LOG.trace("Access denied: Document {} is locked (IGNORE) for user {}", aDoc,
-                            aAnnotator);
+                            aDataOwner);
                     return false;
                 }
             }
@@ -122,7 +129,7 @@ public class DocumentAccessImpl
             LOG.trace(
                     "Access granted: canViewAnnotationDocument [aSessionOwner: {}] [project: {}] "
                             + "[document: {}] [annotator: {}]",
-                    aSessionOwner, aProjectId, aDocumentId, aAnnotator);
+                    aSessionOwner, aProjectId, aDocumentId, aDataOwner);
             return true;
         }
         catch (NoResultException | AccessDeniedException e) {
@@ -162,14 +169,24 @@ public class DocumentAccessImpl
     {
         var project = aDocument.getProject();
 
+        var roles = projectService.listRoles(project, aSessionOwner);
+
         // Is the user a curator?
-        if (projectService.hasRole(aSessionOwner, project, CURATOR)) {
+        if (roles.contains(CURATOR)) {
             // If curation is already done, document is no longer editable
             if (CURATION_USER.equals(aDataOwner)) {
                 if (aDocument.getState() == CURATION_FINISHED) {
                     throw new AccessDeniedException(
                             "Curation is already finished. You can put it back "
                                     + "into progress via the monitoring page.");
+                }
+
+                // Curation cannot begin until all annotations are finished
+                if (!Set.of(ANNOTATION_FINISHED, CURATION_IN_PROGRESS)
+                        .contains(aDocument.getState())) {
+                    throw new AccessDeniedException(
+                            "Annotations are not yet finished. Curation can only "
+                                    + "start once the document is in state ANNOTATION_FINISHED.");
                 }
 
                 return; // Access granted
@@ -179,7 +196,7 @@ public class DocumentAccessImpl
         }
 
         // Is the user an annotator?
-        if (projectService.hasRole(aSessionOwner, project, ANNOTATOR)) {
+        if (roles.contains(ANNOTATOR)) {
             // Annotators can edit their own annotations
             if (!aSessionOwner.getUsername().equals(aDataOwner)) {
                 throw new AccessDeniedException(
@@ -187,18 +204,32 @@ public class DocumentAccessImpl
             }
 
             // Blocked or finished documents cannot be edited
-            if (documentService.existsAnnotationDocument(aDocument, aDataOwner)) {
-                var aDoc = documentService.getAnnotationDocument(aDocument, aDataOwner);
-                if (aDoc.getState() == AnnotationDocumentState.FINISHED) {
+            var dataOwnerSet = AnnotationSet.forUser(aDataOwner);
+            AnnotationDocument annDoc = null;
+            if (documentService.existsAnnotationDocument(aDocument, dataOwnerSet)) {
+                annDoc = documentService.getAnnotationDocument(aDocument, dataOwnerSet);
+                if (annDoc.getState() == AnnotationDocumentState.FINISHED) {
                     throw new AccessDeniedException("This document is already closed for user ["
                             + aDataOwner + "]. Please ask your "
                             + "project manager to re-open it via the monitoring page.");
                 }
 
-                if (aDoc.getState() == AnnotationDocumentState.IGNORE) {
+                if (annDoc.getState() == AnnotationDocumentState.IGNORE) {
                     throw new AccessDeniedException("This document is blocked for user ["
                             + aDataOwner + "]. Please ask your "
                             + "project manager if you believe this is wrong.");
+                }
+            }
+
+            // Annotators cannot start working if the document is already being curated or is done
+            if (annDoc == null || annDoc.getState() == AnnotationDocumentState.NEW) {
+                if (Set.of(CURATION_IN_PROGRESS, CURATION_FINISHED)
+                        .contains(aDocument.getState())) {
+                    throw new AccessDeniedException(
+                            "This document is currently in curation and cannot be opened for "
+                                    + "annotation. Please ask your project manager or curator to "
+                                    + "reopen your annotation document via the monitoring/workload "
+                                    + "page.");
                 }
             }
 

@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "recommender.active-learning.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables the active learning sidebar for recommenders."
+    }
+  ]
+}

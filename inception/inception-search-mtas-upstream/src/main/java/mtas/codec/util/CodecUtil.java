@@ -259,7 +259,7 @@ public class CodecUtil
             if (fieldStats.spanQueryList.size() > 0) {
                 final float boost = 0;
                 for (MtasSpanQuery sq : fieldStats.spanQueryList) {
-                    spansQueryWeight.put(sq, ((MtasSpanQuery) sq.rewrite(reader))
+                    spansQueryWeight.put(sq, ((MtasSpanQuery) sq.rewrite(searcher))
                             .createWeight(searcher, ScoreMode.COMPLETE_NO_SCORES, boost));
                 }
             }

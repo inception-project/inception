@@ -58,7 +58,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class PermissionController
     extends Controller_ImplBase
 {
-    private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Operation(summary = "List all permissions in the given project")
     @GetMapping( //

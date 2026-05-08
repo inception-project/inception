@@ -17,9 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.config;
 
+import java.util.Set;
+
 public interface AssistantChatProperties
 {
+    String AUTO_DETECT_CAPABILITIES = "auto";
+    int AUTO_DETECT = 0;
+
+    String CAP_COMPLETION = "completion";
+    String CAP_TOOLS = "tools";
+
     String getModel();
+
+    Set<String> getCapabilities();
 
     double getTopP();
 

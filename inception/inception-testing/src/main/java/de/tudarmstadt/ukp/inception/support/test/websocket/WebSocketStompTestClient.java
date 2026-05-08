@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BiConsumer;
 
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.function.FailableRunnable;
@@ -47,7 +48,7 @@ import org.awaitility.Awaitility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.converter.JacksonJsonMessageConverter;
 import org.springframework.messaging.converter.MessageConversionException;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -61,13 +62,16 @@ import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.json.JsonMapper;
+
 public class WebSocketStompTestClient
     implements Closeable
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final Duration connectTimeout = Duration.ofSeconds(60);
-    private final Duration messageTimeout = Duration.ofSeconds(10);
+    private final Duration messageTimeout = Duration.ofHours(10);
 
     private final String username;
     private final String password;
@@ -78,7 +82,7 @@ public class WebSocketStompTestClient
     private CapturingSessionHandler sessionHandler;
     private StompSession session;
 
-    private Queue<Object> recieved;
+    private Queue<Object> received;
     private Queue<Expectation<?>> expectations;
 
     public WebSocketStompTestClient(String aUsername, String aPassword)
@@ -86,9 +90,11 @@ public class WebSocketStompTestClient
         username = aUsername;
         password = aPassword;
 
-        recieved = new ConcurrentLinkedQueue<>();
+        received = new ConcurrentLinkedQueue<>();
         expectations = new ConcurrentLinkedDeque<>();
-        messageConverter = new MappingJackson2MessageConverter();
+        messageConverter = new JacksonJsonMessageConverter(JsonMapper.builder() //
+                .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES) //
+                .build());
 
         wsClient = new StandardWebSocketClient();
         wsClient.setUserProperties(Map.of( //
@@ -105,14 +111,14 @@ public class WebSocketStompTestClient
         assertThat(expectations).as("expectations").isNotEmpty();
         assertThat(session).as("already connected").isNull();
 
-        sessionHandler = new CapturingSessionHandler(recieved);
+        sessionHandler = new CapturingSessionHandler(received);
         session = stompClient //
                 .connectAsync(aUrl, getHeaders(), sessionHandler) //
                 .get(connectTimeout.getSeconds(), SECONDS);
 
-        await("all expected responses recieved") //
+        await("all expected responses received") //
                 .atMost(connectTimeout) //
-                .until(() -> recieved.size() >= expectations.size());
+                .until(() -> received.size() >= expectations.size());
 
         await("extra time") //
                 .pollDelay(Duration.ofSeconds(1)) //
@@ -157,12 +163,30 @@ public class WebSocketStompTestClient
     }
 
     @SuppressWarnings("unchecked")
-    public <T> WebSocketStompTestClient expect(T aObject, FailableConsumer<T, Exception> aMatcher)
+    public <T> WebSocketStompTestClient expect(Class<T> aClass,
+            FailableConsumer<T, Exception> aMatcher)
     {
         expectations.add(new Expectation<>(Message.class, false, msg -> {
             try {
-                var obj = messageConverter.fromMessage(msg, aObject.getClass());
+                var obj = messageConverter.fromMessage(msg, aClass);
                 aMatcher.accept((T) obj);
+            }
+            catch (MessageConversionException e) {
+                fail("Unable to convert message: " + msg + " with payload "
+                        + new String((byte[]) msg.getPayload(), UTF_8), e);
+            }
+        }));
+        return this;
+    }
+
+    public <T> WebSocketStompTestClient expectWithHeaders(Class<T> aClass,
+            BiConsumer<Message<?>, T> aMatcher)
+    {
+        expectations.add(new Expectation<>(Message.class, false, msg -> {
+            try {
+                @SuppressWarnings("unchecked")
+                var obj = (T) messageConverter.fromMessage(msg, aClass);
+                aMatcher.accept((Message<?>) msg, obj);
             }
             catch (MessageConversionException e) {
                 fail("Unable to convert message: " + msg + " with payload "
@@ -181,8 +205,29 @@ public class WebSocketStompTestClient
      */
     public Subscription subscribe(String aTopic)
     {
-        var handler = new CapturingFrameHandler<>(Message.class, recieved);
-        var sub = session.subscribe(aTopic, handler);
+        return subscribe(aTopic, null);
+    }
+
+    /**
+     * Subscribes to a topic. Requires expected messages to be queued before.
+     * 
+     * @param aTopic
+     *            topic to subscribe to
+     * @param aHeaders
+     *            extra headers
+     * @return subscription.
+     */
+    public Subscription subscribe(String aTopic, Map<String, String> aHeaders)
+    {
+        var headers = new StompHeaders();
+        headers.setDestination(aTopic);
+
+        if (aHeaders != null) {
+            headers.setAll(aHeaders);
+        }
+
+        var handler = new CapturingFrameHandler<>(Message.class, received);
+        var sub = session.subscribe(headers, handler);
 
         waitForMessages();
 
@@ -216,9 +261,9 @@ public class WebSocketStompTestClient
 
     private void waitForMessages()
     {
-        await("all expected messages recieved") //
+        await("all expected messages received") //
                 .atMost(messageTimeout) //
-                .until(() -> recieved.size() >= expectations.size());
+                .until(() -> received.size() >= expectations.size());
 
         await("extra time") //
                 .pollDelay(Duration.ofSeconds(1)) //
@@ -227,11 +272,11 @@ public class WebSocketStompTestClient
 
     private void handleExpectations()
     {
-        var r = new LinkedList<>(recieved);
+        var r = new LinkedList<>(received);
         var e = new LinkedList<>(expectations);
 
         expectations.clear();
-        recieved.clear();
+        received.clear();
 
         var consuming = false;
         while (!r.isEmpty() && !e.isEmpty()) {
@@ -246,7 +291,7 @@ public class WebSocketStompTestClient
 
         if (!consuming) {
             LOG.trace("Remaining: {} messages  {} expectation", r.size(), e.size());
-            assertThat(r).as("remaining recieved messages").isEmpty();
+            assertThat(r).as("remaining received messages").isEmpty();
             assertThat(e).as("remaining expectations messages").isEmpty();
         }
         else {
@@ -285,14 +330,14 @@ public class WebSocketStompTestClient
         }
     }
 
-    private final class Message2MessageConverter
-        extends MappingJackson2MessageConverter
+    private static class Message2MessageConverter
+        extends JacksonJsonMessageConverter
     {
         @Override
-        protected Object convertFromInternal(Message<?> aMessage, Class<?> aTargetClass,
-                Object aConversionHint)
+        protected Object convertFromInternal(Message<?> message, Class<?> targetClass,
+                Object conversionHint)
         {
-            return aMessage;
+            return message;
         }
     }
 
@@ -320,40 +365,40 @@ public class WebSocketStompTestClient
     private static class CapturingSessionHandler
         extends StompSessionHandlerAdapter
     {
-        private final Queue<Object> recieved;
+        private final Queue<Object> received;
 
         CapturingSessionHandler(Queue<Object> aQueue)
         {
-            recieved = aQueue;
+            received = aQueue;
         }
 
         @Override
         public void afterConnected(StompSession aSession, StompHeaders aConnectedHeaders)
         {
-            LOG.trace("Recieved: connection: {}", aConnectedHeaders);
-            recieved.add(new ConnectionResponse(aConnectedHeaders, null));
+            LOG.trace("Received: connection: {}", aConnectedHeaders);
+            received.add(new ConnectionResponse(aConnectedHeaders, null));
         }
 
         @Override
         public void handleFrame(StompHeaders aHeaders, Object aPayload)
         {
-            LOG.trace("Recieved: frame: {}", aPayload);
-            recieved.add(new NoPayloadResponse(aHeaders, aPayload));
+            LOG.trace("Received: frame: {}", aPayload);
+            received.add(new NoPayloadResponse(aHeaders, aPayload));
         }
 
         @Override
         public void handleException(StompSession aSession, StompCommand aCommand,
                 StompHeaders aHeaders, byte[] aPayload, Throwable aException)
         {
-            LOG.trace("Recieved: exception", aException);
-            recieved.add(new ExceptionResponse(aSession, aCommand, aHeaders, aPayload, aException));
+            LOG.trace("Received: exception", aException);
+            received.add(new ExceptionResponse(aSession, aCommand, aHeaders, aPayload, aException));
         }
 
         @Override
         public void handleTransportError(StompSession aSession, Throwable aException)
         {
-            LOG.trace("Recieved: transport error", aException);
-            recieved.add(new TransportErrorResponse(aSession, aException));
+            LOG.trace("Received: transport error", aException);
+            received.add(new TransportErrorResponse(aSession, aException));
         }
     }
 
@@ -376,6 +421,7 @@ public class WebSocketStompTestClient
             return type;
         }
 
+        @SuppressWarnings("unchecked")
         public void accept(Object aObject)
         {
             try {
@@ -399,12 +445,12 @@ public class WebSocketStompTestClient
                 .getLogger(MethodHandles.lookup().lookupClass());
 
         private final Class<T> type;
-        private final Queue<Object> recieved;
+        private final Queue<Object> received;
 
         CapturingFrameHandler(Class<T> aType, Queue<Object> aQueue)
         {
             type = aType;
-            recieved = aQueue;
+            received = aQueue;
         }
 
         @Override
@@ -418,8 +464,8 @@ public class WebSocketStompTestClient
         public void handleFrame(StompHeaders aHeaders, Object aPayload)
         {
             if (type.isAssignableFrom(aPayload.getClass())) {
-                LOG.trace("Recieved: {}", aPayload);
-                recieved.add((T) aPayload);
+                LOG.trace("Received: {}", aPayload);
+                received.add((T) aPayload);
                 return;
             }
 

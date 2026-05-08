@@ -98,12 +98,12 @@ public class AnnotationFeature
 
     private boolean visible = true;
 
-    @Column(name = "includeInHover")
+    @Column(name = "includeInHover", nullable = false)
     private boolean includeInHover = false;
 
     private boolean remember;
 
-    @Column(name = "hideUnconstraintFeature")
+    @Column(name = "hideUnconstraintFeature", nullable = false)
     private boolean hideUnconstraintFeature;
 
     private boolean required;

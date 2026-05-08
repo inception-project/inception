@@ -25,7 +25,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccess;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectAccessImpl;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectPermissionExtension;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
@@ -33,8 +32,12 @@ import de.tudarmstadt.ukp.clarin.webanno.project.exporters.ProjectPermissionsExp
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.project.api.FeatureInitializer;
+import de.tudarmstadt.ukp.inception.project.api.ProjectAccess;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.project.api.footprint.FootprintProvider;
+import de.tudarmstadt.ukp.inception.project.api.footprint.FootprintProviderRegistry;
+import de.tudarmstadt.ukp.inception.project.footprint.FootprintProviderRegistryImpl;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
@@ -73,6 +76,13 @@ public class ProjectServiceAutoConfiguration
     public ProjectAccess projectAccess(UserDao aUserService, ProjectService aProjectService)
     {
         return new ProjectAccessImpl(aUserService, aProjectService);
+    }
+
+    @Bean
+    public FootprintProviderRegistry footprintProviderRegistry(
+            @Lazy @Autowired(required = false) List<FootprintProvider> aExtensions)
+    {
+        return new FootprintProviderRegistryImpl(aExtensions);
     }
 
 }

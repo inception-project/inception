@@ -17,28 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.support;
 
+import static java.lang.System.getProperty;
+import static java.lang.System.setProperty;
 import static org.apache.commons.lang3.StringUtils.substring;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
-
-import de.tudarmstadt.ukp.inception.support.help.ImageLinkDecl;
 
 public class SettingsUtil
 {
@@ -53,36 +46,6 @@ public class SettingsUtil
 
     private static final String SETTINGS_FILE = "settings.properties";
     private static final String SETTINGS_YAML_FILE = "settings.yml";
-
-    /**
-     * @deprecated Should introduce/use a Spring properties bean instead.
-     */
-    @Deprecated
-    public static final String CFG_LOCALE = "locale";
-
-    /**
-     * @deprecated Should introduce/use a Spring properties bean instead.
-     */
-    @Deprecated
-    public static final String CFG_AUTH_MODE = "auth.mode";
-    @Deprecated
-    public static final String CFG_AUTH_PREAUTH_NEWUSER_ROLES = "auth.preauth.newuser.roles";
-
-    /**
-     * @deprecated Should introduce/use a Spring properties bean instead.
-     */
-    @Deprecated
-    public static final String CFG_WARNINGS_EMBEDDED_DATABASE = "warnings.embeddedDatabase";
-    @Deprecated
-    public static final String CFG_WARNINGS_UNSUPPORTED_BROWSER = "warnings.unsupportedBrowser";
-
-    /**
-     * @deprecated Should introduce/use a Spring properties bean instead.
-     */
-    @Deprecated
-    public static final String CFG_LINK_PREFIX = "style.header.icon.";
-    public static final @Deprecated String CFG_LINK_URL = ".linkUrl";
-    public static final @Deprecated String CFG_LINK_IMAGE_URL = ".imageUrl";
 
     private static Properties versionInfo;
     private static Properties settings;
@@ -105,12 +68,12 @@ public class SettingsUtil
 
     public static void setGlobalLogFolder(Path aPath)
     {
-        System.setProperty("GLOBAL_LOG_FOLDER", aPath.toString());
+        setProperty("GLOBAL_LOG_FOLDER", aPath.toString());
     }
 
     public static Optional<Path> getGlobalLogFolder()
     {
-        String prop = System.getProperty("GLOBAL_LOG_FOLDER");
+        var prop = getProperty("GLOBAL_LOG_FOLDER");
         if (prop == null) {
             return Optional.empty();
         }
@@ -140,9 +103,15 @@ public class SettingsUtil
         return versionInfo;
     }
 
+    public static String getVersion()
+    {
+        var props = getVersionProperties();
+        return props.getProperty(PROP_VERSION);
+    }
+
     public static String getVersionString()
     {
-        Properties props = getVersionProperties();
+        var props = getVersionProperties();
         if ("unknown".equals(props.getProperty(PROP_VERSION))) {
             return "Version information not available";
         }
@@ -154,13 +123,13 @@ public class SettingsUtil
 
     public static File getApplicationHome()
     {
-        String appHome = System.getProperty(propApplicationHome);
+        var appHome = getProperty(propApplicationHome);
 
         if (appHome != null) {
             return new File(appHome);
         }
 
-        String userHome = System.getProperty(PROP_USER_HOME);
+        var userHome = getProperty(PROP_USER_HOME);
         return new File(userHome + "/" + applicationUserHomeSubdir);
     }
 
@@ -172,9 +141,9 @@ public class SettingsUtil
     public static File getSettingsFileLocation()
     {
         // Locate settings, first in application, then in user home
-        String appHome = System.getProperty(propApplicationHome);
+        var appHome = getProperty(propApplicationHome);
         if (appHome != null) {
-            File yamlFile = new File(appHome, SETTINGS_YAML_FILE);
+            var yamlFile = new File(appHome, SETTINGS_YAML_FILE);
             if (yamlFile.exists()) {
                 return yamlFile;
             }
@@ -182,10 +151,9 @@ public class SettingsUtil
             return new File(appHome, SETTINGS_FILE);
         }
 
-        String userHome = System.getProperty(PROP_USER_HOME);
+        var userHome = getProperty(PROP_USER_HOME);
         if (userHome != null) {
-            File yamlFile = new File(userHome + "/" + applicationUserHomeSubdir,
-                    SETTINGS_YAML_FILE);
+            var yamlFile = new File(userHome + "/" + applicationUserHomeSubdir, SETTINGS_YAML_FILE);
             if (yamlFile.exists()) {
                 return yamlFile;
             }
@@ -203,7 +171,7 @@ public class SettingsUtil
      */
     public static File getSettingsFile()
     {
-        File settingsFile = getSettingsFileLocation();
+        var settingsFile = getSettingsFileLocation();
 
         if (settingsFile != null && settingsFile.exists()) {
             return settingsFile;
@@ -224,9 +192,9 @@ public class SettingsUtil
     {
         if (settings == null) {
             var props = new Properties(System.getProperties());
-            File settingsFile = getSettingsFile();
+            var settingsFile = getSettingsFile();
             if (settingsFile != null) {
-                try (InputStream in = new FileInputStream(settingsFile)) {
+                try (var in = new FileInputStream(settingsFile)) {
                     props.load(in);
                 }
                 catch (IOException e) {
@@ -238,38 +206,5 @@ public class SettingsUtil
             settings = props;
         }
         return settings;
-    }
-
-    public static List<ImageLinkDecl> getLinks()
-    {
-        Properties props = getSettings();
-        Map<String, ImageLinkDecl> linkMap = new HashMap<>();
-        for (String key : props.stringPropertyNames()) {
-            if (key.startsWith(CFG_LINK_PREFIX)) {
-                String id = StringUtils.substringBetween(key, CFG_LINK_PREFIX, ".");
-
-                // Create new declaration for current ID if there is none so far
-                ImageLinkDecl e = linkMap.get(id);
-                if (e == null) {
-                    e = new ImageLinkDecl(id);
-                    linkMap.put(id, e);
-                }
-
-                // Record link URL
-                if (key.endsWith(CFG_LINK_URL)) {
-                    e.setLinkUrl(props.getProperty(key));
-                }
-                // Record link URL
-                if (key.endsWith(CFG_LINK_IMAGE_URL)) {
-                    e.setImageUrl(props.getProperty(key));
-                }
-            }
-        }
-
-        // Sort by ID
-        List<ImageLinkDecl> links = new ArrayList<>(linkMap.values());
-        links.sort(Comparator.comparing(ImageLinkDecl::getId));
-
-        return links;
     }
 }

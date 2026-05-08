@@ -35,10 +35,11 @@ public class AnnotationPageLayoutState
 
     private static final long serialVersionUID = 4751157181917255392L;
 
-    private int sidebarSizeLeft;
-    private int sidebarSizeRight;
+    private double sidebarSizeLeft;
+    private double sidebarSizeRight;
+    private boolean actionBarCollapsed;
 
-    public int getSidebarSizeLeft()
+    public double getSidebarSizeLeft()
     {
         if (sidebarSizeLeft < SIDEBAR_SIZE_MIN || sidebarSizeLeft > SIDEBAR_SIZE_MAX) {
             return SIDEBAR_SIZE_DEFAULT;
@@ -48,20 +49,12 @@ public class AnnotationPageLayoutState
         }
     }
 
-    public void setSidebarSizeLeft(int aSidebarSize)
+    public void setSidebarSizeLeft(double aSidebarSize)
     {
-        if (aSidebarSize > SIDEBAR_SIZE_MAX) {
-            sidebarSizeLeft = SIDEBAR_SIZE_MAX;
-        }
-        else if (aSidebarSize < SIDEBAR_SIZE_MIN) {
-            sidebarSizeLeft = SIDEBAR_SIZE_MIN;
-        }
-        else {
-            sidebarSizeLeft = aSidebarSize;
-        }
+        sidebarSizeLeft = clampSidebarSize(aSidebarSize);
     }
 
-    public int getSidebarSizeRight()
+    public double getSidebarSizeRight()
     {
         if (sidebarSizeRight < SIDEBAR_SIZE_MIN || sidebarSizeRight > SIDEBAR_SIZE_MAX) {
             return SIDEBAR_SIZE_DEFAULT;
@@ -71,16 +64,33 @@ public class AnnotationPageLayoutState
         }
     }
 
-    public void setSidebarSizeRight(int aSidebarSize)
+    public void setSidebarSizeRight(double aSidebarSize)
     {
-        if (aSidebarSize > SIDEBAR_SIZE_MAX) {
-            sidebarSizeRight = SIDEBAR_SIZE_MAX;
+        sidebarSizeRight = clampSidebarSize(aSidebarSize);
+    }
+
+    private static double clampSidebarSize(double aValue)
+    {
+        double clamped;
+        if (aValue > SIDEBAR_SIZE_MAX) {
+            clamped = SIDEBAR_SIZE_MAX;
         }
-        else if (aSidebarSize < SIDEBAR_SIZE_MIN) {
-            sidebarSizeRight = SIDEBAR_SIZE_MIN;
+        else if (aValue < SIDEBAR_SIZE_MIN) {
+            clamped = SIDEBAR_SIZE_MIN;
         }
         else {
-            sidebarSizeRight = aSidebarSize;
+            clamped = aValue;
         }
+        return Math.round(clamped * 10_000d) / 10_000d;
+    }
+
+    public boolean isActionBarCollapsed()
+    {
+        return actionBarCollapsed;
+    }
+
+    public void setActionBarCollapsed(boolean aActionBarCollapsed)
+    {
+        actionBarCollapsed = aActionBarCollapsed;
     }
 }

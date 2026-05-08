@@ -21,7 +21,13 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+
+import org.apache.commons.io.FileUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -42,12 +48,13 @@ import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAu
 public class MtasDocumentIndexFactory
     extends PhysicalIndexFactoryImplBase
 {
+    public static final String INDEX = "indexMtas";
+
     private final DocumentService documentService;
     private final RepositoryProperties repositoryProperties;
     private final FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
     private final FeatureSupportRegistry featureSupportRegistry;
 
-    @Autowired
     public MtasDocumentIndexFactory(DocumentService aDocumentService,
             RepositoryProperties aRepositoryProperties,
             FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
@@ -66,10 +73,30 @@ public class MtasDocumentIndexFactory
     }
 
     @Override
+    public File getIndexDir(Project aProject)
+    {
+        return repositoryProperties.getPath().toPath() //
+                .resolve(PROJECT_FOLDER) //
+                .resolve(Long.toString(aProject.getId())) //
+                .resolve(INDEX) //
+                .toFile();
+    }
+
+    @Override
+    public long getIndexSize(Project aProject) throws IOException
+    {
+        try {
+            return FileUtils.sizeOfDirectory(getIndexDir(aProject));
+        }
+        catch (UncheckedIOException e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
     public PhysicalIndex getPhysicalIndex(Project aProject)
     {
-        return new MtasDocumentIndex(aProject, documentService,
-                repositoryProperties.getPath().getAbsolutePath(), featureIndexingSupportRegistry,
-                featureSupportRegistry);
+        return new MtasDocumentIndex(aProject, documentService, getIndexDir(aProject),
+                featureIndexingSupportRegistry, featureSupportRegistry);
     }
 }

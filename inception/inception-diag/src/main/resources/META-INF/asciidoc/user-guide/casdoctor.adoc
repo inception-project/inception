@@ -225,7 +225,8 @@ Removing them is harmless and reduces memory and disk space usage.
 ID:: `AllAnnotationsStartAndEndWithCharactersCheck`
 Related repairs:: <<repair_TrimAnnotationsRepair>>
 
-Checks if all annotations start and end with a character (i.e. not a whitespace). Annotations that start or end with a whitespace character can cause problems during rendering. 
+Checks if all annotations start and end with a character (i.e. not a whitespace).
+Annotations that start or end with a whitespace character can cause problems during rendering. 
 Trimming whitespace at the begin and end is typically as  harmless procedure.
 
 [[check_DocumentTextStartsWithBomCheck]]
@@ -236,14 +237,26 @@ Related repairs:: <<repair_RemoveBomRepair>>
 
 Checks if the document text starts with a Byte Order Mark (BOM).
 
-[[check_XmlStructurePresentInCurationCasCheck]]
-=== XML structure is present in curation CAS
+[[check_PdfStructurePresentInNonInitialCasCheck]]
+=== PDF structure present in non-initial CAS
 [horizontal]
-ID:: `XmlStructurePresentInCurationCasCheck`
-Related repairs:: <<repair_ReplaceXmlStructureInCurationCasRepair>>
+ID:: `PdfStructurePresentInNonInitialCasCheck`
+Related repairs:: <<repair_RemovePdfStructureFromNonInitialCasRepair>>
 
-Checks if an XML structure that may have been extracted from the source document is present in the curation CAS.
-If it is not present, this check will fail.
+Checks if a PDF document structure that may have been extracted from the source document is present in an annotator or curator CAS.
+If it is present, the check will fail.
+We keep the document structure only in the initial CAS now.
+
+
+[[check_XmlStructurePresentInNonInitialCasCheck]]
+=== XML structure present in non-initial CAS
+[horizontal]
+ID:: `XmlStructurePresentInNonInitialCasCheck`
+Related repairs:: <<repair_RemoveXmlStructureFromNonInitialCasRepair>>
+
+Checks if an XML document structure that may have been extracted from the source document is present in an annotator or curator CAS.
+If it is present, the check will fail.
+We keep the document structure only in the initial CAS now.
 
 
 [[sect_repairs]]
@@ -413,10 +426,22 @@ ID:: `RemoveBomRepair`
 
 This repair removes the Byte Order Mark at the start of the document and adjusts all annotation offsets accordingly.
 
-[[repair_ReplaceXmlStructureInCurationCasRepair]]
-=== Relace XML structure in the curation CAS
+[[repair_RemovePdfStructureFromNonInitialCasRepair]]
+=== Remove PDF structure from non-initial CASes
 
 [horizontal]
-ID:: `ReplaceXmlStructureInCurationCasRepair`
+ID:: `RemovePdfStructureFromNonInitialCasRepair`
 
-This repair ensures the XML document structure that may have been extracted from the source document is also present in the curation CAS. Any potentially existing XML document structure int he curation CAS will be removed and replaced with the structure from the source document. 
+This repair ensures the PDF document structure that may have been extracted from the source document from annotator and
+curator CASes.
+We keep the document structure only in the initial CAS now.
+
+[[repair_RemoveXmlStructureFromNonInitialCasRepair]]
+=== Remove Xml structure from non-initial CASes
+
+[horizontal]
+ID:: `RemoveXmlStructureFromNonInitialCasRepair`
+
+This repair ensures the XML document structure that may have been extracted from the source document from annotator and
+curator CASes.
+We keep the document structure only in the initial CAS now.

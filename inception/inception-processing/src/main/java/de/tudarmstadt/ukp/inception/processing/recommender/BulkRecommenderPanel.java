@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
+import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.wrapInTryCatch;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 import java.io.Serializable;
@@ -30,8 +32,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -40,7 +46,14 @@ import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.convert.ConversionException;
+import org.apache.wicket.util.convert.IConverter;
+import org.apache.wicket.validation.IValidatable;
+import org.wicketstuff.kendo.ui.KendoUIBehavior;
+import org.wicketstuff.kendo.ui.form.combobox.ComboBox;
+import org.wicketstuff.kendo.ui.form.combobox.ComboBoxBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -50,7 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User_;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -61,7 +74,8 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 
 public class BulkRecommenderPanel
     extends GenericPanel<Project>
@@ -85,15 +99,95 @@ public class BulkRecommenderPanel
         formModel = new CompoundPropertyModel<>(new FormData());
         queue(new Form<FormData>("form", formModel));
 
-        queue(new DropDownChoice<>("user") //
-                .setChoices(LoadableDetachableModel.of(this::listUsers)) //
-                .setChoiceRenderer(new ChoiceRenderer<>(User_.UI_NAME)) //
-                .setRequired(true));
+        var userRenderer = new org.wicketstuff.kendo.ui.renderer.ChoiceRenderer<User>()
+        {
+            private static final long serialVersionUID = 1L;
 
-        queue(new DropDownChoice<>("recommender") //
-                .setChoices(LoadableDetachableModel.of(this::listRecommenders)) //
-                .setChoiceRenderer(new ChoiceRenderer<>(Recommender_.NAME)) //
-                .setRequired(true));
+            @Override
+            public String getText(User aObject)
+            {
+                if (!Objects.equals(aObject.getUsername(), aObject.getUiName())) {
+                    if (aObject.getUsername() == null) {
+                        return aObject.getUiName() + " (new)";
+                    }
+
+                    return aObject.getUiName() + " (" + aObject.getUsername() + ")";
+                }
+
+                return aObject.getUsername();
+            }
+
+            @Override
+            public String getValue(User aObject)
+            {
+                return aObject.getUsername();
+            }
+        };
+        var userChoices = LoadableDetachableModel.of(this::listUsers);
+        var user = new ComboBox<User>("user", userChoices, userRenderer)
+        {
+            private static final long serialVersionUID = -4402805232261971312L;
+
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            @Override
+            public <C> IConverter<C> getConverter(Class<C> aType)
+            {
+                if (User.class.isAssignableFrom(aType)) {
+                    return (IConverter) new IConverter<User>()
+                    {
+                        private static final long serialVersionUID = -8311927973299485L;
+
+                        @Override
+                        public User convertToObject(String aValue, Locale aLocale)
+                            throws ConversionException
+                        {
+                            var u = userService.get(aValue);
+                            if (u != null) {
+                                return u;
+                            }
+                            return User.builder() //
+                                    .withUiName(aValue) //
+                                    .withRealm(projectService
+                                            .getRealm(BulkRecommenderPanel.this.getModelObject()))
+                                    .build();
+                        }
+
+                        @Override
+                        public String convertToString(User aValue, Locale aLocale)
+                        {
+                            return aValue.getUsername();
+                        }
+                    };
+                }
+
+                return super.getConverter(aType);
+            }
+        };
+        user.add(LambdaBehavior.onConfigure(() -> {
+            // Trigger a re-loading of the model from the server
+            userChoices.detach();
+            var target = RequestCycle.get().find(AjaxRequestTarget.class);
+            if (target.isPresent()) {
+                target.get().appendJavaScript(wrapInTryCatch(format( //
+                        "var $w = %s; if ($w) { $w.dataSource.read(); }",
+                        KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD))));
+            }
+        }));
+        user.add(this::validateUiName);
+        ;
+        user.setOutputMarkupId(true);
+        user.setRequired(true);
+        queue(user);
+
+        var recommender = new DropDownChoice<Recommender>("recommender");
+        recommender.setChoices(LoadableDetachableModel.of(this::listRecommenders));
+        recommender.setChoiceRenderer(new ChoiceRenderer<>(Recommender_.NAME));
+        recommender.setRequired(true);
+        queue(recommender);
+
+        if (recommender.getChoices().size() == 1) {
+            formModel.getObject().recommender = recommender.getChoices().get(0);
+        }
 
         queue(new AnnotationDocumentStatesChoice("states") //
                 .setChoices(asList(NEW, IN_PROGRESS)));
@@ -117,6 +211,28 @@ public class BulkRecommenderPanel
                 .setOutputMarkupId(true));
 
         queue(new LambdaAjaxButton<>("startProcessing", this::actionStartProcessing));
+
+        var closeDialogButton = new LambdaAjaxLink("closeDialog", this::actionCancel);
+        closeDialogButton.setOutputMarkupId(true);
+        queue(closeDialogButton);
+    }
+
+    private void validateUiName(IValidatable<?> aValidatable)
+    {
+        if (aValidatable.getValue() instanceof User user) {
+            userService.validateUiName(user.getUiName()).forEach(aValidatable::error);
+            return;
+        }
+
+        if (aValidatable.getValue() instanceof String username) {
+            userService.validateUiName(username).forEach(aValidatable::error);
+            return;
+        }
+    }
+
+    protected void actionCancel(AjaxRequestTarget aTarget)
+    {
+        findParent(ModalDialog.class).close(aTarget);
     }
 
     private void actionStartProcessing(AjaxRequestTarget aTarget, Form<FormData> aForm)
@@ -127,6 +243,23 @@ public class BulkRecommenderPanel
         }
 
         var formData = aForm.getModelObject();
+
+        // Create a project-bound user if the user does not exist yet
+        if (formData.user.getUsername() == null) {
+            var realm = projectService.getRealm(getModelObject());
+            var other = userService.getUserByRealmAndUiName(realm, formData.user.getUiName());
+            if (other != null) {
+                error("There is already a user named [" + other.getUiName()
+                        + "] in this project! Select the user from the drop-down menu to use it.");
+                aTarget.addChildren(getPage(), IFeedback.class);
+                return;
+            }
+
+            formData.user = projectService.getOrCreateProjectBoundUser(getModelObject(),
+                    formData.user.getUiName());
+            projectService.assignRole(getModelObject(), formData.user, ANNOTATOR);
+        }
+
         schedulingService.enqueue(BulkPredictionTask.builder() //
                 .withSessionOwner(userService.getCurrentUser()) //
                 .withRecommender(formData.recommender) //
@@ -137,11 +270,13 @@ public class BulkRecommenderPanel
                 .withFinishDocumentsWithoutRecommendations(
                         formData.finishDocumentsWithoutRecommendations) //
                 .build());
+
+        findParent(ModalDialog.class).close(aTarget);
     }
 
     private List<User> listUsers()
     {
-        return projectService.listProjectUsersWithPermissions(getModelObject(), ANNOTATOR);
+        return projectService.listUsersWithRoleInProject(getModelObject(), ANNOTATOR);
     }
 
     private List<AnnotationLayer> listDocumentMetadataLayers()

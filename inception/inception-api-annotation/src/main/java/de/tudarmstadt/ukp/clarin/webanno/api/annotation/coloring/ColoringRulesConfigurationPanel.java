@@ -35,7 +35,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -54,7 +54,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
  * Can be added to a feature support traits editor to configure coloring rules.
  */
 public class ColoringRulesConfigurationPanel
-    extends Panel
+    extends GenericPanel<AnnotationLayer>
 {
     private static final long serialVersionUID = -8294428032177255299L;
 
@@ -71,23 +71,20 @@ public class ColoringRulesConfigurationPanel
 
         coloringRules = aColoringRules;
 
-        Form<ColoringRule> coloringRulesForm = new Form<>("coloringRulesForm",
-                CompoundPropertyModel.of(new ColoringRule()));
-        add(coloringRulesForm);
+        queue(new Form<ColoringRule>("coloringRulesForm",
+                CompoundPropertyModel.of(new ColoringRule())));
 
         coloringRulesContainer = new WebMarkupContainer("coloringRulesContainer");
         coloringRulesContainer.setOutputMarkupPlaceholderTag(true);
-        coloringRulesForm.add(coloringRulesContainer);
+        queue(coloringRulesContainer);
 
-        coloringRulesContainer.add(new TextField<String>("pattern"));
+        queue(new TextField<String>("pattern"));
         // We cannot make the color field a required one here because then we'd get a message
         // about color not being set when saving the entire feature details form!
-        coloringRulesContainer.add(
-                new ColorPickerTextField("color").add(new PatternValidator("#[0-9a-fA-F]{6}")));
-        coloringRulesContainer
-                .add(new LambdaAjaxSubmitLink<>("addColoringRule", this::addColoringRule));
+        queue(new ColorPickerTextField("color").add(new PatternValidator("#[0-9a-fA-F]{6}")));
+        queue(new LambdaAjaxSubmitLink<>("addColoringRule", this::addColoringRule));
 
-        coloringRulesContainer.add(createRulesList("coloringRules", coloringRules));
+        queue(createRulesList("coloringRules", coloringRules));
     }
 
     private ListView<ColoringRule> createRulesList(String aId,
@@ -100,9 +97,9 @@ public class ColoringRulesConfigurationPanel
             @Override
             protected void populateItem(ListItem<ColoringRule> aItem)
             {
-                ColoringRule coloringRule = aItem.getModelObject();
+                var coloringRule = aItem.getModelObject();
 
-                Label value = new Label("pattern", coloringRule.getPattern());
+                var value = new Label("pattern", coloringRule.getPattern());
 
                 value.add(new StyleAttributeModifier()
                 {
@@ -152,11 +149,6 @@ public class ColoringRulesConfigurationPanel
                 aTarget.add(coloringRulesContainer);
             }
         };
-    }
-
-    public AnnotationLayer getModelObject()
-    {
-        return (AnnotationLayer) getDefaultModelObject();
     }
 
     private void addColoringRule(AjaxRequestTarget aTarget, Form<ColoringRule> aForm)

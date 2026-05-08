@@ -38,41 +38,41 @@
  * SOFTWARE.
  */
 
-import { MarkerType, VID } from '../protocol/Protocol'
-import { EventDesc } from './EventDesc'
-import { Role } from './Role'
+import { MarkerType, VID } from '../protocol/Protocol';
+import { EventDesc } from './EventDesc';
+import { Role } from './Role';
 
 export class Arc {
-  annotatorNotes = undefined
-  comment = undefined
-  origin: VID
-  target: VID
-  dist: number
-  type: string
-  shadowClass: string
-  jumpHeight = 0
-  equiv = false
-  eventDescId: string
-  relation = false
-  marked: MarkerType
-  hidden = false
+    annotatorNotes = undefined;
+    comment = undefined;
+    origin: VID;
+    target: VID;
+    dist: number;
+    type: string;
+    shadowClass: string;
+    jumpHeight = 0;
+    equiv = false;
+    eventDescId: string;
+    relation = false;
+    marked: MarkerType;
+    hidden = false;
 
-  constructor (eventDesc: EventDesc, role: Role, dist: number, eventNo: string) {
-    this.origin = eventDesc.id
-    this.target = role.targetId
-    this.dist = dist
-    this.type = role.type
-    this.shadowClass = eventDesc.shadowClass
+    constructor(eventDesc: EventDesc, role: Role, dist: number, eventNo: string) {
+        this.origin = eventDesc.id;
+        this.target = role.targetId;
+        this.dist = dist;
+        this.type = role.type;
+        this.shadowClass = eventDesc.shadowClass;
 
-    if (eventDesc.equiv) {
-      this.equiv = true
-      this.eventDescId = eventNo
-      eventDesc.equivArc = this
-    } else if (eventDesc.relation) {
-      this.relation = true
-      this.eventDescId = eventNo
+        if (eventDesc.equiv) {
+            this.equiv = true;
+            this.eventDescId = eventNo;
+            eventDesc.equivArc = this;
+        } else if (eventDesc.relation) {
+            this.relation = true;
+            this.eventDescId = eventNo;
+        }
+
+        // Object.seal(this);
     }
-
-    // Object.seal(this);
-  }
 }

@@ -31,28 +31,41 @@ public class SecurityPropertiesImpl
     private String defaultAdminUsername;
     private String defaultAdminPassword;
     private boolean defaultAdminRemoteAccess = false;
+
+    /**
+     * Whether simple space characters are permitted in usernames. Enable this option only when
+     * necessary to restore access to existing accounts in certain scenarios such as when using
+     * external authentication. Usernames with spaces may lead to problems e.g. when
+     * exporting/importing projects or documents or when constructing certain URLs.
+     */
     private boolean spaceAllowedInUsername = false;
 
     public static final int HARD_MINIMUM_PASSWORD_LENGTH = 0;
     public static final int DEFAULT_MINIMUM_PASSWORD_LENGTH = 8;
+    /** Minimum number of characters a password can have (max {@code 128}). */
     private int minimumPasswordLength = DEFAULT_MINIMUM_PASSWORD_LENGTH;
 
     public static final int HARD_MAXIMUM_PASSWORD_LENGTH = 128;
     public static final int DEFAULT_MAXIMUM_PASSWORD_LENGTH = 32;
+    /** Maximum number of characters a password can have (max {@code 128}). */
     private int maximumPasswordLength = DEFAULT_MAXIMUM_PASSWORD_LENGTH;
 
     public static final int HARD_MINIMUM_USERNAME_LENGTH = 1;
     public static final int DEFAULT_MINIMUM_USERNAME_LENGTH = 4;
+    /** Minimum number of characters a username can have (max {@code 128}). */
     private int minimumUsernameLength = DEFAULT_MINIMUM_USERNAME_LENGTH;
 
     public static final int HARD_MAXIMUM_USERNAME_LENGTH = 128;
     public static final int DEFAULT_MAXIMUM_USERNAME_LENGTH = 64;
+    /** Maximum number of characters a username can have (max {@code 128}). */
     private int maximumUsernameLength = DEFAULT_MAXIMUM_USERNAME_LENGTH;
 
     public static final String DEFAULT_USERNAME_PATTERN = ".*";
+    /** Regular expression for valid usernames. */
     private Pattern usernamePattern = Pattern.compile(DEFAULT_USERNAME_PATTERN);
 
     public static final String DEFAULT_PASSWORD_PATTERN = ".*";
+    /** Regular expression for valid passwords. */
     private Pattern passwordPattern = Pattern.compile(DEFAULT_PASSWORD_PATTERN);
 
     @Override

@@ -21,21 +21,19 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import wicket.contrib.input.events.key.KeyType;
 
-@Component
 @Order(300)
 public class AgreementPageMenuItem
     implements ProjectMenuItem
@@ -50,9 +48,9 @@ public class AgreementPageMenuItem
     }
 
     @Override
-    public IconType getIcon()
+    public Component getIcon(String aId)
     {
-        return FontAwesome5IconType.people_arrows_s;
+        return new Icon(aId, FontAwesome5IconType.people_arrows_s);
     }
 
     @Override
@@ -69,12 +67,12 @@ public class AgreementPageMenuItem
     {
         // Show agreement menu item only if we have at least 2 annotators or we cannot calculate
         // pairwise agreement
-        if (projectService.listProjectUsersWithPermissions(aProject, ANNOTATOR).size() < 2) {
+        if (projectService.listUsersWithRoleInProject(aProject, ANNOTATOR).size() < 2) {
             return false;
         }
 
         // Visible if the current user is a curator or project admin
-        User user = userRepo.getCurrentUser();
+        var user = userRepo.getCurrentUser();
         return projectService.hasRole(user, aProject, CURATOR, MANAGER);
     }
 

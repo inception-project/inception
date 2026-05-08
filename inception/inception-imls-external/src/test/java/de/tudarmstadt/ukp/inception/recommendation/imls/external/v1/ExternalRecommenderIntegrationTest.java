@@ -34,7 +34,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -48,27 +47,33 @@ import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config.ExternalRecommenderPropertiesImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.PredictionRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.TrainingRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.MPredictionRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.MTrainingRequest;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
+import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.QueueDispatcher;
 import okhttp3.mockwebserver.RecordedRequest;
 
+@ExtendWith(MockitoExtension.class)
 public class ExternalRecommenderIntegrationTest
 {
     private static final String TYPE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
@@ -79,6 +84,8 @@ public class ExternalRecommenderIntegrationTest
     private static final long PROJECT_ID = 42L;
     private static final boolean CROSS_SENTENCE = true;
     private static final AnchoringMode ANCHORING_MODE = AnchoringMode.TOKENS;
+
+    private @Mock AnnotationSchemaService schemaService;
 
     private Recommender recommender;
     private RecommenderContext context;
@@ -97,7 +104,8 @@ public class ExternalRecommenderIntegrationTest
         context = new RecommenderContext();
 
         traits = new ExternalRecommenderTraits();
-        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits);
+        sut = new ExternalRecommender(new ExternalRecommenderPropertiesImpl(), recommender, traits,
+                schemaService);
 
         remoteRecommender = new MockRemoteStringMatchingNerRecommender(recommender);
 
@@ -153,7 +161,7 @@ public class ExternalRecommenderIntegrationTest
         var casses = loadDevelopmentData();
         sut.train(context, casses);
 
-        var request = fromJsonString(TrainingRequest.class, requestBodies.get(0));
+        var request = fromJsonString(MTrainingRequest.class, requestBodies.get(0));
 
         assertThat(request.getMetadata()) //
                 .hasNoNullFieldsOrProperties() //
@@ -183,7 +191,7 @@ public class ExternalRecommenderIntegrationTest
         RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
         sut.predict(new PredictionContext(context), cas);
 
-        var request = fromJsonString(PredictionRequest.class, requestBodies.get(1));
+        var request = fromJsonString(MPredictionRequest.class, requestBodies.get(1));
 
         assertThat(request.getMetadata()) //
                 .hasNoNullFieldsOrProperties() //
@@ -209,7 +217,8 @@ public class ExternalRecommenderIntegrationTest
             for (int i = 0; i < data.size(); i++) {
                 var cas = data.get(i);
                 addCasMetadata(cas.getJCas(), i);
-                casStorageSession.add("testDataCas" + i, EXCLUSIVE_WRITE_ACCESS, cas);
+                casStorageSession.add(AnnotationSet.forTest("testDataCas" + i),
+                        EXCLUSIVE_WRITE_ACCESS, cas);
             }
             return data;
         }
@@ -262,9 +271,9 @@ public class ExternalRecommenderIntegrationTest
         return recommender;
     }
 
-    private QueueDispatcher buildDispatcher()
+    private Dispatcher buildDispatcher()
     {
-        return new QueueDispatcher()
+        return new Dispatcher()
         {
             @Override
             public MockResponse dispatch(RecordedRequest request)
@@ -273,11 +282,12 @@ public class ExternalRecommenderIntegrationTest
                     var body = request.getBody().readUtf8();
                     requestBodies.add(body);
 
-                    if (Objects.equals(request.getPath(), "/train")) {
+                    switch (request.getPath()) {
+                    case "/train":
                         remoteRecommender.train(body);
                         return new MockResponse().setResponseCode(204);
-                    }
-                    else if (request.getPath().equals("/predict")) {
+
+                    case "/predict":
                         var response = remoteRecommender.predict(body);
                         return new MockResponse().setResponseCode(200).setBody(response);
                     }

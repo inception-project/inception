@@ -21,16 +21,17 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.resolvePrefLabelProperties;
 import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.buildKnowledgeBase;
 import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.buildRepository;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.slf4j.event.Level.INFO;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.rdf4j.repository.RepositoryConnection;
@@ -128,18 +129,19 @@ public class SPARQLQueryBuilderGenericTest
 
     @ParameterizedTest(name = "{index}: profile: {0}")
     @MethodSource("data")
-    public void thatRegexMetaCharactersAreSafe(KnowledgeBaseProfile aProfile) throws IOException
+    public void thatRegexMetaCharactersAreSafe(KnowledgeBaseProfile aProfile) throws Exception
     {
         var kb = buildKnowledgeBase(aProfile);
         var repo = buildRepository(aProfile);
 
+        var prefLabels = resolvePrefLabelProperties(repo, kb);
+
         try (var conn = repo.getConnection()) {
-            var builder = SPARQLQueryBuilder.forItems(kb)
+            var builder = SPARQLQueryBuilder.forItems(kb).withPrefLabelProperties(prefLabels)
                     .withLabelMatchingExactlyAnyOf(".[]*+{}()lala").limit(3);
 
             LOG.info("Query   :");
-            Arrays.stream(builder.selectQuery().getQueryString().split("\n"))
-                    .forEachOrdered(l -> LOG.info("          {}", l));
+            builder.logQueryString(LOG, INFO, "          ");
 
             builder.asHandles(conn, true);
 
@@ -151,11 +153,12 @@ public class SPARQLQueryBuilderGenericTest
     @ParameterizedTest(name = "{index}: profile: {0}")
     @MethodSource("data")
     public void thatLineBreaksAndWhitespaceAreSafe_noFts(KnowledgeBaseProfile aProfile)
-        throws IOException
+        throws Exception
     {
         var kb = buildKnowledgeBase(aProfile);
         var repo = buildRepository(aProfile);
 
+        var prefLabels = resolvePrefLabelProperties(repo, kb);
         var originalFtsIri = kb.getFullTextSearchIri();
 
         try (var conn = repo.getConnection()) {
@@ -163,12 +166,12 @@ public class SPARQLQueryBuilderGenericTest
 
             var builder = SPARQLQueryBuilder //
                     .forItems(kb) //
+                    .withPrefLabelProperties(prefLabels) //
                     .withLabelMatchingExactlyAnyOf("Lord\n\r\tLady") //
                     .limit(3);
 
             LOG.info("Query   :");
-            Arrays.stream(builder.selectQuery().getQueryString().split("\n"))
-                    .forEachOrdered(l -> LOG.info("          {}", l));
+            builder.logQueryString(LOG, INFO, "          ");
 
             builder.asHandles(conn, true);
 

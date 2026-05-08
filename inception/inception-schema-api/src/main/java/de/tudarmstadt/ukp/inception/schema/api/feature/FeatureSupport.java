@@ -17,8 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.schema.api.feature;
 
+import static de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService.FEATURE_SUFFIX_SEP;
 import static de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil.setFeature;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
+import static java.lang.String.join;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -27,6 +31,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
@@ -41,9 +46,11 @@ import org.springframework.beans.factory.BeanNameAware;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.SuggestionState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
@@ -59,6 +66,8 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 public interface FeatureSupport<T>
     extends BeanNameAware, Extension<AnnotationFeature>
 {
+    String SUFFIX_SUGGESTION_INFO = FEATURE_SUFFIX_SEP + "suggestionInfo";
+
     @Override
     String getId();
 
@@ -241,28 +250,6 @@ public interface FeatureSupport<T>
      * Gets the label that should be displayed for the given feature value in the UI. {@code null}
      * is an acceptable return value for this method.
      * 
-     * <b>NOTE:</b> If this method should never be overwritten! Overwrite
-     * {@link #renderFeatureValue(AnnotationFeature, String) instead}.
-     * 
-     * @param aFeature
-     *            the feature to be rendered.
-     * @param aFs
-     *            the feature structure from which to obtain the label.
-     * @return the UI label.
-     */
-    default String renderFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
-    {
-        var labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
-        if (labelFeature == null) {
-            return null;
-        }
-        return renderFeatureValue(aFeature, aFs.getFeatureValueAsString(labelFeature));
-    }
-
-    /**
-     * Gets the label that should be displayed for the given feature value in the UI. {@code null}
-     * is an acceptable return value for this method.
-     * 
      * @param aFeature
      *            the feature to be rendered.
      * @param aLabel
@@ -274,9 +261,60 @@ public interface FeatureSupport<T>
         return aLabel;
     }
 
+    /**
+     * Gets the label values that should be displayed for the given feature value in the UI.
+     * {@code null} is an acceptable return value for this method.
+     * 
+     * <b>NOTE:</b> In most cases, it is better to overwrite
+     * {@link #renderFeatureValue(AnnotationFeature, String) instead}.
+     * 
+     * @param aFeature
+     *            the feature to be rendered.
+     * @param aFs
+     *            the feature structure from which to obtain the label.
+     * @return the UI label.
+     */
+    default List<String> renderFeatureValues(AnnotationFeature aFeature, FeatureStructure aFs)
+    {
+        var labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+        if (labelFeature == null) {
+            return emptyList();
+        }
+
+        var featureValue = renderFeatureValue(aFeature, aFs.getFeatureValueAsString(labelFeature));
+        if (featureValue == null) {
+            return emptyList();
+        }
+
+        return asList(featureValue);
+    }
+
+    /**
+     * Gets the label that should be displayed for the given feature value in the UI. {@code null}
+     * is an acceptable return value for this method.
+     * 
+     * <b>NOTE:</b> In most cases, it is better to overwrite
+     * {@link #renderFeatureValue(AnnotationFeature, String) instead}.
+     * 
+     * @param aFeature
+     *            the feature to be rendered.
+     * @param aFs
+     *            the feature structure from which to obtain the label.
+     * @return the UI label.
+     */
+    default String renderFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
+    {
+        var values = renderFeatureValues(aFeature, aFs);
+        if (values.isEmpty()) {
+            return null;
+        }
+
+        return join(", ", renderFeatureValues(aFeature, aFs));
+    }
+
     default List<VLazyDetailGroup> lookupLazyDetails(AnnotationFeature aFeature, Object aValue)
     {
-        return Collections.emptyList();
+        return emptyList();
     }
 
     /**
@@ -310,7 +348,7 @@ public interface FeatureSupport<T>
 
         var fs = selectFsByAddr(aCas, aAddress);
 
-        var value = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
+        var value = unwrapFeatureValue(aFeature, aValue);
         setFeature(fs, aFeature, value);
     }
 
@@ -370,13 +408,11 @@ public interface FeatureSupport<T>
      *            the value type
      * @param aFeature
      *            the feature.
-     * @param aCAS
-     *            the CAS being edited
      * @param aValue
      *            the value provided from the feature editor.
      * @return the CAS value.
      */
-    <V> V unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue);
+    <V> V unwrapFeatureValue(AnnotationFeature aFeature, Object aValue);
 
     /**
      * Convert a CAS representation of the feature value to the type of value which the feature
@@ -501,5 +537,32 @@ public interface FeatureSupport<T>
     default boolean isCopyOnCurationMerge(AnnotationFeature aFeature)
     {
         return true;
+    }
+
+    default void pushSuggestions(SourceDocument aDocument, String aDataOwner,
+            AnnotationBaseFS aAnnotation, AnnotationFeature aFeature,
+            List<SuggestionState> aSuggestions)
+    {
+        // No default implementation;
+    }
+
+    default List<SuggestionState> getSuggestions(FeatureStructure aAnnotation,
+            AnnotationFeature aFeature)
+    {
+        // No default implementation
+        return Collections.emptyList();
+    }
+
+    default String renderWrappedFeatureValue(Object aValue)
+    {
+        if (aValue == null) {
+            return null;
+        }
+
+        if (aValue instanceof Iterable multiValue) {
+            return String.join(", ", multiValue);
+        }
+
+        return aValue.toString();
     }
 }

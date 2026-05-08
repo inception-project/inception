@@ -26,7 +26,9 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -36,15 +38,17 @@ import org.apache.wicket.resource.FileSystemResourceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlDocumentReader;
+import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollectionIOUtils;
 
 public class CustomXmlFormatFactory
-    implements FormatSupport
+    extends UimaReaderWriterFormatSupport_ImplBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -110,7 +114,7 @@ public class CustomXmlFormatFactory
     }
 
     @Override
-    public List<String> getSectionElements()
+    public Set<String> getSectionElements()
     {
         return description.getSectionElements();
     }
@@ -125,6 +129,12 @@ public class CustomXmlFormatFactory
                 XmlDocumentReader.PARAM_BLOCK_ELEMENTS, description.getBlockElements(), //
                 XmlDocumentReader.PARAM_SPLIT_SENTENCES_IN_BLOCK_ELEMENTS,
                 description.isSplitSentencesInBlockElements());
+    }
+
+    @Override
+    public void prepareAnnotationCas(CAS aInitialCas, SourceDocument aDocument)
+    {
+        XmlNodeUtils.removeXmlDocumentStructure(aInitialCas);
     }
 
     @Override

@@ -1,0 +1,22 @@
+{
+  "properties": [
+    {
+      "name": "format.json-cas-legacy.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables legacy JSON CAS format import/export support."
+    },
+    {
+      "name": "format.json-cas-struct.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables structured JSON CAS format import/export support."
+    },
+    {
+      "name": "format.json-cas.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables JSON CAS format import/export support."
+    }
+  ]
+}

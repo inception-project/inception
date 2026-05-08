@@ -1,0 +1,28 @@
+{
+  "properties": [
+    {
+      "name": "format.html-legacy.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables legacy HTML import/export support."
+    },
+    {
+      "name": "format.html-zip.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables HTML ZIP import/export support."
+    },
+    {
+      "name": "format.html.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables HTML import/export support."
+    },
+    {
+      "name": "format.mhtml.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables MHTML import/export support."
+    }
+  ]
+}

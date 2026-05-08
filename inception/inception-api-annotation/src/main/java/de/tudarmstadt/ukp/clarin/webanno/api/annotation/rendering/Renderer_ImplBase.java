@@ -17,16 +17,24 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import static java.util.Optional.empty;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.TypeSystem;
+import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.rendering.Renderer;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
@@ -103,15 +111,14 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
             featureTraitsCache = new HashMap<>();
         }
 
-        Object trait = featureTraitsCache.computeIfAbsent(aFeature,
-                feature -> featureSupportRegistry.findExtension(feature).orElseThrow()
-                        .readTraits(feature));
+        var trait = featureTraitsCache.computeIfAbsent(aFeature, feature -> featureSupportRegistry
+                .findExtension(feature).orElseThrow().readTraits(feature));
 
         if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
             return Optional.of((T) trait);
         }
 
-        return Optional.empty();
+        return empty();
     }
 
     /**
@@ -131,13 +138,70 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
             layerTraitsCache = new HashMap<>();
         }
 
-        Object trait = layerTraitsCache.computeIfAbsent(aLayer,
+        var trait = layerTraitsCache.computeIfAbsent(aLayer,
                 feature -> layerSupportRegistry.getLayerSupport(feature).readTraits(feature));
 
         if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
             return Optional.of((T) trait);
         }
 
-        return Optional.empty();
+        return empty();
+    }
+
+    public static VID createEndpoint(RenderRequest aRequest, VDocument aVDocument,
+            AnnotationFS aEndpoint, TypeAdapter aTypeAdapter)
+    {
+        var windowBegin = aVDocument.getWindowBegin();
+        var windowEnd = aVDocument.getWindowEnd();
+
+        if (aEndpoint.getEnd() < windowBegin) {
+            if (aRequest.isClipArcs()) {
+                if (aVDocument.getSpan(VID_BEFORE) == null) {
+                    var beforeAnchor = VSpan.builder() //
+                            .withVid(VID_BEFORE) //
+                            .withLayer(aTypeAdapter.getLayer()) //
+                            .withRange(new VRange(0, 0)) //
+                            .build();
+                    aVDocument.add(beforeAnchor);
+                }
+                return VID_BEFORE;
+            }
+
+            var placeholder = VSpan.builder() //
+                    .forAnnotation(aEndpoint) //
+                    .placeholder() //
+                    .withLayer(aTypeAdapter.getLayer()) //
+                    .withRange(new VRange(aEndpoint.getBegin() - windowBegin,
+                            aEndpoint.getEnd() - windowBegin)) //
+                    .build();
+            aVDocument.add(placeholder);
+            return placeholder.getVid();
+        }
+
+        if (aEndpoint.getBegin() >= windowEnd) {
+            if (aRequest.isClipArcs()) {
+                if (aVDocument.getSpan(VID_AFTER) == null) {
+                    var afterAnchor = VSpan.builder() //
+                            .withVid(VID_AFTER) //
+                            .withLayer(aTypeAdapter.getLayer()) //
+                            .withRange(new VRange(windowEnd - windowBegin, windowEnd - windowBegin)) //
+                            .build();
+                    aVDocument.add(afterAnchor);
+                }
+                return VID_AFTER;
+            }
+
+            var placeholder = VSpan.builder() //
+                    .forAnnotation(aEndpoint) //
+                    .placeholder() //
+                    .withLayer(aTypeAdapter.getLayer()) //
+                    .withRange(new VRange(aEndpoint.getBegin() - windowBegin,
+                            aEndpoint.getEnd() - windowBegin)) //
+                    .build();
+            aVDocument.add(placeholder);
+            return placeholder.getVid();
+        }
+
+        return VID.of(aEndpoint);
     }
 }

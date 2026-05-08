@@ -17,30 +17,27 @@
  */
 package de.tudarmstadt.ukp.inception.assistant;
 
+import static de.tudarmstadt.ukp.inception.assistant.config.AssistantChatProperties.AUTO_DETECT_CAPABILITIES;
+import static de.tudarmstadt.ukp.inception.assistant.config.AssistantChatProperties.CAP_COMPLETION;
+import static de.tudarmstadt.ukp.inception.assistant.config.AssistantChatProperties.CAP_TOOLS;
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonString;
-import static java.lang.Math.floorDiv;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.unmodifiableList;
-import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -48,16 +45,20 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionRegistry;
 
+import com.knuddels.jtokkit.api.Encoding;
 import com.knuddels.jtokkit.api.EncodingRegistry;
-import com.networknt.schema.JsonSchema;
+import com.networknt.schema.Schema;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
+import de.tudarmstadt.ukp.inception.assistant.config.AssistantPropertiesImpl.AssistantChatPropertiesImpl;
 import de.tudarmstadt.ukp.inception.assistant.model.MCallResponse;
 import de.tudarmstadt.ukp.inception.assistant.model.MChatMessage;
+import de.tudarmstadt.ukp.inception.assistant.model.MClearCommand;
 import de.tudarmstadt.ukp.inception.assistant.model.MMessage;
-import de.tudarmstadt.ukp.inception.assistant.model.MRemoveConversationCommand;
+import de.tudarmstadt.ukp.inception.assistant.model.MRefreshCommand;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPoint;
 import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceKey;
@@ -65,7 +66,10 @@ import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceMapValue;
 import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibraryExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaShowRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaShowResponse;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
@@ -76,34 +80,43 @@ public class AssistantServiceImpl
 
     private final SessionRegistry sessionRegistry;
     private final SimpMessagingTemplate msgTemplate;
-    private final ConcurrentMap<AssistentStateKey, AssistentState> states;
+    private final MemoryManager memoryManager;
     private final OllamaClient ollamaClient;
     private final AssistantProperties properties;
     private final EncodingRegistry encodingRegistry;
     private final RetrieverExtensionPoint retrieverExtensionPoint;
+    private final ToolLibraryExtensionPoint toolLibraryExtensionPoint;
 
     private static final ClientSidePreferenceKey<ClientSidePreferenceMapValue> KEY_ASSISTANT_PREFS = //
             new ClientSidePreferenceKey<>(ClientSidePreferenceMapValue.class, "assistant/general");
 
-    private WatchedResourceFile<JsonSchema> userPreferencesSchema;
+    private WatchedResourceFile<Schema> userPreferencesSchema;
 
     public AssistantServiceImpl(SessionRegistry aSessionRegistry,
             SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
             AssistantProperties aProperties, EncodingRegistry aEncodingRegistry,
-            RetrieverExtensionPoint aRetrieverExtensionPoint)
+            RetrieverExtensionPoint aRetrieverExtensionPoint,
+            ToolLibraryExtensionPoint aToolLibraryExtensionPoint)
     {
         sessionRegistry = aSessionRegistry;
         msgTemplate = aMsgTemplate;
-        states = new ConcurrentHashMap<>();
+        memoryManager = new MemoryManager();
         ollamaClient = aOllamaClient;
         properties = aProperties;
         encodingRegistry = aEncodingRegistry;
         retrieverExtensionPoint = aRetrieverExtensionPoint;
+        toolLibraryExtensionPoint = aToolLibraryExtensionPoint;
 
         var userPreferencesSchemaFile = getClass()
                 .getResource("AssistantServiceUserPreferences.schema.json");
         userPreferencesSchema = new WatchedResourceFile<>(userPreferencesSchemaFile,
                 JSONUtil::loadJsonSchema);
+    }
+
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        autoDetectModelCapabilities();
     }
 
     // Set order so this is handled before session info is removed from sessionRegistry
@@ -127,60 +140,34 @@ public class AssistantServiceImpl
         }
 
         if (username != null) {
-            clearState(username);
+            memoryManager.clearMemories(username);
         }
     }
 
     @EventListener
     public void onBeforeProjectRemoved(BeforeProjectRemovedEvent aEvent)
     {
-        clearState(aEvent.getProject());
+        memoryManager.clearMemories(aEvent.getProject());
     }
 
     @EventListener
     public void onAfterProjectRemoved(AfterProjectRemovedEvent aEvent)
     {
-        clearState(aEvent.getProject());
+        memoryManager.clearMemories(aEvent.getProject());
     }
 
     @Override
-    public List<MTextMessage> getAllChatMessages(String aSessionOwner, Project aProject)
+    public List<MChatMessage> getUserChatHistory(String aSessionOwner, Project aProject)
     {
-        var state = getState(aSessionOwner, aProject);
-
-        return state.getMessages().stream() //
-                .filter(MTextMessage.class::isInstance) //
-                .map(MTextMessage.class::cast) //
-                .filter(msg -> state.isDebugMode() || !msg.internal()) //
-                .toList();
-    }
-
-    @Override
-    public List<MTextMessage> getChatMessages(String aSessionOwner, Project aProject)
-    {
-        var state = getState(aSessionOwner, aProject);
-
-        // In dev mode, we also record internal messages, so we need to filter them out again here
-        return state.getMessages().stream() //
-                .filter(MTextMessage.class::isInstance) //
-                .map(MTextMessage.class::cast) //
-                .filter(msg -> !msg.internal()) //
-                .toList();
-    }
-
-    void recordMessage(String aSessionOwner, Project aProject, MChatMessage aMessage)
-    {
-        if (!isDebugMode(aSessionOwner, aProject) && aMessage.ephemeral()) {
-            return;
-        }
-
-        var state = getState(aSessionOwner, aProject);
-        state.upsertMessage(aMessage);
+        var memory = memoryManager.getMemory(aSessionOwner, aProject);
+        return memory.getUserChatHistory();
     }
 
     @Override
     public void dispatchMessage(String aSessionOwner, Project aProject, MMessage aMessage)
     {
+        LOG.trace("Dispatching {}", aMessage);
+
         if (aMessage instanceof MChatMessage chatMessage) {
             if (!isDebugMode(aSessionOwner, aProject) && chatMessage.internal()) {
                 return;
@@ -195,292 +182,216 @@ public class AssistantServiceImpl
     @Override
     public void clearConversation(String aSessionOwner, Project aProject)
     {
-        synchronized (states) {
-            states.entrySet().stream() //
-                    .filter(e -> aSessionOwner.equals(e.getKey().user())
-                            && Objects.equals(aProject.getId(), e.getKey().projectId)) //
-                    .map(Entry::getValue) //
-                    .forEach(state -> state.clearMessages());
-        }
+        memoryManager.clearMemories(aSessionOwner, aProject);
 
-        dispatchMessage(aSessionOwner, aProject, new MRemoveConversationCommand());
+        dispatchMessage(aSessionOwner, aProject, new MClearCommand());
+    }
+
+    @Override
+    public void refreshAnnotations(String aSessionOwner, Project aProject)
+    {
+        dispatchMessage(aSessionOwner, aProject, new MRefreshCommand());
     }
 
     @Override
     public void setDebugMode(String aSessionOwner, Project aProject, boolean aOnOff)
     {
-        synchronized (states) {
-            getState(aSessionOwner, aProject).setDebugMode(aOnOff);
-        }
+        memoryManager.setDebugMode(aSessionOwner, aProject, aOnOff);
     }
 
     @Override
     public boolean isDebugMode(String aSessionOwner, Project aProject)
     {
-        synchronized (states) {
-            return getState(aSessionOwner, aProject).isDebugMode();
-        }
+        return memoryManager.isDebugMode(aSessionOwner, aProject);
     }
 
     @Override
-    public MTextMessage processInternalMessageSync(String aSessionOwner, Project aProject,
+    public MTextMessage processInternalMessageSync(User aSessionOwner, Project aProject,
             MTextMessage aMessage)
         throws IOException
     {
         Validate.isTrue(aMessage.internal());
 
-        if (isDebugMode(aSessionOwner, aProject)) {
-            recordMessage(aSessionOwner, aProject, aMessage);
-            dispatchMessage(aSessionOwner, aProject, aMessage);
-        }
+        try {
+            var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
+            var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
+                    getEncoding());
+            assistant.setSystemMessages(generateSystemMessages(aProject));
+            assistant.setMessageStreamHandler(this::handleStreamedMessageFragment);
+            assistant.setToolCallingEnabled(false);
 
-        var assistant = new ChatContext(properties, ollamaClient, aSessionOwner, aProject);
-        return assistant.chat(asList(aMessage));
+            memory.recordMessage(aMessage);
+            var responseMessage = assistant.chat(asList(aMessage)).message();
+
+            // Record the final complete message to replace the accumulated fragments
+            memory.recordMessage(responseMessage);
+
+            return responseMessage;
+        }
+        catch (ToolNotFoundException e) {
+            // Shouldn't happen because we disabled tool calling above
+            throw new IOException(e);
+        }
     }
 
     @Override
-    public <T> MCallResponse<T> processInternalCallSync(String aSessionOwner, Project aProject,
+    public <T> MCallResponse<T> processInternalCallSync(User aSessionOwner, Project aProject,
             Class<T> aType, MTextMessage aMessage)
         throws IOException
     {
         Validate.isTrue(aMessage.internal());
 
-        if (isDebugMode(aSessionOwner, aProject)) {
-            recordMessage(aSessionOwner, aProject, aMessage);
-            dispatchMessage(aSessionOwner, aProject, aMessage);
+        var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
+
+        if (memory.isDebugMode()) {
+            memory.recordMessage(aMessage);
+            dispatchMessage(aSessionOwner.getUsername(), aProject, aMessage);
         }
 
-        var assistant = new ChatContext(properties, ollamaClient, aSessionOwner, aProject);
+        var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
+                getEncoding());
+        assistant.setSystemMessages(generateSystemMessages(aProject));
+        assistant.setMessageStreamHandler(this::handleStreamedMessageFragment);
         var result = assistant.call(aType, asList(aMessage));
 
-        if (isDebugMode(aSessionOwner, aProject)) {
+        if (isDebugMode(aSessionOwner.getUsername(), aProject)) {
             var resultMessage = MTextMessage.builder() //
                     .withRole(SYSTEM).internal().ephemeral() //
                     .withActor(aMessage.actor()) //
-                    .withMessage("```json\n" + toPrettyJsonString(result.payload()) + "\n```") //
+                    .withContent("```json\n" + toPrettyJsonString(result.payload()) + "\n```") //
                     .withPerformance(result.performance()) //
                     .build();
-            recordMessage(aSessionOwner, aProject, resultMessage);
-            dispatchMessage(aSessionOwner, aProject, resultMessage);
+            memory.recordMessage(resultMessage);
+            dispatchMessage(aSessionOwner.getUsername(), aProject, resultMessage);
         }
 
         return result;
     }
 
     @Override
-    public void processAgentMessage(String aSessionOwner, Project aProject, MTextMessage aMessage,
+    public void processInternalMessage(User aSessionOwner, Project aProject,
+            SourceDocument aDocument, String aDataOwner, MTextMessage aMessage,
             MTextMessage... aContextMessages)
     {
-        var assistant = new ChatContext(properties, ollamaClient, aSessionOwner, aProject);
-
-        // Dispatch message early so the front-end can enter waiting state
-        dispatchMessage(aSessionOwner, aProject, aMessage);
+        var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
+        var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
+                getEncoding());
+        assistant.setIgnoreMemory(true);
+        assistant.setSystemMessages(generateSystemMessages(aProject));
+        assistant.setEphemeralMessages(asList(aContextMessages));
+        assistant.setMessageStreamHandler(this::handleStreamedMessageFragment);
+        assistant.setToolCallingEnabled(false);
 
         try {
-            var systemMessages = generateSystemMessages();
-
-            recordMessage(aSessionOwner, aProject, aMessage);
-
-            var recentConversation = limitConversationToContextLength(systemMessages, emptyList(),
-                    emptyList(), aMessage, properties.getChat().getContextLength());
-
-            var responseMessage = assistant.chat(recentConversation,
-                    (id, r) -> handleStreamedMessageFragment(aSessionOwner, aProject, id, r));
-
-            recordMessage(aSessionOwner, aProject, responseMessage);
-
-            dispatchMessage(aSessionOwner, aProject, responseMessage.withoutContent());
+            assistant.loop(aDocument, aDataOwner, aMessage);
         }
-        catch (IOException e) {
-            var errorMessage = MTextMessage.builder() //
-                    .withActor("Error").withRole(SYSTEM).internal().ephemeral() //
-                    .withMessage("Error: " + e.getMessage()) //
-                    .build();
-            recordMessage(aSessionOwner, aProject, errorMessage);
-            dispatchMessage(aSessionOwner, aProject, errorMessage);
+        catch (Exception e) {
+            handleAsyncException(aSessionOwner.getUsername(), aProject, e);
         }
     }
 
     @Override
-    public void processUserMessage(String aSessionOwner, Project aProject, MTextMessage aMessage,
-            MTextMessage... aContextMessages)
+    public void processUserMessage(User aSessionOwner, Project aProject, SourceDocument aDocument,
+            String aDataOwner, MTextMessage aMessage)
     {
-        var assistant = new ChatContext(properties, ollamaClient, aSessionOwner, aProject);
+        var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
+        var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
+                getEncoding());
+        assistant.setSystemMessages(generateSystemMessages(aProject));
+        assistant.setEphemeralMessages(generateEphemeralMessages(aProject, aMessage));
+        assistant.setMessageStreamHandler(this::handleStreamedMessageFragment);
+        assistant.setCommandDispatcher(
+                command -> dispatchMessage(aSessionOwner.getUsername(), aProject, command));
 
-        // Dispatch message early so the front-end can enter waiting state
-        dispatchMessage(aSessionOwner, aProject, aMessage);
+        toolLibraryExtensionPoint.getExtensions(aProject).forEach(toolLibrary -> {
+            assistant.addToolLibrary(toolLibrary);
+        });
 
         try {
-            var systemMessages = generateSystemMessages();
-
-            List<MTextMessage> contextMessages = isNotEmpty(aContextMessages)
-                    ? asList(aContextMessages)
-                    : emptyList();
-            List<MTextMessage> ephemeralMessages = contextMessages.isEmpty()
-                    ? generateEphemeralMessages(assistant, aMessage)
-                    : contextMessages;
-            List<MTextMessage> conversationMessages = contextMessages.isEmpty()
-                    ? getChatMessages(aSessionOwner, aProject)
-                    : emptyList();
-
-            // We record the message only now to ensure it is not included in the listMessages above
-            recordMessage(aSessionOwner, aProject, aMessage);
-
-            if (isDebugMode(aSessionOwner, aProject)) {
-                for (var msg : ephemeralMessages) {
-                    recordMessage(aSessionOwner, aProject, msg);
-                    dispatchMessage(aSessionOwner, aProject, msg);
-                }
-            }
-
-            var recentConversation = limitConversationToContextLength(systemMessages,
-                    ephemeralMessages, conversationMessages, aMessage,
-                    properties.getChat().getContextLength());
-
-            var responseMessage = assistant.chat(recentConversation,
-                    (id, r) -> handleStreamedMessageFragment(aSessionOwner, aProject, id, r));
-
-            recordMessage(aSessionOwner, aProject, responseMessage);
-
-            dispatchMessage(aSessionOwner, aProject, responseMessage.withoutContent());
+            assistant.loop(aDocument, aDataOwner, aMessage);
         }
-        catch (IOException e) {
-            var errorMessage = MTextMessage.builder() //
-                    .withActor("Error").withRole(SYSTEM).internal().ephemeral() //
-                    .withMessage("Error: " + e.getMessage()) //
-                    .build();
-            recordMessage(aSessionOwner, aProject, errorMessage);
-            dispatchMessage(aSessionOwner, aProject, errorMessage);
+        catch (Exception e) {
+            handleAsyncException(aSessionOwner.getUsername(), aProject, e);
         }
+    }
+
+    private void handleAsyncException(String aSessionOwner, Project aProject, Exception e)
+    {
+        LOG.error("Error processing user message", e);
+        var errorMessage = MTextMessage.builder() //
+                .withActor("Error") //
+                .withRole(SYSTEM) //
+                .internal() //
+                .ephemeral() //
+                .withContent("Error: " + e.getMessage()) //
+                .build();
+        memoryManager.getMemory(aSessionOwner, aProject).recordMessage(errorMessage);
+        dispatchMessage(aSessionOwner, aProject, errorMessage);
     }
 
     private void handleStreamedMessageFragment(String aSessionOwner, Project aProject,
-            UUID responseId, MTextMessage responseMessage)
+            UUID responseId, MChatMessage responseMessage)
     {
-        recordMessage(aSessionOwner, aProject, responseMessage);
         dispatchMessage(aSessionOwner, aProject, responseMessage);
     }
 
-    private List<MTextMessage> generateEphemeralMessages(ChatContext aAssistant,
-            MTextMessage aMessage)
+    private List<MTextMessage> generateEphemeralMessages(Project aProject, MTextMessage aMessage)
     {
         var messages = new ArrayList<MTextMessage>();
 
-        for (var retriever : retrieverExtensionPoint.getExtensions(aAssistant.getProject())) {
-            messages.addAll(retriever.retrieve(aAssistant, aMessage));
+        if (!properties.getChat().getCapabilities().contains(CAP_TOOLS)) {
+            for (var retriever : retrieverExtensionPoint.getExtensions(aProject)) {
+                messages.addAll(retriever.retrieve(aProject, aMessage));
+            }
         }
 
         return messages;
     }
 
-    private List<MTextMessage> generateSystemMessages()
+    private List<MTextMessage> generateSystemMessages(Project aProject)
     {
-        var primeDirectives = asList("Your name is " + properties.getNickname() + ".",
+        var establishIdentity = join("\n\n", "Your name is " + properties.getNickname() + ".",
                 "You are a helpful assistant within the annotation tool INCEpTION.",
                 "INCEpTION always refers to the annotation tool, never anything else such as the movie.",
-                "Do not include references to INCEpTION unless the user explicitly asks about the environment itself."
+                "Do not include references to INCEpTION unless the user explicitly asks about the environment itself.",
+                "Format your responses using markdown.",
+                "DO NOT use markdown tables because the chat window is rather narrow and tables are hard to read.",
+                "When the user asks a question, it is safe to assume it is about the documents in the project, "
+                        + "unless specified otherwise."
+        // "When reasoning, you must explicitly state the exact name of the tool you intend to call.
+        // "
+        // + "Do not say 'I will read the file'. Say 'I will call read_document to read the file'."
+        );
+
         // If you use information from the user manual in your response, prepend it with
         // "According to the user manual".
         // """,
         // """
-        // Respectfully decline to respond to questions or instructions that do not seem to be
+        // Respectfully decline to respond to questions or instructions that do not seem to
+        // be
         // related to INCEpTION or text annotation as that would be beyond your scope.
         // """
-        );
+
+        var primeDirectives = new ArrayList<String>();
+        primeDirectives.add(establishIdentity);
+
+        if (properties.getChat().getCapabilities().contains(CAP_TOOLS)) {
+            // When tools are enabled, collect system prompts from tool libraries
+            for (var toolLibrary : toolLibraryExtensionPoint.getExtensions(aProject)) {
+                primeDirectives.addAll(toolLibrary.getSystemPrompts(aProject));
+            }
+        }
+        else {
+            // When tools are disabled, collect system prompts from retrievers
+            for (var retriever : retrieverExtensionPoint.getExtensions(aProject)) {
+                primeDirectives.addAll(retriever.getSystemPrompts());
+            }
+        }
 
         return asList(MTextMessage.builder() //
                 .withRole(SYSTEM).internal().ephemeral() //
-                .withMessage(join("\n\n", primeDirectives)) //
+                .withContent(join("\n\n", primeDirectives)) //
                 .build());
-    }
-
-    private List<MTextMessage> limitConversationToContextLength(List<MTextMessage> aSystemMessages,
-            List<MTextMessage> aEphemeralMessages, List<MTextMessage> aRecentMessages,
-            MTextMessage aLatestUserMessage, int aContextLength)
-    {
-        // We don't really know which tokenizer the LLM uses. In case
-        // the tokenizer we use counts fewer tokens than the one user by
-        // the model and also to cover for message encoding JSON overhead,
-        // we try to use only 90% of the context window.
-        var encoding = encodingRegistry.getEncoding(properties.getChat().getEncoding())
-                .orElseThrow(() -> new IllegalStateException(
-                        "Unknown encoding: " + properties.getChat().getEncoding()));
-        var limit = floorDiv(aContextLength * 90, 100);
-
-        var headMessages = new ArrayList<MTextMessage>();
-        var tailMessages = new LinkedList<MTextMessage>();
-
-        var totalMessages = aSystemMessages.size() + aEphemeralMessages.size()
-                + aRecentMessages.size() + 1;
-        var allTokens = 0;
-        var systemTokens = 0;
-        var recentTokens = 0;
-        var ephemeralTokens = 0;
-
-        // System prompts from the start as context limit allows
-        var systemMsgIterator = aSystemMessages.iterator();
-
-        while (systemMsgIterator.hasNext() && allTokens < limit) {
-            var msg = systemMsgIterator.next();
-            if (SYSTEM.equals(msg.role())) {
-                var msgTokens = encoding.countTokensOrdinary(msg.message());
-                if (allTokens + msgTokens > limit) {
-                    LOG.trace("System message exceeds remaining token limit ({}): [{}]", msgTokens,
-                            msg.message());
-                    continue;
-                }
-
-                allTokens += msgTokens;
-                systemTokens += msgTokens;
-                headMessages.add(msg);
-            }
-        }
-
-        // Unconditionally the latest user message
-        var latestUserMsgTokens = encoding.countTokensOrdinary(aLatestUserMessage.message());
-        recentTokens += latestUserMsgTokens;
-        allTokens += latestUserMsgTokens;
-        tailMessages.addLast(aLatestUserMessage);
-
-        // Add ephemeral messages as context limit allows
-        var ephemeralMsgIterator = aEphemeralMessages.listIterator(aEphemeralMessages.size());
-        while (ephemeralMsgIterator.hasPrevious() && allTokens < limit) {
-            var msg = ephemeralMsgIterator.previous();
-            var msgTokens = encoding.countTokensOrdinary(msg.message());
-            if (allTokens + msgTokens > limit) {
-                LOG.trace("Ephemeral message exceeds remaining token limit ({}): [{}]", msgTokens,
-                        msg.message());
-                continue;
-            }
-
-            allTokens += msgTokens;
-            ephemeralTokens += msgTokens;
-            tailMessages.addFirst(msg);
-        }
-
-        // Add most recent user/assistant conversation as context limit allows
-        var recentMsgIterator = aRecentMessages.listIterator(aRecentMessages.size());
-        while (recentMsgIterator.hasPrevious() && allTokens < limit) {
-            var msg = recentMsgIterator.previous();
-            var msgTokens = encoding.countTokensOrdinary(msg.message());
-            if (allTokens + msgTokens > limit) {
-                break;
-            }
-
-            allTokens += msgTokens;
-            recentTokens += msgTokens;
-            tailMessages.addFirst(msg);
-        }
-
-        var allMessages = new ArrayList<>(headMessages);
-        allMessages.addAll(tailMessages);
-
-        LOG.trace(
-                "Reduced from {} to {} messages with a total of {} / {} tokens (system: {}, ephemeral: {}, recent: {} )",
-                totalMessages, headMessages.size() + tailMessages.size(), allTokens, limit,
-                systemTokens, ephemeralTokens, recentTokens);
-
-        return allMessages;
     }
 
     @SuppressWarnings({ "unchecked" })
@@ -491,106 +402,81 @@ public class AssistantServiceImpl
     }
 
     @Override
-    public Optional<JsonSchema> getUserPreferencesSchema() throws IOException
+    public Optional<Schema> getUserPreferencesSchema() throws IOException
     {
         return userPreferencesSchema.get();
     }
 
-    private AssistentState getState(String aSessionOwner, Project aProject)
+    private Encoding getEncoding()
     {
-        synchronized (states) {
-            return states.computeIfAbsent(new AssistentStateKey(aSessionOwner, aProject.getId()),
-                    (v) -> newState());
-        }
+        // We don't really know which tokenizer the LLM uses. In case
+        // the tokenizer we use counts fewer tokens than the one user by
+        // the model and also to cover for message encoding JSON overhead,
+        // we try to use only 90% of the context window.
+        var encoding = encodingRegistry.getEncoding(properties.getChat().getEncoding())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Unknown encoding: " + properties.getChat().getEncoding()));
+        return encoding;
     }
 
-    private AssistentState newState()
+    private void autoDetectModelCapabilities()
     {
-        var state = new AssistentState();
-        // state.upsertMessage(MTextMessage.builder() //
-        // .withActor(properties.getNickname()) //
-        // .withRole(SYSTEM) //
-        // .withMessage("Hi") //
-        // .build());
-        return state;
-    }
+        var chatProperties = (AssistantChatPropertiesImpl) properties.getChat();
 
-    private void clearState(Project aProject)
-    {
-        Validate.notNull(aProject, "Project must be specified");
+        var autoDetectCapabilities = chatProperties.getCapabilities()
+                .contains(AUTO_DETECT_CAPABILITIES);
+        var autoDetectContextLength = chatProperties.getContextLength() <= 0;
 
-        synchronized (states) {
-            states.keySet().removeIf(key -> Objects.equals(aProject.getId(), key.projectId()));
-        }
-    }
-
-    private void clearState(String aSessionOwner)
-    {
-        Validate.notNull(aSessionOwner, "Username must be specified");
-
-        synchronized (states) {
-            states.keySet().removeIf(key -> aSessionOwner.equals(key.user()));
-        }
-    }
-
-    private static class AssistentState
-    {
-        private LinkedList<MMessage> messages = new LinkedList<>();
-        private boolean debugMode;
-
-        public List<MMessage> getMessages()
-        {
-            return unmodifiableList(new ArrayList<>(messages));
-        }
-
-        public void clearMessages()
-        {
-            synchronized (messages) {
-                messages.clear();
-            }
-        }
-
-        public void setDebugMode(boolean aOnOff)
-        {
-            debugMode = aOnOff;
-        }
-
-        public boolean isDebugMode()
-        {
-            return debugMode;
-        }
-
-        public void upsertMessage(MMessage aMessage)
-        {
-            synchronized (messages) {
-                var found = false;
-                if (aMessage instanceof MTextMessage textMsg) {
-                    var i = messages.listIterator(messages.size());
-
-                    // If a message with the same ID already exists, update it
-                    while (i.hasPrevious() && !found) {
-                        var m = i.previous();
-                        if (m instanceof MTextMessage existingTextMsg) {
-                            if (Objects.equals(existingTextMsg.id(), textMsg.id())) {
-                                if (textMsg.done()) {
-                                    i.set(textMsg);
-                                }
-                                else {
-                                    i.set(existingTextMsg.append(textMsg));
-                                }
-                                found = true;
-                            }
-                        }
+        synchronized (chatProperties) {
+            if (autoDetectCapabilities || autoDetectContextLength) {
+                OllamaShowResponse modelInfo = null;
+                try {
+                    LOG.info("Contacting [{}] to retrieve information about model [{}]...",
+                            properties.getUrl(), chatProperties.getModel());
+                    modelInfo = ollamaClient.getModelInfo(properties.getUrl(),
+                            OllamaShowRequest.builder().withModel(chatProperties.getModel()) //
+                                    .withApiKey(properties.getApiKey()) //
+                                    .build());
+                }
+                catch (Exception e) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.warn("Unable to retrieve model information - using defaults", e);
+                    }
+                    else {
+                        LOG.warn("Unable to retrieve model information - using defaults");
                     }
                 }
 
-                // Otherwise add it
-                if (!found) {
-                    messages.add(aMessage);
+                if (autoDetectContextLength) {
+                    if (modelInfo != null && modelInfo.info() != null
+                            && modelInfo.info().getContextLength() != null) {
+                        chatProperties.setContextLength(modelInfo.info().getContextLength());
+                        LOG.info("Auto-detected context length: {}",
+                                chatProperties.getContextLength());
+                    }
+                    else {
+                        chatProperties.setContextLength(4096);
+                        LOG.info(
+                                "Unable to auto-detect context length - using default of {} tokens",
+                                chatProperties.getContextLength());
+                    }
+                }
+
+                if (autoDetectCapabilities) {
+                    if (modelInfo != null && CollectionUtils.isNotEmpty(modelInfo.capabilities())) {
+                        chatProperties.setCapabilities(modelInfo.capabilities());
+                        LOG.info("Auto-detected capabilties dimension of model [{}]: {}",
+                                chatProperties.getModel(), chatProperties.getCapabilities());
+                    }
+                    else {
+                        chatProperties.setCapabilities(Set.of(CAP_COMPLETION));
+                        LOG.info("Unable to auto-detect capabilities - using default: {}",
+                                chatProperties.getCapabilities());
+                    }
                 }
             }
         }
     }
 
-    private static record AssistentStateKey(String user, long projectId) {}
+    static record AssistantStateKey(String user, long projectId) {}
 }

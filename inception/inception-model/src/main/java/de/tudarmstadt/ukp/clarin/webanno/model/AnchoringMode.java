@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
-import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.wicket.request.resource.PackageResourceReference;
@@ -54,6 +55,8 @@ public enum AnchoringMode
      * Any number of sentences - allows zero-span annotations as well.
      */
     SENTENCES("sentences", true);
+
+    public static final AnchoringMode DEFAULT_ANCHORING_MODE = AnchoringMode.TOKENS;
 
     private static final PackageResourceReference SYMBOL_CHARACTERS = new PackageResourceReference(
             MethodHandles.lookup().lookupClass(), "AnchoringMode_CHARACTERS.svg");
@@ -122,7 +125,7 @@ public enum AnchoringMode
         // + "\" style=\"max-height: 1rem; width: auto; object-fit: scale-down;\"/>";
 
         try (var is = symbolRef.getResource().getResourceStream().getInputStream()) {
-            return IOUtils.toString(is, StandardCharsets.UTF_8);
+            return IOUtils.toString(is, UTF_8);
         }
         catch (IOException | ResourceStreamNotFoundException e) {
             return "";

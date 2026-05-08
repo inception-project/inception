@@ -22,14 +22,16 @@ import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FO
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.SOURCE_FOLDER;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.file.Files.createDirectories;
+import static java.nio.file.Files.newInputStream;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.zip.ZipFile;
@@ -40,6 +42,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -70,14 +73,17 @@ public class SourceDocumentExporter
     private final DocumentService documentService;
     private final DocumentStorageService documentStorageService;
     private final RepositoryProperties repositoryProperties;
+    private final DocumentImportExportService documentImportExportService;
 
     public SourceDocumentExporter(DocumentService aDocumentService,
             DocumentStorageService aDocumentStorageService,
-            RepositoryProperties aRepositoryProperties)
+            RepositoryProperties aRepositoryProperties,
+            DocumentImportExportService aDocumentImportExportService)
     {
         documentService = aDocumentService;
         repositoryProperties = aRepositoryProperties;
         documentStorageService = aDocumentStorageService;
+        documentImportExportService = aDocumentImportExportService;
     }
 
     @Override
@@ -96,10 +102,11 @@ public class SourceDocumentExporter
         // add source documents to a project
         var documents = documentService.listSourceDocuments(aProject);
         for (var sourceDocument : documents) {
-            ExportedSourceDocument exDocument = new ExportedSourceDocument();
+            var exDocument = new ExportedSourceDocument();
             exDocument.setFormat(sourceDocument.getFormat());
             exDocument.setName(sourceDocument.getName());
             exDocument.setState(sourceDocument.getState());
+            exDocument.setStateUpdated(sourceDocument.getStateUpdated());
             exDocument.setTimestamp(sourceDocument.getTimestamp());
             exDocument.setCreated(sourceDocument.getCreated());
             exDocument.setUpdated(sourceDocument.getUpdated());
@@ -127,8 +134,7 @@ public class SourceDocumentExporter
             try {
                 ProjectExporter.writeEntry(aStage, SOURCE_FOLDER + "/" + sourceDocument.getName(),
                         os -> {
-                            try (var is = Files.newInputStream(documentStorageService
-                                    .getSourceDocumentFile(sourceDocument).toPath())) {
+                            try (var is = getSourceDocumentInputStream(aRequest, sourceDocument)) {
                                 is.transferTo(os);
                             }
                         });
@@ -147,6 +153,30 @@ public class SourceDocumentExporter
                 throw new ProjectExportException(
                         "Couldn't find some source file(s) related to project");
             }
+        }
+    }
+
+    private InputStream getSourceDocumentInputStream(FullProjectExportRequest aRequest,
+            SourceDocument aDoc)
+        throws IOException
+    {
+        var is = newInputStream(documentStorageService.getSourceDocumentFile(aDoc).toPath());
+        if (!aRequest.isObfuscate()) {
+            return is;
+        }
+
+        try {
+            var maybeFS = documentImportExportService.getFormatById(aDoc.getFormat());
+            if (maybeFS.isEmpty()) {
+                throw new IOException(
+                        "Obfuscation failed. Unsupported format:[" + aDoc.getFormat() + "]");
+            }
+
+            return maybeFS.get().obfuscate(aDoc, is);
+        }
+        catch (Exception e) {
+            closeQuietly(is);
+            throw e;
         }
     }
 
@@ -184,6 +214,7 @@ public class SourceDocumentExporter
             sourceDocument.setFormat(importedSourceDocument.getFormat());
             sourceDocument.setName(importedSourceDocument.getName());
             sourceDocument.setState(importedSourceDocument.getState());
+            sourceDocument.setStateUpdated(importedSourceDocument.getStateUpdated());
             sourceDocument.setProject(aImportedProject);
             sourceDocument.setTimestamp(importedSourceDocument.getTimestamp());
             sourceDocument.setCreated(importedSourceDocument.getCreated());

@@ -42,30 +42,35 @@
 
     let { ajaxClient, data = $bindable(), pinnedGroups }: Props = $props();
 
-    let groupedAnnotations: Record<string, Annotation[]> = $state()
-    let groups: { label: string, collapsed: boolean }[] = $state()
     let collapsedGroups: string[] = $state([]);
     let filter = $state('');
 
-    run(() => {
-        const sortedLabels = [...pinnedGroups, ...uniqueLabels(data).filter(v => !pinnedGroups.includes(v))]
-
-        groups = sortedLabels.map(label => {
-            return { label: label, collapsed: collapsedGroups.includes(label) };
-        });
-
-        const relations = data?.relations.values() || []
-        const spans = data?.spans.values() || []
-        groupedAnnotations = groupBy(
+    // Base grouping of annotations by label
+    let groupedAnnotations = $derived.by(() => {
+        if (!data) return {};
+        const relations = data.relations.values() || [];
+        const spans = data.spans.values() || [];
+        return groupBy(
             [...spans, ...relations],
             (s) => renderLabel(data, s)
-        )
-    })
+        );
+    });
 
-    $effect(() => {
-            for (let [key, items] of Object.entries(groupedAnnotations)) {
-            items = filterAnnotations(data, items, filter)
-            items.sort((a, b) => {
+    // Groups with collapsed state
+    let groups = $derived.by(() => {
+        const sortedLabels = [...pinnedGroups, ...uniqueLabels(data).filter(v => !pinnedGroups.includes(v))];
+        return sortedLabels.map(label => {
+            return { label: label, collapsed: collapsedGroups.includes(label) };
+        });
+    });
+
+    // Derived state for filtered and sorted annotations
+    let filteredAndSortedAnnotations = $derived.by(() => {
+        const result: Record<string, Annotation[]> = {};
+        
+        for (let [key, items] of Object.entries(groupedAnnotations)) {
+            let filtered = filterAnnotations(data, items, filter);
+            filtered.sort((a, b) => {
                 if (a instanceof Span && !(b instanceof Span)) {
                     return -1;
                 }
@@ -102,10 +107,13 @@
                 }
 
                 console.error("Unexpected annotation type combination", a, b);
+                return 0;
             });
-            groupedAnnotations[key] = items
+            result[key] = filtered;
         }
-    });
+        
+        return result;
+    })
 
     function scrollTo(ann: Annotation) {
         if (ann instanceof Span) {
@@ -210,12 +218,12 @@
                             <button class="btn btn-link p-0" style="color: var(--bs-body-color)">
                                 <i class="fas fa-caret-down d-inline-block" class:group-collapsed={group.collapsed}></i>
                             </button>
-                            <span class="badge rounded-pill text-bg-secondary float-end m-1">{groupedAnnotations[group.label].length}</span>
+                            <span class="badge rounded-pill text-bg-secondary float-end m-1">{filteredAndSortedAnnotations[group.label]?.length || 0}</span>
                             <span>{group.label || "No label"}</span>
                         </div>
                         <ul class="px-0 list-group list-group-flush" class:d-none={group.collapsed}>
-                            {#if groupedAnnotations[group.label]}
-                                {#each groupedAnnotations[group.label] as ann}
+                            {#if filteredAndSortedAnnotations[group.label]}
+                                {#each filteredAndSortedAnnotations[group.label] as ann}
                                     <!-- svelte-ignore a11y_mouse_events_have_key_events -->
                                     <li
                                         class="list-group-item list-group-item-action p-0 d-flex"
@@ -272,7 +280,6 @@
 <style lang="scss">
     @import "@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss";
     @import "@inception-project/inception-js-api/src/style/InceptionEditorColors.scss";
-
     .labels {
         background: linear-gradient(to right, transparent 0px, var(--bs-body-bg) 15px);
         padding-left: 20px;

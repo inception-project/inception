@@ -46,7 +46,7 @@ const defaults = {
   bundle: true,
   sourcemap: argv.live,
   minify: !argv.live,
-  target: 'es2019',
+  target: 'es2020',
   loader: { '.ts': 'ts' },
   logLevel: 'info'
 }

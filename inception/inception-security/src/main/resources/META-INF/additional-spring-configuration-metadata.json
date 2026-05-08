@@ -1,0 +1,12 @@
+{
+  "properties": [
+    { "name": "security.username-pattern", "defaultValue": ".*" },
+    { "name": "security.password-pattern", "defaultValue": ".*" },
+    {
+      "name": "restoreDefaultAdminAccount",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Recovery flag: when set to a non-'false' value at startup, INCEpTION enters admin account recovery mode and re-creates the default admin account. Intended for emergency recovery only; leave unset in normal operation."
+    }
+  ]
+}

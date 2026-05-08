@@ -1,0 +1,22 @@
+{
+  "properties": [
+    {
+      "name": "format.webanno1.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables WebAnno TSV v1 format import/export support."
+    },
+    {
+      "name": "format.webanno2.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables WebAnno TSV v2 format import/export support."
+    },
+    {
+      "name": "format.webanno3.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables WebAnno TSV v3 format import/export support."
+    }
+  ]
+}

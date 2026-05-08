@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.Strings.CS;
 import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
 import static org.apache.uima.cas.CAS.TYPE_NAME_DOUBLE;
 import static org.apache.uima.cas.CAS.TYPE_NAME_FLOAT;
@@ -56,8 +57,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.bootstrap.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -142,7 +143,8 @@ public class FeatureDetailForm
             var type = FeatureDetailForm.this.getModelObject().getType();
             var requiredMandatory = asList(TYPE_NAME_INTEGER, TYPE_NAME_FLOAT, TYPE_NAME_DOUBLE,
                     TYPE_NAME_BOOLEAN).contains(type);
-            var requiredOptional = asList(TYPE_NAME_STRING_ARRAY, TYPE_NAME_STRING).contains(type);
+            var requiredOptional = asList(TYPE_NAME_STRING_ARRAY, TYPE_NAME_STRING).contains(type)
+                    || CS.startsWith(type, "kb:");
             if (requiredMandatory) {
                 required.setModel(Model.of(true));
                 required.setEnabled(false);

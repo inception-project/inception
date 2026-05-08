@@ -17,11 +17,11 @@
  */
 
 export class Point {
-  x: number
-  y: number
+    x: number;
+    y: number;
 
-  constructor (aPoint: Point) {
-    this.x = aPoint.x
-    this.y = aPoint.y
-  }
+    constructor(aPoint: Point) {
+        this.x = aPoint.x;
+        this.y = aPoint.y;
+    }
 }

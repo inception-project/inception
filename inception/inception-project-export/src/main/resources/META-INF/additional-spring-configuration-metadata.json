@@ -1,0 +1,16 @@
+{
+  "properties": [
+    {
+      "name": "dashboard.legacy-export.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables the legacy project export option on the project export page."
+    },
+    {
+      "name": "dashboard.transforming-export.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables the experimental transforming project export option, which allows applying transformations such as text obfuscation to source documents during export."
+    }
+  ]
+}

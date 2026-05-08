@@ -40,9 +40,14 @@ const defaults = {
   bundle: true,
   sourcemap: true,
   minify: !argv.live,
-  target: 'es2019',
+  target: 'es2020',
   loader: { '.ts': 'ts' },
   logLevel: 'info',
+  // Ensure Svelte runtime is shared across all components: Whenever you see an 
+  // "import from 'svelte'"", resolve it once and reuse that same resolution everywhere.
+  alias: {
+    'svelte': 'svelte'
+  },
   plugins: [
     sassPlugin(),
     esbuildSvelte({
@@ -65,7 +70,10 @@ fs.emptyDirSync(outbase)
 fs.copySync('pdfjs-web', `${outbase}`)
 fs.copySync('node_modules/pdfjs-dist/build', `${outbase}`)
 fs.copySync('node_modules/pdfjs-dist/cmaps', `${outbase}/cmaps`)
+fs.copySync('node_modules/pdfjs-dist/iccs', `${outbase}/iccs`)
+fs.copySync('node_modules/pdfjs-dist/image_decoders', `${outbase}/image_decoders`)
 fs.copySync('node_modules/pdfjs-dist/standard_fonts', `${outbase}/standard_fonts`)
+fs.copySync('node_modules/pdfjs-dist/wasm', `${outbase}/wasm`)
 
 if (argv.live) {
   const context = await esbuild.context(defaults)

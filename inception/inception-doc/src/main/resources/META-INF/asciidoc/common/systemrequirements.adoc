@@ -33,7 +33,7 @@ You should also be able to use {product-name} with other browsers such as Firefo
 | Linux (64bit), macOS (64bit), Windows (64bit)
 
 | Java Runtime Environment
-| version 17 or higher
+| version 21 or higher
 |===
 
 [.small]
@@ -46,7 +46,7 @@ The examples in this guide are based on a recent Debian Linux. Most of them shou
 | Linux (64bit), macOS (64bit), Windows (64bit)
 
 | Java Runtime Environment
-| version 17 or higher
+| version 21 or higher
 
 | DB Server
 | MariaDB version 10.6 or higher +

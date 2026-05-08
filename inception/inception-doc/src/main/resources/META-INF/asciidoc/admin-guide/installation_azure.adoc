@@ -22,6 +22,12 @@ There are various options for deploying {product-name} in the cloud. This sectio
 
 However, depending on the cloud you are running on, there may be special considerations to take or options to set. These are described here with respect to the Microsoft Azure cloud.
 
+== Using Azure AD / Entra ID
+
+Use <<sect_security_authentication_oauth2,OAuth2/OIDC>> to connect {product-name} to Entra ID.
+
+If you really must use SAML instead, check the trouble shooting section in our <<sect_security_authentication_saml2,SAML2>> setup documentation.
+
 == Using MySQL on the Azure cloud
 
 NOTE: Please read the generic <<sect_mysql,MySQL>> setup before reading this section.

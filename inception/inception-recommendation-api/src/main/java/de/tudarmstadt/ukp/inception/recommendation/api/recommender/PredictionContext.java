@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.scheduling.Monitor;
@@ -76,6 +77,11 @@ public class PredictionContext
     public Monitor getMonitor()
     {
         return monitor;
+    }
+
+    public Optional<Project> getProject()
+    {
+        return modelContext.getProject();
     }
 
     /**

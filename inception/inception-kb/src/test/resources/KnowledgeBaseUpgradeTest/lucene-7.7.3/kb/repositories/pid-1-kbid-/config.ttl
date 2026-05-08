@@ -15,6 +15,6 @@
               sail:sailType "openrdf:NativeStore"
             ];
           sail:sailType "openrdf:LuceneSail";
-          sl:indexDir ".../kb/indexes/pid-1-kbid-"
+          sl:indexDir "__MUST_BE_OVERRIDDEN_BY_reconfigureLocalKnowledgeBase__/kb/indexes/pid-1-kbid-"
         ]
     ] .

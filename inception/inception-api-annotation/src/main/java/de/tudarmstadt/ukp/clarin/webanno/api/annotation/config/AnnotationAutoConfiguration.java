@@ -37,8 +37,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderNotificationRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointFeatureSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.span.TokenAttachedSpanChangeListener;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemExtension;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemRegistry;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemRegistryImpl;
@@ -50,7 +48,9 @@ import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 
 @Configuration
-@EnableConfigurationProperties(AnnotationEditorDefaultPreferencesPropertiesImpl.class)
+@EnableConfigurationProperties({ //
+        AnnotationEditorDefaultPreferencesPropertiesImpl.class, //
+        KeyBindingsPropertiesImpl.class })
 public class AnnotationAutoConfiguration
 {
     @Bean
@@ -106,22 +106,15 @@ public class AnnotationAutoConfiguration
     }
 
     @Bean
-    public RelationEndpointFeatureSupport relationEndpointFeatureSupport()
-    {
-        return new RelationEndpointFeatureSupport();
-    }
-
-    @Bean
-    public TokenAttachedSpanChangeListener tokenAttachedSpanChangeListener(
-            AnnotationSchemaService aSchemaService)
-    {
-        return new TokenAttachedSpanChangeListener(aSchemaService);
-    }
-
-    @Bean
     ContextMenuItemRegistry contextMenuItemRegistry(
             @Lazy @Autowired(required = false) List<ContextMenuItemExtension> aExtensions)
     {
         return new ContextMenuItemRegistryImpl(aExtensions);
+    }
+
+    @Bean
+    public StringToEnumArrayConverter stringToEnumArrayConverter()
+    {
+        return new StringToEnumArrayConverter();
     }
 }

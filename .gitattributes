@@ -28,3 +28,6 @@
 *.svg binary
 *.mp4 binary
 *.mp3 binary
+*.gif binary
+*.wasm binary
+*.mhtml binary

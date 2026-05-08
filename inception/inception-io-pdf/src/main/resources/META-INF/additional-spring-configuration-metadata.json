@@ -1,0 +1,22 @@
+{
+  "properties": [
+    {
+      "name": "format.pdf-json-cas.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables PDF JSON CAS format import/export support."
+    },
+    {
+      "name": "format.pdf-xmi-cas.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables PDF XMI CAS format import/export support."
+    },
+    {
+      "name": "format.pdf.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables PDF import/export support."
+    }
+  ]
+}

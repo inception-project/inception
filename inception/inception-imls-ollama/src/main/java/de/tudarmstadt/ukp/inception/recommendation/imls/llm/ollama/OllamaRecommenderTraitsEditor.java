@@ -32,8 +32,8 @@ import org.apache.wicket.validation.validator.UrlValidator;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaModel;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaTag;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Preset;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraitsEditor_ImplBase;
@@ -68,7 +68,7 @@ public class OllamaRecommenderTraitsEditor
         }
 
         try {
-            return ollamaClient.listModels(url).stream().map(OllamaModel::getName).toList();
+            return ollamaClient.listModels(url).stream().map(OllamaTag::name).toList();
         }
         catch (IOException e) {
             return emptyList();

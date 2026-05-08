@@ -19,24 +19,40 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:extend>
-    <div class="flex-content flex-v-container">
-      <div class="annotation-editor-container flex-content flex-h-container flex-gutter flex-no-initial-gutter">
-        <div wicket:id="leftSidebar" class="flex-v-container flex-gutter"></div>
-        <div wicket:id="centerArea" class="flex-content flex-v-container flex-gutter">
-          <div class="flex-content card overflow-hidden">
-            <div class="card-header border-bottom-0">
-              <span wicket:id="documentNamePanel"/> 
-              <span wicket:id="numberOfPages" class="small text-muted float-end"/>
-            </div>
-            <div class="card-body flex-v-container" style="padding: 0px;">
-              <nav wicket:id="actionBar" class="action-bar"/>
-              <div wicket:id="editor" class="flex-content flex-v-container" style="padding: 0px;"/>
+    <div wicket:id="splitter" class="annotation-editor-container flex-content">
+      <!--
+        The splitter panes use inline padding instead of the .flex-gutter class.
+        .flex-gutter applies its top/bottom margin to all direct children — but
+        Kendo's splitter injects a position:absolute .k-splitter-overlay as a direct
+        child of every pane during a drag. With those margins, the absolutely-
+        positioned overlay is offset by the margin amount, which extends the pane's
+        scrollHeight and causes scrollbars to flicker in for the duration of the
+        drag. Using padding on the pane itself sidesteps this entirely: the padding
+        only consumes space inside the pane and is unaffected by extra children.
+      -->
+      <div wicket:id="leftSidebar" class="flex-v-container"
+           style="padding-block: 0.75rem 1rem; box-sizing: border-box;"></div>
+      <div wicket:id="centerArea" class="flex-content flex-v-container"
+           style="padding-block: 0.75rem 1rem; box-sizing: border-box;">
+        <div class="flex-content card overflow-hidden">
+          <div class="card-header d-flex justify-content-between border-bottom-0">
+            <div wicket:id="documentNamePanel"/>
+            <div class="d-flex">
+              <div wicket:id="numberOfPages" class="small text-muted"/>
+              <button wicket:id="toggleActionBar" class="btn btn-sm btn-outline-secondary border-0">
+                <i wicket:id="toggleActionBarIcon"/>
+              </button>
             </div>
           </div>
+          <div class="card-body flex-v-container" style="padding: 0px;">
+            <nav wicket:id="actionBar" class="action-bar"/>
+            <div wicket:id="editor" class="flex-content flex-v-container" style="padding: 0px;"/>
+          </div>
         </div>
-        <div wicket:id="rightSidebar" class="flex-sidebar flex-v-container">
-          <wicket:container wicket:id="annotationDetailEditorPanel"/>
-        </div>
+      </div>
+      <div wicket:id="rightSidebar" class="flex-sidebar flex-v-container"
+           style="padding-block: 0.75rem 1rem; box-sizing: border-box;">
+        <wicket:container wicket:id="annotationDetailEditorPanel"/>
       </div>
     </div>
   </wicket:extend>

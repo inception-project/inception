@@ -35,6 +35,8 @@ public enum ValidationMode
      */
     ALWAYS("always");
 
+    public static final ValidationMode DEFAULT_VALIDATION_MODE = ALWAYS;
+
     private final String id;
 
     ValidationMode(String aId)

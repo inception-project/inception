@@ -24,9 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 
+@JsonPropertyOrder({ "action", "layers", "text", "window", "relations", "spans" })
 public class CompactAnnotatedText
     extends AjaxResponse
 {

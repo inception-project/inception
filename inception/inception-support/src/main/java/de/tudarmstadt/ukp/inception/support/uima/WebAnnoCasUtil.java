@@ -56,6 +56,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationIndex;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
@@ -126,8 +127,7 @@ public class WebAnnoCasUtil
             return aCas;
         }
 
-        ThreadLockingInvocationHandler handler = (ThreadLockingInvocationHandler) Proxy
-                .getInvocationHandler(aCas);
+        var handler = (ThreadLockingInvocationHandler) Proxy.getInvocationHandler(aCas);
         return (CAS) handler.getTarget();
     }
 
@@ -141,8 +141,7 @@ public class WebAnnoCasUtil
             return;
         }
 
-        ThreadLockingInvocationHandler handler = (ThreadLockingInvocationHandler) Proxy
-                .getInvocationHandler(aCas);
+        var handler = (ThreadLockingInvocationHandler) Proxy.getInvocationHandler(aCas);
         handler.transferOwnershipToCurrentThread();
     }
 
@@ -255,6 +254,41 @@ public class WebAnnoCasUtil
     {
         var annotations = new ArrayList<AnnotationFS>();
         for (var t : select(aCas, aType)) {
+            if (t.getBegin() >= aEnd) {
+                break;
+            }
+            // not yet there
+            if (t.getEnd() <= aBegin) {
+                continue;
+            }
+            annotations.add(t);
+        }
+
+        return annotations;
+    }
+
+    /**
+     * Get overlapping annotations where selection overlaps with annotations.<br>
+     * Example: if annotation is (5, 13) and selection covered was from (7, 12); the annotation (5,
+     * 13) is returned as overlapped selection <br>
+     * If multiple annotations are [(3, 8), (9, 15), (16, 21)] and selection covered was from (10,
+     * 18), overlapped annotation [(9, 15), (16, 21)] should be returned
+     *
+     * @param aCas
+     *            a CAS containing the annotation.
+     * @param aType
+     *            a UIMA type.
+     * @param aBegin
+     *            begin offset.
+     * @param aEnd
+     *            end offset.
+     * @return a return value.
+     */
+    public static <T extends Annotation> List<T> selectOverlapping(CAS aCas, Class<T> aType,
+            int aBegin, int aEnd)
+    {
+        var annotations = new ArrayList<T>();
+        for (var t : aCas.select(aType)) {
             if (t.getBegin() >= aEnd) {
                 break;
             }
@@ -474,7 +508,7 @@ public class WebAnnoCasUtil
 
     public static FeatureStructure createDocumentMetadata(CAS aCas)
     {
-        Type type = getType(aCas, DocumentMetaData.class);
+        var type = getType(aCas, DocumentMetaData.class);
         FeatureStructure dmd;
         if (aCas.getDocumentText() != null) {
             dmd = aCas.createAnnotation(type, 0, aCas.getDocumentText().length());
@@ -484,7 +518,7 @@ public class WebAnnoCasUtil
         }
 
         // If there is already a DocumentAnnotation copy it's information and delete it
-        FeatureStructure da = aCas.getDocumentAnnotation();
+        var da = aCas.getDocumentAnnotation();
         if (da != null) {
             FSUtil.setFeature(dmd, FEATURE_BASE_NAME_LANGUAGE,
                     FSUtil.getFeature(da, FEATURE_BASE_NAME_LANGUAGE, String.class));
@@ -519,8 +553,8 @@ public class WebAnnoCasUtil
     public static void copyDocumentMetadata(CAS aSourceView, CAS aTargetView)
     {
         // First get the DMD then create. In case the get fails, we do not create.
-        FeatureStructure dmd = getDocumentMetadata(aSourceView);
-        FeatureStructure docMetaData = createDocumentMetadata(aTargetView);
+        var dmd = getDocumentMetadata(aSourceView);
+        var docMetaData = createDocumentMetadata(aTargetView);
         FSUtil.setFeature(docMetaData, "collectionId",
                 FSUtil.getFeature(dmd, "collectionId", String.class));
         FSUtil.setFeature(docMetaData, "documentBaseUri",

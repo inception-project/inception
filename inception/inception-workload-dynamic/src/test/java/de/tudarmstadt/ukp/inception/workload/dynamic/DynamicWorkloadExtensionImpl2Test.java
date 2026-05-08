@@ -19,49 +19,50 @@ package de.tudarmstadt.ukp.inception.workload.dynamic;
 
 import static java.lang.Thread.sleep;
 import static java.time.temporal.ChronoUnit.SECONDS;
-import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.time.Duration;
 
 import javax.sql.DataSource;
 
+import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.util.CasCreationUtils;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.util.FileSystemUtils;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -71,10 +72,12 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfigurati
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -86,17 +89,16 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @EnableAutoConfiguration
 @DataJpaTest( //
-        excludeAutoConfiguration = LiquibaseAutoConfiguration.class, //
         showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off", //
-                "workload.dynamic.enabled=true", //
-                "repository.path=" + DynamicWorkloadExtensionImpl2Test.TEST_OUTPUT_FOLDER })
+                "workload.dynamic.enabled=true" })
 @AutoConfigureTestDatabase(replace = Replace.AUTO_CONFIGURED)
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //
         "de.tudarmstadt.ukp.clarin.webanno" })
 @Import({ //
+        EventLoggingAutoConfiguration.class, //
         ConstraintsServiceAutoConfiguration.class, //
         TextFormatsAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
@@ -113,7 +115,13 @@ class DynamicWorkloadExtensionImpl2Test
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/DynamicWorkloadExtensionImpl2Test";
+    static @TempDir Path tempFolder;
+
+    @DynamicPropertySource
+    static void registerDynamicProperties(DynamicPropertyRegistry registry)
+    {
+        registry.add("repository.path", () -> tempFolder.toAbsolutePath().toString());
+    }
 
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
@@ -127,12 +135,6 @@ class DynamicWorkloadExtensionImpl2Test
     private SourceDocument sourceDocument;
     private AnnotationDocument annotationDocument;
     private DynamicWorkloadTraits traits;
-
-    @BeforeAll
-    static void setupClass()
-    {
-        FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
-    }
 
     @BeforeEach
     void setup(TestInfo aTestInfo) throws Exception
@@ -153,12 +155,6 @@ class DynamicWorkloadExtensionImpl2Test
         var workloadManager = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project);
         workloadManager.setType(DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID);
-    }
-
-    @AfterEach
-    void tearDown() throws Exception
-    {
-        projectService.removeProject(project);
     }
 
     @Test
@@ -184,7 +180,7 @@ class DynamicWorkloadExtensionImpl2Test
         dynamicWorkloadExtension.writeTraits(traits, project);
 
         var ann = documentService.getAnnotationDocument(annotationDocument.getDocument(),
-                annotationDocument.getUser());
+                AnnotationSet.forUser(annotationDocument.getUser()));
         assertThat(ann.getState()) //
                 .as("Effective state is in-progress after the CAS update")
                 .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
@@ -197,7 +193,8 @@ class DynamicWorkloadExtensionImpl2Test
         dynamicWorkloadExtension.freshenStatus(project);
 
         var annAfterRefresh = documentService.getAnnotationDocument(
-                annotationDocument.getDocument(), annotationDocument.getUser());
+                annotationDocument.getDocument(),
+                AnnotationSet.forUser(annotationDocument.getUser()));
         assertThat(annAfterRefresh.getState())
                 .as("After the abandonation timeout has passed, the effective state has been reset")
                 .isEqualTo(traits.getAbandonationState());
@@ -215,7 +212,7 @@ class DynamicWorkloadExtensionImpl2Test
         dynamicWorkloadExtension.writeTraits(traits, project);
 
         var ann = documentService.getAnnotationDocument(annotationDocument.getDocument(),
-                annotationDocument.getUser());
+                AnnotationSet.forUser(annotationDocument.getUser()));
         assertThat(ann.getState()) //
                 .as("Effective state is in-progress after the CAS update")
                 .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
@@ -235,7 +232,7 @@ class DynamicWorkloadExtensionImpl2Test
         }
 
         var annAfterRefresh = documentService.getAnnotationDocument(ann.getDocument(),
-                ann.getUser());
+                AnnotationSet.forUser(ann.getUser()));
 
         assertThat(annAfterRefresh.getUpdated()) //
                 .as("Database record was not updated at all") //
@@ -269,7 +266,9 @@ class DynamicWorkloadExtensionImpl2Test
                 AnnotationSchemaService aSchemaService)
             throws Exception
         {
-            var tsd = createTypeSystemDescription();
+            var internalTsd = CasMetadataUtils.getInternalTypeSystem();
+            var globalTsd = TypeSystemDescriptionFactory.createTypeSystemDescription();
+            var tsd = CasCreationUtils.mergeTypeSystems(asList(globalTsd, internalTsd));
             var importService = mock(DocumentImportExportService.class);
             when(importService.importCasFromFileNoChecks(any(), any(), any()))
                     .thenReturn(CasCreationUtils.createCas(tsd, null, null, null));

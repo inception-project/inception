@@ -16,18 +16,18 @@
  * limitations under the License.
  */
 
-import { type Offsets } from '@inception-project/inception-js-api'
-import { VGlyph } from './VGlyph'
-import { type JsonVPage } from './VModelJsonDeserializer'
+import { type Offsets } from '@inception-project/inception-js-api';
+import { VGlyph } from './VGlyph';
+import { type JsonVPage } from './VModelJsonDeserializer';
 
 export class VPage {
-  index: number
-  glyphs: VGlyph[]
-  range: Offsets
+    index: number;
+    glyphs: VGlyph[];
+    range: Offsets;
 
-  constructor (aPage : JsonVPage) {
-    this.index = aPage[0] + 1
-    this.range = [aPage[1], aPage[2]]
-    this.glyphs = aPage[3].flatMap(l => l[5].map(g => new VGlyph(this, l, g)))
-  }
+    constructor(aPage: JsonVPage) {
+        this.index = aPage[0] + 1;
+        this.range = [aPage[1], aPage[2]];
+        this.glyphs = aPage[3].flatMap((l) => l[5].map((g) => new VGlyph(this, l, g)));
+    }
 }

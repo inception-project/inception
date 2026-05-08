@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.export.model;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -63,8 +67,8 @@ public class ExportedAnnotationFeature
     @JsonProperty("description")
     private String description;
 
-    @JsonProperty("project_name")
-    private String projectName;
+    @JsonIgnore
+    private Long projectId;
 
     @JsonProperty("multi_value_mode")
     private MultiValueMode multiValueMode;
@@ -170,14 +174,14 @@ public class ExportedAnnotationFeature
         this.tagSet = tagSet;
     }
 
-    public String getProjectName()
+    public Long getProjectId()
     {
-        return projectName;
+        return projectId;
     }
 
-    public void setProjectName(String projectName)
+    public void setProjectId(Long aProjectId)
     {
-        this.projectName = projectName;
+        projectId = aProjectId;
     }
 
     public MultiValueMode getMultiValueMode()
@@ -291,54 +295,26 @@ public class ExportedAnnotationFeature
     }
 
     @Override
-    public int hashCode()
+    public boolean equals(final Object other)
     {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((projectName == null) ? 0 : projectName.hashCode());
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
-        return result;
+        if (!(other instanceof ExportedAnnotationFeature)) {
+            return false;
+        }
+        var castOther = (ExportedAnnotationFeature) other;
+        return new EqualsBuilder() //
+                .append(name, castOther.name) //
+                .append(type, castOther.type) //
+                .append(projectId, castOther.projectId) //
+                .isEquals();
     }
 
     @Override
-    public boolean equals(Object obj)
+    public int hashCode()
     {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        ExportedAnnotationFeature other = (ExportedAnnotationFeature) obj;
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        }
-        else if (!name.equals(other.name)) {
-            return false;
-        }
-        if (projectName == null) {
-            if (other.projectName != null) {
-                return false;
-            }
-        }
-        else if (!projectName.equals(other.projectName)) {
-            return false;
-        }
-        if (type == null) {
-            if (other.type != null) {
-                return false;
-            }
-        }
-        else if (!type.equals(other.type)) {
-            return false;
-        }
-        return true;
+        return new HashCodeBuilder() //
+                .append(name) //
+                .append(type) //
+                .append(projectId) //
+                .toHashCode();
     }
-
 }

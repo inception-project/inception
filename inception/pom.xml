@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
-    <version>37.0-SNAPSHOT</version>
+    <version>41.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>inception-app</artifactId>
@@ -29,11 +29,11 @@
   <properties>
     <maven.surefire.heap>6g</maven.surefire.heap>
     <maven.surefire.argLine>-XX:+EnableDynamicAgentLoading</maven.surefire.argLine>
-    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.release>21</maven.compiler.release>
     <maven.compiler.target>${maven.compiler.release}</maven.compiler.target>
     <maven.compiler.source>${maven.compiler.release}</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
-    <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
+    <dkpro.core.testCachePath>${session.executionRootDirectory}/inception/cache/dkpro-core-datasets</dkpro.core.testCachePath>
     <excludedTestCategories>slow</excludedTestCategories>
     <npm-install-command>ci</npm-install-command>
   </properties>
@@ -43,14 +43,7 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-dependencies</artifactId>
-        <version>37.0-SNAPSHOT</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-bom</artifactId>
-        <version>37.0-SNAPSHOT</version>
+        <version>41.0-SNAPSHOT</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -66,12 +59,6 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <!-- Log4J2 support for Spring Boot and profiles -->
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-spring-boot</artifactId>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
       <!-- Use Log4J v2 as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j2-impl</artifactId>
@@ -81,6 +68,12 @@
       <!-- Route Log4J v1 over SLF4J -->
       <groupId>org.slf4j</groupId>
       <artifactId>log4j-over-slf4j</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <!-- Modern Commons Logging should auto-route through Log4J -->
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -94,11 +87,6 @@
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-layout-template-json</artifactId>
     </dependency>
-    <dependency>
-      <!-- Route Java Commons Logging over SLF4J -->
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-jcl</artifactId>
-    </dependency>
     
     <!-- Dev aids -->
     <dependency>
@@ -107,13 +95,6 @@
       <scope>provided</scope>
     </dependency>
 
-    <!-- Generation of Spring Property Metadata files -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-configuration-processor</artifactId>
-      <optional>true</optional>
-    </dependency>
-    
     <!-- JAXB is no longer included with Java 9+ by default -->
     <!-- Old javax JAXB -->
     <dependency>
@@ -170,6 +151,7 @@
     <module>inception-support-bootstrap</module>
     <module>inception-support</module>
     <module>inception-support-standalone</module>
+    <module>inception-support-xml</module>
     <module>inception-model</module>
     <module>inception-model-vdoc</module>
     <module>inception-model-export</module>
@@ -187,8 +169,9 @@
     <module>inception-security</module>
     <module>inception-telemetry</module>
     <module>inception-ui-core</module>
+    <module>inception-undo</module>
     <module>inception-log</module>
-    <module>inception-log-ui</module>
+    <module>inception-log-api</module>
     <module>inception-scheduling</module>
     <module>inception-js-api</module>
     <module>inception-annotation-storage</module>
@@ -200,16 +183,18 @@
     <module>inception-api-editor</module>
     <module>inception-api-render</module>
     <module>inception-schema-api</module>
+    <module>inception-schema-analyzer</module>
     <module>inception-export</module>
     <module>inception-export-api</module>
     <module>inception-diag</module>
-    <module>inception-tutorial</module>
+    <module>inception-diag-api</module>
     <module>inception-testing</module>
     <module>inception-agreement</module>
     <module>inception-constraints</module>
     <module>inception-ui-agreement</module>
     <module>inception-ui-dashboard</module>
     <module>inception-ui-dashboard-activity</module>
+    <module>inception-ui-dashboard-api</module>
     <module>inception-ui-project</module>
     <module>inception-ui-annotation</module>
     <module>inception-ui-scheduling</module>
@@ -228,6 +213,7 @@
     <module>inception-io-html</module>
     <module>inception-io-nif</module>
     <module>inception-io-lif</module>
+    <module>inception-io-pdf</module>
     <module>inception-io-perseus</module>
     <module>inception-io-imscwb</module>
     <module>inception-io-intertext</module>
@@ -239,6 +225,7 @@
     <module>inception-io-xmi</module>
     <module>inception-io-xml</module>
     <!-- Curation -->
+    <module>inception-curation-api</module>
     <module>inception-curation</module>
     <module>inception-curation-legacy</module>
     <module>inception-ui-curation</module>
@@ -256,7 +243,6 @@
     <module>inception-ui-external-search</module>
     <!-- Knowledge base -->
     <module>inception-kb</module>
-    <module>inception-kb-fact-linking</module>
     <module>inception-kb-lucene-sail</module>
     <module>inception-ui-kb</module>
     <module>inception-concept-linking</module>
@@ -269,12 +255,23 @@
     <module>inception-external-editor</module>
     <module>inception-html-apache-annotator-editor</module>
     <module>inception-html-recogito-editor</module>
-    <module>inception-pdf-editor</module>
     <module>inception-pdf-editor2</module>
     <module>inception-review-editor</module>
     <!-- Schema extensions -->
+    <module>inception-layer-behavior</module>
+    <module>inception-layer-chain</module>
+    <module>inception-layer-chain-api</module>
     <module>inception-layer-docmetadata</module>
+    <module>inception-layer-docmetadata-api</module>
+    <module>inception-layer-relation</module>
+    <module>inception-layer-relation-api</module>
+    <module>inception-layer-span</module>
+    <module>inception-layer-span-api</module>
+    <module>inception-feature-bool</module>
+    <module>inception-feature-link</module>
     <module>inception-feature-lookup</module>
+    <module>inception-feature-number</module>
+    <module>inception-feature-string</module>
     <module>inception-image</module>
     <!-- Recommender system -->
     <module>inception-recommendation-api</module>
@@ -287,7 +284,6 @@
     <module>inception-imls-elg</module>
     <module>inception-imls-hf</module>
     <module>inception-imls-external</module>
-    <module>inception-imls-lapps</module>
     <module>inception-imls-ollama</module>
     <module>inception-imls-llm-support</module>
     <module>inception-imls-weblicht</module>
@@ -298,21 +294,56 @@
     <module>inception-workload-dynamic</module>
     <module>inception-workload-matrix</module>
     <module>inception-workload-ui</module>
-    <!-- Application -->
-    <module>inception-app-webapp</module>
+    <!-- Analytics and reporting -->
+    <module>inception-pivot</module>
+    <module>inception-pivot-api</module>
     <!-- Examples -->
     <module>inception-example-imls-data-majority</module>
     <!--<module>inception-imls-dl4j</module>-->
-    <!-- Packaging -->
-    <module>inception-docker</module>
     <!-- Versioning -->
     <module>inception-versioning</module>
     <module>inception-websocket</module>
     <!-- Assistant -->
+    <module>inception-assistant-api</module>
     <module>inception-assistant</module>
+    <module>inception-assistant-ui</module>
+    <!-- Application -->
+    <module>inception-app-webapp</module>
   </modules>
 
   <build>
+    <resources>
+      <!-- 
+        - We keep HTML and properies files etc. next to the Java code in src/main/java
+        - and not in src/main/resources - so we copy all resources from src/main/java
+        - as well
+        -->
+      <resource>
+        <filtering>false</filtering>
+        <directory>src/main/resources</directory>
+        <excludes>
+          <exclude>META-INF/version.properties</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <filtering>true</filtering>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>META-INF/version.properties</include>
+        </includes>
+      </resource>
+      <resource>
+        <filtering>false</filtering>
+        <directory>src/main/java</directory>
+        <includes>
+          <include>**</include>
+        </includes>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+    </resources>
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -340,6 +371,9 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
+          <compilerArgs>
+            <arg>-Aorg.springframework.boot.configurationprocessor.additionalMetadataLocations=${project.basedir}/src/main/resources</arg>
+          </compilerArgs>
           <annotationProcessorPaths>
             <path>
               <groupId>org.hibernate.orm</groupId>
@@ -350,6 +384,11 @@
               <groupId>org.apache.logging.log4j</groupId>
               <artifactId>log4j-core</artifactId>
               <version>${log4j2.version}</version>
+            </path>
+            <path>
+              <groupId>org.springframework.boot</groupId>
+              <artifactId>spring-boot-configuration-processor</artifactId>
+              <version>${spring.boot.version}</version>
             </path>
           </annotationProcessorPaths>
         </configuration>
@@ -433,13 +472,11 @@
               - Logging is used via reflection and cannot be detected by Maven
             -->
             <dependency>org.apache.logging.log4j:log4j-slf4j2-impl</dependency>
-            <dependency>org.apache.logging.log4j:log4j-spring-boot</dependency>
             <dependency>org.apache.logging.log4j:log4j-layout-template-json</dependency>
             <dependency>org.apache.logging.log4j:log4j-core</dependency>
             <dependency>org.slf4j:log4j-over-slf4j</dependency>
             <dependency>org.slf4j:jul-to-slf4j</dependency>
             <dependency>commons-logging:commons-logging</dependency>
-            <dependency>org.springframework:spring-jcl</dependency>
             <!--
               - JAXB is used via reflection and cannot be detected by Maven
             -->
@@ -464,11 +501,7 @@
               - Dev aids 
               -->
             <dependency>com.google.code.findbugs:jsr305</dependency>
-            <!-- 
-              - Generation of Spring Property Metadata files 
-              -->
-            <dependency>org.springframework.boot:spring-boot-configuration-processor</dependency>
-            <!-- 
+            <!--
               - Generation of constants for I18N properties files
               -->
             <dependency>com.github.kklisura.java.processing:props-to-constants-generator</dependency>
@@ -498,6 +531,7 @@
             <dependency>org.springframework.boot:spring-boot-test-autoconfigure</dependency>
             <dependency>com.squareup.okhttp3:mockwebserver</dependency>
             <dependency>com.squareup.okhttp3:okhttp</dependency>
+            <dependency>com.squareup.okhttp3:okhttp-jvm</dependency>
             <dependency>com.squareup.okio:okio-jvm</dependency>
           </ignoredUsedUndeclaredDependencies>
         </configuration>
@@ -518,9 +552,9 @@
                 </requireJavaVersion>
                 <bannedDependencies>
                   <excludes>
-                    <exclude>commons-logging:commons-logging</exclude>
-                    <exclude>commons-logging:commons-logging-api</exclude>
                     <exclude>org.slf4j:jcl-over-slf4j</exclude>
+                    <!-- Liquibase >= 5 has an incompatible non-OSS license -->
+                    <exclude>org.liquibase:liquibase-core:[5.0.0,)</exclude>
                   </excludes>
                 </bannedDependencies>
               </rules>
@@ -563,17 +597,17 @@
         <plugin>
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
-          <version>0.16.1</version>
+          <version>0.18</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>exec-maven-plugin</artifactId>
-          <version>3.5.0</version>
+          <version>3.6.3</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>3.8.1</version>
+          <version>3.10.0</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.gmaven</groupId>
@@ -583,7 +617,7 @@
         <plugin>
           <groupId>com.github.eirslett</groupId>
           <artifactId>frontend-maven-plugin</artifactId>
-          <version>1.15.1</version>
+          <version>2.0.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -601,6 +635,9 @@
           <configuration>
             <systemPropertyVariables>
               <dkpro.core.testCachePath>${dkpro.core.testCachePath}</dkpro.core.testCachePath>
+              <inception.solr.version>${solr.version}</inception.solr.version>
+              <inception.opensearch.version>${opensearch.version}</inception.opensearch.version>
+              <inception.lucene.version>${lucene.version}</inception.lucene.version>
             </systemPropertyVariables>
             <excludedGroups>${excludedTestCategories}</excludedGroups>
           </configuration>
@@ -608,7 +645,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-war-plugin</artifactId>
-          <version>3.4.0</version>
+          <version>3.5.1</version>
         </plugin>
         <plugin>
           <groupId>io.fabric8</groupId>
@@ -618,7 +655,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>versions-maven-plugin</artifactId>
-          <version>2.18.0</version>
+          <version>2.21.0</version>
           <configuration>
             <rulesUri>file:${maven.multiModuleProjectDirectory}/inception/inception-build/src/main/resources/inception/rules.xml</rulesUri>
             <!--
@@ -633,40 +670,22 @@
 
   <profiles>
     <profile>
-      <id>wicket-module</id>
-      <activation>
-        <file>
-          <exists>marker-wicket-module</exists>
-        </file>
-      </activation>
-      <build>
-        <resources>
-          <resource>
-            <filtering>false</filtering>
-            <directory>src/main/resources</directory>
-            <excludes>
-              <exclude>META-INF/version.properties</exclude>
-            </excludes>
-          </resource>
-          <resource>
-            <filtering>true</filtering>
-            <directory>src/main/resources</directory>
-            <includes>
-              <include>META-INF/version.properties</include>
-            </includes>
-          </resource>
-          <resource>
-            <filtering>false</filtering>
-            <directory>src/main/java</directory>
-            <includes>
-              <include>**</include>
-            </includes>
-            <excludes>
-              <exclude>**/*.java</exclude>
-            </excludes>
-          </resource>
-        </resources>
-      </build>
+      <id>dist-macos</id>
+      <modules>
+        <module>inception-dist-macos</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>dist-docker</id>
+      <modules>
+        <module>inception-dist-docker</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>dist-win</id>
+      <modules>
+        <module>inception-dist-win</module>
+      </modules>
     </profile>
     <profile>
       <id>m2e</id>
@@ -748,40 +767,42 @@
                 </goals>
                 <configuration>
                   <consoleOutput>true</consoleOutput>
-                  <excludes combine.children="append">
-                    <exclude>.mvn/jvm.config</exclude>
-                    <exclude>.oracle_jre_usage/*.timestamp</exclude>
-                    <exclude>.factorypath</exclude>
-                    <exclude>.gitignore</exclude>
-                    <exclude>.checkstyle</exclude>
-                    <exclude>**/.asciidoctorconfig.adoc</exclude>
-                    <exclude>**/.vscode/**/*</exclude>
-                    <exclude>suppressions.xml</exclude>
-                    <exclude>marker-*</exclude>
+                  <inputExcludes combine.children="append">
+                    <inputExclude>/.mvn/jvm.config</inputExclude>
+                    <inputExclude>/.oracle_jre_usage/*.timestamp</inputExclude>
+                    <inputExclude>/.factorypath</inputExclude>
+                    <inputExclude>/.gitignore</inputExclude>
+                    <inputExclude>/**/.gitignore</inputExclude>
+                    <inputExclude>/.checkstyle</inputExclude>
+                    <inputExclude>/**/.asciidoctorconfig.adoc</inputExclude>
+                    <inputExclude>/**/.vscode/**</inputExclude>
+                    <inputExclude>/suppressions.xml</inputExclude>
+                    <inputExclude>/marker-*</inputExclude>
                     <!-- maven config files -->
-                    <exclude>src/main/filter/**/*</exclude>
+                    <inputExclude>/src/main/filter/**</inputExclude>
                     <!-- release generated artifact -->
-                    <exclude>release.properties</exclude>
+                    <inputExclude>/release.properties</inputExclude>
                     <!-- generated JCas wrappers -->
-                    <exclude>src/main/java/**/type/**/*</exclude>
+                    <inputExclude>/src/main/java/**/type/**</inputExclude>
                     <!-- other -->
-                    <exclude>CONTRIBUTORS.txt</exclude>
-                    <exclude>CHANGES</exclude>
-                    <exclude>CHANGES.txt</exclude>
-                    <exclude>NOTICE</exclude>
-                    <exclude>NOTICE.txt</exclude>
-                    <exclude>README</exclude>
-                    <exclude>README.txt</exclude>
-                    <exclude>README.md</exclude>
-                    <exclude>src/main/docker/**/*</exclude>
-                    <exclude>src/main/resources/**/*</exclude>
-                    <exclude>src/test/resources/**/*</exclude>
-                    <exclude>**/cache/**/*</exclude>
-                    <exclude>**/*.example</exclude>
-                    <exclude>doc/*.json</exclude>
-                    <exclude>licenses/**/*</exclude>
-                    <exclude>**/mocha-test-report.xml</exclude>
-                  </excludes>
+                    <inputExclude>/CONTRIBUTORS.txt</inputExclude>
+                    <inputExclude>/CHANGES</inputExclude>
+                    <inputExclude>/CHANGES.txt</inputExclude>
+                    <inputExclude>/NOTICE</inputExclude>
+                    <inputExclude>/NOTICE.txt</inputExclude>
+                    <inputExclude>/README</inputExclude>
+                    <inputExclude>/README.txt</inputExclude>
+                    <inputExclude>/README.md</inputExclude>
+                    <inputExclude>/src/main/docker/**</inputExclude>
+                    <inputExclude>/src/main/resources/**</inputExclude>
+                    <inputExclude>/src/test/resources/**</inputExclude>
+                    <inputExclude>/**/cache/**</inputExclude>
+                    <inputExclude>/**/*.example</inputExclude>
+                    <inputExclude>/doc/*.json</inputExclude>
+                    <inputExclude>/licenses/**</inputExclude>
+                    <inputExclude>/**/mocha-test-report.xml</inputExclude>
+                    <inputExclude>/**/src/main/ts/node_modules/**</inputExclude>
+                  </inputExcludes>
                 </configuration>
               </execution>
             </executions>
@@ -808,10 +829,12 @@
               <typeSystemIncludes>
                 <include>src/main/resources/desc/type/**/*.xml</include>
                 <include>src/main/resources/de/tudarmstadt/ukp/clarin/webanno/**/type/**/*.xml</include>
+                <include>src/main/resources/de/tudarmstadt/ukp/inception/**/type/**/*.xml</include>
               </typeSystemIncludes>
               <typeSystemExcludes>
                 <exclude>src/main/resources/desc/type/**/*_customized.xml</exclude>
                 <exclude>src/main/resources/de/tudarmstadt/ukp/clarin/webanno/**/type/**/*_customized.xml</exclude>
+                <exclude>src/main/resources/de/tudarmstadt/ukp/inception/**/type/**/*_customized.xml</exclude>
               </typeSystemExcludes>
             </configuration>
             <executions>
@@ -876,7 +899,7 @@
                 <dependency>
                   <groupId>com.puppycrawl.tools</groupId>
                   <artifactId>checkstyle</artifactId>
-                  <version>10.20.1</version>
+                  <version>10.26.1</version>
                 </dependency>
               </dependencies>
               <configuration>
@@ -917,6 +940,7 @@
         <rat.skip>true</rat.skip>
         <maven.buildNumber.skip>true</maven.buildNumber.skip>
         <checkstyle.skip>true</checkstyle.skip>
+        <spotless.check.skip>true</spotless.check.skip>
         <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
         <maven.war.skip>true</maven.war.skip>
         <remoteresources.skip>true</remoteresources.skip>
@@ -1126,15 +1150,15 @@
               <groupId>org.apache.rat</groupId>
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
-                <excludes combine.children="append">
-                  <exclude>src/main/ts/.sass-cache/**</exclude>
-                  <exclude>src/main/ts/.eslintrc.yml</exclude>
-                  <exclude>src/main/ts/*.json</exclude>
-                  <exclude>src/main/ts_template/*.json</exclude>
-                  <exclude>src/main/ts/node_modules/**/*</exclude>
-                  <exclude>**/mocha-test-report.xml</exclude>
-                  <exclude>**/vite.config.js.timestamp*</exclude>
-                </excludes>
+                <inputExcludes combine.children="append">
+                  <inputExclude>src/main/ts/.sass-cache/**</inputExclude>
+                  <inputExclude>src/main/ts/.eslintrc.yml</inputExclude>
+                  <inputExclude>src/main/ts/*.json</inputExclude>
+                  <inputExclude>src/main/ts_template/*.json</inputExclude>
+                  <inputExclude>src/main/ts/node_modules/**/*</inputExclude>
+                  <inputExclude>**/mocha-test-report.xml</inputExclude>
+                  <inputExclude>**/vite.config.js.timestamp*</inputExclude>
+                </inputExcludes>
               </configuration>
             </plugin>
           </plugins>

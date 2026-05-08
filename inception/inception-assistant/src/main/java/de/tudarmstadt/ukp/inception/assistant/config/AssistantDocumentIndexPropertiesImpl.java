@@ -27,12 +27,37 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 public class AssistantDocumentIndexPropertiesImpl
     implements AssistantDocumentIndexProperties
 {
+    /** How often the index pool is checked for idle indexes. */
     private Duration idleEvictionDelay = Duration.ofMinutes(5);
+
+    /** How long an index may remain in the pool before being considered for eviction. */
     private Duration minIdleTime = Duration.ofMinutes(5);
+
+    /** How long to wait for access to an index before timing out. */
     private Duration borrowWaitTimeout = Duration.ofMinutes(3);
+
+    /** Maximum number of relevant chunks from the user guide to pass to the LLM service. */
     private int maxChunks = 10;
+
+    /**
+     * Size of a chunk in LLM tokens. Should not be higher than
+     * {@code assistant.embedding.context-length} to avoid truncation. It can be lower to create
+     * more topically focused chunks.
+     */
     private int chunkSize = 128;
+
+    /**
+     * Minimum relevance score for chunks to be considered. Should be a positive number not larger
+     * than {@code 1.0}.
+     */
     private double minScore = 0.6;
+
+    /**
+     * Overlap between indexed chunks. When overlapping chunks are retrieved, they are used to
+     * reconstruct a consecutive larger chunk of the document which is then passed on to the model.
+     * As a consequence, source attribution will link to a larger region of the document; however,
+     * the response from the LLM may be more coherent.
+     */
     private int unitOverlap = 0;
 
     @Override

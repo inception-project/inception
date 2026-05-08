@@ -27,9 +27,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class CspPropertiesImpl
     implements CspProperties
 {
+    /** URLs from which images can be loaded. */
     private List<String> allowedImageSources;
+
+    /** URLs from which media (audio/video) can be loaded. */
     private List<String> allowedMediaSources;
 
+    /** URLs which can embed the application in IFrames. */
     private List<String> allowedFrameAncestors;
 
     @Override

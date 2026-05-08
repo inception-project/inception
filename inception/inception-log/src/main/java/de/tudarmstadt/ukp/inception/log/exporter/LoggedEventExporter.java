@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.log.exporter;
 
-import static com.fasterxml.jackson.core.JsonEncoding.UTF8;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 
@@ -36,9 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
@@ -48,9 +44,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.exporters.SourceDocumentExporter;
-import de.tudarmstadt.ukp.inception.log.EventRepository;
+import de.tudarmstadt.ukp.inception.log.EventRepositoryImpl;
+import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.model.LoggedEventEntity;
+import tools.jackson.core.util.MinimalPrettyPrinter;
+import tools.jackson.databind.MappingIterator;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * <p>
@@ -65,11 +65,12 @@ public class LoggedEventExporter
 
     private static final String EVENT_LOG = "event.log";
 
-    private final EventRepository eventRepository;
+    private final EventRepositoryImpl eventRepository;
     private final DocumentService documentService;
 
     @Autowired
-    public LoggedEventExporter(EventRepository aEventRepository, DocumentService aDocumentService)
+    public LoggedEventExporter(EventRepositoryImpl aEventRepository,
+            DocumentService aDocumentService)
     {
         eventRepository = aEventRepository;
         documentService = aDocumentService;
@@ -98,9 +99,12 @@ public class LoggedEventExporter
         documentService.listSourceDocuments(project)
                 .forEach(doc -> documentNameIndex.put(doc.getId(), doc.getName()));
 
+        var mapper = JsonMapper.builder() //
+                .defaultPrettyPrinter(new MinimalPrettyPrinter("\n")) //
+                .build();
+
         ProjectExporter.writeEntry(aStage, EVENT_LOG, os -> {
-            try (var jGenerator = new ObjectMapper().getFactory().createGenerator(os, UTF8)) {
-                jGenerator.setPrettyPrinter(new MinimalPrettyPrinter("\n"));
+            try (var jGenerator = mapper.createGenerator(os)) {
 
                 // Stream data
                 eventRepository.forEachLoggedEvent(project, event -> {
@@ -131,9 +135,10 @@ public class LoggedEventExporter
 
                     // Write DTO
                     try {
-                        jGenerator.writeObject(exportedEvent);
+                        jGenerator.writePOJO(exportedEvent);
+                        jGenerator.flush();
                     }
-                    catch (IOException e) {
+                    catch (Exception e) {
                         throw new RuntimeException(e);
                     }
 
@@ -168,13 +173,12 @@ public class LoggedEventExporter
         var docs = documentService.listSourceDocuments(aProject).stream()
                 .collect(Collectors.toMap(SourceDocument::getName, identity()));
 
-        try (var jParser = new ObjectMapper().getFactory()
-                .createParser(aZip.getInputStream(entry))) {
+        var mapper = JsonMapper.builder().build();
+        try (MappingIterator<ExportedLoggedEvent> i = mapper.readerFor(ExportedLoggedEvent.class)
+                .readValues(aZip.getInputStream(entry))) {
 
-            // Persist events in batches to speed up import process
-            var batch = new ArrayList<LoggedEvent>();
+            var batch = new ArrayList<LoggedEventEntity>();
 
-            var i = jParser.readValuesAs(ExportedLoggedEvent.class);
             while (i.hasNext()) {
                 // Flush events
                 if (batch.size() >= 50_000) {
@@ -185,11 +189,11 @@ public class LoggedEventExporter
 
                 var exportedEvent = i.next();
 
-                var event = new LoggedEvent();
+                var event = new LoggedEventEntity();
                 event.setProject(aProject.getId());
                 event.setUser(exportedEvent.getUser());
                 event.setEvent(exportedEvent.getEvent());
-                event.setCreated(exportedEvent.getCreated());
+                event.setCreated(exportedEvent.getCreated().toInstant());
                 event.setAnnotator(exportedEvent.getAnnotator());
                 event.setDetails(exportedEvent.getDetails());
 

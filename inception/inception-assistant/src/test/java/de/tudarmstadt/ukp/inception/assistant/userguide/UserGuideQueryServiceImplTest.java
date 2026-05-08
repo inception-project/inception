@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantDocumentIndexProperties;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantDocumentIndexPropertiesImpl;
-import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantPropertiesImpl;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
@@ -51,7 +50,7 @@ class UserGuideQueryServiceImplTest
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Mock SchedulingService schedulingService;
-    private AssistantProperties assistantProperties;
+    private AssistantPropertiesImpl assistantProperties;
     private AssistantDocumentIndexProperties assistantDocumentIndexProperties;
     private OllamaClient ollamaClient;
     private UserGuideQueryServiceImpl sut;
@@ -70,7 +69,8 @@ class UserGuideQueryServiceImplTest
     void setup()
     {
         assistantDocumentIndexProperties = new AssistantDocumentIndexPropertiesImpl();
-        assistantProperties = new AssistantPropertiesImpl(assistantDocumentIndexProperties);
+        assistantProperties = new AssistantPropertiesImpl();
+        assistantProperties.setDocumentIndex(assistantDocumentIndexProperties);
         ollamaClient = new OllamaClientImpl();
         embeddingService = new EmbeddingServiceImpl(assistantProperties, ollamaClient);
         sut = new UserGuideQueryServiceImpl(assistantProperties, schedulingService,

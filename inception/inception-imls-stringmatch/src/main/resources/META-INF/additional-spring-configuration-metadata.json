@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "recommender.string-matching.relation.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables the string-matching relation recommender."
+    }
+  ]
+}

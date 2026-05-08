@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument;
 
+import static de.tudarmstadt.ukp.inception.curation.settings.CurationNavigationUserPrefs.KEY_CURATION_NAVIGATION_USER_PREFS;
+import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static wicket.contrib.input.events.EventType.click;
 
 import java.util.List;
@@ -24,8 +26,10 @@ import java.util.List;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -34,8 +38,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
@@ -45,28 +51,29 @@ import wicket.contrib.input.events.key.KeyType;
  * and associated documents
  */
 public class CurationOpenDocumentDialogPanel
-    extends Panel
+    extends GenericPanel<AnnotatorState>
 {
     private static final long serialVersionUID = 1299869948010875439L;
 
     private static final String CID_TABLE = "table";
     private static final String CID_CLOSE_DIALOG = "closeDialog";
+    private static final String CID_FINISHED_DOCUMENTS_SKIPPED_BY_NAVIGATION = "finishedDocumentsSkippedByNavigation";
 
     private @SpringBean ProjectService projectService;
     private @SpringBean DocumentService documentService;
-    private @SpringBean UserDao userRepository;
+    private @SpringBean UserDao userService;
+    private @SpringBean PreferencesService preferencesService;
 
     private final CurationDocumentTable table;
 
-    private final IModel<AnnotatorState> state;
     private final IModel<List<SourceDocument>> documentList;
+    private final IModel<Boolean> finishedDocumentsSkippedByNavigation;
 
     public CurationOpenDocumentDialogPanel(String aId, IModel<AnnotatorState> aState,
             IModel<List<SourceDocument>> aDocumentList)
     {
-        super(aId);
+        super(aId, aState);
 
-        state = aState;
         documentList = aDocumentList;
 
         queue(new LambdaAjaxLink(CID_CLOSE_DIALOG, this::actionCancel)
@@ -74,12 +81,38 @@ public class CurationOpenDocumentDialogPanel
 
         table = new CurationDocumentTable(CID_TABLE, documentList);
         queue(table);
+
+        finishedDocumentsSkippedByNavigation = LambdaModel.of(
+                this::isFinishedDocumentsSkippedByNavigation,
+                this::setFinishedDocumentsSkippedByNavigation);
+        queue(new CheckBox(CID_FINISHED_DOCUMENTS_SKIPPED_BY_NAVIGATION,
+                finishedDocumentsSkippedByNavigation) //
+                        .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT)));
+    }
+
+    private boolean isFinishedDocumentsSkippedByNavigation()
+    {
+        var project = getModelObject().getProject();
+        var sessionOwner = userService.getCurrentUser();
+        return preferencesService.loadTraitsForUserAndProject(KEY_CURATION_NAVIGATION_USER_PREFS,
+                sessionOwner, project).isFinishedDocumentsSkippedByNavigation();
+    }
+
+    private void setFinishedDocumentsSkippedByNavigation(boolean aBoolean)
+    {
+        var project = getModelObject().getProject();
+        var sessionOwner = userService.getCurrentUser();
+        var prefs = preferencesService.loadTraitsForUserAndProject(
+                KEY_CURATION_NAVIGATION_USER_PREFS, sessionOwner, project);
+        prefs.setFinishedDocumentsSkippedByNavigation(aBoolean);
+        preferencesService.saveTraitsForUserAndProject(KEY_CURATION_NAVIGATION_USER_PREFS,
+                sessionOwner, project, prefs);
     }
 
     @OnEvent
     public void onCurationDocumentOpenDocumentEvent(CurationDocumentOpenDocumentEvent aEvent)
     {
-        state.getObject().setDocument(aEvent.getSourceDocument(), documentList.getObject());
+        getModelObject().setDocument(aEvent.getSourceDocument(), documentList.getObject());
 
         ((AnnotationPageBase) getPage()).actionLoadDocument(aEvent.getTarget());
 
@@ -89,9 +122,9 @@ public class CurationOpenDocumentDialogPanel
     private void actionCancel(AjaxRequestTarget aTarget)
     {
         // If the dialog is aborted without choosing a document, return to a sensible location.
-        if (state.getObject().getProject() == null || state.getObject().getDocument() == null) {
+        if (getModelObject().getProject() == null || getModelObject().getDocument() == null) {
             try {
-                ProjectPageBase ppb = findParent(ProjectPageBase.class);
+                var ppb = findParent(ProjectPageBase.class);
                 if (ppb != null) {
                     ((ProjectPageBase) ppb).backToProjectPage();
                 }

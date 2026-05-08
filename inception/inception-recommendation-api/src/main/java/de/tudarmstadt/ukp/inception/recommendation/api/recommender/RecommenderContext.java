@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
@@ -32,6 +33,7 @@ public class RecommenderContext
     private final Map<String, Object> store;
     private List<LogMessage> messages;
     private Optional<User> user;
+    private Project project;
     private boolean closed = false;
 
     public RecommenderContext()
@@ -106,6 +108,16 @@ public class RecommenderContext
     public void setUser(User aUser)
     {
         user = Optional.ofNullable(aUser);
+    }
+
+    public Optional<Project> getProject()
+    {
+        return Optional.ofNullable(project);
+    }
+
+    public void setProject(Project aProject)
+    {
+        project = aProject;
     }
 
     /**

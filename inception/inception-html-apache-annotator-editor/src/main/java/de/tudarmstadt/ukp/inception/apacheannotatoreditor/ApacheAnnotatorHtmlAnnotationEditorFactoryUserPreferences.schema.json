@@ -8,13 +8,10 @@
     "showAggregatedLabels": {
       "type": "boolean"
     },
-    "showImages": {
-      "type": "boolean"
-    },
-    "showTables": {
-      "type": "boolean"
-    },
     "showEmptyHighlights": {
+      "type": "boolean"
+    },
+    "protectElements": {
       "type": "boolean"
     },
     "showDocumentStructure": {

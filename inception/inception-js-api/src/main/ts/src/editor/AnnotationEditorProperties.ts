@@ -17,13 +17,15 @@
  */
 
 export interface AnnotationEditorProperties {
-  editorFactory: string
-  editorFactoryId: string
-  userPreferencesKey: string
-  scriptSources: ReadonlyArray<string>
-  stylesheetSources: ReadonlyArray<string>
-  diamAjaxCallbackUrl: string
-  diamWsUrl: string
-  csrfToken: string
-  loadingIndicatorDisabled: boolean
+    editorFactory: string;
+    editorFactoryId: string;
+    userPreferencesKey: string;
+    scriptSources: ReadonlyArray<string>;
+    stylesheetSources: ReadonlyArray<string>;
+    diamAjaxCallbackUrl: string;
+    diamWsUrl: string;
+    csrfToken: string;
+    loadingIndicatorDisabled: boolean;
+    sectionElements?: ReadonlyArray<string>;
+    protectedElements?: ReadonlyArray<string>;
 }

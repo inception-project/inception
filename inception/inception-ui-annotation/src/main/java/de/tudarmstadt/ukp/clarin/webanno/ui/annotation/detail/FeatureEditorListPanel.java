@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.handleException;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Optional.empty;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -123,7 +124,7 @@ public class FeatureEditorListPanel
 
     private TextField<String> createFocusResetHelper()
     {
-        TextField<String> textfield = new TextField<>("focusResetHelper");
+        var textfield = new TextField<String>("focusResetHelper");
         textfield.setModel(Model.of());
         textfield.setOutputMarkupId(true);
         textfield.add(new AjaxFormComponentUpdatingBehavior("focus")
@@ -133,7 +134,7 @@ public class FeatureEditorListPanel
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
-                List<FeatureEditor> editors = new ArrayList<>();
+                var editors = new ArrayList<FeatureEditor>();
                 featureEditorPanelContent.getItems().next().visitChildren(FeatureEditor.class,
                         (e, visit) -> {
                             editors.add((FeatureEditor) e);
@@ -151,13 +152,12 @@ public class FeatureEditorListPanel
 
     public Optional<FeatureEditor> getFirstFeatureEditor()
     {
-        Iterator<Item<FeatureState>> itemIterator = featureEditorPanelContent.getItems();
+        var itemIterator = featureEditorPanelContent.getItems();
         if (!itemIterator.hasNext()) {
-            return Optional.empty();
+            return empty();
         }
-        else {
-            return Optional.ofNullable((FeatureEditor) itemIterator.next().get("editor"));
-        }
+
+        return Optional.ofNullable((FeatureEditor) itemIterator.next().get("editor"));
     }
 
     @OnEvent(stop = true)
@@ -212,21 +212,20 @@ public class FeatureEditorListPanel
         }
 
         @Override
-        protected void populateItem(final Item<FeatureState> item)
+        protected void populateItem(final Item<FeatureState> aItem)
         {
             LOG.trace("FeatureEditorPanelContent.populateItem("
-                    + item.getModelObject().feature.getUiName() + ": " + item.getModelObject().value
-                    + ")");
+                    + aItem.getModelObject().feature.getUiName() + ": "
+                    + aItem.getModelObject().value + ")");
 
-            final FeatureState featureState = item.getModelObject();
-            final FeatureEditor editor;
+            final var featureState = aItem.getModelObject();
 
             // Look up a suitable editor and instantiate it
-            FeatureSupport<?> featureSupport = featureSupportRegistry
-                    .findExtension(featureState.feature).orElseThrow();
-            AnnotationDetailEditorPanel editorPanel = findParent(AnnotationDetailEditorPanel.class);
-            editor = featureSupport.createEditor("editor", featureEditorContainer, editorPanel,
-                    getModel(), item.getModel());
+            var featureSupport = featureSupportRegistry.findExtension(featureState.feature)
+                    .orElseThrow();
+            var editorPanel = findParent(AnnotationDetailEditorPanel.class);
+            final var editor = featureSupport.createEditor("editor", featureEditorContainer,
+                    editorPanel, getModel(), aItem.getModel());
 
             // We need to enable the markup ID here because we use it during the AJAX behavior
             // that automatically saves feature editors on change/blur.
@@ -237,9 +236,14 @@ public class FeatureEditorListPanel
             editor.getFocusComponent().setOutputMarkupId(true);
             editor.getFocusComponent()
                     .setMarkupId(ID_PREFIX + editor.getModelObject().feature.getId());
+            // Auto-focus is disabled if there are feature editors with key bindings.
+            // In that case, at least pressing tab should move the focus to the first
+            // editor.
+            editor.getFocusComponent()
+                    .add(AttributeAppender.replace("tabindex", aItem.getIndex() + 1));
 
             if (!featureState.feature.getLayer().isReadonly()) {
-                AnnotatorState state = getModelObject();
+                var state = getModelObject();
 
                 // Whenever it is updating an annotation, it updates automatically when a
                 // component for the feature lost focus - but updating is for every component
@@ -282,7 +286,7 @@ public class FeatureEditorListPanel
                 editor.getFocusComponent().setEnabled(false);
             }
 
-            item.add(editor);
+            aItem.add(editor);
         }
 
         @Override

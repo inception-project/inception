@@ -36,13 +36,9 @@ import org.junit.jupiter.api.Test;
 public class ExternalRecommenderV2ApiTest
 {
 
-    /// *********************************************
-    /// In order to run these, you need to install the test dependencies
-    /// pip install -e ".[all]"
-    /// and then to run
-    /// make inception_test
-    /// in the galahad repository
-    /// *********************************************
+    /// ********************************************* In order to run these, you need to install the
+    /// test dependencies pip install -e ".[all]" and then to run make inception_test in the galahad
+    /// repository *********************************************
 
     private ExternalRecommenderV2Api sut;
 

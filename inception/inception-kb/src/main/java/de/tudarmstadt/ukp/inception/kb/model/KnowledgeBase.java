@@ -500,6 +500,7 @@ public class KnowledgeBase
         setDefaultLanguage(aProfile.getDefaultLanguage());
         setDefaultDatasetIri(aProfile.getDefaultDataset());
         setReification(aProfile.getReification());
+        setBasePrefix(aProfile.getBasePrefix());
 
         applyRootConcepts(aProfile);
         applyMapping(aProfile.getMapping());

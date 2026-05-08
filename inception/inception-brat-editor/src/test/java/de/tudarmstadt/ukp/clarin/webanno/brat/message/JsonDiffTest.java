@@ -22,9 +22,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 
-import com.flipkart.zjsonpatch.JsonDiff;
+import com.flipkart.zjsonpatch.Jackson3JsonDiff;
 
 public class JsonDiffTest
 {
@@ -36,18 +36,18 @@ public class JsonDiffTest
         var f_removedMiddle = "src/test/resources/brat_removed_entity_in_middle.json";
         var f_removedEnd = "src/test/resources/brat_removed_entity_near_end.json";
 
-        var jsonConverter = new MappingJackson2HttpMessageConverter();
+        var jsonConverter = new JacksonJsonHttpMessageConverter();
 
-        var mapper = jsonConverter.getObjectMapper();
+        var mapper = jsonConverter.getMapper();
 
         var base = mapper.readTree(new File(f_base));
         var addedMiddle = mapper.readTree(new File(f_addedMiddle));
         var removedMiddle = mapper.readTree(new File(f_removedMiddle));
         var removedEnd = mapper.readTree(new File(f_removedEnd));
 
-        var d_addedMiddle = JsonDiff.asJson(base, addedMiddle);
-        var d_removedMiddle = JsonDiff.asJson(base, removedMiddle);
-        var d_removedEnd = JsonDiff.asJson(base, removedEnd);
+        var d_addedMiddle = Jackson3JsonDiff.asJson(base, addedMiddle);
+        var d_removedMiddle = Jackson3JsonDiff.asJson(base, removedMiddle);
+        var d_removedEnd = Jackson3JsonDiff.asJson(base, removedEnd);
 
         assertThat(d_addedMiddle.toString()) //
                 .isEqualTo("[{\"op\":\"add\",\"path\":\"/entities/7\",\"value\":" //

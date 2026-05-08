@@ -19,17 +19,20 @@ import DiamAnnotationBrowser from './DiamAnnotationBrowser.svelte';
 import { mount, unmount } from 'svelte';
 
 export default class DiamAnnotationBrowserFactory {
-  static instance: any;
+    static instance: any;
 
-  constructor(args: any) {
-    DiamAnnotationBrowserFactory.instance = mount(DiamAnnotationBrowser, { target: args.target, props: args.props });
-  }
-
-  $destroy() {
-    const i = DiamAnnotationBrowserFactory.instance;
-    if (i) {
-      unmount(i)
-      DiamAnnotationBrowserFactory.instance = null;
+    constructor(args: any) {
+        DiamAnnotationBrowserFactory.instance = mount(DiamAnnotationBrowser, {
+            target: args.target,
+            props: args.props,
+        });
     }
-  }
+
+    $destroy() {
+        const i = DiamAnnotationBrowserFactory.instance;
+        if (i) {
+            unmount(i);
+            DiamAnnotationBrowserFactory.instance = null;
+        }
+    }
 }

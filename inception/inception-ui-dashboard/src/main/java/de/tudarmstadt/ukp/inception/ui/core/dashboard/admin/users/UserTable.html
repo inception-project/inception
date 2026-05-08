@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style type="text/css">
+    .user-table thead { background: var(--bs-body-bg); position: sticky; top: 0; z-index: 1; }
+    .user-table thead td, .user-table thead th { border-bottom-width: 0 !important; }
+    .user-table tr td, .user-table tr th { text-align: center; }
+    .user-table tr th { white-space: nowrap; }
+    .user-table tr td:nth-child(3), .user-table tr th:nth-child(3) { text-align: left; width: 100%;}
+    .user-table tr td:nth-child(4), .user-table tr th:nth-child(4) { white-space: nowrap;}
+    .user-table tr td:nth-child(5), .user-table tr th:nth-child(5) { white-space: nowrap;}
+    .user-table col.s, .user-table tr.s , .user-table td.s { background-color: var(--primary); }
+    .user-table .state-toggle { white-space: nowrap; cursor: pointer; }
+  </style>
+</wicket:head>
+<wicket:panel>
+  <div class="flex-v-container flex-content">
+    <div class="flex-h-container flex-gutter flex-only-internal-gutter justify-content-end mb-3">
+      <div class="flex-content">
+        <div class="input-group">
+          <span class="input-group-text">
+            <i class="fas fa-search"></i>
+          </span>
+          <input wicket:id="nameFilter" class="form-control" wicket:message="placeholder:nameFilter.placeholder"/>
+        </div>
+      </div>
+      <div wicket:id="stateFilters" />
+      <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span class="btn-group" role="group">
+          <button wicket:id="toggleBulkChange" class="btn btn-action" type="button">
+            Bulk action
+          </button>
+          <button wicket:id="bulkActionDropdownButton" class="btn btn-primary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
+          <div wicket:id="bulkActionDropdown" class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
+            <a wicket:id="bulkEnable" class="dropdown-item">
+              Enable selected users
+              <span class="badge text-reset float-end">
+                <i class="fa-solid fa-user-check"></i>
+              </span>
+            </a>
+            <a wicket:id="bulkDisable" class="dropdown-item">
+              Disable selected users
+              <span class="badge text-reset float-end">
+                <i class="fa-solid fa-user-slash"></i>
+              </span>
+            </a>
+          </div>
+        </span>
+      </span>
+    </div>
+    <div class="flex-content scrolling flex-h-container border">
+      <div class="flex-content">
+        <table wicket:id="dataTable" class="table table-sm table-hover user-table" cellspacing="0"
+          align="center" />
+      </div>
+    </div>
+  </div>
+</wicket:panel>
+<wicket:fragment wicket:id="select-column-header">
+  <input wicket:id="allSelected" type="checkbox"/>
+</wicket:fragment>
+<wicket:fragment wicket:id="select-column">
+  <input wicket:id="selected" type="checkbox"/>
+</wicket:fragment>
+<wicket:fragment wicket:id="selectUserColumn">
+  <span wicket:id="uiName"/>
+  <span wicket:enclosure="name" class="text-muted">(<wicket:container wicket:id="name"/>)</span>
+</wicket:fragment>
+</html>

@@ -15,58 +15,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
- body.i7n-template-dialogue {
-   background-color: beige;
- }
+
+body.i7n-template-dialogue {
+    background-color: beige;
+}
 
 .i7n-template-dialogue {
-  p {
-    margin-bottom: 0px;
-  }
-
-  .message {
-    color: #000;
-    clear: both;
-    line-height: 18px;
-    font-size: 15px;
-    padding: 8px;
-    position: relative;
-    margin: 8px 0;
-    max-width: 85%;
-    word-wrap: break-word;
-
-    &::before {
-      font-size: small;
-      content: attr(data-actor);
+    p {
+        margin-bottom: 0px;
     }
 
-    .message-body {
-      display: block;
-    }
-  
-    &.message-sent {
-      background: #e1ffc7;
-      border-radius: 5px 0px 5px 5px;
-      float: right;
-    }
-    
-    &.message-received {
-      background: #fff;
-      border-radius: 0px 5px 5px 5px;
-      float: left;
-      
-    }
+    .message {
+        color: #000;
+        clear: both;
+        line-height: 18px;
+        font-size: 15px;
+        padding: 8px;
+        position: relative;
+        margin: 8px 0;
+        max-width: 85%;
+        word-wrap: break-word;
 
-    &.message-system {
-      clear: both;
-      display: block;
-      width: 60%;
-      margin-left: auto;
-      margin-right: auto;
-      background-color: rgb(231, 231, 158);
-      border-radius: 0.25em;
-      text-align: center;
+        &::before {
+            font-size: small;
+            content: attr(data-actor);
+        }
+
+        .message-body {
+            display: block;
+        }
+
+        &.message-sent {
+            background: #e1ffc7;
+            border-radius: 5px 0px 5px 5px;
+            float: right;
+        }
+
+        &.message-received {
+            background: #fff;
+            border-radius: 0px 5px 5px 5px;
+            float: left;
+        }
+
+        &.message-system {
+            clear: both;
+            display: block;
+            width: 60%;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: rgb(231, 231, 158);
+            border-radius: 0.25em;
+            text-align: center;
+        }
     }
-  }
 }

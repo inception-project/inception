@@ -35,9 +35,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.CreateRelationAnnotationRequest;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.CreateRelationAnnotationRequest;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
@@ -159,11 +159,13 @@ public class CreateRelationAnnotationHandler
         var ann = chainAdapter.handle(request);
         var selection = chainAdapter.selectLink(ann);
 
-        for (var feature : chainAdapter.listFeatures()) {
-            if (feature.isRemember()) {
-                var value = state.getRememberedArcFeatures().get(feature);
-                chainAdapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(),
-                        ann, feature, value);
+        try (var ctx = chainAdapter.updateFeatureValues(state.getDocument(),
+                state.getUser().getUsername(), ann)) {
+            for (var feature : chainAdapter.listFeatures()) {
+                if (feature.isRemember()) {
+                    var value = state.getRememberedArcFeatures().get(feature);
+                    ctx.setFeatureValue(feature, value);
+                }
             }
         }
 
@@ -234,11 +236,13 @@ public class CreateRelationAnnotationHandler
         var ann = relationAdapter.handle(request);
         var selection = relationAdapter.select(VID.of(ann), ann);
 
-        for (var feature : relationAdapter.listFeatures()) {
-            if (feature.isRemember()) {
-                var value = state.getRememberedArcFeatures().get(feature);
-                relationAdapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(),
-                        ann, feature, value);
+        try (var ctx = relationAdapter.updateFeatureValues(state.getDocument(),
+                state.getUser().getUsername(), ann)) {
+            for (var feature : relationAdapter.listFeatures()) {
+                if (feature.isRemember()) {
+                    var value = state.getRememberedArcFeatures().get(feature);
+                    ctx.setFeatureValue(feature, value);
+                }
             }
         }
 

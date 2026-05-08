@@ -2,7 +2,6 @@ package mtas.search.spans;
 
 import java.io.IOException;
 
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queries.spans.SpanContainingQuery;
 import org.apache.lucene.queries.spans.SpanWeight;
 import org.apache.lucene.search.IndexSearcher;
@@ -123,11 +122,11 @@ public class MtasSpanContainingQuery
      * @see mtas.search.spans.util.MtasSpanQuery#rewrite(org.apache.lucene.index. IndexReader)
      */
     @Override
-    public MtasSpanQuery rewrite(IndexReader reader) throws IOException
+    public MtasSpanQuery rewrite(IndexSearcher searcher) throws IOException
     {
         // rewrite big and small
-        MtasSpanQuery newBigQuery = bigQuery.rewrite(reader);
-        MtasSpanQuery newSmallQuery = smallQuery.rewrite(reader);
+        MtasSpanQuery newBigQuery = bigQuery.rewrite(searcher);
+        MtasSpanQuery newSmallQuery = smallQuery.rewrite(searcher);
         // check if query became trivial
         if (newBigQuery == null || newBigQuery instanceof MtasSpanMatchNoneQuery
                 || newSmallQuery == null || newSmallQuery instanceof MtasSpanMatchNoneQuery) {
@@ -135,7 +134,7 @@ public class MtasSpanContainingQuery
         }
         // really new queries
         if (!newBigQuery.equals(bigQuery) || !newSmallQuery.equals(smallQuery)) {
-            return new MtasSpanContainingQuery(newBigQuery, newSmallQuery).rewrite(reader);
+            return new MtasSpanContainingQuery(newBigQuery, newSmallQuery).rewrite(searcher);
             // if equal, then just the big one
         }
         else if (newBigQuery.equals(newSmallQuery)) {
@@ -147,8 +146,8 @@ public class MtasSpanContainingQuery
             // no easy way, just continue
         }
         else {
-            baseQuery = (SpanContainingQuery) baseQuery.rewrite(reader);
-            return super.rewrite(reader);
+            baseQuery = (SpanContainingQuery) baseQuery.rewrite(searcher);
+            return super.rewrite(searcher);
         }
     }
 

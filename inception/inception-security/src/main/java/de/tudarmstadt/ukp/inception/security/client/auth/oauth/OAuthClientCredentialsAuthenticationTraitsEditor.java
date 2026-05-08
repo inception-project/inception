@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraitsEdi
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
 public class OAuthClientCredentialsAuthenticationTraitsEditor
-    extends AuthenticationTraitsEditor
+    extends AuthenticationTraitsEditor<OAuthClientCredentialsAuthenticationTraits>
 {
     private static final long serialVersionUID = 6915129149290353201L;
 
@@ -49,7 +49,7 @@ public class OAuthClientCredentialsAuthenticationTraitsEditor
 
         setOutputMarkupId(true);
 
-        editMode = Model.of(aModel.getObject().getClientId() == null);
+        editMode = Model.of(getModelObject().getClientId() == null);
 
         queue(new Label("status", LoadableDetachableModel.of(this::getStatus))
                 .add(visibleWhenNot(editMode)));
@@ -65,15 +65,9 @@ public class OAuthClientCredentialsAuthenticationTraitsEditor
                 .add(visibleWhen(editMode)));
     }
 
-    @SuppressWarnings("unchecked")
-    IModel<OAuthClientCredentialsAuthenticationTraits> getModel()
-    {
-        return (IModel<OAuthClientCredentialsAuthenticationTraits>) getDefaultModel();
-    }
-
     private String getStatus()
     {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         sb.append("Client ID is ");
         sb.append(getModel().map(OAuthClientCredentialsAuthenticationTraits::getClientId) //
                 .map(username -> "[" + username + "]")//

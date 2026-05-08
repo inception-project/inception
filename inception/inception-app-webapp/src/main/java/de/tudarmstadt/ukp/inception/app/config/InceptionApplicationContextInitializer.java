@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.app.config;
 
-import static de.tudarmstadt.ukp.inception.support.SettingsUtil.CFG_AUTH_MODE;
-import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_DATABASE;
-import static de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH;
 import static de.tudarmstadt.ukp.inception.support.logging.BaseLoggers.BOOT_LOG;
 
 import java.io.IOException;
@@ -42,8 +39,6 @@ import de.tudarmstadt.ukp.inception.support.logging.LoggingFilter;
 public class InceptionApplicationContextInitializer
     implements ApplicationContextInitializer<ConfigurableApplicationContext>
 {
-    private static final String AUTH_MODE_PREAUTH = "preauth";
-
     @Override
     public void initialize(ConfigurableApplicationContext aApplicationContext)
     {
@@ -55,7 +50,7 @@ public class InceptionApplicationContextInitializer
 
         applyDatabaseSpecificOverrides(aEnvironment);
 
-        activateAuthenticationProfiles(aEnvironment);
+        applySentryReleaseOverride(aEnvironment);
 
         Runtime rt = Runtime.getRuntime();
         BOOT_LOG.info("Max. application memory: {}MB",
@@ -79,6 +74,21 @@ public class InceptionApplicationContextInitializer
                 throw new IllegalStateException(e);
             }
         }
+    }
+
+    private void applySentryReleaseOverride(ConfigurableEnvironment aEnvironment)
+    {
+        var version = SettingsUtil.getVersion();
+        if (version == null || "unknown".equals(version)) {
+            return;
+        }
+
+        // Override any user-configured value so that the Sentry release always matches the
+        // running application version - otherwise Sentry's release history would be unreliable.
+        var overrides = new HashMap<String, Object>();
+        overrides.put("sentry.release", version);
+        aEnvironment.getPropertySources()
+                .addFirst(new MapPropertySource("Sentry-Overrides", overrides));
     }
 
     private void applyDatabaseSpecificOverrides(ConfigurableEnvironment aEnvironment)
@@ -127,16 +137,4 @@ public class InceptionApplicationContextInitializer
         }
     }
 
-    private void activateAuthenticationProfiles(ConfigurableEnvironment aEnvironment)
-    {
-        // Activate bean profile depending on authentication mode
-        if (AUTH_MODE_PREAUTH.equals(aEnvironment.getProperty(CFG_AUTH_MODE))) {
-            aEnvironment.addActiveProfile(PROFILE_AUTH_MODE_EXTERNAL_PREAUTH);
-            BOOT_LOG.info("Authentication: pre-auth");
-        }
-        else {
-            aEnvironment.addActiveProfile(PROFILE_AUTH_MODE_DATABASE);
-            BOOT_LOG.info("Authentication: database");
-        }
-    }
 }

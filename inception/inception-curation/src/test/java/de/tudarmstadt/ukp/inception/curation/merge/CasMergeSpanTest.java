@@ -32,11 +32,13 @@ import static org.apache.uima.fit.util.FSUtil.getFeature;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
 
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -44,6 +46,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 
+@Execution(CONCURRENT)
 class CasMergeSpanTest
     extends CasMergeTestBase
 {
@@ -199,6 +202,13 @@ class CasMergeSpanTest
 
     private AnnotationFS createToken(CAS aCas, int aBegin, int aEnd)
     {
+        // Ensure CAS has text if not already set
+        if (aCas.getDocumentText() == null || aCas.getDocumentText().isEmpty()) {
+            // Create a text buffer with actual words (not just spaces) to prevent trimming issues
+            var words = "word0 word1 word2 word3 word4 word5 word6 word7 word8 word9";
+            aCas.setDocumentText(words);
+        }
+
         return buildAnnotation(aCas, Token.class) //
                 .at(aBegin, aEnd) //
                 .buildAndAddToIndexes();
@@ -206,6 +216,13 @@ class CasMergeSpanTest
 
     private AnnotationFS createNEAnno(CAS aCas, String aValue, int aBegin, int aEnd)
     {
+        // Ensure CAS has text if not already set
+        if (aCas.getDocumentText() == null || aCas.getDocumentText().isEmpty()) {
+            // Create a text buffer with actual words
+            var words = "word0 word1 word2 word3 word4 word5 word6 word7 word8 word9";
+            aCas.setDocumentText(words);
+        }
+
         return buildAnnotation(aCas, NamedEntity.class) //
                 .at(aBegin, aEnd) //
                 .withFeature(NamedEntity._FeatName_value, aValue) //
@@ -218,5 +235,82 @@ class CasMergeSpanTest
                 .at(aBegin, aEnd) //
                 .withFeature(POS._FeatName_PosValue, aValue) //
                 .buildAndAddToIndexes();
+    }
+
+    private AnnotationFS createFeaturelessSpan(CAS aCas, int aBegin, int aEnd)
+    {
+        // Ensure CAS has text if not already set
+        if (aCas.getDocumentText() == null || aCas.getDocumentText().isEmpty()) {
+            // Create a text buffer with actual words (not just spaces) to prevent trimming issues
+            var words = "word0 word1 word2 word3 word4 word5 word6 word7 word8 word9";
+            aCas.setDocumentText(words);
+        }
+
+        // Create custom FeaturelessSpan annotation
+        var type = aCas.getTypeSystem().getType(featurelessSpanLayer.getName());
+        var fs = aCas.createAnnotation(type, aBegin, aEnd);
+        aCas.addFsToIndexes(fs);
+        return fs;
+    }
+
+    @Test
+    void thatFeaturelessSpanCanBeMerged() throws Exception
+    {
+        var sourceCas = createCas();
+        var sourceFs = createFeaturelessSpan(sourceCas, 0, 5);
+
+        var targetCas = createCas();
+        createToken(targetCas, 0, 5);
+
+        sut.mergeSpanAnnotation(document, DUMMY_USER, featurelessSpanLayer, targetCas, sourceFs);
+
+        var type = targetCas.getTypeSystem().getType(featurelessSpanLayer.getName());
+        assertThat(targetCas.select(type).coveredBy(0, 5).asList()) //
+                .as("Featureless span was merged") //
+                .hasSize(1);
+    }
+
+    @Test
+    void thatMergingFeaturelessSpanIsRejectedIfAlreadyExists() throws Exception
+    {
+        var sourceCas = createCas();
+        var sourceFs = createFeaturelessSpan(sourceCas, 0, 5);
+
+        var targetCas = createCas();
+        createToken(targetCas, 0, 5);
+        createFeaturelessSpan(targetCas, 0, 5);
+
+        assertThatExceptionOfType(AnnotationException.class) //
+                .as("Reject merging featureless span which already exists")
+                .isThrownBy(() -> sut.mergeSpanAnnotation(document, DUMMY_USER,
+                        featurelessSpanLayer, targetCas, sourceFs))
+                .withMessageContaining("annotation already exists");
+    }
+
+    @Test
+    void thatMultipleFeaturelessSpansCanBeMerged() throws Exception
+    {
+        var sourceCas = createCas();
+        var sourceFs1 = createFeaturelessSpan(sourceCas, 0, 5);
+        var sourceFs2 = createFeaturelessSpan(sourceCas, 6, 10);
+
+        var targetCas = createCas();
+        createToken(targetCas, 0, 5);
+        createToken(targetCas, 6, 10);
+
+        sut.mergeSpanAnnotation(document, DUMMY_USER, featurelessSpanLayer, targetCas, sourceFs1);
+        sut.mergeSpanAnnotation(document, DUMMY_USER, featurelessSpanLayer, targetCas, sourceFs2);
+
+        var type = targetCas.getTypeSystem().getType(featurelessSpanLayer.getName());
+        var mergedSpans = targetCas.select(type).asList();
+        assertThat(mergedSpans) //
+                .as("Both featureless spans were merged") //
+                .hasSize(2);
+        assertThat(mergedSpans) //
+                .extracting(ann -> ((Annotation) ann).getBegin(),
+                        ann -> ((Annotation) ann).getEnd())
+                .containsExactlyInAnyOrder( //
+                        tuple(0, 5), //
+                        tuple(6, 10));
     }
 }

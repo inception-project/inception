@@ -18,28 +18,42 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.ollama.client;
 
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.OllamaRecommenderTraits.DEFAULT_OLLAMA_URL;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.Tool;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolParam;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaFunction;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaFunctionParameters;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaGenerateRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaGenerateResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaShowRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaTag;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaTool;
 import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
+import tools.jackson.databind.node.JsonNodeFactory;
 
 class OllamaClientImplTest
 {
+    private static final String DEFAULT_MODEL = "ministral-3:8b";
+
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private OllamaClientImpl sut = new OllamaClientImpl();
@@ -54,7 +68,7 @@ class OllamaClientImplTest
     void testStream() throws Exception
     {
         var request = OllamaGenerateRequest.builder() //
-                .withModel("mistral") //
+                .withModel(DEFAULT_MODEL) //
                 .withPrompt("Tell me a joke.") //
                 .withStream(true) //
                 .build();
@@ -66,7 +80,7 @@ class OllamaClientImplTest
     void testStreamWithCallback() throws Exception
     {
         var request = OllamaGenerateRequest.builder() //
-                .withModel("mistral") //
+                .withModel(DEFAULT_MODEL) //
                 .withPrompt("Tell me a joke.") //
                 .withStream(true) //
                 .build();
@@ -83,7 +97,7 @@ class OllamaClientImplTest
     void testChatStreamWithCallback() throws Exception
     {
         var request = OllamaChatRequest.builder() //
-                .withModel("mistral") //
+                .withModel(DEFAULT_MODEL) //
                 .withMessages( //
                         new OllamaChatMessage("system",
                                 "You are Donald Duck and end each sentence with 'quack'."),
@@ -103,7 +117,7 @@ class OllamaClientImplTest
     void testNonStream() throws Exception
     {
         var response = sut.generate(DEFAULT_OLLAMA_URL, OllamaGenerateRequest.builder() //
-                .withModel("mistral") //
+                .withModel(DEFAULT_MODEL) //
                 .withPrompt("Tell me a joke.") //
                 .withStream(false) //
                 .build());
@@ -114,7 +128,7 @@ class OllamaClientImplTest
     void testJson() throws Exception
     {
         var response = sut.generate(DEFAULT_OLLAMA_URL, OllamaGenerateRequest.builder() //
-                .withModel("mistral") //
+                .withModel(DEFAULT_MODEL) //
                 .withPrompt("Generate a JSON map with the key/value pairs `a = 1` and `b = 2`") //
                 .withStream(false) //
                 .withFormat(JsonNodeFactory.instance.textNode("json")) //
@@ -127,5 +141,145 @@ class OllamaClientImplTest
     {
         var response = sut.listModels(DEFAULT_OLLAMA_URL);
         LOG.info("Response: [{}]", response);
+    }
+
+    @Test
+    void testShowModel() throws Exception
+    {
+        var response = sut.getModelInfo(DEFAULT_OLLAMA_URL,
+                OllamaShowRequest.builder().withModel(DEFAULT_MODEL).build());
+        LOG.info("Response: [{}]", response);
+    }
+
+    @Test
+    void testFunctionCall() throws Exception
+    {
+        var function = OllamaFunction.builder() //
+                .withName("get_current_weather") //
+                .withDescription("Get the current weather for a city") //
+                .withParameters(OllamaFunctionParameters.builder() //
+                        .withProperty("city", "string", "Name of the city") //
+                        .withRequired("city") //
+                        .build())
+                .build();
+
+        var addFunction = OllamaTool.builder() //
+                .withFunction(function) //
+                .build();
+
+        var call = OllamaChatRequest.builder() //
+                .withModel(DEFAULT_MODEL) //
+                .withMessages(new OllamaChatMessage("user", "What is the weather in Toronto?")) //
+                .withStream(false) //
+                // .withFormat(JsonNodeFactory.instance.textNode("json")) //
+                .withTools(addFunction) //
+                .build();
+
+        var response = sut.chat(DEFAULT_OLLAMA_URL, call).getMessage();
+
+        assertThat(response.toolCalls()).as("toolCalls").hasSize(1);
+        assertThat(response.toolCalls().get(0).getFunction().getName())
+                .isEqualTo(function.getName());
+    }
+
+    static class TestWeatherTool
+    {
+        @Tool("get_weather")
+        public String getWeather(
+                @ToolParam(value = "city", description = "A city name") String aCity)
+        {
+            return "sunny";
+        }
+    }
+
+    static List<OllamaTag> functionCallModels() throws IOException
+    {
+        var sut = new OllamaClientImpl();
+        var allModels = sut.listModels(DEFAULT_OLLAMA_URL);
+
+        return allModels.stream() //
+                .filter(model -> {
+                    try {
+                        var modelInfo = sut.getModelInfo(DEFAULT_OLLAMA_URL, //
+                                OllamaShowRequest.builder().withModel(model.name()).build());
+                        return modelInfo.capabilities() != null
+                                && modelInfo.capabilities().contains("tools");
+                    }
+                    catch (IOException e) {
+                        LOG.warn("Failed to get model info for {}: {}", model.name(),
+                                e.getMessage());
+                        return false;
+                    }
+                }) //
+                .toList();
+    }
+
+    static class SimpleToolService
+    {
+        @Tool(value = "greet", actor = "Greeter", description = "Greets a person by name")
+        public String greet(@ToolParam(value = "name", description = "Person's name") String aName)
+        {
+            return "Hello, " + aName;
+        }
+    }
+
+    static class ComplexToolService
+    {
+        @Tool(value = "create_annotation", description = "Creates annotation from spec")
+        public String createAnnotation( //
+                @ToolParam(value = "spec", description = "Annotation specification") //
+                AnnotationSpec aSpec)
+        {
+            return "Created annotation at " + aSpec.begin + "-" + aSpec.end;
+        }
+
+        @Tool(value = "create_multiple", description = "Creates multiple annotations")
+        public String createMultipleAnnotations( //
+                @ToolParam(value = "specs", description = "List of annotation specifications") //
+                List<AnnotationSpec> aSpecs)
+        {
+            return "Created " + aSpecs.size() + " annotations";
+        }
+    }
+
+    public static class AnnotationSpec
+    {
+        public int begin;
+        public int end;
+        public String label;
+    }
+
+    @MethodSource("functionCallModels")
+    @ParameterizedTest
+    void testFunctionCallReflection(OllamaTag aModel) throws Exception
+    {
+        var weatherTool = new TestWeatherTool();
+
+        var tools = OllamaTool.forService(weatherTool);
+
+        var call = OllamaChatRequest.builder() //
+                .withModel(aModel.name()) //
+                .withMessages(new OllamaChatMessage("user", "What is the weather in Toronto?")) //
+                .withStream(false) //
+                .withTools(tools) //
+                .build();
+
+        var response = sut.chat(DEFAULT_OLLAMA_URL, call).getMessage();
+
+        assertThat(response.toolCalls()).as("toolCalls").hasSize(1);
+
+        var toolCall = response.toolCalls().get(0);
+        assertThat(toolCall.getFunction().getName()) //
+                .isEqualTo("get_weather");
+        assertThat(toolCall.getFunction().getArguments()) //
+                .containsExactly(entry("city", "Toronto"));
+
+        var maybeTool = call.getTool(toolCall);
+        assertThat(maybeTool).isPresent();
+
+        var tool = maybeTool.get();
+        var result = tool.invoke(toolCall);
+
+        assertThat(result).isEqualTo("sunny");
     }
 }

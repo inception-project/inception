@@ -24,9 +24,11 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction.SKIPPED;
+import static java.util.Arrays.asList;
+
+import java.util.Objects;
 
 import org.apache.uima.cas.AnnotationBaseFS;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
@@ -41,9 +43,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AutoAcceptMode;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.SuggestionState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.RecommendableFeatureTrait;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public abstract class SuggestionSupport_ImplBase
@@ -79,14 +84,54 @@ public abstract class SuggestionSupport_ImplBase
         return id;
     }
 
-    protected final void commitLabel(SourceDocument aDocument, String aDataOwner, CAS aCas,
-            TypeAdapter aAdapter, AnnotationFeature aFeature, String aValue,
-            AnnotationBaseFS annotation)
+    protected final void commitLabel(SourceDocument aDocument, String aDataOwner,
+            TypeAdapter aAdapter, AnnotationBaseFS aAnnotation, AnnotationFeature aFeature,
+            Predictions aPredictions, AnnotationSuggestion aSuggestion)
         throws AnnotationException
     {
         // Update the feature value
-        aAdapter.pushFeatureValue(aDocument, aDataOwner, aCas, ICasUtil.getAddr(annotation),
-                aFeature, aValue);
+        var address = ICasUtil.getAddr(aAnnotation);
+        aAdapter.pushFeatureValue(aDocument, aDataOwner, aAnnotation.getCAS(), address, aFeature,
+                aSuggestion.getLabel());
+
+        // Update the suggestion information (if enabled)
+        var retainSuggestionInfo = aAdapter
+                .getFeatureTraits(aFeature, RecommendableFeatureTrait.class) //
+                .map(RecommendableFeatureTrait::isRetainSuggestionInfo) //
+                .orElse(false);
+
+        if (retainSuggestionInfo) {
+            var featureSupport = aAdapter.getFeatureSupport(aFeature).get();
+
+            // Always push the given suggestion
+            featureSupport.pushSuggestions(aDocument, aDataOwner, aAnnotation, aFeature,
+                    asList(new SuggestionState(aSuggestion.getRecommenderName(),
+                            aSuggestion.getScore(), aSuggestion.getLabel())));
+
+            // If we have context predictions check if any other recommender has also suggested this
+            // label and
+            // if so, also push those.
+            if (aPredictions != null) {
+                var group = aPredictions
+                        .getGroupedPredictions(AnnotationSuggestion.class, aDocument,
+                                aFeature.getLayer(), aSuggestion.getWindowBegin(),
+                                aSuggestion.getWindowEnd())
+                        .stream() //
+                        .filter(g -> g.contains(aSuggestion)) //
+                        .findFirst();
+
+                if (!group.isEmpty()) {
+                    var suggestions = group.get().stream() //
+                            .filter(s -> !s.equals(aSuggestion)) // Already added above
+                            .filter(s -> Objects.equals(s.getLabel(), aSuggestion.getLabel()))
+                            .map(s -> new SuggestionState(s.getRecommenderName(), s.getScore(),
+                                    s.getLabel()))
+                            .toList();
+                    featureSupport.pushSuggestions(aDocument, aDataOwner, aAnnotation, aFeature,
+                            suggestions);
+                }
+            }
+        }
     }
 
     protected void recordAndPublishAcceptance(String aSessionOwner, SourceDocument aDocument,
@@ -145,14 +190,13 @@ public abstract class SuggestionSupport_ImplBase
             AnnotationSuggestion aSuggestion, LearningRecordChangeLocation aLocation)
         throws AnnotationException
     {
-        var suggestion = aSuggestion;
-
         // Hide the suggestion. This is faster than having to recalculate the visibility status
         // for the entire document or even for the part visible on screen.
-        suggestion.hide(FLAG_TRANSIENT_REJECTED);
+        aSuggestion.hide(FLAG_TRANSIENT_REJECTED);
 
-        var recommender = recommendationService.getRecommender(suggestion);
-        var feature = recommender.getFeature();
+        var layer = schemaService.getLayer(aSuggestion.getLayerId());
+        var feature = schemaService.getFeature(aSuggestion.getFeature(), layer);
+
         // Log the action to the learning record
         var record = toLearningRecord(aDocument, aDataOwner, aSuggestion, feature, REJECTED,
                 aLocation);
@@ -160,7 +204,7 @@ public abstract class SuggestionSupport_ImplBase
 
         // Send an application event that the suggestion has been rejected
         applicationEventPublisher.publishEvent(
-                new RecommendationRejectedEvent(this, aDocument, aDataOwner, feature, suggestion));
+                new RecommendationRejectedEvent(this, aDocument, aDataOwner, feature, aSuggestion));
     }
 
     @Override

@@ -17,8 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.config;
 
+import static de.tudarmstadt.ukp.inception.websocket.config.MessageExpressionAuthorizationManager.expression;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_USER;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_USER;
+
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -44,7 +53,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.exporter.LearningRecordExporter;
 import de.tudarmstadt.ukp.inception.recommendation.exporter.RecommenderExporter;
 import de.tudarmstadt.ukp.inception.recommendation.footer.RecommendationEventFooterItem;
-import de.tudarmstadt.ukp.inception.recommendation.link.LinkSuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationAcceptedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationRejectedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderDeletedEventAdapter;
@@ -52,17 +60,16 @@ import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.metrics.RecommendationMetricsImpl;
 import de.tudarmstadt.ukp.inception.recommendation.project.ProjectRecommendersMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderProjectSettingsPanelFactory;
-import de.tudarmstadt.ukp.inception.recommendation.relation.RelationSuggestionSupport;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommenderFactoryRegistryImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.SuggestionSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.recommendation.sidebar.RecommendationSidebarFactory;
 import de.tudarmstadt.ukp.inception.recommendation.sidebar.llm.InteractiveRecommenderSidebarFactory;
-import de.tudarmstadt.ukp.inception.recommendation.span.SpanSuggestionSupport;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.websocket.security.StompSecurityConfigurer;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
@@ -75,6 +82,8 @@ import jakarta.persistence.PersistenceContext;
 @ConditionalOnProperty(prefix = "recommender", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class RecommenderServiceAutoConfiguration
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private @PersistenceContext EntityManager entityManager;
 
     @Bean
@@ -199,10 +208,11 @@ public class RecommenderServiceAutoConfiguration
     public RecommendationRenderer recommendationRenderer(
             RecommendationService aRecommendationService,
             SuggestionSupportRegistry aSuggestionSupportRegistry,
-            PreferencesService aPreferencesService, UserDao aUserService)
+            PreferencesService aPreferencesService, UserDao aUserService,
+            AnnotationSchemaService aSchemaService)
     {
         return new RecommendationRenderer(aRecommendationService, aSuggestionSupportRegistry,
-                aPreferencesService, aUserService);
+                aPreferencesService, aUserService, aSchemaService);
     }
 
     @Bean
@@ -213,42 +223,24 @@ public class RecommenderServiceAutoConfiguration
     }
 
     @Bean
-    public SpanSuggestionSupport spanSuggestionSupport(RecommendationService aRecommendationService,
-            LearningRecordService aLearningRecordService,
-            ApplicationEventPublisher aApplicationEventPublisher,
-            AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry,
-            RecommenderProperties aRecommenderProperties)
-    {
-        return new SpanSuggestionSupport(aRecommendationService, aLearningRecordService,
-                aApplicationEventPublisher, aSchemaService, aFeatureSupportRegistry,
-                aRecommenderProperties);
-    }
-
-    @Bean
-    public RelationSuggestionSupport relationSuggestionSupport(
-            RecommendationService aRecommendationService,
-            LearningRecordService aLearningRecordService,
-            ApplicationEventPublisher aApplicationEventPublisher,
-            AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry)
-    {
-        return new RelationSuggestionSupport(aRecommendationService, aLearningRecordService,
-                aApplicationEventPublisher, aSchemaService, aFeatureSupportRegistry);
-    }
-
-    @Bean
-    public LinkSuggestionSupport linkSuggestionSupport(RecommendationService aRecommendationService,
-            LearningRecordService aLearningRecordService,
-            ApplicationEventPublisher aApplicationEventPublisher,
-            AnnotationSchemaService aSchemaService, FeatureSupportRegistry aFeatureSupportRegistry)
-    {
-        return new LinkSuggestionSupport(aRecommendationService, aLearningRecordService,
-                aApplicationEventPublisher, aSchemaService, aFeatureSupportRegistry);
-    }
-
-    @Bean
     public SuggestionSupportRegistry layerRecommendtionSupportRegistry(
             @Lazy @Autowired(required = false) List<SuggestionSupport> aExtensions)
     {
         return new SuggestionSupportRegistryImpl(aExtensions);
+    }
+
+    @Bean
+    public StompSecurityConfigurer recommenderWebsocketSecurity()
+    {
+        return (aBuilder, aMAH) -> {
+            LOG.debug("Configuring websocket security for recommender controller");
+
+            final var recommenderEventsTopic = "/*" + TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT
+                    + "}" + TOPIC_ELEMENT_USER + "{" + PARAM_USER + "}/**";
+
+            aBuilder.simpSubscribeDestMatchers(recommenderEventsTopic)
+                    .access(expression(aMAH, "@projectAccess.canAccessProject(#" + PARAM_PROJECT
+                            + ") and " + "@userAccess.isUser(#" + PARAM_USER + ")"));
+        };
     }
 }

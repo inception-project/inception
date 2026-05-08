@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.processing.curation;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffAdapterRegistry.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
@@ -45,6 +44,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
@@ -54,8 +55,6 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.RecommendationTask_ImplBase;
 import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
-import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class BulkCurationTask
     extends RecommendationTask_ImplBase
@@ -69,7 +68,7 @@ public class BulkCurationTask
     private @Autowired CurationDocumentService curationDocumentService;
     private @Autowired CurationMergeService curationMergeService;
     private @Autowired CurationService curationService;
-    private @Autowired AnnotationSchemaService schemaService;
+    private @Autowired DiffAdapterRegistry diffAdapterRegistry;
 
     private final List<AnnotationLayer> annotationLayers;
     private final CurationWorkflow curationWorkflow;
@@ -98,16 +97,32 @@ public class BulkCurationTask
 
         var curatableDocuments = curationDocumentService.listCuratableSourceDocuments(getProject());
         try (var progress = getMonitor().openScope(SCOPE_DOCUMENTS, curatableDocuments.size())) {
+
+            if (curatableDocuments.isEmpty()) {
+                progress.update(up -> up.status("No curatable documents").statusToLog());
+                return;
+            }
+
+            progress.update(up -> up.info("Preparing to process %d curatable documents...",
+                    curatableDocuments.size()));
+
             for (var doc : curatableDocuments) {
+                if (getMonitor().isCancelled()) {
+                    progress.update(up -> up.info("Task cancelled"));
+                    return;
+                }
+
                 progress.update(up -> up.increment() //
-                        .addMessage(LogMessage.info(this, "%s", doc.getName())));
+                        .status("%s", doc.getName()) //
+                        .info("Processing [%s]", doc.getName()));
 
                 try (var session = CasStorageSession.openNested()) {
                     var users = curationDocumentService.listCuratableUsers(doc);
                     users.removeIf(u -> targetUser.equals(u.getUsername()));
 
-                    var targetCas = documentService.readAnnotationCas(doc, targetUser,
-                            FORCE_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
+                    var targetCas = documentService.readAnnotationCas(doc,
+                            AnnotationSet.forUser(targetUser), FORCE_CAS_UPGRADE,
+                            EXCLUSIVE_WRITE_ACCESS);
 
                     var annotatorCasses = documentService.readAllCasesSharedNoUpgrade(doc, users);
 
@@ -118,19 +133,24 @@ public class BulkCurationTask
                             mergeStrategy, annotationLayers, true);
 
                     var targetAnnDoc = documentService.createOrGetAnnotationDocument(doc,
-                            targetUser);
+                            AnnotationSet.forUser(targetUser));
                     documentService.writeAnnotationCas(targetCas, targetAnnDoc,
                             EXPLICIT_ANNOTATOR_USER_ACTION);
 
                     var allIsCurated = noUncuratedDifferencesRemaining(targetCas, annotatorCasses);
                     if (allIsCurated) {
-                        LOG.info("{} has been fully curated", doc);
+                        progress.update(
+                                up -> up.info("[%s] has been fully curated", doc.getName()));
+                        LOG.debug("{} has been fully curated", doc);
                         documentService.setAnnotationDocumentState(targetAnnDoc, FINISHED,
                                 EXPLICIT_ANNOTATOR_USER_ACTION);
                         documentService.setSourceDocumentState(doc, CURATION_FINISHED);
                     }
                     else {
-                        LOG.info("{} has remaining differences that need to be curated manually",
+                        progress.update(up -> up.info(
+                                "[%s] has remaining differences that need to be curated manually",
+                                doc.getName()));
+                        LOG.debug("{} has remaining differences that need to be curated manually",
                                 doc);
                         documentService.setAnnotationDocumentState(targetAnnDoc, IN_PROGRESS,
                                 EXPLICIT_ANNOTATOR_USER_ACTION);
@@ -139,7 +159,7 @@ public class BulkCurationTask
                 }
             }
 
-            progress.update(up -> up.addMessage(LogMessage.info(this, "Curation complete")));
+            progress.update(up -> up.status("Curation complete").statusToLog());
         }
     }
 
@@ -158,7 +178,7 @@ public class BulkCurationTask
         var allCasses = new HashMap<>(annotatorCasses);
         allCasses.put(targetUser, targetCas);
 
-        var adapters = getDiffAdapters(schemaService, annotationLayers);
+        var adapters = diffAdapterRegistry.getDiffAdapters(annotationLayers);
         var diff = doDiff(adapters, allCasses).toResult();
 
         if (LOG.isTraceEnabled()) {

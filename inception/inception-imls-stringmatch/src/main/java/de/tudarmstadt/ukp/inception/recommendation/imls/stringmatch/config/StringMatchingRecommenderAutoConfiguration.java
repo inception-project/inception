@@ -32,9 +32,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerService;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerServiceImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.exporter.GazeteerExporter;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.GazetteerService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.GazetteerServiceImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetteer.exporter.GazetteerExporter;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.ner.StringMatchingNerClassificationToolFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.pos.StringMatchingPosClassificationToolFactory;
 import jakarta.persistence.EntityManager;
@@ -48,16 +48,16 @@ public class StringMatchingRecommenderAutoConfiguration
     private @PersistenceContext EntityManager entityManager;
 
     @Bean
-    public GazeteerExporter gazeteerExporter(RecommendationService aRecommendationService,
-            GazeteerService aGazeteerService)
+    public GazetteerExporter gazetteerExporter(RecommendationService aRecommendationService,
+            GazetteerService aGazetteerService)
     {
-        return new GazeteerExporter(aRecommendationService, aGazeteerService);
+        return new GazetteerExporter(aRecommendationService, aGazetteerService);
     }
 
     @Bean
-    public GazeteerService gazeteerService(RepositoryProperties aRepositoryProperties)
+    public GazetteerService gazetteerService(RepositoryProperties aRepositoryProperties)
     {
-        return new GazeteerServiceImpl(aRepositoryProperties, entityManager);
+        return new GazetteerServiceImpl(aRepositoryProperties, entityManager);
     }
 
     @Bean
@@ -74,9 +74,9 @@ public class StringMatchingRecommenderAutoConfiguration
 
     @Bean
     public StringMatchingRecommenderFactory stringMatchingRecommenderFactory(
-            GazeteerService aGazeteerService)
+            GazetteerService aGazetteerService)
     {
-        return new StringMatchingRecommenderFactory(aGazeteerService);
+        return new StringMatchingRecommenderFactory(aGazetteerService);
     }
 
     @Bean

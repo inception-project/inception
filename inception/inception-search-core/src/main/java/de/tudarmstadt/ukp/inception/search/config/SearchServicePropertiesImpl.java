@@ -25,7 +25,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SearchServicePropertiesImpl
     implements SearchServiceProperties
 {
-    private boolean enabled = false;
+    /** Enable/disable search. */
+    private boolean enabled = SearchServiceProperties.DEFAULT_ENABLED;
 
     private Duration indexKeepOpenTime = Duration.ofMinutes(10);
 

@@ -25,11 +25,31 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ExternalEditorPropertiesImpl
     implements ExternalEditorProperties
 {
+    /** Whether to remove HTML {@code <img>} tags during rendering. */
     private boolean blockImg = false;
+
+    /**
+     * Where to allow loading images from. Possible values are {@code NONE}, {@code LOCAL} and
+     * {@code ANY}.
+     */
     private Source allowImgSource = LOCAL;
+
+    /** Whether to remove HTML {@code <audio>} tags during rendering. */
     private boolean blockAudio = false;
+
+    /**
+     * Where to allow loading audio files from. Possible values are {@code NONE}, {@code LOCAL} and
+     * {@code ANY}.
+     */
     private Source allowAudioSource = LOCAL;
+
+    /** Whether to remove HTML {@code <video>} tags during rendering. */
     private boolean blockVideo = false;
+
+    /**
+     * Where to allow loading video files from. Possible values are {@code NONE}, {@code LOCAL} and
+     * {@code ANY}.
+     */
     private Source allowVideoSource = LOCAL;
 
     // Experimental / undocumented properties

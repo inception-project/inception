@@ -24,9 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.io.File;
@@ -47,7 +44,6 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -55,10 +51,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
@@ -77,8 +72,7 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @DataJpaTest( //
         showSql = false, //
         properties = { //
-                "spring.main.banner-mode=off" }, //
-        excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+                "spring.main.banner-mode=off" })
 @EnableAutoConfiguration
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception.kb.model", //
@@ -105,11 +99,11 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .collect(toList());
     }
 
-    @BeforeAll
-    public static void setUpOnce()
-    {
-        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
-    }
+    // @BeforeAll
+    // public static void setUpOnce()
+    // {
+    // System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
+    // }
 
     public void setUp(Reification reification) throws Exception
     {
@@ -260,7 +254,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         kb.setRootConcepts(asList(rootConcept1, rootConcept2));
         sut.updateKnowledgeBase(kb, sut.getNativeConfig());
 
-        KnowledgeBase savedKb = testEntityManager.find(KnowledgeBase.class, kb.getRepositoryId());
+        var savedKb = testEntityManager.find(KnowledgeBase.class, kb.getRepositoryId());
         assertThat(savedKb).as("Check that knowledge base was updated correctly")
                 .hasFieldOrPropertyWithValue("name", "New name")
                 .hasFieldOrPropertyWithValue("classIri", OWL.CLASS.stringValue())
@@ -460,7 +454,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         var id = savedConcept.getIdentifier();
         var savedConceptPrefix = id.substring(0, id.lastIndexOf("#") + 1);
-        assertEquals(customPrefix, savedConceptPrefix);
+        assertThat(savedConceptPrefix).isEqualTo(customPrefix);
     }
 
     @ParameterizedTest(name = "Reification = {0}")
@@ -796,7 +790,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         var id = savedProperty.getIdentifier();
         var savedPropertyPrefix = id.substring(0, id.lastIndexOf("#") + 1);
-        assertEquals(customPrefix, savedPropertyPrefix);
+        assertThat(savedPropertyPrefix).isEqualTo(customPrefix);
     }
 
     @ParameterizedTest(name = "Reification = {0}")
@@ -1108,7 +1102,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         var id = savedInstance.getIdentifier();
         var savedInstancePrefix = id.substring(0, id.lastIndexOf("#") + 1);
-        assertEquals(customPrefix, savedInstancePrefix);
+        assertThat(savedInstancePrefix).isEqualTo(customPrefix);
     }
 
     @ParameterizedTest(name = "Reification = {0}")
@@ -1585,7 +1579,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
         importKnowledgeBase("data/wildlife_ontology.ttl");
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
-        List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
+        var rootConcepts = sut.listRootConcepts(kb, false);
 
         assertThat(rootConcepts) //
                 .as("Check that all root concepts have been found")
@@ -1770,7 +1764,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
             }
 
         });
-        assertTrue(result.size() >= 1);
+        assertThat(result.size()).isGreaterThanOrEqualTo(1);
 
     }
 
@@ -1792,7 +1786,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         KBStatement mockStatement = buildStatement(kb, concept.toKBHandle(), property,
                 "Test statement");
-        assertTrue(sut.exists(kb, mockStatement));
+        assertThat(sut.exists(kb, mockStatement)).isTrue();
     }
 
     @ParameterizedTest(name = "Reification = {0}")
@@ -1812,7 +1806,7 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         KBStatement mockStatement = buildStatement(kb, concept.toKBHandle(), property,
                 "Test statement");
-        assertFalse(sut.exists(kb, mockStatement));
+        assertThat(sut.exists(kb, mockStatement)).isFalse();
     }
 
     @ParameterizedTest(name = "Reification = {0}")

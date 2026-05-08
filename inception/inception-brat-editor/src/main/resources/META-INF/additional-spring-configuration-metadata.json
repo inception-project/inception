@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "ui.brat.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables the brat annotation editor UI."
+    }
+  ]
+}

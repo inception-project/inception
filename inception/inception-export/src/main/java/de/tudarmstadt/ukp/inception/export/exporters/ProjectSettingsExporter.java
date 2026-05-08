@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 
 /**
  * <p>
@@ -64,7 +65,11 @@ public class ProjectSettingsExporter
         aExProject.setDisableExport(project.isDisableExport());
         aExProject.setCreated(project.getCreated());
         aExProject.setUpdated(project.getUpdated());
+        aExProject.setState(project.getState());
+        aExProject.setStateUpdated(project.getStateUpdated());
         aExProject.setAnonymousCuration(project.isAnonymousCuration());
+        aExProject.setApplicationName("INCEpTION");
+        aExProject.setApplicationVersion(SettingsUtil.getVersion());
     }
 
     /**
@@ -87,6 +92,8 @@ public class ProjectSettingsExporter
         aProject.setDisableExport(aExProject.isDisableExport());
         aProject.setCreated(aExProject.getCreated());
         aProject.setUpdated(aExProject.getUpdated());
+        aProject.setState(aExProject.getState());
+        aProject.setStateUpdated(aExProject.getStateUpdated());
         aProject.setAnonymousCuration(aExProject.isAnonymousCuration());
 
         // Set dates to now if no dates are set in the exported project

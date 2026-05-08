@@ -19,14 +19,11 @@ package de.tudarmstadt.ukp.inception.search.cli;
 
 import static java.util.Arrays.asList;
 
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWebApplication;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -38,17 +35,16 @@ import de.tudarmstadt.ukp.inception.search.SearchService;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
-@ConditionalOnNotWebApplication
-@Component
 @Command( //
         name = "reindex", //
+        mixinStandardHelpOptions = true, //
         description = { //
-                "Rebuilds the indexes of all projects.", //
+                "Rebuilds the document (CAS) search indexes of all projects.", //
                 "NOTE: This may take a very long time!" })
 public class SearchReindexCliCommand
     implements Callable<Integer>
 {
-    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private final static Logger LOG = LoggerFactory.getLogger("inception.cli");
 
     @Option(names = { "--project-slug" }, description = "Re-index only the given project")
     private String slug;

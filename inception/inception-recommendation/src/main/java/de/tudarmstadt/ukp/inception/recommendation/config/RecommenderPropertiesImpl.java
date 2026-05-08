@@ -28,8 +28,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class RecommenderPropertiesImpl
     implements RecommenderProperties
 {
-    private boolean enabled;
-    private boolean actionButtonsEnabled;
+    /** Enable/disable recommender support. */
+    private boolean enabled = true;
+
     private Messages messages = new Messages();
 
     @Override
@@ -44,28 +45,42 @@ public class RecommenderPropertiesImpl
     }
 
     @Override
-    public boolean isActionButtonsEnabled()
-    {
-        return actionButtonsEnabled;
-    }
-
-    public void setActionButtonsEnabled(boolean aActionButtonsEnabled)
-    {
-        actionButtonsEnabled = aActionButtonsEnabled;
-    }
-
-    @Override
     public Messages getMessages()
     {
         return messages;
     }
 
-    public class Messages
+    public static class Messages
     {
+        /**
+         * If enabled, an info message is posted to the recommendation log when a prediction run
+         * completes without producing any new suggestions.
+         */
         private boolean noNewPredictionsAvailable = false;
+
+        /**
+         * If enabled, an info message is posted to the recommendation log when a prediction run
+         * produces new suggestions, indicating how many became available.
+         */
         private boolean newPredictionsAvailable = false;
+
+        /**
+         * If enabled, an info message is posted to the recommendation log when a recommender's
+         * automatic evaluation completes successfully.
+         */
         private boolean evaluationSuccessful = false;
+
+        /**
+         * If enabled, an error message is posted to the recommendation log when a recommender's
+         * automatic evaluation fails.
+         */
         private boolean evaluationFailed = true;
+
+        /**
+         * If enabled, an info message is posted to the recommendation log when a non-trainable
+         * recommender is auto-activated (since these recommenders skip the regular
+         * train-and-evaluate cycle).
+         */
         private boolean nonTrainableRecommenderActivation = false;
 
         public boolean isNoNewPredictionsAvailable()

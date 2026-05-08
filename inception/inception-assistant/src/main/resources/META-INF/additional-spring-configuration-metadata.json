@@ -1,0 +1,14 @@
+{
+  "properties": [
+    {
+      "name": "assistant.chat.capabilities",
+      "defaultValue": [ "auto" ]
+    },
+    {
+      "name": "assistant.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Whether to enable the assistant."
+    }
+  ]
+}

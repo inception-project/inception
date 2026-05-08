@@ -21,6 +21,15 @@ import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCha
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.endsWithMatching;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveDuplicateCharacters;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
+import static java.lang.Character.CONNECTOR_PUNCTUATION;
+import static java.lang.Character.DASH_PUNCTUATION;
+import static java.lang.Character.END_PUNCTUATION;
+import static java.lang.Character.FINAL_QUOTE_PUNCTUATION;
+import static java.lang.Character.INITIAL_QUOTE_PUNCTUATION;
+import static java.lang.Character.OTHER_PUNCTUATION;
+import static java.lang.Character.START_PUNCTUATION;
+import static java.lang.Character.charCount;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
@@ -82,6 +91,106 @@ class TextUtilsTest
             else {
                 assertThat(TextUtils.isControlCharacter(c)).isFalse();
             }
+        }
+    }
+
+    @Test
+    void asciiObfuscation_preservesWhitespacePunctuationAndLengths()
+    {
+        var input = "My number is 555-1234.";
+        var ob = TextUtils.obfuscate(input);
+
+        assertThat(ob).isNotNull();
+        assertThat(ob.length()).as("UTF-16 length must match").isEqualTo(input.length());
+        assertThat(ob.codePointCount(0, ob.length())).as("Code point count must match")
+                .isEqualTo(input.codePointCount(0, input.length()));
+        assertThat(ob.getBytes(UTF_8).length).as("UTF-8 byte length must match")
+                .isEqualTo(input.getBytes(UTF_8).length);
+
+        // Whitespace and punctuation must be preserved exactly at the same positions
+        int i1 = 0, i2 = 0;
+        while (i1 < input.length() && i2 < ob.length()) {
+            int cp1 = input.codePointAt(i1);
+            int cp2 = ob.codePointAt(i2);
+
+            if (Character.isWhitespace(cp1) || isPunctuationType(Character.getType(cp1))) {
+                assertThat(cp2).as("Whitespace/punctuation must be preserved at offset " + i1)
+                        .isEqualTo(cp1);
+            }
+
+            i1 += charCount(cp1);
+            i2 += charCount(cp2);
+        }
+    }
+
+    @Test
+    void multilingualObfuscation_preservesEncodingsAndCounts()
+    {
+        // mixture: Arabic words + Arabic comma, ASCII exclamation, Arabic-Indic digits, emoji, CJK
+        var input = "مرحبا، عالم! ١٢٣ 😃 中";
+        var ob = TextUtils.obfuscate(input);
+
+        assertThat(ob).isNotNull();
+        assertThat(ob.length()).as("UTF-16 length must match").isEqualTo(input.length());
+        assertThat(ob.codePointCount(0, ob.length())).as("Code point count must match")
+                .isEqualTo(input.codePointCount(0, input.length()));
+        assertThat(ob.getBytes(UTF_8).length).as("UTF-8 byte length must match")
+                .isEqualTo(input.getBytes(UTF_8).length);
+
+        int i1 = 0, i2 = 0;
+        while (i1 < input.length() && i2 < ob.length()) {
+            int cp1 = input.codePointAt(i1);
+            int cp2 = ob.codePointAt(i2);
+            if (Character.isWhitespace(cp1) || isPunctuationType(Character.getType(cp1))) {
+                assertThat(cp2).as("Whitespace/punctuation must be preserved at offset " + i1)
+                        .isEqualTo(cp1);
+            }
+            i1 += charCount(cp1);
+            i2 += charCount(cp2);
+        }
+    }
+
+    @Test
+    void digitsAreReplacedWithZeroInSameDigitBlock()
+    {
+        var asciiDigits = "0123456789";
+        var obAscii = TextUtils.obfuscate(asciiDigits);
+        assertThat(obAscii.length()).isEqualTo(asciiDigits.length());
+        for (int i = 0; i < asciiDigits.length(); i++) {
+            // all ASCII digits must be replaced by ASCII '0'
+            assertThat(obAscii.charAt(i)).isEqualTo('0');
+        }
+
+        var arabicIndic = "٠١٢٣٤٥٦٧٨٩"; // U+0660..U+0669
+        var obArabic = TextUtils.obfuscate(arabicIndic);
+        // ensure code point counts and UTF-8 lengths are preserved
+        assertThat(arabicIndic.codePointCount(0, arabicIndic.length()))
+                .isEqualTo(obArabic.codePointCount(0, obArabic.length()));
+        assertThat(arabicIndic.getBytes(UTF_8).length).isEqualTo(obArabic.getBytes(UTF_8).length);
+
+        // all resulting digits must have numeric value 0 (i.e., be the zero in that digit block)
+        int i = 0;
+        while (i < obArabic.length()) {
+            int cp = obArabic.codePointAt(i);
+            int val = Character.getNumericValue(cp);
+            assertThat(val).as("Digit must have numeric value 0").isEqualTo(0);
+            i += charCount(cp);
+        }
+    }
+
+    static boolean isPunctuationType(int aType)
+    {
+        switch (aType) {
+        case CONNECTOR_PUNCTUATION:
+        case DASH_PUNCTUATION:
+        case START_PUNCTUATION:
+        case END_PUNCTUATION:
+        case OTHER_PUNCTUATION:
+        case INITIAL_QUOTE_PUNCTUATION:
+        case FINAL_QUOTE_PUNCTUATION:
+            return true;
+        default:
+            return false;
         }
     }
 }

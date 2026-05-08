@@ -23,6 +23,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class UserProfilePropertiesImpl
     implements UserProfileProperties
 {
+    /**
+     * Whether regular users can access their own profile to change their password and other profile
+     * information. This setting has no effect when running in pre-authentication mode.
+     */
     private boolean accessible = true;
 
     public void setAccessible(boolean aAccessible)

@@ -64,9 +64,14 @@ public class Fixtures
 
         List<SpanSuggestion> suggestions = new ArrayList<>();
         for (int[] val : vals) {
-            var suggestion = SpanSuggestion.builder().withId(val[0]).withRecommender(rec)
-                    .withDocument(doc).withPosition(val[1], val[2]).withCoveredText(COVERED_TEXT)
-                    .withScore(CONFIDENCE).withScoreExplanation(CONFIDENCE_EXPLANATION).build();
+            var suggestion = SpanSuggestion.builder().withId(val[0]) //
+                    .withRecommender(rec) //
+                    .withDocument(doc) //
+                    .withPosition(val[1], val[2]) //
+                    .withCoveredText(COVERED_TEXT) //
+                    .withScore(CONFIDENCE) //
+                    .withScoreExplanation(CONFIDENCE_EXPLANATION) //
+                    .build();
             suggestions.add(suggestion);
         }
 

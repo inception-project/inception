@@ -39,6 +39,7 @@ public abstract class PersistentEnumUserType<T extends PersistentEnum>
 {
     private static final long serialVersionUID = -3080625439869047088L;
 
+    @SuppressWarnings("unchecked")
     @Override
     public T assemble(Serializable cached, Object owner) throws HibernateException
     {
@@ -75,6 +76,7 @@ public abstract class PersistentEnumUserType<T extends PersistentEnum>
         return false;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public T nullSafeGet(ResultSet rs, int aPosition, SharedSessionContractImplementor session,
             Object owner)
@@ -90,6 +92,16 @@ public abstract class PersistentEnumUserType<T extends PersistentEnum>
                 return (T) value;
             }
         }
+
+        // As a fallback, also check the enum name
+        for (PersistentEnum value : returnedClass().getEnumConstants()) {
+            if (value instanceof Enum enumValue) {
+                if (name.equals(enumValue.name())) {
+                    return (T) value;
+                }
+            }
+        }
+
         throw new IllegalStateException(
                 "Unknown " + returnedClass().getSimpleName() + " value [" + name + "]");
     }

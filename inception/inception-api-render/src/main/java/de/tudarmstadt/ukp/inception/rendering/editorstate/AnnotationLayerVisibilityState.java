@@ -42,8 +42,11 @@ public class AnnotationLayerVisibilityState
 
     private ReadonlyColoringStrategy readonlyLayerColoringStrategy = ReadonlyColoringStrategy.LEGACY;
 
-    // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
     private Set<Long> hiddenLayers = new HashSet<>();
+
+    private Set<Long> hiddenFeatures = new HashSet<>();
+
+    private Map<Long, Set<String>> hiddenFeatureValues = new HashMap<>();
 
     public Map<Long, ColoringStrategyType> getLayerColoringStrategy()
     {
@@ -74,5 +77,25 @@ public class AnnotationLayerVisibilityState
     public void setHiddenLayers(Set<Long> aHiddenLayers)
     {
         hiddenLayers = aHiddenLayers;
+    }
+
+    public Set<Long> getHiddenFeatures()
+    {
+        return hiddenFeatures;
+    }
+
+    public void setHiddenFeatures(Set<Long> aHiddenFeatures)
+    {
+        hiddenFeatures = aHiddenFeatures;
+    }
+
+    public Map<Long, Set<String>> getHiddenFeatureValues()
+    {
+        return hiddenFeatureValues;
+    }
+
+    public void setHiddenFeatureValues(Map<Long, Set<String>> aHiddenFeatureValues)
+    {
+        hiddenFeatureValues = aHiddenFeatureValues;
     }
 }

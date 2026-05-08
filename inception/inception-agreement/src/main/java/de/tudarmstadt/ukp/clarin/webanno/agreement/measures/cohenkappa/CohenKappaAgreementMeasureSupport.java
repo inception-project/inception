@@ -23,6 +23,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCoding
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 public class CohenKappaAgreementMeasureSupport
@@ -31,10 +32,13 @@ public class CohenKappaAgreementMeasureSupport
     public static final String ID = "CohenKappa";
 
     private final AnnotationSchemaService annotationService;
+    private final DiffAdapterRegistry diffAdapterRegistry;
 
-    public CohenKappaAgreementMeasureSupport(AnnotationSchemaService aAnnotationService)
+    public CohenKappaAgreementMeasureSupport(AnnotationSchemaService aAnnotationService,
+            DiffAdapterRegistry aDiffAdapterRegistry)
     {
         annotationService = aAnnotationService;
+        diffAdapterRegistry = aDiffAdapterRegistry;
     }
 
     @Override
@@ -53,7 +57,8 @@ public class CohenKappaAgreementMeasureSupport
     public AgreementMeasure<FullCodingAgreementResult> createMeasure(AnnotationLayer aLayer,
             AnnotationFeature aFeature, DefaultAgreementTraits aTraits)
     {
-        return new CohenKappaAgreementMeasure(aFeature, aTraits, annotationService);
+        return new CohenKappaAgreementMeasure(aFeature, aTraits, annotationService,
+                diffAdapterRegistry);
     }
 
     @Override

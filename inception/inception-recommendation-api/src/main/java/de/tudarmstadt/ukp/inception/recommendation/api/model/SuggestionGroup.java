@@ -74,7 +74,7 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
     private Position position;
     private String feature;
     private long layerId;
-    private String documentName;
+    private long documentId;
 
     public SuggestionGroup()
     {
@@ -90,7 +90,7 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
             position = suggestions.get(0).getPosition();
             feature = get(0).getFeature();
             layerId = get(0).getLayerId();
-            documentName = get(0).getDocumentName();
+            documentId = get(0).getDocumentId();
         }
     }
 
@@ -104,9 +104,9 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
         return layerId;
     }
 
-    public String getDocumentName()
+    public long getDocumentId()
     {
-        return documentName;
+        return documentId;
     }
 
     public Position getPosition()
@@ -344,9 +344,9 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
             Validate.isTrue(Objects.equals(representative.getPosition(), aSuggestion.getPosition()),
                     "All suggestions in a group must be at the same position: expected [%s] but got [%s]",
                     representative.getPosition(), aSuggestion.getPosition());
-            Validate.isTrue(representative.getDocumentName().equals(aSuggestion.getDocumentName()),
+            Validate.isTrue(representative.getDocumentId() == aSuggestion.getDocumentId(),
                     "All suggestions in a group must come from the same document: expected [%s] but got [%s]",
-                    representative.getDocumentName(), aSuggestion.getDocumentName());
+                    representative.getDocumentId(), aSuggestion.getDocumentId());
             Validate.isTrue(representative.getLayerId() == aSuggestion.getLayerId(),
                     "All suggestions in a group must be on the same layer: expected [%d] but got [%d]",
                     representative.getLayerId(), aSuggestion.getLayerId());
@@ -360,7 +360,7 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
             position = aSuggestion.getPosition();
             feature = aSuggestion.getFeature();
             layerId = aSuggestion.getLayerId();
-            documentName = aSuggestion.getDocumentName();
+            documentId = aSuggestion.getDocumentId();
         }
 
         return suggestions.add(aSuggestion);

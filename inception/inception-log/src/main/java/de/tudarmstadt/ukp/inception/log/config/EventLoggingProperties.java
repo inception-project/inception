@@ -21,6 +21,8 @@ import java.util.Set;
 
 public interface EventLoggingProperties
 {
+    boolean DEFAULT_ENABLED = true;
+
     void setEnabled(boolean aEnabled);
 
     boolean isEnabled();

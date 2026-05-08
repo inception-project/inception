@@ -51,4 +51,12 @@
       <column name="event" />
     </createIndex>
   </changeSet>
+
+  <changeSet id="20260222-log-1-mssql" author="INCEpTION Team" dbms="mssql">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="logged_event" columnName="created" />
+    </preConditions>
+    <modifyDataType tableName="logged_event" columnName="created"
+      newDataType="datetimeoffset(7)" />
+  </changeSet>
 </databaseChangeLog>

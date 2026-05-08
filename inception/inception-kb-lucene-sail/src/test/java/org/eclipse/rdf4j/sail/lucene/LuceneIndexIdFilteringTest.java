@@ -15,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +31,6 @@ import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.repository.sail.SailRepositoryConnection;
 import org.eclipse.rdf4j.sail.evaluation.TupleFunctionEvaluationMode;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -66,7 +64,7 @@ public class LuceneIndexIdFilteringTest
     SailRepository repository;
 
     @BeforeEach
-    public void setup(@TempDir File dataDir) throws IOException
+    public void setup(@TempDir File dataDir)
     {
         // sails schema
         // sailType1(LuceneSail) -> sailType2(LuceneSail) -> sailType3(LuceneSail) ->
@@ -98,20 +96,6 @@ public class LuceneIndexIdFilteringTest
         sailType1.setEvaluationMode(TupleFunctionEvaluationMode.NATIVE);
         sailType1.setBaseSail(sailType2);
         sailType1.setDataDir(dataDir);
-    }
-
-    @AfterEach
-    void shutdown()
-    {
-        if (sailType1 != null) {
-            sailType1.shutDown();
-        }
-        if (sailType2 != null) {
-            sailType2.shutDown();
-        }
-        if (sailType3 != null) {
-            sailType3.shutDown();
-        }
     }
 
     private void initSails()

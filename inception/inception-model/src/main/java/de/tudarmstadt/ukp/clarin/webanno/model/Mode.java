@@ -21,7 +21,10 @@ import de.tudarmstadt.ukp.inception.support.db.PersistentEnum;
 
 /**
  * Subjects of interest, either annotation or curation.
+ * 
+ * @deprecated Should no longer be used
  */
+@Deprecated
 public enum Mode
     implements PersistentEnum
 {

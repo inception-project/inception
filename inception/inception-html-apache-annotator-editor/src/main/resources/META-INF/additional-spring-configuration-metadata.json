@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "ui.html-apacheannotator.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables the Apache Annotator-based HTML annotation editor UI."
+    }
+  ]
+}

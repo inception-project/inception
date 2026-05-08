@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "telemetry.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enables anonymous usage telemetry collection."
+    }
+  ]
+}

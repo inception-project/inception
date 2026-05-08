@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingTrait;
+import de.tudarmstadt.ukp.inception.schema.api.feature.RecommendableFeatureTrait;
 
 /**
  * Traits for knowledge-base-related features.
@@ -31,7 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingTr
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ConceptFeatureTraits
     extends ConceptFeatureTraits_ImplBase
-    implements KeyBindingTrait
+    implements KeyBindingTrait, RecommendableFeatureTrait
 {
     private static final long serialVersionUID = 6303541487449965932L;
 

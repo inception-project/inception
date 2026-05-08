@@ -20,10 +20,10 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.chevron_left_s;
 import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.chevron_right_s;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -41,7 +41,6 @@ import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 public class SidebarTabbedPanel<T extends SidebarTab>
     extends AjaxTabbedPanel<T>
@@ -81,7 +80,8 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     {
         expanded = !expanded;
         saveSidebarState();
-        aTarget.add(findParent(SidebarPanel.class));
+        send(this, BUBBLE, new SidebarStateChangedEvent(aTarget, SidebarStateChangedEvent.Side.LEFT,
+                !expanded));
     }
 
     public boolean isExpanded()
@@ -103,7 +103,15 @@ public class SidebarTabbedPanel<T extends SidebarTab>
         if (!expanded) {
             expanded = true;
             saveSidebarState();
-            aTarget.ifPresent(_target -> WicketUtil.refreshPage(_target, getPage()));
+            // Instead of re-rendering the entire page, let's see what happens when we just
+            // re-render the sidebar panel.
+            // See: #5810 - Document scrolls up when opening search sidebar
+            // aTarget.ifPresent(_target -> WicketUtil.refreshPage(_target, getPage()));
+            aTarget.ifPresent(_target -> {
+                _target.add(findParent(SidebarPanel.class));
+                send(this, BUBBLE, new SidebarStateChangedEvent(_target,
+                        SidebarStateChangedEvent.Side.LEFT, false));
+            });
         }
     }
 
@@ -132,8 +140,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
                 state.getObject().getProject());
         expanded = sidebarState.isExpanded();
         if (isNotBlank(sidebarState.getSelectedTab())) {
-            var tabFactories = getTabs().stream().map(SidebarTab::getFactoryId)
-                    .collect(Collectors.toList());
+            var tabFactories = getTabs().stream().map(SidebarTab::getFactoryId).toList();
             var tabIndex = tabFactories.indexOf(sidebarState.getSelectedTab());
             if (tabIndex >= 0) {
                 super.setSelectedTab(tabIndex);

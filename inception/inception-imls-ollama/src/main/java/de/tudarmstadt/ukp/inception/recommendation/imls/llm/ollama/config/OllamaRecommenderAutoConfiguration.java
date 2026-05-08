@@ -23,6 +23,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.OllamaRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
@@ -50,8 +51,10 @@ public class OllamaRecommenderAutoConfiguration
             matchIfMissing = false)
     @Bean
     public OllamaRecommenderFactory ollamaRecommenderFactory(OllamaClient aClient,
-            AnnotationSchemaService aSchemaService)
+            AnnotationSchemaService aSchemaService,
+            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint)
     {
-        return new OllamaRecommenderFactory(aClient, aSchemaService);
+        return new OllamaRecommenderFactory(aClient, aSchemaService,
+                aResponseExtractorExtensionPoint);
     }
 }

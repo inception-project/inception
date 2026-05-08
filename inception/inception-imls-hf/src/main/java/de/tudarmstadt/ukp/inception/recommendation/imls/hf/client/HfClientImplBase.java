@@ -29,7 +29,7 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 public class HfClientImplBase
 {
@@ -85,7 +85,7 @@ public class HfClientImplBase
         try {
             return objectMapper.readValue(response.body(), aType);
         }
-        catch (IOException e) {
+        catch (Exception e) {
             throw new IOException("Error while deserializing server response!", e);
         }
     }

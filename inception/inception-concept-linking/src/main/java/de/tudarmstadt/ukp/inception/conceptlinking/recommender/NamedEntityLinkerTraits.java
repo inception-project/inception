@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import tools.jackson.databind.annotation.JsonSerialize;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize
@@ -31,6 +32,7 @@ public class NamedEntityLinkerTraits
 
     private boolean emptyCandidateFeatureRequired = true;
     private boolean synchronous = true;
+    private boolean includeLinkTargetsInQuery = true;
 
     public boolean isEmptyCandidateFeatureRequired()
     {
@@ -50,5 +52,15 @@ public class NamedEntityLinkerTraits
     public void setSynchronous(boolean aSynchronous)
     {
         synchronous = aSynchronous;
+    }
+
+    public boolean isIncludeLinkTargetsInQuery()
+    {
+        return includeLinkTargetsInQuery;
+    }
+
+    public void setIncludeLinkTargetsInQuery(boolean aIncludeLinkTargetsInQuery)
+    {
+        includeLinkTargetsInQuery = aIncludeLinkTargetsInQuery;
     }
 }

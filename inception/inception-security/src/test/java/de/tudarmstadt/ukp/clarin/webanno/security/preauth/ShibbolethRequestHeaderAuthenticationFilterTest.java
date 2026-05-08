@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security.preauth;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.Realm.REALM_PREAUTH;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -24,13 +27,14 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -39,23 +43,22 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.InceptionSecurityAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.PreauthenticationProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User_;
-import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeService;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 @Transactional
-@ActiveProfiles(DeploymentModeService.PROFILE_AUTH_MODE_EXTERNAL_PREAUTH)
 @DataJpaTest( //
         showSql = false, //
         properties = { //
+                "auth.mode=preauth", //
                 "spring.liquibase.enabled=false", //
                 "spring.main.banner-mode=off" })
 @ImportAutoConfiguration({ //
@@ -91,18 +94,18 @@ class ShibbolethRequestHeaderAuthenticationFilterTest
 
         sut.loadUser(USERNAME);
 
-        User autoCreatedUser = userService.get(USERNAME);
+        var autoCreatedUser = userService.get(USERNAME);
         assertThat(autoCreatedUser) //
                 .as("User should have been created as part of the authentication")
                 .usingRecursiveComparison() //
                 .ignoringFields(User_.CREATED, User_.UPDATED, User_.PASSWORD, "passwordEncoder") //
                 .isEqualTo(User.builder() //
                         .withUsername(USERNAME) //
-                        .withRealm(UserDao.REALM_PREAUTH).withRoles(Set.of(Role.ROLE_USER)) //
+                        .withRealm(REALM_PREAUTH).withRoles(Set.of(ROLE_USER)) //
                         .withEnabled(true) //
                         .build());
 
-        assertThat(userService.userHasNoPassword(autoCreatedUser)) //
+        assertThat(UserDao.userHasNoPassword(autoCreatedUser)) //
                 .as("Auto-created external users should be created without password") //
                 .isTrue();
     }
@@ -112,8 +115,8 @@ class ShibbolethRequestHeaderAuthenticationFilterTest
     {
         userService.create(User.builder() //
                 .withUsername(USERNAME) //
-                .withRealm(UserDao.REALM_PREAUTH) //
-                .withRoles(Set.of(Role.ROLE_USER)) //
+                .withRealm(REALM_PREAUTH) //
+                .withRoles(Set.of(ROLE_USER)) //
                 .withEnabled(true) //
                 .build());
 
@@ -162,6 +165,21 @@ class ShibbolethRequestHeaderAuthenticationFilterTest
         assertThat(userService.list()).isEmpty();
     }
 
+    @Nested
+    @TestPropertySource(properties = "auth.preauth.newuser.roles=ROLE_USER,ROLE_ADMIN")
+    class WithExtraRoles
+    {
+        @Test
+        void thatConfiguredRolesAreAssignedToNewUser()
+        {
+            sut.loadUser(USERNAME);
+
+            assertThat(userService.get(USERNAME).getRoles()) //
+                    .as("Auto-created user should have the configured extra roles") //
+                    .containsExactlyInAnyOrder(ROLE_USER, ROLE_ADMIN);
+        }
+    }
+
     @SpringBootConfiguration
     @AutoConfigurationPackage
     public static class SpringConfig
@@ -174,12 +192,14 @@ class ShibbolethRequestHeaderAuthenticationFilterTest
 
         @Bean
         ShibbolethRequestHeaderAuthenticationFilter ShibbolethRequestHeaderAuthenticationFilter(
-                UserDao aUserService, AuthenticationConfiguration aAuthenticationConfiguration)
+                UserDao aUserService, AuthenticationConfiguration aAuthenticationConfiguration,
+                PreauthenticationProperties aPreauthenticationProperties)
             throws Exception
         {
             var sut = new ShibbolethRequestHeaderAuthenticationFilter();
             sut.setUserRepository(aUserService);
             sut.setAuthenticationManager(aAuthenticationConfiguration.getAuthenticationManager());
+            sut.setPreauthenticationProperties(aPreauthenticationProperties);
             return sut;
         }
 

@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,28 +32,27 @@ import org.springframework.security.core.session.SessionRegistry;
 import com.knuddels.jtokkit.Encodings;
 import com.knuddels.jtokkit.api.EncodingRegistry;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.AssistantServiceImpl;
-import de.tudarmstadt.ukp.inception.assistant.contextmenu.CheckAnnotationContextMenuItem;
+import de.tudarmstadt.ukp.inception.assistant.documents.AssistantIndexFootprintProvider;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentContextRetriever;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryService;
 import de.tudarmstadt.ukp.inception.assistant.documents.DocumentQueryServiceImpl;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingService;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingServiceImpl;
-import de.tudarmstadt.ukp.inception.assistant.retriever.CurrentDateTimeRetriever;
+import de.tudarmstadt.ukp.inception.assistant.recommender.AssistantRecommenderFactory;
+import de.tudarmstadt.ukp.inception.assistant.retriever.CurrentDateRetriever;
 import de.tudarmstadt.ukp.inception.assistant.retriever.Retriever;
 import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPoint;
 import de.tudarmstadt.ukp.inception.assistant.retriever.RetrieverExtensionPointImpl;
-import de.tudarmstadt.ukp.inception.assistant.sidebar.AssistantSidebarFactory;
 import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideQueryService;
 import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideQueryServiceImpl;
 import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideRetriever;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibraryExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @ConditionalOnWebApplication
 @Configuration
@@ -66,16 +65,11 @@ public class AssistantAutoConfiguration
     public AssistantService assistantService(SessionRegistry aSessionRegistry,
             SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
             AssistantProperties aProperties, EncodingRegistry aEncodingRegistry,
-            RetrieverExtensionPoint aRetrieverExtensionPoint)
+            RetrieverExtensionPoint aRetrieverExtensionPoint,
+            ToolLibraryExtensionPoint aToolLibraryExtensionPoint)
     {
         return new AssistantServiceImpl(aSessionRegistry, aMsgTemplate, aOllamaClient, aProperties,
-                aEncodingRegistry, aRetrieverExtensionPoint);
-    }
-
-    @Bean
-    public AssistantSidebarFactory assistantSidebarFactory()
-    {
-        return new AssistantSidebarFactory();
+                aEncodingRegistry, aRetrieverExtensionPoint, aToolLibraryExtensionPoint);
     }
 
     @Bean
@@ -116,9 +110,9 @@ public class AssistantAutoConfiguration
     }
 
     @Bean
-    public CurrentDateTimeRetriever currentDateTimeRetriever()
+    public CurrentDateRetriever currentDateRetriever()
     {
-        return new CurrentDateTimeRetriever();
+        return new CurrentDateRetriever();
     }
 
     @Bean
@@ -136,11 +130,15 @@ public class AssistantAutoConfiguration
     }
 
     @Bean
-    public CheckAnnotationContextMenuItem CheckAnnotationContextMenuItem(
-            SchedulingService aSchedulingService, AssistantSidebarFactory aAssistantSidebarFactory,
-            AnnotationSchemaService aSchemaService, UserDao aUserService)
+    public AssistantIndexFootprintProvider assistantIndexFootprintProvider(
+            RepositoryProperties aRepositoryProperties)
     {
-        return new CheckAnnotationContextMenuItem(aSchedulingService, aAssistantSidebarFactory,
-                aSchemaService, aUserService);
+        return new AssistantIndexFootprintProvider(aRepositoryProperties);
+    }
+
+    @Bean
+    public AssistantRecommenderFactory assistantRecommenderFactory()
+    {
+        return new AssistantRecommenderFactory();
     }
 }

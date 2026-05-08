@@ -25,7 +25,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.FormComponent;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
  * then listens to this event and updates the CAS if necessary.
  */
 public abstract class FeatureEditor
-    extends Panel
+    extends GenericPanel<FeatureState>
 {
     private static final long serialVersionUID = -7275181609671919722L;
 
@@ -72,17 +72,6 @@ public abstract class FeatureEditor
     public Component getLabelComponent()
     {
         return get("feature");
-    }
-
-    @SuppressWarnings("unchecked")
-    public IModel<FeatureState> getModel()
-    {
-        return (IModel<FeatureState>) getDefaultModel();
-    }
-
-    public FeatureState getModelObject()
-    {
-        return (FeatureState) getDefaultModelObject();
     }
 
     private Component createLabel()

@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FO
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 
@@ -29,6 +30,7 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
+import org.apache.lucene.index.IndexUpgrader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
@@ -107,6 +109,23 @@ public class LuceneIndexPool
         }
     }
 
+    public void upgradeIndex(Project aProject) throws Exception
+    {
+        var indexPath = getIndexDirectory(aProject.getId());
+        if (!Files.isDirectory(indexPath)) {
+            return;
+        }
+
+        // Make sure no pooled writer is holding the directory open
+        indexPool.clear(aProject.getId());
+
+        try (var dir = new MMapDirectory(indexPath)) {
+            var iwc = new IndexWriterConfig();
+            iwc.setCodec(new HighDimensionLucene104Codec(embeddingService.getDimension()));
+            new IndexUpgrader(dir, iwc, false).upgrade();
+        }
+    }
+
     public class PooledIndex
         implements AutoCloseable
     {
@@ -152,7 +171,7 @@ public class LuceneIndexPool
         {
             var dir = new MMapDirectory(getIndexDirectory(aKey));
             var iwc = new IndexWriterConfig();
-            iwc.setCodec(new HighDimensionLucene912Codec(embeddingService.getDimension()));
+            iwc.setCodec(new HighDimensionLucene104Codec(embeddingService.getDimension()));
             return new PooledIndex(aKey, dir, new IndexWriter(dir, iwc));
         }
 

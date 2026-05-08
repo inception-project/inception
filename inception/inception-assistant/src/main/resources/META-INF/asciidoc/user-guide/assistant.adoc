@@ -23,8 +23,8 @@ CAUTION: Experimental feature. To use this functionality, you need to enable it 
 
 The assistant sidebar on the annotation page allows you to integrate an LLM-based AI assistant into {product-name}.
 Currently, the assistant is only accessible on the annotation page, not in other parts of the application.
-The assistant has limited access to the user manual and can provide some guideance on how to use {product.name}.
-It also has access to the documents contained in the project and use this information to provide more context-aware responses.
+// The assistant has limited access to the user manual and can provide some guideance on how to use {product-name}.
+The assistant has access to the documents contained in the project and use this information to provide more context-aware responses.
 
 Currently, the assistant is only able to connect to an Ollama service that does not require authentication.
 The service already needs to be running when you start {product-name} and the models need to be available in the service.
@@ -38,3 +38,39 @@ You can configure the system to use other models.
 When changing the embedding model, the assistant indices will need to be rebuilt.
 Any models you choose need to support at least English as a language.
 
+== Capabilities
+
+The capabilities of the assistant depend on the capabilities of the underlying model.
+If the model does not support tools, {product-name} will try to proactively provide relevant context from the documents in the project to the model.
+If the model supports tools, {product-name} will provide the model with a search tool that the model can use to retrieve relevant context from the documents in the project.
+The model can decide when to use the tool and when not to use it.
+
+{product-name} can also provide additional tools to the model.
+
+You can ask the assistant which tools it suppports, e.g. by asking *"Which tools do you have access to?"*.
+
+== Context tool
+
+If the model supports tools, {product-name} does not proactively provide context from the documents in the project to the model.
+Instead, the model can use the context tool to retrieve relevant context by itself.
+The tool uses a vector search to find relevant passages in the documents in the project.
+
+== Recommender tool
+
+When you ask the assistant to e.g. *annotate named entities in the text*, the assistant may decide to use the recommender tool to fulfill your request.
+
+One of the tools that {product-name} can provide to the model is a recommender tool.
+In order to use this tool, you need to have at least one interactive recommender configured in the project.
+The assistant may then call this recommender with a prompt based on the user's query in the chat.
+The recommender will run in the background as usual and eventually produce annotation suggestions in the main editor area.
+You can monitor the progress of the recommender by clicking on the progress bar in the footer of the application.
+Once the recommender is done, you can use the refresh button in the action bar to display the new suggestions.
+
+NOTE: The recommender and the assistant are independent of each other and can be configured to use different models.
+      In fact, a good model for the assistant may not be a good model for the recommender and vice versa.
+      For the assistant, you may want to use a reasoning model with tool support.
+      For the recommender, you should use a model that supports structured output.
+      However, if you are on a system with limited resources, you may want to use the same model for both.
+      In this case, make sure that the context length for the assistant and for the recommender are both set to the same value.
+      If they are set to different values, then Ollama will load the model twice or it will have to unload and reload the model when switching between the assistant and the recommender.
+      Watch your Ollama server logs or use `ollama ps` to check which models are loaded/unloaded.

@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
+import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistryImpl;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -72,7 +72,7 @@ public class AllAnnotationsIndexedCheckTest
         cas.addFsToIndexes(anno3);
 
         var messages = new ArrayList<LogMessage>();
-        var cd = new CasDoctor(checksRegistry, repairsRegistry);
+        var cd = new CasDoctorImpl(checksRegistry, repairsRegistry);
         cd.setActiveChecks(
                 checksRegistry.getExtensions().stream().map(c -> c.getId()).toArray(String[]::new));
         cd.setActiveRepairs(repairsRegistry.getExtensions().stream().map(c -> c.getId())
@@ -119,7 +119,7 @@ public class AllAnnotationsIndexedCheckTest
         cas.addFsToIndexes(anno3);
 
         var messages = new ArrayList<LogMessage>();
-        var cd = new CasDoctor(checksRegistry, repairsRegistry);
+        var cd = new CasDoctorImpl(checksRegistry, repairsRegistry);
         cd.setActiveChecks(
                 checksRegistry.getExtensions().stream().map(c -> c.getId()).toArray(String[]::new));
         cd.setActiveRepairs(repairsRegistry.getExtensions().stream().map(c -> c.getId())

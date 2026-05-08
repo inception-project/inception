@@ -35,6 +35,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.inception.documents.api.SourceDocumentStateStats;
 
 /**
  * This helper class enables features required for the workload page. It also enables access to most
@@ -65,7 +66,7 @@ public class AnnotationQueueOverviewDataProvider
     public Iterator<AnnotationQueueItem> iterator(long aFirst, long aCount)
     {
         // Apply Filter
-        List<AnnotationQueueItem> newList = filter(annotationQueueItems);
+        var newList = filter(annotationQueueItems);
 
         // Apply sorting
         newList.sort((o1, o2) -> {
@@ -104,6 +105,41 @@ public class AnnotationQueueOverviewDataProvider
         }
 
         return newList.subList((int) aFirst, ((int) aFirst + (int) aCount)).iterator();
+    }
+
+    public SourceDocumentStateStats getStats()
+    {
+        long annotationsNew = 0;
+        long annotationsInProgress = 0;
+        long annotationsFinished = 0;
+        long curationsInProgress = 0;
+        long curationsFinished = 0;
+
+        for (var row : annotationQueueItems) {
+            switch (row.getState()) {
+            case NEW:
+                annotationsNew++;
+                break;
+            case ANNOTATION_IN_PROGRESS:
+                annotationsInProgress++;
+                break;
+            case ANNOTATION_FINISHED:
+                annotationsFinished++;
+                break;
+            case CURATION_IN_PROGRESS:
+                curationsInProgress++;
+                break;
+            case CURATION_FINISHED:
+                curationsFinished++;
+                break;
+            }
+        }
+
+        long total = annotationsNew + annotationsInProgress + annotationsFinished
+                + curationsInProgress + curationsFinished;
+
+        return new SourceDocumentStateStats(total, annotationsNew, annotationsInProgress,
+                annotationsFinished, curationsInProgress, curationsFinished);
     }
 
     @Override

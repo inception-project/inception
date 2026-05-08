@@ -43,7 +43,6 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.TextRequestHandler;
@@ -62,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
@@ -76,9 +76,7 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -168,7 +166,7 @@ public abstract class BratSuggestionVisualizer
         stateToggle.add(new SymbolLabel("state", annDoc.map(AnnotationDocument::getState)));
         add(stateToggle);
 
-        Icon commentSymbol = new Icon("commentSymbol", FontAwesome5IconType.comment_s);
+        var commentSymbol = new Icon("commentSymbol", FontAwesome5IconType.comment_s);
         commentSymbol.add(visibleWhen(
                 annDoc.map(AnnotationDocument::getAnnotatorComment).map(StringUtils::isNotBlank)));
         commentSymbol.add(
@@ -192,7 +190,7 @@ public abstract class BratSuggestionVisualizer
     {
         var username = getModelObject().getUser().getUsername();
         var doc = getModelObject().getAnnotatorState().getDocument();
-        var annDoc = documentService.getAnnotationDocument(doc, username);
+        var annDoc = documentService.getAnnotationDocument(doc, AnnotationSet.forUser(username));
         var annDocState = annDoc.getState();
 
         switch (annDocState) {
@@ -216,7 +214,7 @@ public abstract class BratSuggestionVisualizer
     {
         var username = getModelObject().getUser().getUsername();
         var doc = getModelObject().getAnnotatorState().getDocument();
-        return documentService.getAnnotationDocument(doc, username);
+        return documentService.getAnnotationDocument(doc, AnnotationSet.forUser(username));
     }
 
     private String maybeAnonymizeUsername(AnnotatorSegmentState aSegment)
@@ -309,7 +307,7 @@ public abstract class BratSuggestionVisualizer
 
     private void handleError(String aMessage, Exception e)
     {
-        RequestCycle requestCycle = RequestCycle.get();
+        var requestCycle = RequestCycle.get();
         requestCycle.find(AjaxRequestTarget.class)
                 .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
 
@@ -330,9 +328,8 @@ public abstract class BratSuggestionVisualizer
 
     private String bratRenderCommand(String aJson)
     {
-        String str = WicketUtil.wrapInTryCatch("Wicket.$('" + vis.getMarkupId()
+        return WicketUtil.wrapInTryCatch("Wicket.$('" + vis.getMarkupId()
                 + "').dispatcher.post('renderData', [" + aJson + "]);");
-        return str;
     }
 
     public void render(AjaxRequestTarget aTarget)
@@ -381,13 +378,14 @@ public abstract class BratSuggestionVisualizer
                 Request aRequest)
         {
             try {
-                final IRequestParameters request = getRequest().getPostParameters();
-                final VID paramId = BratRequestUtils.getVidFromRequest(request);
+                final var request = getRequest().getPostParameters();
+                final var paramId = BratRequestUtils.getVidFromRequest(request);
 
-                AnnotatorSegmentState segment = getModelObject();
-                AnnotatorState state = segment.getAnnotatorState();
+                var segment = getModelObject();
+                var state = segment.getAnnotatorState();
                 CasProvider casProvider = () -> documentService.readAnnotationCas(
-                        segment.getAnnotatorState().getDocument(), segment.getUser().getUsername());
+                        segment.getAnnotatorState().getDocument(),
+                        AnnotationSet.forUser(segment.getUser().getUsername()));
                 var result = lazyDetailsLookupService.lookupLazyDetails(request, paramId,
                         casProvider, state.getDocument(), segment.getUser(),
                         state.getWindowBeginOffset(), state.getWindowEndOffset());

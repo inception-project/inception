@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -68,6 +69,14 @@ public interface AnnotatorState
     // curation, automation, correction, etc. should be local to the respective modules / pages
     @Deprecated
     Mode getMode();
+
+    void enableExtension(String aExtension);
+
+    void disableExtension(String aExtension);
+
+    boolean isExtensionEnabled(String aExtension);
+
+    Set<String> getEnabledExtensions();
 
     // ---------------------------------------------------------------------------------------------
     // Remembered feature values

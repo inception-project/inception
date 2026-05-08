@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.stream.IntStream;
 
 import org.springframework.http.HttpMethod;
-import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
+import org.springframework.http.converter.xml.JacksonXmlHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.model.ESearchResult;
@@ -49,7 +49,7 @@ public class EntrezClient
     public EntrezClient()
     {
         restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters().add(new MappingJackson2XmlHttpMessageConverter());
+        restTemplate.getMessageConverters().add(new JacksonXmlHttpMessageConverter());
     }
 
     // https://www.ncbi.nlm.nih.gov/books/NBK25499/

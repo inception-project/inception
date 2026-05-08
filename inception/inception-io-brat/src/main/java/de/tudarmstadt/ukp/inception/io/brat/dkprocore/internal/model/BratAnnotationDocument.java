@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonGenerator;
 
 public class BratAnnotationDocument
 {
@@ -116,9 +116,9 @@ public class BratAnnotationDocument
     {
         aJG.writeStartObject();
 
-        aJG.writeStringField("text", aText);
+        aJG.writeStringProperty("text", aText);
 
-        aJG.writeFieldName("entities");
+        aJG.writeName("entities");
         aJG.writeStartArray();
         for (BratAnnotation ann : annotations.values()) {
             if (ann instanceof BratTextAnnotation) {
@@ -127,7 +127,7 @@ public class BratAnnotationDocument
         }
         aJG.writeEndArray();
 
-        aJG.writeFieldName("relations");
+        aJG.writeName("relations");
         aJG.writeStartArray();
         for (BratAnnotation ann : annotations.values()) {
             if (ann instanceof BratRelationAnnotation) {
@@ -136,7 +136,7 @@ public class BratAnnotationDocument
         }
         aJG.writeEndArray();
 
-        aJG.writeFieldName("triggers");
+        aJG.writeName("triggers");
         aJG.writeStartArray();
         for (BratAnnotation ann : annotations.values()) {
             if (ann instanceof BratEventAnnotation) {
@@ -145,7 +145,7 @@ public class BratAnnotationDocument
         }
         aJG.writeEndArray();
 
-        aJG.writeFieldName("events");
+        aJG.writeName("events");
         aJG.writeStartArray();
         for (BratAnnotation ann : annotations.values()) {
             if (ann instanceof BratEventAnnotation) {
@@ -154,7 +154,7 @@ public class BratAnnotationDocument
         }
         aJG.writeEndArray();
 
-        aJG.writeFieldName("attributes");
+        aJG.writeName("attributes");
         aJG.writeStartArray();
         for (BratAnnotation ann : annotations.values()) {
             for (BratAttribute attr : ann.getAttributes()) {

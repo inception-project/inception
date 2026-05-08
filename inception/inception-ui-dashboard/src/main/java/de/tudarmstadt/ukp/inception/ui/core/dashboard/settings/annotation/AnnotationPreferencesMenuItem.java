@@ -17,15 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.annotation;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 
-@Component
 @Order(AnnotationPreferencesProjectSettingsPanelFactory.ORDER)
 public class AnnotationPreferencesMenuItem
     extends ProjectSettingsMenuItemBase
@@ -37,9 +36,9 @@ public class AnnotationPreferencesMenuItem
     }
 
     @Override
-    public IconType getIcon()
+    public Component getIcon(String aId)
     {
-        return FontAwesome5IconType.highlighter_s;
+        return new Icon(aId, FontAwesome5IconType.highlighter_s);
     }
 
     @Override

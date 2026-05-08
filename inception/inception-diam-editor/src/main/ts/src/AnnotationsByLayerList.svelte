@@ -42,33 +42,38 @@
 
     let { ajaxClient, data = $bindable() }: Props = $props();
 
-    let groupedRelations: Record<string, Relation[]> = $state();
-    let groupedAnnotations: Record<string, Annotation[]> = $state();
-    let groups: { layer: Layer, collapsed: boolean }[] = $state();
     let collapsedGroups: number[] = $state([]);
     let filter = $state('');
 
-    $effect(() => {
-        const sortedLayers = uniqueLayers(data)
-
-        groups = sortedLayers.map(layer => {
-            return { layer: layer, collapsed: collapsedGroups.includes(layer.id) };
-        });
-
-        const relations = data?.relations.values() || []
-        const spans = data?.spans.values() || []
-        groupedAnnotations = groupBy(
+    // Base grouping of annotations by layer
+    let groupedAnnotations = $derived.by(() => {
+        if (!data) return {};
+        const relations = data.relations.values() || [];
+        const spans = data.spans.values() || [];
+        return groupBy(
             [...spans, ...relations],
             (s) => s.layer.name
-        )
+        );
+    });
 
-        groupedRelations = groupRelationsBySource(data);
-    })
+    // Grouping relations by source
+    let groupedRelations = $derived(groupRelationsBySource(data));
 
-    $effect(() => {
-            for (let [key, items] of Object.entries(groupedAnnotations)) {
-            items = filterAnnotations(data, items, filter)
-            items.sort((a, b) => {
+    // Groups with collapsed state
+    let groups = $derived.by(() => {
+        const sortedLayers = uniqueLayers(data);
+        return sortedLayers.map(layer => {
+            return { layer: layer, collapsed: collapsedGroups.includes(layer.id) };
+        });
+    });
+
+    // Derived state for filtered and sorted annotations
+    let filteredAndSortedAnnotations = $derived.by(() => {
+        const result: Record<string, Annotation[]> = {};
+        
+        for (let [key, items] of Object.entries(groupedAnnotations)) {
+            let filtered = filterAnnotations(data, items, filter);
+            filtered.sort((a, b) => {
                 if (a instanceof Span && !(b instanceof Span)) {
                     return -1;
                 }
@@ -105,10 +110,12 @@
                 }
 
                 console.error("Unexpected annotation type combination", a, b);
-                return 0
+                return 0;
             });
-            groupedAnnotations[key] = items
+            result[key] = filtered;
         }
+        
+        return result;
     });
 
     function scrollToSpan(span: Span) {
@@ -210,12 +217,12 @@
                             <button class="btn btn-link p-0" style="color: var(--bs-body-color)">
                                 <i class="fas fa-caret-down d-inline-block" class:group-collapsed={group.collapsed}></i>
                             </button>
-                            <span class="badge rounded-pill text-bg-secondary float-end m-1">{groupedAnnotations[group.layer.name].length}</span>
+                            <span class="badge rounded-pill text-bg-secondary float-end m-1">{filteredAndSortedAnnotations[group.layer.name]?.length || 0}</span>
                             <span>{group.layer.name} {group.layer.type}</span>
                         </div>
                         <ul class="px-0 list-group list-group-flush" class:d-none={group.collapsed}>
-                            {#if groupedAnnotations[group.layer.name]}
-                                {#each groupedAnnotations[group.layer.name] as ann}
+                            {#if filteredAndSortedAnnotations[group.layer.name]}
+                                {#each filteredAndSortedAnnotations[group.layer.name] as ann}
                                     <!-- svelte-ignore a11y_mouse_events_have_key_events -->
                                     {#if ann instanceof Span}
                                         <li

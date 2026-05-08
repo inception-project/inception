@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:panel>
+  <div class="row form-row fe-radio-group" wicket:enclosure="value">
+    <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label col-form-label">
+      <span wicket:id="feature"/>
+      <span class="float-end">
+        <span wicket:id="textIndicator"></span>
+        <a wicket:id="clear"><i class="fas fa-times"></i></a>
+      </span>
+    </label>
+    <div class="feature-editor-value">
+      <div wicket:id="emptyTagsetWarning" class="flex-content flex-h-container no-data-notice m-0">
+        <div>Tagset contains no tags</div>
+      </div>
+      <div wicket:id="value">
+        <div class="radio-button-group">
+          <div wicket:id="radios" class="radio-button">
+            <div class="flex-h-container">
+              <input wicket:id="radio" type="radio"/>
+              <label wicket:id="button" class="m-0 flex-content">
+                <span wicket:id="label"/>
+                <span wicket:id="description" class="text-body-tertiary">
+                  <i class="fas fa-info-circle"/>
+                </span>
+                <span wicket:id="score" class="badge text-bg-secondary float-end"/>
+                <span wicket:id="keyCombo" class="small float-end"/>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div wicket:id="suggestionInfo" class="d-flex"/>
+      <div wicket:id="keyBindings" class="col-sm-12"/>
+    </div>
+  </div>
+</wicket:panel>
+</html>

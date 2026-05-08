@@ -42,10 +42,9 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Import;
 
@@ -61,7 +60,6 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.logging.Logging;
 
 @DataJpaTest( //
-        excludeAutoConfiguration = LiquibaseAutoConfiguration.class, //
         showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off" })
@@ -156,7 +154,7 @@ public class ProjectServiceImplTest
     @Test
     public void listProjectUsersWithPermissions_ShouldReturnUsers()
     {
-        List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject);
+        List<User> foundUsers = sut.listUsersWithAnyRoleInProject(testProject);
 
         assertThat(foundUsers).containsExactly(beate, kevin);
     }
@@ -164,7 +162,7 @@ public class ProjectServiceImplTest
     @Test
     public void listProjectUsersWithSpecificPermissions_ShouldReturnUsers()
     {
-        List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, ANNOTATOR);
+        List<User> foundUsers = sut.listUsersWithRoleInProject(testProject, ANNOTATOR);
 
         assertThat(foundUsers).containsExactly(beate, kevin);
     }
@@ -172,7 +170,7 @@ public class ProjectServiceImplTest
     @Test
     public void listProjectUsersWithSpecificPermissions_ShouldReturnAUser()
     {
-        List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, CURATOR);
+        List<User> foundUsers = sut.listUsersWithRoleInProject(testProject, CURATOR);
 
         assertThat(foundUsers).containsExactly(beate);
     }
@@ -180,7 +178,7 @@ public class ProjectServiceImplTest
     @Test
     public void listProjectUsersWithSpecificPermissions_ShouldReturnNoUsers()
     {
-        List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, MANAGER);
+        List<User> foundUsers = sut.listUsersWithRoleInProject(testProject, MANAGER);
 
         assertThat(foundUsers).isEmpty();
     }
@@ -190,7 +188,7 @@ public class ProjectServiceImplTest
     {
         testEntityManager.persist(new ProjectPermission(testProject, "ghost", ANNOTATOR));
 
-        List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, ANNOTATOR);
+        List<User> foundUsers = sut.listUsersWithRoleInProject(testProject, ANNOTATOR);
 
         assertThat(foundUsers).containsExactly(beate, kevin);
     }
@@ -290,6 +288,19 @@ public class ProjectServiceImplTest
 
         sut.revokeRole(testProject, beate, MANAGER, ANNOTATOR);
         assertThat(sut.listRoles(testProject, beate)).isEmpty();
+    }
+
+    @Test
+    public void thatRemovingProjectAlsoDeletesProjectLogFile() throws Exception
+    {
+        var logFile = sut.getProjectLogFile(testProject);
+        logFile.getParentFile().mkdirs();
+        assertThat(logFile.createNewFile()).isTrue();
+        assertThat(logFile).exists();
+
+        sut.removeProject(testProject);
+
+        assertThat(logFile).doesNotExist();
     }
 
     @SpringBootConfiguration

@@ -17,20 +17,24 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 import static java.lang.String.join;
 import static java.time.temporal.ChronoUnit.DAYS;
+import static java.util.Comparator.comparing;
 
 import java.lang.invoke.MethodHandles;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.stream.Streams;
@@ -41,10 +45,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.inception.log.api.EventRepository;
+import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.log.api.model.StateChangeDetails;
+import de.tudarmstadt.ukp.inception.log.api.model.SummarizedLoggedEvent;
+import de.tudarmstadt.ukp.inception.log.api.model.UserSessionStats;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent_;
-import de.tudarmstadt.ukp.inception.log.model.SummarizedLoggedEvent;
+import de.tudarmstadt.ukp.inception.log.model.LoggedEventEntity;
+import de.tudarmstadt.ukp.inception.log.model.LoggedEventEntity_;
+import de.tudarmstadt.ukp.inception.log.model.SessionDetails;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Tuple;
@@ -70,7 +80,6 @@ public class EventRepositoryImpl
         entityManager = aEntityManager;
     }
 
-    @Override
     @Transactional
     public void create(LoggedEvent... aEvents)
     {
@@ -88,82 +97,51 @@ public class EventRepositoryImpl
     }
 
     @Override
-    @Transactional
-    public List<LoggedEvent> listLoggedEventsForRecommender(Project aProject, String aUsername,
-            String aEventType, int aMaxSize, long aRecommenderId)
+    @Transactional(readOnly = true)
+    public UserSessionStats getAggregateSessionDuration(String aSessionOwner)
     {
-        var detailStr = "%\"recommenderId\":" + aRecommenderId + "%";
+        var query = join("\n", //
+                "FROM LoggedEventEntity", //
+                "WHERE user = :sessionOwner", //
+                "  AND project = :project", //
+                "  AND event = :eventType");
 
-        return listLoggedEventsForDetail(aProject, aUsername, aEventType, aMaxSize, detailStr);
-    }
-
-    @Override
-    @Transactional
-    public List<LoggedEvent> listLoggedEventsForDetail(Project aProject, String aUsername,
-            String aEventType, int aMaxSize, String aDetail)
-    {
-        String query = String.join("\n", //
-                "FROM LoggedEvent WHERE ", //
-                "user=:user AND ", //
-                "project = :project AND ", //
-                "event = :event AND ", //
-                "details LIKE :details ", //
-                "ORDER BY created DESC");
-
-        return entityManager.createQuery(query, LoggedEvent.class) //
-                .setParameter("user", aUsername) //
-                .setParameter("project", aProject.getId()) //
-                .setParameter("event", aEventType) //
-                .setParameter("details", aDetail) //
-                .setMaxResults(aMaxSize) //
+        // We query for project here so we can use the (project, user, event) index.
+        // If there is no project, the project is -1
+        var results = entityManager.createQuery(query, LoggedEventEntity.class) //
+                .setParameter("sessionOwner", aSessionOwner) //
+                .setParameter("project", -1) //
+                .setParameter("eventType", "UserSessionEndedEvent") //
+                .setMaxResults(RECENT_ACTIVITY_HORIZON) //
                 .getResultList();
+
+        var accuDuration = new AtomicLong();
+        for (var result : results) {
+            try {
+                var details = fromJsonString(SessionDetails.class, result.getDetails());
+                accuDuration.addAndGet(details.getDuration());
+            }
+            catch (Exception e) {
+                // Skip if we cannot parse
+            }
+        }
+
+        return new UserSessionStats(aSessionOwner, Duration.ofMillis(accuDuration.get()));
     }
 
     @Override
-    @Transactional
-    public List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
-            String[] aEventTypes, int aMaxSize)
-    {
-        var query = String.join("\n", //
-                "FROM LoggedEvent WHERE", //
-                "id IN", //
-                // select one event when time-stamps are the same per document
-                "   (SELECT max(id)", //
-                "   FROM LoggedEvent WHERE", //
-                "   user=:user AND", //
-                "   project=:project AND", //
-                "   event in (:eventTypes)", //
-                "   AND created in", //
-                // select last created events per document
-                "       (SELECT max(created) ", //
-                "       FROM LoggedEvent WHERE", //
-                "       user=:user AND", //
-                "       project=:project AND", //
-                "       event in (:eventTypes)", //
-                "       GROUP BY document)", //
-                "   GROUP BY document)", //
-                "ORDER BY created DESC");
-
-        var typedQuery = entityManager.createQuery(query, LoggedEvent.class) //
-                .setParameter("user", aUsername) //
-                .setParameter("project", aProject.getId()) //
-                .setParameter("eventTypes", Arrays.asList(aEventTypes)); //
-        return typedQuery.setMaxResults(aMaxSize).getResultList();
-    }
-
-    @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<LoggedEvent> listRecentActivity(Project aProject, String aUsername,
             Collection<String> aEventTypes, int aMaxSize)
     {
         var query = join("\n", //
-                "FROM  LoggedEvent", //
+                "FROM  LoggedEventEntity", //
                 "WHERE user = :user", //
                 "  AND project = :project", //
                 "  AND event in (:eventTypes)", //
                 "ORDER BY created DESC");
 
-        var result = entityManager.createQuery(query, LoggedEvent.class) //
+        var result = entityManager.createQuery(query, LoggedEventEntity.class) //
                 .setParameter("user", aUsername) //
                 .setParameter("project", aProject.getId()) //
                 .setParameter("eventTypes", aEventTypes) //
@@ -191,60 +169,83 @@ public class EventRepositoryImpl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<LoggedEvent> listRecentActivity(String aUsername, int aMaxSize)
     {
-        var query = join("\n", //
-                "FROM  LoggedEvent", //
-                "WHERE user = :user", //
-                "ORDER BY created DESC");
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createQuery(LoggedEventEntity.class);
+        var root = cq.from(LoggedEventEntity.class);
 
-        return entityManager.createQuery(query, LoggedEvent.class) //
-                .setParameter("user", aUsername) //
-                .setMaxResults(aMaxSize) //
-                .getResultList();
+        cq.select(root)//
+                .where(cb.equal(root.get(LoggedEventEntity_.user), aUsername))//
+                .orderBy(cb.desc(root.get(LoggedEventEntity_.created)));
+
+        return entityManager.createQuery(cq)//
+                .setMaxResults(aMaxSize)//
+                .getResultStream() //
+                .map(e -> (LoggedEvent) e) //
+                .toList();
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public <E extends Throwable> void forEachLoggedEvent(Project aProject,
             FailableConsumer<LoggedEvent, E> aConsumer)
     {
         // Set up data source
         var query = String.join("\n", //
-                "FROM LoggedEvent WHERE ", //
+                "FROM LoggedEventEntity WHERE ", //
                 "project = :project ", //
                 "ORDER BY id");
-        var typedQuery = entityManager.createQuery(query, LoggedEvent.class) //
+        var typedQuery = entityManager.createQuery(query, LoggedEventEntity.class) //
                 .setParameter("project", aProject.getId());
 
-        try (Stream<LoggedEvent> eventStream = typedQuery.getResultStream()) {
-            Streams.failableStream(eventStream).forEach(aConsumer);
+        try (var eventStream = typedQuery.getResultStream()) {
+            Streams.failableStream(eventStream).forEach(e -> aConsumer.accept(e));
         }
     }
 
     @Override
-    public List<SummarizedLoggedEvent> summarizeEvents(String aUsername, Project aProject,
-            Instant aFrom, Instant aTo)
+    @Transactional() // NOT read-only!
+    public <E extends Throwable> void forEachLoggedEventUpdatable(Project aProject,
+            FailableConsumer<LoggedEvent, E> aConsumer)
+    {
+        // Set up data source
+        var query = String.join("\n", //
+                "FROM LoggedEventEntity WHERE ", //
+                "project = :project ", //
+                "ORDER BY id");
+        var typedQuery = entityManager.createQuery(query, LoggedEventEntity.class) //
+                .setParameter("project", aProject.getId());
+
+        try (var eventStream = typedQuery.getResultStream()) {
+            Streams.failableStream(eventStream).forEach(e -> aConsumer.accept(e));
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SummarizedLoggedEvent> summarizeEventsBySessionOwner(String aSessionOwner,
+            Project aProject, Instant aFrom, Instant aTo)
     {
         var cb = entityManager.getCriteriaBuilder();
         var query = cb.createQuery(Tuple.class);
-        var root = query.from(LoggedEvent.class);
+        var root = query.from(LoggedEventEntity.class);
 
         query //
                 .multiselect( //
-                        root.get(LoggedEvent_.created), //
-                        root.get(LoggedEvent_.document), //
-                        root.get(LoggedEvent_.event))
+                        root.get(LoggedEventEntity_.created), //
+                        root.get(LoggedEventEntity_.document), //
+                        root.get(LoggedEventEntity_.event))
                 .where( //
-                        cb.equal(root.get(LoggedEvent_.user), aUsername), //
-                        cb.equal(root.get(LoggedEvent_.project), aProject.getId()), //
-                        cb.between(root.get(LoggedEvent_.created), Date.from(aFrom),
-                                Date.from(aTo)));
+                        cb.equal(root.get(LoggedEventEntity_.user), aSessionOwner), //
+                        cb.equal(root.get(LoggedEventEntity_.project), aProject.getId()), //
+                        cb.between(root.get(LoggedEventEntity_.created), aFrom, aTo));
 
         var aggregator = new HashMap<SummarizedLoggedEventKey, AtomicLong>();
 
         entityManager.createQuery(query).getResultStream().forEach(tuple -> {
-            var truncDate = tuple.get(0, Date.class).toInstant().truncatedTo(DAYS);
+            var truncDate = tuple.get(0, Instant.class).truncatedTo(DAYS);
             var document = tuple.get(1, Long.class);
             var event = tuple.get(2, String.class);
             var key = new SummarizedLoggedEventKey(event, truncDate, document);
@@ -255,6 +256,215 @@ public class EventRepositoryImpl
                 .map(e -> new SummarizedLoggedEvent(e.getKey().event(), e.getKey().document(),
                         e.getKey().date(), e.getValue().get())) //
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SummarizedLoggedEvent> summarizeEventsByDataOwner(String aDataOwner,
+            Project aProject, Instant aFrom, Instant aTo)
+    {
+        var cb = entityManager.getCriteriaBuilder();
+        var query = cb.createQuery(Tuple.class);
+        var root = query.from(LoggedEventEntity.class);
+
+        query //
+                .multiselect( //
+                        root.get(LoggedEventEntity_.created), //
+                        root.get(LoggedEventEntity_.document), //
+                        root.get(LoggedEventEntity_.event))
+                .where( //
+                        cb.equal(root.get(LoggedEventEntity_.annotator), aDataOwner), //
+                        cb.equal(root.get(LoggedEventEntity_.project), aProject.getId()), //
+                        cb.between(root.get(LoggedEventEntity_.created), aFrom, aTo));
+
+        var aggregator = new HashMap<SummarizedLoggedEventKey, AtomicLong>();
+
+        entityManager.createQuery(query).getResultStream().forEach(tuple -> {
+            var truncDate = tuple.get(0, Instant.class).truncatedTo(DAYS);
+            var document = tuple.get(1, Long.class);
+            var event = tuple.get(2, String.class);
+            var key = new SummarizedLoggedEventKey(event, truncDate, document);
+            aggregator.computeIfAbsent(key, $ -> new AtomicLong()).addAndGet(1);
+        });
+
+        return aggregator.entrySet().stream() //
+                .map(e -> new SummarizedLoggedEvent(e.getKey().event(), e.getKey().document(),
+                        e.getKey().date(), e.getValue().get())) //
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DocumentStateSnapshot> calculateHistoricalDocumentStates(Project aProject,
+            Map<SourceDocumentState, Long> aCurrentStats, Instant aFrom)
+    {
+        var from = aFrom;
+        if (from == null) {
+            from = Instant.MIN;
+        }
+
+        // Initialize running counts from current state
+        var counts = new HashMap<SourceDocumentState, Long>();
+        for (var state : SourceDocumentState.values()) {
+            counts.put(state, aCurrentStats.getOrDefault(state, 0L));
+        }
+
+        // Build result list (will be in reverse order initially)
+        var result = new ArrayList<DocumentStateSnapshot>();
+
+        // Add current state snapshot
+        var now = Instant.now();
+        result.add(createSnapshot(now, counts));
+
+        // Track previous day and counts for change detection
+        var previousDay = toDay(now);
+        var previousCounts = new HashMap<>(counts);
+
+        // Fetch all relevant events sorted newest-first
+        var query = join("\n", //
+                "FROM LoggedEventEntity WHERE ", //
+                "project = :project ", //
+                "AND created >= :from ", //
+                "AND event IN ('AfterDocumentCreatedEvent', 'BeforeDocumentRemovedEvent', 'DocumentStateChangedEvent') ", //
+                "ORDER BY created DESC");
+
+        var events = entityManager.createQuery(query, LoggedEventEntity.class) //
+                .setParameter("project", aProject.getId()) //
+                .setParameter("from", from) //
+                .getResultList();
+
+        // Backwards replay
+        for (var event : events) {
+            var eventTime = event.getCreated();
+            var eventDay = toDay(eventTime);
+
+            // Apply inverse event logic
+            var changed = applyInverseEvent(event, counts, events);
+
+            // Check if we crossed a day boundary
+            if (!eventDay.equals(previousDay)) {
+                // Check if counts changed from previous snapshot
+                if (changed || !countsEqual(counts, previousCounts)) {
+                    result.add(createSnapshot(eventTime, counts));
+                    previousDay = eventDay;
+                    previousCounts = new HashMap<>(counts);
+                }
+            }
+        }
+
+        // Add boundary snapshot at aTo
+        if (!result.isEmpty() && !from.equals(Instant.MIN)) {
+            var lastSnapshot = result.get(result.size() - 1);
+            if (!toDay(lastSnapshot.day()).equals(toDay(from))) {
+                result.add(createSnapshot(from, counts));
+            }
+        }
+
+        // Reverse to get oldest-first ordering
+        result.sort(comparing(DocumentStateSnapshot::day));
+
+        return result;
+    }
+
+    private boolean applyInverseEvent(LoggedEvent aEvent, Map<SourceDocumentState, Long> aCounts,
+            List<LoggedEventEntity> aAllEvents)
+    {
+        var eventType = aEvent.getEvent();
+
+        switch (eventType) {
+        case "AfterDocumentCreatedEvent":
+            // Document was created, so going backwards it didn't exist
+            // Decrement NEW state
+            decrementState(aCounts, SourceDocumentState.NEW);
+            return true;
+
+        case "BeforeDocumentRemovedEvent":
+            // Document was removed, so going backwards it existed
+            // Find last known state of this document
+            var removedDocState = findLastKnownState(aEvent.getDocument(), aAllEvents);
+            incrementState(aCounts, removedDocState);
+            return true;
+
+        case "DocumentStateChangedEvent":
+            // Swap the state transition
+            try {
+                var details = fromJsonString(StateChangeDetails.class, aEvent.getDetails());
+                var newState = SourceDocumentState.fromString(details.getState());
+                var previousState = details.getPreviousState() != null
+                        ? SourceDocumentState.fromString(details.getPreviousState())
+                        : null;
+
+                // Undo the transition: decrement new state, increment previous state
+                decrementState(aCounts, newState);
+                if (previousState != null) {
+                    incrementState(aCounts, previousState);
+                }
+                return true;
+            }
+            catch (Exception e) {
+                LOG.warn("Failed to parse DocumentStateChangedEvent details", e);
+                return false;
+            }
+
+        default:
+            return false;
+        }
+    }
+
+    private SourceDocumentState findLastKnownState(long aDocumentId,
+            List<LoggedEventEntity> aAllEvents)
+    {
+        // Search through all events for the last state change of this document
+        for (var event : aAllEvents) {
+            if (event.getDocument() == aDocumentId
+                    && "DocumentStateChangedEvent".equals(event.getEvent())) {
+                try {
+                    var details = fromJsonString(StateChangeDetails.class, event.getDetails());
+                    return SourceDocumentState.fromString(details.getState());
+                }
+                catch (Exception e) {
+                    LOG.warn("Failed to parse state for removed document", e);
+                }
+            }
+        }
+
+        // No state changes found, assume it was NEW when removed
+        return SourceDocumentState.NEW;
+    }
+
+    private void incrementState(Map<SourceDocumentState, Long> aCounts, SourceDocumentState aState)
+    {
+        aCounts.put(aState, aCounts.getOrDefault(aState, 0L) + 1);
+    }
+
+    private void decrementState(Map<SourceDocumentState, Long> aCounts, SourceDocumentState aState)
+    {
+        aCounts.put(aState, Math.max(0L, aCounts.getOrDefault(aState, 0L) - 1));
+    }
+
+    private LocalDate toDay(Instant aInstant)
+    {
+        return aInstant.atZone(ZoneId.systemDefault()).toLocalDate();
+    }
+
+    private DocumentStateSnapshot createSnapshot(Instant aTime,
+            Map<SourceDocumentState, Long> aCounts)
+    {
+        var snapshot = new LinkedHashMap<SourceDocumentState, Integer>();
+        for (var state : SourceDocumentState.values()) {
+            snapshot.put(state, aCounts.getOrDefault(state, 0L).intValue());
+        }
+        return new DocumentStateSnapshot(aTime, snapshot);
+    }
+
+    private boolean countsEqual(Map<SourceDocumentState, Long> a, Map<SourceDocumentState, Long> b)
+    {
+        for (var state : SourceDocumentState.values()) {
+            if (!a.getOrDefault(state, 0L).equals(b.getOrDefault(state, 0L))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static record SummarizedLoggedEventKey(String event, Instant date, long document) {}
