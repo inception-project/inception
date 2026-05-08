@@ -60,12 +60,15 @@ export class SectionAnnotationVisualizer {
         this.clear();
     }
 
-    render(doc: AnnotatedText) {
+    render(doc: AnnotatedText, opts?: { allowSkip?: boolean }) {
         if (!this.sectionSelector) return;
 
-        // Skip rerendering if the visible section headers did not change.
+        // Default behaviour is always rebuild — safe for any caller that may
+        // have changed annotation properties (label, color, score, …) without
+        // changing the VID set. The tracker callback opts in to `allowSkip`
+        // because during scrolling only the VID set can change.
         const fingerprint = this.computeFingerprint(doc);
-        if (fingerprint === this.lastFingerprint) {
+        if (opts?.allowSkip && fingerprint === this.lastFingerprint) {
             this.ensurePanelVisibility('render-skipped');
             return;
         }

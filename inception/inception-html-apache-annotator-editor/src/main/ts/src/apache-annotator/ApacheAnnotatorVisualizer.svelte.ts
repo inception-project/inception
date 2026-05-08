@@ -98,8 +98,9 @@ export class ApacheAnnotatorVisualizer {
 
         this.tracker = new ViewportTracker(
                 this.root, () => {
-                    this.loadAnnotations()
-                }, 
+                    // We can optimize scrolling by deferring rendering during the scroll
+                    this.doLoadAnnotations({ allowRenderSkip: true });
+                },
                 {
                     ignoreSelector: '.iaa-section-control, .iaa-vertical-marker-focus, .iaa-ping-marker, iaa-visible-annotations-panel, iaa-visible-annotations-panel-spacer'
                 });
@@ -350,6 +351,11 @@ export class ApacheAnnotatorVisualizer {
     }
 
     loadAnnotations(): void {
+        this.doLoadAnnotations({ allowRenderSkip: false });
+    }
+
+    private doLoadAnnotations(opts: { allowRenderSkip: boolean }): void {
+        const allowSkip = opts.allowRenderSkip;
         if (this.loadAnnotationsTimeout) {
             this.cancelScheduled(this.loadAnnotationsTimeout);
             this.loadAnnotationsTimeout = undefined;
@@ -388,14 +394,14 @@ export class ApacheAnnotatorVisualizer {
                 const endTime = performance.now();
                 console.log(`Loading annotations took ${endTime - startTime}ms`);
 
-                this.renderAnnotations(this.data);
+                this.renderAnnotations(this.data, { allowSkip });
             });
         };
 
         this.loadAnnotationsTimeout = this.schedule(LOAD_ANNOTATIONS_DEBOUNCE_MS, loader);
     }
 
-    private renderAnnotations(doc: AnnotatedText): void {
+    private renderAnnotations(doc: AnnotatedText, opts?: { allowSkip?: boolean }): void {
         // Pause tracker while performing DOM writes to avoid visibility feedback loops.
         this.tracker?.pause();
 
@@ -419,7 +425,7 @@ export class ApacheAnnotatorVisualizer {
             }
 
             if (annotatorState.showAggregatedLabels) {
-                this.sectionAnnotationVisualizer.render(doc);
+                this.sectionAnnotationVisualizer.render(doc, opts);
             } else {
                 this.sectionAnnotationVisualizer.clear();
             }
