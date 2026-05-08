@@ -926,14 +926,6 @@ export class ApacheAnnotatorVisualizer {
         this.sectionAnnotationVisualizer.resume();
         this.lastScrollTop = undefined;
         this.lastMarkerTop = undefined;
-
-        // Workaround for Firefox somehow scrolling the page body a bit when we scroll
-        // inside the iframe during page loading
-        if (navigator.userAgent.includes('Firefox')) {
-            if (window?.parent?.document?.body?.scrollTop) {
-                window.parent.document.body.scrollTop = 0;
-            }
-        }
     }
 
     private clearHighlights(): void {
