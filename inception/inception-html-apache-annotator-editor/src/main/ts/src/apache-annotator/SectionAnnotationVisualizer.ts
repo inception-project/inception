@@ -29,6 +29,7 @@ export class SectionAnnotationVisualizer {
     private ajax: DiamAjax;
     private root: Element;
     private suspended = false;
+    private lastFingerprint: string | undefined = undefined;
 
     public constructor(root: Element, ajax: DiamAjax, sectionSelector: string) {
         this.root = root;
@@ -59,16 +60,33 @@ export class SectionAnnotationVisualizer {
         this.clear();
     }
 
-    render(doc: AnnotatedText) {
-        if (this.sectionSelector) {
-            this.clear();
-            this.renderSectionGroups(doc);
-            this.ensurePanelVisibility('render');
+    render(doc: AnnotatedText, opts?: { allowSkip?: boolean }) {
+        if (!this.sectionSelector) return;
+
+        // Default behaviour is always rebuild — safe for any caller that may
+        // have changed annotation properties (label, color, score, …) without
+        // changing the VID set. The tracker callback opts in to `allowSkip`
+        // because during scrolling only the VID set can change.
+        const fingerprint = this.computeFingerprint(doc);
+        if (opts?.allowSkip && fingerprint === this.lastFingerprint) {
+            this.ensurePanelVisibility('render-skipped');
+            return;
         }
+
+        this.clear();
+        this.renderSectionGroups(doc);
+        this.ensurePanelVisibility('render');
+        this.lastFingerprint = fingerprint;
+    }
+
+    private computeFingerprint(doc: AnnotatedText): string {
+        if (!doc.spans) return '';
+        return Array.from(doc.spans.keys()).sort().join(',');
     }
 
     clear() {
         if (this.sectionSelector) {
+            this.lastFingerprint = undefined;
             this.root.parentElement
                 ?.querySelectorAll('.iaa-visible-annotations-panel')
                 .forEach((e) => e.remove());
