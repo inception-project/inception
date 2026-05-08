@@ -129,7 +129,8 @@
     <opensearch.version>2.19.1</opensearch.version>
     <opensearch-runner.version>${opensearch.version}.0</opensearch-runner.version>
     <jena.version>5.6.0</jena.version>
-    <rdf4j.version>5.1.3</rdf4j.version> 
+    <libthrift.version>0.23.0</libthrift.version>
+    <rdf4j.version>5.1.3</rdf4j.version>
     <owlapi-version>5.5.1</owlapi-version>
 
     <asciidoctor.plugin.version>2.2.3</asciidoctor.plugin.version>
