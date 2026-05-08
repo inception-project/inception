@@ -783,6 +783,7 @@ public class ProjectServiceImpl
     @Transactional
     public void removeProject(Project aProject) throws IOException
     {
+        File logFile = null;
         try (var logCtx = withProjectLogger(aProject)) {
             var start = System.currentTimeMillis();
 
@@ -810,10 +811,19 @@ public class ProjectServiceImpl
                 LOG.info("Project directory to be deleted was not found: [{}]. Ignoring.", path);
             }
 
+            logFile = getProjectLogFile(project);
+
             applicationEventPublisher.publishEvent(new AfterProjectRemovedEvent(this, project));
 
             LOG.info("Removed project {} ({})", project,
                     formatDurationWords(System.currentTimeMillis() - start, true, true));
+        }
+
+        // Delete the per-project log file after the logger MDC context has been closed so no
+        // further log lines get routed to it. Best-effort: log appenders may still hold the
+        // handle briefly on some platforms.
+        if (logFile != null && logFile.exists() && !FileUtils.deleteQuietly(logFile)) {
+            LOG.warn("Could not delete project log file: [{}]", logFile);
         }
     }
 

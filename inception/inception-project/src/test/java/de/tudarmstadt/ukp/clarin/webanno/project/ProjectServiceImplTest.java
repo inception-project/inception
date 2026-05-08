@@ -290,6 +290,19 @@ public class ProjectServiceImplTest
         assertThat(sut.listRoles(testProject, beate)).isEmpty();
     }
 
+    @Test
+    public void thatRemovingProjectAlsoDeletesProjectLogFile() throws Exception
+    {
+        var logFile = sut.getProjectLogFile(testProject);
+        logFile.getParentFile().mkdirs();
+        assertThat(logFile.createNewFile()).isTrue();
+        assertThat(logFile).exists();
+
+        sut.removeProject(testProject);
+
+        assertThat(logFile).doesNotExist();
+    }
+
     @SpringBootConfiguration
     public static class SpringConfig
     {
