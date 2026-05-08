@@ -25,7 +25,11 @@ body {
     width: 100%;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    // `clip` rather than `hidden` so html/body are not scroll containers — this
+    // prevents Firefox's focus/anchor auto-scroll from shifting the page by a
+    // few pixels during initial load (which we used to undo with a workaround
+    // in the editor's scrollToComplete).
+    overflow: clip;
 }
 
 .page-header {
@@ -308,6 +312,7 @@ span.form-control {
 .dev-warnings {
     .alert {
         padding: 0px 5px 0px 5px;
+        margin: 0;
         border: none;
         color: yellow;
         background-color: red;

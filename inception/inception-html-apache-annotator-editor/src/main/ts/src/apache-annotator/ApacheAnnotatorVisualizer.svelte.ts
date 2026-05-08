@@ -51,6 +51,11 @@ export const INFO_LABEL = 'ℹ️';
 export const WARN_LABEL = '⚠️';
 
 const SCROLL_ITERATION_MS = 100;
+// After scroll position stabilises we wait this long for any late DOM mutations
+// (e.g. async section-summary spacers from a render that runs after the scroll
+// has reached its target) before declaring the scroll complete. The MutationObserver
+// installed during scrolling cancels the deferred completion if a mutation arrives.
+const SCROLL_QUIET_PERIOD_MS = 400;
 const RESIZE_DEBOUNCE_MS = 500;
 const LOAD_ANNOTATIONS_DEBOUNCE_MS = 150;
 const PING_MARKER_REMOVAL_DELAY_MS = 2000;
@@ -77,6 +82,8 @@ export class ApacheAnnotatorVisualizer {
 
     private scrolling = false;
     private lastScrollTop: number | undefined = undefined;
+    private lastMarkerTop: number | undefined = undefined;
+    private scrollMutationObserver: MutationObserver | undefined = undefined;
     private removeScrollMarkers: (() => void)[] = [];
     private removeScrollMarkersTimeout: number | undefined = undefined;
     private removePingMarkers: (() => void)[] = [];
@@ -113,7 +120,8 @@ export class ApacheAnnotatorVisualizer {
         this.tracker = new ViewportTracker(
             this.root,
             () => {
-                this.loadAnnotations();
+                // We can optimize scrolling by deferring rendering during the scroll
+                this.doLoadAnnotations({ allowRenderSkip: true });
             },
             {
                 ignoreSelector:
@@ -367,12 +375,27 @@ export class ApacheAnnotatorVisualizer {
     }
 
     loadAnnotations(): void {
+        this.doLoadAnnotations({ allowRenderSkip: false });
+    }
+
+    private doLoadAnnotations(opts: { allowRenderSkip: boolean }): void {
+        const allowSkip = opts.allowRenderSkip;
         if (this.loadAnnotationsTimeout) {
             this.cancelScheduled(this.loadAnnotationsTimeout);
             this.loadAnnotationsTimeout = undefined;
         }
 
         const loader = () => {
+            // Defer loading while a scroll is in progress — re-rendering during
+            // every scroll iteration would generate a lot of useless ajax/DOM work
+            // for intermediate viewport ranges nobody will look at.
+            //
+            // The scrollTo loop releases the deferral (sets `scrolling = false`) at
+            // the moment it believes the scroll has reached its target, then waits
+            // through a quiet period during which the loader is allowed to run. If
+            // the resulting render mutates the layout, the scroll MutationObserver
+            // re-suspends scrolling and starts another iteration; otherwise the
+            // quiet period elapses and the scroll completes.
             if (this.scrolling) {
                 this.loadAnnotationsTimeout = this.schedule(LOAD_ANNOTATIONS_DEBOUNCE_MS, loader);
                 return;
@@ -395,14 +418,14 @@ export class ApacheAnnotatorVisualizer {
                 const endTime = performance.now();
                 console.log(`Loading annotations took ${endTime - startTime}ms`);
 
-                this.renderAnnotations(this.data);
+                this.renderAnnotations(this.data, { allowSkip });
             });
         };
 
         this.loadAnnotationsTimeout = this.schedule(LOAD_ANNOTATIONS_DEBOUNCE_MS, loader);
     }
 
-    private renderAnnotations(doc: AnnotatedText): void {
+    private renderAnnotations(doc: AnnotatedText, opts?: { allowSkip?: boolean }): void {
         // Pause tracker while performing DOM writes to avoid visibility feedback loops.
         this.tracker?.pause();
 
@@ -426,7 +449,7 @@ export class ApacheAnnotatorVisualizer {
             }
 
             if (annotatorState.showAggregatedLabels) {
-                this.sectionAnnotationVisualizer.render(doc);
+                this.sectionAnnotationVisualizer.render(doc, opts);
             } else {
                 this.sectionAnnotationVisualizer.clear();
             }
@@ -737,9 +760,15 @@ export class ApacheAnnotatorVisualizer {
     }
 
     private clearScrollMarkers() {
+        if (this.scrollMutationObserver) {
+            this.scrollMutationObserver.disconnect();
+            this.scrollMutationObserver = undefined;
+        }
         if (this.removeScrollMarkersTimeout) {
             this.scrolling = false;
-            this.cancelScheduled(this.removeScrollMarkersTimeout);
+            // Scroll-loop timers are real setTimeouts (not idle callbacks), so use
+            // clearTimeout directly rather than going through cancelScheduled.
+            window.clearTimeout(this.removeScrollMarkersTimeout);
             this.removeScrollMarkersTimeout = undefined;
             this.removeScrollMarkers.forEach((remove) => remove());
             this.removeScrollMarkers = [];
@@ -790,8 +819,13 @@ export class ApacheAnnotatorVisualizer {
     }
 
     scrollTo(args: { offset: number; position?: string; pingRanges?: Offsets[] }): void {
+        console.debug('Scrolling to offset ' + args.offset);
+
         const range = offsetToRange(this.root, args.offset, args.offset);
-        if (!range) return;
+        if (!range) {
+            console.debug('Could not determine scroll target range for offset ' + args.offset);
+            return;
+        }
 
         this.clearScrollMarkers();
         this.clearPingMarkers();
@@ -839,28 +873,37 @@ export class ApacheAnnotatorVisualizer {
             // are set on our scroll root element. For such a case, we schedule a new scroll action
             // which would then take the new padding into account. We do this as long as the transient
             // markers are still there.
+            // Use real setTimeout (not the schedule()/requestIdleCallback abstraction)
+            // for scroll-loop timing: requestIdleCallback fires as soon as the browser
+            // is idle, treating its `timeout` argument as a max wait — useless for
+            // implementing real delays between scroll iterations or a quiet period.
             var scrollIntoViewFunc = () => {
+                this.removeScrollMarkersTimeout = undefined;
                 finalScrollTarget.scrollIntoView({
                     behavior: 'auto',
                     block: 'center',
                     inline: 'nearest',
                 });
-                if (this.removeScrollMarkers.length > 0) {
-                    this.removeScrollMarkersTimeout = this.schedule(
-                        SCROLL_ITERATION_MS,
-                        scrollIntoViewFunc
-                    );
-                }
 
                 const wrapper = this.root.closest('.i7n-wrapper');
                 const scrollTop = wrapper?.scrollTop || this.root.scrollTop || 0;
+                this.lastMarkerTop = finalScrollTarget.getBoundingClientRect().top;
                 if (scrollTop === this.lastScrollTop) {
-                    this.scrollToComplete(args.pingRanges);
+                    // Scroll position is stable. Release the loader-deferral so any
+                    // pending annotation render can run, then wait through a quiet
+                    // period. If the render mutates the layout the MutationObserver
+                    // will re-suspend scrolling and reschedule another iteration; if
+                    // nothing mutates we complete.
+                    this.scrolling = false;
+                    this.removeScrollMarkersTimeout = window.setTimeout(() => {
+                        this.removeScrollMarkersTimeout = undefined;
+                        this.scrollToComplete(args.pingRanges);
+                    }, SCROLL_QUIET_PERIOD_MS);
                 } else {
                     this.lastScrollTop = scrollTop;
-                    this.removeScrollMarkersTimeout = this.schedule(
-                        SCROLL_ITERATION_MS,
-                        scrollIntoViewFunc
+                    this.removeScrollMarkersTimeout = window.setTimeout(
+                        scrollIntoViewFunc,
+                        SCROLL_ITERATION_MS
                     );
                 }
             };
@@ -868,9 +911,47 @@ export class ApacheAnnotatorVisualizer {
             this.scrolling = true;
             this.sectionAnnotationVisualizer.suspend();
             this.sectionAnnotationCreator.suspend();
-            this.removeScrollMarkersTimeout = this.schedule(
-                SCROLL_ITERATION_MS,
-                scrollIntoViewFunc
+
+            // Watch the scroll container for DOM mutations during scrolling. Async
+            // renders (e.g. section summary spacers) can shift content above the
+            // marker and push it out of the viewport. On any mutation we invalidate
+            // the stability tracker and reschedule another iteration so the loop
+            // re-scrolls to the marker's new position.
+            const scrollContainer = this.root.closest('.i7n-wrapper') || this.root;
+            this.scrollMutationObserver?.disconnect();
+            this.scrollMutationObserver = new MutationObserver(() => {
+                if (this.removeScrollMarkers.length === 0) return;
+                // Filter out mutations that don't actually move the marker — e.g. a
+                // re-render that clears and re-inserts the same section spacers in
+                // the same positions, or a `root.normalize()` reshuffling text nodes
+                // by sub-pixel amounts. Only react when the marker's viewport
+                // position has shifted by at least one pixel.
+                const markerTop = finalScrollTarget.getBoundingClientRect().top;
+                if (
+                    this.lastMarkerTop !== undefined &&
+                    Math.abs(markerTop - this.lastMarkerTop) < 1
+                ) {
+                    return;
+                }
+
+                this.lastScrollTop = undefined;
+                this.scrolling = true;
+                if (this.removeScrollMarkersTimeout) {
+                    window.clearTimeout(this.removeScrollMarkersTimeout);
+                }
+                this.removeScrollMarkersTimeout = window.setTimeout(
+                    scrollIntoViewFunc,
+                    SCROLL_ITERATION_MS
+                );
+            });
+            this.scrollMutationObserver.observe(scrollContainer, {
+                childList: true,
+                subtree: true,
+            });
+
+            this.removeScrollMarkersTimeout = window.setTimeout(
+                scrollIntoViewFunc,
+                SCROLL_ITERATION_MS
             );
         }
     }
@@ -902,14 +983,7 @@ export class ApacheAnnotatorVisualizer {
         this.sectionAnnotationCreator.resume();
         this.sectionAnnotationVisualizer.resume();
         this.lastScrollTop = undefined;
-
-        // Workaround for Firefox somehow scrolling the page body a bit when we scroll
-        // inside the iframe during page loading
-        if (navigator.userAgent.includes('Firefox')) {
-            if (window?.parent?.document?.body?.scrollTop) {
-                window.parent.document.body.scrollTop = 0;
-            }
-        }
+        this.lastMarkerTop = undefined;
     }
 
     private clearHighlights(): void {
