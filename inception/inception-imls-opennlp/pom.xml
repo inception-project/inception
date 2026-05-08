@@ -27,10 +27,6 @@
   <artifactId>inception-imls-opennlp</artifactId>
   <name>INCEpTION - ML - OpenNLP (v ${opennlp.version})</name>
 
-  <properties>
-    <opennlp.version>2.5.3</opennlp.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>

@@ -164,6 +164,7 @@
     <flexmark.version>0.64.8</flexmark.version>
     <ivy.version>2.5.3</ivy.version>
     <imageio-tiff-version>3.13.1</imageio-tiff-version>
+    <opennlp.version>2.5.9</opennlp.version>
     <txtmark.version>0.13</txtmark.version>
     <owasp-java-html-sanitizer.version>20220608.1</owasp-java-html-sanitizer.version>
     <jinjava.version>2.8.3</jinjava.version>

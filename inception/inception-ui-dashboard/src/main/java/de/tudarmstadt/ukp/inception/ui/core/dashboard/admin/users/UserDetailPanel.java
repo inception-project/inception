@@ -30,6 +30,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.wicket.AttributeModifier;
@@ -372,8 +373,37 @@ public class UserDetailPanel
                 success("User [" + user.getUsername() + "] has been created.");
             }
             else {
+                // Snapshot DB-committed roles before merging so we can detect newly granted
+                // roles and warn that the user must re-login for them to take effect.
+                var committedRoles = userService.getCommittedRoles(user.getUsername());
                 userService.update(user);
                 success("Details for user " + user + " have been updated.");
+
+                var isSelfEdit = user.getUsername().equals(userService.getCurrentUsername());
+
+                var revokedRoles = new HashSet<>(committedRoles);
+                revokedRoles.removeAll(user.getRoles());
+                if (!revokedRoles.isEmpty()) {
+                    if (isSelfEdit) {
+                        info("Revoked permissions will only take effect after you sign out and back in.");
+                    }
+                    else {
+                        info("User [" + user.getUsername()
+                                + "] has been signed out because permissions were revoked.");
+                    }
+                }
+
+                var grantedRoles = new HashSet<>(user.getRoles());
+                grantedRoles.removeAll(committedRoles);
+                if (!grantedRoles.isEmpty()) {
+                    if (isSelfEdit) {
+                        info("Newly granted permissions will only take effect after you sign out and back in.");
+                    }
+                    else {
+                        info("User [" + user.getUsername()
+                                + "] must sign out and back in before newly granted permissions take effect.");
+                    }
+                }
             }
 
             aTarget.addChildren(getPage(), IFeedback.class);
