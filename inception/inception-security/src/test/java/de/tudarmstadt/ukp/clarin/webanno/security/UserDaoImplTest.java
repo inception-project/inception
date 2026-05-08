@@ -22,12 +22,16 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityProperti
 import static de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityPropertiesImpl.DEFAULT_MINIMUM_USERNAME_LENGTH;
 import static de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityPropertiesImpl.DEFAULT_PASSWORD_PATTERN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityPropertiesImpl.DEFAULT_USERNAME_PATTERN;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
+import java.util.EnumSet;
 import java.util.regex.Pattern;
 
 import org.apache.wicket.validation.ValidationError;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +40,10 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -63,6 +71,9 @@ class UserDaoImplTest
 
     @Autowired
     UserDaoImpl userDao;
+
+    @Autowired
+    SessionRegistry sessionRegistry;
 
     @BeforeEach
     void setup()
@@ -282,6 +293,66 @@ class UserDaoImplTest
 
         assertThat(userDao.get(username)).isNull();
         assertThat(userDao.get("admin")).isNull();
+    }
+
+    @AfterEach
+    void clearSecurityContext()
+    {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void setCurrentUser(String aUsername)
+    {
+        var auth = UsernamePasswordAuthenticationToken.authenticated(aUsername, "x",
+                AuthorityUtils.NO_AUTHORITIES);
+        SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
+    @Test
+    void thatRevokingRoleExpiresSessionsOfTheAffectedUser()
+    {
+        var bob = User.builder().withUsername("bob").withRoles(ROLE_USER, ROLE_REMOTE).build();
+        userDao.create(bob);
+        sessionRegistry.registerNewSession("bob-session-1", "bob");
+
+        setCurrentUser("admin"); // a different user is doing the change
+
+        bob.setRoles(EnumSet.of(ROLE_USER)); // revoke ROLE_REMOTE
+        userDao.update(bob);
+
+        assertThat(sessionRegistry.getSessionInformation("bob-session-1").isExpired()).isTrue();
+    }
+
+    @Test
+    void thatGrantingRoleDoesNotExpireSessions()
+    {
+        var bob = User.builder().withUsername("bob").withRoles(ROLE_USER).build();
+        userDao.create(bob);
+        sessionRegistry.registerNewSession("bob-session-1", "bob");
+
+        setCurrentUser("admin");
+
+        bob.setRoles(EnumSet.of(ROLE_USER, ROLE_REMOTE)); // grant ROLE_REMOTE
+        userDao.update(bob);
+
+        assertThat(sessionRegistry.getSessionInformation("bob-session-1").isExpired()).isFalse();
+    }
+
+    @Test
+    void thatRevokingOwnRoleDoesNotExpireOwnSession()
+    {
+        var alice = User.builder().withUsername("alice").withRoles(ROLE_USER, ROLE_REMOTE).build();
+        userDao.create(alice);
+        sessionRegistry.registerNewSession("alice-session-1", "alice");
+
+        setCurrentUser("alice"); // alice is editing herself
+
+        alice.setRoles(EnumSet.of(ROLE_USER));
+        userDao.update(alice);
+
+        assertThat(sessionRegistry.getSessionInformation("alice-session-1").isExpired())
+                .as("Admin must not lock themselves out by adjusting their own roles") //
+                .isFalse();
     }
 
     @Test

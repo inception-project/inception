@@ -155,6 +155,13 @@ public interface UserDao
     Set<String> getRoles(User aUser);
 
     /**
+     * @return the roles of the given user as currently committed to the database, ignoring any
+     *         not-yet-flushed in-memory changes. Useful for diffing pre/post state of an
+     *         in-progress update.
+     */
+    Set<Role> getCommittedRoles(String aUsername);
+
+    /**
      * @return the number of enabled users
      */
     long countEnabledUsers();
