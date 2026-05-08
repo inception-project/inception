@@ -85,19 +85,15 @@ public class NumberFeatureTraitsEditor
         form.setOutputMarkupPlaceholderTag(true);
         add(form);
 
-        Class clazz = Integer.class;
-        Options options = new Options();
-
+        final Class clazz;
         switch (feature.getObject().getType()) {
-        case CAS.TYPE_NAME_INTEGER: {
-            clazz = Integer.class;
-            options.set("format", "'n0'");
-            break;
-        }
-        case CAS.TYPE_NAME_FLOAT: {
+        case CAS.TYPE_NAME_FLOAT:
             clazz = Float.class;
             break;
-        }
+        case CAS.TYPE_NAME_INTEGER:
+        default:
+            clazz = Integer.class;
+            break;
         }
 
         var limited = new CheckBox("limited");
@@ -113,35 +109,77 @@ public class NumberFeatureTraitsEditor
                 () -> traits.getObject().isLimited() && isEditorTypeSelectionPossible()));
         form.add(editorType);
 
-        var minimum = new NumberTextField<>("minimum", clazz, options);
-        minimum.add(visibleWhen(() -> traits.getObject().isLimited()));
-        form.add(minimum);
+        form.add(createMinimumField(form, clazz));
+        form.add(createMaximumField(form, clazz));
+        form.add(createDefaultValueField(clazz));
 
-        var maximum = new NumberTextField<>("maximum", clazz, options);
-        maximum.add(visibleWhen(() -> traits.getObject().isLimited()));
-        form.add(maximum);
+        var decimals = new NumberTextField<>("decimals", Integer.class,
+                new Options().set("format", "'n0'"));
+        decimals.setMinimum(0);
+        decimals.setMaximum(NumberFeatureTraits.MAX_DECIMALS);
+        decimals.add(visibleWhen(() -> clazz == Float.class));
+        decimals.add(new LambdaAjaxFormComponentUpdatingBehavior("change", target -> {
+            form.replace(createMinimumField(form, clazz));
+            form.replace(createMaximumField(form, clazz));
+            form.replace(createDefaultValueField(clazz));
+            target.add(form);
+        }));
+        form.add(decimals);
+    }
 
-        var defaultValue = new NumberTextField<>("defaultValue", clazz, options);
-        defaultValue.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
-        form.add(defaultValue);
+    static Options buildNumericOptions(Class<?> aClazz, int aDecimals)
+    {
+        var d = Math.max(0, Math.min(NumberFeatureTraits.MAX_DECIMALS, aDecimals));
+        var options = new Options();
+        if (aClazz == Float.class) {
+            options.set("format", d == 0 ? "'#'" : "'#." + "#".repeat(d) + "'");
+            options.set("decimals", d);
+            options.set("step", Math.pow(10, -d));
+        }
+        else {
+            options.set("format", "'n0'");
+        }
+        return options;
+    }
 
-        minimum.add(new LambdaAjaxFormComponentUpdatingBehavior("change", target -> {
+    private NumberTextField<?> createMinimumField(Form<Traits> aForm, Class aClazz)
+    {
+        var field = new NumberTextField<>("minimum", aClazz,
+                buildNumericOptions(aClazz, traits.getObject().getDecimals()));
+        field.add(visibleWhen(() -> traits.getObject().isLimited()));
+        field.add(new LambdaAjaxFormComponentUpdatingBehavior("change", target -> {
             var min = new BigDecimal(traits.getObject().getMinimum().toString());
             var max = new BigDecimal(traits.getObject().getMaximum().toString());
             if (min.compareTo(max) > 0) {
                 traits.getObject().setMaximum(traits.getObject().getMinimum());
             }
-            target.add(form);
+            target.add(aForm);
         }));
+        return field;
+    }
 
-        maximum.add(new LambdaAjaxFormComponentUpdatingBehavior("change", target -> {
+    private NumberTextField<?> createMaximumField(Form<Traits> aForm, Class aClazz)
+    {
+        var field = new NumberTextField<>("maximum", aClazz,
+                buildNumericOptions(aClazz, traits.getObject().getDecimals()));
+        field.add(visibleWhen(() -> traits.getObject().isLimited()));
+        field.add(new LambdaAjaxFormComponentUpdatingBehavior("change", target -> {
             var min = new BigDecimal(traits.getObject().getMinimum().toString());
             var max = new BigDecimal(traits.getObject().getMaximum().toString());
             if (min.compareTo(max) > 0) {
                 traits.getObject().setMinimum(traits.getObject().getMaximum());
             }
-            target.add(form);
+            target.add(aForm);
         }));
+        return field;
+    }
+
+    private NumberTextField<?> createDefaultValueField(Class aClazz)
+    {
+        var field = new NumberTextField<>("defaultValue", aClazz,
+                buildNumericOptions(aClazz, traits.getObject().getDecimals()));
+        field.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
+        return field;
     }
 
     /**
@@ -179,6 +217,7 @@ public class NumberFeatureTraitsEditor
         result.setMaximum(t.getMaximum());
         result.setEditorType(t.getEditorType());
         result.setDefaultValue(t.getDefaultValue());
+        result.setDecimals(t.getDecimals());
 
         return result;
     }
@@ -197,6 +236,7 @@ public class NumberFeatureTraitsEditor
         t.setEditorType(
                 isEditorTypeSelectionPossible() ? traits.getObject().getEditorType() : SPINNER);
         t.setDefaultValue(traits.getObject().getDefaultValue());
+        t.setDecimals(traits.getObject().getDecimals());
 
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
@@ -215,6 +255,17 @@ public class NumberFeatureTraitsEditor
         private Number maximum;
         private NumberFeatureTraits.EditorType editorType;
         private Number defaultValue;
+        private int decimals;
+
+        public int getDecimals()
+        {
+            return decimals;
+        }
+
+        public void setDecimals(int aDecimals)
+        {
+            decimals = aDecimals;
+        }
 
         public boolean isLimited()
         {
