@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "node build.mjs",
-    "test": "",
+    "test": "exit 0",
     "format": "prettier --write \"**/*.{js,ts,svelte,css,scss,json}\"",
     "format:check": "prettier --check \"**/*.{js,ts,svelte,css,scss,json}\""
   },
@@ -21,7 +21,7 @@
     "uuid": "${uuid.version}"
   },
   "dependencies": {
-    "@inception-project/inception-js-api": "${semver}",
+    "@inception-project/inception-js-api": "file:../../../../inception-js-api/src/main/ts",
     "@recogito/recogito-js": "${recogitojs.version}",
     "@recogito/recogito-connections": "${recogito-connections.version}",
     "@recogito/recogito-client-core": "${recogito-client-core.version}",

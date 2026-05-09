@@ -25,7 +25,7 @@
     "undici": "${undici.version}"
   },
   "dependencies": {
-    "@inception-project/inception-js-api": "${semver}",
+    "@inception-project/inception-js-api": "file:../../../../inception-js-api/src/main/ts",
     "@stomp/stompjs": "${stomp-stompjs.version}",
     "@types/stompjs": "${types-stompjs.version}",
     "fast-json-patch": "${fast-json-patch.version}"

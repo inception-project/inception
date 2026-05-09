@@ -41,7 +41,9 @@ jobs:
           cdn01.quay.io:443
           download.eclipse.org:443
           github.com:443
+          objects.githubusercontent.com:443
           raw.githubusercontent.com:443
+          release-assets.githubusercontent.com:443
           hosted-compute-request-orchestrator-prod-eus-01.githubapp.com:443
           hosted-compute-request-orchestrator-prod-iad-01.githubapp.com:443
           hosted-compute-watchdog-prod-eus-01.githubapp.com:443
