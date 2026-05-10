@@ -85,4 +85,28 @@ public class PubAnnotationProviderTest
         assertThat(data).contains(
                 "\"text\" : \"Resistance to IL-10 inhibition of interferon gamma production");
     }
+
+    @Test
+    public void thatAnnotatedDocumentCanBeRetrieved() throws Exception
+    {
+        var doc = sut.getAnnotatedDocument(traits, "PubMed", "25314077", null);
+
+        assertThat(doc.getSourceDb()).isEqualTo("PubMed");
+        assertThat(doc.getSourceId()).isEqualTo("25314077");
+        assertThat(doc.getText()).startsWith("Cancer-selective targeting");
+        assertThat(doc.getTracks()).isNotEmpty();
+    }
+
+    @Test
+    public void thatProjectScopedAnnotatedDocumentCanBeRetrieved() throws Exception
+    {
+        var doc = sut.getAnnotatedDocument(traits, "PubMed", "25314077", "PubmedHPO");
+
+        assertThat(doc.getSourceDb()).isEqualTo("PubMed");
+        assertThat(doc.getSourceId()).isEqualTo("25314077");
+        assertThat(doc.getText()).startsWith("Cancer-selective targeting");
+        assertThat(doc.getProject()).isEqualTo("PubmedHPO");
+        assertThat(doc.getTracks()).isNull();
+        assertThat(doc.getDenotations()).isNotEmpty();
+    }
 }

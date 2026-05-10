@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationSectionsFormatSupport;
+import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocument;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentHandle;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentSection;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraits;
@@ -186,5 +187,32 @@ public class PubAnnotationProvider
         throws IOException
     {
         return PubAnnotationSectionsFormatSupport.ID;
+    }
+
+    /**
+     * Fetch the annotated document including text plus any denotations, relations and attributes.
+     * If {@code aProject} is non-null, the project-scoped endpoint is used (single track, top-level
+     * annotations). Otherwise the global endpoint is used (multi-track response).
+     */
+    public PubAnnotationDocument getAnnotatedDocument(PubAnnotationProviderTraits aTraits,
+            String aCollectionId, String aDocumentId, String aProject)
+    {
+        var variables = new HashMap<String, String>();
+        variables.put("collectionId", aCollectionId);
+        variables.put("documentId", aDocumentId);
+
+        String url;
+        if (aProject != null && !aProject.isBlank()) {
+            variables.put("project", aProject);
+            url = aTraits.getUrl()
+                    + "/projects/{project}/docs/sourcedb/{collectionId}/sourceid/{documentId}/annotations.json";
+        }
+        else {
+            url = aTraits.getUrl()
+                    + "/docs/sourcedb/{collectionId}/sourceid/{documentId}/annotations.json";
+        }
+
+        var restTemplate = new RestTemplate();
+        return restTemplate.getForObject(url, PubAnnotationDocument.class, variables);
     }
 }
