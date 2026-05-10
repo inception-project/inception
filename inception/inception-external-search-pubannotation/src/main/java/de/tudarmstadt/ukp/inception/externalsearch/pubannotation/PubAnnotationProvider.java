@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.externalsearch.pubannotation;
 
 import static java.lang.Integer.parseInt;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
@@ -115,7 +116,8 @@ public class PubAnnotationProvider
         var response = restTemplate.exchange(url, GET, null, PubAnnotationDocumentHandle[].class,
                 variables);
 
-        return asList(response.getBody());
+        var body = response.getBody();
+        return body != null ? asList(body) : emptyList();
     }
 
     private static boolean isNotBlank(String aValue)
@@ -222,8 +224,12 @@ public class PubAnnotationProvider
             PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
         throws IOException
     {
-        return new ByteArrayInputStream(
-                fetchAnnotationsJson(aTraits, aCollectionId, aDocumentId, aTraits.getProject()));
+        var bytes = fetchAnnotationsJson(aTraits, aCollectionId, aDocumentId, aTraits.getProject());
+        if (bytes == null) {
+            throw new IOException("PubAnnotation returned an empty response for " + aCollectionId
+                    + "/" + aDocumentId);
+        }
+        return new ByteArrayInputStream(bytes);
     }
 
     private byte[] fetchAnnotationsJson(PubAnnotationProviderTraits aTraits, String aCollectionId,

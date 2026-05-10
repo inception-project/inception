@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.INPUT_EVENT;
 import static java.util.Comparator.comparing;
 
-import java.io.Serializable;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
@@ -107,7 +107,7 @@ public class PubAnnotationProjectSelectionDialogPanel
         if (filter == null || filter.isBlank()) {
             return sortedByName(allProjects);
         }
-        var needle = filter.toLowerCase();
+        var needle = filter.toLowerCase(Locale.ROOT);
         return sortedByName(allProjects.stream() //
                 .filter(p -> matches(p, needle)) //
                 .toList());
@@ -123,13 +123,14 @@ public class PubAnnotationProjectSelectionDialogPanel
 
     private static boolean contains(String aHaystack, String aNeedle)
     {
-        return aHaystack != null && aHaystack.toLowerCase().contains(aNeedle);
+        return aHaystack != null && aHaystack.toLowerCase(Locale.ROOT).contains(aNeedle);
     }
 
     private static List<PubAnnotationProject> sortedByName(List<PubAnnotationProject> aProjects)
     {
         return aProjects.stream()
-                .sorted(comparing(p -> p.getName() == null ? "" : p.getName().toLowerCase()))
+                .sorted(comparing(
+                        p -> p.getName() == null ? "" : p.getName().toLowerCase(Locale.ROOT)))
                 .toList();
     }
 
@@ -147,16 +148,6 @@ public class PubAnnotationProjectSelectionDialogPanel
     private void actionCancel(AjaxRequestTarget aTarget)
     {
         findParent(ModalDialog.class).close(aTarget);
-    }
-
-    /** Backing field for the filter text — Wicket needs a settable property. */
-    @SuppressWarnings("unused")
-    private static final class FilterModel
-        implements Serializable
-    {
-        private static final long serialVersionUID = 1L;
-        @SuppressWarnings("unused")
-        String text;
     }
 
     public String getFilter()
