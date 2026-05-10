@@ -15,41 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits;
+package de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model;
 
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-public class PubAnnotationProviderTraits
-    implements Serializable
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class PubAnnotationSpan
 {
-    private static final long serialVersionUID = -9198473282184073984L;
+    private int begin;
+    private int end;
 
-    private String url = "https://pubannotation.org";
-
-    private String project;
-
-    public String getUrl()
+    public int getBegin()
     {
-        return url;
+        return begin;
     }
 
-    public void setUrl(String aUrl)
+    public void setBegin(int aBegin)
     {
-        url = aUrl;
+        begin = aBegin;
     }
 
-    /**
-     * Optional PubAnnotation project name. When set, keyword search and document fetches are scoped
-     * to that project — only docs annotated by it are returned, and the {@code annotations.json}
-     * endpoint returns the single-project (no-tracks) shape.
-     */
-    public String getProject()
+    public int getEnd()
     {
-        return project;
+        return end;
     }
 
-    public void setProject(String aProject)
+    public void setEnd(int aEnd)
     {
-        project = aProject;
+        end = aEnd;
     }
 }

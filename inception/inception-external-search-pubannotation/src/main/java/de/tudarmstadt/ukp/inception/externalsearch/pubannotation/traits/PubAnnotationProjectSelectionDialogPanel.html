@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style>
+    .pa-project-card {
+      transition: box-shadow .2s;
+      cursor: pointer;
+      border-color: var(--bs-secondary-color) !important;
+      text-align: left;
+    }
+    .pa-project-card:hover {
+      box-shadow: 0 0 8px var(--bs-tertiary-color);
+    }
+  </style>
+</wicket:head>
+<wicket:panel>
+  <div class="modal-header">
+    <h5 class="modal-title">Select PubAnnotation project</h5>
+    <button wicket:id="closeDialog" type="button" class="btn-close" aria-label="Close"></button>
+  </div>
+  <div class="modal-body overflow-auto">
+    <div class="container">
+      <div class="row mb-3">
+        <div class="col-sm-9">
+          <input wicket:id="filter" type="text" class="form-control"
+                 placeholder="Filter by name, maintainer, author, or license"/>
+        </div>
+        <div class="col-sm-3 d-flex align-items-center justify-content-end small text-muted">
+          <span wicket:id="resultCount"/>
+        </div>
+      </div>
+      <div wicket:id="resultsContainer">
+        <div class="d-flex justify-content-center mb-3">
+          <span wicket:id="navigator"/>
+        </div>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+          <div wicket:id="projects" class="col d-flex">
+            <button wicket:id="select" class="card pa-project-card d-flex flex-grow-1 p-2 overflow-hidden">
+              <div class="card-body w-100 p-2">
+                <h6 wicket:id="name" class="card-title text-truncate"></h6>
+                <div class="small">
+                  <div><strong>Maintainer:</strong> <span wicket:id="maintainer"/></div>
+                  <div><strong>Author:</strong> <span wicket:id="author"/></div>
+                  <div><strong>License:</strong> <span wicket:id="license"/></div>
+                  <div class="text-muted"><strong>Updated:</strong> <span wicket:id="updated"/></div>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</wicket:panel>
+</html>

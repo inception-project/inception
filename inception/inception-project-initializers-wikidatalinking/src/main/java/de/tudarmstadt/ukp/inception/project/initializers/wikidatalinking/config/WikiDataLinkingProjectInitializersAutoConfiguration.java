@@ -181,6 +181,18 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
 
     @ConditionalOnBean(KnowledgeBaseService.class)
     @Bean
+    public ProfileBasedKnowledgeBaseInitializer geneOntologyKnowledgeBaseInitializer(
+            KnowledgeBaseService aKbService)
+    {
+        var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
+                "MedicalKnowledgeBase.svg");
+        return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("go"), thumbnail)
+        {
+        };
+    }
+
+    @ConditionalOnBean(KnowledgeBaseService.class)
+    @Bean
     public ProfileBasedKnowledgeBaseInitializer hpoKnowledgeBaseInitializer(
             KnowledgeBaseService aKbService)
     {

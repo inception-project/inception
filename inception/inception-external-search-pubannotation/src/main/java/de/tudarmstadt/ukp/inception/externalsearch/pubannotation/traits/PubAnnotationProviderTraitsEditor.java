@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -26,8 +28,11 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.validator.UrlValidator;
 
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactory;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
+import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.PubAnnotationProvider;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
 public class PubAnnotationProviderTraitsEditor
     extends Panel
@@ -40,6 +45,9 @@ public class PubAnnotationProviderTraitsEditor
     private final DocumentRepository documentRepository;
     private final PubAnnotationProviderTraits properties;
 
+    private final BootstrapModalDialog dialog;
+    private final TextField<String> projectField;
+
     public PubAnnotationProviderTraitsEditor(String aId,
             IModel<DocumentRepository> aDocumentRepository)
     {
@@ -47,7 +55,11 @@ public class PubAnnotationProviderTraitsEditor
         documentRepository = aDocumentRepository.getObject();
         properties = externalSearchProviderFactory.readTraits(documentRepository);
 
-        Form<PubAnnotationProviderTraits> form = new Form<PubAnnotationProviderTraits>(MID_FORM,
+        dialog = new BootstrapModalDialog("dialog");
+        dialog.trapFocus();
+        queue(dialog);
+
+        var form = new Form<PubAnnotationProviderTraits>(MID_FORM,
                 CompoundPropertyModel.of(Model.of(properties)))
         {
             private static final long serialVersionUID = -3109239608742291123L;
@@ -60,11 +72,40 @@ public class PubAnnotationProviderTraitsEditor
             }
         };
 
-        TextField<String> remoteUrl = new TextField<>("url");
+        var remoteUrl = new TextField<String>("url");
         remoteUrl.setRequired(true);
         remoteUrl.add(new UrlValidator());
         form.add(remoteUrl);
 
+        projectField = new TextField<>("project");
+        projectField.setOutputMarkupId(true);
+        form.add(projectField);
+
+        form.add(new LambdaAjaxLink("browseProjects", this::actionBrowseProjects));
+
         add(form);
+    }
+
+    private void actionBrowseProjects(AjaxRequestTarget aTarget)
+    {
+        try {
+            var provider = (PubAnnotationProvider) ((ExternalSearchProviderFactory<?>) externalSearchProviderFactory)
+                    .getNewExternalSearchProvider();
+            var projects = provider.listProjects(properties);
+            var content = new PubAnnotationProjectSelectionDialogPanel(
+                    BootstrapModalDialog.CONTENT_ID, projects, this::actionSelectProject);
+            dialog.open(content, aTarget);
+        }
+        catch (Exception e) {
+            error("Could not load projects from " + properties.getUrl() + ": " + e.getMessage());
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
+    }
+
+    private void actionSelectProject(AjaxRequestTarget aTarget,
+            de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationProject aProject)
+    {
+        properties.setProject(aProject.getName());
+        aTarget.add(projectField);
     }
 }
