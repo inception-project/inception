@@ -17,16 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubannotation;
 
-import static de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentSection.SPRING_LIST_TYPE_REF;
 import static java.lang.Integer.parseInt;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 import static org.springframework.http.HttpMethod.GET;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -35,23 +33,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
-import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationSectionsFormatSupport;
+import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationAnnotationsFormatSupport;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocument;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentHandle;
-import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentSection;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.model.DocSum;
-import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 public class PubAnnotationProvider
     implements ExternalSearchProvider<PubAnnotationProviderTraits>
@@ -141,9 +135,8 @@ public class PubAnnotationProvider
     public String getDocumentText(DocumentRepository aDocumentRepository,
             PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
     {
-        return getSections(aDocumentRepository, aTraits, aCollectionId, aDocumentId).stream()
-                .map(PubAnnotationDocumentSection::getText) //
-                .collect(joining("\n\n"));
+        var doc = getAnnotatedDocument(aTraits, aCollectionId, aDocumentId, null);
+        return doc != null && doc.getText() != null ? doc.getText() : "";
     }
 
     @Override
@@ -151,34 +144,29 @@ public class PubAnnotationProvider
             PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
         throws IOException
     {
-        var json = JSONUtil.toJsonString(
-                getSections(aDocumentRepository, aTraits, aCollectionId, aDocumentId));
-
-        return IOUtils.toInputStream(json, UTF_8);
+        return new ByteArrayInputStream(
+                fetchAnnotationsJson(aTraits, aCollectionId, aDocumentId, null));
     }
 
-    private List<PubAnnotationDocumentSection> getSections(DocumentRepository aDocumentRepository,
-            PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
+    private byte[] fetchAnnotationsJson(PubAnnotationProviderTraits aTraits, String aCollectionId,
+            String aDocumentId, String aProject)
     {
         var variables = new HashMap<String, String>();
         variables.put("collectionId", aCollectionId);
         variables.put("documentId", aDocumentId);
 
-        var restTemplate = new RestTemplate();
-
-        var url = aTraits.getUrl() + "/docs/sourcedb/{collectionId}/sourceid/{documentId}";
-        try {
-            // If the document has multiple sections, a list is returned...
-            var response = restTemplate.exchange(url, GET, null, SPRING_LIST_TYPE_REF, variables);
-            return response.getBody();
+        String url;
+        if (aProject != null && !aProject.isBlank()) {
+            variables.put("project", aProject);
+            url = aTraits.getUrl()
+                    + "/projects/{project}/docs/sourcedb/{collectionId}/sourceid/{documentId}/annotations.json";
         }
-        catch (RestClientException e) {
-            // If the document has as single section, an object is returned...
-            var section = restTemplate.getForObject(url, PubAnnotationDocumentSection.class,
-                    variables);
-
-            return asList(section);
+        else {
+            url = aTraits.getUrl()
+                    + "/docs/sourcedb/{collectionId}/sourceid/{documentId}/annotations.json";
         }
+
+        return new RestTemplate().getForObject(url, byte[].class, variables);
     }
 
     @Override
@@ -186,7 +174,7 @@ public class PubAnnotationProvider
             PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
         throws IOException
     {
-        return PubAnnotationSectionsFormatSupport.ID;
+        return PubAnnotationAnnotationsFormatSupport.ID;
     }
 
     /**

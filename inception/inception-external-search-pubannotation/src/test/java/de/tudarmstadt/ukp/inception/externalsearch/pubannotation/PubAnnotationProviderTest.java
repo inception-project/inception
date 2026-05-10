@@ -82,8 +82,10 @@ public class PubAnnotationProviderTest
             data = IOUtils.toString(is, UTF_8);
         }
 
+        // Provider now fetches the annotations endpoint, which returns the API's raw JSON
+        // (compact). Text is still present as a top-level field.
         assertThat(data).contains(
-                "\"text\" : \"Resistance to IL-10 inhibition of interferon gamma production");
+                "\"text\":\"Resistance to IL-10 inhibition of interferon gamma production");
     }
 
     @Test
