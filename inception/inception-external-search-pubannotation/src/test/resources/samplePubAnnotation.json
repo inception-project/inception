@@ -36,6 +36,42 @@
             "end": 153
           },
           "obj": "HP_0006775"
+        },
+        {
+          "id": "T2",
+          "span": [
+            {
+              "begin": 169,
+              "end": 173
+            },
+            {
+              "begin": 178,
+              "end": 184
+            }
+          ],
+          "obj": "HP_0002664"
+        }
+      ],
+      "relations": [
+        {
+          "id": "R1",
+          "subj": "T1",
+          "pred": "associatedWith",
+          "obj": "T2"
+        }
+      ],
+      "attributes": [
+        {
+          "id": "A1",
+          "subj": "T1",
+          "pred": "uniprot",
+          "obj": "Q15306"
+        },
+        {
+          "id": "A2",
+          "subj": "T2",
+          "pred": "uncertain",
+          "obj": true
         }
       ]
     }

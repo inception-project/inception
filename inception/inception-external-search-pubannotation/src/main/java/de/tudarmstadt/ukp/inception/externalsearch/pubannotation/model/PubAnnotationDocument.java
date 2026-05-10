@@ -38,6 +38,14 @@ public class PubAnnotationDocument
 
     private String text;
 
+    private String project;
+
+    private List<PubAnnotationDenotation> denotations;
+
+    private List<PubAnnotationRelation> relations;
+
+    private List<PubAnnotationAttribute> attributes;
+
     private List<PubAnnotationTrack> tracks;
 
     public String getTarget()
@@ -88,6 +96,46 @@ public class PubAnnotationDocument
     public void setText(String aText)
     {
         text = aText;
+    }
+
+    public String getProject()
+    {
+        return project;
+    }
+
+    public void setProject(String aProject)
+    {
+        project = aProject;
+    }
+
+    public List<PubAnnotationDenotation> getDenotations()
+    {
+        return denotations;
+    }
+
+    public void setDenotations(List<PubAnnotationDenotation> aDenotations)
+    {
+        denotations = aDenotations;
+    }
+
+    public List<PubAnnotationRelation> getRelations()
+    {
+        return relations;
+    }
+
+    public void setRelations(List<PubAnnotationRelation> aRelations)
+    {
+        relations = aRelations;
+    }
+
+    public List<PubAnnotationAttribute> getAttributes()
+    {
+        return attributes;
+    }
+
+    public void setAttributes(List<PubAnnotationAttribute> aAttributes)
+    {
+        attributes = aAttributes;
     }
 
     public List<PubAnnotationTrack> getTracks()

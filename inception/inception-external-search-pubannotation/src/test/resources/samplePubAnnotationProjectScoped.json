@@ -1,0 +1,47 @@
+{
+  "target": "https://pubannotation.org/docs/sourcedb/PubMed/sourceid/10704529",
+  "sourcedb": "PubMed",
+  "sourceid": "10704529",
+  "text": "IRF-4 expression in CML may be induced by IFN-α therapy",
+  "project": "GO-BP",
+  "denotations": [
+    {
+      "id": "T1",
+      "span": {
+        "begin": 0,
+        "end": 5
+      },
+      "obj": "Protein"
+    },
+    {
+      "id": "T2",
+      "span": {
+        "begin": 42,
+        "end": 47
+      },
+      "obj": "Protein"
+    }
+  ],
+  "relations": [
+    {
+      "id": "R1",
+      "subj": "T1",
+      "pred": "interactWith",
+      "obj": "T2"
+    }
+  ],
+  "attributes": [
+    {
+      "id": "A1",
+      "subj": "T1",
+      "pred": "uniprot",
+      "obj": "Q15306"
+    },
+    {
+      "id": "A2",
+      "subj": "T2",
+      "pred": "uncertain",
+      "obj": true
+    }
+  ]
+}

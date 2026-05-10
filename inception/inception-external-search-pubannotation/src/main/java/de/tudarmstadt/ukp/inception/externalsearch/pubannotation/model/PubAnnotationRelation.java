@@ -17,58 +17,60 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PubAnnotationTrack
+public class PubAnnotationRelation
 {
-    private String project;
+    private String id;
 
-    private List<PubAnnotationDenotation> denotations;
+    @JsonProperty("subj")
+    private String subject;
 
-    private List<PubAnnotationRelation> relations;
+    @JsonProperty("pred")
+    private String predicate;
 
-    private List<PubAnnotationAttribute> attributes;
+    @JsonProperty("obj")
+    private String object;
 
-    public String getProject()
+    public String getId()
     {
-        return project;
+        return id;
     }
 
-    public void setProject(String aProject)
+    public void setId(String aId)
     {
-        project = aProject;
+        id = aId;
     }
 
-    public List<PubAnnotationDenotation> getDenotations()
+    public String getSubject()
     {
-        return denotations;
+        return subject;
     }
 
-    public void setDenotations(List<PubAnnotationDenotation> aDenotations)
+    public void setSubject(String aSubject)
     {
-        denotations = aDenotations;
+        subject = aSubject;
     }
 
-    public List<PubAnnotationRelation> getRelations()
+    public String getPredicate()
     {
-        return relations;
+        return predicate;
     }
 
-    public void setRelations(List<PubAnnotationRelation> aRelations)
+    public void setPredicate(String aPredicate)
     {
-        relations = aRelations;
+        predicate = aPredicate;
     }
 
-    public List<PubAnnotationAttribute> getAttributes()
+    public String getObject()
     {
-        return attributes;
+        return object;
     }
 
-    public void setAttributes(List<PubAnnotationAttribute> aAttributes)
+    public void setObject(String aObject)
     {
-        attributes = aAttributes;
+        object = aObject;
     }
 }
