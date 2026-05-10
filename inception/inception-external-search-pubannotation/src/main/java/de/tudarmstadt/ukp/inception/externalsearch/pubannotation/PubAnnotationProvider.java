@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationAnnotationsFormatSupport;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocument;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentHandle;
+import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationProject;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.model.DocSum;
@@ -52,12 +54,44 @@ public class PubAnnotationProvider
 {
     private static final String EXT_JSON = ".json";
 
+    /**
+     * Direct lookup syntax: <code>id:&lt;sourcedb&gt;/&lt;sourceid&gt;</code> bypasses the keyword
+     * search and returns a single search result for the named document.
+     */
+    private static final Pattern ID_QUERY = Pattern.compile(
+            "\\s*id:\\s*([A-Za-z][A-Za-z0-9_-]*)\\s*/\\s*(\\S+?)\\s*", Pattern.CASE_INSENSITIVE);
+
     private final EntrezClient entrezClient;
+
+    /** Cache for the list of available projects. Keyed by base URL; short TTL. */
+    private static final long PROJECT_LIST_TTL_MS = 5 * 60 * 1000L;
+    private final Map<String, CachedProjects> projectListCache = new HashMap<>();
 
     public PubAnnotationProvider(EntrezClient aEntrezClient)
     {
         entrezClient = aEntrezClient;
     }
+
+    /**
+     * Fetch all known PubAnnotation projects from {@code /projects.json}, cached briefly so
+     * repeated UI opens don't hammer the API.
+     */
+    public List<PubAnnotationProject> listProjects(PubAnnotationProviderTraits aTraits)
+    {
+        var key = aTraits.getUrl();
+        var now = System.currentTimeMillis();
+        var cached = projectListCache.get(key);
+        if (cached != null && (now - cached.fetchedAt) < PROJECT_LIST_TTL_MS) {
+            return cached.projects;
+        }
+        var response = new RestTemplate().getForObject(aTraits.getUrl() + "/projects.json",
+                PubAnnotationProject[].class);
+        var projects = response != null ? List.of(response) : List.<PubAnnotationProject> of();
+        projectListCache.put(key, new CachedProjects(projects, now));
+        return projects;
+    }
+
+    private record CachedProjects(List<PubAnnotationProject> projects, long fetchedAt) {}
 
     List<PubAnnotationDocumentHandle> query(PubAnnotationProviderTraits aTraits, String aQuery,
             int aPage, int aPageSize)
@@ -67,26 +101,46 @@ public class PubAnnotationProvider
         variables.put("page", Integer.toString(aPage));
         variables.put("per", Integer.toString(aPageSize));
 
+        String url;
+        if (isNotBlank(aTraits.getProject())) {
+            variables.put("project", aTraits.getProject());
+            url = aTraits.getUrl()
+                    + "/projects/{project}/docs.json?keywords={keywords}&page={page}&per={per}";
+        }
+        else {
+            url = aTraits.getUrl() + "/docs.json?keywords={keywords}&page={page}&per={per}";
+        }
+
         var restTemplate = new RestTemplate();
-        var response = restTemplate.exchange(
-                aTraits.getUrl() + "/docs.json?keywords={keywords}&page={page}&per={per}", GET,
-                null, PubAnnotationDocumentHandle[].class, variables);
+        var response = restTemplate.exchange(url, GET, null, PubAnnotationDocumentHandle[].class,
+                variables);
 
         return asList(response.getBody());
+    }
+
+    private static boolean isNotBlank(String aValue)
+    {
+        return aValue != null && !aValue.isBlank();
     }
 
     @Override
     public List<ExternalSearchResult> executeQuery(DocumentRepository aDocumentRepository,
             PubAnnotationProviderTraits aTraits, String aQuery)
     {
-        var response = query(aTraits, aQuery, 1, 100);
+        var response = matchesIdQuery(aQuery).orElseGet(() -> query(aTraits, aQuery, 1, 100));
 
         var documentSummaries = lookupDocumentSummaries(response);
 
         var results = new ArrayList<ExternalSearchResult>();
         for (var handle : response) {
-            var summary = documentSummaries
-                    .get(Pair.of(handle.getSourceDb(), parseInt(handle.getSourceId())));
+            DocSum summary = null;
+            try {
+                summary = documentSummaries
+                        .get(Pair.of(handle.getSourceDb(), parseInt(handle.getSourceId())));
+            }
+            catch (NumberFormatException e) {
+                // Non-numeric source ID — no metadata to look up.
+            }
             var result = new ExternalSearchResult(aDocumentRepository, handle.getSourceDb(),
                     handle.getSourceId() + EXT_JSON);
             result.setOriginalSource(summary != null ? summary.source() : handle.getSourceDb());
@@ -104,6 +158,22 @@ public class PubAnnotationProvider
         return results;
     }
 
+    private static java.util.Optional<List<PubAnnotationDocumentHandle>> matchesIdQuery(
+            String aQuery)
+    {
+        if (aQuery == null) {
+            return java.util.Optional.empty();
+        }
+        var m = ID_QUERY.matcher(aQuery);
+        if (!m.matches()) {
+            return java.util.Optional.empty();
+        }
+        var handle = new PubAnnotationDocumentHandle();
+        handle.setSourceDb(m.group(1));
+        handle.setSourceId(stripJsonExtension(m.group(2)));
+        return java.util.Optional.of(List.of(handle));
+    }
+
     private Map<Pair<String, Integer>, DocSum> lookupDocumentSummaries(
             List<PubAnnotationDocumentHandle> response)
     {
@@ -112,9 +182,17 @@ public class PubAnnotationProvider
                 .collect(groupingBy(PubAnnotationDocumentHandle::getSourceDb));
         for (var group : groupedByDb.entrySet()) {
             var db = group.getKey();
-            var ids = group.getValue().stream() //
-                    .map(PubAnnotationDocumentHandle::getSourceId) //
-                    .mapToInt(Integer::parseInt).toArray();
+            int[] ids;
+            try {
+                ids = group.getValue().stream() //
+                        .map(PubAnnotationDocumentHandle::getSourceId) //
+                        .mapToInt(Integer::parseInt).toArray();
+            }
+            catch (NumberFormatException e) {
+                // Non-numeric source IDs aren't supported by entrez esummary; skip the lookup
+                // and fall through with no metadata for this group.
+                continue;
+            }
             var summaries = entrezClient.esummary(db, ids).getDocSumaries();
             documentDetails.putAll(summaries.stream()
                     .collect(toMap(summary -> Pair.of(db, summary.getId()), identity())));
@@ -135,7 +213,7 @@ public class PubAnnotationProvider
     public String getDocumentText(DocumentRepository aDocumentRepository,
             PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
     {
-        var doc = getAnnotatedDocument(aTraits, aCollectionId, aDocumentId, null);
+        var doc = getAnnotatedDocument(aTraits, aCollectionId, aDocumentId, aTraits.getProject());
         return doc != null && doc.getText() != null ? doc.getText() : "";
     }
 
@@ -145,7 +223,7 @@ public class PubAnnotationProvider
         throws IOException
     {
         return new ByteArrayInputStream(
-                fetchAnnotationsJson(aTraits, aCollectionId, aDocumentId, null));
+                fetchAnnotationsJson(aTraits, aCollectionId, aDocumentId, aTraits.getProject()));
     }
 
     private byte[] fetchAnnotationsJson(PubAnnotationProviderTraits aTraits, String aCollectionId,
@@ -153,7 +231,7 @@ public class PubAnnotationProvider
     {
         var variables = new HashMap<String, String>();
         variables.put("collectionId", aCollectionId);
-        variables.put("documentId", aDocumentId);
+        variables.put("documentId", stripJsonExtension(aDocumentId));
 
         String url;
         if (aProject != null && !aProject.isBlank()) {
@@ -167,6 +245,17 @@ public class PubAnnotationProvider
         }
 
         return new RestTemplate().getForObject(url, byte[].class, variables);
+    }
+
+    /**
+     * Search results carry a {@code .json} suffix on the document id (it becomes the imported
+     * file's extension in INCEpTION). Strip it here so it doesn't end up inside the API URL path.
+     */
+    private static String stripJsonExtension(String aDocumentId)
+    {
+        return aDocumentId != null && aDocumentId.endsWith(EXT_JSON)
+                ? aDocumentId.substring(0, aDocumentId.length() - EXT_JSON.length())
+                : aDocumentId;
     }
 
     @Override
@@ -187,7 +276,7 @@ public class PubAnnotationProvider
     {
         var variables = new HashMap<String, String>();
         variables.put("collectionId", aCollectionId);
-        variables.put("documentId", aDocumentId);
+        variables.put("documentId", stripJsonExtension(aDocumentId));
 
         String url;
         if (aProject != null && !aProject.isBlank()) {

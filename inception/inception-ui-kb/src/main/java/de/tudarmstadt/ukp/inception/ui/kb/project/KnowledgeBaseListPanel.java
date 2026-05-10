@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb.project;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
@@ -132,7 +133,9 @@ public class KnowledgeBaseListPanel
         return projectService.listProjectInitializers().stream()
                 .filter(initializer -> initializer instanceof KnowledgeBaseInitializer)
                 .map(KnowledgeBaseInitializer.class::cast)
-                .filter(initializer -> !initializer.alreadyApplied(getModelObject())).toList();
+                .filter(initializer -> !initializer.alreadyApplied(getModelObject()))
+                .sorted(comparing(KnowledgeBaseInitializer::getName, String.CASE_INSENSITIVE_ORDER))
+                .toList();
     }
 
     private void actionAddKnowledgeBase(AjaxRequestTarget aTarget)

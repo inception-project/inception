@@ -66,6 +66,16 @@ public class PubAnnotationProviderTest
     }
 
     @Test
+    public void thatIdQuerySyntaxBypassesKeywordSearch() throws Exception
+    {
+        var results = sut.executeQuery(repo, traits, "id:PubMed/25314077");
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getCollectionId()).isEqualTo("PubMed");
+        assertThat(results.get(0).getDocumentId()).isEqualTo("25314077.json");
+    }
+
+    @Test
     public void thatDocumentTextCanBeRetrieved() throws Exception
     {
         var text = sut.getDocumentText(repo, traits, "PMC", "1064873");

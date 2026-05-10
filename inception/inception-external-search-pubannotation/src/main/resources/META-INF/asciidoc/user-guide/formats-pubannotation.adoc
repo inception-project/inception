@@ -1,0 +1,138 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_formats_pubannotation]]
+= PubAnnotation
+
+The link:https://pubannotation.org/[PubAnnotation] JSON format describes a document as a piece of
+text together with `denotations` (span annotations), `relations` between them, and `attributes`
+attached to either. {product-name} can both read and write this format and uses it as the import
+format when fetching documents from a PubAnnotation external search repository (see
+<<sect_external-search-repos-pubannotation>>).
+
+NOTE: This format dynamically maps information from the imported files to the layers and features
+      configured in the project. For this process to work, the layers and features need to be set
+      up **before** importing PubAnnotation files. The mapping rules below describe what happens
+      when the JSON does not exactly match the project's schema.
+
+== Type resolution
+
+For each `denotation`'s `obj` (and each `relation`'s `pred`), {product-name} resolves the value to
+an annotation layer using the following strategy:
+
+1. **Exact match**: if the value is a fully-qualified UIMA type name (e.g.
+   `de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence`) and that type exists in the
+   project, the annotation is created on that layer.
+2. **Suffix match**: if the value is a plain identifier (e.g. `Sentence`), {product-name} looks
+   for a layer whose simple name matches it. Ambiguous matches (more than one type with that
+   simple name) are skipped with a warning.
+3. **Basic fallback**: if no layer matches, the annotation falls back to the basic span layer
+   (`custom.Span`) for denotations or the basic relation layer (`custom.Relation`) for relations.
+   The original `obj` / `pred` value is stored in the layer's `label` feature so the data is
+   preserved.
+
+For values that are ontology IRIs or opaque identifiers (e.g.
+`http://purl.obolibrary.org/obo/GO_0051923`, `HP_0006775`), the ladder always lands on the
+basic-span fallback because no UIMA type name will match. Such values are stored as plain strings
+in the layer's `label` feature.
+
+To resolve such IRI labels into proper ontology references — so that {product-name} shows the
+human-readable term instead of the raw IRI and links it to a knowledge base — the basic span
+layer's `label` feature must be changed manually from a *string* feature into a *concept*
+feature pointing at a suitable knowledge base. The default `BasicSpanLayerInitializer` ships
+the `label` feature as a string; you have to:
+
+1. In the project's layer settings, open the basic **Span** layer.
+2. Delete the existing string `label` feature.
+3. Re-create a feature called `label` (same name) but with type **Concept** and bind it to the
+   knowledge base that contains the IRIs you expect to import.
+4. Re-import the documents.
+
+The same applies to relations on the basic **Relation** layer, mutatis mutandis.
+
+.Example: GO-BP
+====
+The PubAnnotation `GO-BP` project annotates documents with full Gene Ontology IRIs (e.g.
+`http://purl.obolibrary.org/obo/GO_0051923`). To make these resolve in {product-name}:
+
+1. Add a new knowledge base to your project using the bundled **Gene Ontology** profile (it
+   loads the GO-BP subset from `http://purl.obolibrary.org/obo/go/go-basic.owl`).
+2. Replace the basic **Span** layer's string `label` feature with a *concept* `label` feature
+   bound to the new GO knowledge base.
+3. Configure your PubAnnotation external search repository's **Project** trait to `GO-BP` and
+   import a document — for example by entering `id:PubMed/10704529` in the search panel.
+
+The denotations land on the basic Span layer with their IRIs resolved against the GO knowledge
+base; you see the GO term names instead of raw IRIs and can navigate to each term's KB entry.
+====
+
+== Attribute mapping
+
+Each PubAnnotation attribute (`{subj, pred, obj}`) is mapped to a feature on the target
+annotation:
+
+1. **By name**: if the target annotation's type has a feature whose name matches the attribute's
+   `pred`, the value is set on that feature.
+2. **Label fallback**: if the target has exactly one attribute, the type has a `label` feature, and
+   that slot has not already been claimed by a basic-fallback `obj` / `pred`, the attribute value
+   is written to `label`. This lets simple labelled annotations round-trip through the basic span
+   layer.
+3. **Skip**: otherwise the attribute is dropped (with a warning in the log).
+
+Multi-valued attributes — multiple records sharing the same `subj` and `pred` — are written into
+array-typed features (e.g. `String[]`). When the target feature is single-valued and multiple
+attribute records arrive, the first value is used and the others are dropped with a warning.
+
+== Export (CAS → PubAnnotation)
+
+When writing, {product-name} emits one PubAnnotation document per CAS:
+
+* The `text`, `sourcedb` and `sourceid` are set from the writer's parameters
+  (`sourcedb` and `sourceid` typically originate from `DocumentMetaData`).
+* For each annotation on a span layer in the writer's allow-list, a denotation is emitted with
+  `obj` set to either the type's **simple name** (when unique in the source CAS) or its
+  **fully-qualified name** (when ambiguous).
+* For basic-span / basic-relation annotations, `obj` / `pred` is set to the `label` feature value
+  rather than the type name.
+* Each primitive feature on an exported annotation becomes one or more PubAnnotation attribute
+  records. Array-typed features are expanded into multiple records sharing the same `pred`.
+* Reserved features (the type's `label` when it has been claimed by basic-fallback `obj`/`pred`,
+  and the relation endpoints `Governor`/`Dependent`) are not emitted as attributes.
+* For relations, the relation's source/target FS endpoints are emitted as the PubAnnotation
+  relation's `subj`/`obj`.
+
+== Unsupported features
+
+* **Discontinuous spans** (PubAnnotation's "bagging" model with multiple `begin`/`end` pairs per
+  denotation) are skipped on import. {product-name} does not support discontinuous spans.
+* **Tracks** (multi-project responses) are flattened into a single CAS on import; on export, the
+  document is always written in the flat (project-scoped) shape — no `tracks` array.
+* **FS-link features on a span** (i.e. features pointing to other annotations on a layer that is
+  not a relation layer) cannot be expressed in PubAnnotation and are skipped on export.
+* **Custom relation endpoint feature names**: the writer hard-codes the standard `Governor` /
+  `Dependent` relation endpoint feature names. Relations with renamed endpoints are skipped on
+  export.
+
+[cols="2,1,1,3"]
+|====
+| Format | Import | Export | Supported layers
+
+| link:https://pubannotation.org/docs/annotation-format/[PubAnnotation Document with Annotations]
+  (`pubannotation-annotations`)
+| yes
+| yes
+| see description
+|====

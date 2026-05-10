@@ -305,6 +305,8 @@ include::{include-dir}formats-pdf.adoc[leveloffset=+2]
 
 include::{include-dir}formats-perseus.adoc[leveloffset=+2]
 
+include::{include-dir}formats-pubannotation.adoc[leveloffset=+2]
+
 include::{include-dir}formats-tcf.adoc[leveloffset=+2]
 
 include::{include-dir}formats-tei.adoc[leveloffset=+2]
