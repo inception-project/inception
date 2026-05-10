@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format;
 
-import static de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationCasMapper.LABEL_FEATURE;
-import static de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationCasMapper.BASIC_RELATION_LAYER;
-import static de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationCasMapper.BASIC_SPAN_LAYER;
-import static de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationCasMapper.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationCasMapper.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationToCasConverter.LABEL_FEATURE;
+import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicRelationLayerInitializer.BASIC_RELATION_LAYER_NAME;
+import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanLayerInitializer.BASIC_SPAN_LAYER_NAME;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
@@ -42,12 +42,12 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
 
 /**
  * Exploratory live-API run that fetches a diverse set of PubAnnotation documents and reports how
- * the {@link PubAnnotationCasMapper} maps them. Not a strict assertion test — it prints a per-doc
- * summary and an aggregate so we can eyeball whether the type-mapping ladder behaves reasonably on
- * real data.
+ * the {@link PubAnnotationToCasConverter} maps them. Not a strict assertion test — it prints a
+ * per-doc summary and an aggregate so we can eyeball whether the type-mapping ladder behaves
+ * reasonably on real data.
  */
 @Tag("slow")
-public class PubAnnotationCasMapperExplorationTest
+public class PubAnnotationToCasConverterExplorationTest
 {
     /** {sourcedb, sourceid, optional project (null = multi-track)} */
     private static final String[][] SAMPLES = { //
@@ -139,10 +139,10 @@ public class PubAnnotationCasMapperExplorationTest
         // the "specific" path light up, we'd need a real type system. The point here is to see
         // how often the fallback fires and how attribute mapping behaves.
         var cas = createBasicCas();
-        new PubAnnotationCasMapper(cas).apply(aDoc);
+        new PubAnnotationToCasConverter(cas).apply(aDoc);
 
-        var basicSpanType = cas.getTypeSystem().getType(BASIC_SPAN_LAYER);
-        var basicRelationType = cas.getTypeSystem().getType(BASIC_RELATION_LAYER);
+        var basicSpanType = cas.getTypeSystem().getType(BASIC_SPAN_LAYER_NAME);
+        var basicRelationType = cas.getTypeSystem().getType(BASIC_RELATION_LAYER_NAME);
 
         var basicSpans = list(cas.<AnnotationFS> getAnnotationIndex(basicSpanType));
         var basicRels = list(cas.<AnnotationFS> getAnnotationIndex(basicRelationType));
@@ -246,10 +246,10 @@ public class PubAnnotationCasMapperExplorationTest
     {
         var tsd = UIMAFramework.getResourceSpecifierFactory().createTypeSystemDescription();
 
-        var basicSpan = tsd.addType(BASIC_SPAN_LAYER, null, TYPE_NAME_ANNOTATION);
+        var basicSpan = tsd.addType(BASIC_SPAN_LAYER_NAME, null, TYPE_NAME_ANNOTATION);
         basicSpan.addFeature(LABEL_FEATURE, null, TYPE_NAME_STRING);
 
-        var basicRel = tsd.addType(BASIC_RELATION_LAYER, null, TYPE_NAME_ANNOTATION);
+        var basicRel = tsd.addType(BASIC_RELATION_LAYER_NAME, null, TYPE_NAME_ANNOTATION);
         basicRel.addFeature(LABEL_FEATURE, null, TYPE_NAME_STRING);
         basicRel.addFeature(FEAT_REL_SOURCE, null, TYPE_NAME_ANNOTATION);
         basicRel.addFeature(FEAT_REL_TARGET, null, TYPE_NAME_ANNOTATION);

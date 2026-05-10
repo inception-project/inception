@@ -26,9 +26,11 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.PubAnnotationProviderFactory;
+import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationAnnotationsFormatSupport;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationSectionsFormatSupport;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.config.PubMedServicesAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
 @AutoConfigureAfter({ ExternalSearchAutoConfiguration.class,
@@ -48,5 +50,12 @@ public class PubAnnotationDocumentRepositoryAutoConfiguration
     public PubAnnotationSectionsFormatSupport pubAnnotationSectionsFormatSupport()
     {
         return new PubAnnotationSectionsFormatSupport();
+    }
+
+    @Bean
+    public PubAnnotationAnnotationsFormatSupport pubAnnotationAnnotationsFormatSupport(
+            AnnotationSchemaService aSchemaService)
+    {
+        return new PubAnnotationAnnotationsFormatSupport(aSchemaService);
     }
 }

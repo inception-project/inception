@@ -17,15 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format;
 
-import static de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationCasMapper.BASIC_RELATION_LAYER;
-import static de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationCasMapper.BASIC_SPAN_LAYER;
-import static de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationCasMapper.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationCasMapper.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationCasMapper.LABEL_FEATURE;
+import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicRelationLayerInitializer.BASIC_RELATION_LAYER_NAME;
+import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanLayerInitializer.BASIC_SPAN_LAYER_NAME;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationToCasConverter.LABEL_FEATURE;
 import static java.util.Arrays.asList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,14 +39,13 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocument;
 import tools.jackson.databind.ObjectMapper;
 
-public class PubAnnotationCasMapperTest
+public class PubAnnotationToCasConverterTest
 {
     private static final String CUSTOM_PROTEIN_TYPE = "custom.Protein";
 
@@ -55,7 +55,7 @@ public class PubAnnotationCasMapperTest
         var cas = createCas();
         var doc = readDocument("/samplePubAnnotation.json");
 
-        new PubAnnotationCasMapper(cas).apply(doc);
+        new PubAnnotationToCasConverter(cas).apply(doc);
 
         assertThat(cas.getDocumentText()).startsWith("Cancer-selective targeting");
 
@@ -68,7 +68,7 @@ public class PubAnnotationCasMapperTest
         assertThat(sentences.get(0).getEnd()).isEqualTo(86);
 
         // PubmedHPO track: "HP_0006775" doesn't match anything → falls back to custom.Span
-        var basicSpanType = cas.getTypeSystem().getType(BASIC_SPAN_LAYER);
+        var basicSpanType = cas.getTypeSystem().getType(BASIC_SPAN_LAYER_NAME);
         var basicSpans = annotationsOfType(cas, basicSpanType);
         // T1 (continuous) lands; T2 (discontinuous) is skipped.
         assertThat(basicSpans).hasSize(1);
@@ -87,7 +87,7 @@ public class PubAnnotationCasMapperTest
         var cas = createCas();
         var doc = readDocument("/samplePubAnnotationProjectScoped.json");
 
-        new PubAnnotationCasMapper(cas).apply(doc);
+        new PubAnnotationToCasConverter(cas).apply(doc);
 
         // Both denotations have obj="Protein" → suffix-matches custom.Protein.
         var proteinType = cas.getTypeSystem().getType(CUSTOM_PROTEIN_TYPE);
@@ -104,7 +104,7 @@ public class PubAnnotationCasMapperTest
 
         // Relation R1 (T1 -interactWith-> T2): "interactWith" doesn't match any type → falls
         // back to custom.Relation with label="interactWith".
-        var relationType = cas.getTypeSystem().getType(BASIC_RELATION_LAYER);
+        var relationType = cas.getTypeSystem().getType(BASIC_RELATION_LAYER_NAME);
         var relations = annotationsOfType(cas, relationType);
         assertThat(relations).hasSize(1);
         var r = relations.get(0);
@@ -129,7 +129,7 @@ public class PubAnnotationCasMapperTest
         var cas = createCas();
         var doc = new ObjectMapper().readValue(json, PubAnnotationDocument.class);
 
-        new PubAnnotationCasMapper(cas).apply(doc);
+        new PubAnnotationToCasConverter(cas).apply(doc);
 
         var entityType = cas.getTypeSystem().getType("custom.Entity");
         var entities = annotationsOfType(cas, entityType);
@@ -150,7 +150,7 @@ public class PubAnnotationCasMapperTest
                 + "}";
         var cas = createCas();
 
-        new PubAnnotationCasMapper(cas)
+        new PubAnnotationToCasConverter(cas)
                 .apply(new ObjectMapper().readValue(json, PubAnnotationDocument.class));
 
         var sentenceType = cas.getTypeSystem().getType(Sentence.class.getName());
@@ -175,7 +175,7 @@ public class PubAnnotationCasMapperTest
                 + "]}";
         var cas = createCas();
 
-        new PubAnnotationCasMapper(cas)
+        new PubAnnotationToCasConverter(cas)
                 .apply(new ObjectMapper().readValue(json, PubAnnotationDocument.class));
 
         var proteinType = cas.getTypeSystem().getType(CUSTOM_PROTEIN_TYPE);
@@ -201,7 +201,7 @@ public class PubAnnotationCasMapperTest
                 + "\"obj\":\"T2\"}]" + "}";
         var cas = createCas();
 
-        new PubAnnotationCasMapper(cas)
+        new PubAnnotationToCasConverter(cas)
                 .apply(new ObjectMapper().readValue(json, PubAnnotationDocument.class));
 
         var interactType = cas.getTypeSystem().getType("custom.InteractWith");
@@ -213,6 +213,28 @@ public class PubAnnotationCasMapperTest
                 .isSameAs(proteins.get(0));
         assertThat(rels.get(0).getFeatureValue(interactType.getFeatureByBaseName(FEAT_REL_TARGET)))
                 .isSameAs(proteins.get(1));
+    }
+
+    @Test
+    public void thatMultipleAttributesOnSamePredFillStringArray() throws Exception
+    {
+        // Two attributes with same subj+pred → land in a String-array feature.
+        var json = "{" + "\"text\":\"foo bar baz\","
+                + "\"denotations\":[{\"id\":\"T1\",\"span\":{\"begin\":0,\"end\":3},"
+                + "\"obj\":\"Tagged\"}]," + "\"attributes\":["
+                + "  {\"id\":\"A1\",\"subj\":\"T1\",\"pred\":\"tags\",\"obj\":\"red\"},"
+                + "  {\"id\":\"A2\",\"subj\":\"T1\",\"pred\":\"tags\",\"obj\":\"blue\"}" + "]}";
+        var cas = createCas();
+
+        new PubAnnotationToCasConverter(cas)
+                .apply(new ObjectMapper().readValue(json, PubAnnotationDocument.class));
+
+        var taggedType = cas.getTypeSystem().getType("custom.Tagged");
+        var tagged = annotationsOfType(cas, taggedType);
+        assertThat(tagged).hasSize(1);
+        var arr = (org.apache.uima.cas.StringArrayFS) tagged.get(0)
+                .getFeatureValue(taggedType.getFeatureByBaseName("tags"));
+        assertThat(arr.toArray()).containsExactly("red", "blue");
     }
 
     private static List<AnnotationFS> annotationsOfType(CAS aCas, Type aType)
@@ -235,8 +257,12 @@ public class PubAnnotationCasMapperTest
         var entity = customTsd.addType("custom.Entity", null, TYPE_NAME_ANNOTATION);
         entity.addFeature(LABEL_FEATURE, null, TYPE_NAME_STRING);
 
+        // custom.Tagged — has a multi-valued "tags" feature for the multi-value test
+        var tagged = customTsd.addType("custom.Tagged", null, TYPE_NAME_ANNOTATION);
+        tagged.addFeature("tags", null, TYPE_NAME_STRING_ARRAY);
+
         // Basic span fallback layer
-        var basicSpan = customTsd.addType(BASIC_SPAN_LAYER, null, TYPE_NAME_ANNOTATION);
+        var basicSpan = customTsd.addType(BASIC_SPAN_LAYER_NAME, null, TYPE_NAME_ANNOTATION);
         basicSpan.addFeature(LABEL_FEATURE, null, TYPE_NAME_STRING);
 
         // custom.InteractWith — non-basic relation type for the suffix-match relation test
@@ -245,14 +271,14 @@ public class PubAnnotationCasMapperTest
         interact.addFeature(FEAT_REL_TARGET, null, TYPE_NAME_ANNOTATION);
 
         // Basic relation fallback layer
-        var basicRelation = customTsd.addType(BASIC_RELATION_LAYER, null, TYPE_NAME_ANNOTATION);
+        var basicRelation = customTsd.addType(BASIC_RELATION_LAYER_NAME, null,
+                TYPE_NAME_ANNOTATION);
         basicRelation.addFeature(LABEL_FEATURE, null, TYPE_NAME_STRING);
         basicRelation.addFeature(FEAT_REL_SOURCE, null, TYPE_NAME_ANNOTATION);
         basicRelation.addFeature(FEAT_REL_TARGET, null, TYPE_NAME_ANNOTATION);
 
         // Merge with the auto-discovered classpath type system (provides DKPro Sentence etc.)
-        TypeSystemDescription merged = mergeTypeSystems(
-                asList(createTypeSystemDescription(), customTsd));
+        var merged = mergeTypeSystems(asList(createTypeSystemDescription(), customTsd));
         return CasFactory.createCas(merged);
     }
 

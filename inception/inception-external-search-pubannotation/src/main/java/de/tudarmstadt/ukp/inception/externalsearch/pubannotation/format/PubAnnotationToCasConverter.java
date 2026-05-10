@@ -17,13 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format;
 
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicRelationLayerInitializer.BASIC_RELATION_LAYER_NAME;
+import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanLayerInitializer.BASIC_SPAN_LAYER_NAME;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.counting;
-import static java.util.stream.Collectors.groupingBy;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,6 +39,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +47,6 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnota
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDenotation;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocument;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationRelation;
-import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationSpan;
 
 /**
  * Maps a deserialized {@link PubAnnotationDocument} into a UIMA {@link CAS}.
@@ -52,8 +56,8 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnota
  * <li>If the value looks like a fully-qualified type name and the type exists in the CAS, use it.
  * <li>Else, if the value is a plain Java identifier, look for a type with that simple name. Skip
  * the annotation if more than one type matches (ambiguous).
- * <li>Else, fall back to {@link #BASIC_SPAN_LAYER} ({@link #BASIC_RELATION_LAYER} for relations).
- * The original value is stored in the {@link #LABEL_FEATURE label} feature.
+ * <li>Else, fall back to the basic span/relation layer. The original value is stored in the
+ * {@link #LABEL_FEATURE label} feature.
  * </ol>
  * Attribute mapping for a {@code pred} on a target annotation:
  * <ol>
@@ -65,16 +69,11 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnota
  * </ol>
  * Discontinuous spans (bagging model with multiple {@code begin}/{@code end} pairs) are skipped.
  */
-public class PubAnnotationCasMapper
+public class PubAnnotationToCasConverter
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    public static final String BASIC_SPAN_LAYER = "custom.Span";
-    public static final String BASIC_RELATION_LAYER = "custom.Relation";
     public static final String LABEL_FEATURE = "label";
-
-    public static final String FEAT_REL_SOURCE = "Governor";
-    public static final String FEAT_REL_TARGET = "Dependent";
 
     private static final Pattern IDENTIFIER = Pattern.compile("[A-Za-z_$][A-Za-z0-9_$]*");
     private static final Pattern FQN = Pattern
@@ -83,7 +82,7 @@ public class PubAnnotationCasMapper
     private final CAS cas;
     private final TypeSystem typeSystem;
 
-    public PubAnnotationCasMapper(CAS aCas)
+    public PubAnnotationToCasConverter(CAS aCas)
     {
         cas = aCas;
         typeSystem = aCas.getTypeSystem();
@@ -113,27 +112,44 @@ public class PubAnnotationCasMapper
         List<PubAnnotationRelation> relations = aRelations != null ? aRelations : emptyList();
         List<PubAnnotationAttribute> attributes = aAttributes != null ? aAttributes : emptyList();
 
-        Map<String, Long> attributeCount = attributes.stream().filter(a -> a.getSubject() != null)
-                .collect(groupingBy(PubAnnotationAttribute::getSubject, counting()));
-
         var byId = new HashMap<String, AnnotationFS>();
         var labelClaimedByObj = new HashSet<String>();
 
         for (var d : denotations) {
-            createDenotation(d, labelClaimedByObj).ifPresent(fs -> byId.put(d.getId(), fs));
+            writeDenotation(d, labelClaimedByObj).ifPresent(fs -> byId.put(d.getId(), fs));
         }
 
         for (var r : relations) {
-            createRelation(r, byId, labelClaimedByObj).ifPresent(fs -> byId.put(r.getId(), fs));
+            writeRelation(r, byId, labelClaimedByObj).ifPresent(fs -> byId.put(r.getId(), fs));
         }
 
+        // Group attributes by subject, then by predicate. Multiple records sharing the same
+        // (subj, pred) form a multi-valued attribute that lands on an array-typed feature.
+        var grouped = new LinkedHashMap<String, Map<String, List<PubAnnotationAttribute>>>();
         for (var a : attributes) {
-            applyAttribute(a, byId, attributeCount.getOrDefault(a.getSubject(), 0L),
-                    labelClaimedByObj);
+            if (a.getSubject() == null || a.getPredicate() == null) {
+                continue;
+            }
+            grouped.computeIfAbsent(a.getSubject(), k -> new LinkedHashMap<>())
+                    .computeIfAbsent(a.getPredicate(), k -> new ArrayList<>()).add(a);
+        }
+
+        for (var subjEntry : grouped.entrySet()) {
+            var target = byId.get(subjEntry.getKey());
+            if (target == null) {
+                continue;
+            }
+            var perPred = subjEntry.getValue();
+            int totalRecords = perPred.values().stream().mapToInt(List::size).sum();
+            boolean labelFree = !labelClaimedByObj.contains(subjEntry.getKey());
+            for (var predEntry : perPred.entrySet()) {
+                writeAttributeGroup(target, predEntry.getKey(), predEntry.getValue(), totalRecords,
+                        labelFree);
+            }
         }
     }
 
-    private Optional<AnnotationFS> createDenotation(PubAnnotationDenotation aDenotation,
+    private Optional<AnnotationFS> writeDenotation(PubAnnotationDenotation aDenotation,
             Set<String> aLabelClaimedByObj)
     {
         var spans = aDenotation.getSpans();
@@ -145,8 +161,8 @@ public class PubAnnotationCasMapper
             return Optional.empty();
         }
 
-        PubAnnotationSpan span = spans.get(0);
-        var resolved = resolveType(aDenotation.getObject(), BASIC_SPAN_LAYER);
+        var span = spans.get(0);
+        var resolved = resolveType(aDenotation.getObject(), BASIC_SPAN_LAYER_NAME);
         if (resolved == null) {
             LOG.warn("Skipping denotation {}: cannot resolve type for '{}'", aDenotation.getId(),
                     aDenotation.getObject());
@@ -154,15 +170,14 @@ public class PubAnnotationCasMapper
         }
 
         var fs = cas.createAnnotation(resolved.type, span.getBegin(), span.getEnd());
-        if (resolved.isBasicFallback
-                && setStringFeature(fs, LABEL_FEATURE, aDenotation.getObject())) {
+        if (resolved.isBasicFallback && setLabelFeature(fs, aDenotation.getObject())) {
             aLabelClaimedByObj.add(aDenotation.getId());
         }
         cas.addFsToIndexes(fs);
         return Optional.of(fs);
     }
 
-    private Optional<AnnotationFS> createRelation(PubAnnotationRelation aRelation,
+    private Optional<AnnotationFS> writeRelation(PubAnnotationRelation aRelation,
             Map<String, AnnotationFS> aById, Set<String> aLabelClaimedByPred)
     {
         var src = aById.get(aRelation.getSubject());
@@ -173,7 +188,7 @@ public class PubAnnotationCasMapper
             return Optional.empty();
         }
 
-        var resolved = resolveType(aRelation.getPredicate(), BASIC_RELATION_LAYER);
+        var resolved = resolveType(aRelation.getPredicate(), BASIC_RELATION_LAYER_NAME);
         if (resolved == null) {
             LOG.warn("Skipping relation {}: cannot resolve type for '{}'", aRelation.getId(),
                     aRelation.getPredicate());
@@ -189,76 +204,87 @@ public class PubAnnotationCasMapper
         if (targetFeat != null) {
             fs.setFeatureValue(targetFeat, tgt);
         }
-        if (resolved.isBasicFallback
-                && setStringFeature(fs, LABEL_FEATURE, aRelation.getPredicate())) {
+        if (resolved.isBasicFallback && setLabelFeature(fs, aRelation.getPredicate())) {
             aLabelClaimedByPred.add(aRelation.getId());
         }
         cas.addFsToIndexes(fs);
         return Optional.of(fs);
     }
 
-    private void applyAttribute(PubAnnotationAttribute aAttribute, Map<String, AnnotationFS> aById,
-            long aTotalAttributesOnSubject, Set<String> aLabelClaimed)
+    private void writeAttributeGroup(AnnotationFS aTarget, String aPredicate,
+            List<PubAnnotationAttribute> aAttributes, int aTotalRecordsOnSubject,
+            boolean aLabelFree)
     {
-        var target = aById.get(aAttribute.getSubject());
-        if (target == null || aAttribute.getPredicate() == null) {
-            return;
-        }
-        var type = target.getType();
-        var feature = type.getFeatureByBaseName(aAttribute.getPredicate());
-        if (feature == null && aTotalAttributesOnSubject == 1
-                && !aLabelClaimed.contains(aAttribute.getSubject())) {
+        var type = aTarget.getType();
+        var feature = type.getFeatureByBaseName(aPredicate);
+        if (feature == null && aTotalRecordsOnSubject == 1 && aLabelFree) {
             feature = type.getFeatureByBaseName(LABEL_FEATURE);
         }
         if (feature == null) {
             return;
         }
-        setFeature(target, feature, aAttribute.getObject());
-    }
 
-    /**
-     * Sets a string feature on the FS if it exists and is string-typed. Returns whether the feature
-     * was actually written.
-     */
-    private static boolean setStringFeature(AnnotationFS aFs, String aFeatureName, String aValue)
-    {
-        var f = aFs.getType().getFeatureByBaseName(aFeatureName);
-        if (f != null && CAS.TYPE_NAME_STRING.equals(f.getRange().getName())) {
-            aFs.setStringValue(f, aValue);
-            return true;
+        try {
+            if (feature.getRange().isArray()) {
+                var values = aAttributes.stream().map(PubAnnotationAttribute::getObject).toList();
+                FSUtil.setFeature(aTarget, feature.getShortName(), values);
+                return;
+            }
+            if (aAttributes.size() > 1) {
+                LOG.warn("Multiple attributes for pred '{}' on subject but feature is "
+                        + "single-valued; using first value", aPredicate);
+            }
+            setPrimitiveFeature(aTarget, feature, aAttributes.get(0).getObject());
         }
-        return false;
+        catch (RuntimeException e) {
+            LOG.warn("Cannot set feature '{}' on {}: {}", feature.getShortName(), type.getName(),
+                    e.getMessage());
+        }
     }
 
-    private static void setFeature(AnnotationFS aFs, Feature aFeature, Object aValue)
+    private static void setPrimitiveFeature(AnnotationFS aFs, Feature aFeature, Object aValue)
     {
         if (aValue == null) {
             return;
         }
-        var range = aFeature.getRange().getName();
-        switch (range) {
+        var name = aFeature.getShortName();
+        switch (aFeature.getRange().getName()) {
         case CAS.TYPE_NAME_STRING:
-            aFs.setStringValue(aFeature, aValue.toString());
+            FSUtil.setFeature(aFs, name, aValue.toString());
             break;
         case CAS.TYPE_NAME_BOOLEAN:
             if (aValue instanceof Boolean b) {
-                aFs.setBooleanValue(aFeature, b);
+                FSUtil.setFeature(aFs, name, b.booleanValue());
             }
             break;
         case CAS.TYPE_NAME_INTEGER:
             if (aValue instanceof Number n) {
-                aFs.setIntValue(aFeature, n.intValue());
+                FSUtil.setFeature(aFs, name, n.intValue());
             }
             break;
         case CAS.TYPE_NAME_FLOAT:
             if (aValue instanceof Number n) {
-                aFs.setFloatValue(aFeature, n.floatValue());
+                FSUtil.setFeature(aFs, name, n.floatValue());
             }
             break;
         default:
             // Unsupported feature range; skip silently.
             break;
         }
+    }
+
+    /**
+     * Sets the {@link #LABEL_FEATURE} on the FS if it exists and is string-typed. Returns whether
+     * the slot was claimed (i.e. the write succeeded).
+     */
+    private static boolean setLabelFeature(AnnotationFS aFs, String aValue)
+    {
+        var f = aFs.getType().getFeatureByBaseName(LABEL_FEATURE);
+        if (f == null || !CAS.TYPE_NAME_STRING.equals(f.getRange().getName())) {
+            return false;
+        }
+        FSUtil.setFeature(aFs, LABEL_FEATURE, aValue);
+        return true;
     }
 
     private ResolvedType resolveType(String aLabel, String aBasicLayerName)
