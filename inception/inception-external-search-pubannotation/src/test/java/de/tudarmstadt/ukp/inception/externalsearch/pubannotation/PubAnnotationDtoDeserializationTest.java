@@ -24,9 +24,8 @@ import java.io.InputStream;
 
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocument;
+import tools.jackson.databind.ObjectMapper;
 
 public class PubAnnotationDtoDeserializationTest
 {

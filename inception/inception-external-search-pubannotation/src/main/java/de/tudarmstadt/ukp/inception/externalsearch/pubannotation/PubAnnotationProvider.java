@@ -32,8 +32,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.web.client.RestTemplate;
@@ -55,6 +55,9 @@ public class PubAnnotationProvider
 {
     private static final String EXT_JSON = ".json";
 
+    /** Project-list cache TTL — keep brief so list stays reasonably current. */
+    private static final long PROJECT_LIST_TTL_MS = 5 * 60 * 1000L;
+
     /**
      * Direct lookup syntax: <code>id:&lt;sourcedb&gt;/&lt;sourceid&gt;</code> bypasses the keyword
      * search and returns a single search result for the named document.
@@ -63,9 +66,6 @@ public class PubAnnotationProvider
             "\\s*id:\\s*([A-Za-z][A-Za-z0-9_-]*)\\s*/\\s*(\\S+?)\\s*", Pattern.CASE_INSENSITIVE);
 
     private final EntrezClient entrezClient;
-
-    /** Cache for the list of available projects. Keyed by base URL; short TTL. */
-    private static final long PROJECT_LIST_TTL_MS = 5 * 60 * 1000L;
     private final Map<String, CachedProjects> projectListCache = new HashMap<>();
 
     public PubAnnotationProvider(EntrezClient aEntrezClient)
@@ -153,27 +153,26 @@ public class PubAnnotationProvider
             }
             result.setHighlights(handle.getHighlights().stream() //
                     .map(ExternalSearchHighlight::new) //
-                    .collect(Collectors.toList()));
+                    .toList());
             results.add(result);
         }
 
         return results;
     }
 
-    private static java.util.Optional<List<PubAnnotationDocumentHandle>> matchesIdQuery(
-            String aQuery)
+    private static Optional<List<PubAnnotationDocumentHandle>> matchesIdQuery(String aQuery)
     {
         if (aQuery == null) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
         var m = ID_QUERY.matcher(aQuery);
         if (!m.matches()) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
         var handle = new PubAnnotationDocumentHandle();
         handle.setSourceDb(m.group(1));
         handle.setSourceId(stripJsonExtension(m.group(2)));
-        return java.util.Optional.of(List.of(handle));
+        return Optional.of(List.of(handle));
     }
 
     private Map<Pair<String, Integer>, DocSum> lookupDocumentSummaries(

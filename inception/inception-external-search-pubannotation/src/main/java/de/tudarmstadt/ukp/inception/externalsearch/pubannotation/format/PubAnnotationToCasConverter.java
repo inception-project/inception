@@ -198,6 +198,12 @@ public class PubAnnotationToCasConverter
         var fs = cas.createAnnotation(resolved.type, tgt.getBegin(), tgt.getEnd());
         var sourceFeat = resolved.type.getFeatureByBaseName(FEAT_REL_SOURCE);
         var targetFeat = resolved.type.getFeatureByBaseName(FEAT_REL_TARGET);
+        if (sourceFeat == null || targetFeat == null) {
+            LOG.warn(
+                    "Relation {} on type {} is missing the {}/{} endpoint feature(s); "
+                            + "endpoints will be unset",
+                    aRelation.getId(), resolved.type.getName(), FEAT_REL_SOURCE, FEAT_REL_TARGET);
+        }
         if (sourceFeat != null) {
             fs.setFeatureValue(sourceFeat, src);
         }
