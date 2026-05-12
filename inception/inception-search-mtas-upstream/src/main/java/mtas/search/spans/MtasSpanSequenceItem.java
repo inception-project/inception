@@ -97,8 +97,8 @@ public class MtasSpanSequenceItem
     /**
      * Rewrite.
      *
-     * @param reader
-     *            the reader
+     * @param searcher
+     *            the searcher
      * @return the mtas span sequence item
      * @throws IOException
      *             Signals that an I/O exception has occurred.
