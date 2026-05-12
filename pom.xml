@@ -26,7 +26,7 @@
 
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception</artifactId>
-  <version>40.4-SNAPSHOT</version>
+  <version>40.4</version>
   <packaging>pom</packaging>
 
   <name>INCEpTION</name>
@@ -56,7 +56,7 @@
     <connection>scm:git:https://github.com/inception-project/inception.git</connection>
     <developerConnection>scm:git:https://github.com/inception-project/inception.git</developerConnection>
     <url>https://github.com/inception-project/inception</url>
-    <tag>inception-40.0</tag>
+    <tag>inception-40.4</tag>
   </scm>
 
   <distributionManagement>
@@ -346,8 +346,8 @@
                     <version>4.39</version>
                     <file>${maven.multiModuleProjectDirectory}/inception/inception-build/src/main/resources/inception/DKProStyle_latest.xml</file>
                   </eclipse>
-                  <removeUnusedImports/>
-                  <endWithNewline/>
+                  <removeUnusedImports />
+                  <endWithNewline />
                 </java>
               </configuration>
               <executions>
