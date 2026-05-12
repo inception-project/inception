@@ -49,7 +49,7 @@ public class LogoutTimerJavascriptResourceReference
     @Override
     public List<HeaderItem> getDependencies()
     {
-        List<HeaderItem> dependencies = new ArrayList<>(super.getDependencies());
+        var dependencies = new ArrayList<>(super.getDependencies());
         dependencies.add(forReference(WicketAjaxJQueryResourceReference.get()));
         return dependencies;
     }

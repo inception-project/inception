@@ -419,12 +419,7 @@ public class UserDetailPanel
 
     private void actionCancel(AjaxRequestTarget aTarget)
     {
-        if (userService.isCurrentUserAdmin()) {
-            getModel().setObject(null);
-            aTarget.add(findParent(ManageUsersPage.class));
-        }
-        else {
-            setResponsePage(getApplication().getHomePage());
-        }
+        getModel().setObject(null);
+        aTarget.add(findParent(ManageUsersPage.class));
     }
 }
