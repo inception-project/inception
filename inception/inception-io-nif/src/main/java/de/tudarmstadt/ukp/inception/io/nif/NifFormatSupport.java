@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.inception.io.nif.config.NifFormatSupportAutoConfigurat
  * Support for HTML format.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link NifFormatSupportAutoConfiguration#nifFormatSupport()}.
+ * {@link NifFormatSupportAutoConfiguration#nifFormatSupport}.
  * </p>
  */
 public class NifFormatSupport
