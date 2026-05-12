@@ -57,7 +57,7 @@ VOLUME /tmp
 VOLUME /var/log
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD curl -sf http://localhost:8080/actuator/health | jq -e '.status=="UP"' || exit 1
+  CMD ["sh", "-c", "curl -sf http://localhost:8080/actuator/health | jq -e '.status==\"UP\"' || exit 1"]
 
 # Launch application
-CMD /opt/inception/launch.sh java ${JAVA_MEM_OPTS} ${JAVA_OPTS} --add-modules jdk.incubator.vector -Djava.awt.headless=true -Dinception.home=/export -jar inception-app-standalone.jar ${APP_ARGS}
+CMD ["sh", "-c", "/opt/inception/launch.sh java ${JAVA_MEM_OPTS} ${JAVA_OPTS} --add-modules jdk.incubator.vector -Djava.awt.headless=true -Dinception.home=/export -jar inception-app-standalone.jar ${APP_ARGS}"]
