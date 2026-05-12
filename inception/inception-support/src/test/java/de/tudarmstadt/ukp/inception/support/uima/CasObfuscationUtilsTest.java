@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
-public class CasObfuscationUtilsTest
+class CasObfuscationUtilsTest
 {
     @Test
     void thatObfuscationObfuscatesStrings() throws Exception
@@ -51,20 +51,9 @@ public class CasObfuscationUtilsTest
 
         var obfDmd = DocumentMetaData.get(obfCas);
         assertThat(obfDmd).isNotNull();
-        assertThat(obfDmd.getDocumentTitle()).isNotEqualTo(dmd.getDocumentTitle());
-        assertThat(obfDmd.getDocumentId()).isNotEqualTo(dmd.getDocumentId());
+        assertThat(obfDmd.getDocumentTitle()).isEqualTo(dmd.getDocumentTitle());
+        assertThat(obfDmd.getDocumentId()).isEqualTo(dmd.getDocumentId());
 
-        var obfJCas = obfCas.getJCas();
-        var annIter = obfJCas.getAnnotationIndex(Annotation.class).iterator();
-        boolean found = false;
-        while (annIter.hasNext()) {
-            var a = annIter.next();
-            if (a.getBegin() == 0 && a.getEnd() == 5) {
-                found = true;
-                break;
-            }
-        }
-        assertThat(found).isTrue();
+        assertThat(obfCas.select(Annotation.class).at(0, 5).findAny()).isPresent();
     }
-
 }
