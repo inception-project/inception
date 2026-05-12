@@ -369,6 +369,38 @@ hpo:
     website-url: https://hpo.jax.org/app/
     license-url: https://hpo.jax.org/app/license
 
+go:
+  name: Gene Ontology
+  type: LOCAL
+  default-language: en
+  access:
+    access-url: https://current.geneontology.org/ontology/go-basic.owl
+    full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
+  mapping:
+    class: http://www.w3.org/2002/07/owl#Class
+    subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+    description: http://purl.obolibrary.org/obo/IAO_0000115
+    label: http://www.w3.org/2000/01/rdf-schema#label
+    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    property-label: http://www.w3.org/2000/01/rdf-schema#label
+    property-description: http://www.w3.org/2000/01/rdf-schema#comment
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
+  additional-matching-properties:
+    - http://www.geneontology.org/formats/oboInOwl#hasExactSynonym
+  info:
+    description: |
+      The Gene Ontology (GO) is a structured, controlled vocabulary describing gene product
+      function across three branches: biological process, molecular function, and cellular
+      component. The GO-basic subset used here covers the is_a / part_of relationships and
+      excludes cross-products.
+
+      Find out more at [http://geneontology.org](http://geneontology.org).
+    host-institution-name: Gene Ontology Consortium
+    website-url: http://geneontology.org/
+    license-url: http://geneontology.org/docs/go-citation-policy/
+
 snomed-ct:
   name: SNOMED Clinical Terms (manual steps required!)
   type: LOCAL

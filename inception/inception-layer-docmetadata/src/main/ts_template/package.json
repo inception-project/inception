@@ -11,7 +11,7 @@
   },
   "scripts": {
     "build": "node build.mjs",
-    "test": "",
+    "test": "exit 0",
     "format": "prettier --write \"**/*.{js,ts,svelte,css,scss,json}\"",
     "format:check": "prettier --check \"**/*.{js,ts,svelte,css,scss,json}\""
   },
@@ -25,8 +25,8 @@
     "undici": "${undici.version}"
   },
   "dependencies": {
-    "@inception-project/inception-js-api": "${semver}",
-    "@inception-project/inception-diam": "${semver}",
+    "@inception-project/inception-js-api": "file:../../../../inception-js-api/src/main/ts",
+    "@inception-project/inception-diam": "file:../../../../inception-diam/src/main/ts",
     "bootstrap": "${bootstrap.version}"
   },
   "devDependencies": {

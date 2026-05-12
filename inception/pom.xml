@@ -35,7 +35,8 @@
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.core.testCachePath>${session.executionRootDirectory}/inception/cache/dkpro-core-datasets</dkpro.core.testCachePath>
     <excludedTestCategories>slow</excludedTestCategories>
-    <npm-install-command>ci</npm-install-command>
+    <npm-install-command>install --frozen-lockfile</npm-install-command>
+    <bun.version>1.2.21</bun.version>
   </properties>
 
   <dependencyManagement>
@@ -309,6 +310,9 @@
     <module>inception-assistant-ui</module>
     <!-- Application -->
     <module>inception-app-webapp</module>
+    <module>inception-dist-macos</module>
+    <module>inception-dist-docker</module>
+    <module>inception-dist-win</module>
   </modules>
 
   <build>
@@ -670,24 +674,6 @@
 
   <profiles>
     <profile>
-      <id>dist-macos</id>
-      <modules>
-        <module>inception-dist-macos</module>
-      </modules>
-    </profile>
-    <profile>
-      <id>dist-docker</id>
-      <modules>
-        <module>inception-dist-docker</module>
-      </modules>
-    </profile>
-    <profile>
-      <id>dist-win</id>
-      <modules>
-        <module>inception-dist-win</module>
-      </modules>
-    </profile>
-    <profile>
       <id>m2e</id>
       <activation>
         <property>
@@ -802,6 +788,9 @@
                     <inputExclude>/licenses/**</inputExclude>
                     <inputExclude>/**/mocha-test-report.xml</inputExclude>
                     <inputExclude>/**/src/main/ts/node_modules/**</inputExclude>
+                    <inputExclude>/**/src/main/ts/bun.lock</inputExclude>
+                    <inputExclude>/**/src/main/ts_template/bun.lock</inputExclude>
+                    <inputExclude>/osv-scanner.toml</inputExclude>
                   </inputExcludes>
                 </configuration>
               </execution>
@@ -1005,7 +994,7 @@
                   <directory>src/main/ts</directory>
                   <includes>
                     <include>package.json</include>
-                    <include>package-lock.json</include>
+                    <include>bun.lock</include>
                   </includes>
                   <followSymlinks>false</followSymlinks>
                 </fileset>
@@ -1040,6 +1029,7 @@
               <workingDirectory>src/main/ts</workingDirectory>
               <installDirectory>../nodejs</installDirectory>
               <nodeVersion>v${node.version}</nodeVersion>
+              <bunVersion>v${bun.version}</bunVersion>
             </configuration>
             <executions>
               <execution>
@@ -1050,9 +1040,16 @@
                 <phase>initialize</phase>
               </execution>
               <execution>
-                <id>npm install/ci</id>
+                <id>install bun</id>
                 <goals>
-                  <goal>npm</goal>
+                  <goal>install-bun</goal>
+                </goals>
+                <phase>initialize</phase>
+              </execution>
+              <execution>
+                <id>bun install</id>
+                <goals>
+                  <goal>bun</goal>
                 </goals>
                 <phase>${ts-build-phase}</phase>
                 <configuration>
@@ -1060,49 +1057,29 @@
                 </configuration>
               </execution>
               <execution>
-                <id>npm install license-checker</id>
+                <id>bun generate license report</id>
                 <goals>
-                  <goal>npm</goal>
-                </goals>
-                <phase>${ts-build-phase}</phase>
-                <configuration>
-                  <arguments>install --no-save license-checker</arguments>
-                </configuration>
-              </execution>
-              <execution>
-                <id>npm generate license report</id>
-                <goals>
-                  <goal>npm</goal>
+                  <goal>bun</goal>
                 </goals>
                 <phase>${ts-build-phase}</phase>
                 <configuration>
                   <environmentVariables>
                     <DEBUG>license-report*</DEBUG>
                   </environmentVariables>
-                  <arguments>exec -- license-checker --production --out
+                  <arguments>x license-checker --production --out
                     ${project.build.directory}/js/META-INF/NPM-DEPENDENCIES.json --json --customPath
                     ../../../../inception-build/src/main/resources/inception/licenseCheckerCustomFormat.json
                     --excludePrivatePackages</arguments>
                 </configuration>
               </execution>
               <execution>
-                <id>npm link</id>
+                <id>bun pack</id>
                 <goals>
-                  <goal>npm</goal>
-                </goals>
-                <phase>${ts-link-phase}</phase>
-                <configuration>
-                  <arguments>link</arguments>
-                </configuration>
-              </execution>
-              <execution>
-                <id>npm pack</id>
-                <goals>
-                  <goal>npm</goal>
+                  <goal>bun</goal>
                 </goals>
                 <phase>${ts-pack-phase}</phase>
                 <configuration>
-                  <arguments>pack --pack-destination=../../../target</arguments>
+                  <arguments>pm pack --destination=../../../target</arguments>
                 </configuration>
               </execution>
             </executions>

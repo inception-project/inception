@@ -1,0 +1,19 @@
+# OSV-Scanner policy file.
+# Documents intentionally-ignored vulnerabilities for the TypeScript modules
+# under inception/*/src/main/ts/. Replaces the per-module `audit-resolve.json`
+# files used by `npm-audit-resolver` before the migration to bun.
+#
+# Format reference: https://google.github.io/osv-scanner/configuration/
+#
+# Each [[IgnoredVulns]] entry MUST have:
+#   id          - GHSA / CVE identifier
+#   reason      - why we are not acting on it (link to ticket / discussion)
+#   ignoreUntil - YYYY-MM-DD; force re-evaluation by this date
+#
+# Example:
+#   [[IgnoredVulns]]
+#   id = "GHSA-xxxx-yyyy-zzzz"
+#   reason = "Transitive dev-only dep; tracked in #1234"
+#   ignoreUntil = "2026-09-01"
+
+# (no ignored vulnerabilities at this time)

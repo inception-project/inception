@@ -41,7 +41,9 @@ jobs:
           cdn01.quay.io:443
           download.eclipse.org:443
           github.com:443
+          objects.githubusercontent.com:443
           raw.githubusercontent.com:443
+          release-assets.githubusercontent.com:443
           hosted-compute-request-orchestrator-prod-eus-01.githubapp.com:443
           hosted-compute-request-orchestrator-prod-iad-01.githubapp.com:443
           hosted-compute-watchdog-prod-eus-01.githubapp.com:443
@@ -116,7 +118,7 @@ jobs:
         # `MAVEN_USERNAME` and `MAVEN_PASSWORD` are used in `~/.m2/settings.xml` created by `setup-java` action
         MAVEN_USERNAME: ${{ secrets.UKP_MAVEN_USER }}
         MAVEN_PASSWORD: ${{ secrets.UKP_MAVEN_TOKEN }}
-      run: mvn --show-version --batch-mode --errors --fail-at-end --no-transfer-progress -DdeployAtEnd=true -DskipTests clean deploy
+      run: mvn --show-version --batch-mode --errors --fail-at-end --no-transfer-progress -DdeployAtEnd=true clean deploy
 
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@49b2ca06f62aa7ef83ae6769a2179271e160d8e4 # v6.3.1

@@ -17,17 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubannotation;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.pubmed.entrez.EntrezClient;
@@ -57,27 +54,31 @@ public class PubAnnotationProviderTest
     {
         var results = sut.query(traits, "binding", 1, 10);
 
-        // System.out.println(results);
-
         assertThat(results).isNotEmpty();
     }
 
     @Test
     public void thatExecuteQueryWorks() throws Exception
     {
-        List<ExternalSearchResult> results = sut.executeQuery(repo, traits, "binding");
-
-        // System.out.println(results);
+        var results = sut.executeQuery(repo, traits, "binding");
 
         assertThat(results).isNotEmpty();
+    }
+
+    @Test
+    public void thatIdQuerySyntaxBypassesKeywordSearch() throws Exception
+    {
+        var results = sut.executeQuery(repo, traits, "id:PubMed/25314077");
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getCollectionId()).isEqualTo("PubMed");
+        assertThat(results.get(0).getDocumentId()).isEqualTo("25314077.json");
     }
 
     @Test
     public void thatDocumentTextCanBeRetrieved() throws Exception
     {
         var text = sut.getDocumentText(repo, traits, "PMC", "1064873");
-
-        // System.out.println(text);
 
         assertThat(text)
                 .startsWith("Resistance to IL-10 inhibition of interferon gamma production");
@@ -88,12 +89,36 @@ public class PubAnnotationProviderTest
     {
         String data;
         try (var is = sut.getDocumentAsStream(repo, traits, "PMC", "1064873")) {
-            data = IOUtils.toString(is, StandardCharsets.UTF_8);
+            data = IOUtils.toString(is, UTF_8);
         }
 
-        // System.out.println(data);
-
+        // Provider now fetches the annotations endpoint, which returns the API's raw JSON
+        // (compact). Text is still present as a top-level field.
         assertThat(data).contains(
-                "\"text\" : \"Resistance to IL-10 inhibition of interferon gamma production");
+                "\"text\":\"Resistance to IL-10 inhibition of interferon gamma production");
+    }
+
+    @Test
+    public void thatAnnotatedDocumentCanBeRetrieved() throws Exception
+    {
+        var doc = sut.getAnnotatedDocument(traits, "PubMed", "25314077", null);
+
+        assertThat(doc.getSourceDb()).isEqualTo("PubMed");
+        assertThat(doc.getSourceId()).isEqualTo("25314077");
+        assertThat(doc.getText()).startsWith("Cancer-selective targeting");
+        assertThat(doc.getTracks()).isNotEmpty();
+    }
+
+    @Test
+    public void thatProjectScopedAnnotatedDocumentCanBeRetrieved() throws Exception
+    {
+        var doc = sut.getAnnotatedDocument(traits, "PubMed", "25314077", "PubmedHPO");
+
+        assertThat(doc.getSourceDb()).isEqualTo("PubMed");
+        assertThat(doc.getSourceId()).isEqualTo("25314077");
+        assertThat(doc.getText()).startsWith("Cancer-selective targeting");
+        assertThat(doc.getProject()).isEqualTo("PubmedHPO");
+        assertThat(doc.getTracks()).isNull();
+        assertThat(doc.getDenotations()).isNotEmpty();
     }
 }

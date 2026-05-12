@@ -35,6 +35,7 @@ import org.dkpro.core.api.xml.type.XmlAttribute;
 import org.dkpro.core.api.xml.type.XmlDocument;
 import org.dkpro.core.api.xml.type.XmlNode;
 
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 public class CasObfuscationUtils
@@ -107,6 +108,12 @@ public class CasObfuscationUtils
         for (var fs : reachable) {
             if (fs instanceof SofaFS) {
                 // Can't use standard set methods with SofaFS features.
+                continue;
+            }
+
+            if (fs instanceof DocumentMetaData) {
+                // Can't obfuscate DMD otherwise we run into problems on exporters that merge data
+                // back into original documents or otherwise need to access e.g. the source document
                 continue;
             }
 

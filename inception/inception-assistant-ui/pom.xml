@@ -240,11 +240,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-web-server</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.hsqldb</groupId>
       <artifactId>hsqldb</artifactId>
       <scope>test</scope>
@@ -344,20 +339,9 @@
         <artifactId>frontend-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>npm link dependencies</id>
+            <id>bun build</id>
             <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>${ts-link-dependency-phase}</phase>
-            <configuration>
-              <arguments>link @inception-project/inception-js-api
-                @inception-project/inception-diam</arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm build</id>
-            <goals>
-              <goal>npm</goal>
+              <goal>bun</goal>
             </goals>
             <phase>${ts-build-phase}</phase>
             <configuration>
@@ -365,9 +349,9 @@
             </configuration>
           </execution>
           <execution>
-            <id>npm test</id>
+            <id>bun test</id>
             <goals>
-              <goal>npm</goal>
+              <goal>bun</goal>
             </goals>
             <phase>${ts-test-phase}</phase>
             <configuration>

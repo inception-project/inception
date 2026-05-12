@@ -26,6 +26,8 @@ public class PubAnnotationProviderTraits
 
     private String url = "https://pubannotation.org";
 
+    private String project;
+
     public String getUrl()
     {
         return url;
@@ -34,5 +36,20 @@ public class PubAnnotationProviderTraits
     public void setUrl(String aUrl)
     {
         url = aUrl;
+    }
+
+    /**
+     * Optional PubAnnotation project name. When set, keyword search and document fetches are scoped
+     * to that project — only docs annotated by it are returned, and the {@code annotations.json}
+     * endpoint returns the single-project (no-tracks) shape.
+     */
+    public String getProject()
+    {
+        return project;
+    }
+
+    public void setProject(String aProject)
+    {
+        project = aProject;
     }
 }
