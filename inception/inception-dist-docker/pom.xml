@@ -29,17 +29,10 @@
   <packaging>pom</packaging>
 
   <properties>
-    <docker.image.name>ghcr.io/inception-project/inception-snapshots</docker.image.name>
-    <docker.platform>linux/amd64</docker.platform>
-    <docker.skip.build>false</docker.skip.build>
-    <docker.skip.push>true</docker.skip.push>
-    <!-- Referenced in the Dockerfile. The 'maven/' prefix is the directory
-         where docker-maven-plugin stages the assembled dependencies. -->
-    <docker.jarfile>maven/inception-app-webapp-${project.version}-standalone.jar</docker.jarfile>
     <!-- This module produces no Maven artifact; skip the regular install/deploy
          steps so 'mvn install' / 'mvn deploy' do not try to publish the pom.
          The docker image is built/pushed via docker-maven-plugin executions
-         bound to the install and deploy phases. -->
+         bound to the install and deploy phases inside the 'dist-docker' profile. -->
     <maven.install.skip>true</maven.install.skip>
     <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
@@ -53,72 +46,86 @@
     </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>io.fabric8</groupId>
-        <artifactId>docker-maven-plugin</artifactId>
-        <configuration>
-          <images>
-            <image>
-              <name>${docker.image.name}</name>
-              <build>
-                <tags>
-                  <tag>latest</tag>
-                  <tag>${project.version}</tag>
-                </tags>
-                <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
-                <filter>@</filter>
-                <buildx>
-                  <platforms>
-                    <platform>${docker.platform}</platform>
-                  </platforms>
-                </buildx>
-                <assembly>
-                  <inline>
-                    <dependencySets>
-                      <dependencySet>
-                        <includes>
-                          <include>de.tudarmstadt.ukp.inception.app:inception-app-webapp</include>
-                        </includes>
-                        <useTransitiveFiltering>false</useTransitiveFiltering>
-                        <outputDirectory>.</outputDirectory>
-                        <outputFileNameMapping>inception-app-webapp-${project.version}-standalone.jar</outputFileNameMapping>
-                      </dependencySet>
-                    </dependencySets>
-                  </inline>
-                </assembly>
-              </build>
-            </image>
-          </images>
-        </configuration>
-        <executions>
-          <execution>
-            <id>build</id>
-            <phase>install</phase>
-            <goals>
-              <goal>build</goal>
-            </goals>
-            <configuration>
-              <skipBuild>${docker.skip.build}</skipBuild>
-            </configuration>
-          </execution>
-          <execution>
-            <id>push</id>
-            <phase>deploy</phase>
-            <goals>
-              <goal>push</goal>
-            </goals>
-            <configuration>
-              <skipPush>${docker.skip.push}</skipPush>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-
   <profiles>
+    <profile>
+      <id>dist-docker</id>
+
+      <properties>
+        <docker.image.name>ghcr.io/inception-project/inception-snapshots</docker.image.name>
+        <docker.platform>linux/amd64</docker.platform>
+        <docker.skip.build>false</docker.skip.build>
+        <docker.skip.push>true</docker.skip.push>
+        <!-- Referenced in the Dockerfile. The 'maven/' prefix is the directory
+             where docker-maven-plugin stages the assembled dependencies. -->
+        <docker.jarfile>maven/inception-app-webapp-${project.version}-standalone.jar</docker.jarfile>
+      </properties>
+
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.fabric8</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration>
+              <images>
+                <image>
+                  <name>${docker.image.name}</name>
+                  <build>
+                    <tags>
+                      <tag>latest</tag>
+                      <tag>${project.version}</tag>
+                    </tags>
+                    <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                    <filter>@</filter>
+                    <buildx>
+                      <platforms>
+                        <platform>${docker.platform}</platform>
+                      </platforms>
+                    </buildx>
+                    <assembly>
+                      <inline>
+                        <dependencySets>
+                          <dependencySet>
+                            <includes>
+                              <include>de.tudarmstadt.ukp.inception.app:inception-app-webapp</include>
+                            </includes>
+                            <useTransitiveFiltering>false</useTransitiveFiltering>
+                            <outputDirectory>.</outputDirectory>
+                            <outputFileNameMapping>inception-app-webapp-${project.version}-standalone.jar</outputFileNameMapping>
+                          </dependencySet>
+                        </dependencySets>
+                      </inline>
+                    </assembly>
+                  </build>
+                </image>
+              </images>
+            </configuration>
+            <executions>
+              <execution>
+                <id>build</id>
+                <phase>install</phase>
+                <goals>
+                  <goal>build</goal>
+                </goals>
+                <configuration>
+                  <skipBuild>${docker.skip.build}</skipBuild>
+                </configuration>
+              </execution>
+              <execution>
+                <id>push</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>push</goal>
+                </goals>
+                <configuration>
+                  <skipPush>${docker.skip.push}</skipPush>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
     <profile>
       <id>host-arch-arm64</id>
       <activation>

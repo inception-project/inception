@@ -310,6 +310,9 @@
     <module>inception-assistant-ui</module>
     <!-- Application -->
     <module>inception-app-webapp</module>
+    <module>inception-dist-macos</module>
+    <module>inception-dist-docker</module>
+    <module>inception-dist-win</module>
   </modules>
 
   <build>
@@ -670,24 +673,6 @@
   </build>
 
   <profiles>
-    <profile>
-      <id>dist-macos</id>
-      <modules>
-        <module>inception-dist-macos</module>
-      </modules>
-    </profile>
-    <profile>
-      <id>dist-docker</id>
-      <modules>
-        <module>inception-dist-docker</module>
-      </modules>
-    </profile>
-    <profile>
-      <id>dist-win</id>
-      <modules>
-        <module>inception-dist-win</module>
-      </modules>
-    </profile>
     <profile>
       <id>m2e</id>
       <activation>
