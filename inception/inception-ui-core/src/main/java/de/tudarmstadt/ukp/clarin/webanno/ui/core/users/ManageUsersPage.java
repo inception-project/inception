@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.Strings.CS;
@@ -29,7 +28,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -91,32 +89,12 @@ public class ManageUsersPage
 
     private void checkAccess(final PageParameters aPageParameters)
     {
+        // Page-level admin-only enforcement happens in AdminSettingsDashboardPageBase.
+        // Here we just resolve which user the admin wants to open (default: themselves).
         var username = aPageParameters.get(PARAM_USER).toOptionalString();
-
-        var currentUser = userService.getCurrentUser();
-        var userToOpen = isBlank(username) ? currentUser : userService.get(username);
-
-        // Admins can manage any user
-        if (userService.isCurrentUserAdmin()) {
-            selectedUser.setObject(userToOpen);
-        }
-        // Non-admins can only manage themselves if profile self-service is allowed
-        else if (userToOpen.equals(currentUser)
-                && userService.isProfileSelfServiceAllowed(currentUser)) {
-            selectedUser.setObject(currentUser);
-        }
-        // Other cases are denied
-        else {
-            // Make sure a user doesn't try to access the profile of another user via the
-            // parameter if self-service is turned on.
-            denyAccess();
-        }
-    }
-
-    private void denyAccess()
-    {
-        getSession().error(format("Access to [%s] denied.", getClass().getSimpleName()));
-        throw new RestartResponseException(getApplication().getHomePage());
+        var userToOpen = isBlank(username) ? userService.getCurrentUser()
+                : userService.get(username);
+        selectedUser.setObject(userToOpen);
     }
 
     private void commonInit()

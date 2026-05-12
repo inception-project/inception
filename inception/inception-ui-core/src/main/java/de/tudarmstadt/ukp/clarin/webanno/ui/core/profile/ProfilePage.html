@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:extend>
+    <div class="flex-content flex-h-container flex-gutter">
+      <div class="flex-content flex-v-container">
+        <form wicket:id="form" class="flex-content flex-v-container flex-gutter" autocomplete="off">
+          <div class="flex-content card">
+            <div class="card-header">
+              <wicket:message key="profile"/>
+            </div>
+            <div class="scrolling card-body">
+              <div class="container-fluid">
+                <div class="row form-row">
+                  <label wicket:for="username" class="col-sm-2 col-form-label">
+                    <wicket:label key="username"/>
+                  </label>
+                  <div class="col-sm-10">
+                    <input wicket:id="username" type="text" class="form-control"/>
+                  </div>
+                </div>
+                <div class="row form-row">
+                  <label wicket:for="uiName" class="col-sm-2 col-form-label">
+                    <wicket:label key="uiName"/>
+                  </label>
+                  <div class="col-sm-10">
+                    <input wicket:id="uiName" type="text" class="form-control"/>
+                  </div>
+                </div>
+                <div class="row form-row">
+                  <label wicket:for="email" class="col-sm-2 col-form-label">
+                    <wicket:label key="email"/>
+                  </label>
+                  <div class="col-sm-10">
+                    <input wicket:id="email" type="email" class="form-control"/>
+                  </div>
+                </div>
+                <div class="row form-row" wicket:id="passwordUnsetNotice">
+                  <div class="offset-md-2 col-sm-10">
+                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                    Password is unset. You cannot log in with a password until one is set.
+                  </div>
+                </div>
+                <div class="row form-row" wicket:enclosure="oldPassword">
+                  <label wicket:for="oldPassword" class="col-sm-2 col-form-label">
+                    <wicket:label key="oldPassword"/>
+                  </label>
+                  <div class="col-sm-10">
+                    <input wicket:id="oldPassword" type="password" class="form-control" autocomplete="current-password"/>
+                  </div>
+                </div>
+                <div class="row form-row" wicket:enclosure="password">
+                  <label wicket:for="password" class="col-sm-2 col-form-label">
+                    <wicket:label key="password"/>
+                  </label>
+                  <div class="col-sm-10">
+                    <input wicket:id="password" type="password" class="form-control" autocomplete="new-password"/>
+                  </div>
+                </div>
+                <div class="row form-row" wicket:enclosure="repeatPassword">
+                  <label wicket:for="repeatPassword" class="col-sm-2 col-form-label">
+                    <wicket:label key="repeatPassword"/>
+                  </label>
+                  <div class="col-sm-10">
+                    <input wicket:id="repeatPassword" type="password" class="form-control" autocomplete="new-password"/>
+                  </div>
+                </div>
+                <div class="row form-row">
+                  <label class="col-sm-2 col-form-label">
+                    <wicket:message key="created"/>
+                  </label>
+                  <div class="col-sm-10">
+                    <span class="form-control-plaintext"><wicket:container wicket:id="created"/></span>
+                  </div>
+                </div>
+                <div class="row form-row">
+                  <label class="col-sm-2 col-form-label">
+                    <wicket:message key="lastLogin"/>
+                  </label>
+                  <div class="col-sm-10">
+                    <span class="form-control-plaintext"><wicket:container wicket:id="lastLogin"/></span>
+                  </div>
+                </div>
+                <div class="row form-row">
+                  <label class="col-sm-2 col-form-label">
+                    <wicket:message key="sessionTime"/>
+                  </label>
+                  <div class="col-sm-10">
+                    <span class="form-control-plaintext"><wicket:container wicket:id="sessionTime"/></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer text-end">
+              <button wicket:id="save" class="btn btn-primary">
+                <i class="fas fa-save"></i>&nbsp;
+                <wicket:message key="save"/>
+              </button>
+              <button wicket:id="close" class="btn btn-secondary">
+                <i class="fas fa-times"></i>&nbsp;
+                <wicket:message key="close"/>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </wicket:extend>
+</body>
+</html>
