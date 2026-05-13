@@ -197,5 +197,77 @@
         </plugins>
       </build>
     </profile>
+
+    <profile>
+      <id>release-macos</id>
+
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>enforce-release-macos-prerequisites</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>enforce</goal>
+                </goals>
+                <configuration>
+                  <rules>
+                    <requireOS>
+                      <family>mac</family>
+                      <message>The 'release-macos' profile notarizes macOS DMGs and must be run on macOS.</message>
+                    </requireOS>
+                    <requireProperty>
+                      <property>mac.notarization.keychain.profile</property>
+                      <message>The 'release-macos' profile requires the 'mac.notarization.keychain.profile' property to be set, e.g. -Dmac.notarization.keychain.profile="AC_NOTARY". Create the keychain profile once with: xcrun notarytool store-credentials.</message>
+                    </requireProperty>
+                  </rules>
+                  <fail>true</fail>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>notarize-dmg-aarch64</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <executable>bash</executable>
+                  <arguments>
+                    <argument>${project.basedir}/src/main/scripts/notarize-dmg.sh</argument>
+                    <argument>${project.build.directory}/jpackage-aarch64</argument>
+                    <argument>${mac.notarization.keychain.profile}</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+              <execution>
+                <id>notarize-dmg-x86_64</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <executable>bash</executable>
+                  <arguments>
+                    <argument>${project.basedir}/src/main/scripts/notarize-dmg.sh</argument>
+                    <argument>${project.build.directory}/jpackage-x86_64</argument>
+                    <argument>${mac.notarization.keychain.profile}</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>
