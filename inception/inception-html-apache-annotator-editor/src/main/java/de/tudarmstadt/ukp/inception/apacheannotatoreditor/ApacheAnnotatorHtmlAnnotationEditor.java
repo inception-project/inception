@@ -102,8 +102,10 @@ public class ApacheAnnotatorHtmlAnnotationEditor
     }
 
     /**
-     * Build the script source list in load order: format-specific adapters first (so they register
-     * their structure strategy on the global slot before the editor reads it), editor JS last.
+     * Build the script source list. Format-specific adapters come first, editor JS last; the
+     * external-editor loader honours that order by inserting the scripts with
+     * {@code script.async = false}, so the format adapter is guaranteed to have run by the time the
+     * editor bundle initializes and reads {@code props.documentStructureFactory}.
      */
     private List<String> getScriptSources()
     {

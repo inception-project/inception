@@ -15,13 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { DocumentStructureFactory } from '@inception-project/inception-js-api';
-import { HtmlDocumentStructure } from './HtmlDocumentStructure';
+package de.tudarmstadt.ukp.inception.io.tei;
 
-const INSTANCE: DocumentStructureFactory = {
-    create: () => new HtmlDocumentStructure(),
-};
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-(globalThis as any).HtmlDocumentStructure = {
-    factory: (): DocumentStructureFactory => INSTANCE,
-};
+public class TeiDocumentStructureJsReference
+    extends JavaScriptResourceReference
+{
+    private static final long serialVersionUID = 1L;
+
+    private static final TeiDocumentStructureJsReference INSTANCE //
+            = new TeiDocumentStructureJsReference();
+
+    public static TeiDocumentStructureJsReference get()
+    {
+        return INSTANCE;
+    }
+
+    private TeiDocumentStructureJsReference()
+    {
+        super(TeiDocumentStructureJsReference.class, "TeiDocumentStructure.min.js");
+    }
+}

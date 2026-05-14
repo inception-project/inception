@@ -19,6 +19,7 @@ import type {
     AnnotationEditorFactory,
     AnnotationEditorProperties,
     DiamClientFactory,
+    DocumentStructureFactory,
     DocumentStructureStrategy,
 } from '@inception-project/inception-js-api';
 import { NoopDocumentStructure } from '@inception-project/inception-js-api';
@@ -116,7 +117,8 @@ function resolveDocumentStructure(
     if (!expr) return new NoopDocumentStructure();
     const win = element.ownerDocument?.defaultView ?? window;
     try {
-        return (win as any).eval(expr) as DocumentStructureStrategy;
+        const factory = (win as any).eval(expr) as DocumentStructureFactory;
+        return factory.create();
     } catch (e) {
         console.warn(
             `[ApacheAnnotatorEditorFactory] Failed to resolve documentStructureFactory '${expr}', falling back to noop:`,

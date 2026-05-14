@@ -15,13 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { DocumentStructureFactory } from '@inception-project/inception-js-api';
-import { HtmlDocumentStructure } from './HtmlDocumentStructure';
+import type { DocumentStructureStrategy } from './DocumentStructureStrategy';
 
-const INSTANCE: DocumentStructureFactory = {
-    create: () => new HtmlDocumentStructure(),
-};
-
-(globalThis as any).HtmlDocumentStructure = {
-    factory: (): DocumentStructureFactory => INSTANCE,
-};
+/**
+ * Factory for a {@link DocumentStructureStrategy}. Format-side adapter
+ * scripts expose an instance of this on a globally reachable name; the
+ * editor evaluates the expression in {@code AnnotationEditorProperties#documentStructureFactory}
+ * to obtain the factory and then calls {@link #create} for each editor
+ * initialization.
+ *
+ * Mirrors the {@code editorFactory} convention used for AnnotationEditorFactory:
+ * the eval result IS the factory, and the framework invokes its methods.
+ */
+export interface DocumentStructureFactory {
+    create(): DocumentStructureStrategy;
+}

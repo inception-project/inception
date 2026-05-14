@@ -50,6 +50,11 @@
     let expandedState = $state(initiallyExpanded);
     let tocElement = $state<HTMLElement | undefined>(undefined);
 
+    let hasChildren = $derived(!!tocLevel.children && tocLevel.children.length > 0);
+    let displayTitle = $derived(
+        ((tocLevel.label ? tocLevel.label + ' ' : '') + (tocLevel.title || '')).trim()
+    );
+
     function scrollTo() {
         if (!tocLevel.element) return;
         const target = structure.scrollTarget(tocLevel.element) as HTMLElement;
@@ -68,39 +73,43 @@
 
 {#if tocLevel.parent}
     <li bind:this={tocElement} class="node" class:expanded={expandedState}>
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <span
-            onclick={toggle}
-            class="handle"
-            class:invisible={!(tocLevel.children && tocLevel.children.length > 0)}>▶</span
-        >
-        <!-- svelte-ignore a11y_missing_attribute -->
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <a
-            onclick={scrollTo}
-            class="text-decoration-none text-reset"
-            title={(tocLevel.label || '') + ' ' + (tocLevel.title || '')}
-        >
-            {#if tocLevel.label}
-                <span class="text-muted fw-lighter">{tocLevel.label}</span>
-            {/if}
-            {tocLevel.title}
-        </a>
+        <div class="entry">
+            <button
+                type="button"
+                onclick={toggle}
+                class="handle"
+                class:invisible={!hasChildren}
+                aria-expanded={hasChildren ? expandedState : undefined}
+                aria-label="Toggle {displayTitle}"
+                tabindex={hasChildren ? 0 : -1}
+            >
+                <span aria-hidden="true">▶</span>
+            </button>
+            <button
+                type="button"
+                onclick={scrollTo}
+                class="link"
+                title={displayTitle}
+            >
+                {#if tocLevel.label}
+                    <span class="text-muted fw-lighter">{tocLevel.label}</span>
+                {/if}
+                {tocLevel.title}
+            </button>
+        </div>
+        {#if hasChildren}
+            <div class="children" class:open={expandedState} class:closed={!expandedState}>
+                <ul>
+                    {#each tocLevel.children as child (child)}
+                        <DocumentStructureNode {root} tocLevel={child} {structure} />
+                    {/each}
+                </ul>
+            </div>
+        {/if}
     </li>
-    {#if tocLevel.children && tocLevel.children.length > 0}
-        <li class="children" class:open={expandedState} class:closed={!expandedState}>
-            <ul>
-                {#each tocLevel.children as child (child)}
-                    <DocumentStructureNode {root} tocLevel={child} {structure} />
-                {/each}
-            </ul>
-        </li>
-    {/if}
 {:else}
     <ul class="root">
-        {#if tocLevel.children && tocLevel.children.length > 0}
+        {#if hasChildren}
             {#each tocLevel.children as child (child)}
                 <DocumentStructureNode {root} tocLevel={child} {structure} />
             {/each}
@@ -119,7 +128,6 @@
     .node {
         white-space: nowrap;
         list-style-type: none;
-        cursor: pointer;
         transition:
             background-color var(--animation-speed) linear,
             border-left-color var(--animation-speed) linear;
@@ -149,10 +157,37 @@
         padding-left: 5px;
     }
 
+    .entry {
+        display: flex;
+        align-items: baseline;
+        gap: 0.25em;
+    }
+
+    // Reset native <button> chrome so the buttons read as inline text but stay
+    // keyboard-focusable with the browser's default focus outline.
+    button {
+        background: transparent;
+        border: 0;
+        padding: 0;
+        margin: 0;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+
     .handle {
         display: inline-block;
         transition: transform var(--animation-speed) linear;
         user-select: none;
+        flex: 0 0 auto;
+    }
+
+    .link {
+        flex: 1 1 auto;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .children {
@@ -169,7 +204,7 @@
         display: none;
     }
 
-    .expanded > .handle {
+    .expanded > .entry > .handle {
         transform: rotate(90deg);
     }
 

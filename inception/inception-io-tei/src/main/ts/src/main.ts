@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 import type { DocumentStructureFactory } from '@inception-project/inception-js-api';
-import { HtmlDocumentStructure } from './HtmlDocumentStructure';
+import { TeiDocumentStructure } from './TeiDocumentStructure';
 
 const INSTANCE: DocumentStructureFactory = {
-    create: () => new HtmlDocumentStructure(),
+    create: () => new TeiDocumentStructure(),
 };
 
-(globalThis as any).HtmlDocumentStructure = {
+(globalThis as any).TeiDocumentStructure = {
     factory: (): DocumentStructureFactory => INSTANCE,
 };

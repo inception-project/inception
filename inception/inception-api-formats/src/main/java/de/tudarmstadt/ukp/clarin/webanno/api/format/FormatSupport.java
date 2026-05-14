@@ -133,11 +133,15 @@ public interface FormatSupport
     }
 
     /**
-     * @return a JavaScript expression that evaluates to a factory which produces a
+     * @return a JavaScript expression that evaluates to a {@code DocumentStructureFactory} -- an
+     *         object exposing a {@code create()} method that returns a
      *         {@code DocumentStructureStrategy} for this format. The expression is evaluated in the
      *         editor's iframe context after the scripts returned by {@link #getJavaScripts()} have
-     *         loaded. {@link Optional#empty()} (the default) means no format-specific strategy and
-     *         the editor falls back to a no-op.
+     *         loaded; the editor then calls {@code factory.create()} once per editor
+     *         initialization. Mirrors the {@code editorFactory} convention -- the expression always
+     *         includes the invocation, e.g. {@code "HtmlDocumentStructure.factory()"}.
+     *         {@link Optional#empty()} (the default) means no format-specific strategy and the
+     *         editor falls back to a no-op.
      */
     default Optional<String> getDocumentStructureFactory()
     {

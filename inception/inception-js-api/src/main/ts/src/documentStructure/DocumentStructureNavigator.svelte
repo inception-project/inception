@@ -20,7 +20,6 @@
     import {
         type TocLevel,
         generateTOC,
-        generateTOCIndex,
     } from './DocumentStructureNavigatorUtils';
     import type { DocumentStructureStrategy } from './DocumentStructureStrategy';
     import DocumentStructureNode from './DocumentStructureNode.svelte';
@@ -37,7 +36,6 @@
         structure.sectionSelector,
         (s) => structure.extractTitle(s)
     );
-    let tocByElementId: Record<string, TocLevel> = {};
     let observer: IntersectionObserver | undefined;
     let observeTargetToLevel = new Map<Element, TocLevel>();
 
@@ -64,7 +62,6 @@
     }
 
     onMount(() => {
-        tocByElementId = generateTOCIndex(tocRoot);
         collectObserveTargets(tocRoot);
         observer = new IntersectionObserver(handleIntersect, {
             root: null,
@@ -80,7 +77,6 @@
         observer?.disconnect();
         observer = undefined;
         observeTargetToLevel.clear();
-        tocByElementId = {};
     });
 </script>
 

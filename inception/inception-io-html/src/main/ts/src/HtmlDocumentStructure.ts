@@ -89,7 +89,14 @@ export class HtmlDocumentStructure implements DocumentStructureStrategy {
                 }
                 const section = doc.createElement('sec-wrap');
                 section.setAttribute('data-level', String(level));
-                section.id = `sec-wrap-${counter.n++}`;
+                // Bump the counter past any id already present in the
+                // document so an imported HTML file that happens to contain
+                // e.g. id="sec-wrap-0" doesn't get a duplicate id appended.
+                let id: string;
+                do {
+                    id = `sec-wrap-${counter.n++}`;
+                } while (doc.getElementById(id) !== null);
+                section.id = id;
                 const parent = stack.length ? stack[stack.length - 1].section : container;
                 parent.appendChild(section);
                 section.appendChild(node);
@@ -97,6 +104,18 @@ export class HtmlDocumentStructure implements DocumentStructureStrategy {
             } else {
                 const parent = stack.length ? stack[stack.length - 1].section : container;
                 parent.appendChild(node);
+                // If a non-heading element child itself contains headings (e.g.
+                // <article><h1/><section><h2/></section></article>), recurse so
+                // the nested headings still get wrapped and appear in the
+                // outline. Without this, the H2 here would be silently dropped
+                // because the outer container already had a direct heading and
+                // we never descend into <section>.
+                if (
+                    node.nodeType === Node.ELEMENT_NODE &&
+                    (node as Element).querySelector(HEADING_SELECTOR)
+                ) {
+                    this.wrapHeadingSectionsIn(node as Element, counter);
+                }
             }
         }
     }

@@ -80,9 +80,12 @@ export interface AnnotationEditorProperties {
     protectedElements?: ReadonlyArray<string>;
 
     /**
-     * Optional JavaScript expression evaluating to a factory that returns a
-     * DocumentStructureStrategy for the document's format. Evaluated in the
-     * editor's iframe context after format scripts have loaded.
+     * Optional JavaScript expression evaluating to a {@link DocumentStructureFactory}
+     * for the document's format -- an object whose `create()` method returns a
+     * {@link DocumentStructureStrategy}. Evaluated in the editor's iframe context
+     * after format scripts have loaded; the editor then calls `factory.create()`
+     * once per editor initialization. Mirrors the `editorFactory` convention:
+     * the expression always includes the invocation (e.g. `"HtmlDocumentStructure.factory()"`).
      */
     documentStructureFactory?: string;
 }

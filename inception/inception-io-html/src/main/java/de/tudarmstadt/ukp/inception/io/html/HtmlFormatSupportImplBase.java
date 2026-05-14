@@ -65,7 +65,7 @@ public abstract class HtmlFormatSupportImplBase
     @Override
     public Optional<String> getDocumentStructureFactory()
     {
-        return Optional.of("HtmlDocumentStructure.create()");
+        return Optional.of("HtmlDocumentStructure.factory()");
     }
 
     @Override
