@@ -66,7 +66,9 @@ const defaults = {
 }
 
 fs.mkdirsSync(`${outbase}`)
-fs.emptyDirSync(outbase)
+if (!argv.live) {
+  fs.emptyDirSync(outbase)
+}
 fs.copySync('pdfjs-web', `${outbase}`)
 fs.copySync('node_modules/pdfjs-dist/build', `${outbase}`)
 fs.copySync('node_modules/pdfjs-dist/cmaps', `${outbase}/cmaps`)

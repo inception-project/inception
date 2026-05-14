@@ -770,9 +770,16 @@ export class ApacheAnnotatorVisualizer {
             // clearTimeout directly rather than going through cancelScheduled.
             window.clearTimeout(this.removeScrollMarkersTimeout);
             this.removeScrollMarkersTimeout = undefined;
-            this.removeScrollMarkers.forEach((remove) => remove());
-            this.removeScrollMarkers = [];
         }
+        // Always remove existing markers. Gating this on removeScrollMarkersTimeout
+        // means the markers stick around after a scroll completes naturally (the
+        // quiet-period timer clears itself just before calling scrollToComplete,
+        // so the gate is false by the time we get here). The next scrollTo then
+        // creates a second <mark id="iaa-scroll-marker"> alongside the stale one,
+        // and the id-based lookup returns the first/stale match -- which is
+        // already in view -- so no scroll occurs.
+        this.removeScrollMarkers.forEach((remove) => remove());
+        this.removeScrollMarkers = [];
     }
 
     private renderPingMarkers(pingRanges?: Offsets[]) {
