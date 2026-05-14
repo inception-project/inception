@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "allowArbitraryExtensions": true,
+    "verbatimModuleSyntax": true,
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2019"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "@inception-project/${project.artifactId}",
+  "version": "${semver}",
+  "type": "module",
+  "author": "INCEpTION Team",
+  "license": "(MIT AND Apache-2.0)",
+  "scripts": {
+    "build": "node build.mjs",
+    "format": "prettier --write \"**/*.{js,ts,json,md,html}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,json,md,html}\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inception-project/inception.git"
+  },
+  "bugs": {
+    "url": "https://github.com/inception-project/issues"
+  },
+  "overrides": {
+    "minimatch": "${minimatch.version}",
+    "immutable": "${immutable.version}",
+    "undici": "${undici.version}"
+  },
+  "dependencies": {
+    "@inception-project/inception-js-api": "file:../../../../inception-js-api/src/main/ts"
+  },
+  "devDependencies": {
+    "esbuild": "${esbuild.version}",
+    "fs-extra": "${fs-extra.version}",
+    "prettier": "${prettier.version}",
+    "typescript": "${typescript.version}",
+    "yargs": "${yargs.version}"
+  }
+}

@@ -15,14 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//import './src/style/InceptionEditorColors.scss'
-
-export * from './src/diam';
-export * from './src/documentStructure';
-export * from './src/editor';
-export * from './src/model';
-export * from './src/event';
-export * from './src/model/compact';
-export * from './src/util';
-
-export { unpackCompactAnnotatedText as unpackCompactAnnotatedTextV2 } from './src/model/compact_v2/CompactAnnotatedText';
+// Re-export only TypeScript modules at the package barrel level. The Svelte
+// components (DocumentStructureNavigator.svelte / DocumentStructureNode.svelte)
+// must be deep-imported directly by their full subpath so that consumers of
+// inception-js-api whose bundler is not configured for Svelte (e.g.
+// inception-diam, inception-external-editor) are not forced to pull them in.
+export * from './DocumentStructureStrategy';
+export * from './DocumentStructureNavigatorUtils';
+export * from './NoopDocumentStructure';

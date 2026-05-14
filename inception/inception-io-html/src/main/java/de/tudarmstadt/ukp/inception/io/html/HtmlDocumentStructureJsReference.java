@@ -15,14 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//import './src/style/InceptionEditorColors.scss'
+package de.tudarmstadt.ukp.inception.io.html;
 
-export * from './src/diam';
-export * from './src/documentStructure';
-export * from './src/editor';
-export * from './src/model';
-export * from './src/event';
-export * from './src/model/compact';
-export * from './src/util';
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-export { unpackCompactAnnotatedText as unpackCompactAnnotatedTextV2 } from './src/model/compact_v2/CompactAnnotatedText';
+public class HtmlDocumentStructureJsReference
+    extends JavaScriptResourceReference
+{
+    private static final long serialVersionUID = 1L;
+
+    private static final HtmlDocumentStructureJsReference INSTANCE //
+            = new HtmlDocumentStructureJsReference();
+
+    public static HtmlDocumentStructureJsReference get()
+    {
+        return INSTANCE;
+    }
+
+    private HtmlDocumentStructureJsReference()
+    {
+        super(HtmlDocumentStructureJsReference.class, "HtmlDocumentStructure.min.js");
+    }
+}

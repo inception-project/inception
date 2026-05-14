@@ -60,6 +60,18 @@ html > body {
     overflow: hidden;
 }
 
+/**
+ * Synthetic wrapper inserted around heading-delimited regions so that content
+ * following a heading becomes a descendant of that heading's section. As a
+ * custom element it defaults to `display: inline`, so we force it to block
+ * explicitly: the section needs a real layout box for IntersectionObserver
+ * and scrollIntoView, and for downstream features that want to address the
+ * section as a unit.
+ */
+sec-wrap {
+    display: block;
+}
+
 .iaa-document-navigator {
     min-width: 200px;
     overflow: scroll;

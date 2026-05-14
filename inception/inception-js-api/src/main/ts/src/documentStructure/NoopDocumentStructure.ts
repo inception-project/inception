@@ -15,14 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//import './src/style/InceptionEditorColors.scss'
+import type { DocumentStructureStrategy } from './DocumentStructureStrategy';
 
-export * from './src/diam';
-export * from './src/documentStructure';
-export * from './src/editor';
-export * from './src/model';
-export * from './src/event';
-export * from './src/model/compact';
-export * from './src/util';
+/**
+ * Fallback used when no format-specific adapter is registered. Matches no
+ * elements, performs no preprocessing, and returns nothing. The navigator
+ * displays an empty/"no headings" state in this case.
+ */
+export class NoopDocumentStructure implements DocumentStructureStrategy {
+    readonly sectionSelector = ':not(*)';
 
-export { unpackCompactAnnotatedText as unpackCompactAnnotatedTextV2 } from './src/model/compact_v2/CompactAnnotatedText';
+    preprocess(): void {
+        // no-op
+    }
+
+    extractTitle(): string | undefined {
+        return undefined;
+    }
+
+    scrollTarget(section: Element): Element {
+        return section;
+    }
+}
