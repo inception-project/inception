@@ -24,6 +24,7 @@ TS_MODULES="
 ./inception-js-api/src/main/ts
 ./inception-diam/src/main/ts
 ./inception-io-tei/src/main/ts
+./inception-io-html/src/main/ts
 ./inception-io-xml/src/main/ts
 ./inception-brat-editor/src/main/ts
 ./inception-diam-editor/src/main/ts

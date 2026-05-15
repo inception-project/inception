@@ -30,7 +30,7 @@ if (argv.live) {
   outbase = `../../../target/classes/${packagePath}`
 }
 
-const defaults = {
+const cssBuild = {
   entryPoints: ['src/TeiXmlDocument.scss'],
   outfile: `${outbase}/TeiXmlDocument.min.css`,
   bundle: true,
@@ -42,14 +42,27 @@ const defaults = {
   plugins: [sassPlugin()]
 }
 
+const jsBuild = {
+  entryPoints: ['src/main.ts'],
+  outfile: `${outbase}/TeiDocumentStructure.min.js`,
+  bundle: true,
+  sourcemap: true,
+  minify: !argv.live,
+  target: 'es2020',
+  loader: { '.ts': 'ts' },
+  logLevel: 'info'
+}
+
 fs.mkdirsSync(`${outbase}`)
 if (!argv.live) {
   fs.emptyDirSync(outbase)
 }
 
 if (argv.live) {
-  const context = await esbuild.context(defaults)
-  await context.watch()
+  const cssCtx = await esbuild.context(cssBuild)
+  const jsCtx = await esbuild.context(jsBuild)
+  await Promise.all([cssCtx.watch(), jsCtx.watch()])
 } else {
-  esbuild.build(defaults)
+  await esbuild.build(cssBuild)
+  await esbuild.build(jsBuild)
 }

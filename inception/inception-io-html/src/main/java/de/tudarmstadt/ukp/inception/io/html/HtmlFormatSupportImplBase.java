@@ -17,14 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.io.html;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.request.resource.ResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.UimaReaderWriterFormatSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -51,6 +54,18 @@ public abstract class HtmlFormatSupportImplBase
     public Set<String> getProtectedElements()
     {
         return HTML_PROTECTED_ELEMENTS;
+    }
+
+    @Override
+    public List<ResourceReference> getJavaScripts()
+    {
+        return asList(HtmlDocumentStructureJsReference.get());
+    }
+
+    @Override
+    public Optional<String> getDocumentStructureFactory()
+    {
+        return Optional.of("HtmlDocumentStructure.factory()");
     }
 
     @Override

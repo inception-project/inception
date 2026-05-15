@@ -24,6 +24,7 @@ public class AnnotationEditorProperties
 {
     private String editorFactoryId;
     private String editorFactory;
+    private String documentStructureFactory;
     private String diamAjaxCallbackUrl;
     private String diamWsUrl;
     private String csrfToken;
@@ -42,6 +43,16 @@ public class AnnotationEditorProperties
     public void setEditorFactory(String aEditorFactory)
     {
         editorFactory = aEditorFactory;
+    }
+
+    public String getDocumentStructureFactory()
+    {
+        return documentStructureFactory;
+    }
+
+    public void setDocumentStructureFactory(String aDocumentStructureFactory)
+    {
+        documentStructureFactory = aDocumentStructureFactory;
     }
 
     public String getDiamAjaxCallbackUrl()

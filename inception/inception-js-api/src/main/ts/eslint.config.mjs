@@ -17,8 +17,10 @@
  */
 
 // =======================================================================
-// File lives in 
-// /inception/inception-build/src/main/resources/inception/vite.config.js
+// Canonical source:
+// /inception/inception-build/src/main/resources/inception/eslint.config.mjs
+// Per-module copies under */src/main/ts/eslint.config.mjs are managed by
+// update-bun-lock.sh -- edit the canonical file rather than the copies.
 // =======================================================================
 
 import { defineConfig } from "eslint/config";

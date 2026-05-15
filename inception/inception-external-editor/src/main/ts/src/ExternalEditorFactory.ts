@@ -301,6 +301,14 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
 
             const script = document.createElement('script');
             script.src = scriptSource;
+            // Scripts created via createElement() default to async=true and
+            // therefore execute as soon as they finish downloading, in arbitrary
+            // order with respect to other scripts. Setting async=false makes
+            // the browser execute them in DOM-insertion order instead, which
+            // matches the contract callers rely on (e.g. a format adapter
+            // script must run before the editor's main bundle so the editor
+            // can pick the adapter's registration up).
+            script.async = false;
             script.onload = () => {
                 console.info(`Loaded script: ${scriptSource}`);
                 script.onload = null;

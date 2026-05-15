@@ -18,6 +18,7 @@
 //import './src/style/InceptionEditorColors.scss'
 
 export * from './src/diam';
+export * from './src/documentStructure';
 export * from './src/editor';
 export * from './src/model';
 export * from './src/event';

@@ -19,7 +19,10 @@ import type {
     AnnotationEditorFactory,
     AnnotationEditorProperties,
     DiamClientFactory,
+    DocumentStructureFactory,
+    DocumentStructureStrategy,
 } from '@inception-project/inception-js-api';
+import { NoopDocumentStructure } from '@inception-project/inception-js-api';
 import { ApacheAnnotatorEditor } from './ApacheAnnotatorEditor';
 
 const PROP_EDITOR = '__editor__';
@@ -79,13 +82,15 @@ export class ApacheAnnotatorEditorFactory implements AnnotationEditorFactory {
 
         const sectionElementLocalNames = new Set<string>(props.sectionElements || []);
         const protectedElements = new Set<string>(props.protectedElements || []);
+        const documentStructure = resolveDocumentStructure(element, props);
 
         element[PROP_EDITOR] = new ApacheAnnotatorEditor(
             targetElement,
             ajax,
             props.userPreferencesKey,
             protectedElements,
-            sectionElementLocalNames
+            sectionElementLocalNames,
+            documentStructure
         );
         return element[PROP_EDITOR];
     }
@@ -95,5 +100,30 @@ export class ApacheAnnotatorEditorFactory implements AnnotationEditorFactory {
             element[PROP_EDITOR].destroy();
             console.log('Destroyed editor');
         }
+    }
+}
+
+/**
+ * Evaluate the format-supplied document-structure factory expression in the
+ * iframe's window context (mirrors how the editor framework evaluates
+ * props.editorFactory) and call it to produce the strategy. Falls back to a
+ * noop strategy if no expression was provided or the eval fails.
+ */
+function resolveDocumentStructure(
+    element: Node,
+    props: AnnotationEditorProperties
+): DocumentStructureStrategy {
+    const expr = props.documentStructureFactory;
+    if (!expr) return new NoopDocumentStructure();
+    const win = element.ownerDocument?.defaultView ?? window;
+    try {
+        const factory = (win as any).eval(expr) as DocumentStructureFactory;
+        return factory.create();
+    } catch (e) {
+        console.warn(
+            `[ApacheAnnotatorEditorFactory] Failed to resolve documentStructureFactory '${expr}', falling back to noop:`,
+            e
+        );
+        return new NoopDocumentStructure();
     }
 }

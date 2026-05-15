@@ -136,6 +136,16 @@
             />
             <label class="form-check-label" for="tablesEnabled">Tables</label>
         </div>
+        <div class="form-check form-switch mx-2">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="documentStructureEnabled"
+                bind:checked={annotatorState.showDocumentStructure}
+            />
+            <label class="form-check-label" for="documentStructureEnabled">Outline</label>
+        </div>
     </div>
 </div>
 
