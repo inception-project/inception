@@ -16,31 +16,41 @@
  * limitations under the License.
  */
 
-// Bootstrap variables: Cards
+@use 'inception-bootstrap-config' as *;
 
-$card-spacer-y: 0.25rem !default; // Original: .75rem
-$card-spacer-x: 0.75rem !default; // Original: 1.25rem
+.navbar {
+    margin-bottom: 0px;
+    position: relative;
+    border: none;
+    border-bottom: 1px solid;
 
-// Bootstrap variables: Forms
+    .navbar-extra-link img {
+        padding-top: 5px;
+        padding-bottom: 5px;
+        margin-left: 15px;
+        height: 40px;
+    }
 
-$label-margin-bottom: 0.5rem !default; // Original: .5rem
-$form-group-margin-bottom: 0.5rem !default; // Original: 1rem
+    .navbar-header .navbar-center {
+        position: absolute;
+        left: calc(50% - 400px / 2);
+        width: 400px;
+        text-align: center;
+    }
 
-// Bootstrap variables: Navbar:
+    .navbar-header .navbar-brand {
+        padding-top: 5px;
+        padding-bottom: 5px;
+        line-height: 40px;
+        font-size: 25px;
+        line-height: unset;
+    }
 
-$navbar-padding-y: 0px; // Original: $spacer / 2 !default;
-$navbar-padding-x: 0px; // $spacer !default;
+    .logo {
+        height: 40px;
+    }
 
-// INCEpTION variables: Footer
-
-$page-footer-height: 24px;
-$page-header-height: 51px;
-
-$grid-breakpoints: (
-    xs: 0,
-    sm: 576px,
-    md: 768px,
-    lg: 992px,
-    xl: 1200px,
-    xxl: 1600px,
-);
+    .pageicon {
+        height: 40px;
+    }
+}

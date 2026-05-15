@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+@use 'inception-bootstrap-config' as *;
+
 .action-bar {
     @extend .border-bottom;
     padding: 5px;

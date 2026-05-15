@@ -16,29 +16,10 @@
  * limitations under the License.
  */
 
-// Fix that hidden-xs is missing in Bootstrap File Input
-.hidden-xs {
-    @extend .d-none;
-}
+@use 'inception-bootstrap-config' as *;
 
-.hidden {
-    @extend .d-none;
-}
-
-// Patch some font-awesome icons into the glyphicon CSS namespace, in particular for the
-// BootstrapFileInput
-.glyphicon {
-    font-family: 'Font Awesome 5 Free';
-    font-weight: 900;
-    font-style: normal;
-}
-
-// Original: .fa-folder-open
-.glyphicon-folder-open:before {
-    content: '\f07c';
-}
-
-// Original: .fa-times
-.glyphicon-ban-circle:before {
-    content: '\f00d';
+.border-0 .cbx {
+    border: none;
+    box-shadow: none;
+    -webkit-box-shadow: none;
 }

@@ -16,14 +16,32 @@
  * limitations under the License.
  */
 
-// The Bootstrap ".progress" class clashes with the ".progress" from the Wicketstuff progress bar
-.wicketstuff-progressbar {
-    .label {
-        background: none;
+@use 'inception-bootstrap-config' as *;
+
+/* Bootstrap: Card (additional classes) */
+$card-action-button-font-size: 70%;
+$card-action-button-padding: 1px 4px;
+
+.card-header {
+    .actions {
+        float: right;
+
+        & > .btn,
+        .btn-action {
+            font-size: $card-action-button-font-size;
+            padding: $card-action-button-padding;
+
+            .btn-action-label {
+                display: inline;
+                @include media-breakpoint-down(lg) {
+                    display: none !important;
+                }
+            }
+        }
     }
 
-    .progress {
-        display: inline;
-        background-color: initial;
+    // Add contrast to light buttons when displayed on card background
+    .btn-light {
+        background-color: $body-bg;
     }
 }

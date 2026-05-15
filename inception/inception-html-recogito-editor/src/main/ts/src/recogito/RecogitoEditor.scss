@@ -15,7 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@import 'ApacheAnnotatorEditor.scss';
+@use '~@inception-project/inception-js-api/src/style/InceptionEditorColors.scss' as *;
+@use 'ApacheAnnotatorEditor.scss';
 
 body {
     line-height: 200%;
