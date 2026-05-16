@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishD
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -319,27 +320,42 @@ public class MatrixWorkflowActionBarItemGroup
         }
 
         var sessionOwner = userRepository.getCurrentUser();
+        var isOwnDocument = sessionOwner.equals(state.getUser());
+        var canOverrideState = projectService.hasRole(sessionOwner, state.getProject(), CURATOR,
+                MANAGER);
+
+        if (!isOwnDocument && !canOverrideState) {
+            error("You are not allowed to change the state of another user's document.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
         var annDoc = documentService.getAnnotationDocument(document, state.getUser());
-        if (annDoc.getAnnotatorState() != annDoc.getState()
-                && !projectService.hasRole(sessionOwner, state.getProject(), CURATOR, MANAGER)) {
+        if (isOwnDocument && annDoc.getAnnotatorState() != annDoc.getState() && !canOverrideState) {
             error("Annotation state has been overridden by a project manager or curator. "
                     + "You cannot change it.");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
 
-        // We look at the annotator state here because annotators should only be able to re-open
-        // documents that they closed themselves - not documents that were closed e.g. by a manager
-        var annState = annDoc.getAnnotatorState();
+        var actAsOverrider = !isOwnDocument
+                || (annDoc.getAnnotatorState() != annDoc.getState() && canOverrideState);
+
+        var flags = actAsOverrider ? new AnnotationDocumentStateChangeFlag[0]
+                : new AnnotationDocumentStateChangeFlag[] { EXPLICIT_ANNOTATOR_USER_ACTION };
+
+        // As manager/curator, we should be able to set the state. However, if we are a normal
+        // annotator, we look at the annotator state here because annotators should only be able to
+        // re-open documents that they closed themselves - not documents that were closed e.g. by a
+        // manager
+        var annState = actAsOverrider ? annDoc.getState() : annDoc.getAnnotatorState();
         switch (annState) {
         case IN_PROGRESS:
-            documentService.setAnnotationDocumentState(annDoc, FINISHED,
-                    EXPLICIT_ANNOTATOR_USER_ACTION);
+            documentService.setAnnotationDocumentState(annDoc, FINISHED, flags);
             aTarget.add(page);
             break;
         case FINISHED:
-            documentService.setAnnotationDocumentState(annDoc, IN_PROGRESS,
-                    EXPLICIT_ANNOTATOR_USER_ACTION);
+            documentService.setAnnotationDocumentState(annDoc, IN_PROGRESS, flags);
             aTarget.add(page);
             break;
         default:
