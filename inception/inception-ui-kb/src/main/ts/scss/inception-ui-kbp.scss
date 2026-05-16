@@ -16,10 +16,7 @@
  * limitations under the License.
  */
 
-// @import "variables";
-@import '../node_modules/@inception-project/inception-support-bootstrap/bootstrap/inception-variables';
-@import '../node_modules/bootstrap/scss/functions';
-@import '../node_modules/bootstrap/scss/variables';
+@use '../node_modules/@inception-project/inception-support-bootstrap/bootstrap/inception-bootstrap-config' as *;
 
 /* style for overall panel structure */
 div.flex-25 {

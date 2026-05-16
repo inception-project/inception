@@ -151,7 +151,7 @@
 
 <!-- svelte-ignore css_unused_selector -->
 <style lang="scss">
-    @import '../../node_modules/bootstrap/scss/bootstrap.scss';
+    @use '../../node_modules/bootstrap/scss/bootstrap.scss';
 
     .bootstrap {
         // Ensure that Bootstrap properly applies to the component

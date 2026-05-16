@@ -106,7 +106,7 @@ export class ApacheAnnotatorVisualizer {
         if (v == null || v.trim() === '') {
             this.protectedElementsMatcher = undefined;
         } else {
-            this.protectedElementsMatcher = compileNsSelector(v);
+            this.protectedElementsMatcher = compileNsSelector(v) || undefined;
         }
     }
 
@@ -264,7 +264,7 @@ export class ApacheAnnotatorVisualizer {
 
         try {
             const nodes = element.querySelectorAll(sectionSelector);
-            const measurements = [];
+            const measurements : { n: HTMLElement, height: number, width: number }[] = [];
 
             // PASS 1: Clear any previously set midnHeight/minWidth styles
             nodes.forEach((n) => {

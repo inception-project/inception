@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+@use 'inception-bootstrap-config' as *;
+
 /*
  * When displaying feature editors in a sidebar, move the labels on top of the feature editors so
  * we gain more horizontal space for the feature name as well as for the feature value 

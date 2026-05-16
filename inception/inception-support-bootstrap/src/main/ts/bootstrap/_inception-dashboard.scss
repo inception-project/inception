@@ -15,6 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+@use 'inception-bootstrap-config' as *;
+@use 'inception-custom';
+
 $dashboard-border-left: 3em;
 
 .dashboard-menu {

@@ -16,25 +16,23 @@
  * limitations under the License.
  */
 
-// inception-bootstrap-config forwards bootstrap with our overrides applied;
-// loading it first emits bootstrap's CSS with the configured values.
-@use 'inception-bootstrap-config';
+// Loads bootstrap with our overrides applied. Downstream partials pull bootstrap
+// symbols from here via `@use 'inception-bootstrap-config' as *;`.
+@forward '../node_modules/bootstrap/scss/bootstrap' with (
+  $card-spacer-y: 0.25rem,    // Original: .75rem
+  $card-spacer-x: 0.75rem,    // Original: 1.25rem
+  $navbar-padding-y: 0px,     // Original: $spacer * .5
+  $navbar-padding-x: 0px,     // Original: null
+  $grid-breakpoints: (
+    xs: 0,
+    sm: 576px,
+    md: 768px,
+    lg: 992px,
+    xl: 1200px,
+    xxl: 1600px,
+  )
+);
 
-// Customization
-// Custom styles that make use of Bootstrap and the new variables
-@use 'inception-custom';
-@use 'inception-card-actions';
-@use 'inception-actionbar';
-@use 'inception-navbar';
-@use 'inception-feature-editors';
-@use 'inception-dashboard';
-@use 'inception-tables';
-
-@use 'shim-bootstrap3';
-@use 'shim-kendo';
-@use 'shim-wicket';
-@use 'shim-wicketstuff';
-@use 'shim-bootstrapselect';
-@use 'shim-jquery';
-@use 'shim-fileinput';
-@use 'shim-checkboxx';
+// INCEpTION variables: Footer
+$page-footer-height: 24px;
+$page-header-height: 51px;
