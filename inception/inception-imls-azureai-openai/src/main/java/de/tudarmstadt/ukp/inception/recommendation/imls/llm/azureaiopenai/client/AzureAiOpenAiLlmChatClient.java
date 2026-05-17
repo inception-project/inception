@@ -1,0 +1,118 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client;
+
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiResponseFormatType.JSON_OBJECT;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiResponseFormatType.JSON_SCHEMA;
+
+import java.io.IOException;
+import java.util.List;
+
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatOptions;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatResult;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
+import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
+
+/**
+ * {@link LlmChatClient} adapter for Azure OpenAI Service. The Azure URL embeds the deployment name
+ * and API version, so {@link LlmEndpoint#model()} is not sent on the wire (it is captured by the
+ * URL). Delegates to the existing {@link AzureAiOpenAiClient}; pure pass-through with no
+ * recommender-specific defaults applied here.
+ */
+public class AzureAiOpenAiLlmChatClient
+    implements LlmChatClient
+{
+    public static final String ID = "azure-openai";
+
+    private final AzureAiOpenAiClient client;
+
+    public AzureAiOpenAiLlmChatClient(AzureAiOpenAiClient aClient)
+    {
+        client = aClient;
+    }
+
+    @Override
+    public String getId()
+    {
+        return ID;
+    }
+
+    @Override
+    public boolean supportsJsonSchema()
+    {
+        return true;
+    }
+
+    @Override
+    public ChatResult chat(LlmEndpoint aEndpoint, List<ChatMessage> aMessages, ChatOptions aOptions)
+        throws IOException
+    {
+        var messages = aMessages.stream() //
+                .map(m -> new AzureAiChatCompletionMessage(m.role().getName(), m.content())) //
+                .toList();
+
+        var builder = AzureAiChatCompletionRequest.builder() //
+                .withApiKey(apiKey(aEndpoint)) //
+                .withModel(aEndpoint.model()) //
+                .withMessages(messages) //
+                .withFormat(toResponseFormat(aOptions));
+
+        if (aOptions.options() != null) {
+            builder.withExtraOptions(aOptions.options());
+        }
+
+        var responseText = client.generate(aEndpoint.url(), builder.build()).trim();
+
+        return ChatResult.of(new ChatMessage(ChatMessage.Role.ASSISTANT, responseText));
+    }
+
+    private static String apiKey(LlmEndpoint aEndpoint)
+    {
+        var auth = aEndpoint.auth();
+        if (auth instanceof ApiKeyAuthenticationTraits apiKeyAuth) {
+            return apiKeyAuth.getApiKey();
+        }
+        if (auth == null) {
+            return null;
+        }
+        throw new IllegalArgumentException(
+                "Azure OpenAI client requires " + ApiKeyAuthenticationTraits.class.getSimpleName()
+                        + " but got [" + auth.getClass().getName() + "]");
+    }
+
+    private static AzureAiGenerateResponseFormat toResponseFormat(ChatOptions aOptions)
+    {
+        if (aOptions.jsonSchema() != null) {
+            return AzureAiGenerateResponseFormat.builder() //
+                    .withType(JSON_SCHEMA) //
+                    .withSchema("response", aOptions.jsonSchema()) //
+                    .build();
+        }
+
+        if (aOptions.responseFormat() == ResponseFormat.JSON) {
+            return AzureAiGenerateResponseFormat.builder() //
+                    .withType(JSON_OBJECT) //
+                    .build();
+        }
+
+        return null;
+    }
+}

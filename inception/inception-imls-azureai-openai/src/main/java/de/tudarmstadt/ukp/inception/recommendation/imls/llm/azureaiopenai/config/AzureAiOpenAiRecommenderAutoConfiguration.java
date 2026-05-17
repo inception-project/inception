@@ -25,6 +25,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecE
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.AzureAiOpenAiRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiOpenAiClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiOpenAiClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiOpenAiLlmChatClient;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
@@ -36,6 +37,12 @@ public class AzureAiOpenAiRecommenderAutoConfiguration
     public AzureAiOpenAiClient azureAiOpenAiClient()
     {
         return new AzureAiOpenAiClientImpl();
+    }
+
+    @Bean
+    public AzureAiOpenAiLlmChatClient azureAiOpenAiLlmChatClient(AzureAiOpenAiClient aClient)
+    {
+        return new AzureAiOpenAiLlmChatClient(aClient);
     }
 
     @Bean
