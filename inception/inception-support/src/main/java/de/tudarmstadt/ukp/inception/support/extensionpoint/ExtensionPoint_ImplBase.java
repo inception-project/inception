@@ -72,16 +72,31 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
 
         BOOT_LOG.info("Found [{}] {} extensions", extensions.size(), getClass().getSimpleName());
 
-        checkForDuplicateIds(extensions);
+        if (enforceUniqueIds()) {
+            checkForDuplicateIds(extensions);
+        }
 
         extensionsList = unmodifiableList(extensions);
     }
 
+    /**
+     * Whether two extensions sharing the same id should fail this extension point at startup.
+     * Default is {@code true} since most extension points look up extensions by id via
+     * {@link #getExtension(String)} and silently shadowing a duplicate would be a real bug.
+     * Override to {@code false} for extension points that intentionally dispatch by
+     * {@link Extension#accepts(Object)} on extensions that share an id (e.g. multiple handlers
+     * registered for the same command).
+     */
+    protected boolean enforceUniqueIds()
+    {
+        return true;
+    }
+
     private void checkForDuplicateIds(List<E> aExtensions)
     {
-        // Null IDs are a separate failure mode (lookup via getExtension(id) cannot find them
-        // anyway) and typically only occur in test wiring that bypasses Spring's BeanNameAware
-        // initialization. Don't conflate them with duplicate-id bugs.
+        // Null ids typically only occur in test wiring that bypasses Spring's BeanNameAware
+        // initialization; lookup via getExtension(id) cannot find them anyway, so don't conflate
+        // them with duplicate-id bugs.
         var seen = new HashMap<String, E>();
         for (var ext : aExtensions) {
             var id = ext.getId();

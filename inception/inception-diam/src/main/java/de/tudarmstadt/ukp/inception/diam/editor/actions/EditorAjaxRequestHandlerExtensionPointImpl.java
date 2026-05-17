@@ -52,6 +52,15 @@ public class EditorAjaxRequestHandlerExtensionPointImpl
     }
 
     @Override
+    protected boolean enforceUniqueIds()
+    {
+        // Multiple handlers intentionally share a command id (e.g. SelectAnnotationHandler and
+        // FillSlotWithExistingAnnotationHandler both register as "selectAnnotation"); accepts()
+        // + @Order discriminate between them at dispatch time.
+        return false;
+    }
+
+    @Override
     public List<EditorAjaxRequestHandler> getExtensions(Request aContext)
     {
         // EditorAjaxRequestHandler::accept may have side-effects! In particular the

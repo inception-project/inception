@@ -198,6 +198,9 @@ class OllamaClientImplTest
         var allModels = sut.listModels(DEFAULT_OLLAMA_URL);
 
         return allModels.stream() //
+                // Cloud-only models (":cloud" tag) are proxied through Ollama's hosted service
+                // and require a paid subscription - skip them so the test doesn't 403.
+                .filter(model -> !model.name().endsWith(":cloud")) //
                 .filter(model -> {
                     try {
                         var modelInfo = sut.getModelInfo(DEFAULT_OLLAMA_URL, //
