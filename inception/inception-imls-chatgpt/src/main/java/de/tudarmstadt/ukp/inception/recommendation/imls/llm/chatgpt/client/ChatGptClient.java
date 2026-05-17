@@ -18,8 +18,11 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client;
 
 import java.io.IOException;
+import java.util.List;
 
 public interface ChatGptClient
 {
     String chat(String aUrl, ChatCompletionRequest aRequest) throws IOException;
+
+    List<ChatGptModel> listModels(String aUrl, ListModelsRequest aRequest) throws IOException;
 }

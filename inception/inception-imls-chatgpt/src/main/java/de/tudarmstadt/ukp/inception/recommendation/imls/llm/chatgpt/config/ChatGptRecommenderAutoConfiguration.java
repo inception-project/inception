@@ -25,6 +25,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecE
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.ChatGptRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptLlmChatClient;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
@@ -36,6 +37,12 @@ public class ChatGptRecommenderAutoConfiguration
     public ChatGptClient chatGptClient()
     {
         return new ChatGptClientImpl();
+    }
+
+    @Bean
+    public ChatGptLlmChatClient chatGptLlmChatClient(ChatGptClient aClient)
+    {
+        return new ChatGptLlmChatClient(aClient);
     }
 
     @Bean

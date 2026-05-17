@@ -174,6 +174,7 @@ public class ChatGptClientImpl
         return result.toString();
     }
 
+    @Override
     public List<ChatGptModel> listModels(String aUrl, ListModelsRequest aRequest) throws IOException
     {
         var request = HttpRequest.newBuilder() //
