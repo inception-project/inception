@@ -31,11 +31,13 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelInfo;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolCall;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolDescriptor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.UsageInfo;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
 import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * {@link LlmChatClient} adapter for Ollama, exposing chat, streaming, embeddings, and model
@@ -136,7 +138,7 @@ public class OllamaLlmChatClient
             ChatOptions aOptions, boolean aStream)
     {
         var messages = aMessages.stream() //
-                .map(m -> new OllamaChatMessage(m.role().getName(), m.content())) //
+                .map(OllamaLlmChatClient::toOllamaMessage) //
                 .toList();
 
         var builder = OllamaChatRequest.builder() //
@@ -149,6 +151,65 @@ public class OllamaLlmChatClient
 
         if (aOptions.options() != null) {
             builder.withExtraOptions(aOptions.options());
+        }
+
+        if (aOptions.tools() != null && !aOptions.tools().isEmpty()) {
+            builder.withTools(aOptions.tools().stream() //
+                    .map(OllamaLlmChatClient::toOllamaTool) //
+                    .toList());
+        }
+
+        return builder.build();
+    }
+
+    private static OllamaChatMessage toOllamaMessage(ChatMessage aMessage)
+    {
+        // tool_call_id is not currently part of the OllamaChatMessage DTO; Ollama matches tool
+        // results to calls positionally. Drop the id on the way out.
+        return new OllamaChatMessage(aMessage.role().getName(), aMessage.content());
+    }
+
+    private static OllamaTool toOllamaTool(ToolDescriptor aDescriptor)
+    {
+        var function = OllamaFunction.builder() //
+                .withName(aDescriptor.name()) //
+                .withDescription(aDescriptor.description()) //
+                .withParameters(toOllamaParameters(aDescriptor.parametersSchema())) //
+                .build();
+        return OllamaTool.builder() //
+                .withType("function") //
+                .withFunction(function) //
+                .build();
+    }
+
+    private static OllamaFunctionParameters toOllamaParameters(JsonNode aSchema)
+    {
+        var builder = OllamaFunctionParameters.builder();
+        if (aSchema == null || !aSchema.isObject()) {
+            return builder.build();
+        }
+
+        var typeNode = aSchema.get("type");
+        if (typeNode != null && typeNode.isTextual()) {
+            builder.withType(typeNode.asText());
+        }
+
+        var requiredNode = aSchema.get("required");
+        if (requiredNode != null && requiredNode.isArray()) {
+            for (var item : requiredNode) {
+                if (item.isTextual()) {
+                    builder.addRequired(item.asText());
+                }
+            }
+        }
+
+        var propsNode = aSchema.get("properties");
+        if (propsNode != null && propsNode.isObject()) {
+            for (var entry : propsNode.properties()) {
+                if (entry.getValue() instanceof ObjectNode propDef) {
+                    builder.addProperty(entry.getKey(), propDef);
+                }
+            }
         }
 
         return builder.build();
@@ -181,7 +242,9 @@ public class OllamaLlmChatClient
                         ? aResponse.getPromptEvalCount() + aResponse.getEvalCount() //
                         : null);
 
-        return new ChatResult(new ChatMessage(role, content), toolCalls, finishReason, usage);
+        var thinking = ollamaMessage != null ? ollamaMessage.thinking() : null;
+        return new ChatResult(new ChatMessage(role, content, thinking, null), toolCalls,
+                finishReason, usage);
     }
 
     private static ToolCall toToolCall(OllamaToolCall aCall)
@@ -200,8 +263,7 @@ public class OllamaLlmChatClient
         return switch (aRole) {
         case "system" -> ChatMessage.Role.SYSTEM;
         case "user" -> ChatMessage.Role.USER;
-        case "tool" -> ChatMessage.Role.ASSISTANT; // closest available; TOOL role not yet on
-                                                   // ChatMessage
+        case "tool" -> ChatMessage.Role.TOOL;
         default -> ChatMessage.Role.ASSISTANT;
         };
     }
