@@ -79,11 +79,18 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
 
     private void checkForDuplicateIds(List<E> aExtensions)
     {
+        // Null IDs are a separate failure mode (lookup via getExtension(id) cannot find them
+        // anyway) and typically only occur in test wiring that bypasses Spring's BeanNameAware
+        // initialization. Don't conflate them with duplicate-id bugs.
         var seen = new HashMap<String, E>();
         for (var ext : aExtensions) {
-            var existing = seen.put(ext.getId(), ext);
+            var id = ext.getId();
+            if (id == null) {
+                continue;
+            }
+            var existing = seen.put(id, ext);
             if (existing != null) {
-                throw new IllegalStateException("Duplicate extension id [" + ext.getId() + "] in "
+                throw new IllegalStateException("Duplicate extension id [" + id + "] in "
                         + getClass().getSimpleName() + ": [" + existing.getClass().getName()
                         + "] vs [" + ext.getClass().getName() + "]");
             }

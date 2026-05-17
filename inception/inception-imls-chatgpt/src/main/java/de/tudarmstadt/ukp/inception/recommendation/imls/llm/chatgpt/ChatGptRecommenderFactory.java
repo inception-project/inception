@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatCompletionRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClientExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Presets;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
@@ -43,16 +43,17 @@ public class ChatGptRecommenderFactory
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.chatgpt.ChatGptRecommender";
 
-    private final ChatGptClient client;
     private final AnnotationSchemaService schemaService;
     private final AnnotationTaskCodecExtensionPoint responseExtractorExtensionPoint;
+    private final LlmChatClientExtensionPoint chatClientExtensionPoint;
 
-    public ChatGptRecommenderFactory(ChatGptClient aClient, AnnotationSchemaService aSchemaService,
-            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint)
+    public ChatGptRecommenderFactory(AnnotationSchemaService aSchemaService,
+            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint,
+            LlmChatClientExtensionPoint aChatClientExtensionPoint)
     {
-        client = aClient;
         schemaService = aSchemaService;
         responseExtractorExtensionPoint = aResponseExtractorExtensionPoint;
+        chatClientExtensionPoint = aChatClientExtensionPoint;
     }
 
     @Override
@@ -71,8 +72,8 @@ public class ChatGptRecommenderFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         var traits = readTraits(aRecommender);
-        return new ChatGptRecommender(aRecommender, traits, client, schemaService,
-                responseExtractorExtensionPoint);
+        return new ChatGptRecommender(aRecommender, traits, schemaService,
+                responseExtractorExtensionPoint, chatClientExtensionPoint);
     }
 
     @Override

@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPoint;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClientExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Presets;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
@@ -43,15 +43,16 @@ public class OllamaRecommenderFactory
     public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.ollama.OllamaRecommenderFactory";
 
     private final AnnotationSchemaService schemaService;
-    private final OllamaClient client;
     private final AnnotationTaskCodecExtensionPoint responseExtractorExtensionPoint;
+    private final LlmChatClientExtensionPoint chatClientExtensionPoint;
 
-    public OllamaRecommenderFactory(OllamaClient aClient, AnnotationSchemaService aSchemaService,
-            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint)
+    public OllamaRecommenderFactory(AnnotationSchemaService aSchemaService,
+            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint,
+            LlmChatClientExtensionPoint aChatClientExtensionPoint)
     {
-        client = aClient;
         schemaService = aSchemaService;
         responseExtractorExtensionPoint = aResponseExtractorExtensionPoint;
+        chatClientExtensionPoint = aChatClientExtensionPoint;
     }
 
     @Override
@@ -70,8 +71,8 @@ public class OllamaRecommenderFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         OllamaRecommenderTraits traits = readTraits(aRecommender);
-        return new OllamaRecommender(aRecommender, traits, client, schemaService,
-                responseExtractorExtensionPoint);
+        return new OllamaRecommender(aRecommender, traits, schemaService,
+                responseExtractorExtensionPoint, chatClientExtensionPoint);
     }
 
     @Override

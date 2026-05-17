@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPoint;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client.AzureAiOpenAiClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClientExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Presets;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
@@ -42,17 +42,17 @@ public class AzureAiOpenAiRecommenderFactory
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.azureaiopenai.AzureAiOpenAiRecommender";
 
-    private final AzureAiOpenAiClient client;
     private final AnnotationSchemaService schemaService;
     private final AnnotationTaskCodecExtensionPoint responseExtractorExtensionPoint;
+    private final LlmChatClientExtensionPoint chatClientExtensionPoint;
 
-    public AzureAiOpenAiRecommenderFactory(AzureAiOpenAiClient aClient,
-            AnnotationSchemaService aSchemaService,
-            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint)
+    public AzureAiOpenAiRecommenderFactory(AnnotationSchemaService aSchemaService,
+            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint,
+            LlmChatClientExtensionPoint aChatClientExtensionPoint)
     {
-        client = aClient;
         schemaService = aSchemaService;
         responseExtractorExtensionPoint = aResponseExtractorExtensionPoint;
+        chatClientExtensionPoint = aChatClientExtensionPoint;
     }
 
     @Override
@@ -71,8 +71,8 @@ public class AzureAiOpenAiRecommenderFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         var traits = readTraits(aRecommender);
-        return new AzureAiOpenAiRecommender(aRecommender, traits, client, schemaService,
-                responseExtractorExtensionPoint);
+        return new AzureAiOpenAiRecommender(aRecommender, traits, schemaService,
+                responseExtractorExtensionPoint, chatClientExtensionPoint);
     }
 
     @Override

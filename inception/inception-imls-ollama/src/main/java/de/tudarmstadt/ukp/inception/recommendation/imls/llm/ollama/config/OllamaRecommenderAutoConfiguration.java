@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClientExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.OllamaRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
@@ -58,11 +59,11 @@ public class OllamaRecommenderAutoConfiguration
     @ConditionalOnProperty(prefix = "recommender.ollama", name = "enabled", havingValue = "true", //
             matchIfMissing = false)
     @Bean
-    public OllamaRecommenderFactory ollamaRecommenderFactory(OllamaClient aClient,
-            AnnotationSchemaService aSchemaService,
-            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint)
+    public OllamaRecommenderFactory ollamaRecommenderFactory(AnnotationSchemaService aSchemaService,
+            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint,
+            LlmChatClientExtensionPoint aChatClientExtensionPoint)
     {
-        return new OllamaRecommenderFactory(aClient, aSchemaService,
-                aResponseExtractorExtensionPoint);
+        return new OllamaRecommenderFactory(aSchemaService, aResponseExtractorExtensionPoint,
+                aChatClientExtensionPoint);
     }
 }
