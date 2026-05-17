@@ -27,6 +27,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -71,7 +72,22 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
 
         BOOT_LOG.info("Found [{}] {} extensions", extensions.size(), getClass().getSimpleName());
 
+        checkForDuplicateIds(extensions);
+
         extensionsList = unmodifiableList(extensions);
+    }
+
+    private void checkForDuplicateIds(List<E> aExtensions)
+    {
+        var seen = new HashMap<String, E>();
+        for (var ext : aExtensions) {
+            var existing = seen.put(ext.getId(), ext);
+            if (existing != null) {
+                throw new IllegalStateException("Duplicate extension id [" + ext.getId() + "] in "
+                        + getClass().getSimpleName() + ": [" + existing.getClass().getName()
+                        + "] vs [" + ext.getClass().getName() + "]");
+            }
+        }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
