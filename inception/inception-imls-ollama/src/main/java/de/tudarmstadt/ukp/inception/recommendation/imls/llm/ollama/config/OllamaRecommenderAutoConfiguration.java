@@ -27,6 +27,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecE
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.OllamaRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaLlmChatClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaMetrics;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaMetricsImpl;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -45,6 +46,13 @@ public class OllamaRecommenderAutoConfiguration
     public OllamaMetrics ollamaMetrics()
     {
         return new OllamaMetricsImpl();
+    }
+
+    // Like ollamaClient itself, the adapter is unconditional because the assistant needs it.
+    @Bean
+    public OllamaLlmChatClient ollamaLlmChatClient(OllamaClient aClient)
+    {
+        return new OllamaLlmChatClient(aClient);
     }
 
     @ConditionalOnProperty(prefix = "recommender.ollama", name = "enabled", havingValue = "true", //

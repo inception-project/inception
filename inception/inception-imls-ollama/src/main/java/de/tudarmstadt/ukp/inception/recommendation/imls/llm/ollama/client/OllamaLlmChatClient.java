@@ -1,0 +1,233 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
+
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatChunk;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatOptions;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatResult;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.FinishReason;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelInfo;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolCall;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.UsageInfo;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
+import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+
+/**
+ * {@link LlmChatClient} adapter for Ollama, exposing chat, streaming, embeddings, and model
+ * discovery through the provider-neutral abstraction. Delegates to the existing
+ * {@link OllamaClient}; pure pass-through with no recommender-specific defaults applied here.
+ * <p>
+ * Tool calling is intentionally not yet bridged: callers do not currently pass
+ * {@link ChatOptions#tools()} through the abstraction. When wired, translation between
+ * {@code ToolDescriptor} and {@link OllamaTool} happens here.
+ */
+public class OllamaLlmChatClient
+    implements LlmChatClient
+{
+    public static final String ID = "ollama";
+
+    private final OllamaClient client;
+
+    public OllamaLlmChatClient(OllamaClient aClient)
+    {
+        client = aClient;
+    }
+
+    @Override
+    public String getId()
+    {
+        return ID;
+    }
+
+    @Override
+    public boolean supportsJsonSchema()
+    {
+        return true;
+    }
+
+    @Override
+    public boolean supportsStreaming()
+    {
+        return true;
+    }
+
+    @Override
+    public boolean supportsEmbeddings()
+    {
+        return true;
+    }
+
+    @Override
+    public ChatResult chat(LlmEndpoint aEndpoint, List<ChatMessage> aMessages, ChatOptions aOptions)
+        throws IOException
+    {
+        var request = buildChatRequest(aEndpoint, aMessages, aOptions, false);
+        var response = client.chat(aEndpoint.url(), request);
+        return toChatResult(response);
+    }
+
+    @Override
+    public ChatResult chatStream(LlmEndpoint aEndpoint, List<ChatMessage> aMessages,
+            ChatOptions aOptions, Consumer<ChatChunk> aOnChunk)
+        throws IOException
+    {
+        var request = buildChatRequest(aEndpoint, aMessages, aOptions, true);
+        Consumer<OllamaChatResponse> callback = chunk -> {
+            var msg = chunk.getMessage();
+            if (msg == null) {
+                return;
+            }
+            if (msg.content() == null && msg.thinking() == null) {
+                return;
+            }
+            aOnChunk.accept(new ChatChunk(msg.content(), msg.thinking()));
+        };
+        var response = client.chat(aEndpoint.url(), request, callback);
+        return toChatResult(response);
+    }
+
+    @Override
+    public List<float[]> embed(LlmEndpoint aEndpoint, List<String> aInputs) throws IOException
+    {
+        var request = OllamaEmbedRequest.builder() //
+                .withModel(aEndpoint.model()) //
+                .withInput(aInputs) //
+                .build();
+
+        return client.embed(aEndpoint.url(), request).stream() //
+                .map(p -> p.getRight()) //
+                .toList();
+    }
+
+    @Override
+    public List<ModelInfo> listModels(LlmEndpoint aEndpoint) throws IOException
+    {
+        return client.listModels(aEndpoint.url()).stream() //
+                .map(t -> new ModelInfo(t.name())) //
+                .toList();
+    }
+
+    private OllamaChatRequest buildChatRequest(LlmEndpoint aEndpoint, List<ChatMessage> aMessages,
+            ChatOptions aOptions, boolean aStream)
+    {
+        var messages = aMessages.stream() //
+                .map(m -> new OllamaChatMessage(m.role().getName(), m.content())) //
+                .toList();
+
+        var builder = OllamaChatRequest.builder() //
+                .withApiKey(apiKey(aEndpoint)) //
+                .withModel(aEndpoint.model()) //
+                .withMessages(messages) //
+                .withFormat(toFormat(aOptions)) //
+                .withThink(false) //
+                .withStream(aStream);
+
+        if (aOptions.options() != null) {
+            builder.withExtraOptions(aOptions.options());
+        }
+
+        return builder.build();
+    }
+
+    private static ChatResult toChatResult(OllamaChatResponse aResponse)
+    {
+        var ollamaMessage = aResponse.getMessage();
+        var content = ollamaMessage != null && ollamaMessage.content() != null //
+                ? ollamaMessage.content() //
+                : "";
+        var role = ollamaMessage != null && ollamaMessage.role() != null //
+                ? roleFromOllama(ollamaMessage.role()) //
+                : ChatMessage.Role.ASSISTANT;
+
+        var toolCalls = ollamaMessage != null && ollamaMessage.toolCalls() != null //
+                ? ollamaMessage.toolCalls().stream() //
+                        .map(OllamaLlmChatClient::toToolCall) //
+                        .toList() //
+                : Collections.<ToolCall> emptyList();
+
+        var finishReason = aResponse.isDone() //
+                ? (toolCalls.isEmpty() ? FinishReason.STOP : FinishReason.TOOL_CALLS) //
+                : null;
+
+        var usage = new UsageInfo( //
+                aResponse.getPromptEvalCount() != 0 ? aResponse.getPromptEvalCount() : null, //
+                aResponse.getEvalCount() != 0 ? aResponse.getEvalCount() : null, //
+                aResponse.getPromptEvalCount() + aResponse.getEvalCount() != 0 //
+                        ? aResponse.getPromptEvalCount() + aResponse.getEvalCount() //
+                        : null);
+
+        return new ChatResult(new ChatMessage(role, content), toolCalls, finishReason, usage);
+    }
+
+    private static ToolCall toToolCall(OllamaToolCall aCall)
+    {
+        var fn = aCall.getFunction();
+        if (fn == null) {
+            return new ToolCall(null, null, null);
+        }
+        var args = JsonNodeFactory.instance.objectNode();
+        fn.getArguments().forEach((k, v) -> args.putPOJO(k, v));
+        return new ToolCall(null, fn.getName(), args);
+    }
+
+    private static ChatMessage.Role roleFromOllama(String aRole)
+    {
+        return switch (aRole) {
+        case "system" -> ChatMessage.Role.SYSTEM;
+        case "user" -> ChatMessage.Role.USER;
+        case "tool" -> ChatMessage.Role.ASSISTANT; // closest available; TOOL role not yet on
+                                                   // ChatMessage
+        default -> ChatMessage.Role.ASSISTANT;
+        };
+    }
+
+    private static JsonNode toFormat(ChatOptions aOptions)
+    {
+        if (aOptions.jsonSchema() != null) {
+            return aOptions.jsonSchema();
+        }
+        if (aOptions.responseFormat() == ResponseFormat.JSON) {
+            return JsonNodeFactory.instance.textNode("json");
+        }
+        return null;
+    }
+
+    private static String apiKey(LlmEndpoint aEndpoint)
+    {
+        var auth = aEndpoint.auth();
+        if (auth instanceof ApiKeyAuthenticationTraits apiKeyAuth) {
+            return apiKeyAuth.getApiKey();
+        }
+        if (auth == null) {
+            return null;
+        }
+        throw new IllegalArgumentException(
+                "Ollama client only supports " + ApiKeyAuthenticationTraits.class.getSimpleName()
+                        + " or no auth; got [" + auth.getClass().getName() + "]");
+    }
+}
