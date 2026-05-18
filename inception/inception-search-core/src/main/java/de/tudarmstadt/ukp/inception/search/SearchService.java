@@ -179,4 +179,26 @@ public interface SearchService
      *             if there was an I/O-level problem
      */
     void upgradeIndex(Project aProject) throws IOException;
+
+    /**
+     * Count annotations of the given layer per source document. Each annotation on the layer is
+     * counted once, regardless of its feature values. For token / sentence counts, pass a
+     * lightweight {@link AnnotationLayer} whose UI name is {@code "Token"} or {@code "Sentence"}.
+     *
+     * @param aUser
+     *            the current user
+     * @param aProject
+     *            the project
+     * @param aLayer
+     *            the annotation layer to count; the layer is identified by its UI name
+     * @return map from source document id to match count. Documents with zero matches may be
+     *         omitted; callers should treat a missing key as zero.
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws ExecutionException
+     *             if there was a search-level problem
+     */
+    Map<Long, Long> getAnnotationCountsPerSourceDocument(User aUser, Project aProject,
+            AnnotationLayer aLayer)
+        throws IOException, ExecutionException;
 }

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.workload.ui;
 
 import static de.tudarmstadt.ukp.inception.security.config.InceptionSecurityWebUIApiAutoConfiguration.BASE_API_URL;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -33,5 +34,6 @@ public interface ProjectProgressPanelController
     String getProgressUrl(long aProjectId);
 
     List<DocumentStateSnapshot> progress(long aProjectId, Optional<Instant> aFrom,
-            Optional<Instant> aTo, Optional<Instant> aNow);
+            Optional<Instant> aTo, Optional<Instant> aNow, Optional<ProgressMetric> aMetric)
+        throws IOException;
 }

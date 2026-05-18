@@ -29,9 +29,11 @@ import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_LAYER_SEGMENTA
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getIndexedName;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toSet;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER_ARGS;
 import static mtas.codec.MtasCodec.MTAS_CODEC_NAME;
@@ -99,6 +101,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
@@ -707,6 +711,146 @@ public class MtasDocumentIndex
                 searcher = null;
             }
         }
+    }
+
+    static String buildLayerCountQuery(AnnotationLayer aLayer)
+    {
+        if (aLayer == null) {
+            throw new IllegalArgumentException("Layer must not be null");
+        }
+
+        var type = aLayer.getName();
+        if (Token._TypeName.equals(type)) {
+            return "<Token=\"\"/>";
+        }
+        if (Sentence._TypeName.equals(type)) {
+            return "<s=\"\"/>";
+        }
+
+        return "<" + getIndexedName(aLayer.getUiName()) + "=\"\"/>";
+    }
+
+    @Override
+    public Map<Long, Long> getAnnotationCountsPerSourceDocument(StatisticRequest aRequest,
+            AnnotationLayer aLayer)
+        throws IOException, ExecutionException
+    {
+        var featureQuery = buildLayerCountQuery(aLayer);
+        var parsedQuery = parseQuery(featureQuery, aRequest.getSearchSettings());
+
+        var projectSourceDocumentIds = documentService.listSourceDocuments(aRequest.getProject())
+                .stream() //
+                .map(SourceDocument::getId) //
+                .collect(toSet());
+
+        var counts = new HashMap<Long, Long>();
+
+        IndexSearcher searcher = null;
+        try {
+            searcher = getSearcherManager().acquire();
+            var indexReader = searcher.getIndexReader();
+
+            // Pick exactly one preferred Lucene doc per source document, representing the
+            // project-canonical state of the document:
+            // 1) the curation row, if a curation CAS has been indexed for this document
+            // 2) otherwise the source-doc row (INITIAL_CAS)
+            // Per-annotator rows are intentionally ignored - we count annotations in the
+            // canonical state, not in any individual annotator's work.
+            var preferredLuceneDocBySourceDoc = new HashMap<Long, Integer>();
+            var hasCurationRowBySourceDoc = new HashMap<Long, Boolean>();
+            for (var leafReaderContext : indexReader.leaves()) {
+                var reader = leafReaderContext.reader();
+                var storedFields = reader.storedFields();
+                var liveDocs = reader.getLiveDocs();
+                var docBase = leafReaderContext.docBase;
+                for (var docId = 0; docId < reader.maxDoc(); docId++) {
+                    if (liveDocs != null && !liveDocs.get(docId)) {
+                        continue;
+                    }
+                    var document = storedFields.document(docId);
+                    var rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
+                    var rawAnnotationDocumentId = document.get(FIELD_ANNOTATION_DOCUMENT_ID);
+                    if (!validSourceAndDocumentIds(rawSourceDocumentId, rawAnnotationDocumentId)) {
+                        continue;
+                    }
+                    var sourceDocumentId = Long.valueOf(rawSourceDocumentId);
+                    if (!projectSourceDocumentIds.contains(sourceDocumentId)) {
+                        // Stale row for a source document that no longer exists in the project.
+                        continue;
+                    }
+                    var isAnnotationRow = Long.parseLong(rawAnnotationDocumentId) != -1L;
+                    var rowUser = document.get(FIELD_USER);
+                    if (isAnnotationRow) {
+                        if (!CURATION_USER.equals(rowUser)) {
+                            // Per-annotator rows do not represent the canonical state.
+                            continue;
+                        }
+                        preferredLuceneDocBySourceDoc.put(sourceDocumentId, docId + docBase);
+                        hasCurationRowBySourceDoc.put(sourceDocumentId, true);
+                    }
+                    else {
+                        // Source-doc row (INITIAL_CAS); only used as fallback when no curation
+                        // row is present.
+                        if (!hasCurationRowBySourceDoc.getOrDefault(sourceDocumentId, false)) {
+                            preferredLuceneDocBySourceDoc.put(sourceDocumentId, docId + docBase);
+                        }
+                    }
+                }
+            }
+
+            var preferredGlobalDocIds = new IntOpenHashSet(preferredLuceneDocBySourceDoc.values());
+
+            final var boost = 0;
+            var spanweight = parsedQuery.rewrite(searcher).createWeight(searcher,
+                    COMPLETE_NO_SCORES, boost);
+
+            for (var leafReaderContext : indexReader.leaves()) {
+                var spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
+                if (spans == null) {
+                    continue;
+                }
+
+                var segmentReader = (SegmentReader) leafReaderContext.reader();
+                var storedFields = segmentReader.storedFields();
+                var docBase = leafReaderContext.docBase;
+
+                while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+                    if (segmentReader.numDocs() != segmentReader.maxDoc()
+                            && !segmentReader.getLiveDocs().get(spans.docID())) {
+                        continue;
+                    }
+
+                    if (!preferredGlobalDocIds.contains(spans.docID() + docBase)) {
+                        continue;
+                    }
+
+                    var document = storedFields.document(spans.docID());
+                    var rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
+                    var sourceDocumentId = Long.valueOf(rawSourceDocumentId);
+
+                    var perDocCount = 0L;
+                    while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
+                        perDocCount++;
+                    }
+                    counts.merge(sourceDocumentId, perDocCount, Long::sum);
+                }
+            }
+        }
+        catch (IOException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new ExecutionException(
+                    "Unable to count annotations for query [" + featureQuery + "]", e);
+        }
+        finally {
+            if (searcher != null) {
+                getSearcherManager().release(searcher);
+                searcher = null;
+            }
+        }
+
+        return counts;
     }
 
     private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest,

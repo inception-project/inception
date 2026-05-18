@@ -35,8 +35,10 @@ import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
+import de.tudarmstadt.ukp.inception.search.ProgressWeighterImpl;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
+import de.tudarmstadt.ukp.inception.workload.ui.ProgressWeighter;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
@@ -82,5 +84,11 @@ public class SearchServiceAutoConfiguration
             FeatureSupportRegistry aFeatureSupportRegistry)
     {
         return new PrimitiveUimaIndexingSupport(aFeatureSupportRegistry);
+    }
+
+    @Bean
+    public ProgressWeighter searchProgressWeightSource(SearchService aSearchService)
+    {
+        return new ProgressWeighterImpl(aSearchService);
     }
 }

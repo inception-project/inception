@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasBuilder;
@@ -726,6 +727,35 @@ class MtasDocumentIndexTest
         assertThat(queryStatsResults.getUser()).isEqualTo(user);
         assertThat(queryStatsResults.getProject()).isEqualTo(project);
         assertThat(queryStatsResults.getResults()).isEqualTo(expected);
+    }
+
+    @Test
+    void testTokenCountsPerSourceDocument() throws Exception
+    {
+        var project = new Project("token-counts");
+
+        createProject(project);
+
+        var firstDocument = new SourceDocument("First document", project, "text");
+        var firstContent = "The capital of Galicia is Santiago de Compostela.";
+        uploadAndIndexDocument(Pair.of(firstDocument, firstContent));
+        annotateDocumentAdvanced(project, user, firstDocument);
+
+        var secondDocument = new SourceDocument("Second document", project, "text");
+        var secondContent = "Goodbye moon. Hello World.";
+        uploadAndIndexDocument(Pair.of(secondDocument, secondContent));
+
+        var tokenLayer = new AnnotationLayer();
+        tokenLayer.setUiName("Token");
+
+        var counts = searchService.getAnnotationCountsPerSourceDocument(user, project, tokenLayer);
+
+        var firstDoc = documentService.getSourceDocument(project, firstDocument.getName());
+        var secondDoc = documentService.getSourceDocument(project, secondDocument.getName());
+
+        assertThat(counts).containsOnly( //
+                Map.entry(firstDoc.getId(), 9L), //
+                Map.entry(secondDoc.getId(), 6L));
     }
 
     @SpringBootConfiguration

@@ -73,8 +73,31 @@ public interface EventRepository
      *            earliest time to calculate backwards to
      * @return list of historical state snapshots, ordered oldest-first
      */
+    default List<DocumentStateSnapshot> calculateHistoricalDocumentStates(Project aProject,
+            Map<SourceDocumentState, Long> aCurrentStats, Instant aFrom)
+    {
+        return calculateHistoricalDocumentStates(aProject, aCurrentStats, null, aFrom);
+    }
+
+    /**
+     * Weighted variant: each document contributes the weight given by {@code aWeightByDocId}
+     * (missing entries treated as zero) instead of {@code 1} when buckets are adjusted. Used to
+     * scale the chart by token counts (or any other per-document weight) rather than document
+     * counts. With {@code aWeightByDocId == null}, behavior matches the unweighted overload.
+     *
+     * @param aProject
+     *            the project
+     * @param aCurrentStats
+     *            current document state counts/weights (starting point for backwards calculation)
+     * @param aWeightByDocId
+     *            map from source document id to weight; {@code null} means unit weights (1 per doc)
+     * @param aFrom
+     *            earliest time to calculate backwards to
+     * @return list of historical state snapshots, ordered oldest-first
+     */
     List<DocumentStateSnapshot> calculateHistoricalDocumentStates(Project aProject,
-            Map<SourceDocumentState, Long> aCurrentStats, Instant aFrom);
+            Map<SourceDocumentState, Long> aCurrentStats, Map<Long, Long> aWeightByDocId,
+            Instant aFrom);
 
     /**
      * Represents document state counts at a specific point in time.

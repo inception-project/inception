@@ -56,6 +56,7 @@
     let error: string | null = null;
     let range: "max" | "year" | "quarter" | "month" | "week" = "max";
     let projection: "none" | "week" | "month" | "quarter" | "year" = "quarter";
+    let metric: "documents" | "tokens" | "sentences" = "documents";
     let chartDiv: HTMLDivElement | null = null;
     let chart: echarts.ECharts | null = null;
     let resizeObserver: ResizeObserver | null = null;
@@ -94,16 +95,21 @@
             if (projection && projection !== "none") {
                 const to = computeTo(projection);
                 if (to) {
-                    const sep2 = url.indexOf("?") === -1 ? "?" : "&";
-                    url = `${url}${sep2}to=${encodeURIComponent(to)}`;
+                    const sep = url.indexOf("?") === -1 ? "?" : "&";
+                    url = `${url}${sep}to=${encodeURIComponent(to)}`;
                 }
             }
 
             // Add simulated "now" parameter if test mode is enabled
             if (testModeEnabled && simulatedToday) {
                 const nowParam = dayjs(simulatedToday).toISOString();
-                const sep3 = url.indexOf("?") === -1 ? "?" : "&";
-                url = `${url}${sep3}now=${encodeURIComponent(nowParam)}`;
+                const sep = url.indexOf("?") === -1 ? "?" : "&";
+                url = `${url}${sep}now=${encodeURIComponent(nowParam)}`;
+            }
+
+            if (metric && metric !== "documents") {
+                const sep = url.indexOf("?") === -1 ? "?" : "&";
+                url = `${url}${sep}metric=${encodeURIComponent(metric.toUpperCase())}`;
             }
 
             const res = await fetch(url);
@@ -471,7 +477,7 @@
                 { type: "slider", xAxisIndex: 0, bottom: 8 },
             ],
             xAxis: { type: "category", boundaryGap: false, data: dateArr },
-            yAxis: { type: "value" },
+            yAxis: { type: "value", name: metric.charAt(0).toUpperCase() + metric.slice(1), nameLocation: "middle", nameGap: 50 },
             color: [
                 ...displayStates.map((s) => STATE_COLORS[s] || "#888888"),
                 "#000000",
@@ -540,6 +546,13 @@
             <option value="quarter">Quarter</option>
             <option value="year">Year</option>
             <option value="none">None</option>
+        </select>
+
+        <label for="metric-select" class="ms-3 me-2">Metric</label>
+        <select id="metric-select" class="form-select" bind:value={metric} on:change={load} title="Documents counts one per doc; Tokens/Sentences weight each doc by its count in the search index (unindexed and deleted docs contribute zero).">
+            <option value="documents">Documents</option>
+            <option value="tokens">Tokens</option>
+            <option value="sentences">Sentences</option>
         </select>
     </div>
 
