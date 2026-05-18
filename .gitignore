@@ -12,6 +12,7 @@ target
 *.iml
 .idea
 cache
+.sass-cache
 idea/
 *.jfr
 *.eml
