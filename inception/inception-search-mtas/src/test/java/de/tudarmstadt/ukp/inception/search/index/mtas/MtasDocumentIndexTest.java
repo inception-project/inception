@@ -38,9 +38,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.store.FSDirectory;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.util.CasUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -149,6 +152,7 @@ class MtasDocumentIndexTest
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
     private @Autowired SearchServiceImpl searchService;
+    private @Autowired MtasDocumentIndexFactory indexFactory;
 
     private User user;
 
@@ -835,6 +839,64 @@ class MtasDocumentIndexTest
                         && searchService.getIndexProgress(aProject).isEmpty());
     }
 
+    /**
+     * Diagnostic dump for the count tests. Investigates whether the failure mode is duplicate
+     * Lucene rows (write-path issue) or a single row whose CAS has the wrong token count (CAS-level
+     * issue). Distinguishing the two requires looking at the raw index, which the high-level search
+     * API does not expose.
+     */
+    private void dumpDiagnostics(Project aProject, SourceDocument aDoc)
+    {
+        LOG.error("[DIAG] === Begin diagnostics for project '{}' (id={}) doc '{}' (id={}) ===",
+                aProject.getName(), aProject.getId(), aDoc.getName(), aDoc.getId());
+
+        try (var session = CasStorageSession.open()) {
+            try {
+                var cas = documentService.createOrReadInitialCas(aDoc);
+                var tokenType = CasUtil.getType(cas, Token.class);
+                var sentType = CasUtil.getType(cas, Sentence.class);
+                LOG.error("[DIAG] INITIAL_CAS has {} Token annotations, {} Sentence annotations",
+                        cas.getAnnotationIndex(tokenType).size(),
+                        cas.getAnnotationIndex(sentType).size());
+            }
+            catch (Exception e) {
+                LOG.error("[DIAG] Failed to read INITIAL_CAS", e);
+            }
+        }
+
+        var indexDir = indexFactory.getIndexDir(aProject);
+        LOG.error("[DIAG] Index dir: {} (exists={})", indexDir, indexDir.isDirectory());
+        if (!indexDir.isDirectory()) {
+            LOG.error("[DIAG] === End diagnostics (no index dir) ===");
+            return;
+        }
+
+        try (var dir = FSDirectory.open(indexDir.toPath());
+                var reader = DirectoryReader.open(dir)) {
+            LOG.error("[DIAG] Reader: maxDoc={} numDocs={} numLeaves={}", reader.maxDoc(),
+                    reader.numDocs(), reader.leaves().size());
+            for (var leafCtx : reader.leaves()) {
+                var leafReader = leafCtx.reader();
+                var liveBits = leafReader.getLiveDocs();
+                var storedFields = leafReader.storedFields();
+                for (var i = 0; i < leafReader.maxDoc(); i++) {
+                    var live = (liveBits == null || liveBits.get(i));
+                    var doc = storedFields.document(i);
+                    LOG.error(
+                            "[DIAG]   leaf={} doc#{} live={} user='{}' id='{}' "
+                                    + "srcDocId='{}' annoDocId='{}' timestamp='{}'",
+                            leafCtx.ord, i, live, doc.get("user"), doc.get("id"),
+                            doc.get("sourceDocumentId"), doc.get("annotationDocumentId"),
+                            doc.get("timestamp"));
+                }
+            }
+        }
+        catch (Exception e) {
+            LOG.error("[DIAG] Failed to dump Lucene index", e);
+        }
+        LOG.error("[DIAG] === End diagnostics ===");
+    }
+
     @Test
     void testTokenCountsPerSourceDocument_curationPreferredOverAnnotatorAndInitial()
         throws Exception
@@ -855,7 +917,13 @@ class MtasDocumentIndexTest
         var counts = searchService.getAnnotationCountsPerSourceDocument(user, project, tokenLayer);
 
         var persistedDoc = documentService.getSourceDocument(project, doc.getName());
-        assertThat(counts).containsOnly(Map.entry(persistedDoc.getId(), 2L));
+        try {
+            assertThat(counts).containsOnly(Map.entry(persistedDoc.getId(), 2L));
+        }
+        catch (AssertionError e) {
+            dumpDiagnostics(project, persistedDoc);
+            throw e;
+        }
     }
 
     @Test
@@ -874,7 +942,13 @@ class MtasDocumentIndexTest
         var counts = searchService.getAnnotationCountsPerSourceDocument(user, project, tokenLayer);
 
         var persistedDoc = documentService.getSourceDocument(project, doc.getName());
-        assertThat(counts).containsOnly(Map.entry(persistedDoc.getId(), 6L));
+        try {
+            assertThat(counts).containsOnly(Map.entry(persistedDoc.getId(), 6L));
+        }
+        catch (AssertionError e) {
+            dumpDiagnostics(project, persistedDoc);
+            throw e;
+        }
     }
 
     @Test
@@ -894,7 +968,13 @@ class MtasDocumentIndexTest
                 sentenceLayer);
 
         var persistedDoc = documentService.getSourceDocument(project, doc.getName());
-        assertThat(counts).containsOnly(Map.entry(persistedDoc.getId(), 5L));
+        try {
+            assertThat(counts).containsOnly(Map.entry(persistedDoc.getId(), 5L));
+        }
+        catch (AssertionError e) {
+            dumpDiagnostics(project, persistedDoc);
+            throw e;
+        }
     }
 
     @SpringBootConfiguration
