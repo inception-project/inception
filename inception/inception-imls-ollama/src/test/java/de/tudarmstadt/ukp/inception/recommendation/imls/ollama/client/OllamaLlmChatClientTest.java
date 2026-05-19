@@ -33,9 +33,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.Tool;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolParam;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatChunk;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatOptions;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.FinishReason;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolDescriptor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaLlmChatClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaMetricsImpl;
@@ -130,5 +134,46 @@ class OllamaLlmChatClientTest
 
         LOG.info("Models: {}", models);
         assertThat(models).extracting("id").contains(CHAT_MODEL);
+    }
+
+    static class WeatherService
+    {
+        @Tool(value = "get_current_weather", description = "Get the current weather for a given location.")
+        @SuppressWarnings("unused")
+        String getCurrentWeather(@ToolParam(value = "location", //
+                description = "The city to get the weather for.") String aLocation)
+        {
+            return "sunny";
+        }
+    }
+
+    @Test
+    void testChatWithTool() throws Exception
+    {
+        var weatherTool = ToolDescriptor.fromMethod(
+                WeatherService.class.getDeclaredMethod("getCurrentWeather", String.class));
+
+        var messages = List
+                .of(new ChatMessage(USER, "What is the current weather in Berlin? Use the tool."));
+        var options = new ChatOptions(null, null, List.of(weatherTool), null);
+
+        var result = sut.chat(endpoint(CHAT_MODEL), messages, options);
+
+        LOG.info("Finish reason: {}, tool calls: {}", result.finishReason(), result.toolCalls());
+
+        assertThat(result.toolCalls()).as("tool calls").isNotEmpty();
+        assertThat(result.finishReason()).isEqualTo(FinishReason.TOOL_CALLS);
+
+        var call = result.toolCalls().get(0);
+        assertThat(call.name()).isEqualTo("get_current_weather");
+        assertThat(call.arguments()).as("arguments JsonNode").isNotNull();
+        assertThat(call.arguments().isObject()).as("arguments is an object node").isTrue();
+
+        // valueToTree should yield proper value nodes — not POJONode wrappers — so the
+        // JSON-tree-style type predicates report correctly.
+        var location = call.arguments().get("location");
+        assertThat(location).as("location argument node").isNotNull();
+        assertThat(location.isTextual()).as("location node is TextNode").isTrue();
+        assertThat(location.asText()).containsIgnoringCase("berlin");
     }
 }
