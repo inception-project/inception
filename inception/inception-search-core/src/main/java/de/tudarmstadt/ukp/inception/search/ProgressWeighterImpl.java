@@ -27,8 +27,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.workload.ui.ProgressMetric;
-import de.tudarmstadt.ukp.inception.workload.ui.ProgressWeighter;
+import de.tudarmstadt.ukp.inception.workload.api.ProgressMetric;
+import de.tudarmstadt.ukp.inception.workload.api.ProgressWeighter;
 
 /**
  * Bridges the workload progress chart to the search index. Currently supports

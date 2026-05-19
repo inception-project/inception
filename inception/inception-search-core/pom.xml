@@ -77,7 +77,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-workload</artifactId>
+      <artifactId>inception-workload-api</artifactId>
       <version>${project.version}</version>
     </dependency>
 

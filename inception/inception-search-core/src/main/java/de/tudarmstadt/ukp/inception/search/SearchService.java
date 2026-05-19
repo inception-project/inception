@@ -182,8 +182,7 @@ public interface SearchService
 
     /**
      * Count annotations of the given layer per source document. Each annotation on the layer is
-     * counted once, regardless of its feature values. For token / sentence counts, pass a
-     * lightweight {@link AnnotationLayer} whose UI name is {@code "Token"} or {@code "Sentence"}.
+     * counted once, regardless of its feature values.
      *
      * @param aUser
      *            the current user

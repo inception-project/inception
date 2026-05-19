@@ -50,9 +50,9 @@ public class DocumentStateLinearTrendProjectorTest
         return LocalDate.of(2025, 1, 1).plusDays(offsetDays).atStartOfDay().toInstant(UTC);
     }
 
-    private DocumentStateSnapshot snapshot(int offsetDays, SourceDocumentState state, int count)
+    private DocumentStateSnapshot snapshot(int offsetDays, SourceDocumentState state, long count)
     {
-        var counts = new HashMap<SourceDocumentState, Integer>();
+        var counts = new HashMap<SourceDocumentState, Long>();
         counts.put(state, count);
         return new DocumentStateSnapshot(day(offsetDays), counts);
     }
@@ -82,7 +82,7 @@ public class DocumentStateLinearTrendProjectorTest
         // Expect linear increase by ~1 per day -> projected counts 4,5,6
         assertThat(projections) //
                 .extracting(p -> p.counts().get(ANNOTATION_FINISHED)) //
-                .containsExactly(4, 5, 6);
+                .containsExactly(4L, 5L, 6L);
     }
 
     @Test
@@ -105,7 +105,7 @@ public class DocumentStateLinearTrendProjectorTest
         assertThat(projections) //
                 .hasSize(2) //
                 .extracting(p -> p.counts().get(CURATION_FINISHED)) //
-                .containsExactly(56, 62);
+                .containsExactly(56L, 62L);
     }
 
     @Test
@@ -124,6 +124,6 @@ public class DocumentStateLinearTrendProjectorTest
         assertThat(projections.get(1).day()).isEqualTo(day(6));
 
         assertThat(projections) // counts should be constant
-                .extracting(p -> p.counts().get(ANNOTATION_FINISHED)).containsExactly(5, 5);
+                .extracting(p -> p.counts().get(ANNOTATION_FINISHED)).containsExactly(5L, 5L);
     }
 }

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 import de.tudarmstadt.ukp.inception.log.api.EventRepository.DocumentStateSnapshot;
+import de.tudarmstadt.ukp.inception.workload.api.ProgressMetric;
 
 public interface ProjectProgressPanelController
 {

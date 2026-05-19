@@ -396,15 +396,15 @@ public class EventRepositoryImplIntegrationTest
         assertThat(snapshots.get(0).counts()).allSatisfy((s, c) -> assertThat(c).isZero());
 
         var newest = snapshots.get(snapshots.size() - 1);
-        assertThat(newest.counts().get(ANNOTATION_FINISHED)).isEqualTo(7);
+        assertThat(newest.counts().get(ANNOTATION_FINISHED)).isEqualTo(7L);
 
         // At least one intermediate snapshot must reflect NEW=7 (undone state change).
-        assertThat(snapshots).anySatisfy(s -> assertThat(s.counts().get(NEW)).isEqualTo(7));
+        assertThat(snapshots).anySatisfy(s -> assertThat(s.counts().get(NEW)).isEqualTo(7L));
 
         // Every snapshot's totals must be 0 or 7 — only one doc exists in this scenario and its
         // weight is 7, so any non-zero total proves the weight (not 1) was applied.
         for (var s : snapshots) {
-            var total = s.counts().values().stream().mapToLong(Integer::longValue).sum();
+            var total = s.counts().values().stream().mapToLong(Long::longValue).sum();
             assertThat(total).isIn(0L, 7L);
         }
     }
@@ -481,15 +481,15 @@ public class EventRepositoryImplIntegrationTest
 
         // Newest snapshot must match current state exactly — each doc weighted by its own value.
         var newest = snapshots.get(snapshots.size() - 1);
-        assertThat(newest.counts().get(ANNOTATION_IN_PROGRESS)).isEqualTo(3);
-        assertThat(newest.counts().get(ANNOTATION_FINISHED)).isEqualTo(11);
+        assertThat(newest.counts().get(ANNOTATION_IN_PROGRESS)).isEqualTo(3L);
+        assertThat(newest.counts().get(ANNOTATION_FINISHED)).isEqualTo(11L);
 
         // Going back past doc 701's state change (~2 days ago) but not past doc 700's
         // (~3 days ago): doc 701's weight returns to NEW (11), doc 700 remains IN_PROGRESS (3).
         // Total weight always sums to 14 — weights are conserved on state-change events because
         // each adjusts both source and target buckets by the same per-doc weight.
         for (var s : snapshots) {
-            var total = s.counts().values().stream().mapToLong(Integer::longValue).sum();
+            var total = s.counts().values().stream().mapToLong(Long::longValue).sum();
             assertThat(total).isEqualTo(14);
         }
     }

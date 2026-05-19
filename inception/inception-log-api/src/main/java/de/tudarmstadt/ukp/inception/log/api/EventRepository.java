@@ -102,5 +102,5 @@ public interface EventRepository
     /**
      * Represents document state counts at a specific point in time.
      */
-    record DocumentStateSnapshot(Instant day, Map<SourceDocumentState, Integer> counts) {}
+    record DocumentStateSnapshot(Instant day, Map<SourceDocumentState, Long> counts) {}
 }

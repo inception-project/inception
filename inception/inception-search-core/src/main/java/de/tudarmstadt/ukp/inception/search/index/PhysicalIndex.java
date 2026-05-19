@@ -76,9 +76,6 @@ public interface PhysicalIndex
      * counted once regardless of its feature values. The returned map is keyed by
      * {@link SourceDocument} id; source documents that contain no annotations on the layer may be
      * omitted (callers should treat a missing key as zero).
-     * <p>
-     * For tokens and sentences, pass a layer whose UI name is {@code "Token"} or
-     * {@code "Sentence"}.
      *
      * @param aStatisticRequest
      *            scope of the count (project, user, token-per-doc bounds, etc.)

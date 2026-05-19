@@ -52,14 +52,14 @@ public class TotalConservingDocumentStateProjectorTest
         return LocalDate.of(2025, 1, 1).plusDays(offsetDays).atStartOfDay().toInstant(UTC);
     }
 
-    private DocumentStateSnapshot snapshot(int offsetDays, SourceDocumentState state, int count)
+    private DocumentStateSnapshot snapshot(int offsetDays, SourceDocumentState state, long count)
     {
-        var counts = new HashMap<SourceDocumentState, Integer>();
+        var counts = new HashMap<SourceDocumentState, Long>();
         counts.put(state, count);
         return new DocumentStateSnapshot(day(offsetDays), counts);
     }
 
-    private DocumentStateSnapshot snapshot(int offsetDays, Map<SourceDocumentState, Integer> counts)
+    private DocumentStateSnapshot snapshot(int offsetDays, Map<SourceDocumentState, Long> counts)
     {
         return new DocumentStateSnapshot(day(offsetDays), new HashMap<>(counts));
     }
@@ -81,23 +81,23 @@ public class TotalConservingDocumentStateProjectorTest
         // Two-state example where totals are fixed in the latest snapshot
         var history = new ArrayList<DocumentStateSnapshot>();
         history.add(snapshot(0, Map.of( //
-                ANNOTATION_FINISHED, 2, //
-                CURATION_FINISHED, 1, //
-                NEW, 7)));
+                ANNOTATION_FINISHED, 2L, //
+                CURATION_FINISHED, 1L, //
+                NEW, 7L)));
         history.add(snapshot(1, Map.of( //
-                ANNOTATION_FINISHED, 3, //
-                CURATION_FINISHED, 2, //
-                NEW, 5)));
+                ANNOTATION_FINISHED, 3L, //
+                CURATION_FINISHED, 2L, //
+                NEW, 5L)));
 
         // fixed total is taken from latest snapshot -> 3+2+5 = 10
         var projections = sut.generate(history, 3, null);
 
         assertThat(projections).hasSize(3);
         for (var p : projections) {
-            var sum = p.counts().values().stream().mapToInt(Integer::intValue).sum();
+            var sum = p.counts().values().stream().mapToLong(Long::longValue).sum();
             assertThat(sum).isEqualTo(10);
             // remainder state must be non-negative
-            assertThat(p.counts().getOrDefault(NEW, 0)).isGreaterThanOrEqualTo(0);
+            assertThat(p.counts().getOrDefault(NEW, 0L)).isGreaterThanOrEqualTo(0L);
         }
     }
 
@@ -110,12 +110,12 @@ public class TotalConservingDocumentStateProjectorTest
 
         // Day 0: only NEW=100
         history.add(snapshot(0, Map.of( //
-                NEW, 100)));
+                NEW, 100L)));
 
         // Day 1: ANNOTATION_FINISHED=100, CURATION_FINISHED=100 (total=200)
         history.add(snapshot(1, Map.of( //
-                ANNOTATION_FINISHED, 100, //
-                CURATION_FINISHED, 100)));
+                ANNOTATION_FINISHED, 100L, //
+                CURATION_FINISHED, 100L)));
 
         // Project 2 days ahead; models for ANNOTATION/CURATION will predict large values -> should
         // trigger scaling
@@ -125,10 +125,10 @@ public class TotalConservingDocumentStateProjectorTest
 
         var fixedTotal = 200;
         for (var p : projections) {
-            var sum = p.counts().values().stream().mapToInt(Integer::intValue).sum();
+            var sum = p.counts().values().stream().mapToLong(Long::longValue).sum();
             assertThat(sum).isEqualTo(fixedTotal);
             // New (remainder) should be clamped to 0 in the over-projection case
-            assertThat(p.counts().getOrDefault(NEW, 0)).isEqualTo(0);
+            assertThat(p.counts().getOrDefault(NEW, 0L)).isEqualTo(0L);
         }
     }
 
@@ -137,8 +137,8 @@ public class TotalConservingDocumentStateProjectorTest
     {
         var history = new ArrayList<DocumentStateSnapshot>();
 
-        var counts0 = Map.of(ANNOTATION_FINISHED, 3, CURATION_FINISHED, 2, NEW, 5);
-        var counts1 = Map.of(ANNOTATION_FINISHED, 3, CURATION_FINISHED, 2, NEW, 5);
+        var counts0 = Map.of(ANNOTATION_FINISHED, 3L, CURATION_FINISHED, 2L, NEW, 5L);
+        var counts1 = Map.of(ANNOTATION_FINISHED, 3L, CURATION_FINISHED, 2L, NEW, 5L);
         history.add(snapshot(0, counts0));
         history.add(snapshot(1, counts1));
 
@@ -151,7 +151,7 @@ public class TotalConservingDocumentStateProjectorTest
 
         // totals preserved
         for (var p : projections) {
-            var sum = p.counts().values().stream().mapToInt(Integer::intValue).sum();
+            var sum = p.counts().values().stream().mapToLong(Long::longValue).sum();
             assertThat(sum).isEqualTo(10);
         }
     }

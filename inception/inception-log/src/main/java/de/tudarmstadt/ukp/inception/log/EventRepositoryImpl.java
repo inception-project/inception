@@ -468,9 +468,9 @@ public class EventRepositoryImpl
     private DocumentStateSnapshot createSnapshot(Instant aTime,
             Map<SourceDocumentState, Long> aCounts)
     {
-        var snapshot = new LinkedHashMap<SourceDocumentState, Integer>();
+        var snapshot = new LinkedHashMap<SourceDocumentState, Long>();
         for (var state : SourceDocumentState.values()) {
-            snapshot.put(state, aCounts.getOrDefault(state, 0L).intValue());
+            snapshot.put(state, aCounts.getOrDefault(state, 0L));
         }
         return new DocumentStateSnapshot(aTime, snapshot);
     }

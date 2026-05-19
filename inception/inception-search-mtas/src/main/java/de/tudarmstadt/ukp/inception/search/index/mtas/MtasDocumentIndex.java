@@ -812,11 +812,12 @@ public class MtasDocumentIndex
 
                 for (var i = 0; i < localIds.length; i++) {
                     var target = localIds[i];
-                    var advanced = spans.advance(target);
-                    if (advanced == NO_MORE_DOCS) {
-                        break;
+                    if (spans.docID() < target) {
+                        if (spans.advance(target) == NO_MORE_DOCS) {
+                            break;
+                        }
                     }
-                    if (advanced != target) {
+                    if (spans.docID() != target) {
                         // No span matches in this canonical doc — token count is 0; skip.
                         continue;
                     }
@@ -847,13 +848,20 @@ public class MtasDocumentIndex
      * Identify the canonical Lucene doc per source document by walking only the relevant FIELD_USER
      * posting lists:
      * <ol>
-     * <li>FIELD_USER=CURATION_USER yields all curation rows in this segment.</li>
-     * <li>FIELD_USER="" yields all source-doc rows (INITIAL_CAS), used as fallback when</li>
+     * <li>FIELD_USER=CURATION_USER yields all curation rows.</li>
+     * <li>FIELD_USER="" yields all source-doc rows (INITIAL_CAS), used as fallback when no curation
+     * row exists for that source doc.</li>
      * </ol>
-     * no curation row exists for that source doc. Per-annotator rows live under their own user
-     * names and are not visited at all.
+     * Per-annotator rows live under their own user names and are not visited at all.
      *
-     * Cost per leaf: two posting-list iterations + one stored-fields read per canonical row.
+     * Sweeps all leaves for curation rows first, then all leaves for source-doc rows. Doing it in
+     * two full passes — rather than interleaving curation/source within each leaf — is
+     * load-bearing: a source doc's curation row and its INITIAL_CAS row can live in different
+     * segments. If we recorded the INITIAL_CAS row before knowing whether any other segment held
+     * the curation row, both rows would end up in the result and the doc would be double-counted in
+     * pass 2.
+     *
+     * Cost: two posting-list iterations per leaf + one stored-fields read per canonical row.
      * Independent of annotator count, independent of project size beyond what we actually keep.
      */
     private HashMap<Integer, Long> getSourceDocumentsByDocId(Set<Long> projectSourceDocumentIds,
@@ -862,14 +870,14 @@ public class MtasDocumentIndex
     {
         var srcDocByGlobalLuceneDocId = new HashMap<Integer, Long>();
         var hasCurationRowBySourceDoc = new HashSet<Long>();
+
+        // Pass 1: record all curation rows across every leaf.
         for (var leafCtx : leaves) {
             var leafReader = leafCtx.reader();
             var storedFields = leafReader.storedFields();
             var liveDocs = leafReader.getLiveDocs();
             var docBase = leafCtx.docBase;
 
-            // Pass over curation rows first so the fallback pass can skip source docs that
-            // already have a curation row in this segment or any earlier one.
             for (var localDocId : findLiveDocsByUser(leafReader, CURATION_USER, liveDocs)) {
                 var rawSrcId = storedFields.document(localDocId).get(FIELD_SOURCE_DOCUMENT_ID);
                 if (rawSrcId == null) {
@@ -882,6 +890,14 @@ public class MtasDocumentIndex
                 srcDocByGlobalLuceneDocId.put(localDocId + docBase, srcDocId);
                 hasCurationRowBySourceDoc.add(srcDocId);
             }
+        }
+
+        // Pass 2: record source-doc rows only for source docs without a curation row anywhere.
+        for (var leafCtx : leaves) {
+            var leafReader = leafCtx.reader();
+            var storedFields = leafReader.storedFields();
+            var liveDocs = leafReader.getLiveDocs();
+            var docBase = leafCtx.docBase;
 
             for (var localDocId : findLiveDocsByUser(leafReader, "", liveDocs)) {
                 var rawSrcId = storedFields.document(localDocId).get(FIELD_SOURCE_DOCUMENT_ID);
@@ -898,6 +914,7 @@ public class MtasDocumentIndex
                 srcDocByGlobalLuceneDocId.put(localDocId + docBase, srcDocId);
             }
         }
+
         return srcDocByGlobalLuceneDocId;
     }
 

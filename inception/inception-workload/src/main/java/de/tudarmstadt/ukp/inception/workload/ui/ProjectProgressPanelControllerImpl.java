@@ -53,6 +53,8 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.log.api.EventRepository;
 import de.tudarmstadt.ukp.inception.log.api.EventRepository.DocumentStateSnapshot;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.workload.api.ProgressMetric;
+import de.tudarmstadt.ukp.inception.workload.api.ProgressWeighter;
 import jakarta.servlet.ServletContext;
 
 @ConditionalOnWebApplication
@@ -168,7 +170,7 @@ public class ProjectProgressPanelControllerImpl
         }
 
         if (weightSource.isEmpty()) {
-            throw new IllegalStateException("No weight source configured");
+            return null;
         }
 
         return weightSource.get().getWeights(aUser, aProject, aMetric.get());

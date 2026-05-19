@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.ui;
+package de.tudarmstadt.ukp.inception.workload.api;
 
 /**
  * Unit of the progress chart's Y axis. {@link #DOCUMENTS} counts one per source document;
