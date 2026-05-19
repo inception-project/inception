@@ -423,6 +423,7 @@ public class EventRepositoryImpl
         if (aWeightByDocId == null) {
             return 1L;
         }
+
         return aWeightByDocId.getOrDefault(aDocId, 0L);
     }
 

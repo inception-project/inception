@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.PARA
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getIndexedName;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -39,6 +40,9 @@ import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER_ARGS;
 import static mtas.codec.MtasCodec.MTAS_CODEC_NAME;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.apache.commons.lang3.StringUtils.toRootLowerCase;
+import static org.apache.lucene.index.PostingsEnum.NONE;
+import static org.apache.lucene.queries.spans.SpanWeight.Postings.POSITIONS;
+import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
 import static org.apache.lucene.search.ScoreMode.COMPLETE_NO_SCORES;
 
 import java.io.File;
@@ -50,11 +54,13 @@ import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -78,9 +84,9 @@ import org.apache.lucene.index.IndexUpgrader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.ReaderUtil;
 import org.apache.lucene.index.SegmentReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queries.spans.SpanWeight;
 import org.apache.lucene.queries.spans.Spans;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
@@ -90,6 +96,7 @@ import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -749,95 +756,78 @@ public class MtasDocumentIndex
         try {
             searcher = getSearcherManager().acquire();
             var indexReader = searcher.getIndexReader();
+            var leaves = indexReader.leaves();
 
-            // Pick exactly one preferred Lucene doc per source document, representing the
-            // project-canonical state of the document:
-            // 1) the curation row, if a curation CAS has been indexed for this document
-            // 2) otherwise the source-doc row (INITIAL_CAS)
-            // Per-annotator rows are intentionally ignored - we count annotations in the
-            // canonical state, not in any individual annotator's work.
-            var preferredLuceneDocBySourceDoc = new HashMap<Long, Integer>();
-            var hasCurationRowBySourceDoc = new HashMap<Long, Boolean>();
-            for (var leafReaderContext : indexReader.leaves()) {
-                var reader = leafReaderContext.reader();
-                var storedFields = reader.storedFields();
-                var liveDocs = reader.getLiveDocs();
-                var docBase = leafReaderContext.docBase;
-                for (var docId = 0; docId < reader.maxDoc(); docId++) {
-                    if (liveDocs != null && !liveDocs.get(docId)) {
-                        continue;
+            var srcDocByGlobalLuceneDocId = getSourceDocumentsByDocId(projectSourceDocumentIds,
+                    leaves);
+
+            if (srcDocByGlobalLuceneDocId.isEmpty()) {
+                return counts;
+            }
+
+            // Group the canonical doc IDs by leaf and sort ascending so we can advance() through
+            // each segment in a single sweep instead of iterating every Lucene doc that matches
+            // the layer query.
+            var preferredLocalIdsByLeafIndex = new HashMap<Integer, int[]>();
+            var globalIdsByLeafIndex = new HashMap<Integer, int[]>();
+            {
+                var leafBuckets = new HashMap<Integer, java.util.List<Integer>>();
+                for (var globalId : srcDocByGlobalLuceneDocId.keySet()) {
+                    var leafIdx = ReaderUtil.subIndex(globalId, leaves);
+                    leafBuckets.computeIfAbsent(leafIdx, $ -> new ArrayList<>()).add(globalId);
+                }
+                for (var e : leafBuckets.entrySet()) {
+                    var leafIdx = e.getKey();
+                    var globalIds = e.getValue();
+                    globalIds.sort(Integer::compare);
+                    var docBase = leaves.get(leafIdx).docBase;
+                    var localIds = new int[globalIds.size()];
+                    var globals = new int[globalIds.size()];
+                    for (var i = 0; i < globalIds.size(); i++) {
+                        globals[i] = globalIds.get(i);
+                        localIds[i] = globalIds.get(i) - docBase;
                     }
-                    var document = storedFields.document(docId);
-                    var rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
-                    var rawAnnotationDocumentId = document.get(FIELD_ANNOTATION_DOCUMENT_ID);
-                    if (!validSourceAndDocumentIds(rawSourceDocumentId, rawAnnotationDocumentId)) {
-                        continue;
-                    }
-                    var sourceDocumentId = Long.valueOf(rawSourceDocumentId);
-                    if (!projectSourceDocumentIds.contains(sourceDocumentId)) {
-                        // Stale row for a source document that no longer exists in the project.
-                        continue;
-                    }
-                    var isAnnotationRow = Long.parseLong(rawAnnotationDocumentId) != -1L;
-                    var rowUser = document.get(FIELD_USER);
-                    if (isAnnotationRow) {
-                        if (!CURATION_USER.equals(rowUser)) {
-                            // Per-annotator rows do not represent the canonical state.
-                            continue;
-                        }
-                        preferredLuceneDocBySourceDoc.put(sourceDocumentId, docId + docBase);
-                        hasCurationRowBySourceDoc.put(sourceDocumentId, true);
-                    }
-                    else {
-                        // Source-doc row (INITIAL_CAS); only used as fallback when no curation
-                        // row is present.
-                        if (!hasCurationRowBySourceDoc.getOrDefault(sourceDocumentId, false)) {
-                            preferredLuceneDocBySourceDoc.put(sourceDocumentId, docId + docBase);
-                        }
-                    }
+                    preferredLocalIdsByLeafIndex.put(leafIdx, localIds);
+                    globalIdsByLeafIndex.put(leafIdx, globals);
                 }
             }
 
-            var preferredGlobalDocIds = new IntOpenHashSet(preferredLuceneDocBySourceDoc.values());
-
-            final var boost = 0;
+            final var boost = 0.0f;
             var spanweight = parsedQuery.rewrite(searcher).createWeight(searcher,
                     COMPLETE_NO_SCORES, boost);
 
-            for (var leafReaderContext : indexReader.leaves()) {
-                var spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
+            for (var leafIdx = 0; leafIdx < leaves.size(); leafIdx++) {
+                var localIds = preferredLocalIdsByLeafIndex.get(leafIdx);
+                if (localIds == null) {
+                    continue;
+                }
+
+                var leaf = leaves.get(leafIdx);
+                var spans = spanweight.getSpans(leaf, POSITIONS);
                 if (spans == null) {
                     continue;
                 }
 
-                var segmentReader = (SegmentReader) leafReaderContext.reader();
-                var storedFields = segmentReader.storedFields();
-                var docBase = leafReaderContext.docBase;
+                var globals = globalIdsByLeafIndex.get(leafIdx);
 
-                while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
-                    if (segmentReader.numDocs() != segmentReader.maxDoc()
-                            && !segmentReader.getLiveDocs().get(spans.docID())) {
+                for (var i = 0; i < localIds.length; i++) {
+                    var target = localIds[i];
+                    var advanced = spans.advance(target);
+                    if (advanced == NO_MORE_DOCS) {
+                        break;
+                    }
+                    if (advanced != target) {
+                        // No span matches in this canonical doc — token count is 0; skip.
                         continue;
                     }
-
-                    if (!preferredGlobalDocIds.contains(spans.docID() + docBase)) {
-                        continue;
-                    }
-
-                    var document = storedFields.document(spans.docID());
-                    var rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
-                    var sourceDocumentId = Long.valueOf(rawSourceDocumentId);
 
                     var perDocCount = 0L;
                     while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
                         perDocCount++;
                     }
-                    counts.merge(sourceDocumentId, perDocCount, Long::sum);
+                    counts.merge(srcDocByGlobalLuceneDocId.get(globals[i]), perDocCount, Long::sum);
                 }
             }
-        }
-        catch (IOException e) {
-            throw e;
         }
         catch (Exception e) {
             throw new ExecutionException(
@@ -851,6 +841,96 @@ public class MtasDocumentIndex
         }
 
         return counts;
+    }
+
+    /**
+     * Identify the canonical Lucene doc per source document by walking only the relevant FIELD_USER
+     * posting lists:
+     * <ol>
+     * <li>FIELD_USER=CURATION_USER yields all curation rows in this segment.</li>
+     * <li>FIELD_USER="" yields all source-doc rows (INITIAL_CAS), used as fallback when</li>
+     * </ol>
+     * no curation row exists for that source doc. Per-annotator rows live under their own user
+     * names and are not visited at all.
+     *
+     * Cost per leaf: two posting-list iterations + one stored-fields read per canonical row.
+     * Independent of annotator count, independent of project size beyond what we actually keep.
+     */
+    private HashMap<Integer, Long> getSourceDocumentsByDocId(Set<Long> projectSourceDocumentIds,
+            List<LeafReaderContext> leaves)
+        throws IOException
+    {
+        var srcDocByGlobalLuceneDocId = new HashMap<Integer, Long>();
+        var hasCurationRowBySourceDoc = new HashSet<Long>();
+        for (var leafCtx : leaves) {
+            var leafReader = leafCtx.reader();
+            var storedFields = leafReader.storedFields();
+            var liveDocs = leafReader.getLiveDocs();
+            var docBase = leafCtx.docBase;
+
+            // Pass over curation rows first so the fallback pass can skip source docs that
+            // already have a curation row in this segment or any earlier one.
+            for (var localDocId : findLiveDocsByUser(leafReader, CURATION_USER, liveDocs)) {
+                var rawSrcId = storedFields.document(localDocId).get(FIELD_SOURCE_DOCUMENT_ID);
+                if (rawSrcId == null) {
+                    continue;
+                }
+                var srcDocId = Long.valueOf(rawSrcId);
+                if (!projectSourceDocumentIds.contains(srcDocId)) {
+                    continue;
+                }
+                srcDocByGlobalLuceneDocId.put(localDocId + docBase, srcDocId);
+                hasCurationRowBySourceDoc.add(srcDocId);
+            }
+
+            for (var localDocId : findLiveDocsByUser(leafReader, "", liveDocs)) {
+                var rawSrcId = storedFields.document(localDocId).get(FIELD_SOURCE_DOCUMENT_ID);
+                if (rawSrcId == null) {
+                    continue;
+                }
+                var srcDocId = Long.valueOf(rawSrcId);
+                if (!projectSourceDocumentIds.contains(srcDocId)) {
+                    continue;
+                }
+                if (hasCurationRowBySourceDoc.contains(srcDocId)) {
+                    continue;
+                }
+                srcDocByGlobalLuceneDocId.put(localDocId + docBase, srcDocId);
+            }
+        }
+        return srcDocByGlobalLuceneDocId;
+    }
+
+    /**
+     * Walks the posting list of {@code FIELD_USER=<aUser>} in {@code aLeafReader} and returns the
+     * segment-local Lucene doc ids of all live entries. This avoids both a full segment scan and
+     * per-doc query setup overhead — posting lists are columnar and packed, so the cost is
+     * proportional only to the number of matching rows.
+     */
+    private static List<Integer> findLiveDocsByUser(org.apache.lucene.index.LeafReader aLeafReader,
+            String aUser, org.apache.lucene.util.Bits aLiveDocs)
+        throws IOException
+    {
+        var terms = aLeafReader.terms(FIELD_USER);
+        if (terms == null) {
+            return emptyList();
+        }
+
+        var iter = terms.iterator();
+        if (!iter.seekExact(new BytesRef(aUser))) {
+            return emptyList();
+        }
+
+        var postings = iter.postings(null, NONE);
+        var result = new ArrayList<Integer>();
+        int docId;
+        while ((docId = postings.nextDoc()) != NO_MORE_DOCS) {
+            if (aLiveDocs == null || aLiveDocs.get(docId)) {
+                result.add(docId);
+            }
+        }
+
+        return result;
     }
 
     private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest,
@@ -953,7 +1033,7 @@ public class MtasDocumentIndex
         annotatableDocuments.entrySet().stream()
                 .forEach(e -> sourceDocumentIndex.put(e.getKey().getId(), e.getKey()));
 
-        final var boost = 0;
+        final var boost = 0.0f;
         var spanweight = q.rewrite(searcher).createWeight(searcher, COMPLETE_NO_SCORES, boost);
 
         var numResults = 0;
@@ -962,7 +1042,7 @@ public class MtasDocumentIndex
         while (leafReaderContextIterator.hasNext()) {
             var leafReaderContext = leafReaderContextIterator.next();
             try {
-                var spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
+                var spans = spanweight.getSpans(leafReaderContext, POSITIONS);
                 var segmentReader = (SegmentReader) leafReaderContext.reader();
                 var storedFields = segmentReader.storedFields();
 
@@ -970,7 +1050,7 @@ public class MtasDocumentIndex
                     continue;
                 }
 
-                while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+                while (spans.nextDoc() != NO_MORE_DOCS) {
                     if (segmentReader.numDocs() == segmentReader.maxDoc()
                             || segmentReader.getLiveDocs().get(spans.docID())) {
                         var document = storedFields.document(spans.docID());
@@ -1087,14 +1167,14 @@ public class MtasDocumentIndex
 
         // cycle through all the leaves
         for (var leafReaderContext : aLeaves) {
-            var spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
+            var spans = spanweight.getSpans(leafReaderContext, POSITIONS);
             var segmentReader = (SegmentReader) leafReaderContext.reader();
             var storedFields = segmentReader.storedFields();
             var idList = new LongArrayList();
             // no spans -> no docs
             if (spans != null) {
                 // go through the docs in iterator span
-                while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+                while (spans.nextDoc() != NO_MORE_DOCS) {
                     // don't know why this if is needed, just copy/pasted it from method doQuery
                     // below
                     if (segmentReader.numDocs() == segmentReader.maxDoc()
@@ -1152,7 +1232,7 @@ public class MtasDocumentIndex
             var leafReaderContext = leafReaderContextIterator.next();
 
             try {
-                var spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
+                var spans = spanweight.getSpans(leafReaderContext, POSITIONS);
                 if (spans == null) {
                     continue;
                 }
@@ -1161,7 +1241,7 @@ public class MtasDocumentIndex
                 var storedFields = segmentReader.storedFields();
                 var terms = segmentReader.terms(FIELD_CONTENT);
                 var mtasCodecInfo = CodecInfo.getCodecInfoFromTerms(terms);
-                while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+                while (spans.nextDoc() != NO_MORE_DOCS) {
                     if (segmentReader.numDocs() == segmentReader.maxDoc()
                             || segmentReader.getLiveDocs().get(spans.docID())) {
                         var document = storedFields.document(spans.docID());

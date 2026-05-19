@@ -33,6 +33,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -143,10 +144,20 @@ public class ProjectProgressPanelControllerImpl
     }
 
     /**
-     * @return null for the default {@code documents} metric (unit weights). For {@code tokens},
-     *         returns the per-document token counts from the search index — possibly empty if the
-     *         index has nothing yet, in which case the chart shows zeros (a deliberate signal that
-     *         the index is the source of truth).
+     * Resolves the per-document weight map for the requested metric, or {@code null} to indicate
+     * unit weights ({@code DOCUMENTS} mode).
+     * <p>
+     * Returns {@code null} when:
+     * <ul>
+     * <li>the metric is absent or {@code DOCUMENTS};</li>
+     * <li>no {@link ProgressWeighter} bean is wired (search module not on the classpath);</li>
+     * <li>the wired weighter returns {@code null} for the requested metric (it does not support
+     * it).</li>
+     * </ul>
+     * In all three cases the caller silently degrades to the document-count path. If the weighter
+     * returns a non-null but empty map, that is passed through unchanged — the replay then sees
+     * zero weight for every doc and the chart shows a flat zero line, which is the intended "search
+     * index is the source of truth" signal when nothing has been indexed yet.
      */
     private Map<Long, Long> resolveWeights(Optional<ProgressMetric> aMetric, User aUser,
             Project aProject)
@@ -157,7 +168,7 @@ public class ProjectProgressPanelControllerImpl
         }
 
         if (weightSource.isEmpty()) {
-            return null;
+            throw new IllegalStateException("No weight source configured");
         }
 
         return weightSource.get().getWeights(aUser, aProject, aMetric.get());
@@ -183,8 +194,9 @@ public class ProjectProgressPanelControllerImpl
             }
             totals.merge(state, entry.getValue(), Long::sum);
         }
-        // Keep ordering consistent with SourceDocumentStateStats.toMap()
-        var ordered = new java.util.LinkedHashMap<SourceDocumentState, Long>();
+
+        // Put values into display order
+        var ordered = new LinkedHashMap<SourceDocumentState, Long>();
         ordered.put(NEW, totals.get(NEW));
         ordered.put(ANNOTATION_IN_PROGRESS, totals.get(ANNOTATION_IN_PROGRESS));
         ordered.put(ANNOTATION_FINISHED, totals.get(ANNOTATION_FINISHED));
