@@ -26,7 +26,9 @@ printf '%s\n' "$MODULES" | tr ',' '\n' | sed 's/^/  - /'
 REPO_ROOT=$(git rev-parse --show-toplevel)
 cd "$REPO_ROOT"
 
-if ! mvn -q -pl "$MODULES" -Pspotless,checkstyle spotless:check checkstyle:check; then
+if ! mvn -q -pl "$MODULES" -Pspotless,checkstyle \
+        -Dorg.fusesource.jansi.native.disable=true -Dstyle.color=never \
+        spotless:check checkstyle:check; then
     cat >&2 <<'EOF'
 
 [pre-commit] Verification failed.
