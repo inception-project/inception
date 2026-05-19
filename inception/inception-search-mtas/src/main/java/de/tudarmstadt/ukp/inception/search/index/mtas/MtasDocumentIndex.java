@@ -742,6 +742,11 @@ public class MtasDocumentIndex
             AnnotationLayer aLayer)
         throws IOException, ExecutionException
     {
+        // Writes schedule a deferred commit + searcher refresh; without flushing it here, the
+        // acquired searcher can miss a just-written curation row and fall back to the INITIAL_CAS
+        // row, returning stale counts.
+        ensureAllIsCommitted();
+
         var featureQuery = buildLayerCountQuery(aLayer);
         var parsedQuery = parseQuery(featureQuery, aRequest.getSearchSettings());
 
