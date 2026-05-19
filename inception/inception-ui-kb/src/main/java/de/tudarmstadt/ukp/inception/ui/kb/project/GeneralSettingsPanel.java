@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -129,7 +131,25 @@ public class GeneralSettingsPanel
                 }
                 this.setConvertedInput(list);
             }
+
+            @Override
+            public void renderHead(IHeaderResponse response)
+            {
+                super.renderHead(response);
+                // The Kendo MultiSelect with serverFiltering=true does not reliably sync chip
+                // removals back to the underlying <select> element, so removed languages still
+                // get submitted with the form. Rebuild the <select> from the widget value on
+                // every change to keep form submission in sync.
+                var script = "(function(){var attach=function(){var ms=$('#" + getMarkupId()
+                        + "').data('kendoMultiSelect');if(!ms){setTimeout(attach,50);return;}"
+                        + "ms.bind('change',function(){var v=this.value();var s=$(this.element);"
+                        + "s.empty();for(var i=0;i<v.length;i++){"
+                        + "s.append($('<option selected></option>').val(v[i]).text(v[i]));}});};"
+                        + "attach();})();";
+                response.render(OnDomReadyHeaderItem.forScript(script));
+            }
         };
+        additionalLanguages.setOutputMarkupId(true);
         additionalLanguages.setModel(kbModel.bind("kb.additionalLanguages"));
         add(additionalLanguages);
     }
