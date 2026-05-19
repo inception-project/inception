@@ -17,10 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
+import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
+import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -31,12 +35,12 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
-import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -78,7 +82,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.config.RelationLayerAutoConfiguration;
-import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
@@ -152,6 +155,10 @@ class MtasDocumentIndexTest
     static @TempDir Path tempFolder;
     static SearchServiceImpl _searchService;
 
+    private AnnotationLayer tokenLayer;
+
+    private AnnotationLayer sentenceLayer;
+
     @DynamicPropertySource
     static void registerDynamicProperties(DynamicPropertyRegistry registry)
     {
@@ -176,6 +183,14 @@ class MtasDocumentIndexTest
         }
 
         user = userRepository.get("admin");
+
+        tokenLayer = AnnotationLayer.builder() //
+                .forJCasClass(Token.class) //
+                .build();
+
+        sentenceLayer = AnnotationLayer.builder() //
+                .forJCasClass(Sentence.class) //
+                .build();
     }
 
     @AfterAll
@@ -227,9 +242,9 @@ class MtasDocumentIndexTest
         LOG.info("Preparing annotated document....");
 
         // Manually build annotated CAS
-        var internalTsd = CasMetadataUtils.getInternalTypeSystem();
-        var globalTsd = TypeSystemDescriptionFactory.createTypeSystemDescription();
-        var tsd = CasCreationUtils.mergeTypeSystems(asList(globalTsd, internalTsd));
+        var internalTsd = getInternalTypeSystem();
+        var globalTsd = createTypeSystemDescription();
+        var tsd = mergeTypeSystems(asList(globalTsd, internalTsd));
         var jCas = JCasFactory.createJCas(tsd);
 
         var builder = new JCasBuilder(jCas);
@@ -285,9 +300,9 @@ class MtasDocumentIndexTest
         LOG.info("Preparing annotated document....");
 
         // Manually build annotated CAS
-        var internalTsd = CasMetadataUtils.getInternalTypeSystem();
-        var globalTsd = TypeSystemDescriptionFactory.createTypeSystemDescription();
-        var tsd = CasCreationUtils.mergeTypeSystems(asList(globalTsd, internalTsd));
+        var internalTsd = getInternalTypeSystem();
+        var globalTsd = createTypeSystemDescription();
+        var tsd = mergeTypeSystems(asList(globalTsd, internalTsd));
         var jCas = JCasFactory.createJCas(tsd);
 
         var builder = new JCasBuilder(jCas);
@@ -726,6 +741,160 @@ class MtasDocumentIndexTest
         assertThat(queryStatsResults.getUser()).isEqualTo(user);
         assertThat(queryStatsResults.getProject()).isEqualTo(project);
         assertThat(queryStatsResults.getResults()).isEqualTo(expected);
+    }
+
+    @Test
+    void testTokenCountsPerSourceDocument() throws Exception
+    {
+        var project = new Project("token-counts");
+
+        createProject(project);
+
+        var firstDocument = new SourceDocument("First document", project, "text");
+        var firstContent = "The capital of Galicia is Santiago de Compostela.";
+        uploadAndIndexDocument(Pair.of(firstDocument, firstContent));
+        annotateDocumentAdvanced(project, user, firstDocument);
+
+        var secondDocument = new SourceDocument("Second document", project, "text");
+        var secondContent = "Goodbye moon. Hello World.";
+        uploadAndIndexDocument(Pair.of(secondDocument, secondContent));
+
+        var counts = searchService.getAnnotationCountsPerSourceDocument(user, project, tokenLayer);
+
+        var firstDoc = documentService.getSourceDocument(project, firstDocument.getName());
+        var secondDoc = documentService.getSourceDocument(project, secondDocument.getName());
+
+        assertThat(counts).containsOnly( //
+                Map.entry(firstDoc.getId(), 9L), //
+                Map.entry(secondDoc.getId(), 6L));
+    }
+
+    private static CAS buildTokenCas(int aTokenCount) throws Exception
+    {
+        var tsd = mergeTypeSystems(asList(createTypeSystemDescription(), getInternalTypeSystem()));
+        var jCas = JCasFactory.createJCas(tsd);
+        var builder = new JCasBuilder(jCas);
+        for (var i = 0; i < aTokenCount; i++) {
+            if (i > 0) {
+                builder.add(" ");
+            }
+            builder.add("t" + i, Token.class);
+        }
+        builder.close();
+        return jCas.getCas();
+    }
+
+    private static CAS buildSentenceCas(int aSentenceCount, int aTokensPerSentence) throws Exception
+    {
+        var tsd = mergeTypeSystems(asList(createTypeSystemDescription(), getInternalTypeSystem()));
+        var jCas = JCasFactory.createJCas(tsd);
+        var builder = new JCasBuilder(jCas);
+        for (var s = 0; s < aSentenceCount; s++) {
+            var sentStart = builder.getPosition();
+            for (var t = 0; t < aTokensPerSentence; t++) {
+                if (t > 0) {
+                    builder.add(" ");
+                }
+                builder.add("w" + s + t, Token.class);
+            }
+            new Sentence(jCas, sentStart, builder.getPosition()).addToIndexes();
+            if (s < aSentenceCount - 1) {
+                builder.add(" ");
+            }
+        }
+        builder.close();
+        return jCas.getCas();
+    }
+
+    private void writeAnnotatorCas(SourceDocument aDoc, User aUser, org.apache.uima.cas.CAS aCas)
+        throws Exception
+    {
+        var annoDoc = documentService.createOrGetAnnotationDocument(aDoc, aUser);
+        try (var session = CasStorageSession.open()) {
+            documentService.writeAnnotationCas(aCas, annoDoc);
+        }
+        awaitIndexingComplete(aDoc.getProject());
+    }
+
+    private void writeCurationCas(SourceDocument aDoc, org.apache.uima.cas.CAS aCas)
+        throws Exception
+    {
+        var curationAnnoDoc = documentService.createOrGetAnnotationDocument(aDoc, CURATION_SET);
+        try (var session = CasStorageSession.open()) {
+            documentService.writeAnnotationCas(aCas, curationAnnoDoc);
+        }
+        awaitIndexingComplete(aDoc.getProject());
+    }
+
+    private void awaitIndexingComplete(Project aProject)
+    {
+        await("Waiting for indexing process to complete") //
+                .atMost(60, SECONDS) //
+                .pollInterval(200, MILLISECONDS) //
+                .until(() -> searchService.isIndexValid(aProject)
+                        && searchService.getIndexProgress(aProject).isEmpty());
+    }
+
+    @Test
+    void testTokenCountsPerSourceDocument_curationPreferredOverAnnotatorAndInitial()
+        throws Exception
+    {
+        var project = new Project("token-counts-curation-pref");
+        createProject(project);
+
+        var doc = new SourceDocument("doc", project, "text");
+        // INITIAL_CAS auto-tokenizes to 6 tokens via SegmentationUtils.tokenize during import
+        uploadAndIndexDocument(Pair.of(doc, "Goodbye moon. Hello World."));
+
+        // Per-annotator row: 4 tokens (chosen distinct from INITIAL_CAS and curation)
+        writeAnnotatorCas(doc, user, buildTokenCas(4));
+
+        // Curation row: 2 tokens — must win over both above
+        writeCurationCas(doc, buildTokenCas(2));
+
+        var counts = searchService.getAnnotationCountsPerSourceDocument(user, project, tokenLayer);
+
+        var persistedDoc = documentService.getSourceDocument(project, doc.getName());
+        assertThat(counts).containsOnly(Map.entry(persistedDoc.getId(), 2L));
+    }
+
+    @Test
+    void testTokenCountsPerSourceDocument_annotatorRowIgnoredFallsBackToInitial() throws Exception
+    {
+        var project = new Project("token-counts-annotator-ignored");
+        createProject(project);
+
+        var doc = new SourceDocument("doc", project, "text");
+        // INITIAL_CAS auto-tokenizes to 6 tokens
+        uploadAndIndexDocument(Pair.of(doc, "Goodbye moon. Hello World."));
+
+        // Per-annotator row with a distinct count — must be ignored, INITIAL_CAS row wins
+        writeAnnotatorCas(doc, user, buildTokenCas(99));
+
+        var counts = searchService.getAnnotationCountsPerSourceDocument(user, project, tokenLayer);
+
+        var persistedDoc = documentService.getSourceDocument(project, doc.getName());
+        assertThat(counts).containsOnly(Map.entry(persistedDoc.getId(), 6L));
+    }
+
+    @Test
+    void testSentenceCountsPerSourceDocument_curationWins() throws Exception
+    {
+        var project = new Project("sentence-counts");
+        createProject(project);
+
+        var doc = new SourceDocument("doc", project, "text");
+        // INITIAL_CAS auto-sentence-splits to 2 sentences
+        uploadAndIndexDocument(Pair.of(doc, "Goodbye moon. Hello World."));
+
+        // Curation row: 5 sentences via Sentence layer — must override the 2 from INITIAL_CAS
+        writeCurationCas(doc, buildSentenceCas(5, 3));
+
+        var counts = searchService.getAnnotationCountsPerSourceDocument(user, project,
+                sentenceLayer);
+
+        var persistedDoc = documentService.getSourceDocument(project, doc.getName());
+        assertThat(counts).containsOnly(Map.entry(persistedDoc.getId(), 5L));
     }
 
     @SpringBootConfiguration

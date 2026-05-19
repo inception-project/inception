@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.LayerStatistics;
@@ -68,6 +69,26 @@ public interface PhysicalIndex
     public List<Integer> getUniqueDocuments(StatisticRequest aStatisticRequest) throws IOException;
 
     public StatisticsResult getAnnotationStatistics(StatisticRequest aStatisticRequest)
+        throws IOException, ExecutionException;
+
+    /**
+     * Count the number of annotations on the given layer per source document. Each annotation is
+     * counted once regardless of its feature values. The returned map is keyed by
+     * {@link SourceDocument} id; source documents that contain no annotations on the layer may be
+     * omitted (callers should treat a missing key as zero).
+     *
+     * @param aStatisticRequest
+     *            scope of the count (project, user, token-per-doc bounds, etc.)
+     * @param aLayer
+     *            the annotation layer to count, identified by its UI name
+     * @return a map from {@link SourceDocument} id to match count.
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws ExecutionException
+     *             if there was a search-level problem
+     */
+    public Map<Long, Long> getAnnotationCountsPerSourceDocument(StatisticRequest aStatisticRequest,
+            AnnotationLayer aLayer)
         throws IOException, ExecutionException;
 
     void deindexDocument(SourceDocument aDocument) throws IOException;

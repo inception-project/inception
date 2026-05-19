@@ -75,8 +75,8 @@ public class TotalConservingDocumentStateProjector
 
         // 1. Get Baseline Data from the latest snapshot
         var latestSnapshot = aHistory.get(aHistory.size() - 1);
-        var fixedTotalCount = latestSnapshot.counts().values().stream()
-                .mapToLong(Integer::longValue).sum();
+        var fixedTotalCount = latestSnapshot.counts().values().stream().mapToLong(Long::longValue)
+                .sum();
 
         var relevantHistory = filterHistory(aHistory, aLookbackDurationDays);
         var baselineDate = relevantHistory.get(0).day();
@@ -96,7 +96,7 @@ public class TotalConservingDocumentStateProjector
 
         for (var i = 1; i <= aProjectionDurationDays; i++) {
             var futureDate = lastKnownDate.plus(i, DAYS);
-            var futureCounts = new HashMap<SourceDocumentState, Integer>();
+            var futureCounts = new HashMap<SourceDocumentState, Long>();
             long currentSum = 0;
 
             // 3. PRIORITY CALCULATION LOOP
@@ -117,14 +117,14 @@ public class TotalConservingDocumentStateProjector
 
                 // A. Calculate Projection (Anchored to Last Known Value)
                 // We project relative to the current actual count to prevent initial drops/jumps.
-                double startValue = lastKnownCounts.getOrDefault(state, 0).doubleValue();
+                double startValue = lastKnownCounts.getOrDefault(state, 0L).doubleValue();
                 double slope = models.get(state).slope();
                 double rawPrediction = startValue + (slope * i);
 
                 // B. Round NATURALLY (Standard Rounding)
                 // This prevents jitter. 45.4 stays 45. 45.6 stays 46.
                 // We do NOT use dithering/error-accumulation here to keep lines smooth.
-                int count = (int) Math.round(Math.max(0, rawPrediction));
+                long count = Math.round(Math.max(0, rawPrediction));
 
                 futureCounts.put(state, count);
                 currentSum += count;
@@ -136,14 +136,14 @@ public class TotalConservingDocumentStateProjector
             if (remainder < 0) {
                 // OVERFLOW: The stable states rounded up too much (or trend is too aggressive).
                 // We set NEW to 0, and then shave the excess off the others using Waterfall.
-                futureCounts.put(remainderState, 0);
+                futureCounts.put(remainderState, 0L);
 
                 // Resolve overflow by reducing from expendable states first
                 resolveOverflowWaterfall(futureCounts, fixedTotalCount);
             }
             else {
                 // UNDERFLOW: All rounding differences and remaining docs go here.
-                futureCounts.put(remainderState, (int) remainder);
+                futureCounts.put(remainderState, remainder);
             }
 
             projections.add(new DocumentStateSnapshot(futureDate, futureCounts));
@@ -178,10 +178,9 @@ public class TotalConservingDocumentStateProjector
      * upstream states (ANNOTATION) absorb the error before downstream states (CURATION) are
      * touched.
      */
-    private void resolveOverflowWaterfall(Map<SourceDocumentState, Integer> aCounts,
-            long aTargetTotal)
+    private void resolveOverflowWaterfall(Map<SourceDocumentState, Long> aCounts, long aTargetTotal)
     {
-        long currentTotal = aCounts.values().stream().mapToLong(Integer::longValue).sum();
+        long currentTotal = aCounts.values().stream().mapToLong(Long::longValue).sum();
         long excess = currentTotal - aTargetTotal;
 
         if (excess <= 0) {
@@ -194,9 +193,9 @@ public class TotalConservingDocumentStateProjector
                 continue;
             }
 
-            int count = aCounts.get(state);
+            long count = aCounts.get(state);
             if (count > 0) {
-                int reduction = (int) Math.min(count, excess);
+                long reduction = Math.min(count, excess);
                 aCounts.put(state, count - reduction);
                 excess -= reduction;
             }
@@ -209,9 +208,9 @@ public class TotalConservingDocumentStateProjector
         // remove from arbitrary remaining states.
         if (excess > 0) {
             for (var entry : aCounts.entrySet()) {
-                int count = entry.getValue();
+                long count = entry.getValue();
                 if (count > 0) {
-                    int reduction = (int) Math.min(count, excess);
+                    long reduction = Math.min(count, excess);
                     entry.setValue(count - reduction);
                     excess -= reduction;
                     if (excess == 0) {
@@ -244,21 +243,20 @@ public class TotalConservingDocumentStateProjector
         var points = new ArrayList<Point>();
         for (var s : aHistory) {
             var x = DAYS.between(aBaselineDate, s.day());
-            var y = s.counts().getOrDefault(aState, 0);
+            var y = s.counts().getOrDefault(aState, 0L);
             points.add(new Point(x, y));
         }
         return calculateRegression(points);
     }
 
-    private boolean countsEqual(Map<SourceDocumentState, Integer> a,
-            Map<SourceDocumentState, Integer> b)
+    private boolean countsEqual(Map<SourceDocumentState, Long> a, Map<SourceDocumentState, Long> b)
     {
         var keys = new HashSet<SourceDocumentState>();
         keys.addAll(a.keySet());
         keys.addAll(b.keySet());
         for (var k : keys) {
-            var va = a.getOrDefault(k, 0);
-            var vb = b.getOrDefault(k, 0);
+            var va = a.getOrDefault(k, 0L);
+            var vb = b.getOrDefault(k, 0L);
             if (!Objects.equals(va, vb)) {
                 return false;
             }

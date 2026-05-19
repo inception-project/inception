@@ -665,6 +665,23 @@ public class SearchServiceImpl
     }
 
     @Override
+    public Map<Long, Long> getAnnotationCountsPerSourceDocument(User aUser, Project aProject,
+            AnnotationLayer aLayer)
+        throws IOException, ExecutionException
+    {
+        try (var pooledIndex = acquireIndex(aProject.getId())) {
+            var index = pooledIndex.get();
+            ensureIndexIsCreatedAndValid(aProject, index);
+
+            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
+            var statRequest = new StatisticRequest(aProject, aUser, Integer.MIN_VALUE,
+                    Integer.MAX_VALUE, null, null, prefs);
+            return index.getPhysicalIndex().getAnnotationCountsPerSourceDocument(statRequest,
+                    aLayer);
+        }
+    }
+
+    @Override
     public StatisticsResult getQueryStatistics(User aUser, Project aProject, String aQuery,
             int aMinTokenPerDoc, int aMaxTokenPerDoc, Set<AnnotationFeature> aFeatures)
         throws ExecutionException, IOException

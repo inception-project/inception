@@ -291,6 +291,7 @@
     <!-- Documentation -->
     <module>inception-doc</module>
     <!-- Workload -->
+    <module>inception-workload-api</module>
     <module>inception-workload</module>
     <module>inception-workload-dynamic</module>
     <module>inception-workload-matrix</module>
