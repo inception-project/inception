@@ -17,16 +17,35 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.client;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraits;
 
 /**
- * Identifies a concrete LLM endpoint: which provider, where it lives, how to authenticate, and
- * which model to use. Typically derived from {@code LlmRecommenderTraits} (recommender side) or
- * from assistant configuration.
+ * Identifies a concrete LLM endpoint: which provider, where it lives, how to authenticate, which
+ * model to use, and which {@link ModelCapability capabilities} the configured model is declared to
+ * support. Typically derived from {@code LlmRecommenderTraits} (recommender side) or from assistant
+ * configuration.
  */
 public record LlmEndpoint( //
         String providerId, //
         String url, //
         String model, //
-        AuthenticationTraits auth)
-{}
+        AuthenticationTraits auth, //
+        Set<ModelCapability> capabilities)
+{
+    public LlmEndpoint
+    {
+        capabilities = capabilities != null //
+                ? EnumSet.copyOf(capabilities.isEmpty() //
+                        ? EnumSet.noneOf(ModelCapability.class) //
+                        : capabilities)
+                : EnumSet.noneOf(ModelCapability.class);
+    }
+
+    public LlmEndpoint(String aProviderId, String aUrl, String aModel, AuthenticationTraits aAuth)
+    {
+        this(aProviderId, aUrl, aModel, aAuth, EnumSet.noneOf(ModelCapability.class));
+    }
+}

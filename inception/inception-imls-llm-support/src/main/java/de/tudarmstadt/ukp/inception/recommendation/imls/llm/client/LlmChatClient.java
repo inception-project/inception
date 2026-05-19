@@ -18,7 +18,9 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.client;
 
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage;
@@ -31,9 +33,6 @@ import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
  * <p>
  * {@link #getId()} returns the provider id (e.g. {@code openai}, {@code azure-openai},
  * {@code ollama}) and must match the {@code providerId} carried by {@link LlmEndpoint}.
- * <p>
- * Capability flags let callers and UIs gracefully degrade when a provider does not support a given
- * feature.
  */
 public interface LlmChatClient
     extends Extension<LlmEndpoint>
@@ -47,24 +46,32 @@ public interface LlmChatClient
         return aEndpoint != null && getId().equals(aEndpoint.providerId());
     }
 
-    default boolean supportsTools()
+    /**
+     * Capabilities <em>this adapter is currently able to translate</em> on its wire protocol. This
+     * is an adapter-implementation property, not a model property:
+     * <ul>
+     * <li>{@link ModelCapability#STREAMING} / {@link ModelCapability#EMBEDDINGS} indicate that
+     * {@link #chatStream} / {@link #embed} are implemented (instead of throwing
+     * {@code UnsupportedOperationException}).</li>
+     * <li>{@link ModelCapability#TOOLS} / {@link ModelCapability#JSON_SCHEMA} /
+     * {@link ModelCapability#VISION} / {@link ModelCapability#THINKING} indicate that the adapter
+     * translates the corresponding {@link ChatOptions} field or {@link ChatMessage} content onto
+     * the wire — silently ignored otherwise.</li>
+     * </ul>
+     * This set is typically a constant per adapter and reflects adapter maturity.
+     * <p>
+     * Distinct from {@link LlmEndpoint#capabilities()}, which describes what <em>the configured
+     * model</em> is declared to support. The endpoint set is what the caller wants to use; this set
+     * is the upper bound of what the adapter can deliver. A valid configuration has
+     * {@code endpoint.capabilities() ⊆ adapter.supportedCapabilities()}; declaring a capability the
+     * adapter cannot deliver has no effect (best case) or is silently ignored.
+     * <p>
+     * UIs should use this set to gate which capability checkboxes are even sensible to show for a
+     * given provider.
+     */
+    default Set<ModelCapability> supportedCapabilities()
     {
-        return false;
-    }
-
-    default boolean supportsJsonSchema()
-    {
-        return false;
-    }
-
-    default boolean supportsStreaming()
-    {
-        return false;
-    }
-
-    default boolean supportsEmbeddings()
-    {
-        return false;
+        return EnumSet.of(ModelCapability.CHAT);
     }
 
     /**

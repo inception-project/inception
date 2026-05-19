@@ -106,12 +106,15 @@ public class ChatGptClientImpl
 
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(aUrl, "/") + "v1/chat/completions")) //
-                .header(CONTENT_TYPE, "application/json") //
-                .header(AUTHORIZATION, "Bearer " + aRequest.getApiKey()) //
-                .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
-                .build();
+                .header(CONTENT_TYPE, "application/json");
 
-        var response = sendRequest(request);
+        if (aRequest.getApiKey() != null) {
+            request.header(AUTHORIZATION, "Bearer " + aRequest.getApiKey());
+        }
+
+        request.POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8));
+
+        var response = sendRequest(request.build());
 
         handleError(response);
 
@@ -180,11 +183,13 @@ public class ChatGptClientImpl
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(appendIfMissing(aUrl, "/") + "v1/models")) //
                 .header(CONTENT_TYPE, "application/json").GET() //
-                .header(AUTHORIZATION, "Bearer " + aRequest.getApiKey()) //
-                .timeout(Duration.ofSeconds(10)) //
-                .build();
+                .timeout(Duration.ofSeconds(10));
 
-        var response = sendRequest(request);
+        if (aRequest.getApiKey() != null) {
+            request.header(AUTHORIZATION, "Bearer " + aRequest.getApiKey());
+        }
+
+        var response = sendRequest(request.build());
 
         handleError(response);
 

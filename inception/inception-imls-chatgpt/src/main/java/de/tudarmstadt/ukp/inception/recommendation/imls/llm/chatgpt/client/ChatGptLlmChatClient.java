@@ -23,11 +23,15 @@ import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.clien
 import java.io.IOException;
 import java.util.List;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatOptions;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatResult;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelCapability;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelInfo;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
 import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
@@ -57,9 +61,9 @@ public class ChatGptLlmChatClient
     }
 
     @Override
-    public boolean supportsJsonSchema()
+    public Set<ModelCapability> supportedCapabilities()
     {
-        return true;
+        return EnumSet.of(ModelCapability.CHAT, ModelCapability.JSON_SCHEMA);
     }
 
     @Override

@@ -161,7 +161,7 @@ public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTr
                         + providerId + "] - is the corresponding module enabled?"));
 
         var endpoint = new LlmEndpoint(providerId, traits.getUrl(), traits.getModel(),
-                traits.getAuthentication());
+                traits.getAuthentication(), traits.getCapabilities());
 
         var options = recommenderDefaults(traits.getOptions());
         var chatOptions = new ChatOptions(aResponseformat, aJsonSchema, emptyList(), options);

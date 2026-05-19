@@ -144,8 +144,13 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
     @Override
     public <X extends E> Optional<X> getExtension(String aId)
     {
+        if (aId == null) {
+            return Optional.empty();
+        }
+        // Null-safe: an extension that returns null from getId() (e.g. a Spring-managed
+        // FeatureSupport in a test that bypassed BeanNameAware) is simply not findable here.
         return (Optional<X>) getExtensions().stream() //
-                .filter(fs -> fs.getId().equals(aId)) //
+                .filter(fs -> aId.equals(fs.getId())) //
                 .findFirst();
     }
 }

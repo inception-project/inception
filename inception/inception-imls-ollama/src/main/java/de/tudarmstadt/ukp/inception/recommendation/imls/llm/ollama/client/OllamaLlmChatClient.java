@@ -19,7 +19,9 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage;
@@ -29,12 +31,14 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatResult;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.FinishReason;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelCapability;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelInfo;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolCall;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolDescriptor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.UsageInfo;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
 import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
@@ -67,21 +71,14 @@ public class OllamaLlmChatClient
     }
 
     @Override
-    public boolean supportsJsonSchema()
+    public Set<ModelCapability> supportedCapabilities()
     {
-        return true;
-    }
-
-    @Override
-    public boolean supportsStreaming()
-    {
-        return true;
-    }
-
-    @Override
-    public boolean supportsEmbeddings()
-    {
-        return true;
+        return EnumSet.of( //
+                ModelCapability.CHAT, //
+                ModelCapability.JSON_SCHEMA, //
+                ModelCapability.STREAMING, //
+                ModelCapability.EMBEDDINGS, //
+                ModelCapability.TOOLS);
     }
 
     @Override
@@ -117,6 +114,7 @@ public class OllamaLlmChatClient
     public List<float[]> embed(LlmEndpoint aEndpoint, List<String> aInputs) throws IOException
     {
         var request = OllamaEmbedRequest.builder() //
+                .withApiKey(apiKey(aEndpoint)) //
                 .withModel(aEndpoint.model()) //
                 .withInput(aInputs) //
                 .build();
@@ -129,7 +127,7 @@ public class OllamaLlmChatClient
     @Override
     public List<ModelInfo> listModels(LlmEndpoint aEndpoint) throws IOException
     {
-        return client.listModels(aEndpoint.url()).stream() //
+        return client.listModels(aEndpoint.url(), apiKey(aEndpoint)).stream() //
                 .map(t -> new ModelInfo(t.name())) //
                 .toList();
     }
@@ -253,8 +251,9 @@ public class OllamaLlmChatClient
         if (fn == null) {
             return new ToolCall(null, null, null);
         }
-        var args = JsonNodeFactory.instance.objectNode();
-        fn.getArguments().forEach((k, v) -> args.putPOJO(k, v));
+        // Round-trip through the object mapper so values become proper TextNode / IntNode / ...
+        // — putPOJO would wrap them in POJONode, which makes JsonNode#isTextual / isNumber lie.
+        var args = (ObjectNode) JSONUtil.getObjectMapper().valueToTree(fn.getArguments());
         return new ToolCall(null, fn.getName(), args);
     }
 

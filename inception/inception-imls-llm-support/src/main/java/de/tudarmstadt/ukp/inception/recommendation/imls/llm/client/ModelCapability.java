@@ -18,27 +18,16 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.client;
 
 /**
- * A model offered by a provider endpoint. Used by traits editors to populate model dropdowns.
- *
- * @param id
- *            identifier accepted by the provider (e.g. {@code gpt-4o-mini}, {@code llama3.1:8b})
- * @param displayName
- *            human-readable label; falls back to {@code id} when {@code null}, so callers can
- *            always render {@link #displayName()} without checking for {@code null}
+ * Capabilities a configured model+endpoint supports. The source varies by provider: Ollama can
+ * probe via {@code ollama show}, OpenAI-compatible endpoints (incl. LM Studio, vLLM, Groq, ...)
+ * have no probe so the user declares them in the traits/config UI.
+ * <p>
+ * Distinct from {@code LlmChatClient.supportsX()}, which describes what the adapter can translate
+ * <em>at all</em> on its wire protocol (a static, adapter-level capability). The adapter flag gates
+ * which UI controls are sensible to show; this enum gates what the caller actually sends per
+ * request.
  */
-public record ModelInfo( //
-        String id, //
-        String displayName)
+public enum ModelCapability
 {
-    public ModelInfo
-    {
-        if (displayName == null) {
-            displayName = id;
-        }
-    }
-
-    public ModelInfo(String aId)
-    {
-        this(aId, null);
-    }
+    CHAT, TOOLS, JSON_SCHEMA, STREAMING, EMBEDDINGS, VISION, THINKING
 }

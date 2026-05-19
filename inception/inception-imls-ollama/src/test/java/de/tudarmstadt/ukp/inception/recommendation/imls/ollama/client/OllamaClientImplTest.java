@@ -139,7 +139,7 @@ class OllamaClientImplTest
     @Test
     void testListModels() throws Exception
     {
-        var response = sut.listModels(DEFAULT_OLLAMA_URL);
+        var response = sut.listModels(DEFAULT_OLLAMA_URL, null);
         LOG.info("Response: [{}]", response);
     }
 
@@ -195,7 +195,7 @@ class OllamaClientImplTest
     static List<OllamaTag> functionCallModels() throws IOException
     {
         var sut = new OllamaClientImpl();
-        var allModels = sut.listModels(DEFAULT_OLLAMA_URL);
+        var allModels = sut.listModels(DEFAULT_OLLAMA_URL, null);
 
         return allModels.stream() //
                 // Cloud-only models (":cloud" tag) are proxied through Ollama's hosted service
