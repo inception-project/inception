@@ -1,0 +1,36 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.inception.assistant.tools;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.assistant.CommandDispatcher;
+
+/**
+ * Snapshot of the assistant's per-chat-turn runtime state, captured into each {@link AssistantTool}
+ * when the tool registry is built. Any field may be {@code null} when the surrounding chat session
+ * does not have that context (e.g. no document open).
+ */
+public record AssistantRuntimeContext( //
+        User sessionOwner, //
+        Project project, //
+        SourceDocument document, //
+        String dataOwner, //
+        CommandDispatcher commandDispatcher)
+{}

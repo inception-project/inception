@@ -25,45 +25,39 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Default {@link ToolRegistry} implementation backed by a {@link LinkedHashMap} keyed by tool name.
- * Not thread-safe; the typical use is per-request setup from a single thread.
+ * Default {@link ToolInvokerSet} implementation backed by a {@link LinkedHashMap} keyed by tool
+ * name. Not thread-safe; the typical use is per-request setup from a single thread.
  */
-public class ToolRegistryImpl
-    implements ToolRegistry
+public class ToolInvokerSetImpl
+    implements ToolInvokerSet
 {
-    private final Map<String, ExecutableTool> byName = new LinkedHashMap<>();
+    private final Map<String, ToolInvoker> byName = new LinkedHashMap<>();
 
-    public ToolRegistryImpl()
+    public ToolInvokerSetImpl()
     {
     }
 
-    public ToolRegistryImpl(Collection<? extends ExecutableTool> aTools)
+    public ToolInvokerSetImpl(Collection<? extends ToolInvoker> aInvokers)
     {
-        if (aTools != null) {
-            aTools.forEach(this::register);
+        if (aInvokers != null) {
+            aInvokers.forEach(this::add);
         }
     }
 
     @Override
-    public void register(ExecutableTool aTool)
+    public void add(ToolInvoker aInvoker)
     {
-        var name = aTool.descriptor().name();
-        var existing = byName.put(name, aTool);
+        var name = aInvoker.descriptor().name();
+        var existing = byName.put(name, aInvoker);
         if (existing != null) {
             byName.put(name, existing); // restore — fail-fast wins
-            throw new IllegalStateException("Duplicate tool registration for name [" + name + "]: ["
-                    + existing + "] vs [" + aTool + "]");
+            throw new IllegalStateException(
+                    "Duplicate tool name [" + name + "]: [" + existing + "] vs [" + aInvoker + "]");
         }
     }
 
     @Override
-    public void unregister(String aName)
-    {
-        byName.remove(aName);
-    }
-
-    @Override
-    public Optional<ExecutableTool> findByName(String aName)
+    public Optional<ToolInvoker> findByName(String aName)
     {
         if (aName == null) {
             return Optional.empty();
@@ -72,7 +66,7 @@ public class ToolRegistryImpl
     }
 
     @Override
-    public Collection<ExecutableTool> all()
+    public Collection<ToolInvoker> all()
     {
         return Collections.unmodifiableCollection(byName.values());
     }
@@ -81,7 +75,7 @@ public class ToolRegistryImpl
     public List<ToolDescriptor> toDescriptors()
     {
         return byName.values().stream() //
-                .map(ExecutableTool::descriptor) //
+                .map(ToolInvoker::descriptor) //
                 .toList();
     }
 }

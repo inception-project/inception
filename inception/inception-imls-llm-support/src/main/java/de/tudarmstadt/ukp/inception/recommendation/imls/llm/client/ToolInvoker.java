@@ -20,30 +20,22 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.client;
 import tools.jackson.databind.JsonNode;
 
 /**
- * A tool the LLM may call, paired with the dispatch logic for actually invoking it. Concrete
- * implementations adapt different tool sources:
- * <ul>
- * <li>{@link MethodTool} for {@code @Tool}-annotated Java methods whose parameters are all
- * {@code @ToolParam}-annotated (model-supplied arguments only, no runtime injection).
- * <li>Caller-specific impls when the dispatch needs runtime context the abstraction layer should
- * not know about (e.g. the assistant binds {@code Project}/{@code SourceDocument}/...). Such impls
- * typically capture their context at construction time, since the registry is rebuilt per chat
- * turn.
- * <li>Future: an MCP-proxy tool that round-trips invocations through an MCP transport.
- * </ul>
- * Registered into a {@link ToolRegistry} and looked up by name when a {@link ToolCall} is returned
- * by the model.
+ * Dispatch handle for one tool the LLM may call: pairs the wire-side {@link ToolDescriptor} with
+ * the logic that runs when the model picks the tool. Implementations are caller-defined since the
+ * dispatch typically depends on caller-specific runtime context (e.g. the assistant binds
+ * {@code Project}/{@code SourceDocument}/... captured at construction time). Registered into a
+ * {@link ToolRegistry} and looked up by name when a {@link ToolCall} comes back from the model.
  */
-public interface ExecutableTool
+public interface ToolInvoker
 {
     /**
-     * The provider-neutral, wire-side description of this tool. Sent to the model via
-     * {@link ChatOptions#tools()}.
+     * The provider-neutral, wire-side description of the tool this invoker handles. Sent to the
+     * model via {@link ChatOptions#tools()}.
      */
     ToolDescriptor descriptor();
 
     /**
-     * Dispatch the tool.
+     * Run the tool.
      *
      * @param aArguments
      *            arguments the model supplied; typically an {@code ObjectNode} matching the tool's

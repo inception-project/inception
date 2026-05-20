@@ -26,11 +26,11 @@ import org.junit.jupiter.api.Test;
 
 import tools.jackson.databind.JsonNode;
 
-class ToolRegistryImplTest
+class ToolInvokerSetImplTest
 {
-    private static ExecutableTool stub(String aName)
+    private static ToolInvoker stub(String aName)
     {
-        return new ExecutableTool()
+        return new ToolInvoker()
         {
             private final ToolDescriptor descriptor = new ToolDescriptor(aName, null, null);
 
@@ -55,20 +55,20 @@ class ToolRegistryImplTest
     }
 
     @Test
-    void emptyRegistryHasNothing()
+    void emptySetHasNothing()
     {
-        var sut = new ToolRegistryImpl();
+        var sut = new ToolInvokerSetImpl();
         assertThat(sut.all()).isEmpty();
         assertThat(sut.toDescriptors()).isEmpty();
         assertThat(sut.findByName("anything")).isEmpty();
     }
 
     @Test
-    void registerAndFindByName()
+    void addAndFindByName()
     {
         var foo = stub("foo");
-        var sut = new ToolRegistryImpl();
-        sut.register(foo);
+        var sut = new ToolInvokerSetImpl();
+        sut.add(foo);
 
         assertThat(sut.findByName("foo")).containsSame(foo);
         assertThat(sut.findByName("bar")).isEmpty();
@@ -80,37 +80,23 @@ class ToolRegistryImplTest
     {
         var first = stub("foo");
         var second = stub("foo");
-        var sut = new ToolRegistryImpl();
-        sut.register(first);
+        var sut = new ToolInvokerSetImpl();
+        sut.add(first);
 
         assertThatIllegalStateException() //
-                .isThrownBy(() -> sut.register(second)) //
+                .isThrownBy(() -> sut.add(second)) //
                 .withMessageContaining("foo");
 
         assertThat(sut.findByName("foo")).containsSame(first);
     }
 
     @Test
-    void unregisterRemovesByNameAndIsIdempotent()
+    void allAndToDescriptorsPreserveInsertionOrder()
     {
-        var sut = new ToolRegistryImpl();
-        sut.register(stub("foo"));
-
-        sut.unregister("foo");
-        assertThat(sut.findByName("foo")).isEmpty();
-
-        // second unregister: no-op, no throw.
-        sut.unregister("foo");
-        sut.unregister("never-was");
-    }
-
-    @Test
-    void allAndToDescriptorsPreserveRegistrationOrder()
-    {
-        var sut = new ToolRegistryImpl();
-        sut.register(stub("alpha"));
-        sut.register(stub("zulu"));
-        sut.register(stub("mike"));
+        var sut = new ToolInvokerSetImpl();
+        sut.add(stub("alpha"));
+        sut.add(stub("zulu"));
+        sut.add(stub("mike"));
 
         assertThat(sut.all()).extracting(t -> t.descriptor().name()) //
                 .containsExactly("alpha", "zulu", "mike");
@@ -121,7 +107,7 @@ class ToolRegistryImplTest
     @Test
     void constructorSeedsFromCollection()
     {
-        var sut = new ToolRegistryImpl(List.of(stub("a"), stub("b")));
+        var sut = new ToolInvokerSetImpl(List.of(stub("a"), stub("b")));
         assertThat(sut.toDescriptors()).extracting(ToolDescriptor::name) //
                 .containsExactly("a", "b");
     }
