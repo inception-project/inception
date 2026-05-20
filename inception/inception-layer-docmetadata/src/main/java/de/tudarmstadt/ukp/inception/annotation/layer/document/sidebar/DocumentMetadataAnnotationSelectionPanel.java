@@ -36,6 +36,7 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
@@ -78,6 +79,7 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsEvaluator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
@@ -138,6 +140,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     private static final String CID_ACTION_GROUP = "actionGroup";
     private static final String CID_OPEN = "open";
     private static final String CID_CLOSE = "close";
+    private static final String CID_VALIDATION_WARNING = "validationWarning";
 
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean FeatureSupportRegistry fsRegistry;
@@ -403,9 +406,22 @@ public class DocumentMetadataAnnotationSelectionPanel
             @Override
             protected void populateItem(ListItem<LayerGroup> aItem)
             {
-                var annotations = Model.ofList(aItem.getModelObject().annotations);
+                var layerGroup = aItem.getModelObject();
+                var annotations = Model.ofList(layerGroup.annotations);
 
-                aItem.add(new Label("layerName", aItem.getModelObject().layer.getUiName()));
+                aItem.add(new Label("layerName", layerGroup.layer.getUiName()));
+
+                var layerInvalidFeatures = layerGroup.annotations.stream() //
+                        .filter(item -> item.kind == ItemKind.ANNOTATION) //
+                        .flatMap(item -> item.invalidFeatures.stream()) //
+                        .distinct() //
+                        .toList();
+
+                var layerValidationWarning = new WebMarkupContainer(CID_VALIDATION_WARNING);
+                layerValidationWarning.add(visibleWhen(() -> !layerInvalidFeatures.isEmpty()));
+                layerValidationWarning.add(AttributeModifier.replace("title",
+                        "Invalid or missing value in: " + join(layerInvalidFeatures, ", ")));
+                aItem.add(layerValidationWarning);
 
                 var container = new WebMarkupContainer(CID_ANNOTATIONS_CONTAINER);
                 container.setOutputMarkupPlaceholderTag(true);
@@ -489,6 +505,13 @@ public class DocumentMetadataAnnotationSelectionPanel
                 container.add(new Label(CID_LABEL, defaultIfEmpty(itemState.label, "[No label]"))
                         .add(visibleWhen(() -> itemState.kind != ItemKind.ANNOTATION
                                 || (!itemState.singleton && !isExpanded(aItem, container)))));
+
+                var validationWarning = new WebMarkupContainer(CID_VALIDATION_WARNING);
+                validationWarning.add(visibleWhen(() -> itemState.kind == ItemKind.ANNOTATION
+                        && !itemState.invalidFeatures.isEmpty()));
+                validationWarning.add(AttributeModifier.replace("title",
+                        "Invalid or missing value in: " + join(itemState.invalidFeatures, ", ")));
+                container.add(validationWarning);
 
                 var actionGroup = new WebMarkupContainer(CID_ACTION_GROUP);
                 if (isCuration) {
@@ -635,12 +658,27 @@ public class DocumentMetadataAnnotationSelectionPanel
             annotations.sort(comparing(fs -> getFeature(fs, FEATURE_NAME_ORDER, Integer.class)));
         }
 
+        var constraintsEvaluator = new ConstraintsEvaluator();
+        var constraints = getModelObject().getConstraints();
+
         for (var fs : annotations) {
             var renderedFeatures = renderer.renderLabelFeatureValues(adapter, fs, aFeatures);
             var labelText = TypeUtil.getUiLabelText(renderedFeatures);
             var order = hasOrderFeature ? getFeature(fs, FEATURE_NAME_ORDER, Integer.class) : 0;
+            var invalidFeatures = new ArrayList<String>();
+            for (var feature : aFeatures) {
+                if (!feature.isEnabled()) {
+                    continue;
+                }
+                if (constraintsEvaluator.isHiddenConditionalFeature(constraints, fs, feature)) {
+                    continue;
+                }
+                if (!adapter.isFeatureValueValid(feature, fs)) {
+                    invalidFeatures.add(feature.getUiName());
+                }
+            }
             aItems.add(new AnnotationListItem(VID.of(fs), labelText, aLayer, aSingleton, 0.0d,
-                    order, ItemKind.ANNOTATION));
+                    order, ItemKind.ANNOTATION, invalidFeatures));
         }
     }
 
@@ -992,7 +1030,13 @@ public class DocumentMetadataAnnotationSelectionPanel
     }
 
     private record AnnotationListItem(VID vid, String label, AnnotationLayer layer,
-            boolean singleton, double score, int order, ItemKind kind)
+            boolean singleton, double score, int order, ItemKind kind, List<String> invalidFeatures)
         implements Serializable
-    {}
+    {
+        AnnotationListItem(VID vid, String label, AnnotationLayer layer, boolean singleton,
+                double score, int order, ItemKind kind)
+        {
+            this(vid, label, layer, singleton, score, order, kind, emptyList());
+        }
+    }
 }
