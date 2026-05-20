@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.client;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -95,8 +96,15 @@ public interface LlmChatClient
 
     /**
      * Compute embeddings for the given inputs. Result order matches {@code aInputs}.
+     *
+     * @param aOptions
+     *            provider-specific options (e.g. {@code num_ctx}, {@code seed} for Ollama;
+     *            {@code dimensions}, {@code encoding_format} for OpenAI). May be {@code null} or
+     *            empty.
      */
-    default List<float[]> embed(LlmEndpoint aEndpoint, List<String> aInputs) throws IOException
+    default List<float[]> embed(LlmEndpoint aEndpoint, List<String> aInputs,
+            Map<String, Object> aOptions)
+        throws IOException
     {
         throw new UnsupportedOperationException(
                 "Provider [" + getId() + "] does not support embeddings");

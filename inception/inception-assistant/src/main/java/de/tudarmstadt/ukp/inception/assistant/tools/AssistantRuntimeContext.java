@@ -23,9 +23,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.assistant.CommandDispatcher;
 
 /**
- * Snapshot of the assistant's per-chat-turn runtime state, captured into each {@link AssistantTool}
- * when the tool registry is built. Any field may be {@code null} when the surrounding chat session
- * does not have that context (e.g. no document open).
+ * Snapshot of the assistant's per-chat-turn runtime state, captured into each
+ * {@link AssistantToolInvoker} when the tool registry is built. Any field may be {@code null} when
+ * the surrounding chat session does not have that context (e.g. no document open).
  */
 public record AssistantRuntimeContext( //
         User sessionOwner, //

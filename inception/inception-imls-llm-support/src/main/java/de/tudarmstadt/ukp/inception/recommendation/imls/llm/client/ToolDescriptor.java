@@ -83,7 +83,7 @@ public record ToolDescriptor( //
             getParameterDescription(param).ifPresent(
                     description -> propertySchema.put("description", description.strip()));
 
-            properties.set(paramName, JSONUtil.adaptJackson2To3(propertySchema));
+            properties.set(paramName, propertySchema);
             required.add(paramName);
         }
 

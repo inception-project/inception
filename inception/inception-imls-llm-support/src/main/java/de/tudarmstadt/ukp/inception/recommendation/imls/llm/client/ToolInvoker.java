@@ -24,7 +24,7 @@ import tools.jackson.databind.JsonNode;
  * the logic that runs when the model picks the tool. Implementations are caller-defined since the
  * dispatch typically depends on caller-specific runtime context (e.g. the assistant binds
  * {@code Project}/{@code SourceDocument}/... captured at construction time). Registered into a
- * {@link ToolRegistry} and looked up by name when a {@link ToolCall} comes back from the model.
+ * {@link ToolInvokerSet} and looked up by name when a {@link ToolCall} comes back from the model.
  */
 public interface ToolInvoker
 {

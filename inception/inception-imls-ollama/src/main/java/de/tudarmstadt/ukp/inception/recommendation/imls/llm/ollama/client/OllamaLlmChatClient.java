@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -48,9 +49,8 @@ import tools.jackson.databind.node.ObjectNode;
  * discovery through the provider-neutral abstraction. Delegates to the existing
  * {@link OllamaClient}; pure pass-through with no recommender-specific defaults applied here.
  * <p>
- * Tool calling is intentionally not yet bridged: callers do not currently pass
- * {@link ChatOptions#tools()} through the abstraction. When wired, translation between
- * {@code ToolDescriptor} and {@link OllamaTool} happens here.
+ * Tool calling is bridged here: {@link ChatOptions#tools()} are translated from
+ * {@code ToolDescriptor} into {@link OllamaTool} when building the chat request.
  */
 public class OllamaLlmChatClient
     implements LlmChatClient
@@ -111,15 +111,20 @@ public class OllamaLlmChatClient
     }
 
     @Override
-    public List<float[]> embed(LlmEndpoint aEndpoint, List<String> aInputs) throws IOException
+    public List<float[]> embed(LlmEndpoint aEndpoint, List<String> aInputs,
+            Map<String, Object> aOptions)
+        throws IOException
     {
-        var request = OllamaEmbedRequest.builder() //
+        var builder = OllamaEmbedRequest.builder() //
                 .withApiKey(apiKey(aEndpoint)) //
                 .withModel(aEndpoint.model()) //
-                .withInput(aInputs) //
-                .build();
+                .withInput(aInputs);
 
-        return client.embed(aEndpoint.url(), request).stream() //
+        if (aOptions != null && !aOptions.isEmpty()) {
+            builder.withOptions(aOptions);
+        }
+
+        return client.embed(aEndpoint.url(), builder.build()).stream() //
                 .map(p -> p.getRight()) //
                 .toList();
     }

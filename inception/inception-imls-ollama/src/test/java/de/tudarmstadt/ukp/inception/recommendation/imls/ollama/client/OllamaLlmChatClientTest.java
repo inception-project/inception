@@ -119,7 +119,8 @@ class OllamaLlmChatClientTest
     @Test
     void testEmbed() throws Exception
     {
-        var vectors = sut.embed(endpoint(EMBED_MODEL), List.of("hello world", "good morning"));
+        var vectors = sut.embed(endpoint(EMBED_MODEL), List.of("hello world", "good morning"),
+                null);
 
         assertThat(vectors).hasSize(2);
         assertThat(vectors.get(0)).isNotEmpty();
