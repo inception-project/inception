@@ -486,7 +486,11 @@ public class SchedulingServiceImpl
                 continue;
             }
 
-            if (getScheduledAndRunningTasks().contains(t)) {
+            // Use matches() (not reference equality) so a queued task is not dispatched while a
+            // matching task is still running. enqueue() applies the same rule when first parking
+            // the task; without it here, a queued task picked up later by the watchdog or by an
+            // unrelated afterExecute could race the still-running task it was queued behind.
+            if (containsMatchingTask(getScheduledAndRunningTasks(), t)) {
                 continue;
             }
 
