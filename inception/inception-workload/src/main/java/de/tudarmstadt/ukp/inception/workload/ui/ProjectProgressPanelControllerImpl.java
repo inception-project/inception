@@ -89,6 +89,10 @@ public class ProjectProgressPanelControllerImpl
         }
 
         var stats = documentService.getSourceDocumentStats(project);
+        if (stats.getTotal() == 0) {
+            return emptyList();
+        }
+
         var history = eventRepository.calculateHistoricalDocumentStates(project, stats.toMap(),
                 aFrom.orElse(null));
 

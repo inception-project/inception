@@ -209,6 +209,20 @@ public class EventRepositoryImplIntegrationTest
     }
 
     @Test
+    void calculateHistoricalDocumentStates_nullFrom_doesNotOverflowTimestamp()
+    {
+        // Regression test: previously a null `aFrom` was substituted with Instant.MIN,
+        // which overflows when Hibernate binds it as a JDBC Timestamp, producing a 500.
+        var currentStats = new HashMap<SourceDocumentState, Long>();
+        for (var state : SourceDocumentState.values()) {
+            currentStats.put(state, 0L);
+        }
+
+        assertThat(sut.calculateHistoricalDocumentStates(project, currentStats, null)) //
+                .isNotNull();
+    }
+
+    @Test
     void listRecentActivity_limitAndOrdering()
     {
         var base = Instant.now();
