@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
+import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.QUEUE_THIS;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -26,6 +28,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -113,6 +116,57 @@ public class SchedulingServiceTest
                 .doesNotContain(tasksToRemove);
     }
 
+    /**
+     * Regression test for issue #6052: a queued task must not be dispatched while a matching task
+     * is still running. {@code enqueue()} parks the second task in {@code enqueuedTasks} because
+     * {@code containsMatchingTask(getRunningTasks(), ...)} sees the running first task. The bug was
+     * that {@code scheduleEligibleTasks()} (invoked by the watchdog or by an unrelated
+     * {@code afterExecute}) used reference-equality {@code .contains(t)} instead of
+     * {@code matches()} — so the parked task was promoted to running while the first was still in
+     * flight.
+     */
+    @Test
+    public void thatQueuedTaskIsNotPromotedWhileMatchingTaskIsRunning() throws Exception
+    {
+        var user = buildUser("user1");
+        var project = buildProject("project1");
+
+        var first = buildMatchableDummyTask(user, project);
+        var second = buildMatchableDummyTask(user, project);
+
+        sut.enqueue(first);
+        await().atMost(15, SECONDS).until(() -> sut.getRunningTasks().contains(first));
+
+        sut.enqueue(second);
+
+        assertThat(sut.getEnqueuedTasks()) //
+                .as("Second task must be parked while first is running") //
+                .contains(second);
+
+        // Trigger the promotion path directly. In production this is fired by the 5s watchdog or
+        // by afterExecute() on any unrelated task that just finished.
+        var method = SchedulingServiceImpl.class.getDeclaredMethod("scheduleEligibleTasks");
+        method.setAccessible(true);
+        method.invoke(sut);
+
+        assertThat(sut.getEnqueuedTasks()) //
+                .as("Queued task must not be promoted while a matching task is still running") //
+                .contains(second);
+        assertThat(sut.getScheduledAndRunningTasks()) //
+                .as("Queued task must not have been dispatched") //
+                .doesNotContain(second);
+    }
+
+    private MatchableDummyTask buildMatchableDummyTask(User aUser, Project aProject)
+    {
+        var task = MatchableDummyTask.builder() //
+                .withSessionOwner(aUser) //
+                .withProject(aProject) //
+                .build();
+        task.afterPropertiesSet();
+        return task;
+    }
+
     private User buildUser(String aUsername)
     {
         return new User(aUsername);
@@ -177,6 +231,77 @@ public class SchedulingServiceTest
             public DummyTask build()
             {
                 return new DummyTask(this);
+            }
+        }
+    }
+
+    /**
+     * Sleep-until-interrupted task that is {@link MatchableTask} and uses identity-based equality.
+     * Two instances with the same user/project are {@code matches()}-equal but not
+     * {@code equals()}-equal — which is what surfaces the {@code .contains(t)} vs
+     * {@code containsMatchingTask(...)} bug.
+     */
+    private static class MatchableDummyTask
+        extends Task
+        implements MatchableTask
+    {
+        private static final String TYPE = "MatchableDummyTask";
+
+        MatchableDummyTask(Builder<? extends Builder<?>> aBuilder)
+        {
+            super(aBuilder.withType(TYPE).withTrigger("test"));
+        }
+
+        @Override
+        public void execute()
+        {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Thread.sleep(1000);
+                }
+                catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public MatchResult matches(Task aTask)
+        {
+            if (aTask == this) {
+                return NO_MATCH;
+            }
+            if (aTask instanceof MatchableDummyTask
+                    && Objects.equals(getSessionOwner(), aTask.getSessionOwner())
+                    && Objects.equals(getProject(), aTask.getProject())) {
+                return QUEUE_THIS;
+            }
+            return NO_MATCH;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            return this == o;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return System.identityHashCode(this);
+        }
+
+        public static Builder<Builder<?>> builder()
+        {
+            return new Builder<>();
+        }
+
+        public static class Builder<T extends Builder<?>>
+            extends Task.Builder<T>
+        {
+            public MatchableDummyTask build()
+            {
+                return new MatchableDummyTask(this);
             }
         }
     }
