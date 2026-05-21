@@ -39,6 +39,8 @@ jobs:
           auth.docker.io:443
           build.shibboleth.net:443
           cdn01.quay.io:443
+          docker-images-prod.s3.amazonaws.com:443
+          docker-images-prod.s3.dualstack.us-east-1.amazonaws.com:443
           download.eclipse.org:443
           github.com:443
           raw.githubusercontent.com:443
@@ -53,6 +55,7 @@ jobs:
           nodejs.org:443
           oss.sonatype.org:443
           production.cloudflare.docker.com:443
+          production.cloudfront.docker.com:443
           quay.io:443
           registry-1.docker.io:443
           registry.npmjs.org:443
