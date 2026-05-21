@@ -206,10 +206,14 @@ public abstract class Position_ImplBase
                 && Objects.equals(linkFeatureMultiplicityMode,
                         castOther.linkFeatureMultiplicityMode);
 
-        // If the base properties are equal, then we have to continue only linkCompareBehavior if it
-        // is non-null.
-        if (!result && linkFeatureMultiplicityMode == null) {
+        if (!result) {
             return false;
+        }
+
+        // If the base properties are equal, then we have to continue with linkCompareBehavior
+        // only if it is non-null.
+        if (linkFeatureMultiplicityMode == null) {
+            return true;
         }
 
         switch (linkFeatureMultiplicityMode) {
