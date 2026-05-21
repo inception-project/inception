@@ -208,6 +208,11 @@ public class MtasDocumentIndex
     private ReferenceManager<IndexSearcher> _searcherManager;
     private ScheduledFuture<?> _commitFuture;
 
+    // Source of the timestamp written into {@code FIELD_TIMESTAMP}. Static so tests can pin it
+    // to a fixed value (exercising the same-millisecond collision case that surfaces on Windows
+    // due to its coarser clock resolution) without having to reach into the pooled live instance.
+    static volatile java.util.function.Supplier<Date> nowSupplier = Date::new;
+
     public MtasDocumentIndex(Project aProject, DocumentService aDocumentService, File aIndexDir,
             FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry)
@@ -1259,12 +1264,18 @@ public class MtasDocumentIndex
         }
     }
 
-    private String indexDocument(String aDocumentTitle, long aSourceDocumentId,
-            long aAnnotationDocumentId, String aUser, byte[] aBinaryCas)
+    /**
+     * @param aReplaceByFieldIdTerm
+     *            if non-{@code null}, atomically replaces any existing rows with the same
+     *            {@code FIELD_ID} via {@link org.apache.lucene.index.IndexWriter#updateDocument}.
+     *            Otherwise just appends.
+     */
+    private String writeDocument(String aDocumentTitle, long aSourceDocumentId,
+            long aAnnotationDocumentId, String aUser, byte[] aBinaryCas, Term aReplaceByFieldIdTerm)
         throws IOException
     {
         // Calculate timestamp that will be indexed
-        var timestamp = DateTools.dateToString(new Date(), DateTools.Resolution.MILLISECOND);
+        var timestamp = DateTools.dateToString(nowSupplier.get(), DateTools.Resolution.MILLISECOND);
 
         LOG.debug(
                 "Indexing document in project [{}]({}). sourceId: {}, annotationId: {}, "
@@ -1291,9 +1302,13 @@ public class MtasDocumentIndex
         doc.add(new StringField(FIELD_TIMESTAMP, timestamp, Field.Store.YES));
         doc.add(new TextField(FIELD_CONTENT, encodedCAS, Field.Store.NO));
 
-        // Add document to the Lucene index
         var indexWriter = getIndexWriter();
-        indexWriter.addDocument(doc);
+        if (aReplaceByFieldIdTerm != null) {
+            indexWriter.updateDocument(aReplaceByFieldIdTerm, doc);
+        }
+        else {
+            indexWriter.addDocument(doc);
+        }
 
         return timestamp;
     };
@@ -1356,42 +1371,6 @@ public class MtasDocumentIndex
                         BooleanClause.Occur.MUST) //
                 .add(new TermQuery(new Term(FIELD_TIMESTAMP, aTimestamp)),
                         BooleanClause.Occur.MUST);
-
-        // Delete document based on the previous query
-        indexWriter.deleteDocuments(booleanQuery.build());
-    }
-
-    /**
-     * Remove a specific document from the index based on its timestamp
-     * 
-     * @param aSourceDocumentId
-     *            The ID of the source document to be removed
-     * @param aAnnotationDocumentId
-     *            The ID of the annotation document to be removed
-     * @param aUser
-     *            The owner of the document to be removed
-     * @param aCurrentVersion
-     *            The timestamp of the document to be kept
-     */
-    private void deindexOldVersionsOfDocument(long aSourceDocumentId, long aAnnotationDocumentId,
-            String aUser, String aCurrentVersion)
-        throws IOException
-    {
-        LOG.debug(
-                "Removing old versions of document from index in project [{}]({}). sourceId: {}, "
-                        + "annotationId: {}, user: {}, current timestamp: {}",
-                project.getName(), project.getId(), aSourceDocumentId, aAnnotationDocumentId, aUser,
-                aCurrentVersion);
-
-        var indexWriter = getIndexWriter();
-
-        // Prepare boolean query with the two obligatory terms (id and timestamp)
-        var booleanQuery = new BooleanQuery.Builder() //
-                .add(new TermQuery(new Term(FIELD_ID,
-                        String.format("%d/%d", aSourceDocumentId, aAnnotationDocumentId))),
-                        BooleanClause.Occur.MUST) //
-                .add(new TermQuery(new Term(FIELD_TIMESTAMP, aCurrentVersion)),
-                        BooleanClause.Occur.MUST_NOT);
 
         // Delete document based on the previous query
         indexWriter.deleteDocuments(booleanQuery.build());
@@ -1532,47 +1511,31 @@ public class MtasDocumentIndex
     @Override
     public void indexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException
     {
+        // Atomic delete-by-FIELD_ID + add. The previous add-then-delete-old-by-(timestamp !=
+        // current) pattern was meant to avoid a searcher window with no row present, but it broke
+        // down whenever two consecutive writes shared a millisecond timestamp (easy on Windows due
+        // to its coarser clock resolution): neither write's delete filter matched the other's row,
+        // and both rows survived. Lucene's updateDocument provides the same searcher guarantee
+        // (the change is only visible at next commit/refresh) without that hazard.
         var srcDocId = aDocument.getDocument().getId();
         var annoDocId = aDocument.getId();
-        var user = aDocument.getUser();
-
-        // NOTE: Deleting and then re-indexing the annotation document could lead to
-        // no results for this annotation document being returned while the
-        // re-indexing is still in process. Therefore, we check if there is already
-        // a version of the annotation document index, we obtain the timestamp of this
-        // version, then we add the new version, and finally we remove the old version
-        // as identified by the timestamp.
-        // Optional<String> oldTimestamp = Optional.empty();
-        // if (!BulkIndexingContext.isFullReindexInProgress()) {
-        // // Looking up the timestamp is slow (because it requires refreshing the searcher to
-        // // get the latest info) and when we do a full index rebuild, it is just slowing things
-        // // down unnecessarily.
-        // oldTimestamp = getTimestamp(srcDocId, annoDocId);
-        // }
-
-        var currentTimestamp = indexDocument(aDocument.getName(), srcDocId, annoDocId, user,
-                aBinaryCas);
-
-        deindexOldVersionsOfDocument(srcDocId, annoDocId, user, currentTimestamp);
-
-        // if (oldTimestamp.isPresent()) {
-        // deindexDocument(srcDocId, annoDocId, user, oldTimestamp.get());
-        // }
-
+        var replaceByFieldId = new Term(FIELD_ID, srcDocId + "/" + annoDocId);
+        writeDocument(aDocument.getName(), srcDocId, annoDocId, aDocument.getUser(), aBinaryCas,
+                replaceByFieldId);
         scheduleCommit();
     }
 
     @Override
     public void indexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas) throws IOException
     {
-        // NOTE: deleting all index versions related to the sourcedoc is ok in comparison to
-        // re-indexing annotation documents, because we do this before the search
-        // is accessed and therefore do not care about indices not being available for a short time
-        if (!BulkIndexingContext.isFullReindexInProgress()) {
-            deindexDocument(aSourceDocument.getId(), -1, "");
-        }
-
-        indexDocument(aSourceDocument.getName(), aSourceDocument.getId(), -1, "", aBinaryCas);
+        // Atomic delete-by-FIELD_ID + add. Two concurrent writers for the same source doc (e.g.
+        // ReindexTask overlapping IndexSourceDocumentTask) would otherwise be able to interleave
+        // their separate delete and add calls, producing duplicate rows for the same FIELD_ID.
+        // updateDocument() serializes the replace inside the IndexWriter.
+        var replaceByFieldId = BulkIndexingContext.isFullReindexInProgress() ? null
+                : new Term(FIELD_ID, aSourceDocument.getId() + "/-1");
+        writeDocument(aSourceDocument.getName(), aSourceDocument.getId(), -1, "", aBinaryCas,
+                replaceByFieldId);
         scheduleCommit();
     }
 }
