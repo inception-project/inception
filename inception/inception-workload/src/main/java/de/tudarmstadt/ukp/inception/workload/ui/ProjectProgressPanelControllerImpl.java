@@ -107,10 +107,15 @@ public class ProjectProgressPanelControllerImpl
             return emptyList();
         }
 
+        var stats = documentService.getSourceDocumentStats(project);
+        if (stats.getTotal() == 0) {
+            return emptyList();
+        }
+
         var weights = resolveWeights(aMetric, sessionOwner, project);
         var currentStats = weights != null //
                 ? weightedCurrentStats(project, weights)
-                : documentService.getSourceDocumentStats(project).toMap();
+                : stats.toMap();
         var history = eventRepository.calculateHistoricalDocumentStates(project, currentStats,
                 weights, aFrom.orElse(null));
 

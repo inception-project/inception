@@ -32,6 +32,7 @@ import java.io.ByteArrayInputStream;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -104,6 +105,7 @@ import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 @EnableAutoConfiguration
 @EntityScan({ //
@@ -788,6 +790,62 @@ class MtasDocumentIndexTest
         return jCas.getCas();
     }
 
+    /**
+     * Reproducer for the timestamp-collision race in
+     * {@link MtasDocumentIndex#indexDocument(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument, byte[])}.
+     * The previous {@code addDocument(ts=T)} → {@code deleteDocuments(FIELD_ID=X AND ts != T)}
+     * pattern was meant to keep at least one row visible during re-indexing, but when two writes
+     * land on the same millisecond — easy on Windows with its ~15ms clock granularity, and forced
+     * here by pinning {@link MtasDocumentIndex#nowSupplier} — neither write's delete filter matches
+     * the other's row and both rows survive.
+     * <p>
+     * Single-threaded by design: the bug doesn't actually need concurrency, just two writes sharing
+     * one timestamp. Real-world concurrent writes on Windows hit the same shape via
+     * clock-granularity collisions.
+     */
+    @Test
+    void thatAnnotationDocumentWritesWithTimestampCollisionDoNotDuplicate() throws Exception
+    {
+        var project = new Project("anno-ts-collision");
+        createProject(project);
+
+        var doc = new SourceDocument("doc", project, "text");
+        uploadAndIndexDocument(Pair.of(doc, "Goodbye moon. Hello World."));
+
+        var persistedDoc = documentService.getSourceDocument(project, doc.getName());
+        var annoDoc = documentService.createOrGetAnnotationDocument(persistedDoc, user);
+
+        var fixedDate = new Date();
+        var previousSupplier = MtasDocumentIndex.nowSupplier;
+        MtasDocumentIndex.nowSupplier = () -> fixedDate;
+        try {
+            // Two synchronous annotator writes sharing one millisecond timestamp.
+            searchService.indexDocument(annoDoc, WebAnnoCasUtil.casToByteArray(buildTinyCas("a")));
+            searchService.indexDocument(annoDoc, WebAnnoCasUtil.casToByteArray(buildTinyCas("b")));
+
+            // Force commit + searcher refresh.
+            searchService.query(user, project, "x");
+        }
+        finally {
+            MtasDocumentIndex.nowSupplier = previousSupplier;
+        }
+
+        var fieldId = persistedDoc.getId() + "/" + annoDoc.getId();
+        assertThat(countLiveRowsByFieldId(project, fieldId)) //
+                .as("Annotator row is duplicated when consecutive writes share a millisecond timestamp")
+                .isEqualTo(1);
+    }
+
+    private static CAS buildTinyCas(String aToken) throws Exception
+    {
+        var tsd = mergeTypeSystems(asList(createTypeSystemDescription(), getInternalTypeSystem()));
+        var jCas = JCasFactory.createJCas(tsd);
+        var builder = new JCasBuilder(jCas);
+        builder.add(aToken, Token.class);
+        builder.close();
+        return jCas.getCas();
+    }
+
     private static CAS buildSentenceCas(int aSentenceCount, int aTokensPerSentence) throws Exception
     {
         var tsd = mergeTypeSystems(asList(createTypeSystemDescription(), getInternalTypeSystem()));
@@ -974,6 +1032,29 @@ class MtasDocumentIndexTest
         catch (AssertionError e) {
             dumpDiagnostics(project, persistedDoc);
             throw e;
+        }
+    }
+
+    private int countLiveRowsByFieldId(Project aProject, String aFieldId) throws Exception
+    {
+        var indexDir = indexFactory.getIndexDir(aProject);
+        try (var dir = FSDirectory.open(indexDir.toPath());
+                var reader = DirectoryReader.open(dir)) {
+            var count = 0;
+            for (var leafCtx : reader.leaves()) {
+                var leafReader = leafCtx.reader();
+                var storedFields = leafReader.storedFields();
+                var liveBits = leafReader.getLiveDocs();
+                for (var i = 0; i < leafReader.maxDoc(); i++) {
+                    if (liveBits != null && !liveBits.get(i)) {
+                        continue;
+                    }
+                    if (aFieldId.equals(storedFields.document(i).get("id"))) {
+                        count++;
+                    }
+                }
+            }
+            return count;
         }
     }
 
