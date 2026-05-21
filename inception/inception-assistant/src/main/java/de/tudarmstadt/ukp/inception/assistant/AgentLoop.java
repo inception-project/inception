@@ -377,7 +377,7 @@ public class AgentLoop
         var chatProperties = properties.getChat();
 
         var requestBuilder = buildRequest(aMessages, chatProperties) //
-                .withFormat(JSONUtil.adaptJackson2To3(schema)) //
+                .withFormat(schema) //
                 .withStream(false);
 
         var references = new LinkedHashMap<String, MReference>();

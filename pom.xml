@@ -74,13 +74,13 @@
     <build-ant-version>1.10.15</build-ant-version>
     <build-groovy-version>5.0.6</build-groovy-version>
 
-    <junit.version>6.0.3</junit.version>
+    <junit.version>6.1.0</junit.version>
     <mockito.version>5.23.0</mockito.version>
     <assertj.version>3.27.7</assertj.version>
     <xmlunit.version>2.11.0</xmlunit.version>
     <testcontainers.version>2.0.5</testcontainers.version>
-    <keycloak-admin-client.version>26.0.8</keycloak-admin-client.version>
-    <testcontainers-keycloak.version>4.1.1</testcontainers-keycloak.version>
+    <keycloak-admin-client.version>26.0.9</keycloak-admin-client.version>
+    <testcontainers-keycloak.version>4.2.1</testcontainers-keycloak.version>
 
     <awaitility.version>4.3.0</awaitility.version>
 
@@ -95,31 +95,31 @@
     <spring.data.version>4.0.5</spring.data.version>
     <spring.security.version>7.0.5</spring.security.version>
     <springdoc.version>3.0.3</springdoc.version>
-    <swagger.version>2.2.49</swagger.version>
+    <swagger.version>2.2.50</swagger.version>
     <jjwt.version>0.13.0</jjwt.version>
 
     <slf4j.version>2.0.18</slf4j.version>
-    <log4j2.version>2.25.4</log4j2.version>
+    <log4j2.version>2.26.0</log4j2.version>
     <jboss.logging.version>3.6.3.Final</jboss.logging.version>
-    <sentry.version>8.40.0</sentry.version>
+    <sentry.version>8.42.0</sentry.version>
 
     <tomcat.version>11.0.22</tomcat.version>
-    <jetty.version>12.1.8</jetty.version>
+    <jetty.version>12.1.9</jetty.version>
     <servlet-api.version>6.1.0</servlet-api.version>
 
-    <mariadb.driver.version>3.5.7</mariadb.driver.version>
+    <mariadb.driver.version>3.5.8</mariadb.driver.version>
     <mssql.driver.version>12.10.2.jre11</mssql.driver.version>
-    <mysql.driver.version>9.6.0</mysql.driver.version>
+    <mysql.driver.version>9.7.0</mysql.driver.version>
     <postgres.driver.version>42.7.11</postgres.driver.version>
-    <hibernate.version>7.2.6.Final</hibernate.version>
-    <hibernate.validator.version>8.0.3.Final</hibernate.validator.version>
+    <hibernate.version>7.3.5.Final</hibernate.version>
+    <hibernate.validator.version>9.1.0.Final</hibernate.validator.version>
 
     <wicket.version>10.9.1</wicket.version>
     <wicketstuff.version>10.8.0</wicketstuff.version>
     <wicket-bootstrap.version>7.0.14</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>4.0.14</wicket-jquery-selectors.version>
     <wicket-webjars.version>4.0.14</wicket-webjars.version>
-    <wicket-spring-boot.version>4.1.1</wicket-spring-boot.version>
+    <wicket-spring-boot.version>5.0.0</wicket-spring-boot.version>
 
     <!--
       - These are all interconnected - because they share the dependency on Lucene.
@@ -127,17 +127,17 @@
     <lucene.version>10.4.0</lucene.version>
     <solr.version>10.0.0</solr.version>
     <opensearch.version>3.6.0</opensearch.version>
-    <jena.version>6.0.0</jena.version>
+    <jena.version>6.1.0</jena.version>
     <libthrift.version>0.23.0</libthrift.version>
     <rdf4j.version>5.1.3</rdf4j.version> 
     <owlapi-version>5.5.1</owlapi-version>
 
-    <asciidoctor.plugin.version>2.2.3</asciidoctor.plugin.version>
-    <asciidoctor.version>2.5.13</asciidoctor.version>
-    <asciidoctor-diagram.version>2.3.1</asciidoctor-diagram.version>
-    <build-asciidoctorj-pdf-version>2.3.19</build-asciidoctorj-pdf-version>
+    <asciidoctor.plugin.version>3.2.0</asciidoctor.plugin.version>
+    <asciidoctor.version>3.0.1</asciidoctor.version>
+    <asciidoctor-diagram.version>3.2.1</asciidoctor-diagram.version>
+    <build-asciidoctorj-pdf-version>2.3.23</build-asciidoctorj-pdf-version>
 
-    <ant-version>1.10.15</ant-version>
+    <ant-version>1.10.17</ant-version>
     <json.version>20240303</json.version>
     <jackson.version>2.21.3</jackson.version>
     <jackson3.version>3.1.3</jackson3.version>
@@ -175,10 +175,16 @@
     <woodstox-core.version>6.7.0</woodstox-core.version>
     <nimbus-jose-jwt.version>10.9</nimbus-jose-jwt.version>
     <json-schema-validator.version>3.0.2</json-schema-validator.version>
-    <json-schema-generator.version>4.38.0</json-schema-generator.version>
-    <jgit.version>6.10.1.202505221210-r</jgit.version>
+    <json-schema-generator.version>5.0.0</json-schema-generator.version>
+    <jgit.version>7.6.0.202603022253-r</jgit.version>
     <javax.activation-api-version>1.2.0</javax.activation-api-version>
-    <jaxb.version>4.0.7</jaxb.version>
+    <jaxb.version>4.0.8</jaxb.version>
+    <!--
+      jaxb-impl-version / jaxb-core-version must remain on the 2.3.x line: it is the last
+      release providing the legacy javax.xml.bind implementation. Newer 4.x releases
+      switched to the jakarta.xml.bind namespace and break the dkpro TCF reader
+      (eu.clarin.weblicht.wlfxb), which still imports javax.xml.bind.*.
+    -->
     <jaxb-impl-version>2.3.9</jaxb-impl-version>
     <jaxb-core-version>2.3.0.1</jaxb-core-version>
     <jaxb-api-version>2.3.1</jaxb-api-version>
@@ -188,10 +194,10 @@
     <jna.version>5.18.1</jna.version>
     <jsoup.version>1.18.3</jsoup.version>
     <matomo-java-tracker-core-version>3.4.0</matomo-java-tracker-core-version>
-    <mime4j.version>0.8.13</mime4j.version>
+    <mime4j.version>0.8.14</mime4j.version>
     <hsqldb.version>2.7.4</hsqldb.version>
     <opensaml.version>5.2.2</opensaml.version>
-    <oauth2-oidc-sdk.version>9.43.6</oauth2-oidc-sdk.version>
+    <oauth2-oidc-sdk.version>11.37.2</oauth2-oidc-sdk.version>
     <javassist.version>3.31.0-GA</javassist.version>
     <openjson.version>1.0.13</openjson.version>
 
@@ -219,7 +225,7 @@
     <immutable.version>^5.1.5</immutable.version>
     <jsdom.version>^29.0.2</jsdom.version>
     <jsdom-global.version>^3.0.2</jsdom-global.version>
-    <jquery.version>3.7.1</jquery.version>
+    <jquery.version>4.0.0</jquery.version>
     <jquery-ui.version>1.14.2</jquery-ui.version>
     <license-checker.version>^25.0.1</license-checker.version>
     <marked.version>^18.0.2</marked.version>
@@ -288,7 +294,19 @@
         <plugin>
           <groupId>com.rudikershaw.gitbuildhook</groupId>
           <artifactId>git-build-hook-maven-plugin</artifactId>
-          <version>3.5.0</version>
+          <version>3.6.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>versions-maven-plugin</artifactId>
+          <version>2.21.0</version>
+          <configuration>
+            <rulesUri>file:${maven.multiModuleProjectDirectory}/inception/inception-build/src/main/resources/inception/rules.xml</rulesUri>
+            <!--
+            <allowAnyUpdates>false</allowAnyUpdates>
+            <allowMajorUpdates>false</allowMajorUpdates>
+            -->
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -337,7 +355,7 @@
             <plugin>
               <groupId>com.diffplug.spotless</groupId>
               <artifactId>spotless-maven-plugin</artifactId>
-              <version>2.46.1</version>
+              <version>3.5.1</version>
               <inherited>true</inherited>
               <configuration>
                 <java>
