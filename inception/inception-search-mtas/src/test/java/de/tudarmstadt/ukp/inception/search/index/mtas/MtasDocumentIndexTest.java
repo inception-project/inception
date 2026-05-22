@@ -49,9 +49,12 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -820,8 +823,8 @@ class MtasDocumentIndexTest
         MtasDocumentIndex.nowSupplier = () -> fixedDate;
         try {
             // Two synchronous annotator writes sharing one millisecond timestamp.
-            searchService.indexDocument(annoDoc, WebAnnoCasUtil.casToByteArray(buildTinyCas("a")));
-            searchService.indexDocument(annoDoc, WebAnnoCasUtil.casToByteArray(buildTinyCas("b")));
+            searchService.indexDocument(annoDoc, WebAnnoCasUtil.casToByteArray(buildTokenCas(3)));
+            searchService.indexDocument(annoDoc, WebAnnoCasUtil.casToByteArray(buildTokenCas(5)));
 
             // Force commit + searcher refresh.
             searchService.query(user, project, "x");
@@ -834,16 +837,6 @@ class MtasDocumentIndexTest
         assertThat(countLiveRowsByFieldId(project, fieldId)) //
                 .as("Annotator row is duplicated when consecutive writes share a millisecond timestamp")
                 .isEqualTo(1);
-    }
-
-    private static CAS buildTinyCas(String aToken) throws Exception
-    {
-        var tsd = mergeTypeSystems(asList(createTypeSystemDescription(), getInternalTypeSystem()));
-        var jCas = JCasFactory.createJCas(tsd);
-        var builder = new JCasBuilder(jCas);
-        builder.add(aToken, Token.class);
-        builder.close();
-        return jCas.getCas();
     }
 
     private static CAS buildSentenceCas(int aSentenceCount, int aTokensPerSentence) throws Exception
@@ -1020,6 +1013,88 @@ class MtasDocumentIndexTest
         uploadAndIndexDocument(Pair.of(doc, "Goodbye moon. Hello World."));
 
         // Curation row: 5 sentences via Sentence layer — must override the 2 from INITIAL_CAS
+        writeCurationCas(doc, buildSentenceCas(5, 3));
+
+        var counts = searchService.getAnnotationCountsPerSourceDocument(user, project,
+                sentenceLayer);
+
+        var persistedDoc = documentService.getSourceDocument(project, doc.getName());
+        try {
+            assertThat(counts).containsOnly(Map.entry(persistedDoc.getId(), 5L));
+        }
+        catch (AssertionError e) {
+            dumpDiagnostics(project, persistedDoc);
+            throw e;
+        }
+    }
+
+    // Stress variants of the count tests. The race that produced duplicate FIELD_USER='' rows on
+    // Windows is timing-sensitive enough that unrelated changes (e.g. {@link #dumpDiagnostics})
+    // shift JIT/class-loading enough to close the failing window. These run the same scenario 50x
+    // to make reproduction reliable. Disabled by default; enable via {@code -Dmtas.stress=true}.
+
+    @RepeatedTest(50)
+    @EnabledIfSystemProperty(named = "mtas.stress", matches = "true")
+    void stressTokenCountsPerSourceDocument_curationPreferredOverAnnotatorAndInitial(
+            RepetitionInfo aInfo)
+        throws Exception
+    {
+        var project = new Project(
+                "stress-token-counts-curation-pref-" + aInfo.getCurrentRepetition());
+        createProject(project);
+
+        var doc = new SourceDocument("doc", project, "text");
+        uploadAndIndexDocument(Pair.of(doc, "Goodbye moon. Hello World."));
+        writeAnnotatorCas(doc, user, buildTokenCas(4));
+        writeCurationCas(doc, buildTokenCas(2));
+
+        var counts = searchService.getAnnotationCountsPerSourceDocument(user, project, tokenLayer);
+
+        var persistedDoc = documentService.getSourceDocument(project, doc.getName());
+        try {
+            assertThat(counts).containsOnly(Map.entry(persistedDoc.getId(), 2L));
+        }
+        catch (AssertionError e) {
+            dumpDiagnostics(project, persistedDoc);
+            throw e;
+        }
+    }
+
+    @RepeatedTest(50)
+    @EnabledIfSystemProperty(named = "mtas.stress", matches = "true")
+    void stressTokenCountsPerSourceDocument_annotatorRowIgnoredFallsBackToInitial(
+            RepetitionInfo aInfo)
+        throws Exception
+    {
+        var project = new Project(
+                "stress-token-counts-annotator-ignored-" + aInfo.getCurrentRepetition());
+        createProject(project);
+
+        var doc = new SourceDocument("doc", project, "text");
+        uploadAndIndexDocument(Pair.of(doc, "Goodbye moon. Hello World."));
+        writeAnnotatorCas(doc, user, buildTokenCas(99));
+
+        var counts = searchService.getAnnotationCountsPerSourceDocument(user, project, tokenLayer);
+
+        var persistedDoc = documentService.getSourceDocument(project, doc.getName());
+        try {
+            assertThat(counts).containsOnly(Map.entry(persistedDoc.getId(), 6L));
+        }
+        catch (AssertionError e) {
+            dumpDiagnostics(project, persistedDoc);
+            throw e;
+        }
+    }
+
+    @RepeatedTest(50)
+    @EnabledIfSystemProperty(named = "mtas.stress", matches = "true")
+    void stressSentenceCountsPerSourceDocument_curationWins(RepetitionInfo aInfo) throws Exception
+    {
+        var project = new Project("stress-sentence-counts-" + aInfo.getCurrentRepetition());
+        createProject(project);
+
+        var doc = new SourceDocument("doc", project, "text");
+        uploadAndIndexDocument(Pair.of(doc, "Goodbye moon. Hello World."));
         writeCurationCas(doc, buildSentenceCas(5, 3));
 
         var counts = searchService.getAnnotationCountsPerSourceDocument(user, project,
