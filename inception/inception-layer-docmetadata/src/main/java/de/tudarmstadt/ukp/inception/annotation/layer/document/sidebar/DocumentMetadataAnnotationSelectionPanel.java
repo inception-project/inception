@@ -159,8 +159,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     private final IModel<AnnotationLayer> selectedLayer;
     private final IModel<List<LayerGroup>> layers;
 
-    private WebMarkupContainer selectedAnnotation;
-    private DocumentMetadataAnnotationDetailPanel selectedDetailPanel;
+    private VID selectedAnnotationVid;
     private int createdAnnotationAddress;
 
     public DocumentMetadataAnnotationSelectionPanel(String aId, CasProvider aCasProvider,
@@ -351,9 +350,8 @@ public class DocumentMetadataAnnotationSelectionPanel
             // persist changes
             annotationPage.writeEditorCas(cas);
 
-            if (selectedDetailPanel == aDetailPanel) {
-                selectedAnnotation = null;
-                selectedDetailPanel = null;
+            if (Objects.equals(selectedAnnotationVid, aDetailPanel.getModelObject())) {
+                selectedAnnotationVid = null;
             }
 
             remove(aDetailPanel);
@@ -366,35 +364,19 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
     }
 
-    private void actionSelect(AjaxRequestTarget aTarget, WebMarkupContainer container,
+    private void actionSelect(AjaxRequestTarget aTarget,
             DocumentMetadataAnnotationDetailPanel detailPanel)
     {
-        if (selectedAnnotation != null) {
-            aTarget.add(selectedAnnotation);
-        }
-
-        if (selectedDetailPanel != null) {
-            aTarget.add(selectedDetailPanel);
-        }
-
-        if (selectedAnnotation == container) {
-            // if container is already selected, de-select and close annotation
-            selectedAnnotation = null;
+        var clickedVid = detailPanel.getModelObject();
+        if (Objects.equals(selectedAnnotationVid, clickedVid)) {
+            // if already selected, de-select and close annotation
+            selectedAnnotationVid = null;
         }
         else {
-            selectedAnnotation = container;
+            selectedAnnotationVid = clickedVid;
         }
 
-        if (selectedDetailPanel == detailPanel) {
-            // if detail panel is already selected, de-select and close annotation
-            selectedDetailPanel = null;
-        }
-        else {
-            selectedDetailPanel = detailPanel;
-        }
-
-        aTarget.add(container);
-        aTarget.add(detailPanel);
+        aTarget.add(layersContainer);
     }
 
     private ListView<LayerGroup> createLayerGroupList()
@@ -476,35 +458,34 @@ public class DocumentMetadataAnnotationSelectionPanel
 
                 if (itemState.kind == ItemKind.ANNOTATION) {
                     container.add(new LambdaAjaxEventBehavior(CLICK_EVENT, $ -> actionSelect($,
-                            container, (DocumentMetadataAnnotationDetailPanel) detailPanel)));
+                            (DocumentMetadataAnnotationDetailPanel) detailPanel)));
                 }
 
                 if (detailPanel instanceof DocumentMetadataAnnotationDetailPanel metadataDetailPanel) {
-                    metadataDetailPanel.add(visibleWhen(() -> isExpanded(aItem, container)));
+                    metadataDetailPanel.add(visibleWhen(() -> isExpanded(aItem)));
                 }
 
                 if (itemState.kind == ItemKind.ANNOTATION
                         && createdAnnotationAddress == vid.getId()) {
                     createdAnnotationAddress = -1;
-                    selectedAnnotation = container;
-                    selectedDetailPanel = (DocumentMetadataAnnotationDetailPanel) detailPanel;
+                    selectedAnnotationVid = vid;
                 }
 
                 var close = new WebMarkupContainer(CID_CLOSE);
-                close.add(visibleWhen(() -> isExpanded(aItem, container)
-                        && itemState.kind == ItemKind.ANNOTATION));
+                close.add(visibleWhen(
+                        () -> isExpanded(aItem) && itemState.kind == ItemKind.ANNOTATION));
                 close.setOutputMarkupId(true);
                 container.add(close);
 
                 var open = new WebMarkupContainer(CID_OPEN);
-                open.add(visibleWhen(() -> !isExpanded(aItem, container)
-                        && itemState.kind == ItemKind.ANNOTATION));
+                open.add(visibleWhen(
+                        () -> !isExpanded(aItem) && itemState.kind == ItemKind.ANNOTATION));
                 open.setOutputMarkupId(true);
                 container.add(open);
 
                 container.add(new Label(CID_LABEL, defaultIfEmpty(itemState.label, "[No label]"))
                         .add(visibleWhen(() -> itemState.kind != ItemKind.ANNOTATION
-                                || (!itemState.singleton && !isExpanded(aItem, container)))));
+                                || (!itemState.singleton && !isExpanded(aItem)))));
 
                 var validationWarning = new WebMarkupContainer(CID_VALIDATION_WARNING);
                 validationWarning.add(visibleWhen(() -> itemState.kind == ItemKind.ANNOTATION
@@ -557,11 +538,12 @@ public class DocumentMetadataAnnotationSelectionPanel
                 aItem.setOutputMarkupId(true);
             }
 
-            private boolean isExpanded(ListItem<AnnotationListItem> aItem,
-                    WebMarkupContainer container)
+            private boolean isExpanded(ListItem<AnnotationListItem> aItem)
             {
-                return aItem.getModelObject().kind == ItemKind.ANNOTATION
-                        && (selectedAnnotation == container || aItem.getModelObject().singleton);
+                var itemState = aItem.getModelObject();
+                return itemState.kind == ItemKind.ANNOTATION
+                        && (Objects.equals(selectedAnnotationVid, itemState.vid)
+                                || itemState.singleton);
             }
         };
     }
