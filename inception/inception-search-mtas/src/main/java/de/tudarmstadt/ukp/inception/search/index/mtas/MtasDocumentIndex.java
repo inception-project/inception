@@ -145,6 +145,8 @@ import mtas.search.spans.util.MtasSpanQuery;
 public class MtasDocumentIndex
     implements PhysicalIndex
 {
+    static final int CURRENT_SCHEMA_VERSION = 1;
+
     /**
      * Constant for the field which carries the unique identifier for the index document consisting:
      * {@code [sourceDocumentId]/[annotationDocumentId]}
@@ -339,6 +341,12 @@ public class MtasDocumentIndex
                         project.getName(), project.getId());
             }
         }
+    }
+
+    @Override
+    public int getCurrentSchemaVersion()
+    {
+        return CURRENT_SCHEMA_VERSION;
     }
 
     @Override

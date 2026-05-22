@@ -26,6 +26,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.awaitility.Awaitility.await;
 
 import java.io.ByteArrayInputStream;
@@ -67,6 +68,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.util.AopTestUtils;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -102,11 +104,13 @@ import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoCon
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.LayerStatistics;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
+import de.tudarmstadt.ukp.inception.search.model.Index;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
@@ -837,6 +841,47 @@ class MtasDocumentIndexTest
         assertThat(countLiveRowsByFieldId(project, fieldId)) //
                 .as("Annotator row is duplicated when consecutive writes share a millisecond timestamp")
                 .isEqualTo(1);
+    }
+
+    @Test
+    void thatStaleSchemaVersionTriggersLazyReindex() throws Exception
+    {
+        var project = new Project("schema-lazy-upgrade");
+        createProject(project);
+
+        var doc = new SourceDocument("doc", project, "text");
+        uploadAndIndexDocument(Pair.of(doc, "Goodbye moon. Hello World."));
+
+        // Mutate the cached entity directly: the lazy upgrade check reads from PooledIndex, not DB
+        var indexEntity = lookupCachedIndex(project);
+        assertThat(indexEntity.getSchemaVersion())
+                .isEqualTo(MtasDocumentIndex.CURRENT_SCHEMA_VERSION);
+        indexEntity.setSchemaVersion(0);
+
+        assertThatExceptionOfType(ExecutionException.class) //
+                .isThrownBy(() -> searchService.query(user, project, "Goodbye"));
+
+        await("Lazy upgrade reindex to complete") //
+                .atMost(60, SECONDS) //
+                .pollInterval(200, MILLISECONDS) //
+                .until(() -> searchService.isIndexValid(project)
+                        && searchService.getIndexProgress(project).isEmpty());
+
+        assertThat(indexEntity.getSchemaVersion())
+                .isEqualTo(MtasDocumentIndex.CURRENT_SCHEMA_VERSION);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Index lookupCachedIndex(Project aProject) throws Exception
+    {
+        SearchServiceImpl target = AopTestUtils.getTargetObject(searchService);
+        var indexesField = SearchServiceImpl.class.getDeclaredField("indexes");
+        indexesField.setAccessible(true);
+        var indexes = (Map<Long, Object>) indexesField.get(target);
+        var pooledIndex = indexes.get(aProject.getId());
+        var getMethod = pooledIndex.getClass().getDeclaredMethod("get");
+        getMethod.setAccessible(true);
+        return (Index) getMethod.invoke(pooledIndex);
     }
 
     private static CAS buildSentenceCas(int aSentenceCount, int aTokensPerSentence) throws Exception

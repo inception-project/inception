@@ -58,6 +58,9 @@ public class Index
 
     private String physicalProvider;
 
+    @Column(nullable = false)
+    private int schemaVersion;
+
     @Transient
     private PhysicalIndex physicalIndex;
 
@@ -109,6 +112,16 @@ public class Index
     public void setPhysicalProvider(String physicalProvider)
     {
         this.physicalProvider = physicalProvider;
+    }
+
+    public int getSchemaVersion()
+    {
+        return schemaVersion;
+    }
+
+    public void setSchemaVersion(int aSchemaVersion)
+    {
+        schemaVersion = aSchemaVersion;
     }
 
     public PhysicalIndex getPhysicalIndex()
