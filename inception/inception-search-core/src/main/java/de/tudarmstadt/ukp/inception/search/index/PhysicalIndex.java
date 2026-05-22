@@ -36,6 +36,17 @@ import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
 public interface PhysicalIndex
 {
     /**
+     * Schema version of the data shape this physical index implementation currently produces.
+     * Compared at index-open time against the value stamped on the {@code Index} entity by the last
+     * successful (re)build; a mismatch triggers a lazy rebuild. The numbering is private to each
+     * physical provider, so different providers may reuse the same numbers without conflict.
+     *
+     * @return the current schema version (must be a non-negative integer; bump when the on-disk
+     *         data shape changes in a way that requires a rebuild).
+     */
+    int getCurrentSchemaVersion();
+
+    /**
      * @return if whether the index has data that can be deleted, e.g. index files on disk.
      */
     boolean isCreated();

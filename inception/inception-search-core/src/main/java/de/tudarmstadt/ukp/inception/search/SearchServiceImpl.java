@@ -800,6 +800,16 @@ public class SearchServiceImpl
             throw (new ExecutionException("Index still building. Try again later."));
         }
 
+        // Is the on-disk data shape current? Checked after isInvalid so that an in-flight
+        // rebuild (which only stamps schemaVersion on success) is not duplicated here.
+        var currentSchemaVersion = aIndex.getPhysicalIndex().getCurrentSchemaVersion();
+        if (aIndex.getSchemaVersion() != currentSchemaVersion) {
+            invalidateIndexAndForceIndexRebuild(aProject, aIndex,
+                    "ensureIndexIsCreatedAndValid[schemaMismatch:" + aIndex.getSchemaVersion()
+                            + "!=" + currentSchemaVersion + "]");
+            throw (new ExecutionException("Index still building. Try again later."));
+        }
+
         // Is the index usable - it might be corrupt and needs rebuilding
         try {
             aIndex.getPhysicalIndex().open();
@@ -823,7 +833,7 @@ public class SearchServiceImpl
             entityManager.merge(aIndex);
         }
 
-        enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[doesNotExist]");
+        enqueueReindexTask(aProject, aReason);
     }
 
     private void enqueueReindexTask(Project aProject, String aTrigger)
