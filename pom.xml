@@ -72,7 +72,7 @@
 
   <properties>
     <build-ant-version>1.10.15</build-ant-version>
-    <build-groovy-version>5.0.4</build-groovy-version>
+    <build-groovy-version>5.0.6</build-groovy-version>
 
     <junit.version>6.0.3</junit.version>
     <mockito.version>5.23.0</mockito.version>
@@ -94,16 +94,16 @@
     <spring.boot.version>4.0.6</spring.boot.version>
     <spring.data.version>4.0.5</spring.data.version>
     <spring.security.version>7.0.5</spring.security.version>
-    <springdoc.version>3.0.2</springdoc.version>
+    <springdoc.version>3.0.3</springdoc.version>
     <swagger.version>2.2.49</swagger.version>
     <jjwt.version>0.13.0</jjwt.version>
 
-    <slf4j.version>2.0.17</slf4j.version>
+    <slf4j.version>2.0.18</slf4j.version>
     <log4j2.version>2.25.4</log4j2.version>
     <jboss.logging.version>3.6.3.Final</jboss.logging.version>
     <sentry.version>8.40.0</sentry.version>
 
-    <tomcat.version>11.0.21</tomcat.version>
+    <tomcat.version>11.0.22</tomcat.version>
     <jetty.version>12.1.8</jetty.version>
     <servlet-api.version>6.1.0</servlet-api.version>
 
@@ -114,7 +114,7 @@
     <hibernate.version>7.2.6.Final</hibernate.version>
     <hibernate.validator.version>8.0.3.Final</hibernate.validator.version>
 
-    <wicket.version>10.9.0</wicket.version>
+    <wicket.version>10.9.1</wicket.version>
     <wicketstuff.version>10.8.0</wicketstuff.version>
     <wicket-bootstrap.version>7.0.14</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>4.0.14</wicket-jquery-selectors.version>
@@ -145,7 +145,7 @@
     <okhttp.version>5.3.2</okhttp.version>
     <okio.version>3.17.0</okio.version>
     <byte-buddy.version>1.18.8</byte-buddy.version>
-    <caffeine.version>3.2.3</caffeine.version>
+    <caffeine.version>3.2.4</caffeine.version>
     <commons-beanutils.version>1.11.0</commons-beanutils.version>
     <commons-collections4.version>4.5.0</commons-collections4.version>
     <commons-csv.version>1.14.1</commons-csv.version>
@@ -190,7 +190,7 @@
     <matomo-java-tracker-core-version>3.4.0</matomo-java-tracker-core-version>
     <mime4j.version>0.8.13</mime4j.version>
     <hsqldb.version>2.7.4</hsqldb.version>
-    <opensaml.version>5.2.1</opensaml.version>
+    <opensaml.version>5.2.2</opensaml.version>
     <oauth2-oidc-sdk.version>9.43.6</oauth2-oidc-sdk.version>
     <javassist.version>3.31.0-GA</javassist.version>
     <openjson.version>1.0.13</openjson.version>

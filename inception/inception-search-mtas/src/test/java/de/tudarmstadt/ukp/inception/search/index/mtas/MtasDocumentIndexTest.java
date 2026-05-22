@@ -32,6 +32,7 @@ import java.io.ByteArrayInputStream;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -48,9 +49,12 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,6 +108,7 @@ import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 @EnableAutoConfiguration
 @EntityScan({ //
@@ -788,6 +793,52 @@ class MtasDocumentIndexTest
         return jCas.getCas();
     }
 
+    /**
+     * Reproducer for the timestamp-collision race in
+     * {@link MtasDocumentIndex#indexDocument(de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument, byte[])}.
+     * The previous {@code addDocument(ts=T)} → {@code deleteDocuments(FIELD_ID=X AND ts != T)}
+     * pattern was meant to keep at least one row visible during re-indexing, but when two writes
+     * land on the same millisecond — easy on Windows with its ~15ms clock granularity, and forced
+     * here by pinning {@link MtasDocumentIndex#nowSupplier} — neither write's delete filter matches
+     * the other's row and both rows survive.
+     * <p>
+     * Single-threaded by design: the bug doesn't actually need concurrency, just two writes sharing
+     * one timestamp. Real-world concurrent writes on Windows hit the same shape via
+     * clock-granularity collisions.
+     */
+    @Test
+    void thatAnnotationDocumentWritesWithTimestampCollisionDoNotDuplicate() throws Exception
+    {
+        var project = new Project("anno-ts-collision");
+        createProject(project);
+
+        var doc = new SourceDocument("doc", project, "text");
+        uploadAndIndexDocument(Pair.of(doc, "Goodbye moon. Hello World."));
+
+        var persistedDoc = documentService.getSourceDocument(project, doc.getName());
+        var annoDoc = documentService.createOrGetAnnotationDocument(persistedDoc, user);
+
+        var fixedDate = new Date();
+        var previousSupplier = MtasDocumentIndex.nowSupplier;
+        MtasDocumentIndex.nowSupplier = () -> fixedDate;
+        try {
+            // Two synchronous annotator writes sharing one millisecond timestamp.
+            searchService.indexDocument(annoDoc, WebAnnoCasUtil.casToByteArray(buildTokenCas(3)));
+            searchService.indexDocument(annoDoc, WebAnnoCasUtil.casToByteArray(buildTokenCas(5)));
+
+            // Force commit + searcher refresh.
+            searchService.query(user, project, "x");
+        }
+        finally {
+            MtasDocumentIndex.nowSupplier = previousSupplier;
+        }
+
+        var fieldId = persistedDoc.getId() + "/" + annoDoc.getId();
+        assertThat(countLiveRowsByFieldId(project, fieldId)) //
+                .as("Annotator row is duplicated when consecutive writes share a millisecond timestamp")
+                .isEqualTo(1);
+    }
+
     private static CAS buildSentenceCas(int aSentenceCount, int aTokensPerSentence) throws Exception
     {
         var tsd = mergeTypeSystems(asList(createTypeSystemDescription(), getInternalTypeSystem()));
@@ -974,6 +1025,111 @@ class MtasDocumentIndexTest
         catch (AssertionError e) {
             dumpDiagnostics(project, persistedDoc);
             throw e;
+        }
+    }
+
+    // Stress variants of the count tests. The race that produced duplicate FIELD_USER='' rows on
+    // Windows is timing-sensitive enough that unrelated changes (e.g. {@link #dumpDiagnostics})
+    // shift JIT/class-loading enough to close the failing window. These run the same scenario 50x
+    // to make reproduction reliable. Disabled by default; enable via {@code -Dmtas.stress=true}.
+
+    @RepeatedTest(50)
+    @EnabledIfSystemProperty(named = "mtas.stress", matches = "true")
+    void stressTokenCountsPerSourceDocument_curationPreferredOverAnnotatorAndInitial(
+            RepetitionInfo aInfo)
+        throws Exception
+    {
+        var project = new Project(
+                "stress-token-counts-curation-pref-" + aInfo.getCurrentRepetition());
+        createProject(project);
+
+        var doc = new SourceDocument("doc", project, "text");
+        uploadAndIndexDocument(Pair.of(doc, "Goodbye moon. Hello World."));
+        writeAnnotatorCas(doc, user, buildTokenCas(4));
+        writeCurationCas(doc, buildTokenCas(2));
+
+        var counts = searchService.getAnnotationCountsPerSourceDocument(user, project, tokenLayer);
+
+        var persistedDoc = documentService.getSourceDocument(project, doc.getName());
+        try {
+            assertThat(counts).containsOnly(Map.entry(persistedDoc.getId(), 2L));
+        }
+        catch (AssertionError e) {
+            dumpDiagnostics(project, persistedDoc);
+            throw e;
+        }
+    }
+
+    @RepeatedTest(50)
+    @EnabledIfSystemProperty(named = "mtas.stress", matches = "true")
+    void stressTokenCountsPerSourceDocument_annotatorRowIgnoredFallsBackToInitial(
+            RepetitionInfo aInfo)
+        throws Exception
+    {
+        var project = new Project(
+                "stress-token-counts-annotator-ignored-" + aInfo.getCurrentRepetition());
+        createProject(project);
+
+        var doc = new SourceDocument("doc", project, "text");
+        uploadAndIndexDocument(Pair.of(doc, "Goodbye moon. Hello World."));
+        writeAnnotatorCas(doc, user, buildTokenCas(99));
+
+        var counts = searchService.getAnnotationCountsPerSourceDocument(user, project, tokenLayer);
+
+        var persistedDoc = documentService.getSourceDocument(project, doc.getName());
+        try {
+            assertThat(counts).containsOnly(Map.entry(persistedDoc.getId(), 6L));
+        }
+        catch (AssertionError e) {
+            dumpDiagnostics(project, persistedDoc);
+            throw e;
+        }
+    }
+
+    @RepeatedTest(50)
+    @EnabledIfSystemProperty(named = "mtas.stress", matches = "true")
+    void stressSentenceCountsPerSourceDocument_curationWins(RepetitionInfo aInfo) throws Exception
+    {
+        var project = new Project("stress-sentence-counts-" + aInfo.getCurrentRepetition());
+        createProject(project);
+
+        var doc = new SourceDocument("doc", project, "text");
+        uploadAndIndexDocument(Pair.of(doc, "Goodbye moon. Hello World."));
+        writeCurationCas(doc, buildSentenceCas(5, 3));
+
+        var counts = searchService.getAnnotationCountsPerSourceDocument(user, project,
+                sentenceLayer);
+
+        var persistedDoc = documentService.getSourceDocument(project, doc.getName());
+        try {
+            assertThat(counts).containsOnly(Map.entry(persistedDoc.getId(), 5L));
+        }
+        catch (AssertionError e) {
+            dumpDiagnostics(project, persistedDoc);
+            throw e;
+        }
+    }
+
+    private int countLiveRowsByFieldId(Project aProject, String aFieldId) throws Exception
+    {
+        var indexDir = indexFactory.getIndexDir(aProject);
+        try (var dir = FSDirectory.open(indexDir.toPath());
+                var reader = DirectoryReader.open(dir)) {
+            var count = 0;
+            for (var leafCtx : reader.leaves()) {
+                var leafReader = leafCtx.reader();
+                var storedFields = leafReader.storedFields();
+                var liveBits = leafReader.getLiveDocs();
+                for (var i = 0; i < leafReader.maxDoc(); i++) {
+                    if (liveBits != null && !liveBits.get(i)) {
+                        continue;
+                    }
+                    if (aFieldId.equals(storedFields.document(i).get("id"))) {
+                        count++;
+                    }
+                }
+            }
+            return count;
         }
     }
 

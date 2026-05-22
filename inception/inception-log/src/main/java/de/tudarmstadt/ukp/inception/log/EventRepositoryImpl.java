@@ -301,7 +301,9 @@ public class EventRepositoryImpl
     {
         var from = aFrom;
         if (from == null) {
-            from = Instant.MIN;
+            // Use EPOCH as a safe lower bound. Instant.MIN cannot be bound as a JDBC
+            // Timestamp because Timestamp.from() overflows on such an extreme value.
+            from = Instant.EPOCH;
         }
 
         // Initialize running counts from current state
@@ -354,7 +356,7 @@ public class EventRepositoryImpl
         }
 
         // Add boundary snapshot at aTo
-        if (!result.isEmpty() && !from.equals(Instant.MIN)) {
+        if (!result.isEmpty() && aFrom != null) {
             var lastSnapshot = result.get(result.size() - 1);
             if (!toDay(lastSnapshot.day()).equals(toDay(from))) {
                 result.add(createSnapshot(from, counts));

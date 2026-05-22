@@ -26,7 +26,8 @@ printf '%s\n' "$MODULES" | tr ',' '\n' | sed 's/^/  - /'
 REPO_ROOT=$(git rev-parse --show-toplevel)
 cd "$REPO_ROOT"
 
-if ! mvn -B -q -pl "$MODULES" -Pspotless,checkstyle \
+if ! mvn -B -q -Dstyle.color=never -Dlibrary.jansi.path=/dev/null \
+        -pl "$MODULES" -Pspotless,checkstyle \
         spotless:check checkstyle:check; then
     cat >&2 <<'EOF'
 
