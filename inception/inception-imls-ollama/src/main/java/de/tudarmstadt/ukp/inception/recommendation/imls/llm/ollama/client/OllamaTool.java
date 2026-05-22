@@ -42,7 +42,6 @@ import com.github.victools.jsonschema.module.jackson.JacksonOption;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.Tool;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolUtils;
-import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -144,7 +143,7 @@ public class OllamaTool
             getParameterDescription(param).ifPresent(
                     description -> propertySchema.put("description", description.strip()));
 
-            parameters.addProperty(paramName, JSONUtil.adaptJackson2To3(propertySchema)) //
+            parameters.addProperty(paramName, propertySchema) //
                     .addRequired(paramName);
         }
 

@@ -27,7 +27,8 @@
     "@recogito/recogito-client-core": "${recogito-client-core.version}",
     "color-convert": "${color-convert.version}",
     "bootstrap": "${bootstrap.version}",
-    "@popperjs/core": "${popperjs.version}"
+    "@popperjs/core": "${popperjs.version}",
+    "@svgdotjs/svg.js": "${svgdotjs-svg-js.version}"
   },
   "devDependencies": {
     "license-checker": "${license-checker.version}",

@@ -45,12 +45,10 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.cfg.DateTimeFeature;
 import tools.jackson.databind.cfg.EnumFeature;
 import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.databind.node.ObjectNode;
 
 public class JSONUtil
 {
     private static final JsonMapper J3_MAPPER;
-    private static final com.fasterxml.jackson.databind.ObjectMapper J2_MAPPER;
 
     static {
         var j3JsonFactory = JsonFactory.builder() //
@@ -67,30 +65,6 @@ public class JSONUtil
                 .disable(EnumFeature.WRITE_ENUMS_USING_TO_STRING) //
                 .enable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS) //
                 .build();
-
-        J2_MAPPER = new com.fasterxml.jackson.databind.ObjectMapper();
-    }
-
-    public static com.fasterxml.jackson.databind.JsonNode adaptJackson3To2(JsonNode aNode)
-    {
-        try {
-            var json = J3_MAPPER.writeValueAsString(aNode);
-            return J2_MAPPER.readTree(json);
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Conversion failed", e);
-        }
-    }
-
-    public static ObjectNode adaptJackson2To3(com.fasterxml.jackson.databind.JsonNode aNode)
-    {
-        try {
-            var json = J2_MAPPER.writeValueAsString(aNode);
-            return (ObjectNode) J3_MAPPER.readTree(json);
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Conversion failed", e);
-        }
     }
 
     /**
