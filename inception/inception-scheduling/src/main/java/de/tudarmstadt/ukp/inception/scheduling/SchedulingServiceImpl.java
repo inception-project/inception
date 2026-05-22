@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeoutException;
@@ -105,12 +106,11 @@ public class SchedulingServiceImpl
     private void beforeExecute(Thread aThread, Runnable aRunnable)
     {
         Validate.notNull(aRunnable, "Task cannot be null");
+        // The task is normally already present here because schedule() pre-registers it before
+        // calling executor.execute() to close a visibility race with concurrent enqueue() calls.
         synchronized (runningTasks) {
             if (!runningTasks.contains((Task) aRunnable)) {
                 runningTasks.add((Task) aRunnable);
-            }
-            else {
-                LOG.warn("Task running: {}", aRunnable);
             }
         }
         LOG.debug("Starting task: {} ", aRunnable);
@@ -426,7 +426,29 @@ public class SchedulingServiceImpl
             LOG.error("Error initializing task [{}]", aTask, e);
         }
 
-        executor.execute(aTask);
+        // Make the task visible to concurrent enqueue/scheduleEligibleTasks before handing it to
+        // the executor. When the pool has idle slots, executor.execute() hands the task directly
+        // to a new worker (not via the queue); between that hand-off and the worker calling
+        // beforeExecute(), the task is in neither executor.getQueue() (= getScheduledTasks()) nor
+        // runningTasks. A concurrent enqueue() in this window would not see a matching task and
+        // schedule a racing one. beforeExecute() is idempotent for tasks already in runningTasks.
+        synchronized (runningTasks) {
+            if (!runningTasks.contains(aTask)) {
+                runningTasks.add(aTask);
+            }
+        }
+
+        try {
+            executor.execute(aTask);
+        }
+        catch (RejectedExecutionException e) {
+            // If the executor rejects the task (e.g., the bounded queue is full), undo the
+            // pre-registration so we don't leak a task in runningTasks that will never run.
+            synchronized (runningTasks) {
+                runningTasks.remove(aTask);
+            }
+            throw e;
+        }
     }
 
     private synchronized void cleanUpTasks()
