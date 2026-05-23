@@ -561,8 +561,13 @@ public class SearchAnnotationSidebar
         var maybeProgress = searchService.getIndexProgress(project);
         if (maybeProgress.isPresent()) {
             var p = maybeProgress.get();
-            info("Indexing in progress... cannot perform query at this time. " + p.percent() + "% ("
-                    + p.progress() + "/" + p.maxProgress() + ")");
+            if (p.maxProgress() > 0) {
+                info("Indexing in progress... cannot perform query at this time. " + p.percent()
+                        + "% (" + p.progress() + "/" + p.maxProgress() + ")");
+            }
+            else {
+                info("Index update pending... cannot perform query at this time.");
+            }
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
