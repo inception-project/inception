@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import static de.tudarmstadt.ukp.inception.scheduling.TaskState.NOT_STARTED;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
 import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
 import static java.lang.Integer.MAX_VALUE;
@@ -735,7 +736,12 @@ public class SearchServiceImpl
                 .map(task -> (IndexingTask_ImplBase) task)
                 .filter(task -> aProject.equals(task.getProject())) //
                 .filter(task -> task.getMonitor() != null) //
-                .filter(task -> task.getMonitor().getState() == RUNNING) //
+                // Include NOT_STARTED so that work which has been enqueued but not yet picked up
+                // by a worker thread is also visible. Without this, callers (tests waiting for
+                // indexing to settle, the UI progress indicator, ensureIndexIsCreatedAndValid)
+                // can miss the window between enqueue and the worker transitioning to RUNNING.
+                .filter(task -> task.getMonitor().getState() == NOT_STARTED
+                        || task.getMonitor().getState() == RUNNING) //
                 .toList();
 
         if (tasks.isEmpty()) {
