@@ -60,6 +60,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.compress.compressors.CompressorException;
@@ -346,7 +347,19 @@ public class KnowledgeBaseServiceImpl
     @Override
     public Optional<String> getIndexVersion(KnowledgeBase aKB)
     {
-        return readIndexCommitVersion(aKB).map(Object::toString);
+        var info = readIndexCommit(aKB);
+        if (info.version().isPresent()) {
+            return info.version().map(Version::toString);
+        }
+        if (info.tooOld()) {
+            var prefix = info.outOfRangeMajor().map(m -> m + ".x ").orElse("");
+            return Optional.of(prefix + "— too old, please reindex");
+        }
+        if (info.tooNew()) {
+            var prefix = info.outOfRangeMajor().map(m -> m + ".x ").orElse("");
+            return Optional.of(prefix + "— too new, please upgrade INCEpTION");
+        }
+        return Optional.empty();
     }
 
     @Override
@@ -355,29 +368,123 @@ public class KnowledgeBaseServiceImpl
         if (LOCAL != aKB.getType()) {
             return false;
         }
-        return readIndexCommitVersion(aKB) //
+        return readIndexCommit(aKB).version() //
                 .map(v -> v.major < Version.LATEST.major) //
                 .orElse(false);
     }
 
-    private Optional<Version> readIndexCommitVersion(KnowledgeBase aKB)
+    private static final Pattern TOO_OLD_MAJOR_PATTERN = Pattern
+            .compile("Lucene version (\\d+)\\.");
+    private static final Pattern TOO_NEW_MAJOR_PATTERN = Pattern
+            .compile("indexCreatedVersionMajor is in the future: (\\d+)");
+
+    private record IndexCommitInfo(Optional<Version> version, boolean tooOld, boolean tooNew,
+            Optional<Integer> outOfRangeMajor)
+    {
+        static final IndexCommitInfo MISSING = new IndexCommitInfo(Optional.empty(), false, false,
+                Optional.empty());
+
+        static IndexCommitInfo readable(Version aVersion)
+        {
+            return new IndexCommitInfo(Optional.ofNullable(aVersion), false, false,
+                    Optional.empty());
+        }
+
+        static IndexCommitInfo tooOld(Integer aMajor)
+        {
+            return new IndexCommitInfo(Optional.empty(), true, false, Optional.ofNullable(aMajor));
+        }
+
+        static IndexCommitInfo tooNew(Integer aMajor)
+        {
+            return new IndexCommitInfo(Optional.empty(), false, true, Optional.ofNullable(aMajor));
+        }
+    }
+
+    private IndexCommitInfo readIndexCommit(KnowledgeBase aKB)
     {
         var indexDir = new File(kbRepositoriesRoot, "indexes/" + aKB.getRepositoryId());
         if (!indexDir.isDirectory()) {
-            return Optional.empty();
+            return IndexCommitInfo.MISSING;
         }
 
         try (var dir = FSDirectory.open(indexDir.toPath())) {
             var segmentInfos = SegmentInfos.readLatestCommit(dir);
-            return Optional.ofNullable(segmentInfos.getCommitLuceneVersion());
+            return IndexCommitInfo.readable(segmentInfos.getCommitLuceneVersion());
+        }
+        catch (IndexFormatTooOldException e) {
+            return IndexCommitInfo.tooOld(extractTooOldMajor(e));
+        }
+        catch (IndexFormatTooNewException e) {
+            return IndexCommitInfo.tooNew(extractTooNewMajor(e.getMessage()));
         }
         catch (IndexNotFoundException e) {
-            return Optional.empty();
+            return IndexCommitInfo.MISSING;
+        }
+        catch (IllegalArgumentException e) {
+            var major = extractTooNewMajor(e.getMessage());
+            if (major != null) {
+                return IndexCommitInfo.tooNew(major);
+            }
+            LOG.debug("Unable to read Lucene index version for KB [{}]", aKB.getRepositoryId(), e);
+            return IndexCommitInfo.MISSING;
         }
         catch (IOException e) {
             LOG.debug("Unable to read Lucene index version for KB [{}]", aKB.getRepositoryId(), e);
-            return Optional.empty();
+            return IndexCommitInfo.MISSING;
         }
+    }
+
+    private static Integer extractTooOldMajor(IndexFormatTooOldException e)
+    {
+        // Lucene 10 uses both the int and the reason-string constructors. Only the former exposes
+        // the format version via getVersion(); for the latter we have to parse the message.
+        var v = e.getVersion();
+        if (v != null) {
+            return v;
+        }
+        return extractMajor(TOO_OLD_MAJOR_PATTERN, e.getMessage());
+    }
+
+    private static Integer extractTooNewMajor(String aMessage)
+    {
+        return extractMajor(TOO_NEW_MAJOR_PATTERN, aMessage);
+    }
+
+    private static Integer extractMajor(Pattern aPattern, String aMessage)
+    {
+        if (aMessage == null) {
+            return null;
+        }
+        var matcher = aPattern.matcher(aMessage);
+        if (matcher.find()) {
+            try {
+                return Integer.parseInt(matcher.group(1));
+            }
+            catch (NumberFormatException nfe) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private static boolean isUnreadableIndexFailure(Throwable aThrowable)
+    {
+        if (ExceptionUtils.indexOfThrowable(aThrowable, IndexFormatTooNewException.class) != -1) {
+            return true;
+        }
+        if (ExceptionUtils.indexOfThrowable(aThrowable, IndexFormatTooOldException.class) != -1) {
+            return true;
+        }
+        // SegmentInfos throws a plain IllegalArgumentException when the index was created by a
+        // future Lucene major version (message "indexCreatedVersionMajor is in the future: N").
+        for (var t : ExceptionUtils.getThrowableList(aThrowable)) {
+            if (t instanceof IllegalArgumentException && t.getMessage() != null
+                    && TOO_NEW_MAJOR_PATTERN.matcher(t.getMessage()).find()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -1696,8 +1803,7 @@ public class KnowledgeBaseServiceImpl
             conn.commit();
         }
         catch (SailException e) {
-            if (ExceptionUtils.indexOfThrowable(e, IndexFormatTooNewException.class) == -1
-                    && ExceptionUtils.indexOfThrowable(e, IndexFormatTooOldException.class) == -1) {
+            if (!isUnreadableIndexFailure(e)) {
                 throw e;
             }
 

@@ -205,6 +205,7 @@ public class KnowledgeBaseDetailsPanel
                     kb.getName(), kb.getRepositoryId(), kb.getProject().getName(),
                     kb.getProject().getId(), e);
         }
+        aTarget.add(content);
     }
 
     private void actionDelete(AjaxRequestTarget aTarget)
@@ -255,6 +256,8 @@ public class KnowledgeBaseDetailsPanel
         public KBSettingsContent(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aKbwModel)
         {
             super(id, "kbSettingsContent", KnowledgeBaseDetailsPanel.this, aKbwModel);
+
+            setOutputMarkupId(true);
 
             localKbwModel = aKbwModel;
 
