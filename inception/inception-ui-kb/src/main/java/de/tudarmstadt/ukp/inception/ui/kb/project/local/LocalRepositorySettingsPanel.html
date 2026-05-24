@@ -24,7 +24,7 @@
     <div class="row form-row" wicket:enclosure="repositorySize">
       <div class="offset-sm-3 col-sm-9 d-flex flex-row text-muted">
         <div class="me-5"><i class="fas fa-hdd me-1"></i> Repository: <span wicket:id="repositorySize"/> (<span wicket:id="statementCount"/> statements)</div>
-        <div><i class="fas fa-search me-1"></i> Full-text index: <span wicket:id="indexSize"/></div>
+        <div><i class="fas fa-search me-1"></i> Full-text index: <span wicket:id="indexSize"/><wicket:enclosure child="indexVersion"> (Lucene <span wicket:id="indexVersion"/><span wicket:id="upgradeAction"> &mdash; <a wicket:id="upgradeIndex" href="#">upgrade</a></span>)</wicket:enclosure></div>
       </div>
     </div>
 

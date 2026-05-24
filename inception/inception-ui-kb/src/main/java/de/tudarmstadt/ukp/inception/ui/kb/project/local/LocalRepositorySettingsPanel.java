@@ -35,6 +35,8 @@ import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
@@ -60,6 +62,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 import de.tudarmstadt.ukp.inception.support.io.FileUploadDownloadHelper;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.inception.support.wicket.PipedStreamResource;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
@@ -96,6 +99,7 @@ public class LocalRepositorySettingsPanel
 
     private final Label repositorySize;
     private final Label indexSize;
+    private final Label indexVersion;
     private final Label statementCount;
 
     private FileUploadField fileUpload;
@@ -128,6 +132,20 @@ public class LocalRepositorySettingsPanel
         indexSize.add(visibleWhen(getModel().map(KnowledgeBaseWrapper::isKbSaved)));
         queue(indexSize);
 
+        indexVersion = new Label("indexVersion", LoadableDetachableModel.of(() -> kbModel
+                .map(kbService::getIndexVersion).map(v -> v.orElse(null)).getObject()));
+        indexVersion.add(visibleWhen(() -> getModel().getObject().isKbSaved()
+                && indexVersion.getDefaultModelObject() != null));
+        queue(indexVersion);
+
+        var upgradeAction = new WebMarkupContainer("upgradeAction");
+        upgradeAction.setOutputMarkupPlaceholderTag(true);
+        upgradeAction.add(visibleWhen(() -> getModel().getObject().isKbSaved()
+                && kbService.isIndexUpgradeAvailable(getModel().getObject().getKb())));
+        queue(upgradeAction);
+
+        queue(new LambdaAjaxLink("upgradeIndex", this::actionUpgradeIndex));
+
         statementCount = new Label("statementCount", LoadableDetachableModel.of(() -> {
             var repoSize = repoSizeModel.getObject();
             if (repoSize > 25_000_000) {
@@ -141,6 +159,25 @@ public class LocalRepositorySettingsPanel
         }));
         statementCount.add(visibleWhen(getModel().map(KnowledgeBaseWrapper::isKbSaved)));
         queue(statementCount);
+    }
+
+    private void actionUpgradeIndex(AjaxRequestTarget aTarget)
+    {
+        aTarget.addChildren(getPage(), IFeedback.class);
+        var kb = getModel().getObject().getKb();
+        try {
+            LOG.info("Upgrading full-text index of {} ...", kb);
+            kbService.upgradeIndex(kb);
+            LOG.info("Completed upgrading full-text index of {}", kb);
+            success("Full-text index upgraded.");
+        }
+        catch (Exception e) {
+            error("Unable to upgrade full-text index: " + e.getLocalizedMessage());
+            LOG.error("Unable to upgrade full-text index for KB [{}]({}) in project [{}]({})",
+                    kb.getName(), kb.getRepositoryId(), kb.getProject().getName(),
+                    kb.getProject().getId(), e);
+        }
+        aTarget.add(this);
     }
 
     @SuppressWarnings("unchecked")
