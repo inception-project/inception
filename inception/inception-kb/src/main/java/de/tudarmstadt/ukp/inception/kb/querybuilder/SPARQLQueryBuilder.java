@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_STARDOG;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.OPTIONAL_LOOKUP;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY_RESTRICTIONS;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.SECONDARY;
@@ -142,6 +143,9 @@ public class SPARQLQueryBuilder
     private final List<GraphPattern> primaryPatterns = new ArrayList<>();
     private final List<GraphPattern> primaryRestrictions = new ArrayList<>();
     private final List<GraphPattern> secondaryPatterns = new ArrayList<>();
+    private final List<GraphPattern> optionalLookupPatterns = new ArrayList<>();
+
+    private FtsAdapter cachedFtsAdapter;
 
     private boolean labelImplicitlyRetrieved = false;
 
@@ -149,7 +153,7 @@ public class SPARQLQueryBuilder
 
     enum Priority
     {
-        PRIMARY, PRIMARY_RESTRICTIONS, SECONDARY
+        PRIMARY, PRIMARY_RESTRICTIONS, SECONDARY, OPTIONAL_LOOKUP
     }
 
     /**
@@ -545,9 +549,39 @@ public class SPARQLQueryBuilder
         case SECONDARY:
             secondaryPatterns.add(aPattern);
             break;
+        case OPTIONAL_LOOKUP:
+            optionalLookupPatterns.add(aPattern);
+            break;
         default:
             throw new IllegalArgumentException("Unknown priority: [" + aPriority + "]");
         }
+    }
+
+    /**
+     * Returns the OPTIONAL lookup patterns (label/description/deprecation retrievals) collected so
+     * far, and clears them from the builder. Intended for use by an {@link FtsAdapter} in
+     * {@link FtsAdapter#finalizeQuery(SPARQLQueryBuilder)} that wants to push those patterns into
+     * FTS UNION branches instead of having them rendered as top-level OPTIONAL clauses.
+     */
+    List<GraphPattern> drainOptionalLookupPatterns()
+    {
+        var drained = new ArrayList<>(optionalLookupPatterns);
+        optionalLookupPatterns.clear();
+        return drained;
+    }
+
+    /**
+     * Returns the SECONDARY patterns (typically VALUES bindings for label-property variables like
+     * {@code ?pPrefLabel}) and clears them. Used by {@link FtsAdapter#finalizeQuery} when an
+     * adapter pushes OPTIONAL lookups into UNION branches — those inner OPTIONALs reference
+     * variables bound by the SECONDARY patterns, so the SECONDARY patterns have to move into the
+     * outer scope (above the UNION) for the variable scoping to still work.
+     */
+    List<GraphPattern> drainSecondaryPatterns()
+    {
+        var drained = new ArrayList<>(secondaryPatterns);
+        secondaryPatterns.clear();
+        return drained;
     }
 
     private void addMatchTermProjections(Collection<Projectable> aProjectables)
@@ -703,6 +737,23 @@ public class SPARQLQueryBuilder
     }
 
     /**
+     * Returns a hard-binding VALUES pattern for the pref-label properties, without the OPTIONAL
+     * wrapper used by {@link #bindPrefLabelProperties(Variable)}. Used by adapters that emit the
+     * binding inside a UNION branch where outer-scope OPTIONAL wrappers get reordered by the
+     * optimizer to after the inner patterns, leaving the variable unbound when those inner patterns
+     * reference it. Returns {@code null} when there is nothing to bind (no pre-resolved pref-label
+     * properties available — the caller should fall through to the OPTIONAL form).
+     */
+    GraphPattern bindPrefLabelPropertiesPlain(Variable aVariable)
+    {
+        if (preResolvedPrefLabelProperties.isEmpty()) {
+            return null;
+        }
+        return new ValuesPattern(aVariable,
+                preResolvedPrefLabelProperties.stream().map(Rdf::iri).toArray(RdfValue[]::new));
+    }
+
+    /**
      * Generates a pattern which binds all sub-properties of the label property to the given
      * variable.
      */
@@ -849,6 +900,14 @@ public class SPARQLQueryBuilder
     }
 
     private FtsAdapter getAdapter()
+    {
+        if (cachedFtsAdapter == null) {
+            cachedFtsAdapter = createAdapter();
+        }
+        return cachedFtsAdapter;
+    }
+
+    private FtsAdapter createAdapter()
     {
         var ftsMode = getFtsMode();
 
@@ -1312,7 +1371,7 @@ public class SPARQLQueryBuilder
         // Virtuoso has trouble with multiple OPTIONAL clauses causing results which would
         // normally match to be removed from the results set. Using a UNION seems to address this
         // labelPatterns.forEach(pattern -> addPattern(Priority.SECONDARY, optional(pattern)));
-        addPattern(SECONDARY, optional(union(pattern)));
+        addPattern(OPTIONAL_LOOKUP, optional(union(pattern)));
     }
 
     @Override
@@ -1336,6 +1395,10 @@ public class SPARQLQueryBuilder
     {
         // Must add it anyway because we group by it
         projections.add(VAR_SUBJECT);
+
+        // Give the FTS adapter a chance to assemble its deferred patterns now that all retrieve*
+        // calls have run, e.g. to push OPTIONAL lookups into FTS UNION branches.
+        getAdapter().finalizeQuery(this);
 
         var query = Queries.SELECT().distinct();
         prefixes.forEach(query::prefix);
@@ -1365,6 +1428,7 @@ public class SPARQLQueryBuilder
 
         // Then add the optional or lower-prio elements
         secondaryPatterns.stream().forEach(query::where);
+        optionalLookupPatterns.stream().forEach(query::where);
 
         if (kb.getDefaultDatasetIri() != null) {
             query.from(dataset(from(iri(kb.getDefaultDatasetIri()))));

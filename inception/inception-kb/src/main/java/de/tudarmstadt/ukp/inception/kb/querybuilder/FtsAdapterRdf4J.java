@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,6 +36,7 @@ import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
@@ -67,6 +68,15 @@ public class FtsAdapterRdf4J
 
     private final SPARQLQueryBuilder builder;
 
+    // Branches are accumulated by withLabel* methods and only assembled into a UNION + PRIMARY
+    // pattern in finalizeQuery() — that way the adapter has a chance to push the
+    // retrieveLabel/retrieveDescription/retrieveDeprecation OPTIONAL lookups INTO each branch.
+    // RDF4J 5.1.4+ (see GH-4872) otherwise plans the trailing OPTIONALs as cartesian-product
+    // BadlyDesignedLeftJoinIterators that re-scan large fractions of the store per FTS hit,
+    // turning sub-second queries into multi-minute ones on large KBs like SNOMED (#5444).
+    private final List<GraphPattern> pendingFtsBranches = new ArrayList<>();
+    private boolean ftsActive = false;
+
     public FtsAdapterRdf4J(SPARQLQueryBuilder aBuilder)
     {
         builder = aBuilder;
@@ -76,8 +86,8 @@ public class FtsAdapterRdf4J
     public void withLabelMatchingExactlyAnyOf(String... aValues)
     {
         builder.addPrefix(PREFIX_RDF4J_LUCENE_SEARCH);
+        ftsActive = true;
 
-        var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
             var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
@@ -87,7 +97,7 @@ public class FtsAdapterRdf4J
 
             builder.addProjection(VAR_SCORE);
 
-            valuePatterns.add(VAR_SUBJECT
+            pendingFtsBranches.add(VAR_SUBJECT
                     .has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(sanitizedValue)) //
                             .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
                             .andHas(LUCENE_SCORE, VAR_SCORE))
@@ -95,21 +105,17 @@ public class FtsAdapterRdf4J
                             .equalsPattern(VAR_MATCH_TERM, value, builder.getKnowledgeBase())));
         }
 
-        if (valuePatterns.isEmpty()) {
+        if (pendingFtsBranches.isEmpty()) {
             builder.noResult();
         }
-
-        builder.addPattern(PRIMARY, and( //
-                builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                union(valuePatterns.toArray(GraphPattern[]::new))));
     }
 
     @Override
     public void withLabelContainingAnyOf(String... aValues)
     {
         builder.addPrefix(PREFIX_RDF4J_LUCENE_SEARCH);
+        ftsActive = true;
 
-        var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
             // Strip single quotes and asterisks because they have special semantics
             var sanitizedValue = builder.sanitizeQueryString_FTS(value);
@@ -133,7 +139,7 @@ public class FtsAdapterRdf4J
             // returned). RDF4J only provides access to the matched term in a "highlighted" form
             // where "<B>" and "</B>" match the search term. So we have to strip these markers
             // out as part of the query.
-            valuePatterns.add(VAR_SUBJECT //
+            pendingFtsBranches.add(VAR_SUBJECT //
                     .has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(query)) //
                             .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
                             .andHas(LUCENE_SCORE, VAR_SCORE) //
@@ -148,25 +154,23 @@ public class FtsAdapterRdf4J
                     .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
         }
 
-        if (valuePatterns.isEmpty()) {
+        if (pendingFtsBranches.isEmpty()) {
             builder.noResult();
         }
-
-        builder.addPattern(PRIMARY, and( //
-                builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(GraphPattern[]::new))));
     }
 
     @Override
     public void withLabelStartingWith(String aPrefixQuery)
     {
         builder.addPrefix(PREFIX_RDF4J_LUCENE_SEARCH);
+        ftsActive = true;
 
         // Strip single quotes and asterisks because they have special semantics
         var queryString = builder.sanitizeQueryString_FTS(aPrefixQuery);
 
         if (isBlank(queryString)) {
             builder.noResult();
+            return;
         }
 
         // If the query string entered by the user does not end with a space character, then
@@ -180,21 +184,20 @@ public class FtsAdapterRdf4J
 
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
-        builder.addPattern(PRIMARY, and( //
-                builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                VAR_SUBJECT.has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(queryString)) //
+        pendingFtsBranches.add(VAR_SUBJECT
+                .has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(queryString)) //
                         .andHas(LUCENE_SCORE, VAR_SCORE)
                         .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY))
-                        .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                        .filter(builder.startsWithPattern(VAR_MATCH_TERM, aPrefixQuery))));
+                .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
+                .filter(builder.startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
     }
 
     @Override
     public void withLabelMatchingAnyOf(String... aValues)
     {
         builder.addPrefix(PREFIX_RDF4J_LUCENE_SEARCH);
+        ftsActive = true;
 
-        var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
             // Strip single quotes and asterisks because they have special semantics
             var sanitizedValue = builder.sanitizeQueryString_FTS(value);
@@ -217,7 +220,7 @@ public class FtsAdapterRdf4J
             // returned). RDF4J only provides access to the matched term in a "highlighted" form
             // where "<B>" and "</B>" match the search term. So we have to strip these markers
             // out as part of the query.
-            valuePatterns.add(VAR_SUBJECT //
+            pendingFtsBranches.add(VAR_SUBJECT //
                     .has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(queryString)) //
                             .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
                             .andHas(LUCENE_SCORE, VAR_SCORE) //
@@ -232,12 +235,54 @@ public class FtsAdapterRdf4J
                     .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
         }
 
-        if (valuePatterns.isEmpty()) {
+        if (pendingFtsBranches.isEmpty()) {
             builder.noResult();
         }
+    }
 
-        builder.addPattern(PRIMARY, and( //
-                builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(GraphPattern[]::new))));
+    @Override
+    public void finalizeQuery(SPARQLQueryBuilder aBuilder)
+    {
+        if (!ftsActive || pendingFtsBranches.isEmpty()) {
+            return;
+        }
+
+        // The inner OPTIONALs reference ?pPrefLabel, which is bound at top level by the
+        // SECONDARY pattern emitted by retrieveLabel — but as an OPTIONAL { VALUES ... } wrapper.
+        // RDF4J's optimizer reorders that OPTIONAL to AFTER the union, leaving ?pPrefLabel
+        // unbound when the inner OPTIONALs run; the inner StatementPattern then matches ANY
+        // property and we get back altLabel instead of prefLabel. Workaround: emit a hard
+        // (non-OPTIONAL) VALUES binding directly inside each UNION branch so ?pPrefLabel is
+        // bound before the inner OPTIONALs are evaluated.
+        // Drain the SECONDARY bindings (the OPTIONAL { VALUES ?pPrefLabel ... } / bindMatchTerm
+        // wrappers added by retrieveLabel). We re-emit equivalent hard bindings inside each
+        // branch below, so leaving them in SECONDARY would just be duplicates.
+        aBuilder.drainSecondaryPatterns();
+        var optionalLookups = aBuilder.drainOptionalLookupPatterns();
+        var prefLabelValuesBinding = aBuilder.bindPrefLabelPropertiesPlain(VAR_PREF_LABEL_PROPERTY);
+
+        var augmentedBranches = pendingFtsBranches.stream() //
+                .map(branch -> augmentBranch(branch, prefLabelValuesBinding, optionalLookups)) //
+                .toArray(GraphPattern[]::new);
+
+        aBuilder.addPattern(PRIMARY, and( //
+                aBuilder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
+                union(augmentedBranches)));
+    }
+
+    private static GraphPattern augmentBranch(GraphPattern aBranch, GraphPattern aPrefLabelBinding,
+            List<GraphPattern> aOptionalLookups)
+    {
+        if (aPrefLabelBinding == null && aOptionalLookups.isEmpty()) {
+            return aBranch;
+        }
+
+        var parts = new ArrayList<GraphPattern>();
+        if (aPrefLabelBinding != null) {
+            parts.add(aPrefLabelBinding);
+        }
+        parts.add(aBranch);
+        parts.addAll(aOptionalLookups);
+        return and(parts.toArray(GraphPattern[]::new));
     }
 }
