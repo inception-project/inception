@@ -72,9 +72,12 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.index.IndexFormatTooNewException;
 import org.apache.lucene.index.IndexFormatTooOldException;
+import org.apache.lucene.index.IndexNotFoundException;
 import org.apache.lucene.index.IndexUpgrader;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.SegmentInfos;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.Version;
 import org.eclipse.rdf4j.common.transaction.IsolationLevels;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -338,6 +341,43 @@ public class KnowledgeBaseServiceImpl
     {
         var indexDir = new File(kbRepositoriesRoot, "indexes/" + aKB.getRepositoryId());
         return FileUtils.sizeOfDirectory(indexDir);
+    }
+
+    @Override
+    public Optional<String> getIndexVersion(KnowledgeBase aKB)
+    {
+        return readIndexCommitVersion(aKB).map(Object::toString);
+    }
+
+    @Override
+    public boolean isIndexUpgradeAvailable(KnowledgeBase aKB)
+    {
+        if (LOCAL != aKB.getType()) {
+            return false;
+        }
+        return readIndexCommitVersion(aKB) //
+                .map(v -> v.major < Version.LATEST.major) //
+                .orElse(false);
+    }
+
+    private Optional<Version> readIndexCommitVersion(KnowledgeBase aKB)
+    {
+        var indexDir = new File(kbRepositoriesRoot, "indexes/" + aKB.getRepositoryId());
+        if (!indexDir.isDirectory()) {
+            return Optional.empty();
+        }
+
+        try (var dir = FSDirectory.open(indexDir.toPath())) {
+            var segmentInfos = SegmentInfos.readLatestCommit(dir);
+            return Optional.ofNullable(segmentInfos.getCommitLuceneVersion());
+        }
+        catch (IndexNotFoundException e) {
+            return Optional.empty();
+        }
+        catch (IOException e) {
+            LOG.debug("Unable to read Lucene index version for KB [{}]", aKB.getRepositoryId(), e);
+            return Optional.empty();
+        }
     }
 
     @Override
@@ -1656,22 +1696,28 @@ public class KnowledgeBaseServiceImpl
             conn.commit();
         }
         catch (SailException e) {
-            if (ExceptionUtils.hasCause(e, IndexFormatTooNewException.class)
-                    || ExceptionUtils.hasCause(e, IndexFormatTooOldException.class)) {
-                LOG.warn("Unable to access index: {}", e.getMessage());
-                LOG.info("Index format mismatch - rebuilding index from scratch...");
+            if (ExceptionUtils.indexOfThrowable(e, IndexFormatTooNewException.class) == -1
+                    && ExceptionUtils.indexOfThrowable(e, IndexFormatTooOldException.class) == -1) {
+                throw e;
+            }
 
-                var luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
-                luceneSail.shutDown();
-                FileUtils.deleteQuietly(new File(luceneDir));
-                luceneSail.init();
+            LOG.warn("Unable to access index: {}", e.getMessage());
+            LOG.info("Index format mismatch detected - trying to rebuild index from scratch...");
 
-                // Only try to rebuild once - so no recursion here!
-                try (var conn = getConnection(aKB)) {
-                    ReindexingUtils.reindex(luceneSail);
-                    // luceneSail.reindex();
-                    conn.commit();
-                }
+            var luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
+            // Shut down the whole repository so the manager will create a fresh one on next
+            // access. Shutting down just the LuceneSail and calling init() afterwards leaves
+            // the sail in an unusable state - see upgradeFullTextIndex() for the same dance.
+            ((SailRepository) repo).shutDown();
+            FileUtils.deleteQuietly(new File(luceneDir));
+
+            var freshSail = (LuceneSail) ((SailRepository) repoManager
+                    .getRepository(aKB.getRepositoryId())).getSail();
+
+            // Only try to rebuild once - so no recursion here!
+            try (var conn = getConnection(aKB)) {
+                ReindexingUtils.reindex(freshSail);
+                conn.commit();
             }
         }
     }
@@ -1684,19 +1730,17 @@ public class KnowledgeBaseServiceImpl
         }
 
         var repo = repoManager.getRepository(aKB.getRepositoryId());
-
-        if (!(repo instanceof SailRepository)) {
+        if (!(repo instanceof SailRepository sailRepo)) {
             throw new IllegalArgumentException(
                     "Index upgrade is not supported on [" + repo.getClass() + "] repositories");
         }
 
-        var sail = ((SailRepository) repo).getSail();
-        if (!(sail instanceof LuceneSail)) {
+        var sail = sailRepo.getSail();
+        if (!(sail instanceof LuceneSail luceneSail)) {
             throw new IllegalArgumentException(
                     "Index upgrade is not supported on [" + sail.getClass() + "] repositories");
         }
 
-        var luceneSail = (LuceneSail) sail;
         var luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
         if (luceneDir == null) {
             throw new IllegalStateException("LuceneSail has no '" + LuceneSail.LUCENE_DIR_KEY
@@ -1709,29 +1753,12 @@ public class KnowledgeBaseServiceImpl
             return;
         }
 
-        // Shut the sail down so the on-disk index can be rewritten exclusively. The sail will be
-        // reinitialised lazily on the next access.
-        luceneSail.shutDown();
-        Throwable upgradeError = null;
+        // Shut down the whole repository to release the index files. The repository manager
+        // will create a fresh repository on the next access. Shutting down just the
+        // LuceneSail and calling init() afterwards leaves the sail in an unusable state.
+        sailRepo.shutDown();
         try (var dir = FSDirectory.open(indexDir.toPath())) {
             new IndexUpgrader(dir, new IndexWriterConfig(), false).upgrade();
-        }
-        catch (Throwable e) {
-            upgradeError = e;
-            throw e;
-        }
-        finally {
-            try {
-                luceneSail.init();
-            }
-            catch (Throwable initError) {
-                if (upgradeError != null) {
-                    upgradeError.addSuppressed(initError);
-                }
-                else {
-                    throw initError;
-                }
-            }
         }
     }
 
