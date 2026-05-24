@@ -244,8 +244,8 @@ public class KnowledgeBaseServiceImpl
         }
 
         repoManager = RepositoryProvider.getRepositoryManager(kbRepositoriesRoot);
-        repoManager.setHttpClient(PerThreadSslCheckingHttpClientUtils
-                .newPerThreadSslCheckingHttpClientBuilder().build());
+        repoManager.setHttpClient(
+                PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClient());
 
         BOOT_LOG.info("Knowledge base repository path: {}", kbRepositoriesRoot);
     }

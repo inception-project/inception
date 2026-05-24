@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.RdfImportParserConfigs.doctypeTolerantParserConfig;
-import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClientBuilder;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClient;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandle;
@@ -369,7 +369,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
     static Repository buildSparqlRepository(String aUrl)
     {
         var repo = new SPARQLRepository(aUrl);
-        repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
+        repo.setHttpClient(newPerThreadSslCheckingHttpClient());
         repo.setAdditionalHttpHeaders(Map.of("User-Agent", "INCEpTION/0.0.1-SNAPSHOT"));
         repo.init();
         return repo;
@@ -378,7 +378,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
     static Repository buildSparqlRepository(String aQueryUrl, String aUpdateUrl)
     {
         var repo = new SPARQLRepository(aQueryUrl, aUpdateUrl);
-        repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
+        repo.setHttpClient(newPerThreadSslCheckingHttpClient());
         repo.setAdditionalHttpHeaders(Map.of("User-Agent", "INCEpTION/0.0.1-SNAPSHOT"));
         repo.init();
         return repo;
