@@ -9,7 +9,6 @@
         "@recogito/recogito-client-core": "^1.7.9",
         "@recogito/recogito-connections": "^0.1.11",
         "@recogito/recogito-js": "^1.8.4",
-        "@svgdotjs/svg.js": "^3.2.4",
         "bootstrap": "^5.3.8",
         "color-convert": "^3.1.3",
       },

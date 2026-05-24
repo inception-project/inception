@@ -650,5 +650,9 @@ public interface KnowledgeBaseService
 
     long getIndexSize(KnowledgeBase aKB);
 
+    Optional<String> getIndexVersion(KnowledgeBase aKB);
+
+    boolean isIndexUpgradeAvailable(KnowledgeBase aKB);
+
     void configure(KnowledgeBase aKb, KnowledgeBaseProfile aWikidataProfile);
 }
