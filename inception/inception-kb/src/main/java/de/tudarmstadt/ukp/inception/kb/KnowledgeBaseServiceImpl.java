@@ -31,9 +31,12 @@ import static java.lang.Math.round;
 import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.move;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Locale.ROOT;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
@@ -53,6 +56,7 @@ import java.io.OutputStream;
 import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1594,6 +1598,74 @@ public class KnowledgeBaseServiceImpl
         }
 
         return someResult;
+    }
+
+    @Override
+    public Map<String, KBHandle> readHandles(KnowledgeBase aKB, Collection<String> aIdentifiers)
+    {
+        if (aIdentifiers.isEmpty()) {
+            return emptyMap();
+        }
+
+        try (var watch = new StopWatch(LOG, "readHandles(%d)", aIdentifiers.size())) {
+            var ids = aIdentifiers.stream().distinct().toArray(String[]::new);
+            var query = SPARQLQueryBuilder.forItems(aKB) //
+                    .withIdentifier(ids) //
+                    .retrieveLabel() //
+                    .retrieveDescription() //
+                    .retrieveDeprecation();
+
+            // Always direct read — bypasses queryCache by construction. Batch queries don't share
+            // cache keys well with single-id readHandle calls, and callers of this method are
+            // expected to maintain their own per-id cache.
+            var rows = read(aKB, conn -> query.asHandles(conn, true));
+
+            var result = rows.stream() //
+                    .collect(toMap(KBObject::getIdentifier, identity(), (a, b) -> a,
+                            LinkedHashMap::new));
+
+            // Preserve the "always returns something per requested id" semantics of readHandle.
+            for (var id : ids) {
+                result.computeIfAbsent(id, KBHandle::new);
+            }
+
+            return result;
+        }
+    }
+
+    @Override
+    public Map<String, KBHandle> readHandles(Project aProject, Collection<String> aIdentifiers)
+    {
+        if (aIdentifiers.isEmpty()) {
+            return emptyMap();
+        }
+
+        var result = new LinkedHashMap<String, KBHandle>();
+        for (var id : aIdentifiers) {
+            result.put(id, new KBHandle(id));
+        }
+
+        for (var kb : getEnabledKnowledgeBases(aProject)) {
+            // Only re-query identifiers we haven't yet resolved to a labeled handle. Mirrors the
+            // single-id readHandle(Project, ...) loop, which stops at the first KB providing a
+            // name.
+            var unresolved = result.entrySet().stream() //
+                    .filter(e -> e.getValue().getName() == null) //
+                    .map(Map.Entry::getKey) //
+                    .toList();
+            if (unresolved.isEmpty()) {
+                break;
+            }
+
+            var kbResults = readHandles(kb, unresolved);
+            for (var entry : kbResults.entrySet()) {
+                if (entry.getValue().getName() != null) {
+                    result.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+
+        return result;
     }
 
     /**
