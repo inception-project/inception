@@ -1419,11 +1419,11 @@ public class SPARQLQueryBuilder
         // Must add it anyway because we group by it
         projections.add(VAR_SUBJECT);
 
-        // Give the FTS adapter a chance to assemble its deferred patterns now that all retrieve*
-        // calls have run, e.g. to push OPTIONAL lookups into FTS UNION branches. Guarded because
-        // equals()/hashCode() re-invoke selectQuery() and finalizeQuery() is destructive.
-        if (!finalized) {
-            getAdapter().finalizeQuery(this);
+        // Assemble FTS-adapter deferred patterns. Skipped when no FTS was used (otherwise
+        // identifier-only queries could trip an unknown-FTS-mode ISE) and run at most once
+        // (equals()/hashCode() re-invoke selectQuery() and finalizeQuery() is destructive).
+        if (!finalized && cachedFtsAdapter != null) {
+            cachedFtsAdapter.finalizeQuery(this);
             finalized = true;
         }
 
