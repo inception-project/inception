@@ -148,6 +148,24 @@ public class ConceptLabelCacheTest
     }
 
     @Test
+    public void getAll_labellessHandleWithDescription_preservesDescription() throws Exception
+    {
+        var k1 = Key.of(feature, null, "id:1");
+
+        var labelless = KBHandle.builder() //
+                .withIdentifier("id:1") //
+                .withDescription("A described but unlabeled entity") //
+                .build();
+        when(kbService.readHandles(eq(project), any())) //
+                .thenReturn(Map.of("id:1", labelless));
+
+        var result = sut.getAll(asList(k1));
+
+        assertThat(result.get(k1).getName()).isNull();
+        assertThat(result.get(k1).getDescription()).isEqualTo("A described but unlabeled entity");
+    }
+
+    @Test
     public void getAll_groupsByRepositoryId_oneBatchPerGroup() throws Exception
     {
         var repoA = "kb-a";

@@ -1610,9 +1610,8 @@ public class KnowledgeBaseServiceImpl
             var batchSize = Math.max(1, properties.getReadBatchSize());
             var result = new LinkedHashMap<String, KBHandle>();
 
-            // Chunk large inputs so that no single VALUES clause grows unbounded and the planner's
-            // intermediate result set stays manageable. All chunks share one RepositoryConnection
-            // so we get a single transactional snapshot and avoid per-chunk connection overhead.
+            // Chunk so no single VALUES clause grows unbounded. Shared connection so all chunks
+            // see one transactional snapshot.
             read(aKB, conn -> {
                 for (var start = 0; start < distinctIds.size(); start += batchSize) {
                     var chunk = distinctIds.subList(start,
@@ -1635,9 +1634,8 @@ public class KnowledgeBaseServiceImpl
                 .retrieveDescription() //
                 .retrieveDeprecation();
 
-        // Direct read on the caller-provided connection — bypasses queryCache by construction.
-        // Batch queries don't share cache keys well with single-id readHandle calls, and callers
-        // of this method are expected to maintain their own per-id cache.
+        // Bypasses queryCache: batch keys don't share well with single-id readHandle calls;
+        // callers are expected to maintain their own per-id cache.
         var rows = query.asHandles(aConn, true);
         for (var row : rows) {
             aResult.putIfAbsent(row.getIdentifier(), row);

@@ -146,28 +146,30 @@ public class ConceptLabelCache
             var keysInGroup = group.getValue();
 
             try {
-                // Map each key to its identifier (and back) for batch lookup.
-                var idsToKeys = keysInGroup.stream() //
-                        .collect(Collectors.groupingBy(Key::getLabel));
+                var distinctIds = keysInGroup.stream() //
+                        .map(Key::getLabel) //
+                        .collect(Collectors.toSet());
 
                 Map<String, KBHandle> handlesById;
                 if (repositoryId != null) {
                     var kbOpt = kbService.getKnowledgeBaseById(project, repositoryId) //
                             .filter(KnowledgeBase::isEnabled);
-                    handlesById = kbOpt.map(kb -> kbService.readHandles(kb, idsToKeys.keySet()))
+                    handlesById = kbOpt.map(kb -> kbService.readHandles(kb, distinctIds))
                             .orElse(Map.of());
                 }
                 else {
-                    handlesById = kbService.readHandles(project, idsToKeys.keySet());
+                    handlesById = kbService.readHandles(project, distinctIds);
                 }
 
                 for (var key : keysInGroup) {
+                    // readHandles guarantees one entry per requested id (stub when not found),
+                    // so we cache whatever it returned — mirrors loadLabelValue's behavior of
+                    // keeping handles with name=null but other metadata (description/deprecated).
                     var handle = handlesById.get(key.getLabel());
-                    if (handle != null && handle.getName() != null) {
+                    if (handle != null) {
                         result.put(key, handle);
                     }
                     else {
-                        // Mirror loadLabelValue's NoSuchElementException branch.
                         result.put(key, KBHandle.builder() //
                                 .withIdentifier(key.getLabel()) //
                                 .build());

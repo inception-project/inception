@@ -142,6 +142,7 @@ public class SPARQLQueryBuilder
 
     private final List<GraphPattern> primaryPatterns = new ArrayList<>();
     private final List<GraphPattern> primaryRestrictions = new ArrayList<>();
+    private final List<GraphPattern> labelPropertyBindings = new ArrayList<>();
     private final List<GraphPattern> secondaryPatterns = new ArrayList<>();
     private final List<GraphPattern> optionalLookupPatterns = new ArrayList<>();
 
@@ -573,16 +574,17 @@ public class SPARQLQueryBuilder
     }
 
     /**
-     * Returns the SECONDARY patterns (typically VALUES bindings for label-property variables like
-     * {@code ?pPrefLabel}) and clears them. Used by {@link FtsAdapter#finalizeQuery} when an
-     * adapter pushes OPTIONAL lookups into UNION branches — those inner OPTIONALs reference
-     * variables bound by the SECONDARY patterns, so the SECONDARY patterns have to move into the
-     * outer scope (above the UNION) for the variable scoping to still work.
+     * Returns the label-property bindings (VALUES wrappers for {@code ?pPrefLabel} /
+     * {@code ?pMatch} added by {@link #retrieveLabel()}) and clears them. Used by
+     * {@link FtsAdapter#finalizeQuery} when an adapter re-emits equivalent hard bindings INSIDE the
+     * FTS UNION branches and therefore wants the outer wrappers gone. Kept separate from
+     * {@link #secondaryPatterns} so unrelated SECONDARY patterns (e.g. {@code RDFS:RANGE} /
+     * {@code RDFS:DOMAIN} OPTIONALs added by {@link #retrieveDomainAndRange()}) survive the drain.
      */
-    List<GraphPattern> drainSecondaryPatterns()
+    List<GraphPattern> drainLabelPropertyBindings()
     {
-        var drained = new ArrayList<>(secondaryPatterns);
-        secondaryPatterns.clear();
+        var drained = new ArrayList<>(labelPropertyBindings);
+        labelPropertyBindings.clear();
         return drained;
     }
 
@@ -1334,7 +1336,7 @@ public class SPARQLQueryBuilder
     {
         if (!mode.getAdditionalMatchingProperties(kb).isEmpty()) {
             addPreferredLabelProjections(projections);
-            addPattern(SECONDARY, bindPrefLabelProperties(VAR_PREF_LABEL_PROPERTY));
+            labelPropertyBindings.add(bindPrefLabelProperties(VAR_PREF_LABEL_PROPERTY));
             retrieveOptionalWithLanguage(VAR_PREF_LABEL_PROPERTY, VAR_PREF_LABEL);
         }
 
@@ -1344,7 +1346,7 @@ public class SPARQLQueryBuilder
         }
 
         addMatchTermProjections(projections);
-        addPattern(SECONDARY, bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY));
+        labelPropertyBindings.add(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY));
         retrieveOptionalWithLanguage(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM);
 
         return this;
@@ -1409,9 +1411,7 @@ public class SPARQLQueryBuilder
 
         // Give the FTS adapter a chance to assemble its deferred patterns now that all retrieve*
         // calls have run, e.g. to push OPTIONAL lookups into FTS UNION branches. Guarded because
-        // selectQuery() is invoked repeatedly via equals()/hashCode() for query-cache lookups, and
-        // finalizeQuery() drains pattern lists and adds new primary patterns — re-running it would
-        // drop OPTIONAL lookups or accumulate duplicate UNION patterns.
+        // equals()/hashCode() re-invoke selectQuery() and finalizeQuery() is destructive.
         if (!finalized) {
             getAdapter().finalizeQuery(this);
             finalized = true;
@@ -1444,6 +1444,7 @@ public class SPARQLQueryBuilder
                         .toArray(GraphPattern[]::new)).getQueryString()));
 
         // Then add the optional or lower-prio elements
+        labelPropertyBindings.stream().forEach(query::where);
         secondaryPatterns.stream().forEach(query::where);
         optionalLookupPatterns.stream().forEach(query::where);
 

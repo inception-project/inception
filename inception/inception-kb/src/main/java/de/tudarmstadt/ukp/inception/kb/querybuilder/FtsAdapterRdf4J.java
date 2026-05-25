@@ -278,10 +278,6 @@ public class FtsAdapterRdf4J
     @Override
     public void finalizeQuery(SPARQLQueryBuilder aBuilder)
     {
-        // Defense in depth against repeated invocation: draining secondary/optional lookup patterns
-        // and re-emitting the PRIMARY UNION is destructive, so a second pass would either drop
-        // OPTIONAL lookups or accumulate duplicate UNION patterns. The builder also guards this,
-        // but adapters should be self-contained.
         if (finalized) {
             return;
         }
@@ -309,7 +305,7 @@ public class FtsAdapterRdf4J
         // RDF4J QueryJoinOptimizer "rightArg must not be null" assertion on some
         // LuceneSail+small-data combinations, so keeping the OPTIONALs in-branch is also
         // a correctness fix.
-        aBuilder.drainSecondaryPatterns();
+        aBuilder.drainLabelPropertyBindings();
         var optionalLookups = aBuilder.drainOptionalLookupPatterns();
         var prefLabelValuesBinding = aBuilder.bindPrefLabelPropertiesPlain(VAR_PREF_LABEL_PROPERTY);
         var matchTermBinding = aBuilder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY);
@@ -345,7 +341,8 @@ public class FtsAdapterRdf4J
         if (aBranch.filters().isEmpty()) {
             return aBranch.body();
         }
-        GraphPattern result = aBranch.body();
+        // and(...) first to keep filters in the same group as the body — see wrapBranchInSubSelect.
+        GraphPattern result = and(aBranch.body());
         for (var filter : aBranch.filters()) {
             result = result.filter(filter);
         }
