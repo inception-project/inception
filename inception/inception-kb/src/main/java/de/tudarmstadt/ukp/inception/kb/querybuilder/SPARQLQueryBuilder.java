@@ -180,9 +180,10 @@ public class SPARQLQueryBuilder
      */
     private boolean caseInsensitive = true;
 
-    private int limitOverride = DEFAULT_LIMIT;
+    /** Sentinel for "no LIMIT" — picked so {@code Stream.limit(getLimit())} is a no-op too. */
+    static final int UNLIMITED = Integer.MAX_VALUE;
 
-    private boolean unlimited = false;
+    private int limitOverride = DEFAULT_LIMIT;
 
     private boolean includeInferred = true;
 
@@ -676,14 +677,13 @@ public class SPARQLQueryBuilder
     public SPARQLQueryOptionalElements limit(int aLimit)
     {
         limitOverride = aLimit;
-        unlimited = false;
         return this;
     }
 
     @Override
     public SPARQLQueryOptionalElements noLimit()
     {
-        unlimited = true;
+        limitOverride = UNLIMITED;
         return this;
     }
 
@@ -1462,15 +1462,12 @@ public class SPARQLQueryBuilder
             query.from(dataset(from(iri(kb.getDefaultDatasetIri()))));
         }
 
-        if (!unlimited) {
-            int actualLimit = getLimit();
-
+        int actualLimit = getLimit();
+        if (actualLimit != UNLIMITED) {
             // If we do not do a server-side reduce, then we may get two results for every item
             // from the server (one with and one without the language), so we need to double the
             // query limit and cut down results locally later.
-            actualLimit = actualLimit * 2;
-
-            query.limit(actualLimit);
+            query.limit(actualLimit * 2);
         }
 
         return query;

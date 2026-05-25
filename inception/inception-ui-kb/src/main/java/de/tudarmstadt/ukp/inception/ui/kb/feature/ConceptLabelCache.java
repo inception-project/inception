@@ -123,9 +123,14 @@ public class ConceptLabelCache
 
     /**
      * Bulk-load handles for the given keys via {@link KnowledgeBaseService#readHandles}, grouping
-     * by (project, repositoryId) so each group produces one batched SPARQL request. Falls back to
-     * single-key loading for any group that throws, preserving the per-key fault isolation of
-     * {@link #loadLabelValue}.
+     * by (projectId, repositoryId) so each group produces one batched SPARQL request. Falls back to
+     * single-key loading for any group whose batched request throws, preserving the per-key fault
+     * isolation of {@link #loadLabelValue}.
+     * <p>
+     * Throws {@link IllegalArgumentException} up-front if any key references an
+     * {@link AnnotationFeature} with no project, or a project that has not yet been persisted (null
+     * id) — those are programming errors, not data-level failures, so they are not caught and
+     * isolated per-key.
      */
     private Map<Key, KBHandle> bulkLoadLabelValues(Set<? extends Key> aKeys)
     {
