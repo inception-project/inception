@@ -83,6 +83,11 @@ The default value is shown as an example of how the parameter can be configured 
 | `1m`
 | `5m`
 
+| `knowledge-base.read-batch-size`
+| maximum number of identifiers fitted into a single batch SPARQL request (e.g. when resolving concept labels for annotation rendering). Larger collections are split into sequential chunks to keep `VALUES` clauses and intermediate result sets bounded. Tune higher for backends that handle large `VALUES` well, lower for constrained remote endpoints.
+| `250`
+| `1000`
+
 | `knowledge-base.remove-orphans-on-start`
 | whether to delete orphaned KBs on start
 | `false`

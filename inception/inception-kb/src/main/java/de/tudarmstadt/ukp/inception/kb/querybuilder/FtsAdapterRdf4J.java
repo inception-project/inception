@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,12 +30,14 @@ import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.REPLACE;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.and;
+import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.select;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.union;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.bNode;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
@@ -67,6 +69,35 @@ public class FtsAdapterRdf4J
 
     private final SPARQLQueryBuilder builder;
 
+    // Branches are accumulated by withLabel* methods and only assembled into a UNION + PRIMARY
+    // pattern in finalizeQuery() — that way the adapter has a chance to push the
+    // retrieveLabel/retrieveDescription/retrieveDeprecation OPTIONAL lookups INTO each branch.
+    // RDF4J 5.1.4+ (see GH-4872) otherwise plans the trailing OPTIONALs as cartesian-product
+    // BadlyDesignedLeftJoinIterators that re-scan large fractions of the store per FTS hit,
+    // turning sub-second queries into multi-minute ones on large KBs like SNOMED (#5444).
+    /**
+     * @param body
+     *            the FTS body (search:matches + ?subj ?pMatch ?m for the exact-match case;
+     *            already-filtered GraphPattern for the other variants)
+     * @param filters
+     *            filters to apply outside {@code body} so they can be appended to a flat
+     *            {@code and(matchTermBinding, body)} group — only populated for the exact-match
+     *            path where the inner-StatementPattern cardinality estimate is catastrophic
+     * @param wrapInSubSelect
+     *            when {@code true}, finalizeQuery wraps the body in a sub-SELECT scope to force the
+     *            RDF4J planner away from a 5.5M-row HashJoinIteration. Only used for
+     *            {@link #withLabelMatchingExactlyAnyOf} — the other FTS shapes (startsWith,
+     *            containing, fuzzy) trigger an RDF4J QueryJoinOptimizer "rightArg must not be null"
+     *            assertion when wrapped, so they keep the legacy emission.
+     */
+    private record PendingFtsBranch(GraphPattern body, List<Expression<?>> filters,
+            boolean wrapInSubSelect)
+    {}
+
+    private final List<PendingFtsBranch> pendingFtsBranches = new ArrayList<>();
+    private boolean ftsActive = false;
+    private boolean finalized = false;
+
     public FtsAdapterRdf4J(SPARQLQueryBuilder aBuilder)
     {
         builder = aBuilder;
@@ -76,8 +107,8 @@ public class FtsAdapterRdf4J
     public void withLabelMatchingExactlyAnyOf(String... aValues)
     {
         builder.addPrefix(PREFIX_RDF4J_LUCENE_SEARCH);
+        ftsActive = true;
 
-        var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
             var sanitizedValue = builder.sanitizeQueryString_FTS(value);
 
@@ -87,29 +118,34 @@ public class FtsAdapterRdf4J
 
             builder.addProjection(VAR_SCORE);
 
-            valuePatterns.add(VAR_SUBJECT
+            // Emit one FILTER per conjunct (REGEX, LANGMATCHES) instead of one combined
+            // FILTER ( REGEX(...) && LANGMATCHES(...) ). The combined form is opaque to the
+            // RDF4J cost estimator and triggers the #5444 pathology where the planner cannot
+            // push the cheap language check separately from the expensive anchored regex.
+            // Filters are stored separately so finalizeQuery can apply them inside a flat
+            // GroupGraphPattern (calling .filter() on a TriplePattern wraps it in an extra
+            // group, which the optimiser then treats as a "new scope" and falls back to a
+            // HashJoinIteration with a 5.5M-row estimate on `?subj ?pMatch ?m`).
+            var triple = VAR_SUBJECT
                     .has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(sanitizedValue)) //
                             .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
                             .andHas(LUCENE_SCORE, VAR_SCORE))
-                    .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM).filter(builder
-                            .equalsPattern(VAR_MATCH_TERM, value, builder.getKnowledgeBase())));
+                    .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM);
+            var filters = builder.equalsFilters(VAR_MATCH_TERM, value);
+            pendingFtsBranches.add(new PendingFtsBranch(triple, filters, true));
         }
 
-        if (valuePatterns.isEmpty()) {
+        if (pendingFtsBranches.isEmpty()) {
             builder.noResult();
         }
-
-        builder.addPattern(PRIMARY, and( //
-                builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                union(valuePatterns.toArray(GraphPattern[]::new))));
     }
 
     @Override
     public void withLabelContainingAnyOf(String... aValues)
     {
         builder.addPrefix(PREFIX_RDF4J_LUCENE_SEARCH);
+        ftsActive = true;
 
-        var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
             // Strip single quotes and asterisks because they have special semantics
             var sanitizedValue = builder.sanitizeQueryString_FTS(value);
@@ -133,7 +169,7 @@ public class FtsAdapterRdf4J
             // returned). RDF4J only provides access to the matched term in a "highlighted" form
             // where "<B>" and "</B>" match the search term. So we have to strip these markers
             // out as part of the query.
-            valuePatterns.add(VAR_SUBJECT //
+            pendingFtsBranches.add(new PendingFtsBranch(VAR_SUBJECT //
                     .has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(query)) //
                             .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
                             .andHas(LUCENE_SCORE, VAR_SCORE) //
@@ -145,28 +181,27 @@ public class FtsAdapterRdf4J
                                     literalOf("<B>"), literalOf("")),
                             VAR_LABEL))
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM))
-                    .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
+                    .filter(and(labelFilterExpressions.toArray(Expression[]::new))), List.of(),
+                    false));
         }
 
-        if (valuePatterns.isEmpty()) {
+        if (pendingFtsBranches.isEmpty()) {
             builder.noResult();
         }
-
-        builder.addPattern(PRIMARY, and( //
-                builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(GraphPattern[]::new))));
     }
 
     @Override
     public void withLabelStartingWith(String aPrefixQuery)
     {
         builder.addPrefix(PREFIX_RDF4J_LUCENE_SEARCH);
+        ftsActive = true;
 
         // Strip single quotes and asterisks because they have special semantics
         var queryString = builder.sanitizeQueryString_FTS(aPrefixQuery);
 
         if (isBlank(queryString)) {
             builder.noResult();
+            return;
         }
 
         // If the query string entered by the user does not end with a space character, then
@@ -180,21 +215,23 @@ public class FtsAdapterRdf4J
 
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
-        builder.addPattern(PRIMARY, and( //
-                builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                VAR_SUBJECT.has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(queryString)) //
-                        .andHas(LUCENE_SCORE, VAR_SCORE)
-                        .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY))
-                        .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                        .filter(builder.startsWithPattern(VAR_MATCH_TERM, aPrefixQuery))));
+        pendingFtsBranches
+                .add(new PendingFtsBranch(
+                        VAR_SUBJECT
+                                .has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(queryString)) //
+                                        .andHas(LUCENE_SCORE, VAR_SCORE)
+                                        .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY))
+                                .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
+                                .filter(builder.startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)),
+                        List.of(), false));
     }
 
     @Override
     public void withLabelMatchingAnyOf(String... aValues)
     {
         builder.addPrefix(PREFIX_RDF4J_LUCENE_SEARCH);
+        ftsActive = true;
 
-        var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
             // Strip single quotes and asterisks because they have special semantics
             var sanitizedValue = builder.sanitizeQueryString_FTS(value);
@@ -217,7 +254,7 @@ public class FtsAdapterRdf4J
             // returned). RDF4J only provides access to the matched term in a "highlighted" form
             // where "<B>" and "</B>" match the search term. So we have to strip these markers
             // out as part of the query.
-            valuePatterns.add(VAR_SUBJECT //
+            pendingFtsBranches.add(new PendingFtsBranch(VAR_SUBJECT //
                     .has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(queryString)) //
                             .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
                             .andHas(LUCENE_SCORE, VAR_SCORE) //
@@ -229,15 +266,125 @@ public class FtsAdapterRdf4J
                                     literalOf("<B>"), literalOf("")),
                             VAR_LABEL))
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM))
-                    .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
+                    .filter(and(labelFilterExpressions.toArray(Expression[]::new))), List.of(),
+                    false));
         }
 
-        if (valuePatterns.isEmpty()) {
+        if (pendingFtsBranches.isEmpty()) {
             builder.noResult();
         }
+    }
 
-        builder.addPattern(PRIMARY, and( //
-                builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(GraphPattern[]::new))));
+    @Override
+    public void finalizeQuery(SPARQLQueryBuilder aBuilder)
+    {
+        if (finalized) {
+            return;
+        }
+        finalized = true;
+
+        if (!ftsActive || pendingFtsBranches.isEmpty()) {
+            return;
+        }
+
+        // Each FTS branch gets two transformations:
+        //
+        // 1. The FTS body (search:matches + ?subj ?pMatch ?m + post-filters) is wrapped in a
+        // sub-SELECT. The inner ?subj ?pMatch ?m StatementPattern is estimated by the
+        // planner at ~5.5M rows on real SNOMED (the planner can't statically see that
+        // search:matches will bind ?subj), so without a sub-SELECT boundary it picks a
+        // HashJoinIteration that materialises the whole ?subj?pMatch?m index — multi-second
+        // disk I/O. The sub-SELECT forces a nested-loop join with ?subj already bound by
+        // Lucene, which is essentially free.
+        //
+        // 2. The retrieve* OPTIONALs are pushed INSIDE each branch (rather than left at the
+        // outer level). RDF4J 5.1.4+ otherwise reorders the outer OPTIONAL { VALUES
+        // ?pPrefLabel … } past the union, leaving ?pPrefLabel unbound when the inner
+        // OPTIONALs evaluate — they then match against any predicate and we get altLabel
+        // back instead of prefLabel (#5444). A pure outer-OPTIONALs shape ALSO trips an
+        // RDF4J QueryJoinOptimizer "rightArg must not be null" assertion on some
+        // LuceneSail+small-data combinations, so keeping the OPTIONALs in-branch is also
+        // a correctness fix.
+        aBuilder.drainLabelPropertyBindings();
+        var optionalLookups = aBuilder.drainOptionalLookupPatterns();
+        // Fall back to the property-path OPTIONAL when no pref-label properties are pre-resolved.
+        // Without this, OPTIONAL lookups inside the branches that use ?pPrefLabel would match
+        // any predicate (#5444).
+        var plainBinding = aBuilder.bindPrefLabelPropertiesPlain(VAR_PREF_LABEL_PROPERTY);
+        var prefLabelValuesBinding = plainBinding != null //
+                ? plainBinding //
+                : aBuilder.bindPrefLabelProperties(VAR_PREF_LABEL_PROPERTY);
+        var matchTermBinding = aBuilder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY);
+
+        // The sub-SELECT wrap is only safe when there are 2+ branches: with a single branch the
+        // sparqlbuilder collapses union(singleBranch) to just the branch, and a single sub-SELECT
+        // wrapped in an outer scope trips an RDF4J QueryJoinOptimizer "rightArg must not be null"
+        // assertion via LuceneSailConnection.evaluateInternal. Multi-branch sub-SELECTs work
+        // because the UNION node sits between the sub-SELECTs and the outer scope.
+        var useSubSelect = pendingFtsBranches.size() > 1
+                && pendingFtsBranches.stream().allMatch(PendingFtsBranch::wrapInSubSelect);
+
+        var augmentedBranches = pendingFtsBranches.stream() //
+                .map(branch -> augmentBranch(
+                        useSubSelect ? wrapBranchInSubSelect(branch, matchTermBinding)
+                                : applyFilters(branch),
+                        prefLabelValuesBinding, optionalLookups)) //
+                .toArray(GraphPattern[]::new);
+
+        // With sub-SELECT branches the match-term VALUES is already inside each sub-SELECT, so
+        // the outer wrap is unnecessary. Otherwise it needs to live at the outer level so the
+        // branches' ?pMatch references resolve.
+        if (useSubSelect) {
+            aBuilder.addPattern(PRIMARY, union(augmentedBranches));
+        }
+        else {
+            aBuilder.addPattern(PRIMARY, and(matchTermBinding, union(augmentedBranches)));
+        }
+    }
+
+    private static GraphPattern applyFilters(PendingFtsBranch aBranch)
+    {
+        if (aBranch.filters().isEmpty()) {
+            return aBranch.body();
+        }
+        // and(...) first to keep filters in the same group as the body — see wrapBranchInSubSelect.
+        GraphPattern result = and(aBranch.body());
+        for (var filter : aBranch.filters()) {
+            result = result.filter(filter);
+        }
+        return result;
+    }
+
+    private static GraphPattern wrapBranchInSubSelect(PendingFtsBranch aBranch,
+            GraphPattern aMatchTermBinding)
+    {
+        // Build the sub-SELECT WHERE as a single flat GroupGraphPattern (matchTermBinding +
+        // triple) and then append the filters. and(...) wraps in a GraphPatternNotTriples
+        // whose .filter() appends to the inner GroupGraphPattern's filter list without adding
+        // a new group level — that flat shape is what lets the planner pick a JoinIterator
+        // instead of a HashJoinIteration.
+        var body = aMatchTermBinding != null //
+                ? and(aMatchTermBinding, aBranch.body()) //
+                : and(aBranch.body());
+        for (var filter : aBranch.filters()) {
+            body = body.filter(filter);
+        }
+        return select(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM).where(body);
+    }
+
+    private static GraphPattern augmentBranch(GraphPattern aBranch, GraphPattern aPrefLabelBinding,
+            List<GraphPattern> aOptionalLookups)
+    {
+        if (aPrefLabelBinding == null && aOptionalLookups.isEmpty()) {
+            return aBranch;
+        }
+
+        var parts = new ArrayList<GraphPattern>();
+        if (aPrefLabelBinding != null) {
+            parts.add(aPrefLabelBinding);
+        }
+        parts.add(aBranch);
+        parts.addAll(aOptionalLookups);
+        return and(parts.toArray(GraphPattern[]::new));
     }
 }

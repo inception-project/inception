@@ -62,8 +62,8 @@ public class FtsAdapterStardog
 
             valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, sanitizedValue) //
                     .withLimit(builder.getLimit()) //
-                    .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM).filter(builder
-                            .equalsPattern(VAR_MATCH_TERM, value, builder.getKnowledgeBase()))));
+                    .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
+                            .filter(builder.equalsPattern(VAR_MATCH_TERM, value))));
         }
 
         if (valuePatterns.isEmpty()) {

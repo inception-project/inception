@@ -27,4 +27,16 @@ public interface FtsAdapter
     void withLabelMatchingAnyOf(String... values);
 
     void withLabelStartingWith(String prefix);
+
+    /**
+     * Called once at query assembly time, after all {@code withLabel*} and {@code retrieve*}
+     * methods have run, but before the final SPARQL is rendered. Adapters can use this to defer
+     * pattern assembly until they have visibility into what optional lookups (label, description,
+     * deprecation) need to happen — e.g. to push those into UNION branches for query planners that
+     * otherwise produce poor join orders.
+     */
+    default void finalizeQuery(SPARQLQueryBuilder builder)
+    {
+        // No-op by default.
+    }
 }

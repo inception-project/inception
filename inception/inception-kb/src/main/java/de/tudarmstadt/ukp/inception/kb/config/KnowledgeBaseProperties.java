@@ -56,5 +56,12 @@ public interface KnowledgeBaseProperties
 
     long getRenderCacheSize();
 
+    /**
+     * @return the maximum number of identifiers fitted into a single batch SPARQL request (e.g. by
+     *         {@code readHandles}). Larger collections are chunked so that no single VALUES clause
+     *         grows unbounded.
+     */
+    int getReadBatchSize();
+
     List<String> getDefaultFallbackLanguages();
 }

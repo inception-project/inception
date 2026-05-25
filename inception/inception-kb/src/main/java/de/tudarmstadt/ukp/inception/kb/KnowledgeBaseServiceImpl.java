@@ -31,6 +31,7 @@ import static java.lang.Math.round;
 import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.move;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Locale.ROOT;
 import static java.util.stream.Collectors.toList;
@@ -53,6 +54,7 @@ import java.io.OutputStream;
 import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1594,6 +1596,105 @@ public class KnowledgeBaseServiceImpl
         }
 
         return someResult;
+    }
+
+    @Override
+    public Map<String, KBHandle> readHandles(KnowledgeBase aKB, Collection<String> aIdentifiers)
+    {
+        if (aKB == null) {
+            throw new IllegalArgumentException("KnowledgeBase must not be null");
+        }
+        if (aIdentifiers == null) {
+            throw new IllegalArgumentException("Identifiers must not be null");
+        }
+        if (aIdentifiers.isEmpty()) {
+            return emptyMap();
+        }
+
+        try (var watch = new StopWatch(LOG, "readHandles(%d)", aIdentifiers.size())) {
+            var distinctIds = aIdentifiers.stream().distinct().toList();
+            var batchSize = Math.max(1, properties.getReadBatchSize());
+            var result = new LinkedHashMap<String, KBHandle>();
+
+            // Chunk so no single VALUES clause grows unbounded. Shared connection so all chunks
+            // see one transactional snapshot.
+            read(aKB, conn -> {
+                for (var start = 0; start < distinctIds.size(); start += batchSize) {
+                    var chunk = distinctIds.subList(start,
+                            Math.min(start + batchSize, distinctIds.size()));
+                    readHandlesChunk(aKB, conn, chunk, result);
+                }
+                return null;
+            });
+
+            return result;
+        }
+    }
+
+    private void readHandlesChunk(KnowledgeBase aKB, RepositoryConnection aConn, List<String> aIds,
+            Map<String, KBHandle> aResult)
+    {
+        // Result is already bounded by the VALUES clause from withIdentifier; a SPARQL LIMIT
+        // would risk truncating legitimate multi-row-per-id output (languages × OPTIONALs).
+        var query = SPARQLQueryBuilder.forItems(aKB) //
+                .withIdentifier(aIds.toArray(String[]::new)) //
+                .retrieveLabel() //
+                .retrieveDescription() //
+                .retrieveDeprecation() //
+                .noLimit();
+
+        // Bypasses queryCache: batch keys don't share well with single-id readHandle calls;
+        // callers are expected to maintain their own per-id cache.
+        var rows = query.asHandles(aConn, true);
+        for (var row : rows) {
+            aResult.putIfAbsent(row.getIdentifier(), row);
+        }
+
+        // Preserve the "always returns something per requested id" semantics of readHandle.
+        for (var id : aIds) {
+            aResult.computeIfAbsent(id, KBHandle::new);
+        }
+    }
+
+    @Override
+    public Map<String, KBHandle> readHandles(Project aProject, Collection<String> aIdentifiers)
+    {
+        if (aProject == null) {
+            throw new IllegalArgumentException("Project must not be null");
+        }
+        if (aIdentifiers == null) {
+            throw new IllegalArgumentException("Identifiers must not be null");
+        }
+        if (aIdentifiers.isEmpty()) {
+            return emptyMap();
+        }
+
+        var result = new LinkedHashMap<String, KBHandle>();
+        for (var id : aIdentifiers) {
+            result.put(id, new KBHandle(id));
+        }
+
+        for (var kb : getEnabledKnowledgeBases(aProject)) {
+            // Only re-query identifiers we haven't yet resolved to a labeled handle. Mirrors the
+            // single-id readHandle(Project, ...) loop, which stops at the first KB providing a
+            // name.
+            var unresolved = result.entrySet().stream() //
+                    .filter(e -> e.getValue().getName() == null) //
+                    .map(Map.Entry::getKey) //
+                    .toList();
+            if (unresolved.isEmpty()) {
+                break;
+            }
+
+            var kbResults = readHandles(kb, unresolved);
+            for (var entry : kbResults.entrySet()) {
+                if (entry.getValue().getName() != null) {
+                    result.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+
+        return result;
     }
 
     /**

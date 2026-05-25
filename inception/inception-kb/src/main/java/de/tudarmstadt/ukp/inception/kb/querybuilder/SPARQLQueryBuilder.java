@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_STARDOG;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.OPTIONAL_LOOKUP;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY_RESTRICTIONS;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.SECONDARY;
@@ -141,7 +142,13 @@ public class SPARQLQueryBuilder
 
     private final List<GraphPattern> primaryPatterns = new ArrayList<>();
     private final List<GraphPattern> primaryRestrictions = new ArrayList<>();
+    private final List<GraphPattern> labelPropertyBindings = new ArrayList<>();
     private final List<GraphPattern> secondaryPatterns = new ArrayList<>();
+    private final List<GraphPattern> optionalLookupPatterns = new ArrayList<>();
+
+    private FtsAdapter cachedFtsAdapter;
+
+    private boolean finalized = false;
 
     private boolean labelImplicitlyRetrieved = false;
 
@@ -149,7 +156,7 @@ public class SPARQLQueryBuilder
 
     enum Priority
     {
-        PRIMARY, PRIMARY_RESTRICTIONS, SECONDARY
+        PRIMARY, PRIMARY_RESTRICTIONS, SECONDARY, OPTIONAL_LOOKUP
     }
 
     /**
@@ -172,6 +179,9 @@ public class SPARQLQueryBuilder
      * may not work.
      */
     private boolean caseInsensitive = true;
+
+    /** Sentinel for "no LIMIT" — picked so {@code Stream.limit(getLimit())} is a no-op too. */
+    static final int UNLIMITED = Integer.MAX_VALUE;
 
     private int limitOverride = DEFAULT_LIMIT;
 
@@ -545,9 +555,40 @@ public class SPARQLQueryBuilder
         case SECONDARY:
             secondaryPatterns.add(aPattern);
             break;
+        case OPTIONAL_LOOKUP:
+            optionalLookupPatterns.add(aPattern);
+            break;
         default:
             throw new IllegalArgumentException("Unknown priority: [" + aPriority + "]");
         }
+    }
+
+    /**
+     * Returns the OPTIONAL lookup patterns (label/description/deprecation retrievals) collected so
+     * far, and clears them from the builder. Intended for use by an {@link FtsAdapter} in
+     * {@link FtsAdapter#finalizeQuery(SPARQLQueryBuilder)} that wants to push those patterns into
+     * FTS UNION branches instead of having them rendered as top-level OPTIONAL clauses.
+     */
+    List<GraphPattern> drainOptionalLookupPatterns()
+    {
+        var drained = new ArrayList<>(optionalLookupPatterns);
+        optionalLookupPatterns.clear();
+        return drained;
+    }
+
+    /**
+     * Returns the label-property bindings (VALUES wrappers for {@code ?pPrefLabel} /
+     * {@code ?pMatch} added by {@link #retrieveLabel()}) and clears them. Used by
+     * {@link FtsAdapter#finalizeQuery} when an adapter re-emits equivalent hard bindings INSIDE the
+     * FTS UNION branches and therefore wants the outer wrappers gone. Kept separate from
+     * {@link #secondaryPatterns} so unrelated SECONDARY patterns (e.g. {@code RDFS:RANGE} /
+     * {@code RDFS:DOMAIN} OPTIONALs added by {@link #retrieveDomainAndRange()}) survive the drain.
+     */
+    List<GraphPattern> drainLabelPropertyBindings()
+    {
+        var drained = new ArrayList<>(labelPropertyBindings);
+        labelPropertyBindings.clear();
+        return drained;
     }
 
     private void addMatchTermProjections(Collection<Projectable> aProjectables)
@@ -640,6 +681,13 @@ public class SPARQLQueryBuilder
     }
 
     @Override
+    public SPARQLQueryOptionalElements noLimit()
+    {
+        limitOverride = UNLIMITED;
+        return this;
+    }
+
+    @Override
     public SPARQLQueryOptionalElements caseSensitive()
     {
         caseInsensitive = false;
@@ -700,6 +748,23 @@ public class SPARQLQueryBuilder
         var pattern = aVariable.has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(),
                 pLabel);
         return optional(pattern);
+    }
+
+    /**
+     * Returns a hard-binding VALUES pattern for the pref-label properties, without the OPTIONAL
+     * wrapper used by {@link #bindPrefLabelProperties(Variable)}. Used by adapters that emit the
+     * binding inside a UNION branch where outer-scope OPTIONAL wrappers get reordered by the
+     * optimizer to after the inner patterns, leaving the variable unbound when those inner patterns
+     * reference it. Returns {@code null} when there is nothing to bind (no pre-resolved pref-label
+     * properties available — the caller should fall through to the OPTIONAL form).
+     */
+    GraphPattern bindPrefLabelPropertiesPlain(Variable aVariable)
+    {
+        if (preResolvedPrefLabelProperties.isEmpty()) {
+            return null;
+        }
+        return new ValuesPattern(aVariable,
+                preResolvedPrefLabelProperties.stream().map(Rdf::iri).toArray(RdfValue[]::new));
     }
 
     /**
@@ -849,6 +914,14 @@ public class SPARQLQueryBuilder
     }
 
     private FtsAdapter getAdapter()
+    {
+        if (cachedFtsAdapter == null) {
+            cachedFtsAdapter = createAdapter();
+        }
+        return cachedFtsAdapter;
+    }
+
+    private FtsAdapter createAdapter()
     {
         var ftsMode = getFtsMode();
 
@@ -1034,25 +1107,34 @@ public class SPARQLQueryBuilder
         return value;
     }
 
-    Expression<?> equalsPattern(Variable aVariable, String aValue, KnowledgeBase aKB)
+    Expression<?> equalsPattern(Variable aVariable, String aValue)
     {
-        var variable = aVariable;
+        return and(equalsFilters(aVariable, aValue).toArray(Expression[]::new));
+    }
 
+    /**
+     * Same conjuncts as {@link #equalsPattern}, but returned as separate expressions so the caller
+     * can emit each as its own SPARQL {@code FILTER} clause. Avoiding the combined
+     * {@code FILTER ( REGEX(...) && LANGMATCHES(...) )} shape helps the RDF4J planner — see
+     * <a href="https://github.com/eclipse-rdf4j/rdf4j/issues/5444">RDF4J #5444</a>: with a single
+     * combined filter the cost-estimator treats the conjunction as one opaque expression and cannot
+     * reorder/push the cheap LANGMATCHES separately from the expensive anchored REGEX.
+     */
+    List<Expression<?>> equalsFilters(Variable aVariable, String aValue)
+    {
         var regexFlags = "";
         if (caseInsensitive) {
             regexFlags += "i";
         }
 
-        // Match using REGEX to be resilient against extra whitespace
-        // Match exactly
+        // Match using REGEX to be resilient against extra whitespace, anchored for exact match.
         var value = "^" + asRegexp(aValue) + "$";
 
         var expressions = new ArrayList<Expression<?>>();
         expressions.add(
-                function(REGEX, function(STR, variable), literalOf(value), literalOf(regexFlags)));
+                function(REGEX, function(STR, aVariable), literalOf(value), literalOf(regexFlags)));
         expressions.add(matchKbLanguage(aVariable));
-
-        return and(expressions.toArray(Expression[]::new));
+        return expressions;
     }
 
     private Expression<?> matchString(SparqlFunction aFunction, Variable aVariable, String aValue)
@@ -1264,7 +1346,7 @@ public class SPARQLQueryBuilder
     {
         if (!mode.getAdditionalMatchingProperties(kb).isEmpty()) {
             addPreferredLabelProjections(projections);
-            addPattern(SECONDARY, bindPrefLabelProperties(VAR_PREF_LABEL_PROPERTY));
+            labelPropertyBindings.add(bindPrefLabelProperties(VAR_PREF_LABEL_PROPERTY));
             retrieveOptionalWithLanguage(VAR_PREF_LABEL_PROPERTY, VAR_PREF_LABEL);
         }
 
@@ -1274,7 +1356,7 @@ public class SPARQLQueryBuilder
         }
 
         addMatchTermProjections(projections);
-        addPattern(SECONDARY, bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY));
+        labelPropertyBindings.add(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY));
         retrieveOptionalWithLanguage(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM);
 
         return this;
@@ -1312,7 +1394,7 @@ public class SPARQLQueryBuilder
         // Virtuoso has trouble with multiple OPTIONAL clauses causing results which would
         // normally match to be removed from the results set. Using a UNION seems to address this
         // labelPatterns.forEach(pattern -> addPattern(Priority.SECONDARY, optional(pattern)));
-        addPattern(SECONDARY, optional(union(pattern)));
+        addPattern(OPTIONAL_LOOKUP, optional(union(pattern)));
     }
 
     @Override
@@ -1336,6 +1418,14 @@ public class SPARQLQueryBuilder
     {
         // Must add it anyway because we group by it
         projections.add(VAR_SUBJECT);
+
+        // Assemble FTS-adapter deferred patterns. Skipped when no FTS was used (otherwise
+        // identifier-only queries could trip an unknown-FTS-mode ISE) and run at most once
+        // (equals()/hashCode() re-invoke selectQuery() and finalizeQuery() is destructive).
+        if (!finalized && cachedFtsAdapter != null) {
+            cachedFtsAdapter.finalizeQuery(this);
+            finalized = true;
+        }
 
         var query = Queries.SELECT().distinct();
         prefixes.forEach(query::prefix);
@@ -1364,20 +1454,21 @@ public class SPARQLQueryBuilder
                         .toArray(GraphPattern[]::new)).getQueryString()));
 
         // Then add the optional or lower-prio elements
+        labelPropertyBindings.stream().forEach(query::where);
         secondaryPatterns.stream().forEach(query::where);
+        optionalLookupPatterns.stream().forEach(query::where);
 
         if (kb.getDefaultDatasetIri() != null) {
             query.from(dataset(from(iri(kb.getDefaultDatasetIri()))));
         }
 
         int actualLimit = getLimit();
-
-        // If we do not do a server-side reduce, then we may get two results for every item
-        // from the server (one with and one without the language), so we need to double the
-        // query limit and cut down results locally later.
-        actualLimit = actualLimit * 2;
-
-        query.limit(actualLimit);
+        if (actualLimit != UNLIMITED) {
+            // If we do not do a server-side reduce, then we may get two results for every item
+            // from the server (one with and one without the language), so we need to double the
+            // query limit and cut down results locally later.
+            query.limit(actualLimit * 2);
+        }
 
         return query;
     }

@@ -78,6 +78,13 @@ public class KnowledgeBasePropertiesImpl
     /** Time before items are asynchronously refreshed when rendering. */
     private @DurationUnit(MINUTES) Duration renderCacheRefreshDelay = ofMinutes(1);
 
+    /**
+     * Maximum number of identifiers fitted into a single batch SPARQL request. Collections larger
+     * than this are split into sequential chunks to keep VALUES clauses and intermediate result
+     * sets bounded.
+     */
+    private int readBatchSize = 250;
+
     private List<String> defaultFallbackLanguages = emptyList();
 
     public void setFtsInternalMaxResultsFactor(double aFtsMaxResultsFactor)
@@ -188,6 +195,17 @@ public class KnowledgeBasePropertiesImpl
     public void setRenderCacheRefreshDelay(Duration aRenderCacheRefreshDelay)
     {
         renderCacheRefreshDelay = aRenderCacheRefreshDelay;
+    }
+
+    @Override
+    public int getReadBatchSize()
+    {
+        return readBatchSize;
+    }
+
+    public void setReadBatchSize(int aReadBatchSize)
+    {
+        readBatchSize = aReadBatchSize;
     }
 
     @Override

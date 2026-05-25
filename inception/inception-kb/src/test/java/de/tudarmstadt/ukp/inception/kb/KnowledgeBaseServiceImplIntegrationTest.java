@@ -107,12 +107,17 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
     public void setUp(Reification reification) throws Exception
     {
+        setUp(reification, new KnowledgeBasePropertiesImpl());
+    }
+
+    public void setUp(Reification reification, KnowledgeBasePropertiesImpl aKbProperties)
+        throws Exception
+    {
         var repoProps = new RepositoryPropertiesImpl();
         repoProps.setPath(temporaryFolder);
-        var kbProperties = new KnowledgeBasePropertiesImpl();
         var entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, aKbProperties, entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME, reification);
     }
@@ -1994,6 +1999,138 @@ public class KnowledgeBaseServiceImplIntegrationTest
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/example1.obo.gz");
         assertThat(sut.getIndexSize(kb)).isGreaterThan(30000);
+    }
+
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readHandles_WithExistingConcepts_ShouldReturnHandlePerId(Reification reification)
+        throws Exception
+    {
+        setUp(reification);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        var c1 = buildConcept();
+        c1.setName("Alpha");
+        sut.createConcept(kb, c1);
+        var c2 = buildConcept();
+        c2.setName("Beta");
+        sut.createConcept(kb, c2);
+
+        var result = sut.readHandles(kb, asList(c1.getIdentifier(), c2.getIdentifier()));
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(c1.getIdentifier())).extracting(KBHandle::getName).isEqualTo("Alpha");
+        assertThat(result.get(c2.getIdentifier())).extracting(KBHandle::getName).isEqualTo("Beta");
+    }
+
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readHandles_WithMissingIds_ShouldReturnStubHandles(Reification reification)
+        throws Exception
+    {
+        setUp(reification);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        var c1 = buildConcept();
+        c1.setName("Alpha");
+        sut.createConcept(kb, c1);
+
+        var missingId = "https://nonexistent.identifier.test/x";
+        var result = sut.readHandles(kb, asList(c1.getIdentifier(), missingId));
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(c1.getIdentifier())).extracting(KBHandle::getName).isEqualTo("Alpha");
+        assertThat(result.get(missingId)) //
+                .as("Missing IDs get stub handles with the requested identifier and no name")
+                .isNotNull() //
+                .extracting(KBHandle::getIdentifier, KBHandle::getName) //
+                .containsExactly(missingId, null);
+    }
+
+    @Test
+    public void readHandles_WithEmptyInput_ShouldReturnEmptyMap() throws Exception
+    {
+        setUp(Reification.NONE);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        assertThat(sut.readHandles(kb, List.of())).isEmpty();
+    }
+
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readHandles_WithDuplicateIds_ShouldDeduplicate(Reification reification)
+        throws Exception
+    {
+        setUp(reification);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        var c1 = buildConcept();
+        c1.setName("Alpha");
+        sut.createConcept(kb, c1);
+
+        var result = sut.readHandles(kb,
+                asList(c1.getIdentifier(), c1.getIdentifier(), c1.getIdentifier()));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(c1.getIdentifier())).extracting(KBHandle::getName).isEqualTo("Alpha");
+    }
+
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readHandles_WithMoreIdsThanBatchSize_ShouldChunkAndMergeResults(
+            Reification reification)
+        throws Exception
+    {
+        var props = new KnowledgeBasePropertiesImpl();
+        props.setReadBatchSize(2);
+        setUp(reification, props);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        var concepts = new ArrayList<KBConcept>();
+        for (var i = 0; i < 5; i++) {
+            var c = buildConcept();
+            c.setName("Concept" + i);
+            sut.createConcept(kb, c);
+            concepts.add(c);
+        }
+
+        var ids = concepts.stream().map(KBConcept::getIdentifier).toList();
+        var result = sut.readHandles(kb, ids);
+
+        // 5 ids with batch size 2 => 3 chunks (2 + 2 + 1). All results must still be present.
+        assertThat(result).hasSize(5);
+        for (var i = 0; i < 5; i++) {
+            assertThat(result.get(concepts.get(i).getIdentifier())) //
+                    .extracting(KBHandle::getName) //
+                    .isEqualTo("Concept" + i);
+        }
+    }
+
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readHandles_Project_ShouldResolveAcrossEnabledKBs(Reification reification)
+        throws Exception
+    {
+        setUp(reification);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        var kb2 = buildKnowledgeBase(project, "Second KB", reification);
+        sut.registerKnowledgeBase(kb2, sut.getNativeConfig());
+
+        var c1 = buildConcept();
+        c1.setName("InFirst");
+        sut.createConcept(kb, c1);
+
+        var c2 = buildConcept();
+        c2.setName("InSecond");
+        sut.createConcept(kb2, c2);
+
+        var result = sut.readHandles(project, asList(c1.getIdentifier(), c2.getIdentifier()));
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(c1.getIdentifier())).extracting(KBHandle::getName)
+                .isEqualTo("InFirst");
+        assertThat(result.get(c2.getIdentifier())).extracting(KBHandle::getName)
+                .isEqualTo("InSecond");
     }
 
     // Helper
