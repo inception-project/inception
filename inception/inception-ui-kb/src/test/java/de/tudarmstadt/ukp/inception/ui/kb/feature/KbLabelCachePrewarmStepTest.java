@@ -79,32 +79,41 @@ public class KbLabelCachePrewarmStepTest
         sut = new KbLabelCachePrewarmStep(labelCache, conceptFeatureSupport,
                 multiValueConceptFeatureSupport, schemaService);
 
-        project = new Project();
-        project.setName("test-project");
+        project = Project.builder() //
+                .withId(1L) //
+                .withName("test-project") //
+                .build();
 
         jcas = createJCasFromPath("src/test/resources/desc/type/webannoTestTypes.xml");
         jcas.setDocumentText("0123456789");
 
-        singleValueLayer = new AnnotationLayer();
-        singleValueLayer.setName("webanno.custom.Span");
-        singleValueLayer.setProject(project);
+        singleValueLayer = AnnotationLayer.builder() //
+                .withName("webanno.custom.Span") //
+                .withProject(project) //
+                .build();
 
-        multiValueLayer = new AnnotationLayer();
-        multiValueLayer.setName("webanno.custom.SpanMultiValue");
-        multiValueLayer.setProject(project);
+        multiValueLayer = AnnotationLayer.builder() //
+                .withName("webanno.custom.SpanMultiValue") //
+                .withProject(project) //
+                .build();
 
-        singleValueFeature = new AnnotationFeature("value", ConceptFeatureSupport.TYPE_ANY_OBJECT);
-        singleValueFeature.setMode(MultiValueMode.NONE);
-        singleValueFeature.setLinkMode(LinkMode.NONE);
-        singleValueFeature.setLayer(singleValueLayer);
-        singleValueFeature.setProject(project);
+        singleValueFeature = AnnotationFeature.builder() //
+                .withName("value") //
+                .withType(ConceptFeatureSupport.TYPE_ANY_OBJECT) //
+                .withMultiValueMode(MultiValueMode.NONE) //
+                .withLinkMode(LinkMode.NONE) //
+                .withLayer(singleValueLayer) //
+                .withProject(project) //
+                .build();
 
-        multiValueFeature = new AnnotationFeature("values",
-                MultiValueConceptFeatureSupport.TYPE_ANY_OBJECT);
-        multiValueFeature.setMode(MultiValueMode.ARRAY);
-        multiValueFeature.setLinkMode(LinkMode.NONE);
-        multiValueFeature.setLayer(multiValueLayer);
-        multiValueFeature.setProject(project);
+        multiValueFeature = AnnotationFeature.builder() //
+                .withName("values") //
+                .withType(MultiValueConceptFeatureSupport.TYPE_ANY_OBJECT) //
+                .withMultiValueMode(MultiValueMode.ARRAY) //
+                .withLinkMode(LinkMode.NONE) //
+                .withLayer(multiValueLayer) //
+                .withProject(project) //
+                .build();
     }
 
     @Test

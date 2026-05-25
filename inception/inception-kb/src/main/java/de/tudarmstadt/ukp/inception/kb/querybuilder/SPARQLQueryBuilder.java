@@ -676,6 +676,7 @@ public class SPARQLQueryBuilder
     public SPARQLQueryOptionalElements limit(int aLimit)
     {
         limitOverride = aLimit;
+        unlimited = false;
         return this;
     }
 

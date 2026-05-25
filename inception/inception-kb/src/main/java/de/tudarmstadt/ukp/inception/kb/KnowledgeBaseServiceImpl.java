@@ -1604,6 +1604,9 @@ public class KnowledgeBaseServiceImpl
         if (aKB == null) {
             throw new IllegalArgumentException("KnowledgeBase must not be null");
         }
+        if (aIdentifiers == null) {
+            throw new IllegalArgumentException("Identifiers must not be null");
+        }
         if (aIdentifiers.isEmpty()) {
             return emptyMap();
         }
@@ -1658,6 +1661,9 @@ public class KnowledgeBaseServiceImpl
     {
         if (aProject == null) {
             throw new IllegalArgumentException("Project must not be null");
+        }
+        if (aIdentifiers == null) {
+            throw new IllegalArgumentException("Identifiers must not be null");
         }
         if (aIdentifiers.isEmpty()) {
             return emptyMap();

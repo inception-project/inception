@@ -140,6 +140,10 @@ public class ConceptLabelCache
                 throw new IllegalArgumentException("AnnotationFeature ["
                         + key.getAnnotationFeature().getName() + "] has no associated project");
             }
+            if (project.getId() == null) {
+                throw new IllegalArgumentException(
+                        "Project [" + project.getName() + "] has not been persisted (id is null)");
+            }
             var groupKey = new SimpleEntry<>(project.getId(), key.getRepositoryId());
             groups.computeIfAbsent(groupKey, k -> new java.util.ArrayList<>()).add(key);
         }

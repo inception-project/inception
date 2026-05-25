@@ -56,10 +56,13 @@ public class ConceptLabelCacheTest
     {
         sut = new ConceptLabelCache(kbService, new KnowledgeBasePropertiesImpl());
 
-        project = new Project();
-        project.setName("test-project");
-        feature = new AnnotationFeature();
-        feature.setProject(project);
+        project = Project.builder() //
+                .withId(1L) //
+                .withName("test-project") //
+                .build();
+        feature = AnnotationFeature.builder() //
+                .withProject(project) //
+                .build();
     }
 
     @Test
