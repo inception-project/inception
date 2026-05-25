@@ -307,7 +307,13 @@ public class FtsAdapterRdf4J
         // a correctness fix.
         aBuilder.drainLabelPropertyBindings();
         var optionalLookups = aBuilder.drainOptionalLookupPatterns();
-        var prefLabelValuesBinding = aBuilder.bindPrefLabelPropertiesPlain(VAR_PREF_LABEL_PROPERTY);
+        // Fall back to the property-path OPTIONAL when no pref-label properties are pre-resolved.
+        // Without this, OPTIONAL lookups inside the branches that use ?pPrefLabel would match
+        // any predicate (#5444).
+        var plainBinding = aBuilder.bindPrefLabelPropertiesPlain(VAR_PREF_LABEL_PROPERTY);
+        var prefLabelValuesBinding = plainBinding != null //
+                ? plainBinding //
+                : aBuilder.bindPrefLabelProperties(VAR_PREF_LABEL_PROPERTY);
         var matchTermBinding = aBuilder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY);
 
         // The sub-SELECT wrap is only safe when there are 2+ branches: with a single branch the

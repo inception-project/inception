@@ -180,7 +180,7 @@ public class ConceptLabelCache
                 LOG.error(
                         "Bulk load failed for project [{}] repositoryId [{}]; "
                                 + "falling back to per-key loading",
-                        project.getName(), repositoryId, e);
+                        project != null ? project.getName() : null, repositoryId, e);
                 for (var key : keysInGroup) {
                     result.put(key, loadLabelValue(key));
                 }
