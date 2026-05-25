@@ -1628,11 +1628,14 @@ public class KnowledgeBaseServiceImpl
     private void readHandlesChunk(KnowledgeBase aKB, RepositoryConnection aConn, List<String> aIds,
             Map<String, KBHandle> aResult)
     {
+        // Size the LIMIT to the batch so a low kb.getMaxResults() doesn't silently truncate
+        // results and turn existing IDs into stubs.
         var query = SPARQLQueryBuilder.forItems(aKB) //
                 .withIdentifier(aIds.toArray(String[]::new)) //
                 .retrieveLabel() //
                 .retrieveDescription() //
-                .retrieveDeprecation();
+                .retrieveDeprecation() //
+                .limit(aIds.size());
 
         // Bypasses queryCache: batch keys don't share well with single-id readHandle calls;
         // callers are expected to maintain their own per-id cache.
