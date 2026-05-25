@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb;
 
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.LOCAL;
+import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.skipCertificateChecks;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DEFAULT_LIMIT;
@@ -272,6 +273,9 @@ public class KnowledgeBaseServiceImpl
 
             if (LOCAL == kb.getType()) {
                 reconfigureLocalKnowledgeBase(kb);
+            }
+            else if (REMOTE == kb.getType()) {
+                migrateUrlEmbeddedCredentials(kb);
             }
         }
 
@@ -700,7 +704,14 @@ public class KnowledgeBaseServiceImpl
     @Override
     public RepositoryImplConfig getRemoteConfig(String url)
     {
-        return new SPARQLRepositoryConfig(url);
+        var split = splitUrlUserInfo(url);
+        if (split.userInfo() != null) {
+            LOG.warn(
+                    "URL [{}] contains embedded credentials. Stripping them - configure "
+                            + "authentication via the KB auth-traits UI instead.",
+                    split.cleanUrl());
+        }
+        return new SPARQLRepositoryConfig(split.cleanUrl());
     }
 
     @Override
@@ -833,24 +844,99 @@ public class KnowledgeBaseServiceImpl
     private void applyBasicHttpAuthenticationConfigurationFromUrl(
             SPARQLRepositoryConfig sparqlRepoConfig, SPARQLRepository sparqlRepo)
     {
-        var uri = URI.create(sparqlRepoConfig.getQueryEndpointUrl());
-        var userInfo = uri.getUserInfo();
-        if (isNotBlank(userInfo)) {
-            userInfo = userInfo.trim();
-            String username;
-            String password;
-            if (userInfo.contains(":")) {
-                username = substringBefore(userInfo, ":");
-                password = substringAfter(userInfo, ":");
-            }
-            else {
-                username = userInfo;
-                password = "";
-            }
-
-            sparqlRepo.setUsernameAndPassword(username, password);
+        var split = splitUrlUserInfo(sparqlRepoConfig.getQueryEndpointUrl());
+        if (split.user() != null) {
+            sparqlRepo.setUsernameAndPassword(split.user(), split.password());
         }
     }
+
+    /**
+     * Migrates URL-embedded credentials ({@code http://user:pass@host/...}) on a REMOTE KB into
+     * {@link BasicAuthenticationTraits} and a cleaned URL. Apache HttpClient 5 (used by RDF4J 6)
+     * rejects URIs with a userinfo component outright, so legacy configs that worked under RDF4J 5
+     * must be normalized before the next connection attempt. Invoked once per KB at startup.
+     */
+    private void migrateUrlEmbeddedCredentials(KnowledgeBase aKB)
+    {
+        try {
+            var cfg = getKnowledgeBaseConfig(aKB);
+            if (!(cfg instanceof SPARQLRepositoryConfig sparqlCfg)) {
+                return;
+            }
+
+            var queryUrl = sparqlCfg.getQueryEndpointUrl();
+            var updateUrl = sparqlCfg.getUpdateEndpointUrl();
+            var querySplit = splitUrlUserInfo(queryUrl);
+            var updateSplit = splitUrlUserInfo(updateUrl);
+
+            if (querySplit.userInfo() == null && updateSplit.userInfo() == null) {
+                return;
+            }
+
+            var newCfg = updateUrl == null //
+                    ? new SPARQLRepositoryConfig(querySplit.cleanUrl()) //
+                    : new SPARQLRepositoryConfig(querySplit.cleanUrl(), updateSplit.cleanUrl());
+
+            // Prefer the query URL's credentials; fall back to the update URL's.
+            var credSource = querySplit.user() != null ? querySplit : updateSplit;
+
+            var traits = isNotBlank(aKB.getTraits()) ? readTraits(aKB) : null;
+            if (traits == null) {
+                traits = new RemoteRepositoryTraits();
+            }
+            var hadAuth = traits.getAuthentication() != null;
+            if (!hadAuth && credSource.user() != null) {
+                var basic = new BasicAuthenticationTraits();
+                basic.setUsername(credSource.user());
+                basic.setPassword(credSource.password());
+                traits.setAuthentication(basic);
+                aKB.setTraits(JSONUtil.toJsonString(traits));
+            }
+
+            updateKnowledgeBase(aKB, newCfg);
+
+            if (hadAuth) {
+                LOG.info(
+                        "Migrated KB [{}]: stripped URL-embedded credentials "
+                                + "(KB already had explicit auth traits configured).",
+                        aKB.getName());
+            }
+            else {
+                LOG.info("Migrated KB [{}]: moved URL-embedded credentials into "
+                        + "basic-auth traits.", aKB.getName());
+            }
+        }
+        catch (Exception e) {
+            LOG.error(
+                    "Unable to migrate URL-embedded credentials for KB [{}]. "
+                            + "Remote connections may fail until the URL is corrected manually.",
+                    aKB.getName(), e);
+        }
+    }
+
+    /**
+     * Parses a URL, returning the userinfo (or {@code null}) and the URL with the userinfo
+     * stripped. Returns {@code (cleanUrl=null, user=null, password=null, userInfo=null)} for a
+     * {@code null} input URL.
+     */
+    private static UrlUserInfo splitUrlUserInfo(String aUrl)
+    {
+        if (aUrl == null) {
+            return new UrlUserInfo(null, null, null, null);
+        }
+        var uri = URI.create(aUrl);
+        var userInfo = uri.getUserInfo();
+        if (!isNotBlank(userInfo)) {
+            return new UrlUserInfo(aUrl, null, null, null);
+        }
+        userInfo = userInfo.trim();
+        var user = userInfo.contains(":") ? substringBefore(userInfo, ":") : userInfo;
+        var password = userInfo.contains(":") ? substringAfter(userInfo, ":") : "";
+        var cleanUrl = aUrl.replace(uri.getRawUserInfo() + "@", "");
+        return new UrlUserInfo(cleanUrl, user, password, userInfo);
+    }
+
+    private record UrlUserInfo(String cleanUrl, String user, String password, String userInfo) {}
 
     @SuppressWarnings("resource")
     @Override
