@@ -1611,19 +1611,22 @@ public class KnowledgeBaseServiceImpl
             var result = new LinkedHashMap<String, KBHandle>();
 
             // Chunk large inputs so that no single VALUES clause grows unbounded and the planner's
-            // intermediate result set stays manageable. Chunks run sequentially on the same KB
-            // connection — same transactional consistency as one big query.
-            for (var start = 0; start < distinctIds.size(); start += batchSize) {
-                var chunk = distinctIds.subList(start,
-                        Math.min(start + batchSize, distinctIds.size()));
-                readHandlesChunk(aKB, chunk, result);
-            }
+            // intermediate result set stays manageable. All chunks share one RepositoryConnection
+            // so we get a single transactional snapshot and avoid per-chunk connection overhead.
+            read(aKB, conn -> {
+                for (var start = 0; start < distinctIds.size(); start += batchSize) {
+                    var chunk = distinctIds.subList(start,
+                            Math.min(start + batchSize, distinctIds.size()));
+                    readHandlesChunk(aKB, conn, chunk, result);
+                }
+                return null;
+            });
 
             return result;
         }
     }
 
-    private void readHandlesChunk(KnowledgeBase aKB, List<String> aIds,
+    private void readHandlesChunk(KnowledgeBase aKB, RepositoryConnection aConn, List<String> aIds,
             Map<String, KBHandle> aResult)
     {
         var query = SPARQLQueryBuilder.forItems(aKB) //
@@ -1632,10 +1635,10 @@ public class KnowledgeBaseServiceImpl
                 .retrieveDescription() //
                 .retrieveDeprecation();
 
-        // Always direct read — bypasses queryCache by construction. Batch queries don't share
-        // cache keys well with single-id readHandle calls, and callers of this method are
-        // expected to maintain their own per-id cache.
-        var rows = read(aKB, conn -> query.asHandles(conn, true));
+        // Direct read on the caller-provided connection — bypasses queryCache by construction.
+        // Batch queries don't share cache keys well with single-id readHandle calls, and callers
+        // of this method are expected to maintain their own per-id cache.
+        var rows = query.asHandles(aConn, true);
         for (var row : rows) {
             aResult.putIfAbsent(row.getIdentifier(), row);
         }

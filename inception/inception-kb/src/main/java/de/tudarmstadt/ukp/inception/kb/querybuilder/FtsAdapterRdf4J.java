@@ -96,6 +96,7 @@ public class FtsAdapterRdf4J
 
     private final List<PendingFtsBranch> pendingFtsBranches = new ArrayList<>();
     private boolean ftsActive = false;
+    private boolean finalized = false;
 
     public FtsAdapterRdf4J(SPARQLQueryBuilder aBuilder)
     {
@@ -277,6 +278,15 @@ public class FtsAdapterRdf4J
     @Override
     public void finalizeQuery(SPARQLQueryBuilder aBuilder)
     {
+        // Defense in depth against repeated invocation: draining secondary/optional lookup patterns
+        // and re-emitting the PRIMARY UNION is destructive, so a second pass would either drop
+        // OPTIONAL lookups or accumulate duplicate UNION patterns. The builder also guards this,
+        // but adapters should be self-contained.
+        if (finalized) {
+            return;
+        }
+        finalized = true;
+
         if (!ftsActive || pendingFtsBranches.isEmpty()) {
             return;
         }

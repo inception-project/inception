@@ -147,6 +147,8 @@ public class SPARQLQueryBuilder
 
     private FtsAdapter cachedFtsAdapter;
 
+    private boolean finalized = false;
+
     private boolean labelImplicitlyRetrieved = false;
 
     private boolean filterUsingRegex = true;
@@ -1406,8 +1408,14 @@ public class SPARQLQueryBuilder
         projections.add(VAR_SUBJECT);
 
         // Give the FTS adapter a chance to assemble its deferred patterns now that all retrieve*
-        // calls have run, e.g. to push OPTIONAL lookups into FTS UNION branches.
-        getAdapter().finalizeQuery(this);
+        // calls have run, e.g. to push OPTIONAL lookups into FTS UNION branches. Guarded because
+        // selectQuery() is invoked repeatedly via equals()/hashCode() for query-cache lookups, and
+        // finalizeQuery() drains pattern lists and adds new primary patterns — re-running it would
+        // drop OPTIONAL lookups or accumulate duplicate UNION patterns.
+        if (!finalized) {
+            getAdapter().finalizeQuery(this);
+            finalized = true;
+        }
 
         var query = Queries.SELECT().distinct();
         prefixes.forEach(query::prefix);
