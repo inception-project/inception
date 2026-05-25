@@ -34,9 +34,7 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Locale.ROOT;
-import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
@@ -1608,28 +1606,43 @@ public class KnowledgeBaseServiceImpl
         }
 
         try (var watch = new StopWatch(LOG, "readHandles(%d)", aIdentifiers.size())) {
-            var ids = aIdentifiers.stream().distinct().toArray(String[]::new);
-            var query = SPARQLQueryBuilder.forItems(aKB) //
-                    .withIdentifier(ids) //
-                    .retrieveLabel() //
-                    .retrieveDescription() //
-                    .retrieveDeprecation();
+            var distinctIds = aIdentifiers.stream().distinct().toList();
+            var batchSize = Math.max(1, properties.getReadBatchSize());
+            var result = new LinkedHashMap<String, KBHandle>();
 
-            // Always direct read — bypasses queryCache by construction. Batch queries don't share
-            // cache keys well with single-id readHandle calls, and callers of this method are
-            // expected to maintain their own per-id cache.
-            var rows = read(aKB, conn -> query.asHandles(conn, true));
-
-            var result = rows.stream() //
-                    .collect(toMap(KBObject::getIdentifier, identity(), (a, b) -> a,
-                            LinkedHashMap::new));
-
-            // Preserve the "always returns something per requested id" semantics of readHandle.
-            for (var id : ids) {
-                result.computeIfAbsent(id, KBHandle::new);
+            // Chunk large inputs so that no single VALUES clause grows unbounded and the planner's
+            // intermediate result set stays manageable. Chunks run sequentially on the same KB
+            // connection — same transactional consistency as one big query.
+            for (var start = 0; start < distinctIds.size(); start += batchSize) {
+                var chunk = distinctIds.subList(start,
+                        Math.min(start + batchSize, distinctIds.size()));
+                readHandlesChunk(aKB, chunk, result);
             }
 
             return result;
+        }
+    }
+
+    private void readHandlesChunk(KnowledgeBase aKB, List<String> aIds,
+            Map<String, KBHandle> aResult)
+    {
+        var query = SPARQLQueryBuilder.forItems(aKB) //
+                .withIdentifier(aIds.toArray(String[]::new)) //
+                .retrieveLabel() //
+                .retrieveDescription() //
+                .retrieveDeprecation();
+
+        // Always direct read — bypasses queryCache by construction. Batch queries don't share
+        // cache keys well with single-id readHandle calls, and callers of this method are
+        // expected to maintain their own per-id cache.
+        var rows = read(aKB, conn -> query.asHandles(conn, true));
+        for (var row : rows) {
+            aResult.putIfAbsent(row.getIdentifier(), row);
+        }
+
+        // Preserve the "always returns something per requested id" semantics of readHandle.
+        for (var id : aIds) {
+            aResult.computeIfAbsent(id, KBHandle::new);
         }
     }
 

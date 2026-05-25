@@ -107,12 +107,17 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
     public void setUp(Reification reification) throws Exception
     {
+        setUp(reification, new KnowledgeBasePropertiesImpl());
+    }
+
+    public void setUp(Reification reification, KnowledgeBasePropertiesImpl aKbProperties)
+        throws Exception
+    {
         var repoProps = new RepositoryPropertiesImpl();
         repoProps.setPath(temporaryFolder);
-        var kbProperties = new KnowledgeBasePropertiesImpl();
         var entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, aKbProperties, entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME, reification);
     }
@@ -2068,6 +2073,37 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         assertThat(result).hasSize(1);
         assertThat(result.get(c1.getIdentifier())).extracting(KBHandle::getName).isEqualTo("Alpha");
+    }
+
+    @ParameterizedTest(name = "Reification = {0}")
+    @MethodSource("data")
+    public void readHandles_WithMoreIdsThanBatchSize_ShouldChunkAndMergeResults(
+            Reification reification)
+        throws Exception
+    {
+        var props = new KnowledgeBasePropertiesImpl();
+        props.setReadBatchSize(2);
+        setUp(reification, props);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        var concepts = new ArrayList<KBConcept>();
+        for (var i = 0; i < 5; i++) {
+            var c = buildConcept();
+            c.setName("Concept" + i);
+            sut.createConcept(kb, c);
+            concepts.add(c);
+        }
+
+        var ids = concepts.stream().map(KBConcept::getIdentifier).toList();
+        var result = sut.readHandles(kb, ids);
+
+        // 5 ids with batch size 2 => 3 chunks (2 + 2 + 1). All results must still be present.
+        assertThat(result).hasSize(5);
+        for (var i = 0; i < 5; i++) {
+            assertThat(result.get(concepts.get(i).getIdentifier())) //
+                    .extracting(KBHandle::getName) //
+                    .isEqualTo("Concept" + i);
+        }
     }
 
     @ParameterizedTest(name = "Reification = {0}")
