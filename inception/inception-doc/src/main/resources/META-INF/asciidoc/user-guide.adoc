@@ -297,8 +297,6 @@ include::{include-dir}formats-html-zip.adoc[leveloffset=+2]
 
 include::{include-dir}formats-imscwb.adoc[leveloffset=+2]
 
-// include::{include-dir}formats-lif.adoc[leveloffset=+2]
-
 include::{include-dir}formats-nif.adoc[leveloffset=+2]
 
 include::{include-dir}formats-pdf.adoc[leveloffset=+2]

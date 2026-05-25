@@ -213,7 +213,6 @@
     <module>inception-io-json</module>
     <module>inception-io-html</module>
     <module>inception-io-nif</module>
-    <module>inception-io-lif</module>
     <module>inception-io-pdf</module>
     <module>inception-io-perseus</module>
     <module>inception-io-imscwb</module>
