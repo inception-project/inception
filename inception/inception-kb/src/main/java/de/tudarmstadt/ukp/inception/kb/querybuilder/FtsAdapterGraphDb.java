@@ -51,8 +51,6 @@ public class FtsAdapterGraphDb
     @Override
     public void withLabelMatchingExactlyAnyOf(String... aValues)
     {
-        var kb = builder.getKnowledgeBase();
-
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
             var sanitizedValue = builder.sanitizeQueryString_FTS(value);
@@ -63,7 +61,7 @@ public class FtsAdapterGraphDb
 
             builder.addProjection(VAR_SCORE);
 
-            var filter = builder.equalsPattern(VAR_MATCH_TERM, value, kb);
+            var filter = builder.equalsPattern(VAR_MATCH_TERM, value);
             valuePatterns.addAll(buildLanguageUnionPatterns(sanitizedValue, filter));
         }
 

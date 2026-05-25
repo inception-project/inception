@@ -131,7 +131,7 @@ public class FtsAdapterRdf4J
                             .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
                             .andHas(LUCENE_SCORE, VAR_SCORE))
                     .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM);
-            var filters = builder.equalsFilters(VAR_MATCH_TERM, value, builder.getKnowledgeBase());
+            var filters = builder.equalsFilters(VAR_MATCH_TERM, value);
             pendingFtsBranches.add(new PendingFtsBranch(triple, filters, true));
         }
 

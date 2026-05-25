@@ -1107,9 +1107,9 @@ public class SPARQLQueryBuilder
         return value;
     }
 
-    Expression<?> equalsPattern(Variable aVariable, String aValue, KnowledgeBase aKB)
+    Expression<?> equalsPattern(Variable aVariable, String aValue)
     {
-        return and(equalsFilters(aVariable, aValue, aKB).toArray(Expression[]::new));
+        return and(equalsFilters(aVariable, aValue).toArray(Expression[]::new));
     }
 
     /**
@@ -1120,7 +1120,7 @@ public class SPARQLQueryBuilder
      * combined filter the cost-estimator treats the conjunction as one opaque expression and cannot
      * reorder/push the cheap LANGMATCHES separately from the expensive anchored REGEX.
      */
-    List<Expression<?>> equalsFilters(Variable aVariable, String aValue, KnowledgeBase aKB)
+    List<Expression<?>> equalsFilters(Variable aVariable, String aValue)
     {
         var regexFlags = "";
         if (caseInsensitive) {

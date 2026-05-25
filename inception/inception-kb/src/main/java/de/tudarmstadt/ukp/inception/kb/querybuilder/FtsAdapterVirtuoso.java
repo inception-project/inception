@@ -53,8 +53,7 @@ public class FtsAdapterVirtuoso
             valuePatterns.add(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                     .and(VAR_MATCH_TERM.has(VIRTUOSO_QUERY,
                             literalOf("\"" + sanitizedValue + "\"")))
-                    .filter(builder.equalsPattern(VAR_MATCH_TERM, value,
-                            builder.getKnowledgeBase())));
+                    .filter(builder.equalsPattern(VAR_MATCH_TERM, value)));
         }
 
         if (valuePatterns.isEmpty()) {

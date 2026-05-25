@@ -57,7 +57,7 @@ public class FtsAdapterWikidata
 
             valuePatterns.add(new WikidataEntitySearchService(VAR_SUBJECT, query, language)
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                            .filter(builder.equalsPattern(VAR_MATCH_TERM, value, kb))));
+                            .filter(builder.equalsPattern(VAR_MATCH_TERM, value))));
         }
 
         if (valuePatterns.isEmpty()) {

@@ -68,8 +68,7 @@ public class FtsAdapterAllegroGraph
 
             valuePatterns.add(new AllegroGraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
                     VAR_MATCH_TERM_PROPERTY, sanitizedValue) //
-                            .filter(builder.equalsPattern(VAR_MATCH_TERM, value,
-                                    builder.getKnowledgeBase())));
+                            .filter(builder.equalsPattern(VAR_MATCH_TERM, value)));
         }
 
         if (valuePatterns.isEmpty()) {
