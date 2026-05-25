@@ -97,12 +97,20 @@ public class FtsAdapterRdf4J
 
             builder.addProjection(VAR_SCORE);
 
-            pendingFtsBranches.add(VAR_SUBJECT
+            // Emit one FILTER per conjunct (REGEX, LANGMATCHES) instead of one combined
+            // FILTER ( REGEX(...) && LANGMATCHES(...) ). The combined form is opaque to the
+            // RDF4J cost estimator and triggers the #5444 pathology where the planner cannot
+            // push the cheap language check separately from the expensive anchored regex.
+            GraphPattern branch = VAR_SUBJECT
                     .has(FTS_RDF4J_LUCENE, bNode(LUCENE_QUERY, literalOf(sanitizedValue)) //
                             .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY) //
                             .andHas(LUCENE_SCORE, VAR_SCORE))
-                    .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM).filter(builder
-                            .equalsPattern(VAR_MATCH_TERM, value, builder.getKnowledgeBase())));
+                    .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM);
+            for (var filter : builder.equalsFilters(VAR_MATCH_TERM, value,
+                    builder.getKnowledgeBase())) {
+                branch = branch.filter(filter);
+            }
+            pendingFtsBranches.add(branch);
         }
 
         if (pendingFtsBranches.isEmpty()) {

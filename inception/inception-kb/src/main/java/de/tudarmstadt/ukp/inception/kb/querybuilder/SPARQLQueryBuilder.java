@@ -1095,23 +1095,32 @@ public class SPARQLQueryBuilder
 
     Expression<?> equalsPattern(Variable aVariable, String aValue, KnowledgeBase aKB)
     {
-        var variable = aVariable;
+        return and(equalsFilters(aVariable, aValue, aKB).toArray(Expression[]::new));
+    }
 
+    /**
+     * Same conjuncts as {@link #equalsPattern}, but returned as separate expressions so the caller
+     * can emit each as its own SPARQL {@code FILTER} clause. Avoiding the combined
+     * {@code FILTER ( REGEX(...) && LANGMATCHES(...) )} shape helps the RDF4J planner — see
+     * <a href="https://github.com/eclipse-rdf4j/rdf4j/issues/5444">RDF4J #5444</a>: with a single
+     * combined filter the cost-estimator treats the conjunction as one opaque expression and cannot
+     * reorder/push the cheap LANGMATCHES separately from the expensive anchored REGEX.
+     */
+    List<Expression<?>> equalsFilters(Variable aVariable, String aValue, KnowledgeBase aKB)
+    {
         var regexFlags = "";
         if (caseInsensitive) {
             regexFlags += "i";
         }
 
-        // Match using REGEX to be resilient against extra whitespace
-        // Match exactly
+        // Match using REGEX to be resilient against extra whitespace, anchored for exact match.
         var value = "^" + asRegexp(aValue) + "$";
 
         var expressions = new ArrayList<Expression<?>>();
         expressions.add(
-                function(REGEX, function(STR, variable), literalOf(value), literalOf(regexFlags)));
+                function(REGEX, function(STR, aVariable), literalOf(value), literalOf(regexFlags)));
         expressions.add(matchKbLanguage(aVariable));
-
-        return and(expressions.toArray(Expression[]::new));
+        return expressions;
     }
 
     private Expression<?> matchString(SparqlFunction aFunction, Variable aVariable, String aValue)
