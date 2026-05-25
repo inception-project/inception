@@ -54,7 +54,6 @@ import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.dataset;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.from;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.and;
-import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.filterExists;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.filterNotExists;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.optional;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.union;
@@ -1283,8 +1282,8 @@ public class SPARQLQueryBuilder
             classPatterns.add(VAR_SUBJECT.has(OWL_INTERSECTIONOF_PATH, bNode()));
         }
 
-        addPattern(PRIMARY_RESTRICTIONS,
-                filterExists(union(classPatterns.stream().toArray(GraphPattern[]::new))));
+        addPattern(PRIMARY_RESTRICTIONS, new PromotableExistsFilter(
+                union(classPatterns.stream().toArray(GraphPattern[]::new))));
     }
 
     private void limitToInstances()
@@ -1293,9 +1292,7 @@ public class SPARQLQueryBuilder
         var subClassProperty = iri(kb.getSubclassIri());
         var typeOfProperty = iri(kb.getTypeIri());
 
-        // An item is an instance if ... (make sure to add the LiftableExistsFilter
-        // directly to the PRIMARY_RESTRICTIONS and not nested in another pattern
-        // so it can be discovered by selectQuery() and be lifted if necessary.
+        // An item is an instance if ...
         addPattern(PRIMARY_RESTRICTIONS,
                 new PromotableExistsFilter(VAR_SUBJECT.has(typeOfProperty, bNode())));
         // ... it is not explicitly defined as being a class
@@ -1311,7 +1308,7 @@ public class SPARQLQueryBuilder
 
     private void limitToProperties()
     {
-        addPattern(PRIMARY_RESTRICTIONS, filterExists(isPropertyPattern()));
+        addPattern(PRIMARY_RESTRICTIONS, new PromotableExistsFilter(isPropertyPattern()));
     }
 
     private GraphPattern isPropertyPattern()
@@ -1431,11 +1428,7 @@ public class SPARQLQueryBuilder
         prefixes.forEach(query::prefix);
         projections.forEach(query::select);
 
-        // Some KBs do not like queries consisting only of FILTERs, so if we have a filter
-        // (in particular a FILTER EXISTS), we can convert that a proper pattern by removing
-        // the FILTER EXISTS from it. We only do this if there are no other primary patterns
-        // because the FILTER EXISTS pattern would usually be one that could be expensive and
-        // if we already have another primary pattern, that is hopefully way cheaper.
+        // See PromotableExistsFilter for the rationale.
         var promotableRestriction = primaryRestrictions.stream().findFirst()
                 .filter(pattern -> pattern instanceof PromotableExistsFilter)
                 .map(pattern -> (PromotableExistsFilter) pattern);
@@ -1992,6 +1985,30 @@ public class SPARQLQueryBuilder
                 .forEachOrdered(l -> aLog.atLevel(aLevel).log("{}{}", aPrefix, l));
     }
 
+    /**
+     * A {@code FILTER EXISTS { ... }} that can be promoted into the WHERE body as a regular BGP
+     * when the surrounding query has no other primary pattern to bind the variables it references.
+     * <p>
+     * Background: in SPARQL, variables introduced inside {@code FILTER EXISTS} are local to the
+     * filter's scope. A query whose WHERE consists only of {@code FILTER EXISTS{?subj ...}} and
+     * {@code OPTIONAL}s does not bind {@code ?subj} for the projection — the SELECT then yields
+     * either no rows or only those rows that the OPTIONALs happen to bind, instead of the items the
+     * FILTER EXISTS was meant to restrict to. Additionally, some triple stores (notably Virtuoso)
+     * struggle with queries that consist only of FILTERs.
+     * <p>
+     * To get correct results we want the inner BGP in the WHERE body as a regular pattern. To get
+     * efficient queries we want to keep it as a FILTER EXISTS whenever a cheaper primary pattern is
+     * already present (the FILTER EXISTS guards are typically expensive UNIONs). This wrapper lets
+     * us defer the choice: by default it renders as {@code FILTER EXISTS { nested }}, but because
+     * it exposes the {@code nested} pattern via {@link #getNested()}, the assembly logic in
+     * {@link #selectQuery()} can detect it by type, strip the wrapper, and lift the nested pattern
+     * into {@code primaryPatterns} when {@code primaryPatterns} is otherwise empty.
+     * <p>
+     * <b>Invariant:</b> instances must be added directly to {@link Priority#PRIMARY_RESTRICTIONS},
+     * not nested inside another {@link GraphPattern} — the promotion logic only scans the top level
+     * of {@code primaryRestrictions} and will not find wrappers buried in {@code and(...)},
+     * {@code union(...)}, etc.
+     */
     private static class PromotableExistsFilter
         implements GraphPattern
     {
