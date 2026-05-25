@@ -42,6 +42,13 @@ public interface SPARQLQueryOptionalElements
 
     SPARQLQueryOptionalElements limit(int aLimit);
 
+    /**
+     * Skip the SPARQL LIMIT clause entirely. Use for identifier-based batch lookups where the
+     * result is naturally bounded by a VALUES clause and a hard LIMIT could truncate legitimate
+     * multi-row-per-identifier output (languages, OPTIONAL cartesian products).
+     */
+    SPARQLQueryOptionalElements noLimit();
+
     SPARQLQueryOptionalElements caseSensitive();
 
     SPARQLQueryOptionalElements caseSensitive(boolean aEnabled);

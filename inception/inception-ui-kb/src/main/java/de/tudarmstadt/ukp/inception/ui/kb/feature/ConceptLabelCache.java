@@ -135,8 +135,12 @@ public class ConceptLabelCache
         // project still batch together. A null repositoryId means "any KB in the project".
         var groups = new LinkedHashMap<SimpleEntry<Long, String>, java.util.List<Key>>();
         for (var key : aKeys) {
-            var groupKey = new SimpleEntry<>(key.getAnnotationFeature().getProject().getId(),
-                    key.getRepositoryId());
+            var project = key.getAnnotationFeature().getProject();
+            if (project == null) {
+                throw new IllegalArgumentException("AnnotationFeature ["
+                        + key.getAnnotationFeature().getName() + "] has no associated project");
+            }
+            var groupKey = new SimpleEntry<>(project.getId(), key.getRepositoryId());
             groups.computeIfAbsent(groupKey, k -> new java.util.ArrayList<>()).add(key);
         }
 

@@ -1601,6 +1601,9 @@ public class KnowledgeBaseServiceImpl
     @Override
     public Map<String, KBHandle> readHandles(KnowledgeBase aKB, Collection<String> aIdentifiers)
     {
+        if (aKB == null) {
+            throw new IllegalArgumentException("KnowledgeBase must not be null");
+        }
         if (aIdentifiers.isEmpty()) {
             return emptyMap();
         }
@@ -1628,14 +1631,14 @@ public class KnowledgeBaseServiceImpl
     private void readHandlesChunk(KnowledgeBase aKB, RepositoryConnection aConn, List<String> aIds,
             Map<String, KBHandle> aResult)
     {
-        // Size the LIMIT to the batch so a low kb.getMaxResults() doesn't silently truncate
-        // results and turn existing IDs into stubs.
+        // Result is already bounded by the VALUES clause from withIdentifier; a SPARQL LIMIT
+        // would risk truncating legitimate multi-row-per-id output (languages × OPTIONALs).
         var query = SPARQLQueryBuilder.forItems(aKB) //
                 .withIdentifier(aIds.toArray(String[]::new)) //
                 .retrieveLabel() //
                 .retrieveDescription() //
                 .retrieveDeprecation() //
-                .limit(aIds.size());
+                .noLimit();
 
         // Bypasses queryCache: batch keys don't share well with single-id readHandle calls;
         // callers are expected to maintain their own per-id cache.
@@ -1653,6 +1656,9 @@ public class KnowledgeBaseServiceImpl
     @Override
     public Map<String, KBHandle> readHandles(Project aProject, Collection<String> aIdentifiers)
     {
+        if (aProject == null) {
+            throw new IllegalArgumentException("Project must not be null");
+        }
         if (aIdentifiers.isEmpty()) {
             return emptyMap();
         }

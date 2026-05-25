@@ -182,6 +182,8 @@ public class SPARQLQueryBuilder
 
     private int limitOverride = DEFAULT_LIMIT;
 
+    private boolean unlimited = false;
+
     private boolean includeInferred = true;
 
     private Set<String> forceDisableFTS = new LinkedHashSet<>();
@@ -674,6 +676,13 @@ public class SPARQLQueryBuilder
     public SPARQLQueryOptionalElements limit(int aLimit)
     {
         limitOverride = aLimit;
+        return this;
+    }
+
+    @Override
+    public SPARQLQueryOptionalElements noLimit()
+    {
+        unlimited = true;
         return this;
     }
 
@@ -1452,14 +1461,16 @@ public class SPARQLQueryBuilder
             query.from(dataset(from(iri(kb.getDefaultDatasetIri()))));
         }
 
-        int actualLimit = getLimit();
+        if (!unlimited) {
+            int actualLimit = getLimit();
 
-        // If we do not do a server-side reduce, then we may get two results for every item
-        // from the server (one with and one without the language), so we need to double the
-        // query limit and cut down results locally later.
-        actualLimit = actualLimit * 2;
+            // If we do not do a server-side reduce, then we may get two results for every item
+            // from the server (one with and one without the language), so we need to double the
+            // query limit and cut down results locally later.
+            actualLimit = actualLimit * 2;
 
-        query.limit(actualLimit);
+            query.limit(actualLimit);
+        }
 
         return query;
     }
