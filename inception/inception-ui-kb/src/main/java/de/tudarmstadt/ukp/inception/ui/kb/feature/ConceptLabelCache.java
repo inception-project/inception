@@ -35,7 +35,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.graph.KBErrorHandle;
@@ -132,18 +131,20 @@ public class ConceptLabelCache
     {
         var result = new LinkedHashMap<Key, KBHandle>();
 
-        // Group keys by (project, repositoryId). A null repositoryId means "any KB in the project".
-        var groups = new LinkedHashMap<SimpleEntry<Project, String>, java.util.List<Key>>();
+        // Group by project ID (not Project reference) so distinct JPA instances of the same
+        // project still batch together. A null repositoryId means "any KB in the project".
+        var groups = new LinkedHashMap<SimpleEntry<Long, String>, java.util.List<Key>>();
         for (var key : aKeys) {
-            var groupKey = new SimpleEntry<>(key.getAnnotationFeature().getProject(),
+            var groupKey = new SimpleEntry<>(key.getAnnotationFeature().getProject().getId(),
                     key.getRepositoryId());
             groups.computeIfAbsent(groupKey, k -> new java.util.ArrayList<>()).add(key);
         }
 
         for (var group : groups.entrySet()) {
-            var project = group.getKey().getKey();
             var repositoryId = group.getKey().getValue();
             var keysInGroup = group.getValue();
+            // Any key works — all share the same project ID.
+            var project = keysInGroup.get(0).getAnnotationFeature().getProject();
 
             try {
                 var distinctIds = keysInGroup.stream() //
@@ -180,7 +181,7 @@ public class ConceptLabelCache
                 LOG.error(
                         "Bulk load failed for project [{}] repositoryId [{}]; "
                                 + "falling back to per-key loading",
-                        project != null ? project.getName() : null, repositoryId, e);
+                        project.getName(), repositoryId, e);
                 for (var key : keysInGroup) {
                     result.put(key, loadLabelValue(key));
                 }

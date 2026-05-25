@@ -124,12 +124,14 @@ public class KbLabelCachePrewarmStep
     private void collectKeysForLayer(org.apache.uima.cas.CAS aCas, AnnotationLayer aLayer,
             int aWindowBegin, int aWindowEnd, RenderRequest aRequest, Set<Key> aOut)
     {
-        var features = schemaService.listSupportedFeatures(aLayer).stream() //
+        // Resolve repositoryId once per feature — readTraits deserializes JSON, so doing it per
+        // FS would scale with the document size.
+        var featureInfos = schemaService.listSupportedFeatures(aLayer).stream() //
                 .filter(f -> !aRequest.getHiddenFeatures().contains(f.getId())) //
-                .filter(f -> conceptFeatureSupport.accepts(f)
-                        || multiValueConceptFeatureSupport.accepts(f)) //
+                .map(this::toFeatureInfo) //
+                .filter(java.util.Objects::nonNull) //
                 .toList();
-        if (features.isEmpty()) {
+        if (featureInfos.isEmpty()) {
             return;
         }
 
@@ -142,35 +144,47 @@ public class KbLabelCachePrewarmStep
             if (!overlapping(fs, aWindowBegin, aWindowEnd)) {
                 continue;
             }
-            for (var feature : features) {
-                extractKeys(feature, fs, aOut);
+            for (var info : featureInfos) {
+                extractKeys(info, fs, aOut);
             }
         }
     }
 
-    private void extractKeys(AnnotationFeature aFeature, AnnotationFS aFs, Set<Key> aOut)
+    private FeatureInfo toFeatureInfo(AnnotationFeature aFeature)
     {
         if (conceptFeatureSupport.accepts(aFeature)) {
-            var id = FSUtil.getFeature(aFs, aFeature.getName(), String.class);
+            return new FeatureInfo(aFeature,
+                    conceptFeatureSupport.readTraits(aFeature).getRepositoryId(), false);
+        }
+        if (multiValueConceptFeatureSupport.accepts(aFeature)) {
+            return new FeatureInfo(aFeature,
+                    multiValueConceptFeatureSupport.readTraits(aFeature).getRepositoryId(), true);
+        }
+        return null;
+    }
+
+    private void extractKeys(FeatureInfo aInfo, AnnotationFS aFs, Set<Key> aOut)
+    {
+        var feature = aInfo.feature();
+        if (!aInfo.isMulti()) {
+            var id = FSUtil.getFeature(aFs, feature.getName(), String.class);
             if (isNotBlank(id)) {
-                var repoId = conceptFeatureSupport.readTraits(aFeature).getRepositoryId();
-                aOut.add(Key.of(aFeature, repoId, id));
+                aOut.add(Key.of(feature, aInfo.repositoryId(), id));
             }
             return;
         }
 
-        if (multiValueConceptFeatureSupport.accepts(aFeature)) {
-            @SuppressWarnings("unchecked")
-            var values = (List<String>) FSUtil.getFeature(aFs, aFeature.getName(), List.class);
-            if (values == null || values.isEmpty()) {
-                return;
-            }
-            var repoId = multiValueConceptFeatureSupport.readTraits(aFeature).getRepositoryId();
-            for (var id : values) {
-                if (isNotBlank(id)) {
-                    aOut.add(Key.of(aFeature, repoId, id));
-                }
+        @SuppressWarnings("unchecked")
+        var values = (List<String>) FSUtil.getFeature(aFs, feature.getName(), List.class);
+        if (values == null || values.isEmpty()) {
+            return;
+        }
+        for (var id : values) {
+            if (isNotBlank(id)) {
+                aOut.add(Key.of(feature, aInfo.repositoryId(), id));
             }
         }
     }
+
+    private record FeatureInfo(AnnotationFeature feature, String repositoryId, boolean isMulti) {}
 }
