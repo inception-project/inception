@@ -23,6 +23,7 @@ package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_FEATURE_SENTENCE;
 import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_FEATURE_TOKEN;
 import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_LAYER_SEGMENTATION;
@@ -31,6 +32,7 @@ import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getI
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -52,6 +54,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.text.BreakIterator;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -106,12 +109,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.search.DocumentStatistics;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
@@ -145,6 +150,10 @@ import mtas.search.spans.util.MtasSpanQuery;
 public class MtasDocumentIndex
     implements PhysicalIndex
 {
+    private static final String SENTENCE_QUERY = "<s=\"\"/>";
+
+    private static final String TOKEN_QUERY = "<Token=\"\"/>";
+
     static final int CURRENT_SCHEMA_VERSION = 1;
 
     /**
@@ -500,13 +509,13 @@ public class MtasDocumentIndex
         sentence.setUiName(VIRTUAL_FEATURE_SENTENCE);
         sentence.setLayer(rawText);
 
-        var results = getLayerStatistics(aStatisticRequest, "<Token=\"\"/>", fullDocSet);
+        var results = getLayerStatistics(aStatisticRequest, TOKEN_QUERY, fullDocSet);
 
         results.setFeature(token);
         allStats.put(VIRTUAL_LAYER_SEGMENTATION + "." + VIRTUAL_FEATURE_TOKEN, results);
         nonNullStats.put(VIRTUAL_LAYER_SEGMENTATION + "." + VIRTUAL_FEATURE_TOKEN, results);
 
-        results = getLayerStatistics(aStatisticRequest, "<s=\"\"/>", fullDocSet);
+        results = getLayerStatistics(aStatisticRequest, SENTENCE_QUERY, fullDocSet);
         results.setFeature(sentence);
         allStats.put(VIRTUAL_LAYER_SEGMENTATION + "." + VIRTUAL_FEATURE_SENTENCE, results);
         nonNullStats.put(VIRTUAL_LAYER_SEGMENTATION + "." + VIRTUAL_FEATURE_SENTENCE, results);
@@ -657,7 +666,7 @@ public class MtasDocumentIndex
             functionTypes[0] = LayerStatistics.STATS;
 
             // A query which counts sentences
-            var parsedSentQuery = parseQuery("<s=\"\"/>", aStatisticRequest.getSearchSettings());
+            var parsedSentQuery = parseQuery(SENTENCE_QUERY, aStatisticRequest.getSearchSettings());
             fieldStats.spanQueryList.add(parsedSentQuery);
 
             spanQuerys[1] = parsedSentQuery;
@@ -741,10 +750,10 @@ public class MtasDocumentIndex
 
         var type = aLayer.getName();
         if (Token._TypeName.equals(type)) {
-            return "<Token=\"\"/>";
+            return TOKEN_QUERY;
         }
         if (Sentence._TypeName.equals(type)) {
-            return "<s=\"\"/>";
+            return SENTENCE_QUERY;
         }
 
         return "<" + getIndexedName(aLayer.getUiName()) + "=\"\"/>";
@@ -860,6 +869,203 @@ public class MtasDocumentIndex
         }
 
         return counts;
+    }
+
+    @Override
+    public Map<Long, DocumentStatistics> getAnnotationCountsPerDocument(AnnotationSet aSet,
+            Collection<SourceDocument> aDocuments, AnnotationSearchState aSearchSettings)
+        throws IOException, ExecutionException
+    {
+        if (aDocuments == null || aDocuments.isEmpty()) {
+            return emptyMap();
+        }
+
+        // Same rationale as getAnnotationCountsPerSourceDocument: ensure pending writes are visible
+        // to the searcher so we don't fall back to a stale INITIAL_CAS row.
+        ensureAllIsCommitted();
+
+        var sourceDocIds = aDocuments.stream() //
+                .map(SourceDocument::getId) //
+                .collect(toSet());
+
+        var preferredUser = annotationSetToUserField(aSet);
+        var tokenQuery = parseQuery(TOKEN_QUERY, aSearchSettings);
+        var sentenceQuery = parseQuery(SENTENCE_QUERY, aSearchSettings);
+
+        IndexSearcher searcher = null;
+        try {
+            searcher = getSearcherManager().acquire();
+            var leaves = searcher.getIndexReader().leaves();
+
+            var srcDocByGlobalLuceneDocId = findCanonicalDocs(sourceDocIds, leaves, preferredUser);
+
+            if (srcDocByGlobalLuceneDocId.isEmpty()) {
+                return emptyMap();
+            }
+
+            // Pre-group the canonical doc ids by leaf segment once so each per-query sweep can
+            // advance() through positions instead of scanning every Lucene doc the query touches.
+            var preferredLocalIdsByLeafIndex = new HashMap<Integer, int[]>();
+            var globalIdsByLeafIndex = new HashMap<Integer, int[]>();
+            {
+                var leafBuckets = new HashMap<Integer, List<Integer>>();
+                for (var globalId : srcDocByGlobalLuceneDocId.keySet()) {
+                    var leafIdx = ReaderUtil.subIndex(globalId, leaves);
+                    leafBuckets.computeIfAbsent(leafIdx, $ -> new ArrayList<>()).add(globalId);
+                }
+                for (var e : leafBuckets.entrySet()) {
+                    var leafIdx = e.getKey();
+                    var globalIds = e.getValue();
+                    globalIds.sort(Integer::compare);
+                    var docBase = leaves.get(leafIdx).docBase;
+                    var localIds = new int[globalIds.size()];
+                    var globals = new int[globalIds.size()];
+                    for (var i = 0; i < globalIds.size(); i++) {
+                        globals[i] = globalIds.get(i);
+                        localIds[i] = globalIds.get(i) - docBase;
+                    }
+                    preferredLocalIdsByLeafIndex.put(leafIdx, localIds);
+                    globalIdsByLeafIndex.put(leafIdx, globals);
+                }
+            }
+
+            var tokenCounts = countSpansPerDoc(searcher, leaves, tokenQuery,
+                    preferredLocalIdsByLeafIndex, globalIdsByLeafIndex, srcDocByGlobalLuceneDocId);
+            var sentenceCounts = countSpansPerDoc(searcher, leaves, sentenceQuery,
+                    preferredLocalIdsByLeafIndex, globalIdsByLeafIndex, srcDocByGlobalLuceneDocId);
+
+            var result = new HashMap<Long, DocumentStatistics>();
+            for (var srcDocId : srcDocByGlobalLuceneDocId.values()) {
+                var tokens = tokenCounts.getOrDefault(srcDocId, 0L);
+                var sentences = sentenceCounts.getOrDefault(srcDocId, 0L);
+                result.put(srcDocId, new DocumentStatistics(tokens, sentences));
+            }
+            return result;
+        }
+        catch (Exception e) {
+            throw new ExecutionException("Unable to count tokens/sentences", e);
+        }
+        finally {
+            if (searcher != null) {
+                getSearcherManager().release(searcher);
+                searcher = null;
+            }
+        }
+    }
+
+    private static String annotationSetToUserField(AnnotationSet aSet)
+    {
+        // INITIAL_CAS rows are stored with FIELD_USER="" (see writeDocument for SourceDocument);
+        // every other annotation set maps 1:1 to its id (username, CURATION_USER, ...).
+        return INITIAL_SET.equals(aSet) ? "" : aSet.id();
+    }
+
+    private Map<Long, Long> countSpansPerDoc(IndexSearcher aSearcher,
+            List<LeafReaderContext> aLeaves, MtasSpanQuery aParsedQuery,
+            Map<Integer, int[]> aPreferredLocalIdsByLeafIndex,
+            Map<Integer, int[]> aGlobalIdsByLeafIndex,
+            Map<Integer, Long> aSrcDocByGlobalLuceneDocId)
+        throws IOException
+    {
+        var counts = new HashMap<Long, Long>();
+        var spanweight = aParsedQuery.rewrite(aSearcher).createWeight(aSearcher, COMPLETE_NO_SCORES,
+                0.0f);
+
+        for (var leafIdx = 0; leafIdx < aLeaves.size(); leafIdx++) {
+            var localIds = aPreferredLocalIdsByLeafIndex.get(leafIdx);
+            if (localIds == null) {
+                continue;
+            }
+
+            var leaf = aLeaves.get(leafIdx);
+            var spans = spanweight.getSpans(leaf, POSITIONS);
+            if (spans == null) {
+                continue;
+            }
+
+            var globals = aGlobalIdsByLeafIndex.get(leafIdx);
+
+            for (var i = 0; i < localIds.length; i++) {
+                var target = localIds[i];
+                if (spans.docID() < target) {
+                    if (spans.advance(target) == NO_MORE_DOCS) {
+                        break;
+                    }
+                }
+                if (spans.docID() != target) {
+                    continue;
+                }
+
+                var perDocCount = 0L;
+                while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
+                    perDocCount++;
+                }
+                counts.merge(aSrcDocByGlobalLuceneDocId.get(globals[i]), perDocCount, Long::sum);
+            }
+        }
+
+        return counts;
+    }
+
+    /**
+     * Locate the canonical Lucene doc per source document, preferring rows owned by
+     * {@code aPreferredUser} and falling back to the INITIAL_CAS row (FIELD_USER="") when the
+     * preferred row is absent. When {@code aPreferredUser} is already the empty string, only the
+     * INITIAL_CAS pass runs.
+     */
+    private HashMap<Integer, Long> findCanonicalDocs(Set<Long> aSourceDocIds,
+            List<LeafReaderContext> aLeaves, String aPreferredUser)
+        throws IOException
+    {
+        var srcDocByGlobalLuceneDocId = new HashMap<Integer, Long>();
+        var hasPreferredRowBySourceDoc = new HashSet<Long>();
+        var preferIsInitial = aPreferredUser.isEmpty();
+
+        if (!preferIsInitial) {
+            for (var leafCtx : aLeaves) {
+                var leafReader = leafCtx.reader();
+                var storedFields = leafReader.storedFields();
+                var liveDocs = leafReader.getLiveDocs();
+                var docBase = leafCtx.docBase;
+
+                for (var localDocId : findLiveDocsByUser(leafReader, aPreferredUser, liveDocs)) {
+                    var rawSrcId = storedFields.document(localDocId).get(FIELD_SOURCE_DOCUMENT_ID);
+                    if (rawSrcId == null) {
+                        continue;
+                    }
+                    var srcDocId = Long.valueOf(rawSrcId);
+                    if (!aSourceDocIds.contains(srcDocId)) {
+                        continue;
+                    }
+                    srcDocByGlobalLuceneDocId.put(localDocId + docBase, srcDocId);
+                    hasPreferredRowBySourceDoc.add(srcDocId);
+                }
+            }
+        }
+
+        for (var leafCtx : aLeaves) {
+            var leafReader = leafCtx.reader();
+            var storedFields = leafReader.storedFields();
+            var liveDocs = leafReader.getLiveDocs();
+            var docBase = leafCtx.docBase;
+
+            for (var localDocId : findLiveDocsByUser(leafReader, "", liveDocs)) {
+                var rawSrcId = storedFields.document(localDocId).get(FIELD_SOURCE_DOCUMENT_ID);
+                if (rawSrcId == null) {
+                    continue;
+                }
+                var srcDocId = Long.valueOf(rawSrcId);
+                if (!aSourceDocIds.contains(srcDocId)) {
+                    continue;
+                }
+                if (hasPreferredRowBySourceDoc.contains(srcDocId)) {
+                    continue;
+                }
+                srcDocByGlobalLuceneDocId.put(localDocId + docBase, srcDocId);
+            }
+        }
+
+        return srcDocByGlobalLuceneDocId;
     }
 
     /**

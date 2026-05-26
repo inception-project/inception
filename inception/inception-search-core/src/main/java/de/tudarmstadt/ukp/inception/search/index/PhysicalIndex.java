@@ -18,13 +18,16 @@
 package de.tudarmstadt.ukp.inception.search.index;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.search.DocumentStatistics;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.LayerStatistics;
 import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
@@ -100,6 +103,26 @@ public interface PhysicalIndex
      */
     public Map<Long, Long> getAnnotationCountsPerSourceDocument(StatisticRequest aStatisticRequest,
             AnnotationLayer aLayer)
+        throws IOException, ExecutionException;
+
+    /**
+     * Token and sentence counts per source document for the given annotation set. For each
+     * requested source document the row owned by {@code aSet} is preferred; if no such row is
+     * indexed, the {@link AnnotationSet#INITIAL_SET} row is used as fallback. Source documents that
+     * have no row in either are omitted.
+     *
+     * @param aSet
+     *            which CAS the counts should reflect
+     * @param aDocuments
+     *            source documents to look up; if {@code null} or empty, the result is empty
+     * @return map from {@link SourceDocument} id to its {@link DocumentStatistics}
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws ExecutionException
+     *             if there was a search-level problem
+     */
+    public Map<Long, DocumentStatistics> getAnnotationCountsPerDocument(AnnotationSet aSet,
+            Collection<SourceDocument> aDocuments, AnnotationSearchState aSearchSettings)
         throws IOException, ExecutionException;
 
     void deindexDocument(SourceDocument aDocument) throws IOException;
