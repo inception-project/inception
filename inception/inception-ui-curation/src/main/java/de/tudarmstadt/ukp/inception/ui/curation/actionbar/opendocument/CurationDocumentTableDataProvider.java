@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument;
 
 import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.NAME;
+import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.ObjectUtils.compare;
@@ -25,16 +26,20 @@ import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.danekja.java.util.function.serializable.SerializableFunction;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.search.DocumentStatistics;
 
 public class CurationDocumentTableDataProvider
     extends SortableDataProvider<SourceDocument, CurationDocumentTableSortKeys>
@@ -44,6 +49,9 @@ public class CurationDocumentTableDataProvider
 
     private CurationDocumentTableFilterState filterState;
     private List<SourceDocument> data;
+    private SerializableFunction<Collection<SourceDocument>, //
+            Map<Long, DocumentStatistics>> statisticsLoader;
+    private transient Map<Long, DocumentStatistics> pageStatistics;
 
     public CurationDocumentTableDataProvider(IModel<List<SourceDocument>> aDocuments)
     {
@@ -56,14 +64,37 @@ public class CurationDocumentTableDataProvider
         setSort(NAME, ASCENDING);
     }
 
+    public void setStatisticsLoader(
+            SerializableFunction<Collection<SourceDocument>, Map<Long, DocumentStatistics>> aLoader)
+    {
+        statisticsLoader = aLoader;
+    }
+
+    public Map<Long, DocumentStatistics> getPageStatistics()
+    {
+        return pageStatistics != null ? pageStatistics : emptyMap();
+    }
+
     @Override
     public Iterator<? extends SourceDocument> iterator(long aFirst, long aCount)
     {
         var filteredData = filter(data);
         filteredData.sort(this::comparator);
-        return filteredData //
-                .subList((int) aFirst, (int) (aFirst + aCount)) //
-                .iterator();
+        var page = filteredData //
+                .subList((int) aFirst, (int) (aFirst + aCount));
+
+        if (statisticsLoader != null) {
+            pageStatistics = statisticsLoader.apply(page);
+        }
+
+        return page.iterator();
+    }
+
+    @Override
+    public void detach()
+    {
+        super.detach();
+        pageStatistics = null;
     }
 
     private int comparator(SourceDocument o1, SourceDocument o2)

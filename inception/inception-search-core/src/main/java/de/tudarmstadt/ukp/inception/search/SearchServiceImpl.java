@@ -22,12 +22,14 @@ import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
 import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +52,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -679,6 +682,24 @@ public class SearchServiceImpl
                     Integer.MAX_VALUE, null, null, prefs);
             return index.getPhysicalIndex().getAnnotationCountsPerSourceDocument(statRequest,
                     aLayer);
+        }
+    }
+
+    @Override
+    public Map<Long, DocumentStatistics> getAnnotationCountsPerDocument(AnnotationSet aSet,
+            Project aProject, Collection<SourceDocument> aDocuments)
+        throws IOException, ExecutionException
+    {
+        if (aDocuments == null || aDocuments.isEmpty()) {
+            return emptyMap();
+        }
+
+        try (var pooledIndex = acquireIndex(aProject.getId())) {
+            var index = pooledIndex.get();
+            ensureIndexIsCreatedAndValid(aProject, index);
+
+            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
+            return index.getPhysicalIndex().getAnnotationCountsPerDocument(aSet, aDocuments, prefs);
         }
     }
 

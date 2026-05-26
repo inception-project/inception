@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.search;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,6 +27,7 @@ import java.util.Set;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -199,5 +201,28 @@ public interface SearchService
      */
     Map<Long, Long> getAnnotationCountsPerSourceDocument(User aUser, Project aProject,
             AnnotationLayer aLayer)
+        throws IOException, ExecutionException;
+
+    /**
+     * Token and sentence counts per document for the given annotation set. For each requested
+     * document the row owned by {@code aSet} is preferred; if no such row is indexed, the
+     * {@link AnnotationSet#INITIAL_SET} row is used as fallback. Documents that have no row in
+     * either are omitted from the result map.
+     *
+     * @param aSet
+     *            which CAS the counts should reflect (a specific user's annotations, the curation
+     *            CAS, or the initial CAS)
+     * @param aProject
+     *            the project the documents belong to
+     * @param aDocuments
+     *            documents to compute counts for; if {@code null} or empty, the result is empty
+     * @return map from {@link SourceDocument} id to its {@link DocumentStatistics}
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws ExecutionException
+     *             if there was a search-level problem
+     */
+    Map<Long, DocumentStatistics> getAnnotationCountsPerDocument(AnnotationSet aSet,
+            Project aProject, Collection<SourceDocument> aDocuments)
         throws IOException, ExecutionException;
 }

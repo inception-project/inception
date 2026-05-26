@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open;
 
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.AnnotationDocumentTableSortKeys.NAME;
+import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.ObjectUtils.compare;
@@ -25,16 +26,21 @@ import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.danekja.java.util.function.serializable.SerializableFunction;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.search.DocumentStatistics;
 
 public class AnnotationDocumentTableDataProvider
     extends SortableDataProvider<AnnotationDocument, AnnotationDocumentTableSortKeys>
@@ -44,6 +50,9 @@ public class AnnotationDocumentTableDataProvider
 
     private AnnotationDocumentTableFilterState filterState;
     private IModel<List<AnnotationDocument>> data;
+    private SerializableFunction<Collection<SourceDocument>, //
+            Map<Long, DocumentStatistics>> statisticsLoader;
+    private transient Map<Long, DocumentStatistics> pageStatistics;
 
     public AnnotationDocumentTableDataProvider(IModel<List<AnnotationDocument>> aDocuments)
     {
@@ -56,14 +65,44 @@ public class AnnotationDocumentTableDataProvider
         setSort(NAME, ASCENDING);
     }
 
+    public void setStatisticsLoader(
+            SerializableFunction<Collection<SourceDocument>, Map<Long, DocumentStatistics>> aLoader)
+    {
+        statisticsLoader = aLoader;
+    }
+
+    /**
+     * Statistics for the current page as populated by the most recent {@link #iterator} call.
+     * Returns an empty map if no loader has been wired or before the table has been rendered.
+     */
+    public Map<Long, DocumentStatistics> getPageStatistics()
+    {
+        return pageStatistics != null ? pageStatistics : emptyMap();
+    }
+
     @Override
     public Iterator<? extends AnnotationDocument> iterator(long aFirst, long aCount)
     {
         var filteredData = filter(data.getObject());
         filteredData.sort(this::comparator);
-        return filteredData //
-                .subList((int) aFirst, (int) (aFirst + aCount)) //
-                .iterator();
+        var page = filteredData //
+                .subList((int) aFirst, (int) (aFirst + aCount));
+
+        if (statisticsLoader != null) {
+            var srcDocs = page.stream() //
+                    .map(AnnotationDocument::getDocument) //
+                    .collect(toList());
+            pageStatistics = statisticsLoader.apply(srcDocs);
+        }
+
+        return page.iterator();
+    }
+
+    @Override
+    public void detach()
+    {
+        super.detach();
+        pageStatistics = null;
     }
 
     private int comparator(AnnotationDocument o1, AnnotationDocument o2)

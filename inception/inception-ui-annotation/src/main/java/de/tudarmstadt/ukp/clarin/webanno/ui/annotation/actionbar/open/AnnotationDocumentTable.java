@@ -30,10 +30,14 @@ import static de.tudarmstadt.ukp.inception.support.lambda.KeyCodes.ENTER;
 import static java.time.Duration.ofMillis;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.function.ToLongFunction;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.repeater.data.table.AjaxFallbackHeadersToolbar;
@@ -47,11 +51,14 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
+import org.danekja.java.util.function.serializable.SerializableFunction;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.filters.AnnotationDocumentFilterStateChanged;
 import de.tudarmstadt.ukp.inception.annotation.filters.AnnotationDocumentStateFilterPanel;
+import de.tudarmstadt.ukp.inception.search.DocumentStatistics;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.wicket.EmptyStateToolbar;
 import de.tudarmstadt.ukp.inception.support.wicket.SymbolLambdaColumn;
@@ -80,6 +87,10 @@ public class AnnotationDocumentTable
                 item -> item.getState()));
         columns.add(new AnnotationDocumentOpenActionColumn(this, new ResourceModel("DocumentName"),
                 NAME));
+        columns.add(new LambdaColumn<>(new ResourceModel("DocumentTokens"),
+                $ -> renderCount($.getDocument(), DocumentStatistics::tokenCount)));
+        columns.add(new LambdaColumn<>(new ResourceModel("DocumentSentences"),
+                $ -> renderCount($.getDocument(), DocumentStatistics::sentenceCount)));
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentCreated"), CREATED,
                 $ -> renderDate($.getDocument().getCreated())));
         columns.add(new LambdaColumn<>(new ResourceModel("AnnotationsUpdated"), UPDATED,
@@ -133,6 +144,21 @@ public class AnnotationDocumentTable
         return dataProvider;
     }
 
+    public void setStatisticsLoader(
+            SerializableFunction<Collection<SourceDocument>, Map<Long, DocumentStatistics>> aLoader)
+    {
+        dataProvider.setStatisticsLoader(aLoader);
+    }
+
+    private String renderCount(SourceDocument aDoc, ToLongFunction<DocumentStatistics> aAccessor)
+    {
+        var stats = dataProvider.getPageStatistics().get(aDoc.getId());
+        if (stats == null) {
+            return "-";
+        }
+        return NumberFormat.getIntegerInstance(getLocale()).format(aAccessor.applyAsLong(stats));
+    }
+
     @OnEvent
     public void onAnnotationDocumentFilterStateChanged(AnnotationDocumentFilterStateChanged aEvent)
     {
@@ -145,7 +171,6 @@ public class AnnotationDocumentTable
             return "";
         }
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        return dateFormat.format(aDate);
+        return new SimpleDateFormat("yyyy-MM-dd").format(aDate);
     }
 }
