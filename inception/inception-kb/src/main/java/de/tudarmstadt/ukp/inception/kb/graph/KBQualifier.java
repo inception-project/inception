@@ -23,12 +23,13 @@ import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
+
+import de.tudarmstadt.ukp.inception.kb.XsdDatatypes;
 
 public class KBQualifier
     implements Serializable
@@ -107,7 +108,7 @@ public class KBQualifier
                 Literal litValue = (Literal) aValue;
                 try {
                     language = litValue.getLanguage().orElse(null);
-                    value = new DefaultDatatypeMapper().getJavaObject(litValue);
+                    value = XsdDatatypes.toJavaObject(litValue);
                 }
                 catch (Exception e) {
                     value = "ERROR converting [" + litValue + "]: " + e.getMessage();

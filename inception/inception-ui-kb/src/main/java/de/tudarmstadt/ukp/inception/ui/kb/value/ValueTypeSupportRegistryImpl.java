@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.ClassUtils;
-import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.slf4j.Logger;
@@ -40,6 +39,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
+import de.tudarmstadt.ukp.inception.kb.XsdDatatypes;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
@@ -117,7 +117,7 @@ public class ValueTypeSupportRegistryImpl
 
         if (aStatement.getValue() != null) {
             Class<?> clazz = aStatement.getValue().getClass();
-            IRI type = DefaultDatatypeMapper.getDatatypeURI(clazz);
+            IRI type = XsdDatatypes.datatypeOf(clazz);
 
             // Mapping fails for NaiveIRI class, so check manually
             // if the value is an instance of IRI

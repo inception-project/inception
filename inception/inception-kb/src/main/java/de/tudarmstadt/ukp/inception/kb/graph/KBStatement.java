@@ -26,14 +26,14 @@ import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
-import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+
+import de.tudarmstadt.ukp.inception.kb.XsdDatatypes;
 
 public class KBStatement
     implements Serializable
@@ -160,11 +160,10 @@ public class KBStatement
     public void setValue(Object aValue)
     {
         if (aValue instanceof Value) {
-            DatatypeMapper mapper = new DefaultDatatypeMapper();
             if (aValue instanceof Literal) {
                 Literal litValue = (Literal) aValue;
                 language = litValue.getLanguage().orElse(null);
-                value = mapper.getJavaObject(litValue);
+                value = XsdDatatypes.toJavaObject(litValue);
             }
             else if (aValue instanceof IRI) {
                 value = aValue;

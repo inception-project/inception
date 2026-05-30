@@ -164,11 +164,6 @@
       <artifactId>rdf4j-common-exception</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.cyberborean</groupId>
-      <artifactId>rdfbeans</artifactId>
-    </dependency>
-    
-    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
     </dependency>

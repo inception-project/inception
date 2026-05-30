@@ -51,7 +51,6 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.victools.jsonschema.generator.Option;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
@@ -259,7 +258,6 @@ public final class SpanJsonSchemaAnnotationTaskCodec
     @Override
     public void decode(RecommendationEngine aEngine, CAS aCas, PromptContext aContext,
             String aResponse)
-        throws JsonProcessingException
     {
         if (isBlank(aResponse)) {
             LOG.debug("Empty response. No mentions to extract.");
