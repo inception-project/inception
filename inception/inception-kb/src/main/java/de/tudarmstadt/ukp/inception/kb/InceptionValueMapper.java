@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.inception.kb;
 
 import org.apache.commons.lang3.Validate;
-import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
-import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -63,8 +61,7 @@ public class InceptionValueMapper
             return vf.createLiteral((String) value, language);
         }
         else {
-            DatatypeMapper mapper = new DefaultDatatypeMapper();
-            return mapper.getRDFValue(value, vf);
+            return XsdDatatypes.toRdfValue(value, vf);
         }
     }
 }

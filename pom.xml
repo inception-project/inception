@@ -134,7 +134,6 @@
     <jena.version>6.1.0</jena.version>
     <libthrift.version>0.23.0</libthrift.version>
     <rdf4j.version>5.3.1</rdf4j.version>
-    <rdfbeans.version>2.2</rdfbeans.version>
     <owlapi-version>5.5.1</owlapi-version>
 
     <asciidoctor.plugin.version>3.2.0</asciidoctor.plugin.version>

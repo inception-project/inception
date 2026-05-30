@@ -1347,12 +1347,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.cyberborean</groupId>
-        <artifactId>rdfbeans</artifactId>
-        <version>${rdfbeans.version}</version>
-      </dependency>
-
-      <dependency>
         <groupId>com.knuddels</groupId>
         <artifactId>jtokkit</artifactId>
         <version>${jtokkit.version}</version>
