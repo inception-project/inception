@@ -29,21 +29,20 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 
 /**
- * Methods in this class were copied from JSoup. They were private and could not be accessed.
+ * Methods in this class were copied from JSoup. They were private and could not be accessed. Last
+ * verified against jsoup 1.22.2.
  */
 public final class JSoupUtil
 {
-    /*
-     * org.jsoup.nodes.TextNode.lastCharIsWhitespace(StringBuilder)
-     */
+    // Source:
+    // https://github.com/jhy/jsoup/blob/jsoup-1.22.2/src/main/java/org/jsoup/nodes/TextNode.java#L117
     public static boolean lastCharIsWhitespace(CharSequence sb)
     {
         return sb.length() != 0 && sb.charAt(sb.length() - 1) == ' ';
     }
 
-    /*
-     * org.jsoup.nodes.Element.appendNormalisedText(StringBuilder, TextNode)
-     */
+    // Source:
+    // https://github.com/jhy/jsoup/blob/jsoup-1.22.2/src/main/java/org/jsoup/nodes/Element.java#L1686
     public static void appendNormalisedText(StringBuilder accum, TextNode textNode)
     {
         String text = textNode.getWholeText();
@@ -56,9 +55,8 @@ public final class JSoupUtil
         }
     }
 
-    /*
-     * org.jsoup.nodes.Element.preserveWhitespace(Node)
-     */
+    // Source:
+    // https://github.com/jhy/jsoup/blob/jsoup-1.22.2/src/main/java/org/jsoup/nodes/Element.java#L1694
     public static boolean preserveWhitespace(Node node)
     {
         // looks only at this element and five levels up, to prevent recursion & needless stack

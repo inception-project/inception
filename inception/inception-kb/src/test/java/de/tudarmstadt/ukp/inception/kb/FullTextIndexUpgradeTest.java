@@ -27,6 +27,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.lucene.util.Version;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.jupiter.api.AfterEach;
@@ -196,6 +197,73 @@ public class FullTextIndexUpgradeTest
                         "http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#example",
                         "http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#green-goblin",
                         "http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#lucky-green");
+    }
+
+    @Test
+    void thatIndexCanBeUpgradedInPlace() throws Exception
+    {
+        copyDirectory(new File(REF_DIR, "lucene-9.12.3"), temp);
+
+        sut = new KnowledgeBaseServiceImpl(repoProperties, kbProperties, entityManager);
+
+        kb.setRepositoryId("pid-1-kbid-");
+        sut.reconfigureLocalKnowledgeBase(kb);
+
+        assertThat(sut.getIndexVersion(kb))
+                .hasValueSatisfying(v -> assertThat(v).startsWith("9.12.3"));
+        assertThat(sut.isIndexUpgradeAvailable(kb)).isTrue();
+
+        sut.upgradeFullTextIndex(kb);
+
+        assertThat(sut.getIndexVersion(kb))
+                .hasValueSatisfying(v -> assertThat(v).startsWith(Version.LATEST.major + "."));
+        assertThat(sut.isIndexUpgradeAvailable(kb)).isFalse();
+
+        List<KBHandle> results;
+        try (var conn = sut.getConnection(kb)) {
+            var prefLabels = SPARQLQueryBuilder.forItems(kb).resolvePrefLabelProperties(conn);
+            var builder = SPARQLQueryBuilder //
+                    .forItems(kb) //
+                    .withPrefLabelProperties(prefLabels) //
+                    .withLabelStartingWith("Green Go");
+            results = builder.asHandles(conn, true);
+        }
+
+        assertThat(results) //
+                .extracting(KBHandle::getIdentifier) //
+                .containsExactly(
+                        "http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#green-goblin");
+    }
+
+    @Test
+    void thatRebuildRecoversFromIndexFormatTooOld() throws Exception
+    {
+        copyDirectory(new File(REF_DIR, "lucene-7.7.3"), temp);
+
+        sut = new KnowledgeBaseServiceImpl(repoProperties, kbProperties, entityManager);
+
+        kb.setRepositoryId("pid-1-kbid-");
+        sut.reconfigureLocalKnowledgeBase(kb);
+
+        sut.rebuildFullTextIndex(kb);
+
+        assertThat(sut.getIndexVersion(kb))
+                .hasValueSatisfying(v -> assertThat(v).startsWith(Version.LATEST.major + "."));
+
+        List<KBHandle> results;
+        try (var conn = sut.getConnection(kb)) {
+            var prefLabels = SPARQLQueryBuilder.forItems(kb).resolvePrefLabelProperties(conn);
+            var builder = SPARQLQueryBuilder //
+                    .forItems(kb) //
+                    .withPrefLabelProperties(prefLabels) //
+                    .withLabelStartingWith("Green Go");
+            results = builder.asHandles(conn, true);
+        }
+
+        assertThat(results) //
+                .extracting(KBHandle::getIdentifier) //
+                .containsExactly(
+                        "http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#green-goblin");
     }
 
     @SpringBootConfiguration

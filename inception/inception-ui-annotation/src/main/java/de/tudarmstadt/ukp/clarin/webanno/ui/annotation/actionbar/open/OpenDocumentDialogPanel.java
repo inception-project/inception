@@ -25,12 +25,15 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 import static wicket.contrib.input.events.EventType.click;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -51,8 +54,10 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
@@ -60,6 +65,8 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.search.DocumentStatistics;
+import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
@@ -83,6 +90,7 @@ public class OpenDocumentDialogPanel
     private @SpringBean UserDao userRepository;
     private @SpringBean PreferencesService preferencesService;
     private @SpringBean KeyBindingsProperties keyBindings;
+    private @SpringBean SearchService searchService;
 
     private final DropDownChoice<DecoratedObject<User>> userListChoice;
     private final AnnotationDocumentTable table;
@@ -113,7 +121,28 @@ public class OpenDocumentDialogPanel
         table = new AnnotationDocumentTable(CID_TABLE,
                 LoadableDetachableModel.of(this::listDocuments));
         table.setOutputMarkupId(true);
+        table.setStatisticsLoader(this::loadStatistics);
         queue(table);
+    }
+
+    private Map<Long, DocumentStatistics> loadStatistics(Collection<SourceDocument> aDocuments)
+    {
+        var project = getModelObject().getProject();
+        var user = userListChoice.getModel().map(DecoratedObject::get).orElse(null).getObject();
+
+        if (project == null || user == null || aDocuments == null || aDocuments.isEmpty()) {
+            return emptyMap();
+        }
+
+        try {
+            return searchService.getAnnotationCountsPerDocument(AnnotationSet.forUser(user),
+                    project, aDocuments);
+        }
+        catch (Exception e) {
+            // Search index may be missing/invalid (e.g. still being built or never created on
+            // standalone install) — the dialog should still be usable without the count columns.
+            return emptyMap();
+        }
     }
 
     private boolean isFinishedDocumentsSkippedByNavigation()

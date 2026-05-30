@@ -43,7 +43,7 @@ public class ProjectProgressPanelControllerImplTest
         return LocalDate.of(2025, 1, 1).plusDays(offsetDays).atStartOfDay().toInstant(UTC);
     }
 
-    private DocumentStateSnapshot snapshot(int offsetDays, Map<SourceDocumentState, Integer> counts)
+    private DocumentStateSnapshot snapshot(int offsetDays, Map<SourceDocumentState, Long> counts)
     {
         return new DocumentStateSnapshot(day(offsetDays), new HashMap<>(counts));
     }
@@ -58,10 +58,10 @@ public class ProjectProgressPanelControllerImplTest
     @Test
     public void testBackprojectToDaily_singleSnapshot()
     {
-        var single = asList(snapshot(0, Map.of(ANNOTATION_FINISHED, 5)));
+        var single = asList(snapshot(0, Map.of(ANNOTATION_FINISHED, 5L)));
         var result = backprojectToDaily(single, 30);
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).counts().get(ANNOTATION_FINISHED)).isEqualTo(5);
+        assertThat(result.get(0).counts().get(ANNOTATION_FINISHED)).isEqualTo(5L);
     }
 
     @Test
@@ -76,9 +76,9 @@ public class ProjectProgressPanelControllerImplTest
     {
         // Already daily snapshots - but still fills full lookback window
         var history = asList( //
-                snapshot(0, Map.of(ANNOTATION_FINISHED, 5)), //
-                snapshot(1, Map.of(ANNOTATION_FINISHED, 6)), //
-                snapshot(2, Map.of(ANNOTATION_FINISHED, 7)));
+                snapshot(0, Map.of(ANNOTATION_FINISHED, 5L)), //
+                snapshot(1, Map.of(ANNOTATION_FINISHED, 6L)), //
+                snapshot(2, Map.of(ANNOTATION_FINISHED, 7L)));
 
         var result = backprojectToDaily(history, 30);
 
@@ -86,13 +86,13 @@ public class ProjectProgressPanelControllerImplTest
         assertThat(result).hasSize(31);
 
         // Last 3 days should match original snapshots
-        assertThat(result.get(28).counts().get(ANNOTATION_FINISHED)).isEqualTo(5);
-        assertThat(result.get(29).counts().get(ANNOTATION_FINISHED)).isEqualTo(6);
-        assertThat(result.get(30).counts().get(ANNOTATION_FINISHED)).isEqualTo(7);
+        assertThat(result.get(28).counts().get(ANNOTATION_FINISHED)).isEqualTo(5L);
+        assertThat(result.get(29).counts().get(ANNOTATION_FINISHED)).isEqualTo(6L);
+        assertThat(result.get(30).counts().get(ANNOTATION_FINISHED)).isEqualTo(7L);
 
         // Earlier days backward-filled from day 0
-        assertThat(result.get(0).counts().get(ANNOTATION_FINISHED)).isEqualTo(5);
-        assertThat(result.get(27).counts().get(ANNOTATION_FINISHED)).isEqualTo(5);
+        assertThat(result.get(0).counts().get(ANNOTATION_FINISHED)).isEqualTo(5L);
+        assertThat(result.get(27).counts().get(ANNOTATION_FINISHED)).isEqualTo(5L);
     }
 
     @Test
@@ -100,8 +100,8 @@ public class ProjectProgressPanelControllerImplTest
     {
         // Sparse history: day 0, then day 5
         var history = asList( //
-                snapshot(0, Map.of(ANNOTATION_FINISHED, 10, NEW, 40)), //
-                snapshot(5, Map.of(ANNOTATION_FINISHED, 15, NEW, 35)));
+                snapshot(0, Map.of(ANNOTATION_FINISHED, 10L, NEW, 40L)), //
+                snapshot(5, Map.of(ANNOTATION_FINISHED, 15L, NEW, 35L)));
 
         var result = backprojectToDaily(history, 30);
 
@@ -110,23 +110,23 @@ public class ProjectProgressPanelControllerImplTest
 
         // Day 0 (index 25): snapshot at day 0
         assertThat(result.get(25).day()).isEqualTo(day(0));
-        assertThat(result.get(25).counts().get(ANNOTATION_FINISHED)).isEqualTo(10);
-        assertThat(result.get(25).counts().get(NEW)).isEqualTo(40);
+        assertThat(result.get(25).counts().get(ANNOTATION_FINISHED)).isEqualTo(10L);
+        assertThat(result.get(25).counts().get(NEW)).isEqualTo(40L);
 
         // Days 1-4 (indices 26-29): backward-fill from day 5
         for (int i = 26; i < 30; i++) {
-            assertThat(result.get(i).counts().get(ANNOTATION_FINISHED)).isEqualTo(15);
-            assertThat(result.get(i).counts().get(NEW)).isEqualTo(35);
+            assertThat(result.get(i).counts().get(ANNOTATION_FINISHED)).isEqualTo(15L);
+            assertThat(result.get(i).counts().get(NEW)).isEqualTo(35L);
         }
 
         // Day 5 (index 30): snapshot at day 5
         assertThat(result.get(30).day()).isEqualTo(day(5));
-        assertThat(result.get(30).counts().get(ANNOTATION_FINISHED)).isEqualTo(15);
-        assertThat(result.get(30).counts().get(NEW)).isEqualTo(35);
+        assertThat(result.get(30).counts().get(ANNOTATION_FINISHED)).isEqualTo(15L);
+        assertThat(result.get(30).counts().get(NEW)).isEqualTo(35L);
 
         // Earlier days (indices 0-24): backward-fill from day 0
-        assertThat(result.get(0).counts().get(ANNOTATION_FINISHED)).isEqualTo(10);
-        assertThat(result.get(0).counts().get(NEW)).isEqualTo(40);
+        assertThat(result.get(0).counts().get(ANNOTATION_FINISHED)).isEqualTo(10L);
+        assertThat(result.get(0).counts().get(NEW)).isEqualTo(40L);
     }
 
     @Test
@@ -134,9 +134,9 @@ public class ProjectProgressPanelControllerImplTest
     {
         // Multiple gaps: day 0, day 3, day 10
         var history = asList( //
-                snapshot(0, Map.of(ANNOTATION_FINISHED, 5)), //
-                snapshot(3, Map.of(ANNOTATION_FINISHED, 7)), //
-                snapshot(10, Map.of(ANNOTATION_FINISHED, 12)));
+                snapshot(0, Map.of(ANNOTATION_FINISHED, 5L)), //
+                snapshot(3, Map.of(ANNOTATION_FINISHED, 7L)), //
+                snapshot(10, Map.of(ANNOTATION_FINISHED, 12L)));
 
         var result = backprojectToDaily(history, 30);
 
@@ -144,25 +144,25 @@ public class ProjectProgressPanelControllerImplTest
         assertThat(result).hasSize(31);
 
         // Day 0 (index 20): snapshot at day 0 (5)
-        assertThat(result.get(20).counts().get(ANNOTATION_FINISHED)).isEqualTo(5);
+        assertThat(result.get(20).counts().get(ANNOTATION_FINISHED)).isEqualTo(5L);
 
         // Days 1-2 (indices 21-22): backward-fill from day 3 (7)
-        assertThat(result.get(21).counts().get(ANNOTATION_FINISHED)).isEqualTo(7);
-        assertThat(result.get(22).counts().get(ANNOTATION_FINISHED)).isEqualTo(7);
+        assertThat(result.get(21).counts().get(ANNOTATION_FINISHED)).isEqualTo(7L);
+        assertThat(result.get(22).counts().get(ANNOTATION_FINISHED)).isEqualTo(7L);
 
         // Day 3 (index 23): snapshot at day 3 (7)
-        assertThat(result.get(23).counts().get(ANNOTATION_FINISHED)).isEqualTo(7);
+        assertThat(result.get(23).counts().get(ANNOTATION_FINISHED)).isEqualTo(7L);
 
         // Days 4-9 (indices 24-29): backward-fill from day 10 (12)
-        assertThat(result.get(24).counts().get(ANNOTATION_FINISHED)).isEqualTo(12);
-        assertThat(result.get(29).counts().get(ANNOTATION_FINISHED)).isEqualTo(12);
+        assertThat(result.get(24).counts().get(ANNOTATION_FINISHED)).isEqualTo(12L);
+        assertThat(result.get(29).counts().get(ANNOTATION_FINISHED)).isEqualTo(12L);
 
         // Day 10 (index 30): snapshot at day 10 (12)
-        assertThat(result.get(30).counts().get(ANNOTATION_FINISHED)).isEqualTo(12);
+        assertThat(result.get(30).counts().get(ANNOTATION_FINISHED)).isEqualTo(12L);
 
         // Earlier days (indices 0-19): backward-fill from day 0 (5)
-        assertThat(result.get(0).counts().get(ANNOTATION_FINISHED)).isEqualTo(5);
-        assertThat(result.get(19).counts().get(ANNOTATION_FINISHED)).isEqualTo(5);
+        assertThat(result.get(0).counts().get(ANNOTATION_FINISHED)).isEqualTo(5L);
+        assertThat(result.get(19).counts().get(ANNOTATION_FINISHED)).isEqualTo(5L);
     }
 
     @Test
@@ -171,13 +171,13 @@ public class ProjectProgressPanelControllerImplTest
         // Test with multiple document states
         var history = asList( //
                 snapshot(0, Map.of( //
-                        ANNOTATION_FINISHED, 10, //
-                        CURATION_FINISHED, 5, //
-                        NEW, 35)), //
+                        ANNOTATION_FINISHED, 10L, //
+                        CURATION_FINISHED, 5L, //
+                        NEW, 35L)), //
                 snapshot(7, Map.of( //
-                        ANNOTATION_FINISHED, 20, //
-                        CURATION_FINISHED, 15, //
-                        NEW, 15)));
+                        ANNOTATION_FINISHED, 20L, //
+                        CURATION_FINISHED, 15L, //
+                        NEW, 15L)));
 
         var result = backprojectToDaily(history, 30);
 
@@ -185,26 +185,26 @@ public class ProjectProgressPanelControllerImplTest
         assertThat(result).hasSize(31);
 
         // Day 0 (index 23): snapshot at day 0
-        assertThat(result.get(23).counts().get(ANNOTATION_FINISHED)).isEqualTo(10);
-        assertThat(result.get(23).counts().get(CURATION_FINISHED)).isEqualTo(5);
-        assertThat(result.get(23).counts().get(NEW)).isEqualTo(35);
+        assertThat(result.get(23).counts().get(ANNOTATION_FINISHED)).isEqualTo(10L);
+        assertThat(result.get(23).counts().get(CURATION_FINISHED)).isEqualTo(5L);
+        assertThat(result.get(23).counts().get(NEW)).isEqualTo(35L);
 
         // Days 1-6 (indices 24-29): backward-fill from day 7
         for (int i = 24; i < 30; i++) {
-            assertThat(result.get(i).counts().get(ANNOTATION_FINISHED)).isEqualTo(20);
-            assertThat(result.get(i).counts().get(CURATION_FINISHED)).isEqualTo(15);
-            assertThat(result.get(i).counts().get(NEW)).isEqualTo(15);
+            assertThat(result.get(i).counts().get(ANNOTATION_FINISHED)).isEqualTo(20L);
+            assertThat(result.get(i).counts().get(CURATION_FINISHED)).isEqualTo(15L);
+            assertThat(result.get(i).counts().get(NEW)).isEqualTo(15L);
         }
 
         // Day 7 (index 30): snapshot at day 7
-        assertThat(result.get(30).counts().get(ANNOTATION_FINISHED)).isEqualTo(20);
-        assertThat(result.get(30).counts().get(CURATION_FINISHED)).isEqualTo(15);
-        assertThat(result.get(30).counts().get(NEW)).isEqualTo(15);
+        assertThat(result.get(30).counts().get(ANNOTATION_FINISHED)).isEqualTo(20L);
+        assertThat(result.get(30).counts().get(CURATION_FINISHED)).isEqualTo(15L);
+        assertThat(result.get(30).counts().get(NEW)).isEqualTo(15L);
 
         // Earlier days (indices 0-22): backward-fill from day 0
-        assertThat(result.get(0).counts().get(ANNOTATION_FINISHED)).isEqualTo(10);
-        assertThat(result.get(0).counts().get(CURATION_FINISHED)).isEqualTo(5);
-        assertThat(result.get(0).counts().get(NEW)).isEqualTo(35);
+        assertThat(result.get(0).counts().get(ANNOTATION_FINISHED)).isEqualTo(10L);
+        assertThat(result.get(0).counts().get(CURATION_FINISHED)).isEqualTo(5L);
+        assertThat(result.get(0).counts().get(NEW)).isEqualTo(35L);
     }
 
     @Test
@@ -212,15 +212,15 @@ public class ProjectProgressPanelControllerImplTest
     {
         // Verify that totals are preserved across backprojection
         var history = asList( //
-                snapshot(0, Map.of(ANNOTATION_FINISHED, 10, NEW, 40)), //
-                snapshot(5, Map.of(ANNOTATION_FINISHED, 15, NEW, 35)));
+                snapshot(0, Map.of(ANNOTATION_FINISHED, 10L, NEW, 40L)), //
+                snapshot(5, Map.of(ANNOTATION_FINISHED, 15L, NEW, 35L)));
 
         var result = backprojectToDaily(history, 30);
 
         // All 31 days should preserve total of 50
         for (int i = 0; i <= 30; i++) {
-            var total = result.get(i).counts().values().stream().mapToInt(Integer::intValue).sum();
-            assertThat(total).isEqualTo(50);
+            var total = result.get(i).counts().values().stream().mapToLong(Long::longValue).sum();
+            assertThat(total).isEqualTo(50L);
         }
     }
 }

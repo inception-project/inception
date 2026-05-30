@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@import 'typography';
-@import 'bibliography';
-@import 'layout';
-@import 'tables';
-@import 'notes';
-@import 'figures';
-@import 'linguistic-teitok';
+@use 'typography';
+@use 'bibliography';
+@use 'layout';
+@use 'tables';
+@use 'notes';
+@use 'figures';
+@use 'linguistic-teitok';
 
 :root {
     --section-padding: 8px;

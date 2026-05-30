@@ -20,7 +20,9 @@ package de.tudarmstadt.ukp.inception.kb;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.rdf4j.model.Statement;
@@ -514,6 +516,24 @@ public interface KnowledgeBaseService
     Optional<KBHandle> readHandle(Project aProject, String aIdentifier);
 
     /**
+     * Batch-resolve handles for a collection of identifiers in a single SPARQL request. The
+     * returned map contains an entry for every requested identifier; identifiers not present in the
+     * knowledge base are mapped to a stub {@link KBHandle} carrying only the identifier (mirroring
+     * the always-returns-something semantics of {@link #readHandle(KnowledgeBase, String)}). This
+     * method bypasses the service-level query cache because batches don't share cache keys well;
+     * callers are expected to maintain their own per-id cache (e.g. ConceptLabelCache) on top.
+     */
+    @SuppressWarnings("javadoc")
+    Map<String, KBHandle> readHandles(KnowledgeBase aKB, Collection<String> aIdentifiers);
+
+    /**
+     * Project-level variant of {@link #readHandles(KnowledgeBase, Collection)}: queries enabled
+     * knowledge bases in order, keeping the first labeled handle encountered for each identifier.
+     */
+    @SuppressWarnings("javadoc")
+    Map<String, KBHandle> readHandles(Project aProject, Collection<String> aIdentifiers);
+
+    /**
      * Retrieves the distinct parent concepts till the root element for an identifier regardless of
      * it being an instance or concept
      *
@@ -649,6 +669,10 @@ public interface KnowledgeBaseService
     long getStatementCount(KnowledgeBase aKB);
 
     long getIndexSize(KnowledgeBase aKB);
+
+    Optional<String> getIndexVersion(KnowledgeBase aKB);
+
+    boolean isIndexUpgradeAvailable(KnowledgeBase aKB);
 
     void configure(KnowledgeBase aKb, KnowledgeBaseProfile aWikidataProfile);
 }

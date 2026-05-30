@@ -23,10 +23,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
-import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.XSD;
 
+import de.tudarmstadt.ukp.inception.kb.XsdDatatypes;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
@@ -73,7 +73,7 @@ public class StringLiteralValueSupport
         if (aStatement.getValue() == null) {
             return false;
         }
-        IRI iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
+        IRI iri = XsdDatatypes.datatypeOf((aStatement.getValue()).getClass());
         // Conditions for different datatype URI apart from String
         boolean accept = XSD.STRING.equals(iri);
 

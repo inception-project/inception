@@ -25,7 +25,10 @@ import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.inception.log.api.EventRepository.DocumentStateSnapshot;
@@ -103,7 +106,7 @@ public class LinearDocumentStateProjector
             var futureDate = lastKnownDate.plus(i, DAYS);
             var futureX = daysFromBaselineToLast + i;
 
-            var futureCounts = new HashMap<SourceDocumentState, Integer>();
+            var futureCounts = new HashMap<SourceDocumentState, Long>();
 
             for (var entry : models.entrySet()) {
                 var state = entry.getKey();
@@ -112,7 +115,7 @@ public class LinearDocumentStateProjector
                 var predictedY = (model.slope() * futureX) + model.intercept();
 
                 // Clamp to 0 to ensure we don't return negative document counts
-                var result = (int) max(0, round(predictedY));
+                var result = max(0L, round(predictedY));
                 futureCounts.put(state, result);
             }
 
@@ -144,17 +147,17 @@ public class LinearDocumentStateProjector
         return projections;
     }
 
-    private boolean countsEqual(java.util.Map<SourceDocumentState, Integer> a,
-            java.util.Map<SourceDocumentState, Integer> b)
+    private static boolean countsEqual(Map<SourceDocumentState, Long> a,
+            Map<SourceDocumentState, Long> b)
     {
         // compare union of keys
-        var keys = new java.util.HashSet<SourceDocumentState>();
+        var keys = new HashSet<SourceDocumentState>();
         keys.addAll(a.keySet());
         keys.addAll(b.keySet());
         for (var k : keys) {
-            var va = a.getOrDefault(k, 0);
-            var vb = b.getOrDefault(k, 0);
-            if (!java.util.Objects.equals(va, vb)) {
+            var va = a.getOrDefault(k, 0L);
+            var vb = b.getOrDefault(k, 0L);
+            if (!Objects.equals(va, vb)) {
                 return false;
             }
         }

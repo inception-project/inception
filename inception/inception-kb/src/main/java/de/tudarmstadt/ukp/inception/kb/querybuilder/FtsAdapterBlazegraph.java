@@ -51,8 +51,6 @@ public class FtsAdapterBlazegraph
     @Override
     public void withLabelMatchingExactlyAnyOf(String... aValues)
     {
-        var kb = builder.getKnowledgeBase();
-
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
             var sanitizedValue = builder.sanitizeQueryString_FTS(value);
@@ -67,8 +65,8 @@ public class FtsAdapterBlazegraph
                     SPARQLQueryBuilder.VAR_SCORE, SPARQLQueryBuilder.VAR_MATCH_TERM,
                     SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY, sanitizedValue) //
                             .withLimit(builder.getLimit()) //
-                            .filter(builder.equalsPattern(SPARQLQueryBuilder.VAR_MATCH_TERM, value,
-                                    kb)));
+                            .filter(builder.equalsPattern(SPARQLQueryBuilder.VAR_MATCH_TERM,
+                                    value)));
         }
 
         if (valuePatterns.isEmpty()) {

@@ -18,12 +18,16 @@
 package de.tudarmstadt.ukp.inception.search.index;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.search.DocumentStatistics;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.LayerStatistics;
 import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
@@ -34,6 +38,17 @@ import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
 
 public interface PhysicalIndex
 {
+    /**
+     * Schema version of the data shape this physical index implementation currently produces.
+     * Compared at index-open time against the value stamped on the {@code Index} entity by the last
+     * successful (re)build; a mismatch triggers a lazy rebuild. The numbering is private to each
+     * physical provider, so different providers may reuse the same numbers without conflict.
+     *
+     * @return the current schema version (must be a non-negative integer; bump when the on-disk
+     *         data shape changes in a way that requires a rebuild).
+     */
+    int getCurrentSchemaVersion();
+
     /**
      * @return if whether the index has data that can be deleted, e.g. index files on disk.
      */
@@ -68,6 +83,46 @@ public interface PhysicalIndex
     public List<Integer> getUniqueDocuments(StatisticRequest aStatisticRequest) throws IOException;
 
     public StatisticsResult getAnnotationStatistics(StatisticRequest aStatisticRequest)
+        throws IOException, ExecutionException;
+
+    /**
+     * Count the number of annotations on the given layer per source document. Each annotation is
+     * counted once regardless of its feature values. The returned map is keyed by
+     * {@link SourceDocument} id; source documents that contain no annotations on the layer may be
+     * omitted (callers should treat a missing key as zero).
+     *
+     * @param aStatisticRequest
+     *            scope of the count (project, user, token-per-doc bounds, etc.)
+     * @param aLayer
+     *            the annotation layer to count, identified by its UI name
+     * @return a map from {@link SourceDocument} id to match count.
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws ExecutionException
+     *             if there was a search-level problem
+     */
+    public Map<Long, Long> getAnnotationCountsPerSourceDocument(StatisticRequest aStatisticRequest,
+            AnnotationLayer aLayer)
+        throws IOException, ExecutionException;
+
+    /**
+     * Token and sentence counts per source document for the given annotation set. For each
+     * requested source document the row owned by {@code aSet} is preferred; if no such row is
+     * indexed, the {@link AnnotationSet#INITIAL_SET} row is used as fallback. Source documents that
+     * have no row in either are omitted.
+     *
+     * @param aSet
+     *            which CAS the counts should reflect
+     * @param aDocuments
+     *            source documents to look up; if {@code null} or empty, the result is empty
+     * @return map from {@link SourceDocument} id to its {@link DocumentStatistics}
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws ExecutionException
+     *             if there was a search-level problem
+     */
+    public Map<Long, DocumentStatistics> getAnnotationCountsPerDocument(AnnotationSet aSet,
+            Collection<SourceDocument> aDocuments, AnnotationSearchState aSearchSettings)
         throws IOException, ExecutionException;
 
     void deindexDocument(SourceDocument aDocument) throws IOException;

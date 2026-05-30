@@ -213,7 +213,6 @@
     <module>inception-io-json</module>
     <module>inception-io-html</module>
     <module>inception-io-nif</module>
-    <module>inception-io-lif</module>
     <module>inception-io-pdf</module>
     <module>inception-io-perseus</module>
     <module>inception-io-imscwb</module>
@@ -291,6 +290,7 @@
     <!-- Documentation -->
     <module>inception-doc</module>
     <!-- Workload -->
+    <module>inception-workload-api</module>
     <module>inception-workload</module>
     <module>inception-workload-dynamic</module>
     <module>inception-workload-matrix</module>
@@ -442,7 +442,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>buildnumber-maven-plugin</artifactId>
-        <version>3.2.1</version>
+        <version>3.3.0</version>
         <executions>
           <execution>
             <phase>validate</phase>
@@ -577,12 +577,12 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
-          <version>3.6.0</version>
+          <version>3.6.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
-          <version>3.3.1</version>
+          <version>3.5.0</version>
           <configuration>
             <encoding>${project.build.sourceEncoding}</encoding>
             <propertiesEncoding>${project.build.sourceEncoding}</propertiesEncoding>
@@ -602,6 +602,10 @@
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
           <version>0.18</version>
+          <configuration>
+            <!-- Workaround for a race condition in the SCM ignore file handler -->
+            <parseSCMIgnoresAsExcludes>false</parseSCMIgnoresAsExcludes>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -635,14 +639,18 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.5.1</version>
+          <version>3.5.5</version>
           <configuration>
             <systemPropertyVariables>
               <dkpro.core.testCachePath>${dkpro.core.testCachePath}</dkpro.core.testCachePath>
               <inception.solr.version>${solr.version}</inception.solr.version>
               <inception.opensearch.version>${opensearch.version}</inception.opensearch.version>
               <inception.lucene.version>${lucene.version}</inception.lucene.version>
+              <liquibase.analytics-enabled>false</liquibase.analytics-enabled>
             </systemPropertyVariables>
+            <environmentVariables>
+              <LIQUIBASE_ANALYTICS_ENABLED>false</LIQUIBASE_ANALYTICS_ENABLED>
+            </environmentVariables>
             <excludedGroups>${excludedTestCategories}</excludedGroups>
           </configuration>
         </plugin>
@@ -654,19 +662,7 @@
         <plugin>
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
-          <version>0.45.1</version>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>versions-maven-plugin</artifactId>
-          <version>2.21.0</version>
-          <configuration>
-            <rulesUri>file:${maven.multiModuleProjectDirectory}/inception/inception-build/src/main/resources/inception/rules.xml</rulesUri>
-            <!--
-            <allowAnyUpdates>false</allowAnyUpdates>
-            <allowMajorUpdates>false</allowMajorUpdates>
-            -->
-          </configuration>
+          <version>0.48.1</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -754,6 +750,9 @@
                 <configuration>
                   <consoleOutput>true</consoleOutput>
                   <inputExcludes combine.children="append">
+                    <!-- Maven build outputs (RAT 0.18 no longer excludes these by default) -->
+                    <inputExclude>/target/**</inputExclude>
+                    <inputExclude>/**/target/**</inputExclude>
                     <inputExclude>/.mvn/jvm.config</inputExclude>
                     <inputExclude>/.oracle_jre_usage/*.timestamp</inputExclude>
                     <inputExclude>/.factorypath</inputExclude>

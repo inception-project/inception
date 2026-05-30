@@ -18,7 +18,9 @@
 package de.tudarmstadt.ukp.inception.log;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
+import static java.util.Map.entry;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
@@ -36,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -209,6 +212,20 @@ public class EventRepositoryImplIntegrationTest
     }
 
     @Test
+    void calculateHistoricalDocumentStates_nullFrom_doesNotOverflowTimestamp()
+    {
+        // Regression test: previously a null `aFrom` was substituted with Instant.MIN,
+        // which overflows when Hibernate binds it as a JDBC Timestamp, producing a 500.
+        var currentStats = new HashMap<SourceDocumentState, Long>();
+        for (var state : SourceDocumentState.values()) {
+            currentStats.put(state, 0L);
+        }
+
+        assertThat(sut.calculateHistoricalDocumentStates(project, currentStats, null)) //
+                .isNotNull();
+    }
+
+    @Test
     void listRecentActivity_limitAndOrdering()
     {
         var base = Instant.now();
@@ -353,6 +370,151 @@ public class EventRepositoryImplIntegrationTest
 
         assertThat(hasNonZeroA).isTrue();
         assertThat(hasNonZeroB).isTrue();
+    }
+
+    @Test
+    void calculateHistoricalDocumentStates_weighted_appliesPerDocWeightOnEveryReplayedEvent()
+        throws Exception
+    {
+        var now = Instant.now();
+        var threeDaysAgo = now.minus(3, DAYS);
+        var twoDaysAgo = now.minus(2, DAYS);
+
+        // Doc 500 was created (NEW) 3 days ago and transitioned to ANNOTATION_FINISHED 2 days ago.
+        // It still exists today as ANNOTATION_FINISHED with weight 7.
+        sut.create(buildLoggedEvent(project, user.getUsername(), "AfterDocumentCreatedEvent",
+                Date.from(threeDaysAgo), 500L, ""));
+
+        var details = new StateChangeDetails();
+        details.setState(ANNOTATION_FINISHED.toString());
+        details.setPreviousState(NEW.toString());
+        sut.create(buildLoggedEvent(project, user.getUsername(), "DocumentStateChangedEvent",
+                Date.from(twoDaysAgo), 500L, JSONUtil.toJsonString(details)));
+
+        var currentStats = zeroStats();
+        currentStats.put(ANNOTATION_FINISHED, 7L);
+
+        var weights = Map.of(500L, 7L);
+        var fourDaysAgo = now.minus(4, DAYS);
+
+        var snapshots = sut.calculateHistoricalDocumentStates(project, currentStats, weights,
+                fourDaysAgo);
+
+        // Backwards replay (then sorted oldest-first) should produce:
+        // ~4 days ago: empty (boundary)
+        // ~3 days ago: empty (after undoing the creation, doc no longer existed)
+        // ~2 days ago: NEW=7 (after undoing the state change)
+        // now: ANNOTATION_FINISHED=7
+        // Every adjustment must use the doc's weight (7), not 1.
+        assertThat(snapshots).isNotEmpty();
+        assertThat(snapshots.get(0).counts()).allSatisfy((s, c) -> assertThat(c).isZero());
+
+        var newest = snapshots.get(snapshots.size() - 1);
+        assertThat(newest.counts().get(ANNOTATION_FINISHED)).isEqualTo(7L);
+
+        // At least one intermediate snapshot must reflect NEW=7 (undone state change).
+        assertThat(snapshots).anySatisfy(s -> assertThat(s.counts().get(NEW)).isEqualTo(7L));
+
+        // Every snapshot's totals must be 0 or 7 — only one doc exists in this scenario and its
+        // weight is 7, so any non-zero total proves the weight (not 1) was applied.
+        for (var s : snapshots) {
+            var total = s.counts().values().stream().mapToLong(Long::longValue).sum();
+            assertThat(total).isIn(0L, 7L);
+        }
+    }
+
+    @Test
+    void calculateHistoricalDocumentStates_weighted_treatsMissingWeightAsZero() throws Exception
+    {
+        var now = Instant.now();
+        var threeDaysAgo = now.minus(3, DAYS);
+        var twoDaysAgo = now.minus(2, DAYS);
+
+        // Doc 600: created → finished, but absent from the weight map — must be invisible.
+        sut.create(buildLoggedEvent(project, user.getUsername(), "AfterDocumentCreatedEvent",
+                Date.from(threeDaysAgo), 600L, ""));
+        var details = new StateChangeDetails();
+        details.setState(ANNOTATION_FINISHED.toString());
+        details.setPreviousState(NEW.toString());
+        sut.create(buildLoggedEvent(project, user.getUsername(), "DocumentStateChangedEvent",
+                Date.from(twoDaysAgo), 600L, JSONUtil.toJsonString(details)));
+
+        // Current state already excludes doc 600 (weight=0 ⇒ contributes nothing).
+        var currentStats = zeroStats();
+        // Weight map empty — equivalent to "no doc in scope". A weight=0 entry would behave the
+        // same; verifying via the absent-key path.
+        var weights = Map.<Long, Long> of();
+        var fourDaysAgo = now.minus(4, DAYS);
+
+        var snapshots = sut.calculateHistoricalDocumentStates(project, currentStats, weights,
+                fourDaysAgo);
+
+        // Every snapshot must be all-zero because every event for doc 600 is a no-op under the
+        // empty weight map.
+        assertThat(snapshots).isNotEmpty();
+        for (var s : snapshots) {
+            assertThat(s.counts().values()).allSatisfy(c -> assertThat(c).isZero());
+        }
+    }
+
+    @Test
+    void calculateHistoricalDocumentStates_weighted_combinesDifferentDocWeightsIndependently()
+        throws Exception
+    {
+        var now = Instant.now();
+        var threeDaysAgo = now.minus(3, DAYS);
+        var twoDaysAgo = now.minus(2, DAYS);
+
+        // Doc 700 weight 3, transitions NEW → ANNOTATION_IN_PROGRESS 3 days ago.
+        // Doc 701 weight 11, transitions NEW → ANNOTATION_FINISHED 2 days ago.
+        // Both still exist today.
+        var d1 = new StateChangeDetails();
+        d1.setState(ANNOTATION_IN_PROGRESS.toString());
+        d1.setPreviousState(NEW.toString());
+        sut.create(buildLoggedEvent(project, user.getUsername(), "DocumentStateChangedEvent",
+                Date.from(threeDaysAgo), 700L, JSONUtil.toJsonString(d1)));
+
+        var d2 = new StateChangeDetails();
+        d2.setState(ANNOTATION_FINISHED.toString());
+        d2.setPreviousState(NEW.toString());
+        sut.create(buildLoggedEvent(project, user.getUsername(), "DocumentStateChangedEvent",
+                Date.from(twoDaysAgo), 701L, JSONUtil.toJsonString(d2)));
+
+        // Today's totals: doc 700 (weight 3) is IN_PROGRESS, doc 701 (weight 11) is FINISHED.
+        var currentStats = zeroStats();
+        currentStats.put(ANNOTATION_IN_PROGRESS, 3L);
+        currentStats.put(ANNOTATION_FINISHED, 11L);
+
+        var weights = Map.ofEntries(entry(700L, 3L), entry(701L, 11L));
+        var fourDaysAgo = now.minus(4, DAYS);
+
+        var snapshots = sut.calculateHistoricalDocumentStates(project, currentStats, weights,
+                fourDaysAgo);
+
+        assertThat(snapshots).isNotEmpty();
+
+        // Newest snapshot must match current state exactly — each doc weighted by its own value.
+        var newest = snapshots.get(snapshots.size() - 1);
+        assertThat(newest.counts().get(ANNOTATION_IN_PROGRESS)).isEqualTo(3L);
+        assertThat(newest.counts().get(ANNOTATION_FINISHED)).isEqualTo(11L);
+
+        // Going back past doc 701's state change (~2 days ago) but not past doc 700's
+        // (~3 days ago): doc 701's weight returns to NEW (11), doc 700 remains IN_PROGRESS (3).
+        // Total weight always sums to 14 — weights are conserved on state-change events because
+        // each adjusts both source and target buckets by the same per-doc weight.
+        for (var s : snapshots) {
+            var total = s.counts().values().stream().mapToLong(Long::longValue).sum();
+            assertThat(total).isEqualTo(14);
+        }
+    }
+
+    private HashMap<SourceDocumentState, Long> zeroStats()
+    {
+        var stats = new HashMap<SourceDocumentState, Long>();
+        for (var state : SourceDocumentState.values()) {
+            stats.put(state, 0L);
+        }
+        return stats;
     }
 
     // Helper

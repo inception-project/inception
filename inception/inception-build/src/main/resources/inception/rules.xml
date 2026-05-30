@@ -26,13 +26,41 @@
     <ignoreVersion type="regex">(?i).*[-_\.]Dev[0-9\.-]*</ignoreVersion>
     <ignoreVersion type="regex">(?i).*[-_\.]alpha[0-9\.-]*</ignoreVersion>
     <ignoreVersion type="regex">(?i).*[-_\.]beta[0-9\.-]*</ignoreVersion>
+    <ignoreVersion type="regex">(?i).*[-_\.]preview[0-9\.-]*</ignoreVersion>
     <!-- e.g. commons-collections:commons-collections ... 3.2.1.redhat-7 -> 20040117.000000 -->
     <ignoreVersion type="regex">\d{4,}.*</ignoreVersion>
+    <!-- Backwards-compatibility variants for legacy JDKs (e.g. net.bytebuddy:byte-buddy 1.18.8-jdk5) -->
+    <ignoreVersion type="regex">(?i).*[-_\.]jdk[0-9]+</ignoreVersion>
   </ignoreVersions>
   <rules>
     <rule groupId="org.codehaus.mojo" artifactId="properties-maven-plugin" comparisonMethod="maven">
       <ignoreVersions>
         <ignoreVersion type="regex">.*-tc</ignoreVersion>
+      </ignoreVersions>
+    </rule>
+    <!--
+      RDF4J is pinned to <= 6.0.0. The 5444 workarounds in inception-kb make 5.1.4+ usable;
+      major-version bumps beyond 6.0.0 need explicit review.
+    -->
+    <rule groupId="org.eclipse.rdf4j" comparisonMethod="maven">
+      <ignoreVersions>
+        <ignoreVersion type="range">(6.0.0,)</ignoreVersion>
+      </ignoreVersions>
+    </rule>
+    <!--
+      The com.sun.xml.bind jaxb-impl/jaxb-core artifacts must remain on the 2.3.x line:
+      it is the last release providing the legacy javax.xml.bind implementation. Newer
+      4.x releases switched to the jakarta.xml.bind namespace and break code that still
+      imports javax.xml.bind.* (e.g. the dkpro TCF reader via eu.clarin.weblicht.wlfxb).
+    -->
+    <rule groupId="com.sun.xml.bind" artifactId="jaxb-impl" comparisonMethod="maven">
+      <ignoreVersions>
+        <ignoreVersion type="range">(2.3.9,)</ignoreVersion>
+      </ignoreVersions>
+    </rule>
+    <rule groupId="com.sun.xml.bind" artifactId="jaxb-core" comparisonMethod="maven">
+      <ignoreVersions>
+        <ignoreVersion type="range">(2.3.0.1,)</ignoreVersion>
       </ignoreVersions>
     </rule>
   </rules>

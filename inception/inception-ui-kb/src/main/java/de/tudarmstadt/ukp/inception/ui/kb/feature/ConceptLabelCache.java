@@ -17,13 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
@@ -55,12 +62,30 @@ public class ConceptLabelCache
                 .maximumSize(aKBProperties.getRenderCacheSize()) //
                 .expireAfterWrite(aKBProperties.getRenderCacheExpireDelay()) //
                 .refreshAfterWrite(aKBProperties.getRenderCacheRefreshDelay()) //
-                .build(key -> loadLabelValue(key));
+                .build(new CacheLoader<Key, KBHandle>()
+                {
+                    @Override
+                    public KBHandle load(Key aKey)
+                    {
+                        return loadLabelValue(aKey);
+                    }
+
+                    @Override
+                    public Map<? extends Key, ? extends KBHandle> loadAll(Set<? extends Key> aKeys)
+                    {
+                        return bulkLoadLabelValues(aKeys);
+                    }
+                });
     }
 
     public KBHandle get(AnnotationFeature aFeature, String aRepositoryId, String aLabel)
     {
         return labelCache.get(new Key(aFeature, aRepositoryId, aLabel));
+    }
+
+    public Map<Key, KBHandle> getAll(Collection<Key> aKeys)
+    {
+        return labelCache.getAll(aKeys);
     }
 
     private KBHandle loadLabelValue(Key aKey)
@@ -96,7 +121,90 @@ public class ConceptLabelCache
         }
     }
 
-    private class Key
+    /**
+     * Bulk-load handles for the given keys via {@link KnowledgeBaseService#readHandles}, grouping
+     * by (projectId, repositoryId) so each group produces one batched SPARQL request. Falls back to
+     * single-key loading for any group whose batched request throws, preserving the per-key fault
+     * isolation of {@link #loadLabelValue}.
+     * <p>
+     * Throws {@link IllegalArgumentException} up-front if any key references an
+     * {@link AnnotationFeature} with no project, or a project that has not yet been persisted (null
+     * id) — those are programming errors, not data-level failures, so they are not caught and
+     * isolated per-key.
+     */
+    private Map<Key, KBHandle> bulkLoadLabelValues(Set<? extends Key> aKeys)
+    {
+        var result = new LinkedHashMap<Key, KBHandle>();
+
+        // Group by project ID (not Project reference) so distinct JPA instances of the same
+        // project still batch together. A null repositoryId means "any KB in the project".
+        var groups = new LinkedHashMap<SimpleEntry<Long, String>, java.util.List<Key>>();
+        for (var key : aKeys) {
+            var project = key.getAnnotationFeature().getProject();
+            if (project == null) {
+                throw new IllegalArgumentException("AnnotationFeature ["
+                        + key.getAnnotationFeature().getName() + "] has no associated project");
+            }
+            if (project.getId() == null) {
+                throw new IllegalArgumentException(
+                        "Project [" + project.getName() + "] has not been persisted (id is null)");
+            }
+            var groupKey = new SimpleEntry<>(project.getId(), key.getRepositoryId());
+            groups.computeIfAbsent(groupKey, k -> new java.util.ArrayList<>()).add(key);
+        }
+
+        for (var group : groups.entrySet()) {
+            var repositoryId = group.getKey().getValue();
+            var keysInGroup = group.getValue();
+            // Any key works — all share the same project ID.
+            var project = keysInGroup.get(0).getAnnotationFeature().getProject();
+
+            try {
+                var distinctIds = keysInGroup.stream() //
+                        .map(Key::getLabel) //
+                        .collect(Collectors.toSet());
+
+                Map<String, KBHandle> handlesById;
+                if (repositoryId != null) {
+                    var kbOpt = kbService.getKnowledgeBaseById(project, repositoryId) //
+                            .filter(KnowledgeBase::isEnabled);
+                    handlesById = kbOpt.map(kb -> kbService.readHandles(kb, distinctIds))
+                            .orElse(Map.of());
+                }
+                else {
+                    handlesById = kbService.readHandles(project, distinctIds);
+                }
+
+                for (var key : keysInGroup) {
+                    // readHandles guarantees one entry per requested id (stub when not found),
+                    // so we cache whatever it returned — mirrors loadLabelValue's behavior of
+                    // keeping handles with name=null but other metadata (description/deprecated).
+                    var handle = handlesById.get(key.getLabel());
+                    if (handle != null) {
+                        result.put(key, handle);
+                    }
+                    else {
+                        result.put(key, KBHandle.builder() //
+                                .withIdentifier(key.getLabel()) //
+                                .build());
+                    }
+                }
+            }
+            catch (Exception e) {
+                LOG.error(
+                        "Bulk load failed for project [{}] repositoryId [{}]; "
+                                + "falling back to per-key loading",
+                        project.getName(), repositoryId, e);
+                for (var key : keysInGroup) {
+                    result.put(key, loadLabelValue(key));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public static class Key
     {
         private final AnnotationFeature feature;
         private final String repositoryId;
@@ -107,6 +215,11 @@ public class ConceptLabelCache
             feature = aFeature;
             repositoryId = aRepositoryId;
             label = aLabel;
+        }
+
+        public static Key of(AnnotationFeature aFeature, String aRepositoryId, String aLabel)
+        {
+            return new Key(aFeature, aRepositoryId, aLabel);
         }
 
         public String getLabel()

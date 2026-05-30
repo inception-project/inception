@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.lang.invoke.MethodHandles;
+import java.nio.charset.StandardCharsets;
 import java.text.Bidi;
 import java.text.Normalizer;
 import java.util.HashMap;
@@ -47,7 +48,7 @@ public class GlyphPositionUtils
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     // Source:
-    // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/examples/src/main/java/org/apache/pdfbox/examples/util/DrawPrintTextLocations.java#L220
+    // https://github.com/apache/pdfbox/blob/3.0.7/examples/src/main/java/org/apache/pdfbox/examples/util/DrawPrintTextLocations.java#L202
     public static AffineTransform makeFlipAT(PDPage pdPage)
     {
         // flip y-axis
@@ -59,43 +60,32 @@ public class GlyphPositionUtils
     }
 
     // Source:
-    // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/examples/src/main/java/org/apache/pdfbox/examples/util/DrawPrintTextLocations.java#L225
+    // https://github.com/apache/pdfbox/blob/3.0.7/examples/src/main/java/org/apache/pdfbox/examples/util/DrawPrintTextLocations.java#L207
     public static AffineTransform makeRotateAT(PDPage pdPage)
     {
         // page may be rotated
         AffineTransform rotateAT = new AffineTransform();
         int rotation = pdPage.getRotation();
-        if (rotation != 0) {
-            PDRectangle mediaBox = pdPage.getMediaBox();
-            switch (rotation) {
-            case 90:
-                rotateAT.translate(mediaBox.getHeight(), 0);
-                break;
-            case 270:
-                rotateAT.translate(0, mediaBox.getWidth());
-                break;
-            case 180:
-                rotateAT.translate(mediaBox.getWidth(), mediaBox.getHeight());
-                break;
-            default:
-                break;
-            }
-            rotateAT.rotate(Math.toRadians(rotation));
+        PDRectangle cropBox = pdPage.getCropBox();
+        switch (rotation) {
+        case 90:
+            rotateAT.translate(cropBox.getHeight(), 0);
+            break;
+        case 270:
+            rotateAT.translate(0, cropBox.getWidth());
+            break;
+        case 180:
+            rotateAT.translate(cropBox.getWidth(), cropBox.getHeight());
+            break;
+        default:
+            break;
         }
+        rotateAT.rotate(Math.toRadians(rotation));
         return rotateAT;
     }
 
     // Source:
-    // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/examples/src/main/java/org/apache/pdfbox/examples/util/DrawPrintTextLocations.java#L248
-    public static AffineTransform makeTransAT(PDPage pdPage)
-    {
-        PDRectangle cropBox = pdPage.getCropBox();
-        return AffineTransform.getTranslateInstance(-cropBox.getLowerLeftX(),
-                cropBox.getLowerLeftY());
-    }
-
-    // Source:
-    // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/examples/src/main/java/org/apache/pdfbox/examples/util/DrawPrintTextLocations.java#L290
+    // https://github.com/apache/pdfbox/blob/3.0.7/examples/src/main/java/org/apache/pdfbox/examples/util/DrawPrintTextLocations.java#L283
     public static Shape calculateFontBounds(TextPosition text, AffineTransform flipAT,
             AffineTransform rotateAT)
         throws IOException
@@ -156,7 +146,7 @@ public class GlyphPositionUtils
     }
 
     // source:
-    // https://github.com/apache/pdfbox/blob/2.0.28/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1911
+    // https://github.com/apache/pdfbox/blob/3.0.7/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L2047
     // The support for extracting the glyph order was added for INCEpTION
     /**
      * Normalize certain Unicode characters. For example, convert the single "fi" ligature to "f"
@@ -221,7 +211,7 @@ public class GlyphPositionUtils
     }
 
     // source:
-    // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1756
+    // https://github.com/apache/pdfbox/blob/3.0.7/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1903
     // The support for extracting the glyph order was added for INCEpTION
     /**
      * Handles the LTR and RTL direction of the given words. The whole implementation stands and
@@ -309,15 +299,15 @@ public class GlyphPositionUtils
     }
 
     // source:
-    // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1822
-    private static Map<Character, Character> MIRRORING_CHAR_MAP = new HashMap<Character, Character>();
+    // https://github.com/apache/pdfbox/blob/3.0.7/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1958
+    private static final Map<Character, Character> MIRRORING_CHAR_MAP = new HashMap<>();
 
     // source:
-    // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1824
+    // https://github.com/apache/pdfbox/blob/3.0.7/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1960
     static {
         String path = "/org/apache/pdfbox/resources/text/BidiMirroring.txt";
-        try (InputStream input = new BufferedInputStream(
-                PDFTextStripper.class.getResourceAsStream(path))) {
+        try (InputStream resourceAsStream = PDFTextStripper.class.getResourceAsStream(path);
+                InputStream input = new BufferedInputStream(resourceAsStream)) {
             parseBidiFile(input);
         }
         catch (IOException e) {
@@ -327,10 +317,10 @@ public class GlyphPositionUtils
     }
 
     // source:
-    // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1856
+    // https://github.com/apache/pdfbox/blob/3.0.7/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1994
     /**
      * This method parses the bidi file provided as inputstream.
-     * 
+     *
      * @param inputStream
      *            - The bidi file as inputstream
      * @throws IOException
@@ -338,7 +328,8 @@ public class GlyphPositionUtils
      */
     private static void parseBidiFile(InputStream inputStream) throws IOException
     {
-        LineNumberReader rd = new LineNumberReader(new InputStreamReader(inputStream));
+        LineNumberReader rd = new LineNumberReader(
+                new InputStreamReader(inputStream, StandardCharsets.US_ASCII));
 
         do {
             String s = rd.readLine();

@@ -233,9 +233,10 @@ public class ReindexTask
                     }
                 }
 
-                // After re-indexing, reset the invalid flag
+                // After re-indexing, reset the invalid flag and stamp the schema version
                 if (!getMonitor().isCancelled()) {
                     index.setInvalid(false);
+                    index.setSchemaVersion(index.getPhysicalIndex().getCurrentSchemaVersion());
                 }
 
                 searchService.writeIndex(pooledIndex);

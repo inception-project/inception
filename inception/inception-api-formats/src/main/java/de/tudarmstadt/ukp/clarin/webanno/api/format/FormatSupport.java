@@ -122,6 +122,33 @@ public interface FormatSupport
     }
 
     /**
+     * @return format-specific JavaScript resources that scriptable editors should load into the
+     *         document context before the editor itself initializes. Used e.g. to expose a factory
+     *         for a {@code DocumentStructureStrategy} that the editor will pull via
+     *         {@link #getDocumentStructureFactory()}.
+     */
+    default List<ResourceReference> getJavaScripts()
+    {
+        return emptyList();
+    }
+
+    /**
+     * @return a JavaScript expression that evaluates to a {@code DocumentStructureFactory} -- an
+     *         object exposing a {@code create()} method that returns a
+     *         {@code DocumentStructureStrategy} for this format. The expression is evaluated in the
+     *         editor's iframe context after the scripts returned by {@link #getJavaScripts()} have
+     *         loaded; the editor then calls {@code factory.create()} once per editor
+     *         initialization. Mirrors the {@code editorFactory} convention -- the expression always
+     *         includes the invocation, e.g. {@code "HtmlDocumentStructure.factory()"}.
+     *         {@link Optional#empty()} (the default) means no format-specific strategy and the
+     *         editor falls back to a no-op.
+     */
+    default Optional<String> getDocumentStructureFactory()
+    {
+        return empty();
+    }
+
+    /**
      * @return format-specific section elements
      */
     default Set<String> getSectionElements()

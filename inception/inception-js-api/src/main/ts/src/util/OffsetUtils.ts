@@ -91,6 +91,22 @@ export function offsetToRange(root: Node, begin: number, end: number): Range | n
         return null;
     }
 
+    // When `begin` lands exactly on the trailing edge of this text node AND
+    // there is a following text node, advance to offset 0 of that next node.
+    // Otherwise the range would start at the trailing edge of e.g. a protected
+    // element whose text ends at `begin`, and downstream rendering would expand
+    // the highlight backward to cover that element. If there is no following
+    // text node we keep `n` so a collapsed range at the end of all content
+    // (`begin === totalLength`) remains valid. The end-seek below keeps `<` so
+    // an end-boundary stays with the preceding run.
+    if (begin === base + n.textContent.length) {
+        const next = ni.nextNode();
+        if (next != null) {
+            base += n.textContent.length;
+            n = next;
+        }
+    }
+
     const startNode = n;
     const startOffset = begin - base;
 

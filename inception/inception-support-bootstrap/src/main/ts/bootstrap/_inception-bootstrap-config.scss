@@ -1,0 +1,38 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Loads bootstrap with our overrides applied. Downstream partials pull bootstrap
+// symbols from here via `@use 'inception-bootstrap-config' as *;`.
+@forward '../node_modules/bootstrap/scss/bootstrap' with (
+  $card-spacer-y: 0.25rem,    // Original: .75rem
+  $card-spacer-x: 0.75rem,    // Original: 1.25rem
+  $navbar-padding-y: 0px,     // Original: $spacer * .5
+  $navbar-padding-x: 0px,     // Original: null
+  $grid-breakpoints: (
+    xs: 0,
+    sm: 576px,
+    md: 768px,
+    lg: 992px,
+    xl: 1200px,
+    xxl: 1600px,
+  )
+);
+
+// INCEpTION variables: Footer
+$page-footer-height: 24px;
+$page-header-height: 51px;

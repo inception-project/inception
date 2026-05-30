@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static java.util.Optional.empty;
 
 import java.io.File;
 import java.io.IOException;
@@ -104,6 +105,28 @@ public interface DocumentImportExportService
         return formatSupport.getCssStylesheets();
     }
 
+    default List<ResourceReference> getFormatJavaScripts(SourceDocument aDoc)
+    {
+        var maybeFormatSupport = getFormatById(aDoc.getFormat());
+        if (!maybeFormatSupport.isPresent()) {
+            return emptyList();
+        }
+
+        var formatSupport = maybeFormatSupport.get();
+
+        return formatSupport.getJavaScripts();
+    }
+
+    default Optional<String> getFormatDocumentStructureFactory(SourceDocument aDoc)
+    {
+        var maybeFormatSupport = getFormatById(aDoc.getFormat());
+        if (!maybeFormatSupport.isPresent()) {
+            return empty();
+        }
+
+        return maybeFormatSupport.get().getDocumentStructureFactory();
+    }
+
     default Set<String> getSectionElements(SourceDocument aDoc)
     {
         var maybeFormatSupport = getFormatById(aDoc.getFormat());
@@ -132,7 +155,7 @@ public interface DocumentImportExportService
     {
         var maybeFormatSupport = getFormatById(aDoc.getFormat());
         if (!maybeFormatSupport.isPresent()) {
-            return Optional.empty();
+            return empty();
         }
 
         var formatSupport = maybeFormatSupport.get();

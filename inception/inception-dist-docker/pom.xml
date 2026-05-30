@@ -155,7 +155,7 @@
                     <image>
                       <build>
                         <buildx>
-                          <platforms combine.children="override">
+                          <platforms combine.self="override">
                             <platform>linux/amd64</platform>
                             <platform>linux/arm64</platform>
                           </platforms>

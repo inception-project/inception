@@ -54,7 +54,9 @@ const defaults = {
 }
 
 fs.mkdirsSync(`${outbase}`)
-fs.emptyDirSync(outbase)
+if (!argv.live) {
+  fs.emptyDirSync(outbase)
+}
 
 if (argv.live) {
   const context = await esbuild.context(defaults)

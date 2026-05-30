@@ -20,8 +20,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-@import '~@inception-project/inception-js-api/src/style/InceptionEditorColors.scss';
-@import '~@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss';
+@use '~@inception-project/inception-js-api/src/style/InceptionEditorColors.scss';
+@use '~@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss';
 
 $color_1: #2e6e9e;
 $color_2: #000000;

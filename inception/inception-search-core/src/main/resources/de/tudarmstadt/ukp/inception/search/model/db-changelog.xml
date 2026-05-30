@@ -37,4 +37,17 @@
       constraintName="FK_index_project" deferrable="false" initiallyDeferred="false"
       onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
   </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20260522-search-01">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="inception_index" columnName="schemaVersion"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="inception_index">
+      <column name="schemaVersion" type="INT" defaultValueNumeric="0">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

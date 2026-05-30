@@ -104,7 +104,9 @@ echo "Building ${TARGET_ARCH} DMG via $JPACKAGE..."
   --mac-signing-key-user-name "$SIGNING_IDENTITY" \
   --mac-entitlements "$ENTITLEMENTS"
 
-# Tag the produced DMG with the target arch so multiple builds can coexist.
+# Tag the produced DMG with the target arch so multiple builds can coexist,
+# then codesign the DMG itself. jpackage signs the .app inside the DMG but
+# leaves the DMG container unsigned, which Gatekeeper/notarization requires.
 for f in "$DEST_DIR"/*.dmg; do
   [ -e "$f" ] || continue
   base=$(basename "$f" .dmg)
@@ -112,5 +114,7 @@ for f in "$DEST_DIR"/*.dmg; do
     *-"$TARGET_ARCH") tagged="$f" ;;
     *) tagged="$DEST_DIR/$base-$TARGET_ARCH.dmg"; mv "$f" "$tagged" ;;
   esac
+  echo "Signing DMG: $tagged"
+  codesign --sign "$SIGNING_IDENTITY" --timestamp "$tagged"
   echo "Wrote $tagged"
 done

@@ -136,12 +136,22 @@
             />
             <label class="form-check-label" for="tablesEnabled">Tables</label>
         </div>
+        <div class="form-check form-switch mx-2">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="documentStructureEnabled"
+                bind:checked={annotatorState.showDocumentStructure}
+            />
+            <label class="form-check-label" for="documentStructureEnabled">Outline</label>
+        </div>
     </div>
 </div>
 
 <!-- svelte-ignore css_unused_selector -->
 <style lang="scss">
-    @import '../../node_modules/bootstrap/scss/bootstrap.scss';
+    @use '../../node_modules/bootstrap/scss/bootstrap.scss';
 
     .bootstrap {
         // Ensure that Bootstrap properly applies to the component

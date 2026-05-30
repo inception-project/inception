@@ -62,7 +62,9 @@ const defaults = {
 }
 
 fs.mkdirsSync(`${outbase}`)
-fs.emptyDirSync(outbase)
+if (!argv.live) {
+  fs.emptyDirSync(outbase)
+}
 
 if (argv.live) {
   const context1 = await esbuild.context(Object.assign({

@@ -19,14 +19,23 @@ package de.tudarmstadt.ukp.inception.workload.ui;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.util.Collections.emptyList;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -36,11 +45,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.log.api.EventRepository;
 import de.tudarmstadt.ukp.inception.log.api.EventRepository.DocumentStateSnapshot;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.workload.api.ProgressMetric;
+import de.tudarmstadt.ukp.inception.workload.api.ProgressWeighter;
 import jakarta.servlet.ServletContext;
 
 @ConditionalOnWebApplication
@@ -54,16 +68,19 @@ public class ProjectProgressPanelControllerImpl
     private final DocumentService documentService;
     private final ProjectService projectService;
     private final UserDao userService;
+    private final Optional<ProgressWeighter> weightSource;
 
     public ProjectProgressPanelControllerImpl(ServletContext aServletContext,
             EventRepository aEventRepository, DocumentService aDocumentService,
-            ProjectService aProjectService, UserDao aUserService)
+            ProjectService aProjectService, UserDao aUserService,
+            Optional<ProgressWeighter> aWeightSource)
     {
         servletContext = aServletContext;
         eventRepository = aEventRepository;
         documentService = aDocumentService;
         projectService = aProjectService;
         userService = aUserService;
+        weightSource = aWeightSource;
     }
 
     @Override
@@ -79,7 +96,9 @@ public class ProjectProgressPanelControllerImpl
             @PathVariable("projectId") long aProjectId, //
             @RequestParam("from") Optional<Instant> aFrom, //
             @RequestParam("to") Optional<Instant> aTo, //
-            @RequestParam("now") Optional<Instant> aNow)
+            @RequestParam("now") Optional<Instant> aNow, //
+            @RequestParam("metric") Optional<ProgressMetric> aMetric)
+        throws IOException
     {
         var sessionOwner = userService.getCurrentUser();
         var project = projectService.getProject(aProjectId);
@@ -89,8 +108,16 @@ public class ProjectProgressPanelControllerImpl
         }
 
         var stats = documentService.getSourceDocumentStats(project);
-        var history = eventRepository.calculateHistoricalDocumentStates(project, stats.toMap(),
-                aFrom.orElse(null));
+        if (stats.getTotal() == 0) {
+            return emptyList();
+        }
+
+        var weights = resolveWeights(aMetric, sessionOwner, project);
+        var currentStats = weights != null //
+                ? weightedCurrentStats(project, weights)
+                : stats.toMap();
+        var history = eventRepository.calculateHistoricalDocumentStates(project, currentStats,
+                weights, aFrom.orElse(null));
 
         // Filter history to only include snapshots at or before the specified "now" point
         var effectiveNow = aNow.orElse(now());
@@ -121,6 +148,68 @@ public class ProjectProgressPanelControllerImpl
         result.addAll(history);
         result.addAll(future);
         return result;
+    }
+
+    /**
+     * Resolves the per-document weight map for the requested metric, or {@code null} to indicate
+     * unit weights ({@code DOCUMENTS} mode).
+     * <p>
+     * Returns {@code null} when:
+     * <ul>
+     * <li>the metric is absent or {@code DOCUMENTS};</li>
+     * <li>no {@link ProgressWeighter} bean is wired (search module not on the classpath);</li>
+     * <li>the wired weighter returns {@code null} for the requested metric (it does not support
+     * it).</li>
+     * </ul>
+     * In all three cases the caller silently degrades to the document-count path. If the weighter
+     * returns a non-null but empty map, that is passed through unchanged — the replay then sees
+     * zero weight for every doc and the chart shows a flat zero line, which is the intended "search
+     * index is the source of truth" signal when nothing has been indexed yet.
+     */
+    private Map<Long, Long> resolveWeights(Optional<ProgressMetric> aMetric, User aUser,
+            Project aProject)
+        throws IOException
+    {
+        if (aMetric.isEmpty() || aMetric.get() == ProgressMetric.DOCUMENTS) {
+            return null;
+        }
+
+        if (weightSource.isEmpty()) {
+            return null;
+        }
+
+        return weightSource.get().getWeights(aUser, aProject, aMetric.get());
+    }
+
+    private Map<SourceDocumentState, Long> weightedCurrentStats(Project aProject,
+            Map<Long, Long> aWeights)
+    {
+        var stateByDocId = new HashMap<Long, SourceDocumentState>();
+        for (var doc : documentService.listSourceDocuments(aProject)) {
+            stateByDocId.put(doc.getId(), doc.getState());
+        }
+
+        var totals = new EnumMap<SourceDocumentState, Long>(SourceDocumentState.class);
+        for (var state : SourceDocumentState.values()) {
+            totals.put(state, 0L);
+        }
+        for (var entry : aWeights.entrySet()) {
+            var state = stateByDocId.get(entry.getKey());
+            if (state == null) {
+                // Doc no longer exists (deleted) — weights are by current index; ignore.
+                continue;
+            }
+            totals.merge(state, entry.getValue(), Long::sum);
+        }
+
+        // Put values into display order
+        var ordered = new LinkedHashMap<SourceDocumentState, Long>();
+        ordered.put(NEW, totals.get(NEW));
+        ordered.put(ANNOTATION_IN_PROGRESS, totals.get(ANNOTATION_IN_PROGRESS));
+        ordered.put(ANNOTATION_FINISHED, totals.get(ANNOTATION_FINISHED));
+        ordered.put(CURATION_IN_PROGRESS, totals.get(CURATION_IN_PROGRESS));
+        ordered.put(CURATION_FINISHED, totals.get(CURATION_FINISHED));
+        return ordered;
     }
 
     /**

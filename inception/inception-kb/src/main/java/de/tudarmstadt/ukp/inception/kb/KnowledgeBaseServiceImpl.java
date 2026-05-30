@@ -31,6 +31,7 @@ import static java.lang.Math.round;
 import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.move;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Locale.ROOT;
 import static java.util.stream.Collectors.toList;
@@ -53,6 +54,7 @@ import java.io.OutputStream;
 import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -60,6 +62,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.compress.compressors.CompressorException;
@@ -72,9 +75,12 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.lucene.index.IndexFormatTooNewException;
 import org.apache.lucene.index.IndexFormatTooOldException;
+import org.apache.lucene.index.IndexNotFoundException;
 import org.apache.lucene.index.IndexUpgrader;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.SegmentInfos;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.Version;
 import org.eclipse.rdf4j.common.transaction.IsolationLevels;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -338,6 +344,149 @@ public class KnowledgeBaseServiceImpl
     {
         var indexDir = new File(kbRepositoriesRoot, "indexes/" + aKB.getRepositoryId());
         return FileUtils.sizeOfDirectory(indexDir);
+    }
+
+    @Override
+    public Optional<String> getIndexVersion(KnowledgeBase aKB)
+    {
+        var info = readIndexCommit(aKB);
+        if (info.version().isPresent()) {
+            return info.version().map(Version::toString);
+        }
+        if (info.tooOld()) {
+            var prefix = info.outOfRangeMajor().map(m -> m + ".x ").orElse("");
+            return Optional.of(prefix + "— too old, please reindex");
+        }
+        if (info.tooNew()) {
+            var prefix = info.outOfRangeMajor().map(m -> m + ".x ").orElse("");
+            return Optional.of(prefix + "— too new, please upgrade INCEpTION");
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public boolean isIndexUpgradeAvailable(KnowledgeBase aKB)
+    {
+        if (LOCAL != aKB.getType()) {
+            return false;
+        }
+        return readIndexCommit(aKB).version() //
+                .map(v -> v.major < Version.LATEST.major) //
+                .orElse(false);
+    }
+
+    private static final Pattern TOO_OLD_MAJOR_PATTERN = Pattern
+            .compile("Lucene version (\\d+)\\.");
+    private static final Pattern TOO_NEW_MAJOR_PATTERN = Pattern
+            .compile("indexCreatedVersionMajor is in the future: (\\d+)");
+
+    private record IndexCommitInfo(Optional<Version> version, boolean tooOld, boolean tooNew,
+            Optional<Integer> outOfRangeMajor)
+    {
+        static final IndexCommitInfo MISSING = new IndexCommitInfo(Optional.empty(), false, false,
+                Optional.empty());
+
+        static IndexCommitInfo readable(Version aVersion)
+        {
+            return new IndexCommitInfo(Optional.ofNullable(aVersion), false, false,
+                    Optional.empty());
+        }
+
+        static IndexCommitInfo tooOld(Integer aMajor)
+        {
+            return new IndexCommitInfo(Optional.empty(), true, false, Optional.ofNullable(aMajor));
+        }
+
+        static IndexCommitInfo tooNew(Integer aMajor)
+        {
+            return new IndexCommitInfo(Optional.empty(), false, true, Optional.ofNullable(aMajor));
+        }
+    }
+
+    private IndexCommitInfo readIndexCommit(KnowledgeBase aKB)
+    {
+        var indexDir = new File(kbRepositoriesRoot, "indexes/" + aKB.getRepositoryId());
+        if (!indexDir.isDirectory()) {
+            return IndexCommitInfo.MISSING;
+        }
+
+        try (var dir = FSDirectory.open(indexDir.toPath())) {
+            var segmentInfos = SegmentInfos.readLatestCommit(dir);
+            return IndexCommitInfo.readable(segmentInfos.getCommitLuceneVersion());
+        }
+        catch (IndexFormatTooOldException e) {
+            return IndexCommitInfo.tooOld(extractTooOldMajor(e));
+        }
+        catch (IndexFormatTooNewException e) {
+            return IndexCommitInfo.tooNew(extractTooNewMajor(e.getMessage()));
+        }
+        catch (IndexNotFoundException e) {
+            return IndexCommitInfo.MISSING;
+        }
+        catch (IllegalArgumentException e) {
+            var major = extractTooNewMajor(e.getMessage());
+            if (major != null) {
+                return IndexCommitInfo.tooNew(major);
+            }
+            LOG.debug("Unable to read Lucene index version for KB [{}]", aKB.getRepositoryId(), e);
+            return IndexCommitInfo.MISSING;
+        }
+        catch (IOException e) {
+            LOG.debug("Unable to read Lucene index version for KB [{}]", aKB.getRepositoryId(), e);
+            return IndexCommitInfo.MISSING;
+        }
+    }
+
+    private static Integer extractTooOldMajor(IndexFormatTooOldException e)
+    {
+        // Lucene 10 uses both the int and the reason-string constructors. Only the former exposes
+        // the format version via getVersion(); for the latter we have to parse the message.
+        var v = e.getVersion();
+        if (v != null) {
+            return v;
+        }
+        return extractMajor(TOO_OLD_MAJOR_PATTERN, e.getMessage());
+    }
+
+    private static Integer extractTooNewMajor(String aMessage)
+    {
+        return extractMajor(TOO_NEW_MAJOR_PATTERN, aMessage);
+    }
+
+    private static Integer extractMajor(Pattern aPattern, String aMessage)
+    {
+        if (aMessage == null) {
+            return null;
+        }
+        var matcher = aPattern.matcher(aMessage);
+        if (matcher.find()) {
+            try {
+                return Integer.parseInt(matcher.group(1));
+            }
+            catch (NumberFormatException nfe) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private static boolean isUnreadableIndexFailure(Throwable aThrowable)
+    {
+        if (ExceptionUtils.indexOfThrowable(aThrowable, IndexFormatTooNewException.class) != -1) {
+            return true;
+        }
+        if (ExceptionUtils.indexOfThrowable(aThrowable, IndexFormatTooOldException.class) != -1) {
+            return true;
+        }
+        // SegmentInfos throws a plain IllegalArgumentException when the index was created by a
+        // future Lucene major version (message "indexCreatedVersionMajor is in the future: N").
+        for (var t : ExceptionUtils.getThrowableList(aThrowable)) {
+            if (t instanceof IllegalArgumentException && t.getMessage() != null
+                    && TOO_NEW_MAJOR_PATTERN.matcher(t.getMessage()).find()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -1449,6 +1598,105 @@ public class KnowledgeBaseServiceImpl
         return someResult;
     }
 
+    @Override
+    public Map<String, KBHandle> readHandles(KnowledgeBase aKB, Collection<String> aIdentifiers)
+    {
+        if (aKB == null) {
+            throw new IllegalArgumentException("KnowledgeBase must not be null");
+        }
+        if (aIdentifiers == null) {
+            throw new IllegalArgumentException("Identifiers must not be null");
+        }
+        if (aIdentifiers.isEmpty()) {
+            return emptyMap();
+        }
+
+        try (var watch = new StopWatch(LOG, "readHandles(%d)", aIdentifiers.size())) {
+            var distinctIds = aIdentifiers.stream().distinct().toList();
+            var batchSize = Math.max(1, properties.getReadBatchSize());
+            var result = new LinkedHashMap<String, KBHandle>();
+
+            // Chunk so no single VALUES clause grows unbounded. Shared connection so all chunks
+            // see one transactional snapshot.
+            read(aKB, conn -> {
+                for (var start = 0; start < distinctIds.size(); start += batchSize) {
+                    var chunk = distinctIds.subList(start,
+                            Math.min(start + batchSize, distinctIds.size()));
+                    readHandlesChunk(aKB, conn, chunk, result);
+                }
+                return null;
+            });
+
+            return result;
+        }
+    }
+
+    private void readHandlesChunk(KnowledgeBase aKB, RepositoryConnection aConn, List<String> aIds,
+            Map<String, KBHandle> aResult)
+    {
+        // Result is already bounded by the VALUES clause from withIdentifier; a SPARQL LIMIT
+        // would risk truncating legitimate multi-row-per-id output (languages × OPTIONALs).
+        var query = SPARQLQueryBuilder.forItems(aKB) //
+                .withIdentifier(aIds.toArray(String[]::new)) //
+                .retrieveLabel() //
+                .retrieveDescription() //
+                .retrieveDeprecation() //
+                .noLimit();
+
+        // Bypasses queryCache: batch keys don't share well with single-id readHandle calls;
+        // callers are expected to maintain their own per-id cache.
+        var rows = query.asHandles(aConn, true);
+        for (var row : rows) {
+            aResult.putIfAbsent(row.getIdentifier(), row);
+        }
+
+        // Preserve the "always returns something per requested id" semantics of readHandle.
+        for (var id : aIds) {
+            aResult.computeIfAbsent(id, KBHandle::new);
+        }
+    }
+
+    @Override
+    public Map<String, KBHandle> readHandles(Project aProject, Collection<String> aIdentifiers)
+    {
+        if (aProject == null) {
+            throw new IllegalArgumentException("Project must not be null");
+        }
+        if (aIdentifiers == null) {
+            throw new IllegalArgumentException("Identifiers must not be null");
+        }
+        if (aIdentifiers.isEmpty()) {
+            return emptyMap();
+        }
+
+        var result = new LinkedHashMap<String, KBHandle>();
+        for (var id : aIdentifiers) {
+            result.put(id, new KBHandle(id));
+        }
+
+        for (var kb : getEnabledKnowledgeBases(aProject)) {
+            // Only re-query identifiers we haven't yet resolved to a labeled handle. Mirrors the
+            // single-id readHandle(Project, ...) loop, which stops at the first KB providing a
+            // name.
+            var unresolved = result.entrySet().stream() //
+                    .filter(e -> e.getValue().getName() == null) //
+                    .map(Map.Entry::getKey) //
+                    .toList();
+            if (unresolved.isEmpty()) {
+                break;
+            }
+
+            var kbResults = readHandles(kb, unresolved);
+            for (var entry : kbResults.entrySet()) {
+                if (entry.getValue().getName() != null) {
+                    result.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+
+        return result;
+    }
+
     /**
      * List label properties.
      * 
@@ -1656,22 +1904,27 @@ public class KnowledgeBaseServiceImpl
             conn.commit();
         }
         catch (SailException e) {
-            if (ExceptionUtils.hasCause(e, IndexFormatTooNewException.class)
-                    || ExceptionUtils.hasCause(e, IndexFormatTooOldException.class)) {
-                LOG.warn("Unable to access index: {}", e.getMessage());
-                LOG.info("Index format mismatch - rebuilding index from scratch...");
+            if (!isUnreadableIndexFailure(e)) {
+                throw e;
+            }
 
-                var luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
-                luceneSail.shutDown();
-                FileUtils.deleteQuietly(new File(luceneDir));
-                luceneSail.init();
+            LOG.warn("Unable to access index: {}", e.getMessage());
+            LOG.info("Index format mismatch detected - trying to rebuild index from scratch...");
 
-                // Only try to rebuild once - so no recursion here!
-                try (var conn = getConnection(aKB)) {
-                    ReindexingUtils.reindex(luceneSail);
-                    // luceneSail.reindex();
-                    conn.commit();
-                }
+            var luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
+            // Shut down the whole repository so the manager will create a fresh one on next
+            // access. Shutting down just the LuceneSail and calling init() afterwards leaves
+            // the sail in an unusable state - see upgradeFullTextIndex() for the same dance.
+            ((SailRepository) repo).shutDown();
+            FileUtils.deleteQuietly(new File(luceneDir));
+
+            var freshSail = (LuceneSail) ((SailRepository) repoManager
+                    .getRepository(aKB.getRepositoryId())).getSail();
+
+            // Only try to rebuild once - so no recursion here!
+            try (var conn = getConnection(aKB)) {
+                ReindexingUtils.reindex(freshSail);
+                conn.commit();
             }
         }
     }
@@ -1684,19 +1937,17 @@ public class KnowledgeBaseServiceImpl
         }
 
         var repo = repoManager.getRepository(aKB.getRepositoryId());
-
-        if (!(repo instanceof SailRepository)) {
+        if (!(repo instanceof SailRepository sailRepo)) {
             throw new IllegalArgumentException(
                     "Index upgrade is not supported on [" + repo.getClass() + "] repositories");
         }
 
-        var sail = ((SailRepository) repo).getSail();
-        if (!(sail instanceof LuceneSail)) {
+        var sail = sailRepo.getSail();
+        if (!(sail instanceof LuceneSail luceneSail)) {
             throw new IllegalArgumentException(
                     "Index upgrade is not supported on [" + sail.getClass() + "] repositories");
         }
 
-        var luceneSail = (LuceneSail) sail;
         var luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
         if (luceneDir == null) {
             throw new IllegalStateException("LuceneSail has no '" + LuceneSail.LUCENE_DIR_KEY
@@ -1709,29 +1960,12 @@ public class KnowledgeBaseServiceImpl
             return;
         }
 
-        // Shut the sail down so the on-disk index can be rewritten exclusively. The sail will be
-        // reinitialised lazily on the next access.
-        luceneSail.shutDown();
-        Throwable upgradeError = null;
+        // Shut down the whole repository to release the index files. The repository manager
+        // will create a fresh repository on the next access. Shutting down just the
+        // LuceneSail and calling init() afterwards leaves the sail in an unusable state.
+        sailRepo.shutDown();
         try (var dir = FSDirectory.open(indexDir.toPath())) {
             new IndexUpgrader(dir, new IndexWriterConfig(), false).upgrade();
-        }
-        catch (Throwable e) {
-            upgradeError = e;
-            throw e;
-        }
-        finally {
-            try {
-                luceneSail.init();
-            }
-            catch (Throwable initError) {
-                if (upgradeError != null) {
-                    upgradeError.addSuppressed(initError);
-                }
-                else {
-                    throw initError;
-                }
-            }
         }
     }
 

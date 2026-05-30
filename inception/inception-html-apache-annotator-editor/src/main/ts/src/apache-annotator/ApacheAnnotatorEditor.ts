@@ -18,9 +18,11 @@
 import {
     type AnnotationEditor,
     type DiamAjax,
+    type DocumentStructureStrategy,
     type Offsets,
     calculateStartOffset,
 } from '@inception-project/inception-js-api';
+import DocumentStructureNavigator from '@inception-project/inception-js-api/src/documentStructure/DocumentStructureNavigator.svelte';
 import { ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualizer.svelte';
 import { ApacheAnnotatorSelector } from './ApacheAnnotatorSelector';
 import ApacheAnnotatorToolbar from './ApacheAnnotatorToolbar.svelte';
@@ -44,7 +46,7 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     private popover: AnnotationDetailPopOver;
     private sectionSelector: string;
     private horizSplitPane: HTMLElement;
-    private documentStructureNavigator: Element;
+    private documentStructureNavigator: ReturnType<typeof mount> | undefined;
     private userPreferencesKey: string;
     private navigatorContainer: HTMLElement;
     private deferredInitializationSteps: (() => void)[] = [];
@@ -52,19 +54,22 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     private protectedElements: Set<string>;
     private protectedElementsMatcher?: (el: Element) => boolean;
     private activeResizeCleanup: (() => void) | undefined = undefined;
+    private documentStructure: DocumentStructureStrategy;
 
     public constructor(
         element: Element,
         ajax: DiamAjax,
         userPreferencesKey: string,
         protectedElements: Set<string>,
-        sectionElementLocalNames: Set<string>
+        sectionElementLocalNames: Set<string>,
+        documentStructure: DocumentStructureStrategy
     ) {
         this.ajax = ajax;
         this.root = element;
         this.userPreferencesKey = userPreferencesKey;
         this.sectionSelector = [...sectionElementLocalNames].join(',');
         this.protectedElements = protectedElements;
+        this.documentStructure = documentStructure;
         const protectedSel = [...protectedElements].join(',');
         this.protectedElementsMatcher = compileNsSelector(protectedSel) || undefined;
 
@@ -109,6 +114,8 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
                     documentContainer.appendChild(child)
                 );
 
+                this.documentStructure.preprocess(documentContainer);
+
                 // Set up a container for the document navigation sidebar
                 this.navigatorContainer = this.root.ownerDocument.createElement('div');
                 this.navigatorContainer.classList.add('iaa-document-navigator');
@@ -133,7 +140,9 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
 
                 // Add auxiliary controls
                 this.documentStructureNavigator = this.createDocumentNavigator(
-                    this.navigatorContainer
+                    this.navigatorContainer,
+                    documentContainer,
+                    this.documentStructure
                 );
                 this.toolbar = this.createToolbar();
 
@@ -319,8 +328,18 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
         });
     }
 
-    private createDocumentNavigator(target: HTMLElement) {
-        return this.root.ownerDocument.createElement('div');
+    private createDocumentNavigator(
+        target: HTMLElement,
+        documentContainer: HTMLElement,
+        structure: DocumentStructureStrategy
+    ) {
+        return mount(DocumentStructureNavigator, {
+            target,
+            props: {
+                documentContainer,
+                structure,
+            },
+        });
     }
 
     private cancelRightClick(e: Event): void {
@@ -412,6 +431,11 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
         if (this.toolbar) {
             unmount(this.toolbar);
             this.toolbar = undefined;
+        }
+
+        if (this.documentStructureNavigator) {
+            unmount(this.documentStructureNavigator);
+            this.documentStructureNavigator = undefined;
         }
 
         this.vis?.destroy();

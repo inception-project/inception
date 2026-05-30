@@ -17,8 +17,10 @@
  */
 
 // =======================================================================
-// File lives in 
+// Canonical source:
 // /inception/inception-build/src/main/resources/inception/vite.config.js
+// Per-module copies under */src/main/ts/vite.config.js are managed by
+// update-bun-lock.sh -- edit the canonical file rather than the copies.
 // =======================================================================
 
 import { defineConfig } from 'vite'

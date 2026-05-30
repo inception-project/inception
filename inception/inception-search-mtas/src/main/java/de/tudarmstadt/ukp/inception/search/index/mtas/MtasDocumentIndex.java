@@ -23,20 +23,28 @@ package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_FEATURE_SENTENCE;
 import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_FEATURE_TOKEN;
 import static de.tudarmstadt.ukp.inception.search.Metrics.VIRTUAL_LAYER_SEGMENTATION;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getIndexedName;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toSet;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER_ARGS;
 import static mtas.codec.MtasCodec.MTAS_CODEC_NAME;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.apache.commons.lang3.StringUtils.toRootLowerCase;
+import static org.apache.lucene.index.PostingsEnum.NONE;
+import static org.apache.lucene.queries.spans.SpanWeight.Postings.POSITIONS;
+import static org.apache.lucene.search.DocIdSetIterator.NO_MORE_DOCS;
 import static org.apache.lucene.search.ScoreMode.COMPLETE_NO_SCORES;
 
 import java.io.File;
@@ -46,13 +54,16 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.text.BreakIterator;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -76,9 +87,9 @@ import org.apache.lucene.index.IndexUpgrader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.ReaderUtil;
 import org.apache.lucene.index.SegmentReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queries.spans.SpanWeight;
 import org.apache.lucene.queries.spans.Spans;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
@@ -88,6 +99,7 @@ import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,10 +109,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.search.DocumentStatistics;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
@@ -134,6 +150,12 @@ import mtas.search.spans.util.MtasSpanQuery;
 public class MtasDocumentIndex
     implements PhysicalIndex
 {
+    private static final String SENTENCE_QUERY = "<s=\"\"/>";
+
+    private static final String TOKEN_QUERY = "<Token=\"\"/>";
+
+    static final int CURRENT_SCHEMA_VERSION = 1;
+
     /**
      * Constant for the field which carries the unique identifier for the index document consisting:
      * {@code [sourceDocumentId]/[annotationDocumentId]}
@@ -208,6 +230,11 @@ public class MtasDocumentIndex
     private IndexWriter _indexWriter;
     private ReferenceManager<IndexSearcher> _searcherManager;
     private ScheduledFuture<?> _commitFuture;
+
+    // Source of the timestamp written into {@code FIELD_TIMESTAMP}. Static so tests can pin it
+    // to a fixed value (exercising the same-millisecond collision case that surfaces on Windows
+    // due to its coarser clock resolution) without having to reach into the pooled live instance.
+    static volatile java.util.function.Supplier<Date> nowSupplier = Date::new;
 
     public MtasDocumentIndex(Project aProject, DocumentService aDocumentService, File aIndexDir,
             FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
@@ -323,6 +350,12 @@ public class MtasDocumentIndex
                         project.getName(), project.getId());
             }
         }
+    }
+
+    @Override
+    public int getCurrentSchemaVersion()
+    {
+        return CURRENT_SCHEMA_VERSION;
     }
 
     @Override
@@ -476,13 +509,13 @@ public class MtasDocumentIndex
         sentence.setUiName(VIRTUAL_FEATURE_SENTENCE);
         sentence.setLayer(rawText);
 
-        var results = getLayerStatistics(aStatisticRequest, "<Token=\"\"/>", fullDocSet);
+        var results = getLayerStatistics(aStatisticRequest, TOKEN_QUERY, fullDocSet);
 
         results.setFeature(token);
         allStats.put(VIRTUAL_LAYER_SEGMENTATION + "." + VIRTUAL_FEATURE_TOKEN, results);
         nonNullStats.put(VIRTUAL_LAYER_SEGMENTATION + "." + VIRTUAL_FEATURE_TOKEN, results);
 
-        results = getLayerStatistics(aStatisticRequest, "<s=\"\"/>", fullDocSet);
+        results = getLayerStatistics(aStatisticRequest, SENTENCE_QUERY, fullDocSet);
         results.setFeature(sentence);
         allStats.put(VIRTUAL_LAYER_SEGMENTATION + "." + VIRTUAL_FEATURE_SENTENCE, results);
         nonNullStats.put(VIRTUAL_LAYER_SEGMENTATION + "." + VIRTUAL_FEATURE_SENTENCE, results);
@@ -633,7 +666,7 @@ public class MtasDocumentIndex
             functionTypes[0] = LayerStatistics.STATS;
 
             // A query which counts sentences
-            var parsedSentQuery = parseQuery("<s=\"\"/>", aStatisticRequest.getSearchSettings());
+            var parsedSentQuery = parseQuery(SENTENCE_QUERY, aStatisticRequest.getSearchSettings());
             fieldStats.spanQueryList.add(parsedSentQuery);
 
             spanQuerys[1] = parsedSentQuery;
@@ -707,6 +740,438 @@ public class MtasDocumentIndex
                 searcher = null;
             }
         }
+    }
+
+    static String buildLayerCountQuery(AnnotationLayer aLayer)
+    {
+        if (aLayer == null) {
+            throw new IllegalArgumentException("Layer must not be null");
+        }
+
+        var type = aLayer.getName();
+        if (Token._TypeName.equals(type)) {
+            return TOKEN_QUERY;
+        }
+        if (Sentence._TypeName.equals(type)) {
+            return SENTENCE_QUERY;
+        }
+
+        return "<" + getIndexedName(aLayer.getUiName()) + "=\"\"/>";
+    }
+
+    @Override
+    public Map<Long, Long> getAnnotationCountsPerSourceDocument(StatisticRequest aRequest,
+            AnnotationLayer aLayer)
+        throws IOException, ExecutionException
+    {
+        // Writes schedule a deferred commit + searcher refresh; without flushing it here, the
+        // acquired searcher can miss a just-written curation row and fall back to the INITIAL_CAS
+        // row, returning stale counts.
+        ensureAllIsCommitted();
+
+        var featureQuery = buildLayerCountQuery(aLayer);
+        var parsedQuery = parseQuery(featureQuery, aRequest.getSearchSettings());
+
+        var projectSourceDocumentIds = documentService.listSourceDocuments(aRequest.getProject())
+                .stream() //
+                .map(SourceDocument::getId) //
+                .collect(toSet());
+
+        var counts = new HashMap<Long, Long>();
+
+        IndexSearcher searcher = null;
+        try {
+            searcher = getSearcherManager().acquire();
+            var indexReader = searcher.getIndexReader();
+            var leaves = indexReader.leaves();
+
+            var srcDocByGlobalLuceneDocId = getSourceDocumentsByDocId(projectSourceDocumentIds,
+                    leaves);
+
+            if (srcDocByGlobalLuceneDocId.isEmpty()) {
+                return counts;
+            }
+
+            // Group the canonical doc IDs by leaf and sort ascending so we can advance() through
+            // each segment in a single sweep instead of iterating every Lucene doc that matches
+            // the layer query.
+            var preferredLocalIdsByLeafIndex = new HashMap<Integer, int[]>();
+            var globalIdsByLeafIndex = new HashMap<Integer, int[]>();
+            {
+                var leafBuckets = new HashMap<Integer, java.util.List<Integer>>();
+                for (var globalId : srcDocByGlobalLuceneDocId.keySet()) {
+                    var leafIdx = ReaderUtil.subIndex(globalId, leaves);
+                    leafBuckets.computeIfAbsent(leafIdx, $ -> new ArrayList<>()).add(globalId);
+                }
+                for (var e : leafBuckets.entrySet()) {
+                    var leafIdx = e.getKey();
+                    var globalIds = e.getValue();
+                    globalIds.sort(Integer::compare);
+                    var docBase = leaves.get(leafIdx).docBase;
+                    var localIds = new int[globalIds.size()];
+                    var globals = new int[globalIds.size()];
+                    for (var i = 0; i < globalIds.size(); i++) {
+                        globals[i] = globalIds.get(i);
+                        localIds[i] = globalIds.get(i) - docBase;
+                    }
+                    preferredLocalIdsByLeafIndex.put(leafIdx, localIds);
+                    globalIdsByLeafIndex.put(leafIdx, globals);
+                }
+            }
+
+            final var boost = 0.0f;
+            var spanweight = parsedQuery.rewrite(searcher).createWeight(searcher,
+                    COMPLETE_NO_SCORES, boost);
+
+            for (var leafIdx = 0; leafIdx < leaves.size(); leafIdx++) {
+                var localIds = preferredLocalIdsByLeafIndex.get(leafIdx);
+                if (localIds == null) {
+                    continue;
+                }
+
+                var leaf = leaves.get(leafIdx);
+                var spans = spanweight.getSpans(leaf, POSITIONS);
+                if (spans == null) {
+                    continue;
+                }
+
+                var globals = globalIdsByLeafIndex.get(leafIdx);
+
+                for (var i = 0; i < localIds.length; i++) {
+                    var target = localIds[i];
+                    if (spans.docID() < target) {
+                        if (spans.advance(target) == NO_MORE_DOCS) {
+                            break;
+                        }
+                    }
+                    if (spans.docID() != target) {
+                        // No span matches in this canonical doc — token count is 0; skip.
+                        continue;
+                    }
+
+                    var perDocCount = 0L;
+                    while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
+                        perDocCount++;
+                    }
+                    counts.merge(srcDocByGlobalLuceneDocId.get(globals[i]), perDocCount, Long::sum);
+                }
+            }
+        }
+        catch (Exception e) {
+            throw new ExecutionException(
+                    "Unable to count annotations for query [" + featureQuery + "]", e);
+        }
+        finally {
+            if (searcher != null) {
+                getSearcherManager().release(searcher);
+                searcher = null;
+            }
+        }
+
+        return counts;
+    }
+
+    @Override
+    public Map<Long, DocumentStatistics> getAnnotationCountsPerDocument(AnnotationSet aSet,
+            Collection<SourceDocument> aDocuments, AnnotationSearchState aSearchSettings)
+        throws IOException, ExecutionException
+    {
+        if (aDocuments == null || aDocuments.isEmpty()) {
+            return emptyMap();
+        }
+
+        // Same rationale as getAnnotationCountsPerSourceDocument: ensure pending writes are visible
+        // to the searcher so we don't fall back to a stale INITIAL_CAS row.
+        ensureAllIsCommitted();
+
+        var sourceDocIds = aDocuments.stream() //
+                .map(SourceDocument::getId) //
+                .collect(toSet());
+
+        var preferredUser = annotationSetToUserField(aSet);
+        var tokenQuery = parseQuery(TOKEN_QUERY, aSearchSettings);
+        var sentenceQuery = parseQuery(SENTENCE_QUERY, aSearchSettings);
+
+        IndexSearcher searcher = null;
+        try {
+            searcher = getSearcherManager().acquire();
+            var leaves = searcher.getIndexReader().leaves();
+
+            var srcDocByGlobalLuceneDocId = findCanonicalDocs(sourceDocIds, leaves, preferredUser);
+
+            if (srcDocByGlobalLuceneDocId.isEmpty()) {
+                return emptyMap();
+            }
+
+            // Pre-group the canonical doc ids by leaf segment once so each per-query sweep can
+            // advance() through positions instead of scanning every Lucene doc the query touches.
+            var preferredLocalIdsByLeafIndex = new HashMap<Integer, int[]>();
+            var globalIdsByLeafIndex = new HashMap<Integer, int[]>();
+            {
+                var leafBuckets = new HashMap<Integer, List<Integer>>();
+                for (var globalId : srcDocByGlobalLuceneDocId.keySet()) {
+                    var leafIdx = ReaderUtil.subIndex(globalId, leaves);
+                    leafBuckets.computeIfAbsent(leafIdx, $ -> new ArrayList<>()).add(globalId);
+                }
+                for (var e : leafBuckets.entrySet()) {
+                    var leafIdx = e.getKey();
+                    var globalIds = e.getValue();
+                    globalIds.sort(Integer::compare);
+                    var docBase = leaves.get(leafIdx).docBase;
+                    var localIds = new int[globalIds.size()];
+                    var globals = new int[globalIds.size()];
+                    for (var i = 0; i < globalIds.size(); i++) {
+                        globals[i] = globalIds.get(i);
+                        localIds[i] = globalIds.get(i) - docBase;
+                    }
+                    preferredLocalIdsByLeafIndex.put(leafIdx, localIds);
+                    globalIdsByLeafIndex.put(leafIdx, globals);
+                }
+            }
+
+            var tokenCounts = countSpansPerDoc(searcher, leaves, tokenQuery,
+                    preferredLocalIdsByLeafIndex, globalIdsByLeafIndex, srcDocByGlobalLuceneDocId);
+            var sentenceCounts = countSpansPerDoc(searcher, leaves, sentenceQuery,
+                    preferredLocalIdsByLeafIndex, globalIdsByLeafIndex, srcDocByGlobalLuceneDocId);
+
+            var result = new HashMap<Long, DocumentStatistics>();
+            for (var srcDocId : srcDocByGlobalLuceneDocId.values()) {
+                var tokens = tokenCounts.getOrDefault(srcDocId, 0L);
+                var sentences = sentenceCounts.getOrDefault(srcDocId, 0L);
+                result.put(srcDocId, new DocumentStatistics(tokens, sentences));
+            }
+            return result;
+        }
+        catch (Exception e) {
+            throw new ExecutionException("Unable to count tokens/sentences", e);
+        }
+        finally {
+            if (searcher != null) {
+                getSearcherManager().release(searcher);
+                searcher = null;
+            }
+        }
+    }
+
+    private static String annotationSetToUserField(AnnotationSet aSet)
+    {
+        // INITIAL_CAS rows are stored with FIELD_USER="" (see writeDocument for SourceDocument);
+        // every other annotation set maps 1:1 to its id (username, CURATION_USER, ...).
+        return INITIAL_SET.equals(aSet) ? "" : aSet.id();
+    }
+
+    private Map<Long, Long> countSpansPerDoc(IndexSearcher aSearcher,
+            List<LeafReaderContext> aLeaves, MtasSpanQuery aParsedQuery,
+            Map<Integer, int[]> aPreferredLocalIdsByLeafIndex,
+            Map<Integer, int[]> aGlobalIdsByLeafIndex,
+            Map<Integer, Long> aSrcDocByGlobalLuceneDocId)
+        throws IOException
+    {
+        var counts = new HashMap<Long, Long>();
+        var spanweight = aParsedQuery.rewrite(aSearcher).createWeight(aSearcher, COMPLETE_NO_SCORES,
+                0.0f);
+
+        for (var leafIdx = 0; leafIdx < aLeaves.size(); leafIdx++) {
+            var localIds = aPreferredLocalIdsByLeafIndex.get(leafIdx);
+            if (localIds == null) {
+                continue;
+            }
+
+            var leaf = aLeaves.get(leafIdx);
+            var spans = spanweight.getSpans(leaf, POSITIONS);
+            if (spans == null) {
+                continue;
+            }
+
+            var globals = aGlobalIdsByLeafIndex.get(leafIdx);
+
+            for (var i = 0; i < localIds.length; i++) {
+                var target = localIds[i];
+                if (spans.docID() < target) {
+                    if (spans.advance(target) == NO_MORE_DOCS) {
+                        break;
+                    }
+                }
+                if (spans.docID() != target) {
+                    continue;
+                }
+
+                var perDocCount = 0L;
+                while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
+                    perDocCount++;
+                }
+                counts.merge(aSrcDocByGlobalLuceneDocId.get(globals[i]), perDocCount, Long::sum);
+            }
+        }
+
+        return counts;
+    }
+
+    /**
+     * Locate the canonical Lucene doc per source document, preferring rows owned by
+     * {@code aPreferredUser} and falling back to the INITIAL_CAS row (FIELD_USER="") when the
+     * preferred row is absent. When {@code aPreferredUser} is already the empty string, only the
+     * INITIAL_CAS pass runs.
+     */
+    private HashMap<Integer, Long> findCanonicalDocs(Set<Long> aSourceDocIds,
+            List<LeafReaderContext> aLeaves, String aPreferredUser)
+        throws IOException
+    {
+        var srcDocByGlobalLuceneDocId = new HashMap<Integer, Long>();
+        var hasPreferredRowBySourceDoc = new HashSet<Long>();
+        var preferIsInitial = aPreferredUser.isEmpty();
+
+        if (!preferIsInitial) {
+            for (var leafCtx : aLeaves) {
+                var leafReader = leafCtx.reader();
+                var storedFields = leafReader.storedFields();
+                var liveDocs = leafReader.getLiveDocs();
+                var docBase = leafCtx.docBase;
+
+                for (var localDocId : findLiveDocsByUser(leafReader, aPreferredUser, liveDocs)) {
+                    var rawSrcId = storedFields.document(localDocId).get(FIELD_SOURCE_DOCUMENT_ID);
+                    if (rawSrcId == null) {
+                        continue;
+                    }
+                    var srcDocId = Long.valueOf(rawSrcId);
+                    if (!aSourceDocIds.contains(srcDocId)) {
+                        continue;
+                    }
+                    srcDocByGlobalLuceneDocId.put(localDocId + docBase, srcDocId);
+                    hasPreferredRowBySourceDoc.add(srcDocId);
+                }
+            }
+        }
+
+        for (var leafCtx : aLeaves) {
+            var leafReader = leafCtx.reader();
+            var storedFields = leafReader.storedFields();
+            var liveDocs = leafReader.getLiveDocs();
+            var docBase = leafCtx.docBase;
+
+            for (var localDocId : findLiveDocsByUser(leafReader, "", liveDocs)) {
+                var rawSrcId = storedFields.document(localDocId).get(FIELD_SOURCE_DOCUMENT_ID);
+                if (rawSrcId == null) {
+                    continue;
+                }
+                var srcDocId = Long.valueOf(rawSrcId);
+                if (!aSourceDocIds.contains(srcDocId)) {
+                    continue;
+                }
+                if (hasPreferredRowBySourceDoc.contains(srcDocId)) {
+                    continue;
+                }
+                srcDocByGlobalLuceneDocId.put(localDocId + docBase, srcDocId);
+            }
+        }
+
+        return srcDocByGlobalLuceneDocId;
+    }
+
+    /**
+     * Identify the canonical Lucene doc per source document by walking only the relevant FIELD_USER
+     * posting lists:
+     * <ol>
+     * <li>FIELD_USER=CURATION_USER yields all curation rows.</li>
+     * <li>FIELD_USER="" yields all source-doc rows (INITIAL_CAS), used as fallback when no curation
+     * row exists for that source doc.</li>
+     * </ol>
+     * Per-annotator rows live under their own user names and are not visited at all.
+     *
+     * Sweeps all leaves for curation rows first, then all leaves for source-doc rows. Doing it in
+     * two full passes — rather than interleaving curation/source within each leaf — is
+     * load-bearing: a source doc's curation row and its INITIAL_CAS row can live in different
+     * segments. If we recorded the INITIAL_CAS row before knowing whether any other segment held
+     * the curation row, both rows would end up in the result and the doc would be double-counted in
+     * pass 2.
+     *
+     * Cost: two posting-list iterations per leaf + one stored-fields read per canonical row.
+     * Independent of annotator count, independent of project size beyond what we actually keep.
+     */
+    private HashMap<Integer, Long> getSourceDocumentsByDocId(Set<Long> projectSourceDocumentIds,
+            List<LeafReaderContext> leaves)
+        throws IOException
+    {
+        var srcDocByGlobalLuceneDocId = new HashMap<Integer, Long>();
+        var hasCurationRowBySourceDoc = new HashSet<Long>();
+
+        // Pass 1: record all curation rows across every leaf.
+        for (var leafCtx : leaves) {
+            var leafReader = leafCtx.reader();
+            var storedFields = leafReader.storedFields();
+            var liveDocs = leafReader.getLiveDocs();
+            var docBase = leafCtx.docBase;
+
+            for (var localDocId : findLiveDocsByUser(leafReader, CURATION_USER, liveDocs)) {
+                var rawSrcId = storedFields.document(localDocId).get(FIELD_SOURCE_DOCUMENT_ID);
+                if (rawSrcId == null) {
+                    continue;
+                }
+                var srcDocId = Long.valueOf(rawSrcId);
+                if (!projectSourceDocumentIds.contains(srcDocId)) {
+                    continue;
+                }
+                srcDocByGlobalLuceneDocId.put(localDocId + docBase, srcDocId);
+                hasCurationRowBySourceDoc.add(srcDocId);
+            }
+        }
+
+        // Pass 2: record source-doc rows only for source docs without a curation row anywhere.
+        for (var leafCtx : leaves) {
+            var leafReader = leafCtx.reader();
+            var storedFields = leafReader.storedFields();
+            var liveDocs = leafReader.getLiveDocs();
+            var docBase = leafCtx.docBase;
+
+            for (var localDocId : findLiveDocsByUser(leafReader, "", liveDocs)) {
+                var rawSrcId = storedFields.document(localDocId).get(FIELD_SOURCE_DOCUMENT_ID);
+                if (rawSrcId == null) {
+                    continue;
+                }
+                var srcDocId = Long.valueOf(rawSrcId);
+                if (!projectSourceDocumentIds.contains(srcDocId)) {
+                    continue;
+                }
+                if (hasCurationRowBySourceDoc.contains(srcDocId)) {
+                    continue;
+                }
+                srcDocByGlobalLuceneDocId.put(localDocId + docBase, srcDocId);
+            }
+        }
+
+        return srcDocByGlobalLuceneDocId;
+    }
+
+    /**
+     * Walks the posting list of {@code FIELD_USER=<aUser>} in {@code aLeafReader} and returns the
+     * segment-local Lucene doc ids of all live entries. This avoids both a full segment scan and
+     * per-doc query setup overhead — posting lists are columnar and packed, so the cost is
+     * proportional only to the number of matching rows.
+     */
+    private static List<Integer> findLiveDocsByUser(org.apache.lucene.index.LeafReader aLeafReader,
+            String aUser, org.apache.lucene.util.Bits aLiveDocs)
+        throws IOException
+    {
+        var terms = aLeafReader.terms(FIELD_USER);
+        if (terms == null) {
+            return emptyList();
+        }
+
+        var iter = terms.iterator();
+        if (!iter.seekExact(new BytesRef(aUser))) {
+            return emptyList();
+        }
+
+        var postings = iter.postings(null, NONE);
+        var result = new ArrayList<Integer>();
+        int docId;
+        while ((docId = postings.nextDoc()) != NO_MORE_DOCS) {
+            if (aLiveDocs == null || aLiveDocs.get(docId)) {
+                result.add(docId);
+            }
+        }
+
+        return result;
     }
 
     private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest,
@@ -809,7 +1274,7 @@ public class MtasDocumentIndex
         annotatableDocuments.entrySet().stream()
                 .forEach(e -> sourceDocumentIndex.put(e.getKey().getId(), e.getKey()));
 
-        final var boost = 0;
+        final var boost = 0.0f;
         var spanweight = q.rewrite(searcher).createWeight(searcher, COMPLETE_NO_SCORES, boost);
 
         var numResults = 0;
@@ -818,7 +1283,7 @@ public class MtasDocumentIndex
         while (leafReaderContextIterator.hasNext()) {
             var leafReaderContext = leafReaderContextIterator.next();
             try {
-                var spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
+                var spans = spanweight.getSpans(leafReaderContext, POSITIONS);
                 var segmentReader = (SegmentReader) leafReaderContext.reader();
                 var storedFields = segmentReader.storedFields();
 
@@ -826,7 +1291,7 @@ public class MtasDocumentIndex
                     continue;
                 }
 
-                while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+                while (spans.nextDoc() != NO_MORE_DOCS) {
                     if (segmentReader.numDocs() == segmentReader.maxDoc()
                             || segmentReader.getLiveDocs().get(spans.docID())) {
                         var document = storedFields.document(spans.docID());
@@ -943,14 +1408,14 @@ public class MtasDocumentIndex
 
         // cycle through all the leaves
         for (var leafReaderContext : aLeaves) {
-            var spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
+            var spans = spanweight.getSpans(leafReaderContext, POSITIONS);
             var segmentReader = (SegmentReader) leafReaderContext.reader();
             var storedFields = segmentReader.storedFields();
             var idList = new LongArrayList();
             // no spans -> no docs
             if (spans != null) {
                 // go through the docs in iterator span
-                while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+                while (spans.nextDoc() != NO_MORE_DOCS) {
                     // don't know why this if is needed, just copy/pasted it from method doQuery
                     // below
                     if (segmentReader.numDocs() == segmentReader.maxDoc()
@@ -1008,7 +1473,7 @@ public class MtasDocumentIndex
             var leafReaderContext = leafReaderContextIterator.next();
 
             try {
-                var spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
+                var spans = spanweight.getSpans(leafReaderContext, POSITIONS);
                 if (spans == null) {
                     continue;
                 }
@@ -1017,7 +1482,7 @@ public class MtasDocumentIndex
                 var storedFields = segmentReader.storedFields();
                 var terms = segmentReader.terms(FIELD_CONTENT);
                 var mtasCodecInfo = CodecInfo.getCodecInfoFromTerms(terms);
-                while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+                while (spans.nextDoc() != NO_MORE_DOCS) {
                     if (segmentReader.numDocs() == segmentReader.maxDoc()
                             || segmentReader.getLiveDocs().get(spans.docID())) {
                         var document = storedFields.document(spans.docID());
@@ -1259,12 +1724,18 @@ public class MtasDocumentIndex
         }
     }
 
-    private String indexDocument(String aDocumentTitle, long aSourceDocumentId,
-            long aAnnotationDocumentId, String aUser, byte[] aBinaryCas)
+    /**
+     * @param aReplaceByFieldIdTerm
+     *            if non-{@code null}, atomically replaces any existing rows with the same
+     *            {@code FIELD_ID} via {@link org.apache.lucene.index.IndexWriter#updateDocument}.
+     *            Otherwise just appends.
+     */
+    private String writeDocument(String aDocumentTitle, long aSourceDocumentId,
+            long aAnnotationDocumentId, String aUser, byte[] aBinaryCas, Term aReplaceByFieldIdTerm)
         throws IOException
     {
         // Calculate timestamp that will be indexed
-        var timestamp = DateTools.dateToString(new Date(), DateTools.Resolution.MILLISECOND);
+        var timestamp = DateTools.dateToString(nowSupplier.get(), DateTools.Resolution.MILLISECOND);
 
         LOG.debug(
                 "Indexing document in project [{}]({}). sourceId: {}, annotationId: {}, "
@@ -1291,9 +1762,13 @@ public class MtasDocumentIndex
         doc.add(new StringField(FIELD_TIMESTAMP, timestamp, Field.Store.YES));
         doc.add(new TextField(FIELD_CONTENT, encodedCAS, Field.Store.NO));
 
-        // Add document to the Lucene index
         var indexWriter = getIndexWriter();
-        indexWriter.addDocument(doc);
+        if (aReplaceByFieldIdTerm != null) {
+            indexWriter.updateDocument(aReplaceByFieldIdTerm, doc);
+        }
+        else {
+            indexWriter.addDocument(doc);
+        }
 
         return timestamp;
     };
@@ -1356,42 +1831,6 @@ public class MtasDocumentIndex
                         BooleanClause.Occur.MUST) //
                 .add(new TermQuery(new Term(FIELD_TIMESTAMP, aTimestamp)),
                         BooleanClause.Occur.MUST);
-
-        // Delete document based on the previous query
-        indexWriter.deleteDocuments(booleanQuery.build());
-    }
-
-    /**
-     * Remove a specific document from the index based on its timestamp
-     * 
-     * @param aSourceDocumentId
-     *            The ID of the source document to be removed
-     * @param aAnnotationDocumentId
-     *            The ID of the annotation document to be removed
-     * @param aUser
-     *            The owner of the document to be removed
-     * @param aCurrentVersion
-     *            The timestamp of the document to be kept
-     */
-    private void deindexOldVersionsOfDocument(long aSourceDocumentId, long aAnnotationDocumentId,
-            String aUser, String aCurrentVersion)
-        throws IOException
-    {
-        LOG.debug(
-                "Removing old versions of document from index in project [{}]({}). sourceId: {}, "
-                        + "annotationId: {}, user: {}, current timestamp: {}",
-                project.getName(), project.getId(), aSourceDocumentId, aAnnotationDocumentId, aUser,
-                aCurrentVersion);
-
-        var indexWriter = getIndexWriter();
-
-        // Prepare boolean query with the two obligatory terms (id and timestamp)
-        var booleanQuery = new BooleanQuery.Builder() //
-                .add(new TermQuery(new Term(FIELD_ID,
-                        String.format("%d/%d", aSourceDocumentId, aAnnotationDocumentId))),
-                        BooleanClause.Occur.MUST) //
-                .add(new TermQuery(new Term(FIELD_TIMESTAMP, aCurrentVersion)),
-                        BooleanClause.Occur.MUST_NOT);
 
         // Delete document based on the previous query
         indexWriter.deleteDocuments(booleanQuery.build());
@@ -1553,47 +1992,31 @@ public class MtasDocumentIndex
     @Override
     public void indexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException
     {
+        // Atomic delete-by-FIELD_ID + add. The previous add-then-delete-old-by-(timestamp !=
+        // current) pattern was meant to avoid a searcher window with no row present, but it broke
+        // down whenever two consecutive writes shared a millisecond timestamp (easy on Windows due
+        // to its coarser clock resolution): neither write's delete filter matched the other's row,
+        // and both rows survived. Lucene's updateDocument provides the same searcher guarantee
+        // (the change is only visible at next commit/refresh) without that hazard.
         var srcDocId = aDocument.getDocument().getId();
         var annoDocId = aDocument.getId();
-        var user = aDocument.getUser();
-
-        // NOTE: Deleting and then re-indexing the annotation document could lead to
-        // no results for this annotation document being returned while the
-        // re-indexing is still in process. Therefore, we check if there is already
-        // a version of the annotation document index, we obtain the timestamp of this
-        // version, then we add the new version, and finally we remove the old version
-        // as identified by the timestamp.
-        // Optional<String> oldTimestamp = Optional.empty();
-        // if (!BulkIndexingContext.isFullReindexInProgress()) {
-        // // Looking up the timestamp is slow (because it requires refreshing the searcher to
-        // // get the latest info) and when we do a full index rebuild, it is just slowing things
-        // // down unnecessarily.
-        // oldTimestamp = getTimestamp(srcDocId, annoDocId);
-        // }
-
-        var currentTimestamp = indexDocument(aDocument.getName(), srcDocId, annoDocId, user,
-                aBinaryCas);
-
-        deindexOldVersionsOfDocument(srcDocId, annoDocId, user, currentTimestamp);
-
-        // if (oldTimestamp.isPresent()) {
-        // deindexDocument(srcDocId, annoDocId, user, oldTimestamp.get());
-        // }
-
+        var replaceByFieldId = new Term(FIELD_ID, srcDocId + "/" + annoDocId);
+        writeDocument(aDocument.getName(), srcDocId, annoDocId, aDocument.getUser(), aBinaryCas,
+                replaceByFieldId);
         scheduleCommit();
     }
 
     @Override
     public void indexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas) throws IOException
     {
-        // NOTE: deleting all index versions related to the sourcedoc is ok in comparison to
-        // re-indexing annotation documents, because we do this before the search
-        // is accessed and therefore do not care about indices not being available for a short time
-        if (!BulkIndexingContext.isFullReindexInProgress()) {
-            deindexDocument(aSourceDocument.getId(), -1, "");
-        }
-
-        indexDocument(aSourceDocument.getName(), aSourceDocument.getId(), -1, "", aBinaryCas);
+        // Atomic delete-by-FIELD_ID + add. Two concurrent writers for the same source doc (e.g.
+        // ReindexTask overlapping IndexSourceDocumentTask) would otherwise be able to interleave
+        // their separate delete and add calls, producing duplicate rows for the same FIELD_ID.
+        // updateDocument() serializes the replace inside the IndexWriter.
+        var replaceByFieldId = BulkIndexingContext.isFullReindexInProgress() ? null
+                : new Term(FIELD_ID, aSourceDocument.getId() + "/-1");
+        writeDocument(aSourceDocument.getName(), aSourceDocument.getId(), -1, "", aBinaryCas,
+                replaceByFieldId);
         scheduleCommit();
     }
 }

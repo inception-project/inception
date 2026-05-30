@@ -19,9 +19,12 @@ package de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument;
 
 import static de.tudarmstadt.ukp.inception.curation.settings.CurationNavigationUserPrefs.KEY_CURATION_NAVIGATION_USER_PREFS;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
+import static java.util.Collections.emptyMap;
 import static wicket.contrib.input.events.EventType.click;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -34,6 +37,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
@@ -41,6 +45,8 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.search.DocumentStatistics;
+import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
@@ -63,6 +69,7 @@ public class CurationOpenDocumentDialogPanel
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userService;
     private @SpringBean PreferencesService preferencesService;
+    private @SpringBean SearchService searchService;
 
     private final CurationDocumentTable table;
 
@@ -80,6 +87,7 @@ public class CurationOpenDocumentDialogPanel
                 .add(new InputBehavior(new KeyType[] { KeyType.Escape }, click)));
 
         table = new CurationDocumentTable(CID_TABLE, documentList);
+        table.setStatisticsLoader(this::loadStatistics);
         queue(table);
 
         finishedDocumentsSkippedByNavigation = LambdaModel.of(
@@ -88,6 +96,23 @@ public class CurationOpenDocumentDialogPanel
         queue(new CheckBox(CID_FINISHED_DOCUMENTS_SKIPPED_BY_NAVIGATION,
                 finishedDocumentsSkippedByNavigation) //
                         .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT)));
+    }
+
+    private Map<Long, DocumentStatistics> loadStatistics(Collection<SourceDocument> aDocuments)
+    {
+        var project = getModelObject().getProject();
+
+        if (project == null || aDocuments == null || aDocuments.isEmpty()) {
+            return emptyMap();
+        }
+
+        try {
+            return searchService.getAnnotationCountsPerDocument(AnnotationSet.CURATION_SET, project,
+                    aDocuments);
+        }
+        catch (Exception e) {
+            return emptyMap();
+        }
     }
 
     private boolean isFinishedDocumentsSkippedByNavigation()

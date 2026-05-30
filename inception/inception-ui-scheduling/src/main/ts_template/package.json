@@ -35,6 +35,7 @@
       "@rollup/rollup-darwin-arm64": "${rollup.version}"
   },
   "devDependencies": {
+    "license-checker": "${license-checker.version}",
     "esbuild": "${esbuild.version}",
     "esbuild-svelte": "${esbuild-svelte.version}",
     "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",

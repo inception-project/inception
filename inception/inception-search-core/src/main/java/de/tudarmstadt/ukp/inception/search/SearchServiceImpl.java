@@ -17,16 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import static de.tudarmstadt.ukp.inception.scheduling.TaskState.NOT_STARTED;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
 import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +52,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -665,6 +669,41 @@ public class SearchServiceImpl
     }
 
     @Override
+    public Map<Long, Long> getAnnotationCountsPerSourceDocument(User aUser, Project aProject,
+            AnnotationLayer aLayer)
+        throws IOException, ExecutionException
+    {
+        try (var pooledIndex = acquireIndex(aProject.getId())) {
+            var index = pooledIndex.get();
+            ensureIndexIsCreatedAndValid(aProject, index);
+
+            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
+            var statRequest = new StatisticRequest(aProject, aUser, Integer.MIN_VALUE,
+                    Integer.MAX_VALUE, null, null, prefs);
+            return index.getPhysicalIndex().getAnnotationCountsPerSourceDocument(statRequest,
+                    aLayer);
+        }
+    }
+
+    @Override
+    public Map<Long, DocumentStatistics> getAnnotationCountsPerDocument(AnnotationSet aSet,
+            Project aProject, Collection<SourceDocument> aDocuments)
+        throws IOException, ExecutionException
+    {
+        if (aDocuments == null || aDocuments.isEmpty()) {
+            return emptyMap();
+        }
+
+        try (var pooledIndex = acquireIndex(aProject.getId())) {
+            var index = pooledIndex.get();
+            ensureIndexIsCreatedAndValid(aProject, index);
+
+            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
+            return index.getPhysicalIndex().getAnnotationCountsPerDocument(aSet, aDocuments, prefs);
+        }
+    }
+
+    @Override
     public StatisticsResult getQueryStatistics(User aUser, Project aProject, String aQuery,
             int aMinTokenPerDoc, int aMaxTokenPerDoc, Set<AnnotationFeature> aFeatures)
         throws ExecutionException, IOException
@@ -718,7 +757,12 @@ public class SearchServiceImpl
                 .map(task -> (IndexingTask_ImplBase) task)
                 .filter(task -> aProject.equals(task.getProject())) //
                 .filter(task -> task.getMonitor() != null) //
-                .filter(task -> task.getMonitor().getState() == RUNNING) //
+                // Include NOT_STARTED so that work which has been enqueued but not yet picked up
+                // by a worker thread is also visible. Without this, callers (tests waiting for
+                // indexing to settle, the UI progress indicator, ensureIndexIsCreatedAndValid)
+                // can miss the window between enqueue and the worker transitioning to RUNNING.
+                .filter(task -> task.getMonitor().getState() == NOT_STARTED
+                        || task.getMonitor().getState() == RUNNING) //
                 .toList();
 
         if (tasks.isEmpty()) {
@@ -783,6 +827,16 @@ public class SearchServiceImpl
             throw (new ExecutionException("Index still building. Try again later."));
         }
 
+        // Is the on-disk data shape current? Checked after isInvalid so that an in-flight
+        // rebuild (which only stamps schemaVersion on success) is not duplicated here.
+        var currentSchemaVersion = aIndex.getPhysicalIndex().getCurrentSchemaVersion();
+        if (aIndex.getSchemaVersion() != currentSchemaVersion) {
+            invalidateIndexAndForceIndexRebuild(aProject, aIndex,
+                    "ensureIndexIsCreatedAndValid[schemaMismatch:" + aIndex.getSchemaVersion()
+                            + "!=" + currentSchemaVersion + "]");
+            throw (new ExecutionException("Index still building. Try again later."));
+        }
+
         // Is the index usable - it might be corrupt and needs rebuilding
         try {
             aIndex.getPhysicalIndex().open();
@@ -806,7 +860,7 @@ public class SearchServiceImpl
             entityManager.merge(aIndex);
         }
 
-        enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[doesNotExist]");
+        enqueueReindexTask(aProject, aReason);
     }
 
     private void enqueueReindexTask(Project aProject, String aTrigger)

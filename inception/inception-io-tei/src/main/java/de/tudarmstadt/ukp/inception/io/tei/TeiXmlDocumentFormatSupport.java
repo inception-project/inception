@@ -72,6 +72,18 @@ public class TeiXmlDocumentFormatSupport
     }
 
     @Override
+    public List<ResourceReference> getJavaScripts()
+    {
+        return asList(TeiDocumentStructureJsReference.get());
+    }
+
+    @Override
+    public Optional<String> getDocumentStructureFactory()
+    {
+        return Optional.of("TeiDocumentStructure.factory()");
+    }
+
+    @Override
     public Set<String> getSectionElements()
     {
         return TEI_SECTION_ELEMENTS;

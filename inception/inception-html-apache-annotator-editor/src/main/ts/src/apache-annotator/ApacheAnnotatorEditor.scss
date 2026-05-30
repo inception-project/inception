@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@import '~@inception-project/inception-js-api/src/style/InceptionEditorColors.scss';
-@import '~@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss';
+@use '~@inception-project/inception-js-api/src/style/InceptionEditorColors.scss';
+@use '~@inception-project/inception-js-api/src/style/InceptionEditorIcons.scss';
 
 :root {
     --hover-brightness: 1.2;
@@ -58,6 +58,18 @@ html > body {
     flex-direction: column;
     flex-grow: 1;
     overflow: hidden;
+}
+
+/**
+ * Synthetic wrapper inserted around heading-delimited regions so that content
+ * following a heading becomes a descendant of that heading's section. As a
+ * custom element it defaults to `display: inline`, so we force it to block
+ * explicitly: the section needs a real layout box for IntersectionObserver
+ * and scrollIntoView, and for downstream features that want to address the
+ * section as a unit.
+ */
+sec-wrap {
+    display: block;
 }
 
 .iaa-document-navigator {

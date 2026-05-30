@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.apacheannotatoreditor;
 
 import static de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils.referenceToUrl;
-import static java.util.Arrays.asList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,13 +77,14 @@ public class ApacheAnnotatorHtmlAnnotationEditor
         // defined in main.ts
         props.setEditorFactory("ApacheAnnotatorEditor.factory()");
         props.setStylesheetSources(getStylesheetSources());
-        props.setScriptSources(asList( //
-                referenceToUrl(servletContext,
-                        ApacheAnnotatorJsJavascriptResourceReference.get())));
+        props.setScriptSources(getScriptSources());
         props.setSectionElements(
                 documentImportExportService.getSectionElements(getModelObject().getDocument()));
         props.setProtectedElements(
                 documentImportExportService.getProtectedElements(getModelObject().getDocument()));
+        documentImportExportService
+                .getFormatDocumentStructureFactory(getModelObject().getDocument())
+                .ifPresent(props::setDocumentStructureFactory);
         return props;
     }
 
@@ -97,6 +97,27 @@ public class ApacheAnnotatorHtmlAnnotationEditor
         for (var reference : stylesheetSources.listStylesheetReferences()) {
             sources.add(referenceToUrl(servletContext, reference));
         }
+
+        return sources;
+    }
+
+    /**
+     * Build the script source list. Format-specific adapters come first, editor JS last; the
+     * external-editor loader honours that order by inserting the scripts with
+     * {@code script.async = false}, so the format adapter is guaranteed to have run by the time the
+     * editor bundle initializes and reads {@code props.documentStructureFactory}.
+     */
+    private List<String> getScriptSources()
+    {
+        var sources = new ArrayList<String>();
+
+        for (var reference : documentImportExportService
+                .getFormatJavaScripts(getModelObject().getDocument())) {
+            sources.add(referenceToUrl(servletContext, reference));
+        }
+
+        sources.add(
+                referenceToUrl(servletContext, ApacheAnnotatorJsJavascriptResourceReference.get()));
 
         return sources;
     }

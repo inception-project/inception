@@ -296,11 +296,14 @@ public class EventRepositoryImpl
     @Override
     @Transactional(readOnly = true)
     public List<DocumentStateSnapshot> calculateHistoricalDocumentStates(Project aProject,
-            Map<SourceDocumentState, Long> aCurrentStats, Instant aFrom)
+            Map<SourceDocumentState, Long> aCurrentStats, Map<Long, Long> aWeightByDocId,
+            Instant aFrom)
     {
         var from = aFrom;
         if (from == null) {
-            from = Instant.MIN;
+            // Use EPOCH as a safe lower bound. Instant.MIN cannot be bound as a JDBC
+            // Timestamp because Timestamp.from() overflows on such an extreme value.
+            from = Instant.EPOCH;
         }
 
         // Initialize running counts from current state
@@ -339,7 +342,7 @@ public class EventRepositoryImpl
             var eventDay = toDay(eventTime);
 
             // Apply inverse event logic
-            var changed = applyInverseEvent(event, counts, events);
+            var changed = applyInverseEvent(event, counts, events, aWeightByDocId);
 
             // Check if we crossed a day boundary
             if (!eventDay.equals(previousDay)) {
@@ -353,7 +356,7 @@ public class EventRepositoryImpl
         }
 
         // Add boundary snapshot at aTo
-        if (!result.isEmpty() && !from.equals(Instant.MIN)) {
+        if (!result.isEmpty() && aFrom != null) {
             var lastSnapshot = result.get(result.size() - 1);
             if (!toDay(lastSnapshot.day()).equals(toDay(from))) {
                 result.add(createSnapshot(from, counts));
@@ -367,22 +370,28 @@ public class EventRepositoryImpl
     }
 
     private boolean applyInverseEvent(LoggedEvent aEvent, Map<SourceDocumentState, Long> aCounts,
-            List<LoggedEventEntity> aAllEvents)
+            List<LoggedEventEntity> aAllEvents, Map<Long, Long> aWeightByDocId)
     {
         var eventType = aEvent.getEvent();
+        // In weighted mode, weight=0 means the doc is not in scope (e.g. deleted or unindexed)
+        // and the event becomes a no-op. In unweighted mode (null map), every doc counts as 1.
+        var weight = weightFor(aEvent.getDocument(), aWeightByDocId);
+        if (weight == 0L) {
+            return false;
+        }
 
         switch (eventType) {
         case "AfterDocumentCreatedEvent":
             // Document was created, so going backwards it didn't exist
             // Decrement NEW state
-            decrementState(aCounts, SourceDocumentState.NEW);
+            decrementState(aCounts, SourceDocumentState.NEW, weight);
             return true;
 
         case "BeforeDocumentRemovedEvent":
             // Document was removed, so going backwards it existed
             // Find last known state of this document
             var removedDocState = findLastKnownState(aEvent.getDocument(), aAllEvents);
-            incrementState(aCounts, removedDocState);
+            incrementState(aCounts, removedDocState, weight);
             return true;
 
         case "DocumentStateChangedEvent":
@@ -395,9 +404,9 @@ public class EventRepositoryImpl
                         : null;
 
                 // Undo the transition: decrement new state, increment previous state
-                decrementState(aCounts, newState);
+                decrementState(aCounts, newState, weight);
                 if (previousState != null) {
-                    incrementState(aCounts, previousState);
+                    incrementState(aCounts, previousState, weight);
                 }
                 return true;
             }
@@ -409,6 +418,15 @@ public class EventRepositoryImpl
         default:
             return false;
         }
+    }
+
+    private long weightFor(long aDocId, Map<Long, Long> aWeightByDocId)
+    {
+        if (aWeightByDocId == null) {
+            return 1L;
+        }
+
+        return aWeightByDocId.getOrDefault(aDocId, 0L);
     }
 
     private SourceDocumentState findLastKnownState(long aDocumentId,
@@ -432,14 +450,16 @@ public class EventRepositoryImpl
         return SourceDocumentState.NEW;
     }
 
-    private void incrementState(Map<SourceDocumentState, Long> aCounts, SourceDocumentState aState)
+    private void incrementState(Map<SourceDocumentState, Long> aCounts, SourceDocumentState aState,
+            long aDelta)
     {
-        aCounts.put(aState, aCounts.getOrDefault(aState, 0L) + 1);
+        aCounts.put(aState, aCounts.getOrDefault(aState, 0L) + aDelta);
     }
 
-    private void decrementState(Map<SourceDocumentState, Long> aCounts, SourceDocumentState aState)
+    private void decrementState(Map<SourceDocumentState, Long> aCounts, SourceDocumentState aState,
+            long aDelta)
     {
-        aCounts.put(aState, Math.max(0L, aCounts.getOrDefault(aState, 0L) - 1));
+        aCounts.put(aState, Math.max(0L, aCounts.getOrDefault(aState, 0L) - aDelta));
     }
 
     private LocalDate toDay(Instant aInstant)
@@ -450,9 +470,9 @@ public class EventRepositoryImpl
     private DocumentStateSnapshot createSnapshot(Instant aTime,
             Map<SourceDocumentState, Long> aCounts)
     {
-        var snapshot = new LinkedHashMap<SourceDocumentState, Integer>();
+        var snapshot = new LinkedHashMap<SourceDocumentState, Long>();
         for (var state : SourceDocumentState.values()) {
-            snapshot.put(state, aCounts.getOrDefault(state, 0L).intValue());
+            snapshot.put(state, aCounts.getOrDefault(state, 0L));
         }
         return new DocumentStateSnapshot(aTime, snapshot);
     }
