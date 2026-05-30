@@ -21,6 +21,7 @@ import java.io.Serializable;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 
 public class SearchOptions
@@ -30,20 +31,32 @@ public class SearchOptions
 
     private String query;
     private SearchResult selectedResult;
+    private AnnotationSet selectedResultAnnotationSet;
     private boolean limitedToCurrentDocument = false;
     private AnnotationLayer groupingLayer;
     private AnnotationFeature groupingFeature;
     private long itemsPerPage;
     private boolean lowLevelPaging;
 
-    public void setSelectedResult(SearchResult aSelectedResult)
+    public void setSelectedResult(SearchResult aSelectedResult, AnnotationSet aAnnotationSet)
     {
         selectedResult = aSelectedResult;
+        selectedResultAnnotationSet = aAnnotationSet;
+    }
+
+    public void clearSelectedResult()
+    {
+        setSelectedResult(null, null);
     }
 
     public SearchResult getSelectedResult()
     {
         return selectedResult;
+    }
+
+    public AnnotationSet getSelectedResultAnnotationSet()
+    {
+        return selectedResultAnnotationSet;
     }
 
     public String getQuery()

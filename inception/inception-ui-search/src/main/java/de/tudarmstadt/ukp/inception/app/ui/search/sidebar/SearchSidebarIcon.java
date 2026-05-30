@@ -35,6 +35,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchOptions;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
@@ -85,6 +86,8 @@ public class SearchSidebarIcon
 
         var query = searchOptions.map(SearchOptions::getQuery);
         var selectedResult = searchOptions.map(SearchOptions::getSelectedResult).getObject();
+        var selectedResultAnnotationSet = searchOptions
+                .map(SearchOptions::getSelectedResultAnnotationSet).getObject();
         if (query.map(StringUtils::isNotBlank).orElse(false).getObject()) {
             try {
                 var results = query(query.getObject());
@@ -111,7 +114,10 @@ public class SearchSidebarIcon
             }
         }
 
-        if (selectedResult != null) {
+        if (selectedResult != null
+                && selectedResult.getDocumentId() == getModelObject().getDocument().getId()
+                && AnnotationSet.forUser(getModelObject().getUser())
+                        .equals(selectedResultAnnotationSet)) {
             var range = VRange.clippedRange(aEvent.getVDocument(), selectedResult.getOffsetStart(),
                     selectedResult.getOffsetEnd());
 
