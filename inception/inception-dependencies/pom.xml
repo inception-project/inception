@@ -79,12 +79,12 @@
       <dependency>
         <groupId>org.liquibase</groupId>
         <artifactId>liquibase-core</artifactId>
-        <version>4.33.0</version>
+        <version>${liquibase.version}</version>
       </dependency>
       <dependency>
         <groupId>com.mattbertolini</groupId>
         <artifactId>liquibase-slf4j</artifactId>
-        <version>5.1.0</version>
+        <version>${liquibase-slf4j.version}</version>
       </dependency>
 
       <dependency>
@@ -241,7 +241,7 @@
       <dependency>
         <groupId>jakarta.data</groupId>
         <artifactId>jakarta.data-api</artifactId>
-        <version>1.0.0</version>
+        <version>${jakarta.data.version}</version>
       </dependency>
 
       <!-- Testing -->
@@ -290,7 +290,7 @@
       <dependency>
         <groupId>no.nav.security</groupId>
         <artifactId>mock-oauth2-server</artifactId>
-        <version>0.5.10</version>
+        <version>${mock-oauth2-server.version}</version>
         <scope>test</scope>
         <exclusions>
           <exclusion>
@@ -500,7 +500,7 @@
       <dependency>
         <groupId>org.mozilla</groupId>
         <artifactId>rhino-runtime</artifactId>
-        <version>1.7.15</version>
+        <version>${rhino.version}</version>
       </dependency>
 
       <dependency>
@@ -522,12 +522,12 @@
       <dependency>
         <groupId>org.webjars.npm</groupId>
         <artifactId>webstomp-client</artifactId>
-        <version>1.2.6</version>
+        <version>${webstomp-client.version}</version>
       </dependency>
       <dependency>
         <groupId>org.sharegov</groupId>
         <artifactId>mjson</artifactId>
-        <version>1.4.2</version>
+        <version>${mjson.version}</version>
         <scope>provided</scope>
         <exclusions>
           <exclusion>
@@ -678,19 +678,19 @@
       <dependency>
         <groupId>com.google.code.findbugs</groupId>
         <artifactId>jsr305</artifactId>
-        <version>3.0.2</version>
+        <version>${jsr305.version}</version>
       </dependency>
       
       <dependency>
         <groupId>com.ibm.icu</groupId>
         <artifactId>icu4j</artifactId>
-        <version>75.1</version>
+        <version>${icu4j.version}</version>
       </dependency>
 
       <dependency>
         <groupId>eu.openminted.share.annotations</groupId>
         <artifactId>omtd-share-annotations-api</artifactId>
-        <version>3.0.2.7</version>
+        <version>${omtd-share-annotations.version}</version>
       </dependency>
 
       <dependency>
@@ -782,7 +782,7 @@
       <dependency>
         <groupId>org.codehaus.woodstox</groupId>
         <artifactId>stax2-api</artifactId>
-        <version>4.3.0</version>
+        <version>${stax2-api.version}</version>
       </dependency>
 
       <dependency>
@@ -891,7 +891,7 @@
       <dependency>
         <groupId>javax.validation</groupId>
         <artifactId>validation-api</artifactId>
-        <version>2.0.1.Final</version>
+        <version>${javax.validation.version}</version>
       </dependency>
       <dependency>
         <groupId>org.javassist</groupId>
@@ -930,12 +930,12 @@
       <dependency>
         <groupId>org.apache.httpcomponents.core5</groupId>
         <artifactId>httpcore5</artifactId>
-        <version>5.3.6</version>
+        <version>${httpcore5.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.httpcomponents.client5</groupId>
         <artifactId>httpclient5</artifactId>
-        <version>5.5.1</version>
+        <version>${httpclient5.version}</version>
       </dependency>
 
       <dependency>
@@ -1014,7 +1014,7 @@
       <dependency>
         <groupId>org.dkpro.statistics</groupId>
         <artifactId>dkpro-statistics-agreement</artifactId>
-        <version>2.2.1</version>
+        <version>${dkpro-statistics.version}</version>
       </dependency>
 
       <!-- Snakeyaml -->
@@ -1029,7 +1029,7 @@
       <dependency>
         <groupId>eu.clarin.weblicht</groupId>
         <artifactId>wlfxb</artifactId>
-        <version>1.4.3</version>
+        <version>${wlfxb.version}</version>
         <exclusions>
           <!--
             - Looks like moxy isn't even used by wlfxb except for an annotation which again doesn't
@@ -1349,13 +1349,13 @@
       <dependency>
         <groupId>org.cyberborean</groupId>
         <artifactId>rdfbeans</artifactId>
-        <version>2.2</version>
+        <version>${rdfbeans.version}</version>
       </dependency>
 
       <dependency>
         <groupId>com.knuddels</groupId>
         <artifactId>jtokkit</artifactId>
-        <version>1.1.0</version>
+        <version>${jtokkit.version}</version>
       </dependency>
 
       <dependency>

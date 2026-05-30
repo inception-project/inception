@@ -81,10 +81,12 @@
     <testcontainers.version>2.0.5</testcontainers.version>
     <keycloak-admin-client.version>26.0.9</keycloak-admin-client.version>
     <testcontainers-keycloak.version>4.2.1</testcontainers-keycloak.version>
+    <mock-oauth2-server.version>0.5.10</mock-oauth2-server.version>
 
     <awaitility.version>4.3.0</awaitility.version>
 
     <dkpro.version>3.0.0-beta-1</dkpro.version>
+    <dkpro-statistics.version>2.2.1</dkpro-statistics.version>
     <uima.version>3.6.1</uima.version>
     <uima-json.version>0.5.0</uima-json.version>
 
@@ -113,6 +115,8 @@
     <postgres.driver.version>42.7.11</postgres.driver.version>
     <hibernate.version>7.4.0.Final</hibernate.version>
     <hibernate.validator.version>9.1.0.Final</hibernate.validator.version>
+    <liquibase.version>4.33.0</liquibase.version>
+    <liquibase-slf4j.version>5.1.0</liquibase-slf4j.version>
 
     <wicket.version>10.9.1</wicket.version>
     <wicketstuff.version>10.9.2</wicketstuff.version>
@@ -129,7 +133,8 @@
     <opensearch.version>3.6.0</opensearch.version>
     <jena.version>6.1.0</jena.version>
     <libthrift.version>0.23.0</libthrift.version>
-    <rdf4j.version>5.3.1</rdf4j.version> 
+    <rdf4j.version>5.3.1</rdf4j.version>
+    <rdfbeans.version>2.2</rdfbeans.version>
     <owlapi-version>5.5.1</owlapi-version>
 
     <asciidoctor.plugin.version>3.2.0</asciidoctor.plugin.version>
@@ -173,6 +178,7 @@
     <zjsonpatch.version>0.6.2</zjsonpatch.version>
     <picocli.version>4.7.7</picocli.version>
     <woodstox-core.version>7.2.0</woodstox-core.version>
+    <stax2-api.version>4.3.0</stax2-api.version>
     <nimbus-jose-jwt.version>10.9</nimbus-jose-jwt.version>
     <json-schema-validator.version>3.0.3</json-schema-validator.version>
     <json-schema-generator.version>5.0.0</json-schema-generator.version>
@@ -189,6 +195,9 @@
     <jaxb-core-version>2.3.0.1</jaxb-core-version>
     <jaxb-api-version>2.3.1</jaxb-api-version>
     <jakarta.xml.bind-api-version>4.0.5</jakarta.xml.bind-api-version>
+    <jakarta.data.version>1.0.0</jakarta.data.version>
+    <javax.validation.version>2.0.1.Final</javax.validation.version>
+    <wlfxb.version>1.4.3</wlfxb.version>
     <snappy.version>1.1.10.8</snappy.version>
     <jsonld-java.version>0.13.6</jsonld-java.version>
     <jna.version>5.18.1</jna.version>
@@ -200,6 +209,15 @@
     <oauth2-oidc-sdk.version>11.37.2</oauth2-oidc-sdk.version>
     <javassist.version>3.31.0-GA</javassist.version>
     <openjson.version>1.0.13</openjson.version>
+    <mjson.version>1.4.2</mjson.version>
+    <jsr305.version>3.0.2</jsr305.version>
+    <icu4j.version>75.1</icu4j.version>
+    <jtokkit.version>1.1.0</jtokkit.version>
+    <rhino.version>1.7.15</rhino.version>
+    <httpcore5.version>5.3.6</httpcore5.version>
+    <httpclient5.version>5.5.1</httpclient5.version>
+    <omtd-share-annotations.version>3.0.2.7</omtd-share-annotations.version>
+    <webstomp-client.version>1.2.6</webstomp-client.version>
 
     <node.version>24.14.1</node.version>
     <apache-annotator.version>^0.2.0</apache-annotator.version>
