@@ -50,6 +50,9 @@ import de.tudarmstadt.ukp.inception.io.pdf.visual.model.VGlyph;
 import de.tudarmstadt.ukp.inception.io.pdf.visual.model.VModel;
 import de.tudarmstadt.ukp.inception.io.pdf.visual.model.VPage;
 
+// Extends pdfbox PDFTextStripper. The set of overridden protected hooks and the relied-on
+// internals (output, charactersByArticle, TextPosition accessors) were last verified against:
+// https://github.com/apache/pdfbox/blob/3.0.7/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java
 public class VisualPDFTextStripper
     extends PDFTextStripper
 {
