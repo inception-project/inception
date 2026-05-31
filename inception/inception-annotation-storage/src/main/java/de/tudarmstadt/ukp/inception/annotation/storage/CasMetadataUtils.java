@@ -39,6 +39,22 @@ public class CasMetadataUtils
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    /**
+     * Sentinel {@code lastChangedOnDisk} value returned by {@link #getLastChanged(CAS)} when no
+     * timestamp is available - either because the CAS carries no {@link CASMetadata} instance or
+     * because its (older) CASMetadata type does not include the {@code lastChangedOnDisk} feature.
+     */
+    public static final long UNKNOWN_CAS_TIMESTAMP = -1l;
+
+    /**
+     * Sentinel {@code lastChangedOnDisk} value used to mark a CAS as <i>transient</i>: it was
+     * created on-the-fly (e.g. when reading under {@code SHARED_READ_ONLY_ACCESS} and no CAS exists
+     * on disk yet) and carries identity metadata for debugging/transparency only, but must never be
+     * persisted. This is deliberately distinct from {@link #UNKNOWN_CAS_TIMESTAMP}, so that a
+     * not-yet-stamped CAS on its legitimate first write is not mistaken for a transient one.
+     */
+    public static final long TRANSIENT_CAS_TIMESTAMP = -2l;
+
     public static TypeSystemDescription getInternalTypeSystem()
     {
         return createTypeSystemDescription(
@@ -124,8 +140,45 @@ public class CasMetadataUtils
     {
         var casMetadataType = getType(aCas, CASMetadata.class);
         var feature = casMetadataType.getFeatureByBaseName(CASMetadata._FeatName_lastChangedOnDisk);
+        if (feature == null) {
+            // An older type system may have a CASMetadata type that does not yet include the
+            // lastChangedOnDisk feature. We tolerate this here (just as addOrUpdateCasMetadata
+            // does when stamping) and treat it as "no timestamp available".
+            return UNKNOWN_CAS_TIMESTAMP;
+        }
         return aCas.select(casMetadataType).map(cmd -> cmd.getLongValue(feature)).findFirst()
-                .orElse(-1l);
+                .orElse(UNKNOWN_CAS_TIMESTAMP);
+    }
+
+    /**
+     * @return whether the type system of the given CAS supports {@link CASMetadata}.
+     */
+    public static boolean supportsCasMetadata(CAS aCas)
+    {
+        return aCas.getTypeSystem().getType(CASMetadata.class.getName()) != null;
+    }
+
+    /**
+     * @return whether the given CAS can be marked as transient - i.e. its type system declares the
+     *         {@link CASMetadata} type <em>including</em> the {@code lastChangedOnDisk} feature
+     *         that carries the {@link #TRANSIENT_CAS_TIMESTAMP} marker. Without that feature the
+     *         marker cannot be set, so the CAS could not later be recognized as transient.
+     */
+    public static boolean canMarkTransient(CAS aCas)
+    {
+        var type = aCas.getTypeSystem().getType(CASMetadata.class.getName());
+        return type != null
+                && type.getFeatureByBaseName(CASMetadata._FeatName_lastChangedOnDisk) != null;
+    }
+
+    /**
+     * @return whether the given CAS has been marked as transient (i.e. created on-the-fly and not
+     *         backed by a file on disk) and therefore must not be persisted.
+     * @see #TRANSIENT_CAS_TIMESTAMP
+     */
+    public static boolean isTransientCas(CAS aCas)
+    {
+        return supportsCasMetadata(aCas) && getLastChanged(aCas) == TRANSIENT_CAS_TIMESTAMP;
     }
 
     public static Optional<String> getUsername(CAS aCas)

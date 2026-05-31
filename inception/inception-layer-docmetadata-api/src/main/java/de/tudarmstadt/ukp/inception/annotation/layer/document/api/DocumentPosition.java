@@ -18,12 +18,11 @@
 package de.tudarmstadt.ukp.inception.annotation.layer.document.api;
 
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.cas.AnnotationBase;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.type.CasMetadataSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
 import de.tudarmstadt.ukp.inception.curation.api.Position_ImplBase;
-import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 /**
  * Represents a document position.
@@ -91,18 +90,11 @@ public class DocumentPosition
 
         public Builder forAnnotation(AnnotationBase aAnnotation)
         {
+            // Document identity (used only for debugging/transparency) comes from the
+            // INCEpTION-internal CASMetadata which is stamped on every CAS load.
             var cas = aAnnotation.getCAS();
-            try {
-                var dmd = WebAnnoCasUtil.getDocumentMetadata(cas);
-                collectionId = FSUtil.getFeature(dmd, "collectionId", String.class);
-                documentId = FSUtil.getFeature(dmd, "documentId", String.class);
-            }
-            catch (IllegalArgumentException e) {
-                // We use this information only for debugging - so we can ignore if the information
-                // is missing.
-                collectionId = null;
-                documentId = null;
-            }
+            collectionId = CasMetadataSupport.getProjectName(cas);
+            documentId = CasMetadataSupport.getSourceDocumentName(cas);
 
             type = aAnnotation.getType().getName();
 

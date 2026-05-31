@@ -35,7 +35,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
-import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class CalculatePairwiseAgreementTask
     extends Task
@@ -176,12 +174,6 @@ public class CalculatePairwiseAgreementTask
         var cas = documentService.createOrReadInitialCas(aDocument, AUTO_CAS_UPGRADE,
                 SHARED_READ_ONLY_ACCESS);
 
-        // Set the CAS name in the DocumentMetaData so that we can pick it
-        // up in the Diff position for the purpose of debugging / transparency.
-        var dmd = WebAnnoCasUtil.getDocumentMetadata(cas);
-        FSUtil.setFeature(dmd, "documentId", aDocument.getName());
-        FSUtil.setFeature(dmd, "collectionId", aDocument.getProject().getName());
-
         return cas;
     }
 
@@ -214,12 +206,6 @@ public class CalculatePairwiseAgreementTask
     {
         var cas = documentService.readAnnotationCas(aDocument, aSet, AUTO_CAS_UPGRADE,
                 SHARED_READ_ONLY_ACCESS);
-
-        // Set the CAS name in the DocumentMetaData so that we can pick it
-        // up in the Diff position for the purpose of debugging / transparency.
-        var dmd = WebAnnoCasUtil.getDocumentMetadata(cas);
-        FSUtil.setFeature(dmd, "documentId", aDocument.getName());
-        FSUtil.setFeature(dmd, "collectionId", aDocument.getProject().getName());
 
         return Optional.of(cas);
     }
