@@ -33,8 +33,12 @@ import java.util.Set;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
+import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
+import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder;
 
@@ -176,6 +180,48 @@ class AgreementServiceImplTest
         assertThat(generateReport(userCount, data).lines()).contains( //
                 "SpanPosition,,,de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity,"
                         + "value,8-12 [John],\"DIFFERENCE, COMPLETE, USED\",PER,LOC,<no label>");
+    }
+
+    @Test
+    void testReport_carriesDocumentIdentityFromCasMetadata() throws Exception
+    {
+        var type = NamedEntity._TypeName;
+        var feature = NamedEntity._FeatName_value;
+
+        var tsd = CasCreationUtils.mergeTypeSystems(
+                List.of(TypeSystemDescriptionFactory.createTypeSystemDescription(),
+                        TypeSystemDescriptionFactory.createTypeSystemDescription(
+                                "de/tudarmstadt/ukp/clarin/webanno/api/type/webanno-internal")));
+
+        var userCases = new HashMap<String, CAS>();
+        for (var user : List.of("user1", "user2")) {
+            var cas = CasFactory.createCas(tsd);
+            cas.setDocumentText("Joe");
+
+            var casMetadata = cas.createAnnotation(
+                    cas.getTypeSystem().getType(CASMetadata.class.getName()), 0, 0);
+            FSUtil.setFeature(casMetadata, "projectName", "proj1");
+            FSUtil.setFeature(casMetadata, "sourceDocumentName", "doc1");
+            cas.addFsToIndexes(casMetadata);
+
+            AnnotationBuilder.buildAnnotation(cas, type).at(0, 3).withFeature(feature, "PER")
+                    .buildAndAddToIndexes();
+
+            userCases.put(user, cas);
+        }
+
+        var diff = doDiff(asList(NER_DIFF_ADAPTER), userCases);
+        Set<String> tagSet = null;
+        var agreementResult = makeCodingStudy(diff, type, feature, tagSet, false, userCases);
+
+        var buffer = new StringBuilder();
+        try (var printer = new CSVPrinter(buffer, RFC4180)) {
+            AgreementServiceImpl.configurationSetsWithItemsToCsv(printer, agreementResult, true);
+        }
+
+        // The Collection/Document columns must be populated from the CASMetadata identity
+        assertThat(buffer.toString().lines())
+                .anyMatch(line -> line.startsWith("SpanPosition,proj1,doc1,"));
     }
 
     private String generateReport(int aUserCount, Row[] data) throws Exception, IOException

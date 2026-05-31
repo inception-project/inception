@@ -32,6 +32,7 @@ import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDiffMode;
@@ -79,15 +80,19 @@ class DocumentMetadataDiffAdapterTest
         var dld = tsd.addType(DOC_TYPE, "", CAS.TYPE_NAME_ANNOTATION);
         dld.addFeature("label", "", CAS.TYPE_NAME_STRING);
         var fullTsd = CasCreationUtils.mergeTypeSystems(
-                List.of(tsd, TypeSystemDescriptionFactory.createTypeSystemDescription()));
+                List.of(tsd, TypeSystemDescriptionFactory.createTypeSystemDescription(),
+                        TypeSystemDescriptionFactory.createTypeSystemDescription(
+                                "de/tudarmstadt/ukp/clarin/webanno/api/type/webanno-internal")));
 
         var jcas = JCasFactory.createJCas(fullTsd);
         var cas = jcas.getCas();
 
-        // ensure document metadata exists and set collection/document id
-        var dmd = DocumentMetaData.create(jcas);
-        dmd.setCollectionId("coll1");
-        dmd.setDocumentId("doc1");
+        // Document identity is taken from the INCEpTION-internal CASMetadata
+        var casMetadata = cas
+                .createAnnotation(cas.getTypeSystem().getType(CASMetadata.class.getName()), 0, 0);
+        FSUtil.setFeature(casMetadata, "projectName", "coll1");
+        FSUtil.setFeature(casMetadata, "sourceDocumentName", "doc1");
+        cas.addFsToIndexes(casMetadata);
 
         var type = cas.getTypeSystem().getType(DOC_TYPE);
         var a1 = cas.createAnnotation(type, 0, 0);

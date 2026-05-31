@@ -55,10 +55,10 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.type.CasMetadataSupport;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapter;
 import de.tudarmstadt.ukp.inception.curation.api.Position;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
-import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class CasDiff
 {
@@ -209,18 +209,9 @@ public class CasDiff
         if (LOG.isDebugEnabled()) {
             LOG.debug("Analyzing CAS group [{}]", aCasGroupId);
 
-            String collectionId = null;
-            String documentId = null;
-            try {
-                var dmd = WebAnnoCasUtil.getDocumentMetadata(aCas);
-                collectionId = getFeature(dmd, "collectionId", String.class);
-                documentId = getFeature(dmd, "documentId", String.class);
-                LOG.debug("User [{}] - Document [{}]", collectionId, documentId);
-            }
-            catch (IllegalArgumentException e) {
-                // We use this information only for debugging - so we can ignore if the information
-                // is missing.
-            }
+            var collectionId = CasMetadataSupport.getProjectName(aCas);
+            var documentId = CasMetadataSupport.getSourceDocumentName(aCas);
+            LOG.debug("User [{}] - Document [{}]", collectionId, documentId);
         }
 
         var type = aCas.getTypeSystem().getType(aType);
