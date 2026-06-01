@@ -630,7 +630,7 @@ public class SearchAnnotationSidebar
     {
         searchOptions.getObject().setQuery("");
         resultsProvider.emptyQuery();
-        searchOptions.getObject().setSelectedResult(null);
+        searchOptions.getObject().clearSelectedResult();
         aTarget.add(mainContainer);
 
         // Need to re-render because we want to highlight the match
@@ -641,7 +641,7 @@ public class SearchAnnotationSidebar
     {
         try {
             var opt = searchOptions.getObject();
-            opt.setSelectedResult(null);
+            opt.clearSelectedResult();
             resultsView.setItemsPerPage(opt.getItemsPerPage());
 
             resultsProvider.initializeQuery(aRequest);
@@ -973,7 +973,7 @@ public class SearchAnnotationSidebar
                 ? schemaService.getFeature(aItem.groupingFeature(), layer)
                 : null;
 
-        opt.setSelectedResult(null);
+        opt.clearSelectedResult();
         opt.setQuery(aItem.query());
         opt.setGroupingLayer(layer);
         opt.setGroupingFeature(feature);
@@ -1085,7 +1085,8 @@ public class SearchAnnotationSidebar
                     throws IOException
                 {
                     var selectedResult = aItem.getModelObject();
-                    searchOptions.getObject().setSelectedResult(selectedResult);
+                    searchOptions.getObject().setSelectedResult(selectedResult, AnnotationSet
+                            .forUser(SearchAnnotationSidebar.this.getModelObject().getUser()));
                     getAnnotationPage().actionShowSelectedDocument(t,
                             documentService.getSourceDocument(currentProject,
                                     selectedResult.getDocumentTitle()),
