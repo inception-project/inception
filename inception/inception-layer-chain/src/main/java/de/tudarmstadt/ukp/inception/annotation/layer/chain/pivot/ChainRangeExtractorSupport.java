@@ -21,38 +21,39 @@ import static de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtract
 
 import org.apache.uima.jcas.tcas.Annotation;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.Extractor;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerExtractorSupport;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorBinding;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorSupport;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerBinding;
 
 public class ChainRangeExtractorSupport
-    implements LayerExtractorSupport
+    implements ExtractorSupport
 {
     @Override
-    public String renderName(AnnotationLayer aLayer)
+    public String getId()
     {
-        if (aLayer == null) {
-            return RANGE;
-        }
-
-        return aLayer.getUiName() + " :: " + RANGE;
+        return "chain.range";
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aContext)
+    public String renderLabel(ExtractorBinding aBinding)
     {
-        if (aContext == null) {
-            return false;
-        }
-
-        return ChainLayerSupport.TYPE.equals(aContext.getType());
+        return RANGE;
     }
 
     @Override
-    public Extractor<ContextualizedFS<Annotation>, String> createExtractor(AnnotationLayer aLayer)
+    public boolean accepts(ExtractorBinding aBinding)
     {
-        return new ChainRangeExtractor<>(aLayer);
+        return aBinding instanceof LayerBinding lb
+                && ChainLayerSupport.TYPE.equals(lb.layer().getType());
+    }
+
+    @Override
+    public Extractor<ContextualizedFS<Annotation>, String> createExtractor(
+            ExtractorBinding aBinding)
+    {
+        return new ChainRangeExtractor<>(((LayerBinding) aBinding).layer());
     }
 }

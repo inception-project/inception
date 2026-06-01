@@ -17,28 +17,44 @@
  */
 package de.tudarmstadt.ukp.inception.pivot.extractor;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.Extractor;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerExtractorSupport;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorBinding;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorBindingResolutionContext;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorSupport;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.GeneralBinding;
+import de.tudarmstadt.ukp.inception.pivot.api.report.ExtractorDef;
 
 public class DocumentNameExtractorSupport
-    implements LayerExtractorSupport
+    implements ExtractorSupport
 {
     @Override
-    public String renderName(AnnotationLayer aLayer)
+    public String getId()
     {
-        return (aLayer != null ? aLayer.getUiName() : "*") + " :: <document name>";
+        return "documentName";
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aContext)
+    public ExtractorBinding bindingFromDef(ExtractorDef aDef,
+            ExtractorBindingResolutionContext aContext)
     {
-        return true;
+        return new GeneralBinding();
     }
 
     @Override
-    public Extractor<?, ?> createExtractor(AnnotationLayer aLayer)
+    public String renderLabel(ExtractorBinding aBinding)
     {
-        return new DocumentNameExtractor(aLayer);
+        return "<document name>";
+    }
+
+    @Override
+    public boolean accepts(ExtractorBinding aBinding)
+    {
+        return aBinding instanceof GeneralBinding;
+    }
+
+    @Override
+    public Extractor<?, ?> createExtractor(ExtractorBinding aBinding)
+    {
+        return new DocumentNameExtractor(null);
     }
 }

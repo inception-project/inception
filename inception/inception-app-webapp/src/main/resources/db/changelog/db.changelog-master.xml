@@ -38,4 +38,5 @@
   <include file="de/tudarmstadt/ukp/inception/workload/model/db-changelog.xml"/>
   <include file="de/tudarmstadt/ukp/inception/sharing/model/db-changelog.xml"/>
   <include file="de/tudarmstadt/ukp/inception/preferences/model/db-changelog.xml"/>
+  <include file="de/tudarmstadt/ukp/inception/pivot/model/db-changelog.xml"/>
 </databaseChangeLog>

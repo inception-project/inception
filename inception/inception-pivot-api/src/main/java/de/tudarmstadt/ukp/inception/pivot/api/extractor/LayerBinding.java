@@ -17,10 +17,24 @@
  */
 package de.tudarmstadt.ukp.inception.pivot.api.extractor;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.pivot.api.report.ExtractorDef;
 
-public interface FeatureExtractorSupportRegistry
-    extends ExtensionPoint<AnnotationFeature, FeatureExtractorSupport>
+/**
+ * Binds an extractor to a specific layer.
+ */
+public record LayerBinding(AnnotationLayer layer)
+    implements ExtractorBinding
 {
+    @Override
+    public String groupLabel()
+    {
+        return layer.getUiName();
+    }
+
+    @Override
+    public ExtractorDef toDef(String aExtractorId)
+    {
+        return new ExtractorDef(aExtractorId, layer.getName(), null);
+    }
 }
