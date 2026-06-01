@@ -17,19 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.pivot.api.extractor;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
-public interface FeatureExtractorSupport
-    extends Extension<AnnotationFeature>
+public interface ExtractorSupportRegistry
+    extends ExtensionPoint<ExtractorBinding, ExtractorSupport>
 {
-    @Override
-    default String getId()
-    {
-        return getClass().getName();
-    }
-
-    Extractor<?, ?> createExtractor(AnnotationFeature aLayer);
-
-    String renderName(AnnotationFeature aFeature);
 }

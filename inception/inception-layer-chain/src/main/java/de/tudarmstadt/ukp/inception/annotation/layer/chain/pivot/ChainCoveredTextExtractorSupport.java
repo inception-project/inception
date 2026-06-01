@@ -18,39 +18,38 @@
 package de.tudarmstadt.ukp.inception.annotation.layer.chain.pivot;
 
 import static de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor.TEXT;
-import static java.util.Arrays.asList;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.Extractor;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerExtractorSupport;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorBinding;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorSupport;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerBinding;
 
 public class ChainCoveredTextExtractorSupport
-    implements LayerExtractorSupport
+    implements ExtractorSupport
 {
     @Override
-    public String renderName(AnnotationLayer aLayer)
+    public String getId()
     {
-        if (aLayer == null) {
-            return TEXT;
-        }
-
-        return aLayer.getUiName() + " :: " + TEXT;
+        return "chain.coveredText";
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aContext)
+    public String renderLabel(ExtractorBinding aBinding)
     {
-        if (aContext == null) {
-            return false;
-        }
-
-        return asList(ChainLayerSupport.TYPE).contains(aContext.getType());
+        return TEXT;
     }
 
     @Override
-    public Extractor<?, ?> createExtractor(AnnotationLayer aLayer)
+    public boolean accepts(ExtractorBinding aBinding)
     {
-        return new ChainCoveredTextExtractor(aLayer);
+        return aBinding instanceof LayerBinding lb
+                && ChainLayerSupport.TYPE.equals(lb.layer().getType());
+    }
+
+    @Override
+    public Extractor<?, ?> createExtractor(ExtractorBinding aBinding)
+    {
+        return new ChainCoveredTextExtractor(((LayerBinding) aBinding).layer());
     }
 }

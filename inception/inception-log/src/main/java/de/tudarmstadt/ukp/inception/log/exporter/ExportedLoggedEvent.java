@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 
 import de.tudarmstadt.ukp.inception.log.api.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.support.json.RawJsonDeserializer;
 import tools.jackson.databind.annotation.JsonDeserialize;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -127,7 +128,7 @@ public class ExportedLoggedEvent
 
     public static ExportedLoggedEvent fromLoggedEvent(String documentName, LoggedEvent event)
     {
-        ExportedLoggedEvent exportedEvent = new ExportedLoggedEvent();
+        var exportedEvent = new ExportedLoggedEvent();
         exportedEvent.setId(event.getId());
         exportedEvent.setCreated(Date.from(event.getCreated()));
         exportedEvent.setDocumentName(documentName);

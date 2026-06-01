@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:panel>
+  <div class="dropend d-inline-block">
+    <button class="btn btn-sm btn-link p-0 text-decoration-none text-body-secondary" type="button"
+            data-bs-toggle="dropdown" data-bs-config='{"popperConfig":{"strategy":"fixed"}}'
+            aria-expanded="false" title="Add" aria-label="Add">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+    <div class="dropdown-menu p-1"
+         style="max-height: 24rem; overflow-y: auto; min-width: 18rem;">
+      <wicket:container wicket:id="layerGroups">
+        <h6 class="dropdown-header px-3 pt-2 pb-1 text-truncate" wicket:id="layerName"></h6>
+        <wicket:container wicket:id="extractors">
+          <a wicket:id="addLink" href="#"
+             class="dropdown-item text-truncate py-1 px-3"
+             style="font-size: 90%;">
+            <span wicket:id="extractorName"></span>
+          </a>
+        </wicket:container>
+      </wicket:container>
+    </div>
+  </div>
+</wicket:panel>
+</html>

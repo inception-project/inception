@@ -18,35 +18,38 @@
 package de.tudarmstadt.ukp.inception.annotation.layer.span.pivot;
 
 import static de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor.TEXT;
-import static java.util.Arrays.asList;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.Extractor;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerExtractorSupport;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorBinding;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorSupport;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerBinding;
 
 public class SpanCoveredTextExtractorSupport
-    implements LayerExtractorSupport
+    implements ExtractorSupport
 {
     @Override
-    public String renderName(AnnotationLayer aLayer)
+    public String getId()
     {
-        return aLayer.getUiName() + " :: " + TEXT;
+        return "span.coveredText";
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aContext)
+    public String renderLabel(ExtractorBinding aBinding)
     {
-        if (aContext == null) {
-            return false;
-        }
-
-        return asList(SpanLayerSupport.TYPE).contains(aContext.getType());
+        return TEXT;
     }
 
     @Override
-    public Extractor<?, ?> createExtractor(AnnotationLayer aLayer)
+    public boolean accepts(ExtractorBinding aBinding)
     {
-        return new SpanCoveredTextExtractor(aLayer);
+        return aBinding instanceof LayerBinding lb
+                && SpanLayerSupport.TYPE.equals(lb.layer().getType());
+    }
+
+    @Override
+    public Extractor<?, ?> createExtractor(ExtractorBinding aBinding)
+    {
+        return new SpanCoveredTextExtractor(((LayerBinding) aBinding).layer());
     }
 }

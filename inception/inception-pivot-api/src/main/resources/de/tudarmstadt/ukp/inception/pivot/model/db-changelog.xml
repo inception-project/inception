@@ -1,0 +1,53 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+  <changeSet author="INCEpTION Team" id="20260530-pivot-01">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="pivot_report" />
+      </not>
+    </preConditions>
+    <createTable tableName="pivot_report">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="project" type="BIGINT">
+        <constraints nullable="false" />
+      </column>
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="description" type="LONGTEXT" />
+      <column name="definition" type="LONGTEXT" />
+      <column name="created" type="TIMESTAMP" />
+      <column name="updated" type="TIMESTAMP" />
+    </createTable>
+    <addUniqueConstraint columnNames="name, project"
+      constraintName="UK__pivot_report__name__project" tableName="pivot_report" />
+    <createIndex indexName="FK__pivot_report__project__id" tableName="pivot_report">
+      <column name="project" />
+    </createIndex>
+    <addForeignKeyConstraint baseColumnNames="project" baseTableName="pivot_report"
+      constraintName="FK__pivot_report__project__id" deferrable="false" initiallyDeferred="false"
+      onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
+      referencedTableName="project" />
+  </changeSet>
+</databaseChangeLog>

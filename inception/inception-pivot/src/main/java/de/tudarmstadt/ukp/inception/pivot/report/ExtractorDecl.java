@@ -15,21 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.pivot.api.extractor;
+package de.tudarmstadt.ukp.inception.pivot.report;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
+import java.io.Serializable;
 
-public interface LayerExtractorSupport
-    extends Extension<AnnotationLayer>
-{
-    @Override
-    default String getId()
-    {
-        return getClass().getName();
-    }
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorBinding;
 
-    Extractor<?, ?> createExtractor(AnnotationLayer aLayer);
-
-    String renderName(AnnotationLayer aSelectedLayer);
-}
+public record ExtractorDecl(String id, String name, ExtractorBinding binding)
+    implements Serializable
+{}

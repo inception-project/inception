@@ -15,26 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.pivot.extractor;
+package de.tudarmstadt.ukp.inception.pivot.report;
 
+import java.io.Serializable;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
+import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerExtractorSupport;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerExtractorSupportRegistry;
-import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
-
-public class LayerExtractorSupportRegistryImpl
-    extends ExtensionPoint_ImplBase<AnnotationLayer, LayerExtractorSupport>
-    implements LayerExtractorSupportRegistry
+public record ResolvedReport(ReportDecl decl, List<LogMessage> problems)
+    implements Serializable
 {
-
-    public LayerExtractorSupportRegistryImpl(
-            @Lazy @Autowired(required = false) List<LayerExtractorSupport> aExtensions)
+    public boolean hasProblems()
     {
-        super(aExtensions);
+        return !problems.isEmpty();
     }
 }

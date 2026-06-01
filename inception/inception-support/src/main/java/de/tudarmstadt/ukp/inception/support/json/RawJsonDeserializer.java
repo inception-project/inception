@@ -15,13 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.log.exporter;
+package de.tudarmstadt.ukp.inception.support.json;
 
 import tools.jackson.core.JsonParser;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.ValueDeserializer;
 
 /**
+ * Reads an inline JSON property back into a {@link String} holding its JSON text. The counterpart
+ * for serialization is {@link com.fasterxml.jackson.annotation.JsonRawValue @JsonRawValue}.
+ *
  * @see <a href=
  *      "https://cassiomolin.com/2017/01/24/deserializing-json-property-as-string-with-jackson/">
  *      Deserializing JSON property as String with Jackson</a>
@@ -32,7 +35,6 @@ public class RawJsonDeserializer
     @Override
     public String deserialize(JsonParser aParser, DeserializationContext aContext)
     {
-        var node = aContext.readTree(aParser);
-        return node.toString();
+        return aContext.readTree(aParser).toString();
     }
 }

@@ -17,10 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.pivot.api.extractor;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
-public interface LayerExtractorSupportRegistry
-    extends ExtensionPoint<AnnotationLayer, LayerExtractorSupport>
+/**
+ * Provides the lookups an {@link ExtractorSupport} needs to rebuild its binding from a serialised
+ * definition, scoped to the report's project. Lookups that fail record a problem on the ongoing
+ * resolution and return {@code null} so the extractor is dropped gracefully.
+ */
+public interface ExtractorBindingResolutionContext
 {
+    /**
+     * @return the layer with the given name in the project, or {@code null} (recording a problem)
+     *         if it no longer exists.
+     */
+    AnnotationLayer resolveLayer(String aLayerName);
+
+    /**
+     * @return the feature with the given name on the named layer, or {@code null} (recording a
+     *         problem) if either the layer or the feature no longer exists.
+     */
+    AnnotationFeature resolveFeature(String aLayerName, String aFeatureName);
 }

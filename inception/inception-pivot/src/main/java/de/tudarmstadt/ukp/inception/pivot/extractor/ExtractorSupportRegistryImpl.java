@@ -22,18 +22,17 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.FeatureExtractorSupport;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.FeatureExtractorSupportRegistry;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorBinding;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorSupport;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
 
-public class FeatureExtractorSupportRegistryImpl
-    extends ExtensionPoint_ImplBase<AnnotationFeature, FeatureExtractorSupport>
-    implements FeatureExtractorSupportRegistry
+public class ExtractorSupportRegistryImpl
+    extends ExtensionPoint_ImplBase<ExtractorBinding, ExtractorSupport>
+    implements ExtractorSupportRegistry
 {
-
-    public FeatureExtractorSupportRegistryImpl(
-            @Lazy @Autowired(required = false) List<FeatureExtractorSupport> aExtensions)
+    public ExtractorSupportRegistryImpl(
+            @Lazy @Autowired(required = false) List<ExtractorSupport> aExtensions)
     {
         super(aExtensions);
     }

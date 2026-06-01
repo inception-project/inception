@@ -34,10 +34,9 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.behavior.RelationO
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.curation.RelationDiffSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.export.RelationLayerToCsvExporter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.export.RelationLayerToJsonExporter;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.pivot.RelationSourceRangeExtractorSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.pivot.RelationSourceTextExtractorSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.pivot.RelationTargetRangeExtractorSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.pivot.RelationTargetTextExtractorSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.pivot.RelationEndpointExtractorSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.pivot.RelationEndpointExtractorSupport.Representation;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.recommender.RelationSuggestionSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.undo.RelationAnnotationActionUndoSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -128,30 +127,34 @@ public class RelationLayerAutoConfiguration
     }
 
     @Bean
-    public RelationSourceTextExtractorSupport relationSourceTextExtractorSupport(
+    public RelationEndpointExtractorSupport relationSourceTextExtractorSupport(
             AnnotationSchemaService aSchemaService)
     {
-        return new RelationSourceTextExtractorSupport(aSchemaService);
+        return new RelationEndpointExtractorSupport(aSchemaService, "relation.sourceText",
+                RelationAdapter::getSourceFeatureName, Representation.TEXT);
     }
 
     @Bean
-    public RelationTargetTextExtractorSupport relationTargetTextExtractorSupport(
+    public RelationEndpointExtractorSupport relationTargetTextExtractorSupport(
             AnnotationSchemaService aSchemaService)
     {
-        return new RelationTargetTextExtractorSupport(aSchemaService);
+        return new RelationEndpointExtractorSupport(aSchemaService, "relation.targetText",
+                RelationAdapter::getTargetFeatureName, Representation.TEXT);
     }
 
     @Bean
-    public RelationSourceRangeExtractorSupport relationSourceRangeExtractorSupport(
+    public RelationEndpointExtractorSupport relationSourceRangeExtractorSupport(
             AnnotationSchemaService aSchemaService)
     {
-        return new RelationSourceRangeExtractorSupport(aSchemaService);
+        return new RelationEndpointExtractorSupport(aSchemaService, "relation.sourceRange",
+                RelationAdapter::getSourceFeatureName, Representation.RANGE);
     }
 
     @Bean
-    public RelationTargetRangeExtractorSupport relationTargetRangeExtractorSupport(
+    public RelationEndpointExtractorSupport relationTargetRangeExtractorSupport(
             AnnotationSchemaService aSchemaService)
     {
-        return new RelationTargetRangeExtractorSupport(aSchemaService);
+        return new RelationEndpointExtractorSupport(aSchemaService, "relation.targetRange",
+                RelationAdapter::getTargetFeatureName, Representation.RANGE);
     }
 }
