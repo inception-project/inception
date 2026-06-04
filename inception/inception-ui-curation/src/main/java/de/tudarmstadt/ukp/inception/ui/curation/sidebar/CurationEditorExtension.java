@@ -316,9 +316,15 @@ public class CurationEditorExtension
                     .filter(f -> !f.isCuratable()) //
                     .toList();
 
-            // This is where we get the "show on hover" stuff...
+            // This is where we get the "show on hover" stuff... The renderer must see the same
+            // (full) feature set that was used to render the annotation. Otherwise slot/link
+            // features - which are excluded from the curatable subset because they are multi-valued
+            // - cannot be resolved: the positional feature index stored in the VID is relative to
+            // the full feature list, so resolving it against a filtered subset fails. The curatable
+            // subset is only relevant for the curation-specific feature comparison below.
             detailsLookupService
-                    .lookupLayerLevelDetails(vid, srcCas, aLayer, () -> curatableFeatures)
+                    .lookupLayerLevelDetails(vid, srcCas, aLayer,
+                            () -> annotationService.listSupportedFeatures(aLayer))
                     .forEach(detailGroups::add);
 
             for (var feature : curatableFeatures) {
