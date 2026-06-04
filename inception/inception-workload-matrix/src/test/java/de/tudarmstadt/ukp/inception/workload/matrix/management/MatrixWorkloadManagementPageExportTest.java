@@ -41,25 +41,6 @@ import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentM
 class MatrixWorkloadManagementPageExportTest
 {
     @Test
-    void testBuildAnnotatorListSortsByDisplayName()
-    {
-        // Create test users with different names to test sorting
-        var userCharlie = User.builder().withUsername("charlie").withUiName("Charlie").build();
-        var userAlice = User.builder().withUsername("alice").withUiName("Alice").build();
-        var userBob = User.builder().withUsername("bob").withUiName("Bob").build();
-
-        var users = List.of(userCharlie, userAlice, userBob);
-
-        // After the fix, this should return a sorted list by displayName
-        var result = MatrixWorkloadManagementPage.buildAnnotatorList(users);
-
-        assertThat(result).hasSize(3);
-        assertThat(result.get(0).displayName()).isEqualTo("Alice");
-        assertThat(result.get(1).displayName()).isEqualTo("Bob");
-        assertThat(result.get(2).displayName()).isEqualTo("Charlie");
-    }
-
-    @Test
     void testExportWorkloadToCsvFormat() throws IOException
     {
         // Create test users
@@ -67,10 +48,10 @@ class MatrixWorkloadManagementPageExportTest
         var userAlice = User.builder().withUsername("alice").withUiName("Alice").build();
         var userBob = User.builder().withUsername("bob").withUiName("Bob").build();
 
-        var users = List.of(userCharlie, userAlice, userBob);
-
-        // Build sorted annotator list using the fixed method
-        var annotators = MatrixWorkloadManagementPage.buildAnnotatorList(users);
+        // Annotators are provided to the CSV export pre-sorted by display name (as
+        // DocumentService.listDataOwners returns them).
+        var annotators = List.of(AnnotationSet.forUser(userAlice), AnnotationSet.forUser(userBob),
+                AnnotationSet.forUser(userCharlie));
 
         // Create test project and documents
         var project = Project.builder().withName("test-project").build();

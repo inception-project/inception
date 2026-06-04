@@ -32,6 +32,7 @@ import static wicket.contrib.input.events.EventType.click;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -229,7 +230,9 @@ public class OpenDocumentDialogPanel
             return users;
         }
 
+        var seen = new HashSet<String>();
         for (var user : projectService.listUsersWithRoleInProject(project, ANNOTATOR)) {
+            seen.add(user.getUsername());
             var du = DecoratedObject.of(user);
             du.setLabel(user.getUiName());
             if (user.equals(sessionOwner)) {
@@ -238,6 +241,26 @@ public class OpenDocumentDialogPanel
             else {
                 users.add(du);
             }
+        }
+
+        // Former annotators: users that left annotation data behind but no longer hold the
+        // ANNOTATOR permission (e.g. removed from the project or assigned a different role). Their
+        // data stays accessible here as long as their account still exists - the display name
+        // already flags them as former annotators. Data owners whose account was deleted entirely
+        // cannot be opened in the editor yet (there is no User to drive the annotation state).
+        for (var dataOwner : documentService.listDataOwners(project)) {
+            if (seen.contains(dataOwner.id())) {
+                continue;
+            }
+
+            var user = userRepository.get(dataOwner.id());
+            if (user == null) {
+                continue;
+            }
+
+            var du = DecoratedObject.of(user);
+            du.setLabel(dataOwner.displayName());
+            users.add(du);
         }
 
         return users;

@@ -70,9 +70,17 @@ public interface CurationDocumentService
     List<SourceDocument> listCuratableSourceDocuments(Project aProject);
 
     /**
-     * @return list of users that have finished the given document
+     * @param aSourceDocument
+     *            the source document.
+     * @return the users that have curatable annotation data for the given document. A user is
+     *         curatable if they finished the document, or if they set their state to {@code IGNORE}
+     *         (i.e. it should no longer be annotated by them) after having actually opened it -
+     *         i.e. a CAS exists. An {@code IGNORE} document that was never opened carries no data
+     *         and does not make its owner curatable. This includes former annotators that no longer
+     *         hold the {@code ANNOTATOR} permission (e.g. removed from the project or role changed)
+     *         so their data remains accessible for curation. Users whose account was deleted
+     *         entirely are not included as they can no longer be represented as a {@link User}.
      */
-    @SuppressWarnings("javadoc")
     List<User> listCuratableUsers(SourceDocument aSourceDocument);
 
     Optional<Long> getCurationCasTimestamp(SourceDocument aDocument) throws IOException;

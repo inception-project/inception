@@ -27,6 +27,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IG
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSetMarker.DEACTIVATED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSetMarker.FORMER_ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSetMarker.MISSING;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
@@ -42,11 +45,15 @@ import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCha
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.endsWithMatching;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveDuplicateCharacters;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
 import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.contains;
@@ -111,6 +118,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument_;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User_;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentStorageService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
@@ -1190,20 +1198,28 @@ public class DocumentServiceImpl
             AnnotationDocumentStateChangeFlag... aFlags)
         throws UIMAException, IOException
     {
-        var adoc = getAnnotationDocument(aDocument, aUser);
+        resetAnnotationCas(aDocument, AnnotationSet.forUser(aUser.getUsername()), aFlags);
+    }
+
+    @Override
+    @Transactional
+    public void resetAnnotationCas(SourceDocument aDocument, AnnotationSet aSet,
+            AnnotationDocumentStateChangeFlag... aFlags)
+        throws UIMAException, IOException
+    {
+        var adoc = getAnnotationDocument(aDocument, aSet);
 
         // We read the initial CAS and then use it to override the CAS for the given document/user.
         // In order to do that, we must read the initial CAS unmanaged.
         var cas = createOrReadInitialCas(aDocument, FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
 
         // Add/update the CAS metadata
-        var timestamp = casStorageService.getCasTimestamp(aDocument,
-                AnnotationSet.forUser(aUser.getUsername()));
+        var timestamp = casStorageService.getCasTimestamp(aDocument, aSet);
         if (timestamp.isPresent()) {
-            addOrUpdateCasMetadata(cas, timestamp.get(), aDocument, aUser.getUsername());
+            addOrUpdateCasMetadata(cas, timestamp.get(), aDocument, aSet.id());
         }
 
-        writeAnnotationCas(cas, aDocument, aUser);
+        writeAnnotationCas(cas, aDocument, aSet);
 
         adoc.setTimestamp(null);
         adoc.setAnnotatorComment(null);
@@ -1254,6 +1270,197 @@ public class DocumentServiceImpl
                 .setParameter("project", aProject) //
                 .setParameter("level", ANNOTATOR) //
                 .getResultList();
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public List<AnnotationSet> listDataOwners(Project aProject)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+
+        var dataOwners = new ArrayList<AnnotationSet>();
+
+        // Current annotators - including those that have not produced any annotation data yet.
+        var currentAnnotators = projectService.listUsersWithRoleInProject(aProject, ANNOTATOR);
+        currentAnnotators.stream() //
+                .map(user -> toAnnotationSet(user.getUsername(), user, true)) //
+                .forEach(dataOwners::add);
+
+        var currentAnnotatorNames = currentAnnotators.stream() //
+                .map(User::getUsername) //
+                .collect(toSet());
+
+        // Former annotators - users that left annotation data behind but no longer hold the
+        // ANNOTATOR permission (e.g. removed from the project or assigned a different role). Their
+        // account may even have been deleted entirely, in which case we fall back to the username.
+        // We only consider users that actually have annotation data: a NEW (or absent) annotation
+        // document carries no data - it is merely the result of an assignment. A locked (IGNORE)
+        // document only counts if a CAS was actually written before it was locked (see
+        // hasAnnotationData). The candidate query below narrows to non-NEW documents; the CAS check
+        // then weeds out owners whose only documents were locked without ever being worked on.
+        var cb = entityManager.getCriteriaBuilder();
+
+        var ownerQuery = cb.createQuery(String.class);
+        var adoc = ownerQuery.from(AnnotationDocument.class);
+        ownerQuery.select(adoc.get(AnnotationDocument_.user)).distinct(true) //
+                .where(cb.equal(adoc.get(AnnotationDocument_.project), aProject), //
+                        adoc.get(AnnotationDocument_.user)
+                                .in(CURATION_USER, INITIAL_CAS_PSEUDO_USER).not(), //
+                        cb.notEqual(adoc.get(AnnotationDocument_.state),
+                                AnnotationDocumentState.NEW));
+
+        var formerCandidates = entityManager.createQuery(ownerQuery).getResultList().stream() //
+                .filter(username -> !currentAnnotatorNames.contains(username)) //
+                .collect(toSet());
+
+        if (!formerCandidates.isEmpty()) {
+            // Load the candidates' non-NEW documents and keep only owners that actually have
+            // annotation data: a locked document may have been locked before the annotator ever
+            // opened it, in which case no CAS exists and the owner is not a data owner.
+            var docQuery = cb.createQuery(AnnotationDocument.class);
+            var cadoc = docQuery.from(AnnotationDocument.class);
+            docQuery.select(cadoc).where(cb.equal(cadoc.get(AnnotationDocument_.project), aProject), //
+                    cadoc.get(AnnotationDocument_.user).in(formerCandidates), //
+                    cb.notEqual(cadoc.get(AnnotationDocument_.state), AnnotationDocumentState.NEW));
+
+            var docsByOwner = entityManager.createQuery(docQuery).getResultList().stream() //
+                    .collect(groupingBy(ad -> ad.getAnnotationSet().id()));
+
+            var formerUsernames = formerCandidates.stream() //
+                    .filter(username -> hasAnnotationData(docsByOwner.get(username))) //
+                    .sorted() //
+                    .toList();
+
+            if (!formerUsernames.isEmpty()) {
+                var userQuery = cb.createQuery(User.class);
+                var userRoot = userQuery.from(User.class);
+                userQuery.select(userRoot).where(userRoot.get(User_.username).in(formerUsernames));
+
+                var formerUsersByName = new HashMap<String, User>();
+                entityManager.createQuery(userQuery).getResultList() //
+                        .forEach(user -> formerUsersByName.put(user.getUsername(), user));
+
+                for (var username : formerUsernames) {
+                    // These are by definition not current annotators, so toAnnotationSet yields a
+                    // FORMER_ANNOTATOR (account kept) or MISSING (account deleted) marker.
+                    dataOwners
+                            .add(toAnnotationSet(username, formerUsersByName.get(username), false));
+                }
+            }
+        }
+
+        dataOwners.sort(comparing(AnnotationSet::displayName));
+
+        return dataOwners;
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public AnnotationSet getDataOwner(Project aProject, String aDataOwner)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+        Validate.notBlank(aDataOwner, "Data owner must be specified");
+
+        // The account may have been deleted entirely (e.g. former annotator removed from the
+        // system), in which case toAnnotationSet falls back to the bare user name (MISSING).
+        var user = entityManager.find(User.class, aDataOwner);
+        var isCurrentAnnotator = user != null && projectService.hasRole(user, aProject, ANNOTATOR);
+
+        return toAnnotationSet(aDataOwner, user, isCurrentAnnotator);
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public Map<String, AnnotationSet> getDataOwners(Project aProject,
+            Collection<String> aDataOwners)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+        Validate.notNull(aDataOwners, "Data owners must be specified");
+
+        var result = new LinkedHashMap<String, AnnotationSet>();
+        if (aDataOwners.isEmpty()) {
+            return result;
+        }
+
+        // Resolve current-annotator membership and the user accounts in two bulk queries instead of
+        // hitting the database once per data owner.
+        var currentAnnotatorNames = projectService.listUsersWithRoleInProject(aProject, ANNOTATOR)
+                .stream() //
+                .map(User::getUsername) //
+                .collect(toSet());
+
+        var usersByName = new HashMap<String, User>();
+        entityManager.createQuery("FROM User WHERE username IN (:usernames)", User.class) //
+                .setParameter("usernames", aDataOwners) //
+                .getResultList() //
+                .forEach(user -> usersByName.put(user.getUsername(), user));
+
+        for (var dataOwner : aDataOwners) {
+            result.computeIfAbsent(dataOwner, owner -> toAnnotationSet(owner,
+                    usersByName.get(owner), currentAnnotatorNames.contains(owner)));
+        }
+
+        return result;
+    }
+
+    /**
+     * Build the display {@link AnnotationSet} for a single data owner, applying the marker
+     * precedence shared by {@link #listDataOwners}, {@link #getDataOwner} and
+     * {@link #getDataOwners} (in order): a data owner with no user account at all is flagged
+     * MISSING; an account that is still a current annotator but disabled is flagged DEACTIVATED; an
+     * account that no longer holds the annotator permission is flagged FORMER_ANNOTATOR (whether
+     * enabled or not); an enabled current annotator carries no marker.
+     */
+    private AnnotationSet toAnnotationSet(String aDataOwner, User aUser,
+            boolean aIsCurrentAnnotator)
+    {
+        if (aUser == null) {
+            return AnnotationSet.forUser(aDataOwner, MISSING);
+        }
+
+        if (!aIsCurrentAnnotator) {
+            return AnnotationSet.forUser(aUser, FORMER_ANNOTATOR);
+        }
+
+        if (!aUser.isEnabled()) {
+            return AnnotationSet.forUser(aUser, DEACTIVATED);
+        }
+
+        return AnnotationSet.forUser(aUser);
+    }
+
+    /**
+     * @return whether the given (non-NEW) annotation documents represent actual annotation data.
+     *         Documents in a taken state (IN_PROGRESS / FINISHED) always have a CAS - it is created
+     *         when the document is first opened. The remaining documents are locked (IGNORE) and
+     *         only count as data if a CAS was actually written before they were locked.
+     */
+    private boolean hasAnnotationData(List<AnnotationDocument> aDocuments)
+    {
+        if (aDocuments == null) {
+            return false;
+        }
+
+        for (var doc : aDocuments) {
+            if (doc.getState().isTaken()) {
+                return true;
+            }
+        }
+
+        for (var doc : aDocuments) {
+            try {
+                if (existsCas(doc)) {
+                    return true;
+                }
+            }
+            catch (IOException e) {
+                LOG.warn("Unable to determine whether a CAS exists for annotation document [{}] - "
+                        + "assuming it does", doc, e);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -1314,6 +1521,22 @@ public class DocumentServiceImpl
                         AnnotationDocument.class)
                 .setParameter("project", aDocument.getProject()) //
                 .setParameter("document", aDocument) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public List<AnnotationDocument> listAllAnnotationDocuments(Project aProject)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+
+        // Unlike listAnnotationDocuments(Project), this does not join ProjectPermission/User, so it
+        // also returns the documents of former annotators (no longer holding a permission, or whose
+        // account was deleted).
+        return entityManager
+                .createQuery("FROM AnnotationDocument WHERE project = :project",
+                        AnnotationDocument.class)
+                .setParameter("project", aProject) //
                 .getResultList();
     }
 

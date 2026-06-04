@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
  * Fired when a user clicks on the annotator comment symbol.
@@ -30,15 +30,15 @@ public class AnnotatorColumnCellShowAnnotatorCommentEvent
     extends AbstractAjaxAwareEvent
 {
     private final SourceDocument sourceDocument;
-    private final User user;
+    private final AnnotationSet annotationSet;
 
     public AnnotatorColumnCellShowAnnotatorCommentEvent(AjaxRequestTarget aTarget,
-            SourceDocument aSourceDocument, User aUser)
+            SourceDocument aSourceDocument, AnnotationSet aAnnotationSet)
     {
         super(aTarget);
 
         sourceDocument = aSourceDocument;
-        user = aUser;
+        annotationSet = aAnnotationSet;
     }
 
     public SourceDocument getSourceDocument()
@@ -46,8 +46,8 @@ public class AnnotatorColumnCellShowAnnotatorCommentEvent
         return sourceDocument;
     }
 
-    public User getUser()
+    public AnnotationSet getAnnotationSet()
     {
-        return user;
+        return annotationSet;
     }
 }

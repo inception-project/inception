@@ -17,13 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.curation.service;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession.openNested;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
+import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createCas;
+import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
+import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -46,9 +52,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -94,8 +102,10 @@ class CurationDocumentServiceImplTest
     private @Autowired TestEntityManager testEntityManager;
 
     private @Autowired DocumentService documentService;
+    private @Autowired CasStorageService casStorageService;
     private @Autowired CurationDocumentServiceImpl sut;
 
+    private User current;
     private User beate;
     private User kevin;
     private Project testProject;
@@ -105,7 +115,7 @@ class CurationDocumentServiceImplTest
     void setup() throws Exception
     {
         // create users
-        var current = new User("current", ROLE_USER);
+        current = new User("current", ROLE_USER);
         beate = new User("beate", ROLE_USER);
         kevin = new User("kevin", ROLE_USER);
         testEntityManager.persist(current);
@@ -141,6 +151,54 @@ class CurationDocumentServiceImplTest
     }
 
     @Test
+    void listCuratableSourceDocuments_legacy_ShouldIncludeFormerAnnotatorsDocuments()
+    {
+        // "current" has a user account but no ANNOTATOR permission in the project (e.g. removed
+        // from the project or role changed). A document with only their finished data must still
+        // surface for curation so their data stays accessible.
+        var ann = documentService
+                .createOrUpdateAnnotationDocument(new AnnotationDocument("current", testDocument));
+        documentService.setAnnotationDocumentState(ann, FINISHED);
+
+        assertThat(sut.listCuratableSourceDocuments_legacy(testProject)) //
+                .as("Documents with only former-annotator data are curatable") //
+                .contains(testDocument);
+    }
+
+    @Test
+    void listCuratableSourceDocuments_legacy_ShouldIncludeIgnoredDocumentsOnlyWhenTheyHaveData()
+        throws Exception
+    {
+        var withData = new SourceDocument("withData", testProject, "text");
+        var withoutData = new SourceDocument("withoutData", testProject, "text");
+        testEntityManager.persist(withData);
+        testEntityManager.persist(withoutData);
+
+        // kevin opened "withData" (a CAS exists) before setting it to IGNORE.
+        testEntityManager.persist(AnnotationDocument.builder() //
+                .withUser("kevin") //
+                .forDocument(withData) //
+                .withAnnotatorState(IGNORE) //
+                .build());
+        writeCasFor(withData, "kevin");
+
+        // kevin set "withoutData" to IGNORE without ever opening it (no CAS).
+        testEntityManager.persist(AnnotationDocument.builder() //
+                .withUser("kevin") //
+                .forDocument(withoutData) //
+                .withAnnotatorState(IGNORE) //
+                .build());
+
+        // A CAS storage session is required so the CAS-existence check can run (as in the real
+        // curation flow, which always runs within such a session).
+        try (var session = openNested(true)) {
+            assertThat(sut.listCuratableSourceDocuments_legacy(testProject)) //
+                    .as("IGNORE documents are curatable only when the annotator produced data") //
+                    .containsExactly(withData);
+        }
+    }
+
+    @Test
     void testListCuratableSourceDocuments_new()
     {
         assertThat(sut.listCuratableSourceDocuments_new(testProject))
@@ -155,9 +213,58 @@ class CurationDocumentServiceImplTest
     }
 
     @Test
-    void listCuratableUsers_ShouldReturnFinishedUsers()
+    void listCuratableUsers_ShouldIncludeIgnoredDocumentsOnlyWhenTheyHaveData() throws Exception
     {
-        // create finished annotation documents
+        // beate finished the document - a finished document always has a CAS, so she is curatable.
+        testEntityManager.persist(AnnotationDocument.builder() //
+                .withUser("beate") //
+                .forDocument(testDocument) //
+                .withState(FINISHED) //
+                .build());
+
+        // kevin opened the document (a CAS exists) and then set it to IGNORE - his partial work is
+        // still curatable.
+        testEntityManager.persist(AnnotationDocument.builder() //
+                .withUser("kevin") //
+                .forDocument(testDocument) //
+                .withAnnotatorState(IGNORE) //
+                .build());
+        writeCasFor(testDocument, "kevin");
+
+        // current set the document to IGNORE without ever opening it (no CAS) - there is nothing to
+        // curate, so he is not curatable.
+        testEntityManager.persist(AnnotationDocument.builder() //
+                .withUser("current") //
+                .forDocument(testDocument) //
+                .withAnnotatorState(IGNORE) //
+                .build());
+
+        // A CAS storage session is required so the CAS-existence check can run (as in the real
+        // curation flow, which always runs within such a session).
+        try (var session = openNested(true)) {
+            assertThat(sut.listCuratableUsers(testDocument)) //
+                    .as("IGNORE documents are only curatable when the annotator produced data") //
+                    .containsExactly(beate, kevin);
+        }
+    }
+
+    private void writeCasFor(SourceDocument aDocument, String aUsername) throws Exception
+    {
+        try (var session = openNested(true)) {
+            var tsd = mergeTypeSystems(
+                    asList(createTypeSystemDescription(), getInternalTypeSystem()));
+            var cas = createCas(tsd);
+            session.add(AnnotationSet.forUser(aUsername), EXCLUSIVE_WRITE_ACCESS, cas);
+            casStorageService.writeCas(aDocument, cas, AnnotationSet.forUser(aUsername));
+        }
+    }
+
+    @Test
+    void listCuratableUsers_ShouldIncludeFormerAnnotatorsButNotDeletedAccounts()
+    {
+        // "beate" is a current annotator. "current" has a user account but no ANNOTATOR permission
+        // in the project (e.g. removed from the project or role changed). "ghost" left data behind
+        // but the user account was deleted entirely (no User row).
         testEntityManager.persist(AnnotationDocument.builder() //
                 .withUser("beate") //
                 .forDocument(testDocument) //
@@ -165,14 +272,22 @@ class CurationDocumentServiceImplTest
                 .build());
 
         testEntityManager.persist(AnnotationDocument.builder() //
-                .withUser("kevin") //
+                .withUser("current") //
                 .forDocument(testDocument) //
-                .withAnnotatorState(IGNORE) //
+                .withState(FINISHED) //
                 .build());
 
-        var finishedUsers = sut.listCuratableUsers(testDocument);
+        testEntityManager.persist(AnnotationDocument.builder() //
+                .withUser("ghost") //
+                .forDocument(testDocument) //
+                .withState(FINISHED) //
+                .build());
 
-        assertThat(finishedUsers).containsExactly(beate, kevin);
+        var curatableUsers = sut.listCuratableUsers(testDocument);
+
+        assertThat(curatableUsers) //
+                .as("Former annotators with data are curatable; deleted accounts are not") //
+                .containsExactly(beate, current);
     }
 
     @Test

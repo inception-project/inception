@@ -57,7 +57,7 @@ class ReportServiceImplIntegrationTest
     void setUp()
     {
         sut = new ReportServiceImpl(testEntityManager.getEntityManager(), null, null, null, null,
-                null, null);
+                null);
         project = createProject("Project A");
         otherProject = createProject("Project B");
     }

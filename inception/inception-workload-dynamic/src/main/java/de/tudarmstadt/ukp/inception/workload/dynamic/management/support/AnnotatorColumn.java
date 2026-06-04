@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.management.support;
 import static java.util.stream.Collectors.toList;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
@@ -28,6 +29,7 @@ import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueItem;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys;
 
@@ -36,9 +38,13 @@ public class AnnotatorColumn
 {
     private static final long serialVersionUID = 8324173231787296215L;
 
-    public AnnotatorColumn(IModel<String> aTitle)
+    private final IModel<Map<String, AnnotationSet>> dataOwnerIndex;
+
+    public AnnotatorColumn(IModel<String> aTitle,
+            IModel<Map<String, AnnotationSet>> aDataOwnerIndex)
     {
         super(aTitle, AnnotationQueueItem::getAnnotationDocuments);
+        dataOwnerIndex = aDataOwnerIndex;
     }
 
     @Override
@@ -53,6 +59,6 @@ public class AnnotatorColumn
                 .collect(toList()));
 
         aItem.add(new AnnotationStateList(aComponentId, annotators,
-                aRowModel.getObject().getAbandonationTimeout()));
+                aRowModel.getObject().getAbandonationTimeout(), dataOwnerIndex));
     }
 }

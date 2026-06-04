@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class ReportDecl
@@ -32,7 +32,7 @@ public class ReportDecl
 
     private AggregatorDecl aggregator;
 
-    private List<ProjectUserPermissions> annotators = new ArrayList<>();
+    private List<AnnotationSet> annotators = new ArrayList<>();
     private List<SourceDocument> documents = new ArrayList<>();
     private List<AnnotationDocumentState> states = new ArrayList<>();
     private List<ExtractorDecl> rowExtractors = new ArrayList<>();
@@ -49,12 +49,12 @@ public class ReportDecl
         aggregator = aAggregator;
     }
 
-    public List<ProjectUserPermissions> getAnnotators()
+    public List<AnnotationSet> getAnnotators()
     {
         return annotators;
     }
 
-    public void setAnnotators(List<ProjectUserPermissions> aAnnotators)
+    public void setAnnotators(List<AnnotationSet> aAnnotators)
     {
         annotators = aAnnotators != null ? aAnnotators : new ArrayList<>();
     }

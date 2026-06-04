@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSetMarker.FORMER_ANNOTATOR;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -78,6 +80,7 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAu
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
@@ -871,6 +874,70 @@ class MtasDocumentIndexTest
                 .isEqualTo(MtasDocumentIndex.CURRENT_SCHEMA_VERSION);
     }
 
+    /**
+     * A full re-index must retain the data of former annotators so it stays searchable.
+     * <p>
+     * We assert by counting live Lucene rows stamped {@code FIELD_USER=<former user>} via a
+     * {@link DirectoryReader}, not via {@code query()} (owner-scoped, so it never surfaces former
+     * data) nor {@code getAnnotationCountsPerDocument} (falls back to the INITIAL_CAS row, so it
+     * reads {@code > 0} even if the data was dropped). The {@code query()} before each read forces
+     * the deferred commit synchronously ({@code ensureAllIsCommitted}), so there is no commit race.
+     */
+    @Test
+    void thatFormerAnnotatorDataRemainsSearchableAfterReindex() throws Exception
+    {
+        var project = new Project("former-annotator-reindex");
+        createProject(project);
+
+        var annotator = userRepository.exists("former") ? userRepository.get("former")
+                : userRepository.create(new User("former", Role.ROLE_USER));
+
+        var doc = new SourceDocument("doc", project, "text");
+        uploadAndIndexDocument(Pair.of(doc, "The capital of Galicia is Santiago de Compostela ."));
+        var persistedDoc = documentService.getSourceDocument(project, doc.getName());
+
+        // While still a current annotator, the user produces annotation data which gets indexed
+        // incrementally.
+        projectService.assignRole(project, annotator, PermissionLevel.ANNOTATOR);
+        annotateDocument(project, annotator, persistedDoc);
+
+        // Mark the document IN_PROGRESS so it counts as actual data of the annotator: a NEW
+        // document is treated as "no data" and would be ignored by both listDataOwners and the
+        // reindex (which is the realistic state once an annotator has actually worked on it).
+        documentService.setAnnotationDocumentState(
+                documentService.getAnnotationDocument(persistedDoc, annotator), IN_PROGRESS);
+
+        // Force the deferred commit, then verify the annotator's own row is in the index.
+        searchService.query(user, project, "Galicia");
+        assertThat(countLiveRowsByUser(project, annotator.getUsername())) //
+                .as("annotator's own row is indexed while the user holds the annotator role") //
+                .isGreaterThan(0);
+
+        // The user is removed from the project -> they become a former annotator, i.e. a data
+        // owner who is no longer a current annotator but still has data in the project.
+        projectService.revokeRole(project, annotator, PermissionLevel.ANNOTATOR);
+        assertThat(documentService.listDataOwners(project)) //
+                .as("user is recognized as a former data owner after losing the annotator role") //
+                .anyMatch(set -> set.id().equals(annotator.getUsername())
+                        && set.hasAnyMarkers(FORMER_ANNOTATOR));
+
+        // A full re-index clears the index and rebuilds it from scratch. The previous,
+        // permission-filtered ReindexTask would have dropped the former annotator's data here.
+        searchService.enqueueReindexTask(project, user, "test former annotator reindex");
+        await("re-index to complete") //
+                .atMost(60, SECONDS) //
+                .pollInterval(200, MILLISECONDS) //
+                .until(() -> searchService.isIndexValid(project)
+                        && searchService.getIndexProgress(project).isEmpty());
+
+        // Force the deferred commit again, then verify the former annotator's row survived the
+        // rebuild.
+        searchService.query(user, project, "Galicia");
+        assertThat(countLiveRowsByUser(project, annotator.getUsername())) //
+                .as("former annotator's row remains in the index after a full re-index") //
+                .isGreaterThan(0);
+    }
+
     @SuppressWarnings("unchecked")
     private Index lookupCachedIndex(Project aProject) throws Exception
     {
@@ -1170,6 +1237,29 @@ class MtasDocumentIndexTest
                         continue;
                     }
                     if (aFieldId.equals(storedFields.document(i).get("id"))) {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        }
+    }
+
+    private int countLiveRowsByUser(Project aProject, String aUser) throws Exception
+    {
+        var indexDir = indexFactory.getIndexDir(aProject);
+        try (var dir = FSDirectory.open(indexDir.toPath());
+                var reader = DirectoryReader.open(dir)) {
+            var count = 0;
+            for (var leafCtx : reader.leaves()) {
+                var leafReader = leafCtx.reader();
+                var storedFields = leafReader.storedFields();
+                var liveBits = leafReader.getLiveDocs();
+                for (var i = 0; i < leafReader.maxDoc(); i++) {
+                    if (liveBits != null && !liveBits.get(i)) {
+                        continue;
+                    }
+                    if (aUser.equals(storedFields.document(i).get("user"))) {
                         count++;
                     }
                 }

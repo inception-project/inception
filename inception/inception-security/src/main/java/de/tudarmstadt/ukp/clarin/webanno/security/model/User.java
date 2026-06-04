@@ -111,13 +111,6 @@ public class User
         // No-args constructor required for ORM.
     }
 
-    public User(String aName, String aUiName)
-    {
-        username = aName;
-        uiName = aName;
-        enabled = true;
-    }
-
     /**
      * This constructor is mainly intended for testing.
      * 

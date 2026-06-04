@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.workload.dynamic;
 import static java.lang.Thread.sleep;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Arrays.asList;
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -48,6 +50,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.config.ConstraintsServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -55,12 +58,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -210,6 +215,91 @@ public class DynamicWorkloadExtensionImplTest
                 .as("Document was abandoned by other user, so it can be worked on now")
                 .map(SourceDocument::getName) //
                 .isPresent().get().isEqualTo("1.txt");
+    }
+
+    @Test
+    public void thatFormerAnnotatorFinishedWorkCountsTowardCompletion() throws Exception
+    {
+        // A user with annotation data but no ANNOTATOR role in the project - i.e. a former
+        // annotator. Their finished work must still count towards the required annotator count.
+        var former = userService.create(new User("former"));
+        var doc = createSourceDocument("1.txt");
+        documentService.createOrUpdateAnnotationDocument(AnnotationDocument.builder() //
+                .withUser(former.getUsername()) //
+                .forDocument(doc) //
+                .withState(AnnotationDocumentState.FINISHED) //
+                .build());
+
+        dynamicWorkloadExtension.updateDocumentState(doc, 1);
+
+        assertThat(documentService.getSourceDocument(project.getId(), doc.getId()).getState()) //
+                .as("A former annotator's finished work counts towards completion") //
+                .isEqualTo(SourceDocumentState.ANNOTATION_FINISHED);
+    }
+
+    @Test
+    public void thatAbandonmentResetsDocumentOfDeletedAccountWithoutError() throws Exception
+    {
+        // "ghost" has no user account at all - there is only an annotation document referencing the
+        // username. Abandonment handling must not skip it (or fail) just because the account is
+        // gone.
+        var doc = createSourceDocument("1.txt");
+        var ann = new AnnotationDocument("ghost", doc);
+        Fixtures.importTestSourceDocumentAndAddNamedEntity(documentService, ann);
+
+        // Push the document past the abandonation timeout
+        sleep(traits.getAbandonationTimeout().multipliedBy(2).toMillis());
+
+        // Must not throw - previously this NPE'd on userRepository.get("ghost") == null
+        dynamicWorkloadExtension.freshenStatus(project);
+
+        var reset = documentService.getAnnotationDocument(doc, AnnotationSet.forUser("ghost"));
+        assertThat(reset.getState()) //
+                .as("Abandoned document of a deleted-account user is reset to NEW") //
+                .isEqualTo(AnnotationDocumentState.NEW);
+    }
+
+    @Test
+    public void thatAbandonmentRetainsDeletedAccountDataWhenAbandonationStateIsIgnore()
+        throws Exception
+    {
+        assertAbandonmentRetainsData(AnnotationDocumentState.IGNORE);
+    }
+
+    @Test
+    public void thatAbandonmentRetainsDeletedAccountDataWhenAbandonationStateIsFinished()
+        throws Exception
+    {
+        assertAbandonmentRetainsData(AnnotationDocumentState.FINISHED);
+    }
+
+    private void assertAbandonmentRetainsData(AnnotationDocumentState aAbandonationState)
+        throws Exception
+    {
+        // Configure the project to retain abandoned work in the given (non-NEW) state
+        traits.setAbandonationState(aAbandonationState);
+        dynamicWorkloadExtension.writeTraits(traits, project);
+
+        // "ghost" has no user account - only an annotation document with a NamedEntity
+        var doc = createSourceDocument("1.txt");
+        var ann = new AnnotationDocument("ghost", doc);
+        Fixtures.importTestSourceDocumentAndAddNamedEntity(documentService, ann);
+
+        sleep(traits.getAbandonationTimeout().multipliedBy(2).toMillis());
+
+        dynamicWorkloadExtension.freshenStatus(project);
+
+        var abandoned = documentService.getAnnotationDocument(doc, AnnotationSet.forUser("ghost"));
+        assertThat(abandoned.getState()) //
+                .as("Abandoned document is moved to the configured retain state") //
+                .isEqualTo(aAbandonationState);
+
+        try (var session = CasStorageSession.open()) {
+            var cas = documentService.readAnnotationCas(doc, AnnotationSet.forUser("ghost"));
+            assertThat(select(cas, getType(cas, NamedEntity.class))) //
+                    .as("The former annotator's annotations are retained, not reset") //
+                    .isNotEmpty();
+        }
     }
 
     private SourceDocument createSourceDocument(String aName)

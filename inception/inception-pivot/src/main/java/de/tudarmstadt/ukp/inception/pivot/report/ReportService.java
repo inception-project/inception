@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.inception.pivot.report;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.inception.pivot.api.model.PivotReport;
 import de.tudarmstadt.ukp.inception.pivot.api.report.ReportDef;
 
@@ -43,5 +43,5 @@ public interface ReportService
 
     ResolvedReport resolve(ReportDef aDef, Project aProject);
 
-    List<ProjectUserPermissions> listDataOwners(Project aProject);
+    List<AnnotationSet> listDataOwners(Project aProject);
 }

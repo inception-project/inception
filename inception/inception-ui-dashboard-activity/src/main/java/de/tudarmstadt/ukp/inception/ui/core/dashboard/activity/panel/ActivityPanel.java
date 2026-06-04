@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHAN
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,9 +35,10 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
@@ -50,11 +52,12 @@ public class ActivityPanel
     private @SpringBean ActivitiesDashletController controller;
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userService;
+    private @SpringBean DocumentService documentService;
 
     private IModel<Project> projectModel = Model.of();
-    private IModel<User> userModel = Model.of();
+    private IModel<AnnotationSet> userModel = Model.of();
 
-    private DropDownChoice<User> userSelection;
+    private DropDownChoice<AnnotationSet> userSelection;
 
     private WebMarkupContainer content;
 
@@ -78,27 +81,28 @@ public class ActivityPanel
         content.add(new SvelteBehavior(this));
         add(content);
 
-        userSelection = new DropDownChoice<User>("user");
+        userSelection = new DropDownChoice<AnnotationSet>("user");
         userSelection.setOutputMarkupId(true);
         userSelection.setModel(userModel);
-        userSelection.setChoiceRenderer(new LambdaChoiceRenderer<>(user -> {
-            var username = user.toLongString();
-            if (username.equals(sessionOwner.getUsername())) {
-                username += " (me)";
+        userSelection.setChoiceRenderer(new LambdaChoiceRenderer<>(dataOwner -> {
+            var label = dataOwner.displayName();
+            if (dataOwner.id().equals(sessionOwner.getUsername())) {
+                label += " (me)";
             }
-            return username;
+            return label;
         }));
-        userSelection.setChoices(this::getUsersForCurrentProject);
+        userSelection.setChoices(this::getDataOwnersForCurrentProject);
         userSelection.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                 this::actionChangeDataOwner));
         userSelection.setVisible(isManager);
 
-        var users = userSelection.getChoices();
-        if (users.contains(sessionOwner)) {
-            userModel.setObject(sessionOwner);
+        var dataOwners = userSelection.getChoices();
+        var sessionOwnerSet = AnnotationSet.forUser(sessionOwner);
+        if (dataOwners.contains(sessionOwnerSet)) {
+            userModel.setObject(sessionOwnerSet);
         }
-        else if (!users.isEmpty()) {
-            userModel.setObject(users.get(0));
+        else if (!dataOwners.isEmpty()) {
+            userModel.setObject(dataOwners.get(0));
         }
 
         add(userSelection);
@@ -107,15 +111,28 @@ public class ActivityPanel
     private void actionChangeDataOwner(AjaxRequestTarget aTarget)
     {
         getModelObject().put("dataOwner",
-                userModel.getObject() != null ? userModel.getObject().getUsername() : null);
+                userModel.getObject() != null ? userModel.getObject().id() : null);
         aTarget.add(userSelection, content);
     }
 
-    private List<User> getUsersForCurrentProject()
+    private List<AnnotationSet> getDataOwnersForCurrentProject()
     {
-        var users = new ArrayList<User>();
-        users.addAll(projectService.listUsersWithAnyRoleInProject(projectModel.getObject()));
-        users.add(userService.getCurationUser());
-        return users;
+        var project = projectModel.getObject();
+
+        // All users currently holding any role in the project, plus the curation user.
+        var dataOwners = new LinkedHashMap<String, AnnotationSet>();
+        for (var user : projectService.listUsersWithAnyRoleInProject(project)) {
+            dataOwners.put(user.getUsername(), AnnotationSet.forUser(user));
+        }
+        var curationUser = userService.getCurationUser();
+        dataOwners.put(curationUser.getUsername(), AnnotationSet.forUser(curationUser));
+
+        // Former annotators that left annotation data behind but no longer hold a role (removed
+        // from the project, role changed or account deleted) so their activity stays accessible.
+        for (var dataOwner : documentService.listDataOwners(project)) {
+            dataOwners.putIfAbsent(dataOwner.id(), dataOwner);
+        }
+
+        return new ArrayList<>(dataOwners.values());
     }
 }

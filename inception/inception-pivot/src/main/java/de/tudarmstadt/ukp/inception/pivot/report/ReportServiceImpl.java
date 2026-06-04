@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.pivot.report;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static java.util.Collections.emptySet;
-import static java.util.Comparator.comparing;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
@@ -33,11 +30,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.pivot.api.aggregator.AggregatorSupportRegistry;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorBindingResolutionContext;
@@ -47,7 +43,6 @@ import de.tudarmstadt.ukp.inception.pivot.api.report.ExtractorDef;
 import de.tudarmstadt.ukp.inception.pivot.api.report.FilterDef;
 import de.tudarmstadt.ukp.inception.pivot.api.model.PivotReport;
 import de.tudarmstadt.ukp.inception.pivot.api.report.ReportDef;
-import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
@@ -61,21 +56,19 @@ public class ReportServiceImpl
     private final AnnotationSchemaService schemaService;
     private final ExtractorSupportRegistry extractorRegistry;
     private final AggregatorSupportRegistry aggregatorRegistry;
-    private final ProjectService projectService;
     private final DocumentService documentService;
     private final UserDao userService;
     private final ObjectMapper jsonMapper;
 
     public ReportServiceImpl(EntityManager aEntityManager, AnnotationSchemaService aSchemaService,
             ExtractorSupportRegistry aExtractorRegistry,
-            AggregatorSupportRegistry aAggregatorRegistry, ProjectService aProjectService,
-            DocumentService aDocumentService, UserDao aUserService)
+            AggregatorSupportRegistry aAggregatorRegistry, DocumentService aDocumentService,
+            UserDao aUserService)
     {
         entityManager = aEntityManager;
         schemaService = aSchemaService;
         extractorRegistry = aExtractorRegistry;
         aggregatorRegistry = aAggregatorRegistry;
-        projectService = aProjectService;
         documentService = aDocumentService;
         userService = aUserService;
         jsonMapper = JSONUtil.getObjectMapper();
@@ -173,7 +166,7 @@ public class ReportServiceImpl
 
         var filter = new FilterDef();
         filter.setAnnotators(aDecl.getAnnotators().stream() //
-                .map(ProjectUserPermissions::getUsername) //
+                .map(AnnotationSet::id) //
                 .toList());
         filter.setDocuments(aDecl.getDocuments().stream() //
                 .map(SourceDocument::getName) //
@@ -334,13 +327,13 @@ public class ReportServiceImpl
             return;
         }
 
-        var byUsername = listDataOwners(aProject).stream() //
-                .collect(toMap(ProjectUserPermissions::getUsername, identity(), (a, $) -> a));
+        var byId = listDataOwners(aProject).stream() //
+                .collect(toMap(AnnotationSet::id, identity(), (a, $) -> a));
 
         for (var username : aFilter.getAnnotators()) {
-            var perm = byUsername.get(username);
-            if (perm != null) {
-                aDecl.getAnnotators().add(perm);
+            var dataOwner = byId.get(username);
+            if (dataOwner != null) {
+                aDecl.getAnnotators().add(dataOwner);
             }
             else {
                 aProblems.add(
@@ -371,22 +364,15 @@ public class ReportServiceImpl
     }
 
     @Override
-    public List<ProjectUserPermissions> listDataOwners(Project aProject)
+    public List<AnnotationSet> listDataOwners(Project aProject)
     {
-        var dataOwners = new ArrayList<ProjectUserPermissions>();
+        // Current and former annotators (the latter flagged in their display name).
+        var dataOwners = new ArrayList<>(documentService.listDataOwners(aProject));
 
-        projectService.listProjectUserPermissions(aProject).stream() //
-                .filter(p -> p.getRoles().contains(ANNOTATOR)) //
-                .sorted(comparing(p -> p.getUser().map(User::getUiName).orElse(p.getUsername()))) //
-                .forEach(dataOwners::add);
-
-        var curationUser = userService.getCurationUser();
-        dataOwners.add(new ProjectUserPermissions(aProject, curationUser.getUsername(),
-                curationUser, emptySet()));
-
-        var initialCasUser = userService.getInitialCasUser();
-        dataOwners.add(new ProjectUserPermissions(aProject, initialCasUser.getUsername(),
-                initialCasUser, emptySet()));
+        // The pivot can also report on the curation and initial CAS data which are not regular
+        // annotators and thus not included by DocumentService.listDataOwners(...).
+        dataOwners.add(AnnotationSet.forUser(userService.getCurationUser()));
+        dataOwners.add(AnnotationSet.forUser(userService.getInitialCasUser()));
 
         return dataOwners;
     }
