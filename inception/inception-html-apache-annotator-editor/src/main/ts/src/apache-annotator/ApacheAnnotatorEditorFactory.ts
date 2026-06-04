@@ -105,9 +105,14 @@ export class ApacheAnnotatorEditorFactory implements AnnotationEditorFactory {
 
 /**
  * Evaluate the format-supplied document-structure factory expression in the
- * iframe's window context (mirrors how the editor framework evaluates
- * props.editorFactory) and call it to produce the strategy. Falls back to a
- * noop strategy if no expression was provided or the eval fails.
+ * iframe's window context (mirrors how props.editorFactory is evaluated) and
+ * call it to produce the strategy. Falls back to {@link NoopDocumentStructure}
+ * if no expression was provided or the eval fails.
+ *
+ * Note: this only governs the table-of-contents outline. Making section
+ * elements pinnable across browsers is a separate, unconditional step
+ * (normalizeSectionsForPinning in the editor), independent of which strategy
+ * is chosen here.
  */
 function resolveDocumentStructure(
     element: Node,
