@@ -87,8 +87,18 @@ public class OAuth2LoginPanel
                 .findFirst();
 
         if (maybeAutoLoginTarget.isPresent()) {
-            throw new RedirectToUrlException(maybeAutoLoginTarget.get().getLoginUrl());
+            throw new RedirectToUrlException(toAutoLoginRedirectUrl(servletContext.getContextPath(),
+                    maybeAutoLoginTarget.get().getLoginUrl()));
         }
+    }
+
+    /**
+     * Determine the URL the auto-login should redirect to, given the context-absolute login URL
+     * used verbatim by the login button.
+     */
+    static String toAutoLoginRedirectUrl(String aContextPath, String aLoginUrl)
+    {
+        return aLoginUrl;
     }
 
     /*
