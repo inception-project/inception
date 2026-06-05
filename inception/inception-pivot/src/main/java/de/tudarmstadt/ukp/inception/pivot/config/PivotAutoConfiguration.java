@@ -42,7 +42,6 @@ import de.tudarmstadt.ukp.inception.pivot.report.ReportService;
 import de.tudarmstadt.ukp.inception.pivot.report.ReportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import jakarta.persistence.EntityManager;
 
@@ -108,11 +107,11 @@ public class PivotAutoConfiguration
     @Bean
     public ReportService reportService(EntityManager aEntityManager,
             AnnotationSchemaService aSchemaService, ExtractorSupportRegistry aExtractorRegistry,
-            AggregatorSupportRegistry aAggregatorRegistry, ProjectService aProjectService,
-            DocumentService aDocumentService, UserDao aUserService)
+            AggregatorSupportRegistry aAggregatorRegistry, DocumentService aDocumentService,
+            UserDao aUserService)
     {
         return new ReportServiceImpl(aEntityManager, aSchemaService, aExtractorRegistry,
-                aAggregatorRegistry, aProjectService, aDocumentService, aUserService);
+                aAggregatorRegistry, aDocumentService, aUserService);
     }
 
     @Bean

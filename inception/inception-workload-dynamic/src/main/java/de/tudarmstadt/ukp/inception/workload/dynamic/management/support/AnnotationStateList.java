@@ -28,7 +28,9 @@ import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -43,9 +45,9 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxEventBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorColumnCellClickEvent;
@@ -57,16 +59,18 @@ public class AnnotationStateList
 {
     private static final long serialVersionUID = -8717096450102813443L;
 
-    private @SpringBean UserDao userRepository;
+    private @SpringBean DocumentService documentService;
 
     private final Duration abandonationTimeout;
+    private final IModel<Map<String, AnnotationSet>> dataOwnerIndex;
 
     public AnnotationStateList(String aId, IModel<List<AnnotationDocument>> aModel,
-            Duration aAbandonationTimeout)
+            Duration aAbandonationTimeout, IModel<Map<String, AnnotationSet>> aDataOwnerIndex)
     {
         super(aId, aModel);
 
         abandonationTimeout = aAbandonationTimeout;
+        dataOwnerIndex = aDataOwnerIndex;
 
         ListView<AnnotationDocument> annotationStates = new ListView<>("item", aModel)
         {
@@ -76,7 +80,12 @@ public class AnnotationStateList
             protected void populateItem(ListItem<AnnotationDocument> aItem)
             {
                 var row = aItem.getModelObject();
-                var user = userRepository.get(aItem.getModelObject().getUser());
+                var dataOwner = row.getAnnotationSet().id();
+                // The index carries the uiName and former/missing marker; the document's own
+                // getAnnotationSet() only has the bare user name. Fall back for owners not indexed.
+                var indexed = dataOwnerIndex.getObject().get(dataOwner);
+                var annotationSet = indexed != null ? indexed
+                        : documentService.getDataOwner(row.getDocument().getProject(), dataOwner);
 
                 var state = new WebMarkupContainer("state");
                 aItem.queue(state);
@@ -93,9 +102,10 @@ public class AnnotationStateList
                 }
                 else {
                     aItem.add(new AttributeAppender("class", "bg-secondary", " "));
-                    state.add(AjaxEventBehavior.onEvent("click", _target -> stateLabel.send(
-                            stateLabel, BUBBLE,
-                            new AnnotatorColumnCellClickEvent(_target, row.getDocument(), user))));
+                    state.add(AjaxEventBehavior.onEvent("click",
+                            _target -> stateLabel.send(stateLabel, BUBBLE,
+                                    new AnnotatorColumnCellClickEvent(_target, row.getDocument(),
+                                            annotationSet))));
                     state.add(new AttributeAppender("class", CSS_CLASS_STATE_TOGGLE, " "));
                 }
 
@@ -103,13 +113,23 @@ public class AnnotationStateList
                 stateLabel.setEscapeModelStrings(false); // SAFE - WE RENDER CONTROLLED SET OF ICONS
                 aItem.queue(stateLabel);
 
-                aItem.queue(new Label("annotatorName", user.getUiName()));
+                aItem.queue(new Label("annotatorName", annotationSet.name()));
+
+                // Mark former/missing data owners with a person-slash icon
+                var marker = annotationSet.marker();
+                var formerMarker = new WebMarkupContainer("formerMarker");
+                formerMarker.setVisible(marker != null);
+                if (marker != null) {
+                    formerMarker.add(AttributeModifier.replace("title", marker.getLabel()));
+                }
+                aItem.queue(formerMarker);
 
                 state.add(new LambdaAjaxEventBehavior("contextmenu",
-                        _t -> actionShowContextMenu(_t, state, row, user)).setPreventDefault(true));
+                        _t -> actionShowContextMenu(_t, state, row, annotationSet))
+                                .setPreventDefault(true));
 
                 var showComment = new LambdaAjaxLink("showComment",
-                        _t -> actionShowAnnotatorComment(_t, row.getDocument(), user));
+                        _t -> actionShowAnnotatorComment(_t, row.getDocument(), annotationSet));
                 showComment.add(visibleWhen(() -> isNotBlank(row.getAnnotatorComment())));
                 aItem.queue(showComment);
             }
@@ -119,17 +139,17 @@ public class AnnotationStateList
     }
 
     private void actionShowContextMenu(AjaxRequestTarget aTarget, Component aContext,
-            AnnotationDocument aAnnDoc, User aUser)
+            AnnotationDocument aAnnDoc, AnnotationSet aAnnotationSet)
     {
         send(aContext, BUBBLE, new AnnotatorStateOpenContextMenuEvent(aTarget, aContext,
-                aAnnDoc.getDocument(), aUser, aAnnDoc.getState()));
-        ;
+                aAnnDoc.getDocument(), aAnnotationSet, aAnnDoc.getState()));
     }
 
     private void actionShowAnnotatorComment(AjaxRequestTarget aTarget, SourceDocument aDoc,
-            User aUser)
+            AnnotationSet aAnnotationSet)
     {
-        send(this, BUBBLE, new AnnotatorColumnCellShowAnnotatorCommentEvent(aTarget, aDoc, aUser));
+        send(this, BUBBLE,
+                new AnnotatorColumnCellShowAnnotatorCommentEvent(aTarget, aDoc, aAnnotationSet));
     }
 
     private boolean isAbandoned(AnnotationDocument aAnnDoc)

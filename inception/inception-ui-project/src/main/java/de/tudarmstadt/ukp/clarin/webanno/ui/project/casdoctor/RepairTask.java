@@ -152,8 +152,17 @@ public class RepairTask
                     getMessageSets().add(messageSet);
                 }
 
-                // Repair regular annotator CASes
-                for (var ad : documentService.listAnnotationDocuments(sd)) {
+                // Repair regular annotator CASes - including those of former annotators (removed
+                // from the project, role changed or account deleted) so their data is not skipped.
+                for (var ad : documentService.listAllAnnotationDocuments(sd)) {
+                    // The initial and curation CASes are repaired separately above. Their
+                    // pseudo-user annotation documents are included in listAllAnnotationDocuments,
+                    // so skip them here to avoid repairing those CASes a second time.
+                    var annotationSet = ad.getAnnotationSet();
+                    if (CURATION_SET.equals(annotationSet) || INITIAL_SET.equals(annotationSet)) {
+                        continue;
+                    }
+
                     var messageSet = new LogMessageSet(sd.getName() + " [" + ad.getUser() + "]");
                     try {
                         if (documentService.existsCas(ad)) {

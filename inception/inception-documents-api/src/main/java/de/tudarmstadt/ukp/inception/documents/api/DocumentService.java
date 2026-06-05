@@ -302,6 +302,26 @@ public interface DocumentService
         throws UIMAException, IOException;
 
     /**
+     * Resets the annotations for the given document and data owner back to the initial state. This
+     * overload accepts an {@link AnnotationSet} (i.e. is identified by the data owner's username)
+     * and therefore also works for former annotators whose user account no longer exists.
+     *
+     * @param aDocument
+     *            the source document.
+     * @param aSet
+     *            the data owner whose annotations are reset.
+     * @param aFlags
+     *            optional flags controlling the operation
+     * @throws UIMAException
+     *             if a data error occurs.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    void resetAnnotationCas(SourceDocument aDocument, AnnotationSet aSet,
+            AnnotationDocumentStateChangeFlag... aFlags)
+        throws UIMAException, IOException;
+
+    /**
      * A Method that checks if there is already an annotation document created for the source
      * document
      *
@@ -584,6 +604,54 @@ public interface DocumentService
      */
     List<AnnotationDocument> listAnnotationDocuments(Project aProject);
 
+    /**
+     * List the data owners for the given project: all users that currently hold the
+     * {@link PermissionLevel#ANNOTATOR ANNOTATOR} permission (including those who have not produced
+     * any annotation data yet), unioned with any user that has left annotation documents behind but
+     * no longer holds that permission (e.g. because they were removed from the project or had their
+     * role changed - or even had their account deleted entirely). The latter are flagged as former
+     * annotators in their {@link AnnotationSet#displayName() display name}. The curation and
+     * initial CAS pseudo users are not included.
+     *
+     * @param aProject
+     *            the project
+     * @return the current and former data owners as annotation sets.
+     */
+    List<AnnotationSet> listDataOwners(Project aProject);
+
+    /**
+     * Resolve a single data-owner name to the {@link AnnotationSet} to display for it, flagging
+     * former annotators and missing accounts so they can be told apart from current annotators (the
+     * singular counterpart to {@link #listDataOwners(Project)}):
+     * <ul>
+     * <li>a current annotator (the account still holds the {@link PermissionLevel#ANNOTATOR
+     * ANNOTATOR} permission in the project) resolves to an unmarked set;</li>
+     * <li>an existing account that no longer holds that permission (removed from the project or
+     * role changed) is flagged as a former annotator;</li>
+     * <li>a data owner whose account no longer exists is flagged as missing.</li>
+     * </ul>
+     *
+     * @param aProject
+     *            the project the data owner belongs to.
+     * @param aDataOwner
+     *            the data-owner name (i.e. the user name stored on an annotation document).
+     * @return the annotation set to display for the given data owner.
+     */
+    AnnotationSet getDataOwner(Project aProject, String aDataOwner);
+
+    /**
+     * Batch variant of {@link #getDataOwner(Project, String)} that resolves several data-owner
+     * names at once using a fixed number of queries rather than one lookup per name. The same
+     * current/former/missing (and deactivated) marker rules apply.
+     *
+     * @param aProject
+     *            the project the data owners belong to.
+     * @param aDataOwners
+     *            the data-owner names (i.e. the user names stored on annotation documents).
+     * @return a map from each requested data-owner name to the annotation set to display for it.
+     */
+    Map<String, AnnotationSet> getDataOwners(Project aProject, Collection<String> aDataOwners);
+
     List<AnnotationDocument> listAnnotationDocumentsInState(Project aProject,
             AnnotationDocumentState... aStates);
 
@@ -675,15 +743,27 @@ public interface DocumentService
 
     /**
      * List all annotation documents for this source document (including in active and deleted user
-     * annotation and those created by project admins or super admins for Test purpose. This method
-     * is called when a source document (or Project) is deleted so that associated annotation
-     * documents also get removed.
+     * annotation and those created by project admins or super admins. This method is called when a
+     * source document (or Project) is deleted so that associated annotation documents also get
+     * removed.
      *
      * @param document
      *            the source document.
      * @return the annotation documents.
      */
     List<AnnotationDocument> listAllAnnotationDocuments(SourceDocument document);
+
+    /**
+     * List all the {@link AnnotationDocument annotation documents} in a given project, regardless
+     * of whether their owner still holds a permission in the project or whether their user account
+     * still exists. Unlike {@link #listAnnotationDocuments(Project)}, this includes the data of
+     * former annotators (removed from the project, role changed, or account deleted).
+     *
+     * @param aProject
+     *            the project
+     * @return the annotation documents.
+     */
+    List<AnnotationDocument> listAllAnnotationDocuments(Project aProject);
 
     /**
      * Check if the user finished annotating the {@link SourceDocument} in this {@link Project}

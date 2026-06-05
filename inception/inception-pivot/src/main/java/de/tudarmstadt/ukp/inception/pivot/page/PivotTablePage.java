@@ -38,7 +38,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.wicket.Component;
@@ -66,12 +65,10 @@ import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.users.ProjectUserPermissionChoiceRenderer;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.pivot.api.aggregator.Aggregator;
 import de.tudarmstadt.ukp.inception.pivot.api.aggregator.AggregatorSupport;
@@ -252,8 +249,8 @@ public class PivotTablePage
         queue(new LambdaAjaxButton<ReportDecl>("save", (t, f) -> actionSaveTab(t, activeTab)));
         queue(new LambdaAjaxButton<ReportDecl>("run", this::actionRun));
 
-        var annotatorList = new ListMultipleChoice<ProjectUserPermissions>("annotators");
-        annotatorList.setChoiceRenderer(new ProjectUserPermissionChoiceRenderer());
+        var annotatorList = new ListMultipleChoice<AnnotationSet>("annotators");
+        annotatorList.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationSet::displayName));
         annotatorList.setChoices(reportService.listDataOwners(getProject()));
         annotatorList.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                 this::actionMarkActiveTabDirty));
@@ -654,10 +651,8 @@ public class PivotTablePage
         var dataOwners = (state.getAnnotators().isEmpty()
                 ? reportService.listDataOwners(getProject())
                 : state.getAnnotators()).stream() //
-                        .map(ProjectUserPermissions::getUser) //
-                        .filter(Optional::isPresent) //
-                        .map(Optional::get) //
-                        .map(User::getUsername).toList();
+                        .map(AnnotationSet::id) //
+                        .toList();
 
         var sessionOwner = userService.getCurrentUser();
         var states = state.getStates().isEmpty() ? asList(IN_PROGRESS, FINISHED, IGNORE)

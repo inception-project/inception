@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.Do
 
 import java.util.Set;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
 import org.apache.wicket.markup.repeater.Item;
@@ -41,7 +42,7 @@ public class DocumentMatrixAnnotatorColumn
     public DocumentMatrixAnnotatorColumn(AnnotationSet aAnnSet,
             IModel<Set<AnnotationSet>> aSelectedSets)
     {
-        super(Model.of(aAnnSet.displayName()), annotatorSortKey(aAnnSet),
+        super(Model.of(aAnnSet.name()), annotatorSortKey(aAnnSet),
                 row -> row.getAnnotationDocument(aAnnSet));
         annotationSet = aAnnSet;
         selectedUsers = aSelectedSets;
@@ -50,6 +51,14 @@ public class DocumentMatrixAnnotatorColumn
     public AnnotationSet getAnnotationSet()
     {
         return annotationSet;
+    }
+
+    @Override
+    public Component getHeader(String aComponentId)
+    {
+        // Render the plain name plus, for former annotators, a warning icon with an explanatory
+        // tooltip - instead of spelling out "(former annotator)" in the (narrow) column header.
+        return new AnnotatorColumnHeaderPanel(aComponentId, annotationSet);
     }
 
     @Override

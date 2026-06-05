@@ -44,6 +44,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -159,7 +160,7 @@ public class ActivitiesDashletControllerImpl
 
         // Only managers can view other users' activity
         var dataOwner = getDataOwner(aDataOwner, sessionOwner);
-        if (!dataOwner.equals(sessionOwner)
+        if (!dataOwner.equals(sessionOwner.getUsername())
                 && !projectService.hasRole(sessionOwner, project, MANAGER)) {
             return new ActivitySummary(begin, end, emptyList(), emptyMap());
         }
@@ -248,7 +249,7 @@ public class ActivitiesDashletControllerImpl
 
         // Only managers can view other users' activity
         var dataOwner = getDataOwner(aDataOwner, sessionOwner);
-        if (!dataOwner.equals(sessionOwner)
+        if (!dataOwner.equals(sessionOwner.getUsername())
                 && !projectService.hasRole(sessionOwner, project, MANAGER)) {
             return new ActivityOverview(begin, end, emptyMap());
         }
@@ -271,33 +272,21 @@ public class ActivitiesDashletControllerImpl
     }
 
     private List<SummarizedLoggedEvent> summarizeEvents(Project project, Instant begin, Instant end,
-            User dataOwner)
+            String dataOwner)
     {
-        if (userRepository.getCurationUser().equals(dataOwner)) {
-            return eventRepository.summarizeEventsByDataOwner(dataOwner.getUsername(), project,
-                    begin, end);
+        if (CURATION_USER.equals(dataOwner)) {
+            return eventRepository.summarizeEventsByDataOwner(dataOwner, project, begin, end);
         }
 
-        return eventRepository.summarizeEventsBySessionOwner(dataOwner.getUsername(), project,
-                begin, end);
+        return eventRepository.summarizeEventsBySessionOwner(dataOwner, project, begin, end);
     }
 
-    private User getDataOwner(Optional<String> aDataOwner, User aSessionOwner)
+    private String getDataOwner(Optional<String> aDataOwner, User aSessionOwner)
     {
-        User dataOwner;
-
-        if (aDataOwner.isPresent()) {
-            dataOwner = userRepository.getUserOrCurationUser(aDataOwner.get());
-            if (dataOwner == null) {
-                throw new IllegalArgumentException(
-                        "User [" + aDataOwner.get() + "] does not exist");
-            }
-        }
-        else {
-            dataOwner = aSessionOwner;
-        }
-
-        return dataOwner;
+        // The data owner may be a former annotator whose account no longer exists (removed from
+        // the project, role changed or account deleted) - so we operate on the username and do not
+        // require the user account to still exist. Their logged events remain accessible.
+        return aDataOwner.filter(StringUtils::isNotBlank).orElseGet(aSessionOwner::getUsername);
     }
 
     @Override

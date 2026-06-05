@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.pivot.report;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,7 +27,6 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
-import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,8 +36,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -55,7 +53,6 @@ import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerBinding;
 import de.tudarmstadt.ukp.inception.pivot.api.report.AggregatorDef;
 import de.tudarmstadt.ukp.inception.pivot.api.report.ExtractorDef;
 import de.tudarmstadt.ukp.inception.pivot.api.report.ReportDef;
-import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
@@ -65,7 +62,6 @@ class ReportServiceImplTranslationTest
     private @Mock AnnotationSchemaService schemaService;
     private @Mock ExtractorSupportRegistry extractorRegistry;
     private @Mock AggregatorSupportRegistry aggregatorRegistry;
-    private @Mock ProjectService projectService;
     private @Mock DocumentService documentService;
     private @Mock UserDao userService;
 
@@ -87,7 +83,7 @@ class ReportServiceImplTranslationTest
     void setUp()
     {
         sut = new ReportServiceImpl(null, schemaService, extractorRegistry, aggregatorRegistry,
-                projectService, documentService, userService);
+                documentService, userService);
 
         project = new Project();
         project.setName("p");
@@ -124,8 +120,7 @@ class ReportServiceImplTranslationTest
         decl.setRowExtractors(asList( //
                 new ExtractorDecl("documentName", "Token :: <doc>", new LayerBinding(tokenLayer)), //
                 new ExtractorDecl("featureValue", "Token.POS", new FeatureBinding(posFeature))));
-        decl.getAnnotators()
-                .add(new ProjectUserPermissions(project, "alice", alice, Set.of(ANNOTATOR)));
+        decl.getAnnotators().add(AnnotationSet.forUser(alice));
         decl.getDocuments().add(doc1);
         decl.getStates().add(FINISHED);
 
@@ -206,7 +201,7 @@ class ReportServiceImplTranslationTest
                 .containsExactly("documentName", "featureValue");
         assertThat(resolved.decl().getRowExtractors()).extracting(ExtractorDecl::binding) //
                 .containsExactly(new LayerBinding(tokenLayer), new FeatureBinding(posFeature));
-        assertThat(resolved.decl().getAnnotators()).extracting(ProjectUserPermissions::getUsername) //
+        assertThat(resolved.decl().getAnnotators()).extracting(AnnotationSet::id) //
                 .containsExactly("alice");
         assertThat(resolved.decl().getDocuments()).containsExactly(doc1);
         assertThat(resolved.decl().getStates()).containsExactly(IN_PROGRESS);
@@ -311,7 +306,7 @@ class ReportServiceImplTranslationTest
         var resolved = sut.resolve(def, project);
 
         assertThat(resolved.problems()).isEmpty();
-        assertThat(resolved.decl().getAnnotators()).extracting(ProjectUserPermissions::getUsername) //
+        assertThat(resolved.decl().getAnnotators()).extracting(AnnotationSet::id) //
                 .containsExactly("CURATION_USER", "INITIAL_CAS");
     }
 
@@ -368,11 +363,11 @@ class ReportServiceImplTranslationTest
 
     private void givenProjectDataOwners(Project aProject, User... aUsers)
     {
-        var perms = new java.util.ArrayList<ProjectUserPermissions>();
+        var dataOwners = new java.util.ArrayList<AnnotationSet>();
         for (var u : aUsers) {
-            perms.add(new ProjectUserPermissions(aProject, u.getUsername(), u, Set.of(ANNOTATOR)));
+            dataOwners.add(AnnotationSet.forUser(u));
         }
-        lenient().when(projectService.listProjectUserPermissions(aProject)).thenReturn(perms);
+        lenient().when(documentService.listDataOwners(aProject)).thenReturn(dataOwners);
         lenient().when(userService.getCurationUser()).thenReturn(curationUser);
         lenient().when(userService.getInitialCasUser()).thenReturn(initialCasUser);
     }

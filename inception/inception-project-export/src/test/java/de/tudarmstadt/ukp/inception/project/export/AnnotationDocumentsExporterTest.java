@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.project.export;
 
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.FilenameUtils.removeExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,6 +29,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipFile;
@@ -53,7 +57,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePropertiesImpl;
@@ -126,15 +129,13 @@ public class AnnotationDocumentsExporterTest
     void thatExportingAndImportingAgainWorks() throws Exception
     {
         var annDocs = annotationDocuments(sourceProject);
-        when(documentService.listAnnotationDocuments(any(Project.class))) //
+        when(documentService.listAllAnnotationDocuments(any(Project.class))) //
                 .thenReturn(annDocs);
         var srcDocs = sourceDocuments(sourceProject);
         when(documentService.listSourceDocuments(any(Project.class))) //
                 .thenReturn(srcDocs);
         when(documentService.existsCas(any())) //
                 .thenReturn(true);
-        when(userService.get(any(String.class)))
-                .thenAnswer(invocation -> new User(invocation.getArgument(0)));
 
         var exportFile = new File(tempFolder, "export.zip");
 
@@ -173,6 +174,109 @@ public class AnnotationDocumentsExporterTest
                         "glob:**/project/2/document/9/annotation/someuser.ser");
     }
 
+    /**
+     * Data of a former annotator (still has an account but no project permission) must still be
+     * exported and imported. Permission-independence of {@code listAllAnnotationDocuments} itself
+     * is covered by {@code DocumentServiceImplDatabaseTest}.
+     */
+    @Test
+    void thatDataOfUserWithoutProjectPermissionIsExportedAndImported() throws Exception
+    {
+        var srcDoc = sourceDocument(1, sourceProject);
+        var annDoc = AnnotationDocument.builder() //
+                .withId(1l) //
+                .withUser("former") //
+                .forDocument(srcDoc) //
+                .withState(AnnotationDocumentState.IN_PROGRESS) //
+                .build();
+
+        var imported = runExportThenImport(asList(srcDoc), asList(annDoc));
+
+        assertThat(imported).extracting(AnnotationDocument::getUser).contains("former");
+        assertThat(serFileNames()).contains("former.ser");
+    }
+
+    /**
+     * Data of a deleted-account user must still be exported and imported - exercises the removal of
+     * the {@code userRepository.get(user) != null} guard on the CAS export.
+     */
+    @Test
+    void thatDataOfNonExistentUserIsExportedAndImported() throws Exception
+    {
+        var srcDoc = sourceDocument(1, sourceProject);
+        var annDoc = AnnotationDocument.builder() //
+                .withId(1l) //
+                .withUser("ghost") //
+                .forDocument(srcDoc) //
+                .withState(AnnotationDocumentState.FINISHED) //
+                .build();
+
+        // userService.get(...) is intentionally not stubbed - unstubbed returns null, modelling the
+        // deleted account; the exporter must not depend on the account existing.
+        var imported = runExportThenImport(asList(srcDoc), asList(annDoc));
+
+        assertThat(imported).extracting(AnnotationDocument::getUser).contains("ghost");
+        assertThat(serFileNames()).contains("ghost.ser");
+    }
+
+    /**
+     * The curation CAS has its own exporter ({@code curation_ser}), so a CURATION_USER row must
+     * contribute its metadata (we own the AnnotationDocument table) but its CAS must not be written
+     * into {@code annotation_ser}.
+     */
+    @Test
+    void thatCurationPseudoUserCasIsNotExportedButItsMetadataIs() throws Exception
+    {
+        var srcDoc = sourceDocument(1, sourceProject);
+        var annDoc = AnnotationDocument.builder() //
+                .withId(1l) //
+                .withUser("someuser") //
+                .forDocument(srcDoc) //
+                .withState(AnnotationDocumentState.IN_PROGRESS) //
+                .build();
+        var curationDoc = AnnotationDocument.builder() //
+                .withId(2l) //
+                .withUser(CURATION_USER) //
+                .forDocument(srcDoc) //
+                .withState(AnnotationDocumentState.IN_PROGRESS) //
+                .build();
+
+        var imported = runExportThenImport(asList(srcDoc), asList(annDoc, curationDoc));
+
+        // Metadata for the curation row is owned by this exporter and round-trips...
+        assertThat(imported).extracting(AnnotationDocument::getUser) //
+                .contains("someuser", CURATION_USER);
+        // ...but the curation CAS must NOT be emitted here (only the regular user's is).
+        assertThat(serFileNames()) //
+                .contains("someuser.ser") //
+                .doesNotContain(CURATION_USER + ".ser");
+    }
+
+    /**
+     * A locked (IGNORE) document that has a CAS is real work set aside - both its state metadata
+     * and its CAS must round-trip. A locked document without a CAS stays excluded via
+     * {@code existsCas}.
+     */
+    @Test
+    void thatLockedDocumentWithDataIsExportedAndImported() throws Exception
+    {
+        var srcDoc = sourceDocument(1, sourceProject);
+        var annDoc = AnnotationDocument.builder() //
+                .withId(1l) //
+                .withUser("lockeduser") //
+                .forDocument(srcDoc) //
+                .withState(AnnotationDocumentState.IGNORE) //
+                .build();
+
+        var imported = runExportThenImport(asList(srcDoc), asList(annDoc));
+
+        assertThat(imported).anySatisfy(ad -> {
+            assertThat(ad.getUser()).isEqualTo("lockeduser");
+            assertThat(ad.getState()).isEqualTo(AnnotationDocumentState.IGNORE);
+        });
+        assertThat(serFileNames()).contains("lockeduser.ser");
+    }
+
     @Test
     void thatImportingAnnotationProjectWorks_3_6_1() throws Exception
     {
@@ -204,6 +308,46 @@ public class AnnotationDocumentsExporterTest
                 .containsExactlyInAnyOrder("example_sentence.txt", "example_sentence.txt");
         assertThat(imported).extracting(Pair::getValue)
                 .containsExactlyInAnyOrder(INITIAL_CAS_PSEUDO_USER, "admin");
+    }
+
+    private List<AnnotationDocument> runExportThenImport(List<SourceDocument> aSrcDocs,
+            List<AnnotationDocument> aAnnDocs)
+        throws Exception
+    {
+        when(documentService.listAllAnnotationDocuments(any(Project.class))).thenReturn(aAnnDocs);
+        when(documentService.listSourceDocuments(any(Project.class))).thenReturn(aSrcDocs);
+        when(documentService.existsCas(any())).thenReturn(true);
+
+        var exportFile = new File(tempFolder, "export.zip");
+        var exportRequest = FullProjectExportRequest.builder().withProject(sourceProject).build();
+        var monitor = new ProjectExportTaskMonitor(sourceProject, null, "test",
+                exportRequest.getFilenamePrefix());
+        var exportedProject = new ExportedProject();
+        try (var zos = new ZipOutputStream(new FileOutputStream(exportFile))) {
+            sut.exportData(exportRequest, monitor, exportedProject, zos);
+        }
+
+        reset(documentService);
+        when(documentService.listSourceDocuments(any(Project.class))).thenReturn(aSrcDocs);
+        var captor = ArgumentCaptor.forClass(AnnotationDocument.class);
+        when(documentService.createOrUpdateAnnotationDocument(captor.capture())).thenReturn(null);
+
+        var importRequest = ProjectImportRequest.builder().build();
+        try (var zipFile = new ZipFile(exportFile)) {
+            sut.importData(importRequest, targetProject, exportedProject, zipFile);
+        }
+
+        return captor.getAllValues();
+    }
+
+    private List<String> serFileNames() throws IOException
+    {
+        try (var stream = Files.walk(tempFolder.toPath())) {
+            return stream.filter(Files::isRegularFile) //
+                    .map(p -> p.getFileName().toString()) //
+                    .filter(n -> n.endsWith(".ser")) //
+                    .collect(toList());
+        }
     }
 
     private List<AnnotationDocument> annotationDocuments(Project aProject)
