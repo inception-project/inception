@@ -95,9 +95,20 @@ public class OAuth2LoginPanel
     /**
      * Determine the URL the auto-login should redirect to, given the context-absolute login URL
      * used verbatim by the login button.
+     * <p>
+     * Wicket's {@code RedirectRequestHandler} re-applies the servlet context path to a redirect URL
+     * that starts with {@code '/'} (via {@code UrlRenderer#renderContextRelativeUrl}). The login
+     * URL is context-absolute, so the context path is stripped here to make it context-relative;
+     * otherwise it would be applied twice (e.g. {@code /inception/inception/oauth2/...}) and
+     * auto-login would enter an infinite redirect loop.
      */
     static String toAutoLoginRedirectUrl(String aContextPath, String aLoginUrl)
     {
+        var contextPath = removeEnd(aContextPath, "/");
+        if (!contextPath.isEmpty() && aLoginUrl.startsWith(contextPath + "/")) {
+            return aLoginUrl.substring(contextPath.length());
+        }
+
         return aLoginUrl;
     }
 
