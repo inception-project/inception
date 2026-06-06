@@ -535,7 +535,7 @@ async function displayViewer(): Promise<void> {
     // Load a PDF file.
     return Promise.all([
         annoPage.loadVisualModel(vModelUrl),
-        annoPage.displayViewer(getPDFName(pdfUrl), pdfUrl),
+        annoPage.await displayViewer(getPDFName(pdfUrl), pdfUrl),
     ]).then(([vModel]) => {
         console.log('Loaded visual model and viewer');
 
