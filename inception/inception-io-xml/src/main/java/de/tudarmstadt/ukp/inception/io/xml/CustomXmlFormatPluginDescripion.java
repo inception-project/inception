@@ -36,6 +36,8 @@ public class CustomXmlFormatPluginDescripion
     private String name;
 
     private List<String> stylesheets = emptyList();
+    private List<String> scripts = emptyList();
+    private String documentStructureFactory;
     private Set<String> sectionElements = emptySet();
     private List<String> blockElements = emptyList();
     private boolean splitSentencesInBlockElements;
@@ -80,6 +82,26 @@ public class CustomXmlFormatPluginDescripion
     public void setStylesheets(List<String> aStylesheets)
     {
         stylesheets = aStylesheets;
+    }
+
+    public List<String> getScripts()
+    {
+        return scripts;
+    }
+
+    public void setScripts(List<String> aScripts)
+    {
+        scripts = aScripts;
+    }
+
+    public String getDocumentStructureFactory()
+    {
+        return documentStructureFactory;
+    }
+
+    public void setDocumentStructureFactory(String aDocumentStructureFactory)
+    {
+        documentStructureFactory = aDocumentStructureFactory;
     }
 
     public Set<String> getSectionElements()

@@ -61,17 +61,22 @@ export function normalizeSectionsForPinning(
     // moves into the new wrapper and is still wrapped on a later iteration.
     const targets = Array.from(container.querySelectorAll(selector));
 
-    let wrapped = false;
+    // True if wrappers exist when we are done -- whether created here or already
+    // present from an earlier run. The return value must reflect the resulting
+    // DOM, not just this invocation's actions, so a re-run keeps reporting the
+    // wrapper selector and downstream keeps targeting the wrappers.
+    let hasWrappers = false;
     for (const el of targets) {
         if (el.namespaceURI === XHTML_NS) continue; // already pinnable
 
         const parent = el.parentNode;
         if (!parent) continue;
-        // Idempotent: skip if already wrapped (e.g. preprocess run twice).
+        // Idempotent: skip if already wrapped (e.g. run twice on the same tree).
         if (
             parent.nodeType === Node.ELEMENT_NODE &&
             (parent as Element).localName === WRAPPER_TAG
         ) {
+            hasWrappers = true;
             continue;
         }
 
@@ -79,10 +84,10 @@ export function normalizeSectionsForPinning(
         wrapper.setAttribute('data-section-type', el.localName);
         parent.insertBefore(wrapper, el);
         wrapper.appendChild(el);
-        wrapped = true;
+        hasWrappers = true;
     }
 
     // If every section was already HTML, no wrappers exist and the section
     // boundaries are still the original elements.
-    return wrapped ? WRAPPER_TAG : selector;
+    return hasWrappers ? WRAPPER_TAG : selector;
 }

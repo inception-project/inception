@@ -64,7 +64,12 @@ export class SectionAnnotationCreator {
 
     private initializeSectionTypeAttributes() {
         this.root.querySelectorAll(this.sectionSelector).forEach((e, i) => {
-            e.setAttribute('data-iaa-section-type', e.localName);
+            // For synthetic <sec-wrap> wrappers (used to make namespaced XML
+            // sections pinnable) the localName is 'sec-wrap'; the original
+            // element name is preserved in data-section-type, so prefer it for
+            // the displayed section-type label.
+            const sectionType = e.getAttribute('data-section-type') ?? e.localName;
+            e.setAttribute('data-iaa-section-type', sectionType);
         });
     }
 

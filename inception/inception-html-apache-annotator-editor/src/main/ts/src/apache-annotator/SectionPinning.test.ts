@@ -135,15 +135,20 @@ describe('normalizeSectionsForPinning', () => {
         expect(textInOrder(container)).toBe(before);
     });
 
-    it('is idempotent: running twice does not double-wrap', () => {
+    it('is idempotent: running twice does not double-wrap and keeps reporting the wrapper selector', () => {
         const div = teiEl('div', 'body');
         container.appendChild(div);
 
-        normalizeSectionsForPinning(container, new Set(['div']));
-        normalizeSectionsForPinning(container, new Set(['div']));
+        const first = normalizeSectionsForPinning(container, new Set(['div']));
+        const second = normalizeSectionsForPinning(container, new Set(['div']));
 
         expect(container.querySelectorAll('sec-wrap').length).toBe(1);
         expect(container.firstElementChild?.firstElementChild).toBe(div);
+        // The selector must stay 'sec-wrap' on the re-run: the wrappers still
+        // exist, so downstream must keep targeting them rather than the
+        // now-buried original elements.
+        expect(first).toBe('sec-wrap');
+        expect(second).toBe('sec-wrap');
     });
 
     it('only wraps elements whose local name is configured', () => {
