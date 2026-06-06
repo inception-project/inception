@@ -73,9 +73,10 @@ public class CustomXmlFormatFactory
         }
 
         stylesheetReferences = new ArrayList<ResourceReference>();
+        var basePath = description.getBasePath().normalize();
         for (var stylesheet : description.getStylesheets()) {
-            var stylesheetPath = description.getBasePath().resolve(stylesheet);
-            if (!stylesheetPath.startsWith(description.getBasePath())) {
+            var stylesheetPath = basePath.resolve(stylesheet).normalize();
+            if (!stylesheetPath.startsWith(basePath)) {
                 LOG.warn("Stylesheet in custom XML format [{}] has illegal path [{}]",
                         description.getId(), stylesheet);
                 continue;
