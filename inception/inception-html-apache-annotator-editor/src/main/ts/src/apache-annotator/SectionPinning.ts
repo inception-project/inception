@@ -42,9 +42,16 @@ const WRAPPER_TAG = 'sec-wrap';
  * separately by the {@link DocumentStructureStrategy}.
  *
  * @returns the CSS selector the editor should use for "a section" afterwards:
- *   {@code 'sec-wrap'} when any wrapping happened, the original element-name
- *   selector when every section was already HTML, or {@code ''} when no section
- *   elements were configured.
+ *   - {@code ''} when no section elements were configured.
+ *   - the original element-name selector (e.g. {@code 'div,p'}) when nothing
+ *     was wrapped because every matching section was already HTML.
+ *   - {@code 'sec-wrap'} when every matching section got wrapped.
+ *   - a combined selector (e.g.
+ *     {@code 'sec-wrap, :is(div,p):not(sec-wrap *)'}) when the document mixes
+ *     already-HTML sections (left in place) with namespaced ones (wrapped), so
+ *     downstream targets the wrappers AND the still-unwrapped HTML sections.
+ *     The {@code :not(sec-wrap *)} keeps the original elements now buried inside
+ *     a wrapper from matching twice.
  */
 export function normalizeSectionsForPinning(
     container: Element,
@@ -61,13 +68,15 @@ export function normalizeSectionsForPinning(
     // moves into the new wrapper and is still wrapped on a later iteration.
     const targets = Array.from(container.querySelectorAll(selector));
 
-    // True if wrappers exist when we are done -- whether created here or already
-    // present from an earlier run. The return value must reflect the resulting
-    // DOM, not just this invocation's actions, so a re-run keeps reporting the
-    // wrapper selector and downstream keeps targeting the wrappers.
+    // Track the resulting DOM (not just this run's actions) so the returned
+    // selector is correct even on a re-run or a mixed document.
     let hasWrappers = false;
+    let hasUnwrapped = false;
     for (const el of targets) {
-        if (el.namespaceURI === XHTML_NS) continue; // already pinnable
+        if (el.namespaceURI === XHTML_NS) {
+            hasUnwrapped = true; // already pinnable, stays as itself
+            continue;
+        }
 
         const parent = el.parentNode;
         if (!parent) continue;
@@ -87,7 +96,10 @@ export function normalizeSectionsForPinning(
         hasWrappers = true;
     }
 
-    // If every section was already HTML, no wrappers exist and the section
-    // boundaries are still the original elements.
-    return hasWrappers ? WRAPPER_TAG : selector;
+    if (!hasWrappers) return selector;
+    if (!hasUnwrapped) return WRAPPER_TAG;
+    // Mixed: target wrappers plus the still-unwrapped originals. The
+    // :not(sec-wrap *) guard excludes originals now buried inside a wrapper so
+    // they don't match alongside their own wrapper.
+    return `${WRAPPER_TAG}, :is(${selector}):not(${WRAPPER_TAG} *)`;
 }

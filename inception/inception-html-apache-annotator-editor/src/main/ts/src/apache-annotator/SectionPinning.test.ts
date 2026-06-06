@@ -100,6 +100,29 @@ describe('normalizeSectionsForPinning', () => {
         expect(xhtmlSection.parentElement).toBe(container);
     });
 
+    it('returns a combined selector when HTML and namespaced sections are mixed', () => {
+        // Same configured local name ('div') matches both an already-HTML <div>
+        // (left in place) and a namespaced TEI <div> (wrapped). The returned
+        // selector must reach the wrapper AND the untouched HTML div, but not
+        // the original TEI div now buried inside the wrapper.
+        const htmlDiv = document.createElement('div');
+        htmlDiv.textContent = 'html section';
+        const teiDiv = teiEl('div', 'tei section');
+        container.appendChild(htmlDiv);
+        container.appendChild(teiDiv);
+
+        const selector = normalizeSectionsForPinning(container, new Set(['div']));
+
+        expect(container.querySelectorAll('sec-wrap').length).toBe(1);
+        // What the editor will actually select afterwards:
+        const matched = Array.from(container.querySelectorAll(selector));
+        const wrap = container.querySelector('sec-wrap')!;
+        expect(matched).toContain(wrap); // the wrapped (was namespaced) section
+        expect(matched).toContain(htmlDiv); // the still-unwrapped HTML section
+        expect(matched).not.toContain(teiDiv); // buried original must not double-match
+        expect(matched.length).toBe(2);
+    });
+
     it('wraps nested sections at each level', () => {
         const inner = teiEl('div', 'inner text');
         const outer = teiEl('div', 'outer ', inner);

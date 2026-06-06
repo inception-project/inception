@@ -91,9 +91,10 @@ public class CustomXmlFormatFactory
         }
 
         scriptReferences = new ArrayList<ResourceReference>();
+        var basePath = description.getBasePath().normalize();
         for (var script : description.getScripts()) {
-            var scriptPath = description.getBasePath().resolve(script);
-            if (!scriptPath.startsWith(description.getBasePath())) {
+            var scriptPath = basePath.resolve(script).normalize();
+            if (!scriptPath.startsWith(basePath)) {
                 LOG.warn("Script in custom XML format [{}] has illegal path [{}]",
                         description.getId(), script);
                 continue;
