@@ -276,11 +276,11 @@ public class ExternalRecommender
     private List<MTagset> buildTagsets(CAS aCas, PredictionContext aContext)
         throws RecommendationException
     {
-        var casMetadata = getCasMetadata(aCas);
-        var projectId = casMetadata.getProjectId();
+        // The context project is authoritative. The CAS-metadata projectId is not
+        // used as a guard: it is a long defaulting to 0, so it cannot tell "unset"
+        // from a legitimate project id of 0 (HSQLDB starts IDENTITY at 0).
         var maybeProject = aContext.getProject();
-
-        if (!(projectId > 0) || maybeProject.isEmpty()) {
+        if (maybeProject.isEmpty()) {
             return emptyList();
         }
 
