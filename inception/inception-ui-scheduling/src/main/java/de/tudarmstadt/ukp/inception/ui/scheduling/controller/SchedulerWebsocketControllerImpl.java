@@ -97,7 +97,9 @@ public class SchedulerWebsocketControllerImpl
                     aUpdate);
         }
 
-        if (aUpdate.getProjectId() > 0) {
+        // -1 is the "no project" sentinel (see MTaskStateUpdate); a real project
+        // id of 0 is valid (HSQLDB starts IDENTITY at 0), so guard on >= 0.
+        if (aUpdate.getProjectId() >= 0) {
             var topic = SchedulerWebsocketController
                     .getProjectTaskUpdatesTopic(aUpdate.getProjectId());
             msgTemplate.convertAndSend("/topic" + topic, aUpdate);

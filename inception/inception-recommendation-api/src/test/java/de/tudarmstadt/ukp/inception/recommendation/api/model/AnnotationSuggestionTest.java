@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +29,66 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class AnnotationSuggestionTest
 {
+    @Test
+    public void thatPersistedEntitiesWithIdZeroAreAccepted()
+    {
+        // id 0 is a valid persisted id (HSQLDB starts IDENTITY at 0) and must not
+        // trip the persisted-entity asserts.
+        var doc = SourceDocument.builder().withId(0L).withName("doc0").build();
+        var layer = AnnotationLayer.builder().withId(0L).build();
+        var feature = AnnotationFeature.builder().withLayer(layer).withName("value").build();
+        var rec = Recommender.builder().withId(0L).withName("Recommender").withLayer(layer)
+                .withFeature(feature).build();
+
+        var suggestion = SpanSuggestion.builder() //
+                .withId(1) //
+                .withRecommender(rec) //
+                .withDocument(doc) //
+                .withPosition(0, 1) //
+                .withCoveredText("a") //
+                .withLabel("A") //
+                .withUiLabel("#A") //
+                .withScore(0.1) //
+                .withScoreExplanation("E1") //
+                .build();
+
+        assertThat(suggestion.getRecommenderId()).isZero();
+        assertThat(suggestion.getLayerId()).isZero();
+        assertThat(suggestion.getDocumentId()).isZero();
+        assertThat(suggestion.getRecommenderName()).isEqualTo("Recommender");
+    }
+
+    @Test
+    public void thatUnpersistedRecommenderIsRejected()
+    {
+        // A recommender with a null id (never persisted) must still be rejected.
+        var doc = SourceDocument.builder().withId(0L).withName("doc0").build();
+        var layer = AnnotationLayer.builder().withId(0L).build();
+        var feature = AnnotationFeature.builder().withLayer(layer).withName("value").build();
+        var unpersistedRec = Recommender.builder() // no withId(...) -> id is null
+                .withName("Recommender").withLayer(layer).withFeature(feature).build();
+
+        var builder = SpanSuggestion.builder() //
+                .withId(1) //
+                .withRecommender(unpersistedRec) //
+                .withDocument(doc) //
+                .withPosition(0, 1) //
+                .withCoveredText("a") //
+                .withLabel("A") //
+                .withUiLabel("#A");
+
+        // Only meaningful when assertions are enabled (-ea), as in the test JVM.
+        boolean assertionsEnabled = false;
+        assert assertionsEnabled = true; // side-effect sets the flag when -ea is on
+        if (assertionsEnabled) {
+            org.assertj.core.api.Assertions.assertThatThrownBy(builder::build)
+                    .isInstanceOf(AssertionError.class);
+        }
+        else {
+            assertThatNoException().isThrownBy(builder::build);
+        }
+    }
+
     @Test
     public void thatEqualsAndHashCodeAndCompareToWorkCorrectly()
     {

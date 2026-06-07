@@ -121,26 +121,31 @@ public abstract class AnnotationSuggestion
         correction = aBuilder.correction;
         correctionExplanation = aBuilder.correctionExplanation;
 
-        recommenderId = aBuilder.recommenderId != null ? aBuilder.recommenderId
-                : (aBuilder.recommender != null ? aBuilder.recommender.getId() : 0);
+        // Boxed so null (unpersisted) is distinct from a genuine id of 0 (HSQLDB
+        // starts IDENTITY at 0). The asserts below check id != null, not id > 0.
+        Long srcRecommenderId = aBuilder.recommenderId != null ? aBuilder.recommenderId
+                : (aBuilder.recommender != null ? aBuilder.recommender.getId() : null);
+        Long srcLayerId = aBuilder.layerId != null ? aBuilder.layerId
+                : (aBuilder.recommender != null && aBuilder.recommender.getLayer() != null
+                        ? aBuilder.recommender.getLayer().getId()
+                        : null);
+
+        recommenderId = srcRecommenderId != null ? srcRecommenderId : 0;
 
         recommenderName = aBuilder.recommenderName != null ? aBuilder.recommenderName
                 : (aBuilder.recommender != null ? aBuilder.recommender.getName() : null);
 
-        layerId = aBuilder.layerId != null ? aBuilder.layerId
-                : (aBuilder.recommender != null && aBuilder.recommender.getLayer() != null
-                        ? aBuilder.recommender.getLayer().getId()
-                        : 0);
+        layerId = srcLayerId != null ? srcLayerId : 0;
 
         feature = aBuilder.feature != null ? aBuilder.feature
                 : (aBuilder.recommender != null && aBuilder.recommender.getFeature() != null
                         ? aBuilder.recommender.getFeature().getName()
                         : null);
 
-        assert layerId > 0l : "Layer must be persisted (id > 0) but was [" + layerId + "]";
-        assert recommenderId > 0l : "Recommender must be persisted (id > 0) but was "
-                + recommenderId + "]";
-        assert documentId > 0l : "Document must be persisted (id > 0) but was " + documentId + "]";
+        // documentId is a primitive long; it would already have NPE'd on unbox if
+        // the document were unpersisted, so it needs no separate guard here.
+        assert srcLayerId != null : "Layer must be persisted (id must be set)";
+        assert srcRecommenderId != null : "Recommender must be persisted (id must be set)";
         assert feature != null : "Feature cannot be null";
         assert recommenderName != null : "Recommender name cannot be null";
         assert generation >= 0 : "Generation cannot be negative but was [" + generation + "]";
