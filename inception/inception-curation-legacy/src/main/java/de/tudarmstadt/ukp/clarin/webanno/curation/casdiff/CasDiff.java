@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -55,10 +55,10 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.type.CasMetadataSupport;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapter;
 import de.tudarmstadt.ukp.inception.curation.api.Position;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
-import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
 public class CasDiff
 {
@@ -209,18 +209,9 @@ public class CasDiff
         if (LOG.isDebugEnabled()) {
             LOG.debug("Analyzing CAS group [{}]", aCasGroupId);
 
-            String collectionId = null;
-            String documentId = null;
-            try {
-                var dmd = WebAnnoCasUtil.getDocumentMetadata(aCas);
-                collectionId = getFeature(dmd, "collectionId", String.class);
-                documentId = getFeature(dmd, "documentId", String.class);
-                LOG.debug("User [{}] - Document [{}]", collectionId, documentId);
-            }
-            catch (IllegalArgumentException e) {
-                // We use this information only for debugging - so we can ignore if the information
-                // is missing.
-            }
+            var collectionId = CasMetadataSupport.getProjectName(aCas);
+            var documentId = CasMetadataSupport.getSourceDocumentName(aCas);
+            LOG.debug("User [{}] - Document [{}]", collectionId, documentId);
         }
 
         var type = aCas.getTypeSystem().getType(aType);

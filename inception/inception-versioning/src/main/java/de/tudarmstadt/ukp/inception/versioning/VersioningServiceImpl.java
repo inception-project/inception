@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.versioning;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -151,10 +153,20 @@ public class VersioningServiceImpl
                 }
             }
 
-            // Dump annotation documents
-            for (var annotationDocument : documentService.listAnnotationDocuments(sourceDocument)) {
+            // Dump annotation documents - including those of former annotators (removed from the
+            // project, role changed or account deleted) so the snapshot is a complete backup.
+            for (var annotationDocument : documentService
+                    .listAllAnnotationDocuments(sourceDocument)) {
 
                 var set = AnnotationSet.forUser(annotationDocument.getUser());
+
+                // The initial and curation CASes are dumped separately above. Their pseudo-user
+                // annotation documents are included in listAllAnnotationDocuments, so skip them
+                // here to avoid dumping those CASes a second time.
+                if (CURATION_SET.equals(set) || INITIAL_SET.equals(set)) {
+                    continue;
+                }
+
                 var annotationDocumentPath = sourceDir.resolve(set + ".xmi");
 
                 try (var session = CasStorageSession.openNested();

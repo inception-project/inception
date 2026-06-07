@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.Do
 
 import java.util.Set;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
 import org.apache.wicket.markup.repeater.Item;
@@ -41,7 +42,7 @@ public class DocumentMatrixAnnotatorColumn
     public DocumentMatrixAnnotatorColumn(AnnotationSet aAnnSet,
             IModel<Set<AnnotationSet>> aSelectedSets)
     {
-        super(Model.of(aAnnSet.displayName()), annotatorSortKey(aAnnSet),
+        super(Model.of(aAnnSet.name()), annotatorSortKey(aAnnSet),
                 row -> row.getAnnotationDocument(aAnnSet));
         annotationSet = aAnnSet;
         selectedUsers = aSelectedSets;
@@ -50,6 +51,14 @@ public class DocumentMatrixAnnotatorColumn
     public AnnotationSet getAnnotationSet()
     {
         return annotationSet;
+    }
+
+    @Override
+    public Component getHeader(String aComponentId)
+    {
+        // Render the plain name plus, for former annotators, a warning icon with an explanatory
+        // tooltip - instead of spelling out "(former annotator)" in the (narrow) column header.
+        return new AnnotatorColumnHeaderPanel(aComponentId, annotationSet);
     }
 
     @Override

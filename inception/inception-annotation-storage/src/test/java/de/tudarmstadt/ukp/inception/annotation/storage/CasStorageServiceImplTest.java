@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -58,6 +58,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
+import org.apache.uima.UIMAFramework;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
@@ -207,6 +208,99 @@ public class CasStorageServiceImplTest
             sut.deleteCas(doc, set);
             assertThat(sut.existsCas(doc, set)).isFalse();
         }
+    }
+
+    @Test
+    public void testReadOnlyLazilyCreatedCasReceivesCasMetadata() throws Exception
+    {
+        try (var casStorageSession = openNested(true)) {
+            // Setup fixture - a document whose CAS does not exist on disk yet
+            var project = new Project();
+            project.setId(13l);
+            project.setName("project");
+            var doc = new SourceDocument();
+            doc.setProject(project);
+            doc.setId(13l);
+            doc.setName("document");
+            var set = AnnotationSet.forTest("test");
+
+            assertThat(sut.existsCas(doc, set)).isFalse();
+
+            // Actual test - load under read-only access, forcing the lazy-creation path
+            var cas = sut.readOrCreateCas(doc, set, AUTO_CAS_UPGRADE,
+                    () -> makeCas("This is a test"), SHARED_READ_ONLY_ACCESS).getJCas();
+
+            // A read-only access must not persist the lazily created CAS
+            assertThat(sut.existsCas(doc, set)) //
+                    .as("Read-only access must not write the CAS to disk") //
+                    .isFalse();
+
+            // ... but the CAS must still carry its identity in the CASMetadata so that e.g. diff
+            // positions can pick it up for debugging/transparency.
+            var cmds = new ArrayList<>(select(cas, CASMetadata.class));
+            assertThat(cmds).hasSize(1);
+            assertThat(cmds.get(0).getSourceDocumentName()).isEqualTo(doc.getName());
+            assertThat(cmds.get(0).getProjectName()).isEqualTo(doc.getProject().getName());
+        }
+    }
+
+    @Test
+    public void testThatTransientCasCannotBePersisted() throws Exception
+    {
+        try (var casStorageSession = openNested(true)) {
+            // Setup fixture - a CAS explicitly marked as transient (as a lazily created read-only
+            // CAS would be). It is deliberately NOT added to the session, so writeCas takes the
+            // exclusive-access path down to realWriteCas where the transient-guard sits. (A CAS
+            // held read-only within the session is already blocked one layer earlier by the
+            // session's write-permission check.)
+            var doc = makeSourceDocument(14l, 14l, "test");
+            var set = AnnotationSet.forTest("test");
+
+            var cas = makeCas("This is a test");
+            CasMetadataUtils.addOrUpdateCasMetadata(cas, CasMetadataUtils.TRANSIENT_CAS_TIMESTAMP,
+                    doc, set.id());
+            assertThat(CasMetadataUtils.isTransientCas(cas)).isTrue();
+
+            // Actual test - attempting to write it back must be rejected
+            assertThatExceptionOfType(IOException.class) //
+                    .isThrownBy(() -> sut.writeCas(doc, cas, set)) //
+                    .withMessageContaining("transient");
+
+            assertThat(sut.existsCas(doc, set)) //
+                    .as("Rejected write must not have created a file on disk") //
+                    .isFalse();
+        }
+    }
+
+    @Test
+    public void testTransientCheckToleratesOlderCasMetadataWithoutTimestampFeature()
+        throws Exception
+    {
+        // An older type system may contain a CASMetadata type that does not yet have the
+        // lastChangedOnDisk feature. Reading the timestamp (e.g. via the realWriteCas guard which
+        // runs on every write) must not fail in that case.
+        var tsd = UIMAFramework.getResourceSpecifierFactory().createTypeSystemDescription();
+        var type = tsd.addType(CASMetadata.class.getName(), "", CAS.TYPE_NAME_ANNOTATION);
+        type.addFeature("username", "", CAS.TYPE_NAME_STRING);
+
+        var cas = CasCreationUtils.createCas(tsd, null, null);
+        var casMetadataType = cas.getTypeSystem().getType(CASMetadata.class.getName());
+        cas.addFsToIndexes(cas.createAnnotation(casMetadataType, 0, 0));
+
+        assertThat(CasMetadataUtils.getLastChanged(cas))
+                .isEqualTo(CasMetadataUtils.UNKNOWN_CAS_TIMESTAMP);
+        assertThat(CasMetadataUtils.isTransientCas(cas)).isFalse();
+
+        // ... and such a CAS must not be marked transient, since the marker could not be read back.
+        assertThat(CasMetadataUtils.canMarkTransient(cas)).isFalse();
+    }
+
+    @Test
+    public void testThatCasWithTimestampFeatureCanBeMarkedTransient() throws Exception
+    {
+        var cas = makeCas("This is a test");
+
+        assertThat(CasMetadataUtils.canMarkTransient(cas)).isTrue();
     }
 
     @Test

@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,12 +30,16 @@ import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQu
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.DOCUMENT;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.FINISHED;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.STATE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.Objects.isNull;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -45,6 +49,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
@@ -87,6 +92,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoic
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.comment.AnnotatorCommentDialogPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -170,6 +176,8 @@ public class DynamicWorkloadManagementPage
     // Table
     private DataTable<AnnotationQueueItem, AnnotationQueueSortKeys> table;
 
+    private Map<String, AnnotationSet> dataOwnerIndex = new HashMap<>();
+
     // Modal dialog
     private ModalDialog modalDialog;
     private ChallengeResponseDialog resetDocumentDialog;
@@ -225,7 +233,7 @@ public class DynamicWorkloadManagementPage
                 AnnotationQueueItem::getInProgressCount));
         columns.add(new LambdaColumn<>(new ResourceModel("Finished"), FINISHED,
                 AnnotationQueueItem::getFinishedCount));
-        columns.add(new AnnotatorColumn(new ResourceModel("Annotators")));
+        columns.add(new AnnotatorColumn(new ResourceModel("Annotators"), () -> dataOwnerIndex));
         columns.add(new LambdaColumn<>(new ResourceModel("Updated"),
                 AnnotationQueueItem::getLastUpdated));
 
@@ -676,8 +684,14 @@ public class DynamicWorkloadManagementPage
         documentService.listSourceDocuments(project)
                 .forEach(d -> documentMap.put(d, new ArrayList<>()));
 
-        documentService.listAnnotationDocuments(project).forEach(ad -> documentMap
-                .computeIfAbsent(ad.getDocument(), d -> new ArrayList<>()).add(ad));
+        documentService.listAllAnnotationDocuments(project).stream() //
+                .filter(ad -> !CURATION_SET.equals(ad.getAnnotationSet())) //
+                .filter(ad -> !INITIAL_SET.equals(ad.getAnnotationSet())) //
+                .forEach(ad -> documentMap.computeIfAbsent(ad.getDocument(), d -> new ArrayList<>())
+                        .add(ad));
+
+        dataOwnerIndex = documentService.listDataOwners(project).stream()
+                .collect(toMap(AnnotationSet::id, identity()));
 
         var traits = dynamicWorkloadExtension.readTraits(workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(currentProject.getObject()));
@@ -693,8 +707,8 @@ public class DynamicWorkloadManagementPage
     @OnEvent
     public void onAnnotatorColumnCellClickEvent(AnnotatorColumnCellClickEvent aEvent)
     {
-        var annotationDocument = documentService
-                .createOrGetAnnotationDocument(aEvent.getSourceDocument(), aEvent.getUser());
+        var annotationDocument = documentService.createOrGetAnnotationDocument(
+                aEvent.getSourceDocument(), aEvent.getAnnotationSet());
 
         var targetState = oneClickTransition(annotationDocument);
 
@@ -709,7 +723,7 @@ public class DynamicWorkloadManagementPage
     public void onAnnotatorColumnCellClickEvent(AnnotatorColumnCellShowAnnotatorCommentEvent aEvent)
     {
         var annDoc = documentService.getAnnotationDocument(aEvent.getSourceDocument(),
-                aEvent.getUser());
+                aEvent.getAnnotationSet());
         modalDialog.open(new AnnotatorCommentDialogPanel(ModalDialog.CONTENT_ID, Model.of(annDoc)),
                 aEvent.getTarget());
     }
@@ -729,28 +743,28 @@ public class DynamicWorkloadManagementPage
         // The AnnotatorColumnCellOpenContextMenuEvent is not serializable, so we need to extract
         // the information we need in the menu item here
         var document = aEvent.getSourceDocument();
-        var user = aEvent.getUser();
+        var annotationSet = aEvent.getAnnotationSet();
         items.add(new LambdaMenuItem("Reset",
-                _target -> actionResetAnnotationDocument(_target, document, user)));
+                _target -> actionResetAnnotationDocument(_target, document, annotationSet)));
         items.add(new LambdaMenuItem("Touch",
-                _target -> actionTouchAnnotationDocument(_target, document, user)));
+                _target -> actionTouchAnnotationDocument(_target, document, annotationSet)));
 
         contextMenu.onOpen(aEvent.getTarget(), aEvent.getCell());
     }
 
     private void actionResetAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            User aUser)
+            AnnotationSet aAnnotationSet)
     {
         var dialogContent = new ResetAnnotationDocumentConfirmationDialogContentPanel(
                 ModalDialog.CONTENT_ID);
 
         dialogContent.setExpectedResponseModel(
-                Model.of(aUser.getUiName() + " / " + aDocument.getName()));
+                Model.of(aAnnotationSet.displayName() + " / " + aDocument.getName()));
         dialogContent.setConfirmAction(_target -> {
-            documentService.resetAnnotationCas(aDocument, aUser);
+            documentService.resetAnnotationCas(aDocument, aAnnotationSet);
 
             success(format("The annotations of document [%s] for user [%s] have been set reset.",
-                    aDocument.getName(), aUser.getUiName()));
+                    aDocument.getName(), aAnnotationSet.displayName()));
             _target.addChildren(getPage(), IFeedback.class);
 
             updateTable(_target);
@@ -760,14 +774,14 @@ public class DynamicWorkloadManagementPage
     }
 
     private void actionTouchAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            User aUser)
+            AnnotationSet aAnnotationSet)
     {
-        var ann = documentService.getAnnotationDocument(aDocument, aUser);
+        var ann = documentService.getAnnotationDocument(aDocument, aAnnotationSet);
         ann.setTimestamp(new Date());
         documentService.createOrUpdateAnnotationDocument(ann);
 
         success(format("The timestamp of document [%s] for user [%s] has been updated.",
-                aDocument.getName(), aUser.getUiName()));
+                aDocument.getName(), aAnnotationSet.displayName()));
         aTarget.addChildren(getPage(), IFeedback.class);
 
         updateTable(aTarget);

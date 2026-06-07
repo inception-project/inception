@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.pivot.extractor;
 
 import org.apache.uima.jcas.cas.AnnotationBase;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.FeatureStructureExtractor_ImplBase;
 
@@ -54,7 +54,7 @@ public class DocumentNameExtractor
         var cas = ann.getCAS();
         var docAnn = cas.getDocumentAnnotation();
 
-        // Avoid fetching the DocumentMetaData annotation each time
+        // Avoid fetching the CASMetadata annotation each time
         if (cacheMarker == docAnn) {
             return documentName;
         }
@@ -62,9 +62,9 @@ public class DocumentNameExtractor
         cacheMarker = docAnn;
         documentName = null;
 
-        var dmd = DocumentMetaData.get(cas);
-        if (dmd != null) {
-            documentName = dmd.getDocumentTitle();
+        var casMetadata = cas.select(CASMetadata.class).toList();
+        if (!casMetadata.isEmpty()) {
+            documentName = casMetadata.get(0).getSourceDocumentName();
         }
 
         return documentName;

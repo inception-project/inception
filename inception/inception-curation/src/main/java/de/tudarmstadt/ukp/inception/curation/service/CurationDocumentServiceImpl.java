@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,35 +18,40 @@
 package de.tudarmstadt.ukp.inception.curation.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static java.util.Comparator.comparing;
 
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument_;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.config.CurationProperties;
-import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import jakarta.persistence.EntityManager;
 
@@ -59,21 +64,21 @@ import jakarta.persistence.EntityManager;
 public class CurationDocumentServiceImpl
     implements CurationDocumentService
 {
+    private static final Logger LOG = LoggerFactory.getLogger(CurationDocumentServiceImpl.class);
+
     private final CurationProperties curationProperties;
     private final EntityManager entityManager;
     private final CasStorageService casStorageService;
     private final AnnotationSchemaService annotationService;
-    private final ProjectService projectService;
 
     @Autowired
     public CurationDocumentServiceImpl(CasStorageService aCasStorageService,
-            AnnotationSchemaService aAnnotationService, ProjectService aProjectService,
-            CurationProperties aCurationProperties, EntityManager aEntityManager)
+            AnnotationSchemaService aAnnotationService, CurationProperties aCurationProperties,
+            EntityManager aEntityManager)
     {
         casStorageService = aCasStorageService;
         annotationService = aAnnotationService;
         entityManager = aEntityManager;
-        projectService = aProjectService;
         curationProperties = aCurationProperties;
     }
 
@@ -114,25 +119,58 @@ public class CurationDocumentServiceImpl
     {
         Validate.notNull(aSourceDocument, "Document must be specified");
 
+        // We deliberately do not join ProjectPermission here: a user that left annotation data
+        // behind but no longer holds the ANNOTATOR permission (e.g. removed from the project or
+        // role changed) must remain curatable so their data stays accessible.
+        // The User join still excludes the curation/initial-CAS pseudo users as well as users whose
+        // account was deleted entirely (they have no User row).
         var query = String.join("\n", //
-                "SELECT u FROM User u", //
+                "SELECT u, d FROM User u", //
                 " JOIN AnnotationDocument as d", //
                 "   ON d.user = u.username", //
-                " JOIN ProjectPermission AS perm", //
-                "   ON d.project = perm.project AND d.user = perm.user", //
                 "WHERE u.username = d.user", //
-                "  AND perm.level = :level", //
                 "  AND d.document = :document", //
                 "  AND (d.state = :state or d.annotatorState = :ignore)", //
                 "ORDER BY u.username ASC");
 
-        return new ArrayList<>(entityManager //
-                .createQuery(query, User.class) //
+        var candidates = entityManager //
+                .createQuery(query, Object[].class) //
                 .setParameter("document", aSourceDocument) //
-                .setParameter("level", ANNOTATOR) //
                 .setParameter("state", AnnotationDocumentState.FINISHED) //
                 .setParameter("ignore", AnnotationDocumentState.IGNORE) //
-                .getResultList());
+                .getResultList();
+
+        var curatableUsers = new ArrayList<User>();
+        for (var candidate : candidates) {
+            var user = (User) candidate[0];
+            var annDoc = (AnnotationDocument) candidate[1];
+
+            // Each candidate either finished the document or set their own state to IGNORE (i.e.
+            // the document should no longer be annotated by them - for whatever reason). A finished
+            // document always has a CAS - it is created when the document is first opened - so its
+            // owner is curatable without further checks. Any other candidate got here via the
+            // IGNORE branch and only counts if a CAS was actually written, i.e. the annotator had
+            // opened the document before it was set to IGNORE - an IGNORE document that was never
+            // opened has no data to curate.
+            if (annDoc.getState() == AnnotationDocumentState.FINISHED
+                    || hasCas(aSourceDocument, user.getUsername())) {
+                curatableUsers.add(user);
+            }
+        }
+
+        return curatableUsers;
+    }
+
+    private boolean hasCas(SourceDocument aDocument, String aDataOwner)
+    {
+        try {
+            return casStorageService.existsCas(aDocument, AnnotationSet.forUser(aDataOwner));
+        }
+        catch (IOException e) {
+            LOG.warn("Unable to determine whether a CAS exists for [{}] on {} - assuming it does",
+                    aDataOwner, aDocument, e);
+            return true;
+        }
     }
 
     @Override
@@ -152,27 +190,43 @@ public class CurationDocumentServiceImpl
     {
         Validate.notNull(aProject, "Project must be specified");
 
-        // Get all annotators in the project
-        var users = projectService.listUsersWithRoleInProject(aProject, ANNOTATOR);
-        // Bail out already. HQL doesn't seem to like queries with an empty parameter right of "in"
-        if (users.isEmpty()) {
-            return new ArrayList<>();
-        }
-
+        // We deliberately do not restrict to current annotators: a document that only has finished
+        // or IGNORE annotation data from a former annotator (removed from the project or role
+        // changed) must still surface for curation so that data stays accessible. The pseudo users
+        // for the curation and initial CASes are excluded.
         var query = String.join("\n", //
-                "SELECT DISTINCT adoc.document", //
+                "SELECT adoc", //
                 "FROM AnnotationDocument AS adoc", //
                 "WHERE adoc.project = :project", //
-                "AND adoc.user in (:users)", //
-                "AND (adoc.state = :state or adoc.annotatorState = :ignore)", //
-                "ORDER BY adoc.document.name");
+                "AND adoc.user NOT IN (:pseudoUsers)", //
+                "AND (adoc.state = :state or adoc.annotatorState = :ignore)");
 
-        return entityManager.createQuery(query, SourceDocument.class) //
+        var candidates = entityManager.createQuery(query, AnnotationDocument.class) //
                 .setParameter("project", aProject) //
-                .setParameter("users", users.stream().map(User::getUsername).toList()) //
+                .setParameter("pseudoUsers", List.of(CURATION_USER, INITIAL_CAS_PSEUDO_USER)) //
                 .setParameter("state", AnnotationDocumentState.FINISHED) //
                 .setParameter("ignore", AnnotationDocumentState.IGNORE) //
                 .getResultList();
+
+        // A document is curatable only if at least one annotator actually produced data on it: a
+        // finished document always has a CAS, while a document the annotator set to IGNORE counts
+        // only if a CAS was actually written (same reasoning as in listCuratableUsers).
+        var curatableDocuments = new HashMap<Long, SourceDocument>();
+        for (var adoc : candidates) {
+            var document = adoc.getDocument();
+            if (curatableDocuments.containsKey(document.getId())) {
+                continue;
+            }
+
+            if (adoc.getState() == AnnotationDocumentState.FINISHED
+                    || hasCas(document, adoc.getAnnotationSet().id())) {
+                curatableDocuments.put(document.getId(), document);
+            }
+        }
+
+        var result = new ArrayList<>(curatableDocuments.values());
+        result.sort(comparing(SourceDocument::getName));
+        return result;
     }
 
     @Transactional

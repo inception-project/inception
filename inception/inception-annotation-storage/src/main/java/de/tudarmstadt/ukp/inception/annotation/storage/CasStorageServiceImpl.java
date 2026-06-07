@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -846,6 +846,20 @@ public class CasStorageServiceImpl
 
                 addOrUpdateCasMetadata(aDocument, aSet, cas);
             }
+            else if (aAccessMode == SHARED_READ_ONLY_ACCESS
+                    && CasMetadataUtils.canMarkTransient(cas)) {
+                // The CAS was created on-the-fly for read-only access (the document has no CAS on
+                // disk yet) and is therefore never written back. We still stamp the document
+                // identity into the CASMetadata so that e.g. diff positions can pick it up for
+                // debugging / transparency, but mark it as transient so that it can never be
+                // accidentally persisted. We only do this when the transient marker feature is
+                // actually present - otherwise the CAS could not be recognized as transient later
+                // and we would create a stamped-but-unprotected CAS. We also deliberately do NOT do
+                // this for UNMANAGED_ACCESS, where the caller takes ownership of the CAS and may
+                // legitimately write it back (e.g. when resetting a document to its initial state).
+                CasMetadataUtils.addOrUpdateCasMetadata(cas,
+                        CasMetadataUtils.TRANSIENT_CAS_TIMESTAMP, aDocument, aSet.id());
+            }
         }
         // If no CAS provider is given, fail
         else {
@@ -1334,6 +1348,13 @@ public class CasStorageServiceImpl
     private void realWriteCas(SourceDocument aDocument, AnnotationSet aSet, CAS aCas)
         throws IOException
     {
+        if (CasMetadataUtils.isTransientCas(aCas)) {
+            throw new IOException("Refusing to persist CAS for set [" + aSet + "] on document "
+                    + aDocument + " in project " + aDocument.getProject() + ": this CAS was "
+                    + "created as a transient read-only CAS (not backed by a file on disk) and "
+                    + "must not be written back to disk.");
+        }
+
         analyze(aDocument, aSet, aCas);
 
         if (CasStorageSession.exists()) {

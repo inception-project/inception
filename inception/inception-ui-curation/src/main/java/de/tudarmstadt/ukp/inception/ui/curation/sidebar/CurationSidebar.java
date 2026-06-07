@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,6 +30,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -53,6 +54,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
@@ -103,6 +105,7 @@ public class CurationSidebar
     private CheckGroup<User> selectedUsers;
     private DropDownChoice<String> curationTargetChoice;
     private ListView<User> users;
+    private IModel<Map<String, AnnotationSet>> dataOwners;
     private final Form<Void> usersForm;
     private CheckBox showMerged;
     private CheckBox showScore;
@@ -331,6 +334,12 @@ public class CurationSidebar
             }
         };
 
+        // Resolve the current/former/deactivated markers for the whole curatable-user list in a
+        // single batch instead of one permission lookup per rendered row.
+        dataOwners = LoadableDetachableModel
+                .of(() -> documentService.getDataOwners(getModelObject().getProject(),
+                        users.getModelObject().stream().map(User::getUsername).toList()));
+
         selectedUsers = new CheckGroup<User>("selectedUsers");
         selectedUsers.setModel(new LambdaModelAdapter<>( //
                 () -> curationSessionService.getSelectedUsers(sessionOwner, project.getId()), //
@@ -352,7 +361,22 @@ public class CurationSidebar
             return Model.of("Anonymized annotator " + (aUserListItem.getIndex() + 1));
         }
 
-        return aUserListItem.getModel().map(User::getUiName);
+        // Mark data owners that no longer hold the annotator permission (e.g. removed from the
+        // project or role changed) so the curator can tell them apart from current annotators. The
+        // markers are resolved in a single batch (see dataOwners).
+        var user = aUserListItem.getModelObject();
+        var dataOwner = dataOwners.getObject().get(user.getUsername());
+        return Model.of(dataOwner != null ? dataOwner.displayName() : user.getUiName());
+    }
+
+    @Override
+    protected void onDetach()
+    {
+        if (dataOwners != null) {
+            dataOwners.detach();
+        }
+
+        super.onDetach();
     }
 
     /**

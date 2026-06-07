@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,13 +25,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTA
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -48,6 +49,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -284,15 +286,14 @@ public class DynamicWorkloadExtensionImpl
         }
 
         // Update the annotation document and source document states for the abandoned documents
-        Map<String, User> userCache = new HashMap<>();
         for (Entry<SourceDocument, Set<AnnotationDocument>> docSet : abandonedDocuments
                 .entrySet()) {
             if (AnnotationDocumentState.NEW == traits.getAbandonationState()) {
                 for (var adoc : docSet.getValue()) {
-                    User user = userCache.computeIfAbsent(adoc.getUser(),
-                            username -> userRepository.get(username));
+                    // Reset by data owner so this also works for deleted accounts
                     try (var session = CasStorageSession.openNested()) {
-                        documentService.resetAnnotationCas(adoc.getDocument(), user);
+                        documentService.resetAnnotationCas(adoc.getDocument(),
+                                AnnotationSet.forUser(adoc.getUser()));
                     }
                     catch (UIMAException | IOException e) {
                         log.error("Unable to reset abandoned document {}", adoc, e);
@@ -325,9 +326,18 @@ public class DynamicWorkloadExtensionImpl
             return;
         }
 
-        var stats = documentService.getAnnotationDocumentStats(aDocument);
-        var finishedCount = stats.get(AnnotationDocumentState.FINISHED);
-        var inProgressCount = stats.get(AnnotationDocumentState.IN_PROGRESS);
+        // Count all data owners towards completion - including former annotators - but exclude the
+        // curation/initial pseudo users.
+        var annotationDocuments = documentService.listAllAnnotationDocuments(aDocument).stream() //
+                .filter(annDoc -> !CURATION_SET.equals(annDoc.getAnnotationSet())) //
+                .filter(annDoc -> !INITIAL_SET.equals(annDoc.getAnnotationSet())) //
+                .toList();
+        var finishedCount = annotationDocuments.stream() //
+                .filter(annDoc -> annDoc.getState() == AnnotationDocumentState.FINISHED) //
+                .count();
+        var inProgressCount = annotationDocuments.stream() //
+                .filter(annDoc -> annDoc.getState() == IN_PROGRESS) //
+                .count();
 
         // If enough documents are finished, mark as finished
         if (finishedCount >= aRequiredAnnotatorCount) {

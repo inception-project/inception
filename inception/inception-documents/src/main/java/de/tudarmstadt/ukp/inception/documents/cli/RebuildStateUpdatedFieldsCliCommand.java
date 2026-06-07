@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.documents.cli;
 
+import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 import static java.util.Arrays.asList;
 
 import java.util.Date;
@@ -38,7 +39,6 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.log.api.EventRepository;
 import de.tudarmstadt.ukp.inception.log.api.model.StateChangeDetails;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -92,7 +92,7 @@ public class RebuildStateUpdatedFieldsCliCommand
             aLog.info("Processing project: {}", project);
 
             var srcDocs = documentService.listSourceDocuments(project);
-            var annDocs = documentService.listAnnotationDocuments(project);
+            var annDocs = documentService.listAllAnnotationDocuments(project);
             var stateChangeEvents = Set.of("ProjectStateChangedEvent", "DocumentStateChangedEvent",
                     "AnnotationStateChangeEvent");
 
@@ -103,8 +103,7 @@ public class RebuildStateUpdatedFieldsCliCommand
                 }
 
                 try {
-                    var details = JSONUtil.fromJsonString(StateChangeDetails.class,
-                            event.getDetails());
+                    var details = fromJsonString(StateChangeDetails.class, event.getDetails());
 
                     if ("ProjectStateChangedEvent".equals(event.getEvent())) {
                         if (project.getState() != ProjectState.fromString(details.getState())) {

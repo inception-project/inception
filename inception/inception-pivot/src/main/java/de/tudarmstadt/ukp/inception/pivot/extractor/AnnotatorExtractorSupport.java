@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,28 +17,44 @@
  */
 package de.tudarmstadt.ukp.inception.pivot.extractor;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.Extractor;
-import de.tudarmstadt.ukp.inception.pivot.api.extractor.LayerExtractorSupport;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorBinding;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorBindingResolutionContext;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.ExtractorSupport;
+import de.tudarmstadt.ukp.inception.pivot.api.extractor.GeneralBinding;
+import de.tudarmstadt.ukp.inception.pivot.api.report.ExtractorDef;
 
 public class AnnotatorExtractorSupport
-    implements LayerExtractorSupport
+    implements ExtractorSupport
 {
     @Override
-    public String renderName(AnnotationLayer aLayer)
+    public String getId()
     {
-        return (aLayer != null ? aLayer.getUiName() : "*") + " :: <annotator>";
+        return "annotator";
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aContext)
+    public ExtractorBinding bindingFromDef(ExtractorDef aDef,
+            ExtractorBindingResolutionContext aContext)
     {
-        return true;
+        return new GeneralBinding();
     }
 
     @Override
-    public Extractor<?, ?> createExtractor(AnnotationLayer aLayer)
+    public String renderLabel(ExtractorBinding aBinding)
     {
-        return new AnnotatorExtractor(aLayer);
+        return "<annotator>";
+    }
+
+    @Override
+    public boolean accepts(ExtractorBinding aBinding)
+    {
+        return aBinding instanceof GeneralBinding;
+    }
+
+    @Override
+    public Extractor<?, ?> createExtractor(ExtractorBinding aBinding)
+    {
+        return new AnnotatorExtractor(null);
     }
 }

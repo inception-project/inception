@@ -2,17 +2,17 @@
  * Copyright 2017
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -124,13 +124,16 @@ public class ReindexTask
                 // We can ignore this since we are rebuilding the index already anyway
             }
 
-            var usersWithPermissions = projectService.listUsersWithAnyRoleInProject(project)
-                    .stream() //
-                    .map(User::getUsername) //
+            // Index the data of all data owners - including former annotators (removed from the
+            // project, role changed, or account deleted) - so their annotations remain searchable.
+            // listDataOwners excludes the curation/initial pseudo users (indexed separately below)
+            // and owners without actual data.
+            var dataOwners = documentService.listDataOwners(project).stream() //
+                    .map(AnnotationSet::id) //
                     .collect(toUnmodifiableSet());
             var sourceDocuments = documentService.listSupportedSourceDocuments(project);
-            var annotationDocuments = documentService.listAnnotationDocuments(project).stream()
-                    .filter(annDoc -> usersWithPermissions.contains(annDoc.getUser())) //
+            var annotationDocuments = documentService.listAllAnnotationDocuments(project).stream()
+                    .filter(annDoc -> dataOwners.contains(annDoc.getUser())) //
                     .filter(annDoc -> sourceDocuments.contains(annDoc.getDocument())) //
                     .toList();
 

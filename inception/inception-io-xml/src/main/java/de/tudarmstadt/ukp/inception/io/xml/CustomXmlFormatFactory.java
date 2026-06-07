@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -55,6 +55,7 @@ public class CustomXmlFormatFactory
     private final CustomXmlFormatPluginDescripion description;
     private final Application wicketApplication;
     private final List<ResourceReference> stylesheetReferences;
+    private final List<ResourceReference> scriptReferences;
 
     private WatchedResourceFile<PolicyCollection> policyResource;
 
@@ -74,9 +75,10 @@ public class CustomXmlFormatFactory
         }
 
         stylesheetReferences = new ArrayList<ResourceReference>();
+        var basePath = description.getBasePath().normalize();
         for (var stylesheet : description.getStylesheets()) {
-            var stylesheetPath = description.getBasePath().resolve(stylesheet);
-            if (!stylesheetPath.startsWith(description.getBasePath())) {
+            var stylesheetPath = basePath.resolve(stylesheet).normalize();
+            if (!stylesheetPath.startsWith(basePath)) {
                 LOG.warn("Stylesheet in custom XML format [{}] has illegal path [{}]",
                         description.getId(), stylesheet);
                 continue;
@@ -86,6 +88,20 @@ public class CustomXmlFormatFactory
                     stylesheetPath);
             wicketApplication.getResourceReferenceRegistry().registerResourceReference(ref);
             stylesheetReferences.add(ref);
+        }
+
+        scriptReferences = new ArrayList<ResourceReference>();
+        for (var script : description.getScripts()) {
+            var scriptPath = basePath.resolve(script).normalize();
+            if (!scriptPath.startsWith(basePath)) {
+                LOG.warn("Script in custom XML format [{}] has illegal path [{}]",
+                        description.getId(), script);
+                continue;
+            }
+            var ref = new FileSystemResourceReference(
+                    PLUGINS_XML_FORMAT_BASE_NAME + description.getId() + "/" + script, scriptPath);
+            wicketApplication.getResourceReferenceRegistry().registerResourceReference(ref);
+            scriptReferences.add(ref);
         }
     }
 
@@ -105,6 +121,18 @@ public class CustomXmlFormatFactory
     public List<ResourceReference> getCssStylesheets()
     {
         return stylesheetReferences;
+    }
+
+    @Override
+    public List<ResourceReference> getJavaScripts()
+    {
+        return scriptReferences;
+    }
+
+    @Override
+    public Optional<String> getDocumentStructureFactory()
+    {
+        return Optional.ofNullable(description.getDocumentStructureFactory());
     }
 
     @Override

@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,8 +22,8 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
  * Fired when a user right-clicks on an annotator state
@@ -34,16 +34,17 @@ public class AnnotatorStateOpenContextMenuEvent
     private final Component cell;
     private final SourceDocument sourceDocument;
     private final AnnotationDocumentState state;
-    private final User user;
+    private final AnnotationSet annotationSet;
 
     public AnnotatorStateOpenContextMenuEvent(AjaxRequestTarget aTarget, Component aCell,
-            SourceDocument aSourceDocument, User aUser, AnnotationDocumentState aState)
+            SourceDocument aSourceDocument, AnnotationSet aAnnotationSet,
+            AnnotationDocumentState aState)
     {
         super(aTarget);
 
         cell = aCell;
         sourceDocument = aSourceDocument;
-        user = aUser;
+        annotationSet = aAnnotationSet;
         state = aState;
     }
 
@@ -52,9 +53,9 @@ public class AnnotatorStateOpenContextMenuEvent
         return sourceDocument;
     }
 
-    public User getUser()
+    public AnnotationSet getAnnotationSet()
     {
-        return user;
+        return annotationSet;
     }
 
     public AnnotationDocumentState getState()

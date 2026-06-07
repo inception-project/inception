@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.ui.agreement.page;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.forUser;
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
@@ -84,12 +83,9 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.task.CalculatePerDocumentAgre
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.users.ProjectUserPermissionChoiceRenderer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
@@ -97,7 +93,6 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporter;
 import de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporterRegistry;
-import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
@@ -120,7 +115,6 @@ public class AgreementPage
     private static final String MID_RESULTS = "results";
 
     private @SpringBean DocumentService documentService;
-    private @SpringBean ProjectService projectService;
     private @SpringBean AnnotationSchemaService schemaService;
     private @SpringBean UserDao userRepository;
     private @SpringBean AgreementMeasureSupportRegistry agreementRegistry;
@@ -192,9 +186,9 @@ public class AgreementPage
 
         queue(new CheckBox("compareWithInitialCas").setOutputMarkupId(true));
 
-        var annotatorList = new ListMultipleChoice<ProjectUserPermissions>("annotators");
-        annotatorList.setChoiceRenderer(new ProjectUserPermissionChoiceRenderer());
-        annotatorList.setChoices(listUsersWithPermissions());
+        var annotatorList = new ListMultipleChoice<AnnotationSet>("annotators");
+        annotatorList.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationSet::displayName));
+        annotatorList.setChoices(listAnnotators());
         queue(annotatorList);
 
         var documentList = new ListMultipleChoice<SourceDocument>("documents");
@@ -267,12 +261,11 @@ public class AgreementPage
         return ams.isSupportingMoreThanTwoRaters();
     }
 
-    private List<ProjectUserPermissions> listUsersWithPermissions()
+    private List<AnnotationSet> listAnnotators()
     {
-        return projectService.listProjectUserPermissions(getProject()).stream() //
-                .filter(p -> p.getRoles().contains(ANNOTATOR)) //
-                .sorted(comparing(p -> p.getUser().map(User::getUiName).orElse(p.getUsername()))) //
-                .toList();
+        // Current and former annotators - the latter (removed from the project or with a changed
+        // role) are flagged in their display name so their leftover data stays accessible here.
+        return documentService.listDataOwners(getProject());
     }
 
     private List<SourceDocument> listDocuments()
@@ -620,14 +613,10 @@ public class AgreementPage
         }
 
         if (isEmpty(model.annotators)) {
-            listUsersWithPermissions().stream() //
-                    .map(t -> forUser(t.getUsername())) //
-                    .forEach(annotators::add);
+            annotators.addAll(listAnnotators());
         }
         else {
-            model.annotators.stream() //
-                    .map(t -> forUser(t.getUsername())) //
-                    .forEach(annotators::add);
+            annotators.addAll(model.annotators);
         }
 
         return annotators;
@@ -741,7 +730,7 @@ public class AgreementPage
 
         Pair<String, String> measure;
 
-        List<ProjectUserPermissions> annotators = new ArrayList<>();
+        List<AnnotationSet> annotators = new ArrayList<>();
 
         List<SourceDocument> documents = new ArrayList<>();
 

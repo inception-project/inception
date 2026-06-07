@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,9 +43,7 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
-import static java.util.Comparator.comparing;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
-import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.csv.CSVFormat.EXCEL;
@@ -388,8 +386,9 @@ public class MatrixWorkloadManagementPage
 
     private IResourceStream exportWorkload()
     {
-        var users = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR);
-        var annotators = buildAnnotatorList(users);
+        // Includes current and former annotators (and data owners without a user account), so the
+        // exported workload reflects everyone who left annotation data behind in the project.
+        var annotators = documentService.listDataOwners(getProject());
 
         return new PipedStreamResource(os -> {
             try (var aOut = new CSVPrinter(new OutputStreamWriter(os, UTF_8), EXCEL)) {
@@ -398,21 +397,6 @@ public class MatrixWorkloadManagementPage
                 exportWorkloadToCsv(aOut, annotators, documentRows);
             }
         }, MediaType.valueOf("text/csv"));
-    }
-
-    /**
-     * Builds a sorted list of AnnotationSet objects from a list of users.
-     * 
-     * @param users
-     *            the list of users to convert to AnnotationSets
-     * @return a list of AnnotationSets sorted by display name
-     */
-    static List<AnnotationSet> buildAnnotatorList(List<User> users)
-    {
-        return users.stream() //
-                .map(AnnotationSet::forUser) //
-                .sorted(comparing(AnnotationSet::displayName)) //
-                .toList();
     }
 
     /**
@@ -523,20 +507,21 @@ public class MatrixWorkloadManagementPage
         columns.add(new DocumentMatrixStateColumn());
         columns.add(new DocumentMatrixNameColumn());
 
-        var annotators = projectService.listUsersWithRoleInProject(getProject(), ANNOTATOR).stream() //
-                .map(AnnotationSet::forUser) //
-                .collect(toCollection(ArrayList::new));
+        // Current and former annotators (the latter - removed from the project or with a changed
+        // role - flagged in their display name) so that managers/curators can still see and triage
+        // the data of people who left the project. Data owners whose account was deleted entirely
+        // appear as well, since the matrix operates on annotation sets rather than user accounts.
+        var annotators = new ArrayList<>(documentService.listDataOwners(getProject()));
 
         if (isNotBlank(filter.getObject().getUserName())) {
             if (filter.getObject().isMatchUserNameAsRegex()) {
                 var p = Pattern
                         .compile(".*(" + filter.getObject().getUserName() + ").*", CASE_INSENSITIVE)
                         .asMatchPredicate().negate();
-                annotators.removeIf(u -> p.test(u.displayName()));
+                annotators.removeIf(u -> p.test(u.name()));
             }
             else {
-                annotators.removeIf(
-                        u -> !CI.contains(u.displayName(), filter.getObject().getUserName()));
+                annotators.removeIf(u -> !CI.contains(u.name(), filter.getObject().getUserName()));
             }
         }
 
@@ -579,20 +564,23 @@ public class MatrixWorkloadManagementPage
 
         if (selectedCells.size() == 1) {
             var annDoc = selectedCells.get(0);
-            var user = userRepository.get(annDoc.getUser());
+            var dataOwner = annDoc.getAnnotationSet();
+            // The account may no longer exist (former annotator), so fall back to the data owner's
+            // display name for the confirmation prompt.
+            var owner = userRepository.get(dataOwner.id());
+            var ownerLabel = owner != null ? owner.getUiName() : dataOwner.displayName();
             dialogContent.setExpectedResponseModel(
-                    Model.of(user.getUiName() + " / " + annDoc.getName()));
+                    Model.of(ownerLabel + " / " + annDoc.getDocument().getName()));
         }
         else {
             dialogContent.setExpectedResponseModel(Model.of(getProject().getName()));
         }
 
         dialogContent.setConfirmAction(_target -> {
-            var userCache = new HashMap<String, User>();
-            for (var document : selectedCells) {
-                var user = userCache.computeIfAbsent(document.getUser(),
-                        username -> userRepository.get(username));
-                documentService.resetAnnotationCas(document.getDocument(), user);
+            // Reset by annotation set (username) rather than user account so that the data of
+            // former annotators - including those whose account no longer exists - can be reset.
+            for (var annDoc : selectedCells) {
+                documentService.resetAnnotationCas(annDoc.getDocument(), annDoc.getAnnotationSet());
             }
 
             success(format("The %s document(s) have been set reset.", selectedCells.size()));
@@ -731,19 +719,20 @@ public class MatrixWorkloadManagementPage
     }
 
     private void actionResetAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            AnnotationSet aUser)
+            AnnotationSet aDataOwner)
     {
         var dialogContent = new ResetAnnotationDocumentConfirmationDialogContentPanel(
                 ModalDialog.CONTENT_ID);
 
-        var user = userRepository.get(aUser.id());
-        dialogContent
-                .setExpectedResponseModel(Model.of(user.getUiName() + " / " + aDocument.getName()));
+        // Reset by annotation set so this also works for former annotators whose account no longer
+        // exists; the display name already flags them as former.
+        dialogContent.setExpectedResponseModel(
+                Model.of(aDataOwner.displayName() + " / " + aDocument.getName()));
         dialogContent.setConfirmAction(_target -> {
-            documentService.resetAnnotationCas(aDocument, user);
+            documentService.resetAnnotationCas(aDocument, aDataOwner);
 
             success(format("The annotations of document [%s] for user [%s] have been set reset.",
-                    aDocument.getName(), user.getUiName()));
+                    aDocument.getName(), aDataOwner.displayName()));
             _target.addChildren(getPage(), IFeedback.class);
 
             reloadMatrixData();
@@ -1327,7 +1316,11 @@ public class MatrixWorkloadManagementPage
             documentMatrixRows.put(srcDoc, new DocumentMatrixRow(srcDoc, annotators));
         }
 
-        for (var annDoc : documentService.listAnnotationDocuments(getProject())) {
+        // Use listAllAnnotationDocuments so the cells of former annotators (no longer holding a
+        // permission, or whose account was deleted) show their actual document state instead of
+        // falling back to NEW. The row's annotator set above stays limited to current annotators,
+        // so former annotators do not contribute to the rolled-up document/project state.
+        for (var annDoc : documentService.listAllAnnotationDocuments(getProject())) {
             documentMatrixRows.get(annDoc.getDocument()).add(annDoc);
         }
 

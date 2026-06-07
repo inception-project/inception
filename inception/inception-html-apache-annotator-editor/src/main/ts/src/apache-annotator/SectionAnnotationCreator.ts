@@ -64,7 +64,22 @@ export class SectionAnnotationCreator {
 
     private initializeSectionTypeAttributes() {
         this.root.querySelectorAll(this.sectionSelector).forEach((e, i) => {
-            e.setAttribute('data-iaa-section-type', e.localName);
+            // The label is normally the element's own tag name. Synthetic
+            // <sec-wrap> wrappers (used to make namespaced XML sections pinnable)
+            // are the exception: their own localName is 'sec-wrap', but they
+            // carry the original element name in data-section-type, so use that.
+            // A synthetic wrapper is identified by all three of: tag 'sec-wrap',
+            // the XHTML namespace, AND the data-section-type marker attribute --
+            // the same definition SectionPinning uses to create them. Requiring
+            // the attribute means an unrelated <sec-wrap> (or any element that
+            // happens to carry data-section-type) is still labelled by its own
+            // tag name.
+            const wrapperType =
+                e.localName === 'sec-wrap' &&
+                e.namespaceURI === 'http://www.w3.org/1999/xhtml'
+                    ? e.getAttribute('data-section-type')
+                    : null;
+            e.setAttribute('data-iaa-section-type', wrapperType || e.localName);
         });
     }
 

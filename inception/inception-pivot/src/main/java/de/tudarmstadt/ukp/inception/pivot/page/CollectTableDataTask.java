@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,6 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +57,6 @@ import de.tudarmstadt.ukp.inception.pivot.table.PivotTableDataProvider;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
-import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 public class CollectTableDataTask<A extends Serializable, T extends FeatureStructure>
@@ -74,6 +72,7 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
     private final Map<SourceDocument, List<AnnotationDocument>> allAnnDocs;
     private final List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> rowExtractors;
     private final List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> colExtractors;
+    private final List<? extends Extractor<ContextualizedFS<T>, ? extends Serializable>> cellExtractors;
     private final List<LogMessage> logMessages = new ArrayList<>();
 
     private PivotTableDataProvider.Builder<A, ContextualizedFS<T>> summary;
@@ -86,6 +85,7 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
         allAnnDocs = aBuilder.allAnnDocs;
         rowExtractors = aBuilder.rowExtractors;
         colExtractors = aBuilder.colExtractors;
+        cellExtractors = aBuilder.cellExtractors;
 
         summary = PivotTableDataProvider.builder(aBuilder.rowExtractors, aBuilder.colExtractors,
                 aBuilder.cellExtractors, aBuilder.aggregator);
@@ -100,6 +100,17 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
 
         LOG.debug("Collecting data for [{}] documents and [{}] data owners", docs.size(),
                 dataOwners.size());
+
+        // The trigger types are derived solely from the (fixed) row/column/cell extractors, so
+        // compute them once instead of rebuilding the set for every CAS.
+        var triggerTypes = new HashSet<String>();
+        for (var extractors : asList(rowExtractors, colExtractors, cellExtractors)) {
+            extractors.stream() //
+                    .map(Extractor::getTriggerType) //
+                    .filter(Optional::isPresent) //
+                    .map(Optional::get) //
+                    .forEach(triggerTypes::add);
+        }
 
         var totalCasLoadedCount = 0;
         var totalFsAddedCount = 0;
@@ -131,18 +142,6 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
 
                         var cas = maybeCas.get();
                         totalCasLoadedCount++;
-
-                        var triggerTypes = new HashSet<String>();
-                        rowExtractors.stream() //
-                                .map(Extractor::getTriggerType) //
-                                .filter(Optional::isPresent) //
-                                .map(Optional::get) //
-                                .forEach(triggerTypes::add);
-                        colExtractors.stream() //
-                                .map(Extractor::getTriggerType) //
-                                .filter(Optional::isPresent) //
-                                .map(Optional::get) //
-                                .forEach(triggerTypes::add);
 
                         var seen = new IntOpenHashSet();
                         for (var triggerType : triggerTypes) {
@@ -206,12 +205,6 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
         var cas = documentService.createOrReadInitialCas(aDocument, AUTO_CAS_UPGRADE,
                 SHARED_READ_ONLY_ACCESS);
 
-        // Set the CAS name in the DocumentMetaData so that we can pick it
-        // up in the Diff position for the purpose of debugging / transparency.
-        var dmd = WebAnnoCasUtil.getDocumentMetadata(cas);
-        FSUtil.setFeature(dmd, "documentId", aDocument.getName());
-        FSUtil.setFeature(dmd, "collectionId", aDocument.getProject().getName());
-
         return cas;
     }
 
@@ -247,12 +240,6 @@ public class CollectTableDataTask<A extends Serializable, T extends FeatureStruc
     {
         var cas = documentService.readAnnotationCas(aDocument, aDataOwner, AUTO_CAS_UPGRADE,
                 SHARED_READ_ONLY_ACCESS);
-
-        // Set the CAS name in the DocumentMetaData so that we can pick it
-        // up in the Diff position for the purpose of debugging / transparency.
-        var dmd = WebAnnoCasUtil.getDocumentMetadata(cas);
-        FSUtil.setFeature(dmd, "documentId", aDocument.getName());
-        FSUtil.setFeature(dmd, "collectionId", aDocument.getProject().getName());
 
         return Optional.of(cas);
     }

@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl.RESERVED_US
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.ANNOTATION_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.io.FastIOUtils.copy;
 import static java.lang.Math.ceil;
@@ -61,9 +62,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
@@ -81,7 +79,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.exporters.SourceDocumentExporter;
@@ -149,7 +146,14 @@ public class AnnotationDocumentExporter
     {
         var annotationDocuments = new ArrayList<ExportedAnnotationDocument>();
 
-        for (var annotationDocument : documentService.listAnnotationDocuments(aProject)) {
+        // Unfiltered list so the data of former annotators (no current role, or deleted account) is
+        // preserved. Keep the curation pseudo user (we own the AnnotationDocument table; its CAS is
+        // exported by the CuratedDocumentsExporter); skip the initial-CAS pseudo user.
+        for (var annotationDocument : documentService.listAllAnnotationDocuments(aProject)) {
+            if (INITIAL_CAS_PSEUDO_USER.equals(annotationDocument.getUser())) {
+                continue;
+            }
+
             var exAnnotationDocument = new ExportedAnnotationDocument();
             exAnnotationDocument.setName(annotationDocument.getDocument().getName());
             exAnnotationDocument.setState(annotationDocument.getState());
@@ -184,12 +188,8 @@ public class AnnotationDocumentExporter
         // Create a map containing the annotation documents for each source document. Doing this
         // as one DB access before the main processing to avoid hammering the DB in the loops
         // below.
-        var srcToAnnIdx = documentService.listAnnotationDocuments(project).stream()
+        var srcToAnnIdx = documentService.listAllAnnotationDocuments(project).stream()
                 .collect(groupingBy(doc -> doc.getDocument(), toList()));
-
-        // Cache user lookups to avoid constantly hitting the database
-        LoadingCache<String, User> usersCache = Caffeine.newBuilder()
-                .build(key -> userRepository.get(key));
 
         for (var srcDoc : documents) {
             // check if the export has been cancelled
@@ -247,12 +247,18 @@ public class AnnotationDocumentExporter
                 // Export annotations from regular users
                 for (var annDoc : srcToAnnIdx.computeIfAbsent(srcDoc, key -> emptyList())) {
 
-                    // copy annotation document only for existing users and the state of the
-                    // annotation document is not NEW/IGNORE
-                    if (usersCache.get(annDoc.getUser()) != null
-                            && documentService.existsCas(annDoc)
-                            && !annDoc.getState().equals(AnnotationDocumentState.NEW)
-                            && !annDoc.getState().equals(AnnotationDocumentState.IGNORE)) {
+                    // Curation CAS is exported by the CuratedDocumentsExporter, the initial CAS
+                    // explicitly above - skip them here to avoid duplicates under annotation_ser.
+                    if (CURATION_USER.equals(annDoc.getUser())
+                            || INITIAL_CAS_PSEUDO_USER.equals(annDoc.getUser())) {
+                        continue;
+                    }
+
+                    // Export the CAS of any owner that has one - including former annotators (whose
+                    // account may no longer exist) and locked documents worked on before locking.
+                    // Gate on existsCas (skips locked-but-never-opened) and exclude only NEW.
+                    if (documentService.existsCas(annDoc)
+                            && !annDoc.getState().equals(AnnotationDocumentState.NEW)) {
 
                         exportCas(aRequest, aStage, bulkOperationContext, srcDoc,
                                 annDoc.getAnnotationSet());

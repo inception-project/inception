@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * regarding copyright ownership.  The Technische Universität Darmstadt
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *  
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -152,8 +152,17 @@ public class RepairTask
                     getMessageSets().add(messageSet);
                 }
 
-                // Repair regular annotator CASes
-                for (var ad : documentService.listAnnotationDocuments(sd)) {
+                // Repair regular annotator CASes - including those of former annotators (removed
+                // from the project, role changed or account deleted) so their data is not skipped.
+                for (var ad : documentService.listAllAnnotationDocuments(sd)) {
+                    // The initial and curation CASes are repaired separately above. Their
+                    // pseudo-user annotation documents are included in listAllAnnotationDocuments,
+                    // so skip them here to avoid repairing those CASes a second time.
+                    var annotationSet = ad.getAnnotationSet();
+                    if (CURATION_SET.equals(annotationSet) || INITIAL_SET.equals(annotationSet)) {
+                        continue;
+                    }
+
                     var messageSet = new LogMessageSet(sd.getName() + " [" + ad.getUser() + "]");
                     try {
                         if (documentService.existsCas(ad)) {
