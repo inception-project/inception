@@ -144,9 +144,11 @@ public abstract class AnnotationSuggestion
                         ? aBuilder.recommender.getFeature().getName()
                         : null);
 
-        assert srcLayerId != null : "Layer must be persisted (id must be set)";
-        assert srcRecommenderId != null : "Recommender must be persisted (id must be set)";
-        assert srcDocumentId != null : "Document must be persisted (id must be set)";
+        assert srcLayerId != null : "Layer must be persisted but its id was [" + srcLayerId + "]";
+        assert srcRecommenderId != null : "Recommender must be persisted but its id was ["
+                + srcRecommenderId + "]";
+        assert srcDocumentId != null : "Document must be persisted but its id was [" + srcDocumentId
+                + "]";
         assert feature != null : "Feature cannot be null";
         assert recommenderName != null : "Recommender name cannot be null";
         assert generation >= 0 : "Generation cannot be negative but was [" + generation + "]";
