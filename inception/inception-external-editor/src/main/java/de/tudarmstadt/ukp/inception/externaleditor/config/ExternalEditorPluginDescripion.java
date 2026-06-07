@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.externaleditor.config;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static java.util.Objects.requireNonNullElse;
 
 import java.io.Serializable;
 import java.nio.file.Path;
@@ -100,7 +101,7 @@ public class ExternalEditorPluginDescripion
 
     public void setScripts(List<String> aScripts)
     {
-        scripts = aScripts;
+        scripts = requireNonNullElse(aScripts, emptyList());
     }
 
     public List<String> getStylesheets()
@@ -110,7 +111,7 @@ public class ExternalEditorPluginDescripion
 
     public void setStylesheets(List<String> aStylesheets)
     {
-        stylesheets = aStylesheets;
+        stylesheets = requireNonNullElse(aStylesheets, emptyList());
     }
 
     public Set<String> getSectionElements()
@@ -120,6 +121,6 @@ public class ExternalEditorPluginDescripion
 
     public void setSectionElements(Set<String> aSectionElements)
     {
-        sectionElements = aSectionElements;
+        sectionElements = requireNonNullElse(aSectionElements, emptySet());
     }
 }
