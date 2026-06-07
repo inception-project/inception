@@ -133,7 +133,7 @@
     <opensearch.version>3.6.0</opensearch.version>
     <jena.version>6.1.0</jena.version>
     <libthrift.version>0.23.0</libthrift.version>
-    <rdf4j.version>5.3.1</rdf4j.version>
+    <rdf4j.version>6.0.0-M1</rdf4j.version>
     <owlapi-version>5.5.1</owlapi-version>
 
     <asciidoctor.plugin.version>3.2.0</asciidoctor.plugin.version>
