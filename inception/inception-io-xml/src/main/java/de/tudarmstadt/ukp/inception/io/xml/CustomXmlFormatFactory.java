@@ -55,6 +55,7 @@ public class CustomXmlFormatFactory
     private final CustomXmlFormatPluginDescripion description;
     private final Application wicketApplication;
     private final List<ResourceReference> stylesheetReferences;
+    private final List<ResourceReference> scriptReferences;
 
     private WatchedResourceFile<PolicyCollection> policyResource;
 
@@ -88,6 +89,20 @@ public class CustomXmlFormatFactory
             wicketApplication.getResourceReferenceRegistry().registerResourceReference(ref);
             stylesheetReferences.add(ref);
         }
+
+        scriptReferences = new ArrayList<ResourceReference>();
+        for (var script : description.getScripts()) {
+            var scriptPath = basePath.resolve(script).normalize();
+            if (!scriptPath.startsWith(basePath)) {
+                LOG.warn("Script in custom XML format [{}] has illegal path [{}]",
+                        description.getId(), script);
+                continue;
+            }
+            var ref = new FileSystemResourceReference(
+                    PLUGINS_XML_FORMAT_BASE_NAME + description.getId() + "/" + script, scriptPath);
+            wicketApplication.getResourceReferenceRegistry().registerResourceReference(ref);
+            scriptReferences.add(ref);
+        }
     }
 
     @Override
@@ -106,6 +121,18 @@ public class CustomXmlFormatFactory
     public List<ResourceReference> getCssStylesheets()
     {
         return stylesheetReferences;
+    }
+
+    @Override
+    public List<ResourceReference> getJavaScripts()
+    {
+        return scriptReferences;
+    }
+
+    @Override
+    public Optional<String> getDocumentStructureFactory()
+    {
+        return Optional.ofNullable(description.getDocumentStructureFactory());
     }
 
     @Override

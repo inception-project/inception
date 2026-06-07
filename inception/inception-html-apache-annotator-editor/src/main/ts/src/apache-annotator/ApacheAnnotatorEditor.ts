@@ -25,6 +25,7 @@ import {
 import DocumentStructureNavigator from '@inception-project/inception-js-api/src/documentStructure/DocumentStructureNavigator.svelte';
 import { ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualizer.svelte';
 import { ApacheAnnotatorSelector } from './ApacheAnnotatorSelector';
+import { normalizeSectionsForPinning } from './SectionPinning';
 import ApacheAnnotatorToolbar from './ApacheAnnotatorToolbar.svelte';
 import { annotatorState } from './ApacheAnnotatorState.svelte';
 import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte';
@@ -67,7 +68,8 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
         this.ajax = ajax;
         this.root = element;
         this.userPreferencesKey = userPreferencesKey;
-        this.sectionSelector = [...sectionElementLocalNames].join(',');
+        // Settled during init by normalizeSectionsForPinning (Step 1 below).
+        this.sectionSelector = '';
         this.protectedElements = protectedElements;
         this.documentStructure = documentStructure;
         const protectedSel = [...protectedElements].join(',');
@@ -105,8 +107,6 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
                     preferences.protectElements ?? defaultPreferences.protectElements;
             })
             .then(() => {
-                this.ensureSectionElementsHaveAnId();
-
                 // Move all content into a document container
                 const documentContainer = this.root.ownerDocument.createElement('div');
                 documentContainer.classList.add('iaa-document-container');
@@ -114,6 +114,19 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
                     documentContainer.appendChild(child)
                 );
 
+                // Step 1 (rendering fix): make section elements pinnable and
+                // settle the section selector. Schema-free; see SectionPinning.
+                // Must run before the IDs are assigned so they land on the
+                // wrapper elements rather than the soon-to-be-buried originals.
+                this.sectionSelector = normalizeSectionsForPinning(
+                    documentContainer,
+                    sectionElementLocalNames
+                );
+                this.ensureSectionElementsHaveAnId();
+
+                // Step 2 (table of contents): build the outline for the
+                // navigator. Operates on the post-pinning DOM; owns title and
+                // scroll-target extraction per format.
                 this.documentStructure.preprocess(documentContainer);
 
                 // Set up a container for the document navigation sidebar

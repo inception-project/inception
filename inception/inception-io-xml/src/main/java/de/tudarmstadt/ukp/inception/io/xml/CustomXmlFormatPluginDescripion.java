@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.io.xml;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static java.util.Objects.requireNonNullElse;
 
 import java.io.Serializable;
 import java.nio.file.Path;
@@ -36,6 +37,8 @@ public class CustomXmlFormatPluginDescripion
     private String name;
 
     private List<String> stylesheets = emptyList();
+    private List<String> scripts = emptyList();
+    private String documentStructureFactory;
     private Set<String> sectionElements = emptySet();
     private List<String> blockElements = emptyList();
     private boolean splitSentencesInBlockElements;
@@ -79,7 +82,27 @@ public class CustomXmlFormatPluginDescripion
 
     public void setStylesheets(List<String> aStylesheets)
     {
-        stylesheets = aStylesheets;
+        stylesheets = requireNonNullElse(aStylesheets, emptyList());
+    }
+
+    public List<String> getScripts()
+    {
+        return scripts;
+    }
+
+    public void setScripts(List<String> aScripts)
+    {
+        scripts = requireNonNullElse(aScripts, emptyList());
+    }
+
+    public String getDocumentStructureFactory()
+    {
+        return documentStructureFactory;
+    }
+
+    public void setDocumentStructureFactory(String aDocumentStructureFactory)
+    {
+        documentStructureFactory = aDocumentStructureFactory;
     }
 
     public Set<String> getSectionElements()
@@ -89,12 +112,12 @@ public class CustomXmlFormatPluginDescripion
 
     public void setSectionElements(Set<String> aSectionElements)
     {
-        sectionElements = aSectionElements;
+        sectionElements = requireNonNullElse(aSectionElements, emptySet());
     }
 
     public void setBlockElements(List<String> aBlockElements)
     {
-        blockElements = aBlockElements;
+        blockElements = requireNonNullElse(aBlockElements, emptyList());
     }
 
     public List<String> getBlockElements()
