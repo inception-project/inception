@@ -68,15 +68,18 @@ export class SectionAnnotationCreator {
             // <sec-wrap> wrappers (used to make namespaced XML sections pinnable)
             // are the exception: their own localName is 'sec-wrap', but they
             // carry the original element name in data-section-type, so use that.
-            // The override is gated on the element actually being such a wrapper
-            // -- an unrelated section that happens to have a data-section-type
-            // attribute must still be labelled by its own tag name.
-            const isWrapper =
+            // A synthetic wrapper is identified by all three of: tag 'sec-wrap',
+            // the XHTML namespace, AND the data-section-type marker attribute --
+            // the same definition SectionPinning uses to create them. Requiring
+            // the attribute means an unrelated <sec-wrap> (or any element that
+            // happens to carry data-section-type) is still labelled by its own
+            // tag name.
+            const wrapperType =
                 e.localName === 'sec-wrap' &&
-                e.namespaceURI === 'http://www.w3.org/1999/xhtml';
-            const sectionType =
-                (isWrapper && e.getAttribute('data-section-type')) || e.localName;
-            e.setAttribute('data-iaa-section-type', sectionType);
+                e.namespaceURI === 'http://www.w3.org/1999/xhtml'
+                    ? e.getAttribute('data-section-type')
+                    : null;
+            e.setAttribute('data-iaa-section-type', wrapperType || e.localName);
         });
     }
 
