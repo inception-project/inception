@@ -20,6 +20,11 @@ import { normalizeSectionsForPinning } from './SectionPinning';
 
 const TEI_NS = 'http://www.tei-c.org/ns/1.0';
 const XHTML_NS = 'http://www.w3.org/1999/xhtml';
+// The selector the function returns for "a wrapped section": the synthetic
+// wrappers are addressed by their data-section-type attribute, not by the bare
+// 'sec-wrap' tag name, so a buried namespaced original sharing that local name
+// is never matched.
+const WRAPPER_SELECTOR = 'sec-wrap[data-section-type]';
 
 let container: HTMLElement;
 
@@ -74,7 +79,7 @@ describe('normalizeSectionsForPinning', () => {
 
         const selector = normalizeSectionsForPinning(container, new Set(['div']));
 
-        expect(selector).toBe('sec-wrap');
+        expect(selector).toBe(WRAPPER_SELECTOR);
         const wraps = container.querySelectorAll('sec-wrap');
         expect(wraps.length).toBe(1);
         // Wrapper is HTML-namespace so the editor's HTMLElement-only inline-style
@@ -167,11 +172,11 @@ describe('normalizeSectionsForPinning', () => {
 
         expect(container.querySelectorAll('sec-wrap').length).toBe(1);
         expect(container.firstElementChild?.firstElementChild).toBe(div);
-        // The selector must stay 'sec-wrap' on the re-run: the wrappers still
-        // exist, so downstream must keep targeting them rather than the
-        // now-buried original elements.
-        expect(first).toBe('sec-wrap');
-        expect(second).toBe('sec-wrap');
+        // The selector must stay stable on the re-run: the wrappers still exist,
+        // so downstream must keep targeting them rather than the now-buried
+        // original elements.
+        expect(first).toBe(WRAPPER_SELECTOR);
+        expect(second).toBe(WRAPPER_SELECTOR);
     });
 
     it('wraps a namespaced element named sec-wrap rather than mistaking it for the synthetic wrapper', () => {
@@ -183,13 +188,19 @@ describe('normalizeSectionsForPinning', () => {
 
         const selector = normalizeSectionsForPinning(container, new Set(['sec-wrap']));
 
-        expect(selector).toBe('sec-wrap');
+        expect(selector).toBe(WRAPPER_SELECTOR);
         const wrap = container.firstElementChild!;
         // The wrapper is the synthetic XHTML one; the TEI sec-wrap is its child.
         expect(wrap.namespaceURI).toBe(XHTML_NS);
         expect(wrap).toBeInstanceOf(HTMLElement);
         expect(wrap.firstElementChild).toBe(teiSecWrap);
         expect(teiSecWrap.namespaceURI).toBe(TEI_NS);
+        // The returned selector must address only the pinnable wrapper, NOT the
+        // buried namespaced original (which shares the local name 'sec-wrap').
+        // This is the whole reason wrappers are selected by data-section-type.
+        const matched = Array.from(container.querySelectorAll(selector));
+        expect(matched).toEqual([wrap]);
+        expect(matched).not.toContain(teiSecWrap);
         // Running again must not double-wrap the now-pinnable structure.
         normalizeSectionsForPinning(container, new Set(['sec-wrap']));
         expect(container.querySelectorAll('sec-wrap').length).toBe(2); // xhtml wrapper + tei child, no more

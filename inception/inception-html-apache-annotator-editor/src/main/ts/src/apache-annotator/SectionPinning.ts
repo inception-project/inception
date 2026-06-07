@@ -18,6 +18,12 @@
 
 const XHTML_NS = 'http://www.w3.org/1999/xhtml';
 const WRAPPER_TAG = 'sec-wrap';
+// Attribute stamped on every synthetic wrapper (and only on those). Selecting by
+// it -- rather than by the bare tag name -- avoids matching a buried namespaced
+// original that happens to share the local name 'sec-wrap'. `querySelectorAll`
+// matches local names ignoring namespace, so the tag name alone is ambiguous.
+const WRAPPER_ATTR = 'data-section-type';
+const WRAPPER_SELECTOR = `${WRAPPER_TAG}[${WRAPPER_ATTR}]`;
 
 /**
  * Make every configured section element pinnable by the layout code.
@@ -41,17 +47,24 @@ const WRAPPER_TAG = 'sec-wrap';
  * (titles, headings, outline): that is the navigator's concern, handled
  * separately by the {@link DocumentStructureStrategy}.
  *
+ * Wrappers are identified by the {@code data-section-type} attribute they carry
+ * (selector {@code sec-wrap[data-section-type]}), never by the bare tag name:
+ * {@code querySelectorAll} matches local names ignoring namespace, so a buried
+ * namespaced original whose local name is also {@code sec-wrap} would otherwise
+ * be mistaken for a real wrapper.
+ *
  * @returns the CSS selector the editor should use for "a section" afterwards:
  *   - {@code ''} when no section elements were configured.
  *   - the original element-name selector (e.g. {@code 'div,p'}) when nothing
  *     was wrapped because every matching section was already HTML.
- *   - {@code 'sec-wrap'} when every matching section got wrapped.
+ *   - {@code 'sec-wrap[data-section-type]'} when every matching section got
+ *     wrapped.
  *   - a combined selector (e.g.
- *     {@code 'sec-wrap, :is(div,p):not(sec-wrap *)'}) when the document mixes
- *     already-HTML sections (left in place) with namespaced ones (wrapped), so
- *     downstream targets the wrappers AND the still-unwrapped HTML sections.
- *     The {@code :not(sec-wrap *)} keeps the original elements now buried inside
- *     a wrapper from matching twice.
+ *     {@code 'sec-wrap[data-section-type], :is(div,p):not(sec-wrap *)'}) when
+ *     the document mixes already-HTML sections (left in place) with namespaced
+ *     ones (wrapped), so downstream targets the wrappers AND the still-unwrapped
+ *     HTML sections. The {@code :not(sec-wrap *)} keeps the original elements now
+ *     buried inside a wrapper from matching twice.
  */
 export function normalizeSectionsForPinning(
     container: Element,
@@ -94,16 +107,18 @@ export function normalizeSectionsForPinning(
         }
 
         const wrapper = doc.createElementNS(XHTML_NS, WRAPPER_TAG);
-        wrapper.setAttribute('data-section-type', el.localName);
+        wrapper.setAttribute(WRAPPER_ATTR, el.localName);
         parent.insertBefore(wrapper, el);
         wrapper.appendChild(el);
         hasWrappers = true;
     }
 
     if (!hasWrappers) return selector;
-    if (!hasUnwrapped) return WRAPPER_TAG;
-    // Mixed: target wrappers plus the still-unwrapped originals. The
-    // :not(sec-wrap *) guard excludes originals now buried inside a wrapper so
-    // they don't match alongside their own wrapper.
-    return `${WRAPPER_TAG}, :is(${selector}):not(${WRAPPER_TAG} *)`;
+    if (!hasUnwrapped) return WRAPPER_SELECTOR;
+    // Mixed: target the synthetic wrappers plus the still-unwrapped originals.
+    // Wrappers are matched via WRAPPER_SELECTOR (the data-section-type attribute)
+    // so a buried original sharing the local name 'sec-wrap' is not picked up,
+    // and the :not(sec-wrap *) guard excludes any original now nested inside a
+    // wrapper from matching alongside its own wrapper.
+    return `${WRAPPER_SELECTOR}, :is(${selector}):not(${WRAPPER_TAG} *)`;
 }

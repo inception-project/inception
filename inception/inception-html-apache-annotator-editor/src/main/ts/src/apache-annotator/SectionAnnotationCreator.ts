@@ -64,11 +64,18 @@ export class SectionAnnotationCreator {
 
     private initializeSectionTypeAttributes() {
         this.root.querySelectorAll(this.sectionSelector).forEach((e, i) => {
-            // For synthetic <sec-wrap> wrappers (used to make namespaced XML
-            // sections pinnable) the localName is 'sec-wrap'; the original
-            // element name is preserved in data-section-type, so prefer it for
-            // the displayed section-type label.
-            const sectionType = e.getAttribute('data-section-type') ?? e.localName;
+            // The label is normally the element's own tag name. Synthetic
+            // <sec-wrap> wrappers (used to make namespaced XML sections pinnable)
+            // are the exception: their own localName is 'sec-wrap', but they
+            // carry the original element name in data-section-type, so use that.
+            // The override is gated on the element actually being such a wrapper
+            // -- an unrelated section that happens to have a data-section-type
+            // attribute must still be labelled by its own tag name.
+            const isWrapper =
+                e.localName === 'sec-wrap' &&
+                e.namespaceURI === 'http://www.w3.org/1999/xhtml';
+            const sectionType =
+                (isWrapper && e.getAttribute('data-section-type')) || e.localName;
             e.setAttribute('data-iaa-section-type', sectionType);
         });
     }
