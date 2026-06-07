@@ -91,7 +91,6 @@ public class CustomXmlFormatFactory
         }
 
         scriptReferences = new ArrayList<ResourceReference>();
-        var basePath = description.getBasePath().normalize();
         for (var script : description.getScripts()) {
             var scriptPath = basePath.resolve(script).normalize();
             if (!scriptPath.startsWith(basePath)) {

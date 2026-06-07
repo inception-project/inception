@@ -174,6 +174,28 @@ describe('normalizeSectionsForPinning', () => {
         expect(second).toBe('sec-wrap');
     });
 
+    it('wraps a namespaced element named sec-wrap rather than mistaking it for the synthetic wrapper', () => {
+        // A section element that happens to be a non-HTML <sec-wrap> (here in the
+        // TEI namespace) is itself unpinnable and must be wrapped. The idempotency
+        // skip must not fire on it just because its parent's local name matches.
+        const teiSecWrap = teiEl('sec-wrap', 'body');
+        container.appendChild(teiSecWrap);
+
+        const selector = normalizeSectionsForPinning(container, new Set(['sec-wrap']));
+
+        expect(selector).toBe('sec-wrap');
+        const wrap = container.firstElementChild!;
+        // The wrapper is the synthetic XHTML one; the TEI sec-wrap is its child.
+        expect(wrap.namespaceURI).toBe(XHTML_NS);
+        expect(wrap).toBeInstanceOf(HTMLElement);
+        expect(wrap.firstElementChild).toBe(teiSecWrap);
+        expect(teiSecWrap.namespaceURI).toBe(TEI_NS);
+        // Running again must not double-wrap the now-pinnable structure.
+        normalizeSectionsForPinning(container, new Set(['sec-wrap']));
+        expect(container.querySelectorAll('sec-wrap').length).toBe(2); // xhtml wrapper + tei child, no more
+        expect(wrap.firstElementChild).toBe(teiSecWrap);
+    });
+
     it('only wraps elements whose local name is configured', () => {
         const wanted = teiEl('div', 'wrapme');
         const skipped = teiEl('p', 'leaveme');

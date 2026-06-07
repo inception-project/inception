@@ -81,9 +81,13 @@ export function normalizeSectionsForPinning(
         const parent = el.parentNode;
         if (!parent) continue;
         // Idempotent: skip if already wrapped (e.g. run twice on the same tree).
+        // Match only our synthetic XHTML-namespace wrapper -- a section element
+        // that happens to be a namespaced <foo:sec-wrap> is NOT a real wrapper,
+        // is still a non-HTMLElement, and must itself be wrapped to be pinnable.
         if (
             parent.nodeType === Node.ELEMENT_NODE &&
-            (parent as Element).localName === WRAPPER_TAG
+            (parent as Element).localName === WRAPPER_TAG &&
+            (parent as Element).namespaceURI === XHTML_NS
         ) {
             hasWrappers = true;
             continue;
