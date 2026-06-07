@@ -97,7 +97,7 @@ public class SchedulerWebsocketControllerImpl
                     aUpdate);
         }
 
-        if (aUpdate.getProjectId() > 0) {
+        if (aUpdate.getProjectId() != MTaskStateUpdate.NO_PROJECT) {
             var topic = SchedulerWebsocketController
                     .getProjectTaskUpdatesTopic(aUpdate.getProjectId());
             msgTemplate.convertAndSend("/topic" + topic, aUpdate);

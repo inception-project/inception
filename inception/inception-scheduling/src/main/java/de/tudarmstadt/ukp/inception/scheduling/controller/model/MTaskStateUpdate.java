@@ -31,6 +31,12 @@ import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class MTaskStateUpdate
 {
+    /**
+     * {@link #getProjectId()} value used when an update is not associated with a project. A real
+     * project id can be 0 (HSQLDB starts IDENTITY at 0), so this must be negative.
+     */
+    public static final long NO_PROJECT = -1;
+
     private final int id;
     private final String title;
     private final long timestamp;
@@ -71,7 +77,7 @@ public class MTaskStateUpdate
 
         username = aMonitor.getUser();
 
-        projectId = aMonitor.getProject() != null ? aMonitor.getProject().getId() : -1;
+        projectId = aMonitor.getProject() != null ? aMonitor.getProject().getId() : NO_PROJECT;
         projectName = aMonitor.getProject() != null ? aMonitor.getProject().getName() : null;
 
         state = aMonitor.getState();
