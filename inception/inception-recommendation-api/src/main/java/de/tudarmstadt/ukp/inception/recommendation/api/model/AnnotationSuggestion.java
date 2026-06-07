@@ -115,20 +115,20 @@ public abstract class AnnotationSuggestion
         id = aBuilder.id;
         score = aBuilder.score;
         scoreExplanation = aBuilder.scoreExplanation;
-        documentId = aBuilder.documentId;
         autoAcceptMode = aBuilder.autoAcceptMode != null ? aBuilder.autoAcceptMode : NEVER;
         hidingFlags = aBuilder.hidingFlags;
         correction = aBuilder.correction;
         correctionExplanation = aBuilder.correctionExplanation;
 
-        // Boxed so null (unpersisted) is distinct from a genuine id of 0 (HSQLDB
-        // starts IDENTITY at 0). The asserts below check id != null, not id > 0.
+        // Boxed Long so null (unpersisted) is distinct from id 0, which is valid
+        // (HSQLDB starts IDENTITY at 0). Asserts check != null, not > 0.
         Long srcRecommenderId = aBuilder.recommenderId != null ? aBuilder.recommenderId
                 : (aBuilder.recommender != null ? aBuilder.recommender.getId() : null);
         Long srcLayerId = aBuilder.layerId != null ? aBuilder.layerId
                 : (aBuilder.recommender != null && aBuilder.recommender.getLayer() != null
                         ? aBuilder.recommender.getLayer().getId()
                         : null);
+        Long srcDocumentId = aBuilder.documentId;
 
         recommenderId = srcRecommenderId != null ? srcRecommenderId : 0;
 
@@ -137,15 +137,16 @@ public abstract class AnnotationSuggestion
 
         layerId = srcLayerId != null ? srcLayerId : 0;
 
+        documentId = srcDocumentId != null ? srcDocumentId : 0;
+
         feature = aBuilder.feature != null ? aBuilder.feature
                 : (aBuilder.recommender != null && aBuilder.recommender.getFeature() != null
                         ? aBuilder.recommender.getFeature().getName()
                         : null);
 
-        // documentId is a primitive long; it would already have NPE'd on unbox if
-        // the document were unpersisted, so it needs no separate guard here.
         assert srcLayerId != null : "Layer must be persisted (id must be set)";
         assert srcRecommenderId != null : "Recommender must be persisted (id must be set)";
+        assert srcDocumentId != null : "Document must be persisted (id must be set)";
         assert feature != null : "Feature cannot be null";
         assert recommenderName != null : "Recommender name cannot be null";
         assert generation >= 0 : "Generation cannot be negative but was [" + generation + "]";
@@ -418,7 +419,7 @@ public abstract class AnnotationSuggestion
         protected String recommenderName;
         protected Long layerId;
         protected String feature;
-        protected long documentId;
+        protected Long documentId;
         protected String label;
         protected String uiLabel;
         protected double score;

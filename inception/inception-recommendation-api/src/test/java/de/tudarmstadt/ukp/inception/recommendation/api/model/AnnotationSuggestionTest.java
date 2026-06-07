@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
@@ -32,8 +32,7 @@ public class AnnotationSuggestionTest
     @Test
     public void thatPersistedEntitiesWithIdZeroAreAccepted()
     {
-        // id 0 is a valid persisted id (HSQLDB starts IDENTITY at 0) and must not
-        // trip the persisted-entity asserts.
+        // id 0 is a valid persisted id (HSQLDB starts IDENTITY at 0).
         var doc = SourceDocument.builder().withId(0L).withName("doc0").build();
         var layer = AnnotationLayer.builder().withId(0L).build();
         var feature = AnnotationFeature.builder().withLayer(layer).withName("value").build();
@@ -61,7 +60,6 @@ public class AnnotationSuggestionTest
     @Test
     public void thatUnpersistedRecommenderIsRejected()
     {
-        // A recommender with a null id (never persisted) must still be rejected.
         var doc = SourceDocument.builder().withId(0L).withName("doc0").build();
         var layer = AnnotationLayer.builder().withId(0L).build();
         var feature = AnnotationFeature.builder().withLayer(layer).withName("value").build();
@@ -77,16 +75,42 @@ public class AnnotationSuggestionTest
                 .withLabel("A") //
                 .withUiLabel("#A");
 
-        // Only meaningful when assertions are enabled (-ea), as in the test JVM.
+        requireAssertionsEnabled();
+        assertThatThrownBy(builder::build).isInstanceOf(AssertionError.class);
+    }
+
+    @Test
+    public void thatMissingDocumentIsRejected()
+    {
+        var layer = AnnotationLayer.builder().withId(0L).build();
+        var feature = AnnotationFeature.builder().withLayer(layer).withName("value").build();
+        var rec = Recommender.builder().withId(0L).withName("Recommender").withLayer(layer)
+                .withFeature(feature).build();
+
+        var builder = SpanSuggestion.builder() //
+                .withId(1) //
+                .withRecommender(rec) //
+                // no withDocument(...)
+                .withPosition(0, 1) //
+                .withCoveredText("a") //
+                .withLabel("A") //
+                .withUiLabel("#A");
+
+        requireAssertionsEnabled();
+        assertThatThrownBy(builder::build).isInstanceOf(AssertionError.class);
+    }
+
+    /**
+     * Rejection tests rely on {@code assert}, so fail fast if {@code -ea} is off rather than
+     * passing silently.
+     */
+    private static void requireAssertionsEnabled()
+    {
         boolean assertionsEnabled = false;
-        assert assertionsEnabled = true; // side-effect sets the flag when -ea is on
-        if (assertionsEnabled) {
-            org.assertj.core.api.Assertions.assertThatThrownBy(builder::build)
-                    .isInstanceOf(AssertionError.class);
-        }
-        else {
-            assertThatNoException().isThrownBy(builder::build);
-        }
+        assert assertionsEnabled = true; // side-effect: true only when -ea is on
+        assertThat(assertionsEnabled) //
+                .as("This test requires assertions to be enabled (-ea)") //
+                .isTrue();
     }
 
     @Test
