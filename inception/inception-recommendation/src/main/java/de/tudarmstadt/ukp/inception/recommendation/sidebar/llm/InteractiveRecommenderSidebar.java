@@ -350,8 +350,15 @@ public class InteractiveRecommenderSidebar
     {
         return recommendationService.listEnabledRecommenders(getModelObject().getProject()).stream() //
                 .filter(rec -> recommendationService.getRecommenderFactory(rec)
-                        .map(factory -> factory.isInteractive(rec)).orElse(false)) //
+                        .map(factory -> factory.isInteractive(rec) && hasLlmTraits(factory))
+                        .orElse(false)) //
                 .toList();
+    }
+
+    private static boolean hasLlmTraits(RecommendationEngineFactory<?> aFactory)
+    {
+        var traits = aFactory.createTraits();
+        return traits instanceof LlmRecommenderTraits;
     }
 
     private List<AnnotationFeature> listFeatures()

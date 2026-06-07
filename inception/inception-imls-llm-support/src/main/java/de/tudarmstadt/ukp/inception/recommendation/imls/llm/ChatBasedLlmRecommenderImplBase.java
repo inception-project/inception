@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContextGenerator.VAR_EXAMPLES;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContextGenerator.getPromptContextGenerator;
 import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_UNITS;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
@@ -38,6 +39,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.PredictionContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatOptions;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClientExtensionPoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.JinjaPromptRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
@@ -51,24 +55,37 @@ public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTr
 {
     private static final int MAX_FEW_SHOT_EXAMPLES = 10;
 
+    private static final String OPT_TEMPERATURE = "temperature";
+    private static final String OPT_TOP_P = "top_p";
+    private static final String OPT_SEED = "seed";
+
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     protected final T traits;
     protected final AnnotationSchemaService schemaService;
     protected final AnnotationTaskCodecExtensionPoint taskCodecExtensionPoint;
+    protected final LlmChatClientExtensionPoint chatClientExtensionPoint;
     protected final JinjaPromptRenderer promptRenderer;
 
     public ChatBasedLlmRecommenderImplBase(Recommender aRecommender, T aTraits,
             AnnotationSchemaService aSchemaService,
-            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint)
+            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint,
+            LlmChatClientExtensionPoint aChatClientExtensionPoint)
     {
         super(aRecommender);
 
         traits = aTraits;
         schemaService = aSchemaService;
         taskCodecExtensionPoint = aResponseExtractorExtensionPoint;
+        chatClientExtensionPoint = aChatClientExtensionPoint;
         promptRenderer = new JinjaPromptRenderer();
     }
+
+    /**
+     * Identifier of the {@code LlmChatClient} that handles this recommender's provider. Must match
+     * the {@code getId()} of the registered adapter.
+     */
+    protected abstract String getProviderId();
 
     protected Map<String, Object> prepareGlobalBindings(CAS aCas)
     {
@@ -134,7 +151,41 @@ public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTr
         return new Range(aBegin, aEnd);
     }
 
-    protected abstract String exchange(List<ChatMessage> aPrompt, ResponseFormat aResponseformat,
+    protected String exchange(List<ChatMessage> aPrompt, ResponseFormat aResponseformat,
             JsonNode aJsonSchema)
-        throws IOException;
+        throws IOException
+    {
+        var providerId = getProviderId();
+        var client = chatClientExtensionPoint.getExtension(providerId)
+                .orElseThrow(() -> new IOException("No LLM client registered for provider ["
+                        + providerId + "] - is the corresponding module enabled?"));
+
+        var endpoint = new LlmEndpoint(providerId, traits.getUrl(), traits.getModel(),
+                traits.getAuthentication(), traits.getCapabilities());
+
+        var options = recommenderDefaults(traits.getOptions());
+        var chatOptions = new ChatOptions(aResponseformat, aJsonSchema, emptyList(), options);
+
+        var result = client.chat(endpoint, aPrompt, chatOptions);
+        LOG.trace("[{}] response: [{}]", providerId, result.message().content());
+        return result.message().content();
+    }
+
+    /**
+     * Apply recommender-use-case defaults to the option bag without mutating the traits-owned map:
+     * deterministic seed for reproducibility, and {@code temperature=0} unless the user has already
+     * set either temperature or top_p.
+     */
+    private static Map<String, Object> recommenderDefaults(Map<String, Object> aOptions)
+    {
+        var out = new LinkedHashMap<String, Object>();
+        if (aOptions != null) {
+            out.putAll(aOptions);
+        }
+        if (!out.containsKey(OPT_TEMPERATURE) && !out.containsKey(OPT_TOP_P)) {
+            out.put(OPT_TEMPERATURE, 0.0d);
+        }
+        out.putIfAbsent(OPT_SEED, 0xdeadbeef);
+        return out;
+    }
 }

@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
 
 import java.lang.invoke.MethodHandles;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -39,8 +40,9 @@ import de.tudarmstadt.ukp.inception.assistant.config.AssistantDocumentIndexPrope
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantDocumentIndexPropertiesImpl;
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantPropertiesImpl;
 import de.tudarmstadt.ukp.inception.assistant.embedding.EmbeddingServiceImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClientExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaLlmChatClient;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
 
@@ -52,7 +54,7 @@ class UserGuideQueryServiceImplTest
     private @Mock SchedulingService schedulingService;
     private AssistantPropertiesImpl assistantProperties;
     private AssistantDocumentIndexProperties assistantDocumentIndexProperties;
-    private OllamaClient ollamaClient;
+    private LlmChatClientExtensionPointImpl chatClientExtensionPoint;
     private UserGuideQueryServiceImpl sut;
     private EmbeddingServiceImpl embeddingService;
 
@@ -71,8 +73,12 @@ class UserGuideQueryServiceImplTest
         assistantDocumentIndexProperties = new AssistantDocumentIndexPropertiesImpl();
         assistantProperties = new AssistantPropertiesImpl();
         assistantProperties.setDocumentIndex(assistantDocumentIndexProperties);
-        ollamaClient = new OllamaClientImpl();
-        embeddingService = new EmbeddingServiceImpl(assistantProperties, ollamaClient);
+
+        var ollamaAdapter = new OllamaLlmChatClient(new OllamaClientImpl());
+        chatClientExtensionPoint = new LlmChatClientExtensionPointImpl(List.of(ollamaAdapter));
+        chatClientExtensionPoint.init();
+
+        embeddingService = new EmbeddingServiceImpl(assistantProperties, chatClientExtensionPoint);
         sut = new UserGuideQueryServiceImpl(assistantProperties, schedulingService,
                 embeddingService);
     }

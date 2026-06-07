@@ -21,12 +21,16 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelCapability;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptingMode;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ExtractionMode;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraits;
@@ -49,7 +53,8 @@ public class LlmRecommenderTraits
 
     private @JsonInclude(NON_EMPTY) Map<String, Object> options = new LinkedHashMap<String, Object>();
 
-    private boolean structuredOutputSupported = true;
+    private @JsonInclude(NON_EMPTY) Set<ModelCapability> capabilities = EnumSet
+            .of(ModelCapability.JSON_SCHEMA);
 
     private boolean interactive;
 
@@ -138,14 +143,37 @@ public class LlmRecommenderTraits
         authentication = aAuthentication;
     }
 
+    public Set<ModelCapability> getCapabilities()
+    {
+        return Collections.unmodifiableSet(capabilities);
+    }
+
+    public void setCapabilities(Set<ModelCapability> aCapabilities)
+    {
+        capabilities = aCapabilities != null && !aCapabilities.isEmpty() //
+                ? EnumSet.copyOf(aCapabilities) //
+                : EnumSet.noneOf(ModelCapability.class);
+    }
+
+    /**
+     * Derived view of {@link ModelCapability#JSON_SCHEMA} membership in {@link #getCapabilities()}.
+     * Suppressed from JSON output so persisted traits use the {@code capabilities} field as the
+     * source of truth; legacy JSON rows carrying this boolean still deserialize via the setter.
+     */
+    @JsonIgnore
     public boolean isStructuredOutputSupported()
     {
-        return structuredOutputSupported;
+        return capabilities.contains(ModelCapability.JSON_SCHEMA);
     }
 
     public void setStructuredOutputSupported(boolean aStructuredOutputSupported)
     {
-        structuredOutputSupported = aStructuredOutputSupported;
+        if (aStructuredOutputSupported) {
+            capabilities.add(ModelCapability.JSON_SCHEMA);
+        }
+        else {
+            capabilities.remove(ModelCapability.JSON_SCHEMA);
+        }
     }
 
     public boolean isJustificationEnabled()

@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.inception.assistant.userguide.UserGuideRetriever;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibraryExtensionPoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClientExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 
@@ -87,9 +88,9 @@ public class AssistantAutoConfiguration
 
     @Bean
     public EmbeddingService EmbeddingService(AssistantProperties aProperties,
-            OllamaClient aOllamaClient)
+            LlmChatClientExtensionPoint aChatClientExtensionPoint)
     {
-        return new EmbeddingServiceImpl(aProperties, aOllamaClient);
+        return new EmbeddingServiceImpl(aProperties, aChatClientExtensionPoint);
     }
 
     @Bean

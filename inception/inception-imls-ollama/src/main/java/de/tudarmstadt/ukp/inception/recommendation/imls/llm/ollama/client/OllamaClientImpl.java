@@ -261,11 +261,15 @@ public class OllamaClientImpl
     {
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(CS.appendIfMissing(aUrl, "/") + "api/embed")) //
-                .header(CONTENT_TYPE, "application/json")
-                .POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8)) //
-                .build();
+                .header(CONTENT_TYPE, "application/json");
 
-        var rawResponse = sendRequest(request);
+        if (aRequest.apiKey() != null) {
+            request.header(AUTHORIZATION, "Bearer " + aRequest.apiKey());
+        }
+
+        request.POST(BodyPublishers.ofString(JSONUtil.toJsonString(aRequest), UTF_8));
+
+        var rawResponse = sendRequest(request.build());
 
         if (aRequest.input().size() == 1 && rawResponse.statusCode() >= HTTP_BAD_REQUEST) {
             LOG.error("Error embedding string [{}]", aRequest.input().get(0));
@@ -328,15 +332,18 @@ public class OllamaClientImpl
     }
 
     @Override
-    public List<OllamaTag> listModels(String aUrl) throws IOException
+    public List<OllamaTag> listModels(String aUrl, String aApiKey) throws IOException
     {
         var request = HttpRequest.newBuilder() //
                 .uri(URI.create(CS.appendIfMissing(aUrl, "/") + "api/tags")) //
                 .header(CONTENT_TYPE, APPLICATION_JSON).GET() //
-                .timeout(TIMEOUT) //
-                .build();
+                .timeout(TIMEOUT);
 
-        var response = sendRequest(request);
+        if (aApiKey != null) {
+            request.header(AUTHORIZATION, "Bearer " + aApiKey);
+        }
+
+        var response = sendRequest(request.build());
 
         handleError(response);
 

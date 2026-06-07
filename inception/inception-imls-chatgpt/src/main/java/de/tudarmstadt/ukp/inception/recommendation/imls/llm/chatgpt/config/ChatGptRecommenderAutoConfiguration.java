@@ -25,6 +25,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecE
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.ChatGptRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptLlmChatClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClientExtensionPoint;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
 @Configuration
@@ -39,11 +41,18 @@ public class ChatGptRecommenderAutoConfiguration
     }
 
     @Bean
-    public ChatGptRecommenderFactory chatGptRecommenderFactory(ChatGptClient aClient,
-            AnnotationSchemaService aSchemaService,
-            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint)
+    public ChatGptLlmChatClient chatGptLlmChatClient(ChatGptClient aClient)
     {
-        return new ChatGptRecommenderFactory(aClient, aSchemaService,
-                aResponseExtractorExtensionPoint);
+        return new ChatGptLlmChatClient(aClient);
+    }
+
+    @Bean
+    public ChatGptRecommenderFactory chatGptRecommenderFactory(
+            AnnotationSchemaService aSchemaService,
+            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint,
+            LlmChatClientExtensionPoint aChatClientExtensionPoint)
+    {
+        return new ChatGptRecommenderFactory(aSchemaService, aResponseExtractorExtensionPoint,
+                aChatClientExtensionPoint);
     }
 }

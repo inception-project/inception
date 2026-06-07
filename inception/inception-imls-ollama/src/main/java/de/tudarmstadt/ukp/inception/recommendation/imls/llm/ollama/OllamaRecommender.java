@@ -17,85 +17,28 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama;
 
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions.SEED;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions.TEMPERATURE;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions.TOP_P;
-
-import java.io.IOException;
-import java.lang.invoke.MethodHandles;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationTaskCodecExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatBasedLlmRecommenderImplBase;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatMessage;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaChatRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClientExtensionPoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaLlmChatClient;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.node.JsonNodeFactory;
 
 public class OllamaRecommender
     extends ChatBasedLlmRecommenderImplBase<OllamaRecommenderTraits>
 {
-    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
-    private final OllamaClient client;
-
     public OllamaRecommender(Recommender aRecommender, OllamaRecommenderTraits aTraits,
-            OllamaClient aClient, AnnotationSchemaService aSchemaService,
-            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint)
+            AnnotationSchemaService aSchemaService,
+            AnnotationTaskCodecExtensionPoint aResponseExtractorExtensionPoint,
+            LlmChatClientExtensionPoint aChatClientExtensionPoint)
     {
-        super(aRecommender, aTraits, aSchemaService, aResponseExtractorExtensionPoint);
-
-        client = aClient;
+        super(aRecommender, aTraits, aSchemaService, aResponseExtractorExtensionPoint,
+                aChatClientExtensionPoint);
     }
 
     @Override
-    protected String exchange(List<ChatMessage> aMessages, ResponseFormat aFormat, JsonNode aSchema)
-        throws IOException
+    protected String getProviderId()
     {
-        var format = getResponseFormat(aFormat, aSchema);
-        var messages = aMessages.stream() //
-                .map(m -> new OllamaChatMessage(m.role().getName(), m.content())) //
-                .toList();
-
-        var request = OllamaChatRequest.builder() //
-                .withModel(traits.getModel()) //
-                .withMessages(messages) //
-                .withFormat(format) //
-                .withThink(false) //
-                .withStream(false);
-
-        var options = traits.getOptions();
-        // https://platform.openai.com/docs/api-reference/chat/create recommends to set temperature
-        // or top_p but not both.
-        if (!options.containsKey(TEMPERATURE.getName()) && !options.containsKey(TOP_P.getName())) {
-            request.withOption(TEMPERATURE, 0.0d);
-        }
-        request.withOption(SEED, 0xdeadbeef);
-        request.withExtraOptions(options);
-
-        var response = client.chat(traits.getUrl(), request.build(), null).getMessage().content();
-
-        return response;
-    }
-
-    private JsonNode getResponseFormat(ResponseFormat aFormat, JsonNode aSchema)
-    {
-        if (aSchema != null) {
-            return aSchema;
-        }
-
-        if (aFormat == ResponseFormat.JSON) {
-            return JsonNodeFactory.instance.textNode("json");
-        }
-
-        return null;
+        return OllamaLlmChatClient.ID;
     }
 }

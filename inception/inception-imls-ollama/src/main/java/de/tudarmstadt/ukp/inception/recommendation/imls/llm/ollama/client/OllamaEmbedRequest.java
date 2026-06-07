@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -31,13 +32,13 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.Option;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record OllamaEmbedRequest(String model, List<String> input, boolean truncate,
-        @JsonInclude(Include.NON_EMPTY) Map<String, Object> options)
+public record OllamaEmbedRequest(@JsonIgnore String apiKey, String model, List<String> input,
+        boolean truncate, @JsonInclude(Include.NON_EMPTY) Map<String, Object> options)
 {
 
     private OllamaEmbedRequest(Builder builder)
     {
-        this(builder.model, builder.input, builder.truncate, builder.options);
+        this(builder.apiKey, builder.model, builder.input, builder.truncate, builder.options);
     }
 
     public static Builder builder()
@@ -47,6 +48,7 @@ public record OllamaEmbedRequest(String model, List<String> input, boolean trunc
 
     public static final class Builder
     {
+        private String apiKey;
         private String model;
         private boolean truncate = true;
         private List<String> input = new ArrayList<>();
@@ -54,6 +56,12 @@ public record OllamaEmbedRequest(String model, List<String> input, boolean trunc
 
         private Builder()
         {
+        }
+
+        public Builder withApiKey(String aApiKey)
+        {
+            apiKey = aApiKey;
+            return this;
         }
 
         public Builder withModel(String aModel)

@@ -37,7 +37,7 @@ public interface OllamaClient
             Consumer<OllamaChatResponse> aCallback)
         throws IOException;
 
-    List<OllamaTag> listModels(String aUrl) throws IOException;
+    List<OllamaTag> listModels(String aUrl, String aApiKey) throws IOException;
 
     OllamaShowResponse getModelInfo(String aUrl, OllamaShowRequest aRequest) throws IOException;
 

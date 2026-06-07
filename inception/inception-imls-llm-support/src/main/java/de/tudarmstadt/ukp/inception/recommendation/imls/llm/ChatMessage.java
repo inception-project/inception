@@ -19,13 +19,33 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+/**
+ * A single chat message exchanged with the LLM.
+ *
+ * @param role
+ *            who is speaking
+ * @param content
+ *            the message text; may be empty for assistant messages that only carry tool calls
+ * @param thinking
+ *            reasoning / chain-of-thought emitted by the model alongside {@code content}, when the
+ *            model exposes it; {@code null} otherwise
+ * @param toolCallId
+ *            for {@link Role#TOOL} messages, the id of the call this is the result of (set by the
+ *            provider in the preceding assistant turn); {@code null} for all other roles
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record ChatMessage(Role role, String content) {
+public record ChatMessage(Role role, String content, String thinking, String toolCallId) {
+    public ChatMessage(Role aRole, String aContent)
+    {
+        this(aRole, aContent, null, null);
+    }
+
     public static enum Role
     {
         SYSTEM("system"), //
         ASSISTANT("assistant"), //
-        USER("user");
+        USER("user"), //
+        TOOL("tool");
 
         private final String name;
 
@@ -39,5 +59,4 @@ public record ChatMessage(Role role, String content) {
             return name;
         }
     }
-
 }
