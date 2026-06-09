@@ -79,6 +79,15 @@ public class AzureAiOpenAiLlmChatClient
                 .withMessages(messages) //
                 .withFormat(toResponseFormat(aOptions));
 
+        // Translate the provider-neutral fields to Azure OpenAI's parameters; explicit options
+        // below override them.
+        if (aOptions.temperature() != null) {
+            builder.withOption(AzureAiChatCompletionRequest.TEMPERATURE, aOptions.temperature());
+        }
+        if (aOptions.topP() != null) {
+            builder.withOption(AzureAiChatCompletionRequest.TOP_P, aOptions.topP());
+        }
+
         if (aOptions.options() != null) {
             builder.withExtraOptions(aOptions.options());
         }

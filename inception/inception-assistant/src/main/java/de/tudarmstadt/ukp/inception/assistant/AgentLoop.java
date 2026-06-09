@@ -111,12 +111,9 @@ public class AgentLoop
      */
     private static final int CONTEXT_LENGTH_SAFETY_PERCENTAGE = 90;
 
-    // Provider-specific (Ollama) generation option keys carried through ChatOptions#options().
     private static final String OPT_NUM_CTX = "num_ctx";
-    private static final String OPT_TOP_P = "top_p";
     private static final String OPT_TOP_K = "top_k";
     private static final String OPT_REPEAT_PENALTY = "repeat_penalty";
-    private static final String OPT_TEMPERATURE = "temperature";
 
     private final AssistantProperties properties;
     private final LlmChatClient chatClient;
@@ -411,17 +408,21 @@ public class AgentLoop
     {
         var options = new LinkedHashMap<String, Object>();
         options.put(OPT_NUM_CTX, chatProperties.getContextLength());
-        options.put(OPT_TOP_P, chatProperties.getTopP());
         options.put(OPT_TOP_K, chatProperties.getTopK());
         options.put(OPT_REPEAT_PENALTY, chatProperties.getRepeatPenalty());
-        options.put(OPT_TEMPERATURE, chatProperties.getTemperature());
 
-        // Provider-specific escape hatch: explicit options override the typed settings above.
+        // Provider-specific escape hatch: explicit options override the typed settings.
         if (chatProperties.getOptions() != null) {
             options.putAll(chatProperties.getOptions());
         }
 
-        return new ChatOptions(null, aJsonSchema, aTools, options);
+        return ChatOptions.builder() //
+                .withJsonSchema(aJsonSchema) //
+                .withTools(aTools) //
+                .withOptions(options) //
+                .withTemperature(chatProperties.getTemperature()) //
+                .withTopP(chatProperties.getTopP()) //
+                .build();
     }
 
     /**

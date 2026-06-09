@@ -80,6 +80,15 @@ public class ChatGptLlmChatClient
                 .withMessages(messages) //
                 .withResponseFormat(toResponseFormat(aOptions));
 
+        // Translate the provider-neutral fields to OpenAI's parameters; explicit options below
+        // override them.
+        if (aOptions.temperature() != null) {
+            builder.withOption(ChatCompletionRequest.TEMPERATURE, aOptions.temperature());
+        }
+        if (aOptions.topP() != null) {
+            builder.withOption(ChatCompletionRequest.TOP_P, aOptions.topP());
+        }
+
         if (aOptions.options() != null) {
             builder.withExtraOptions(aOptions.options());
         }
