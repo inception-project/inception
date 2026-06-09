@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions.TEMPERATURE;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions.TOP_P;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -151,6 +154,15 @@ public class OllamaLlmChatClient
                 .withFormat(toFormat(aOptions)) //
                 .withThink(false) //
                 .withStream(aStream);
+
+        // Translate the provider-neutral fields to Ollama's parameters; explicit options below
+        // override them.
+        if (aOptions.temperature() != null) {
+            builder.withOption(TEMPERATURE, aOptions.temperature());
+        }
+        if (aOptions.topP() != null) {
+            builder.withOption(TOP_P, aOptions.topP());
+        }
 
         if (aOptions.options() != null) {
             builder.withExtraOptions(aOptions.options());
