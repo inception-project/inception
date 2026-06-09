@@ -67,7 +67,10 @@ import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvide
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibraryExtensionPoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClientExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaLlmChatClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaShowRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaShowResponse;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
@@ -82,6 +85,7 @@ public class AssistantServiceImpl
     private final SimpMessagingTemplate msgTemplate;
     private final MemoryManager memoryManager;
     private final OllamaClient ollamaClient;
+    private final LlmChatClientExtensionPoint chatClientExtensionPoint;
     private final AssistantProperties properties;
     private final EncodingRegistry encodingRegistry;
     private final RetrieverExtensionPoint retrieverExtensionPoint;
@@ -94,14 +98,15 @@ public class AssistantServiceImpl
 
     public AssistantServiceImpl(SessionRegistry aSessionRegistry,
             SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
-            AssistantProperties aProperties, EncodingRegistry aEncodingRegistry,
-            RetrieverExtensionPoint aRetrieverExtensionPoint,
+            LlmChatClientExtensionPoint aChatClientExtensionPoint, AssistantProperties aProperties,
+            EncodingRegistry aEncodingRegistry, RetrieverExtensionPoint aRetrieverExtensionPoint,
             ToolLibraryExtensionPoint aToolLibraryExtensionPoint)
     {
         sessionRegistry = aSessionRegistry;
         msgTemplate = aMsgTemplate;
         memoryManager = new MemoryManager();
         ollamaClient = aOllamaClient;
+        chatClientExtensionPoint = aChatClientExtensionPoint;
         properties = aProperties;
         encodingRegistry = aEncodingRegistry;
         retrieverExtensionPoint = aRetrieverExtensionPoint;
@@ -111,6 +116,16 @@ public class AssistantServiceImpl
                 .getResource("AssistantServiceUserPreferences.schema.json");
         userPreferencesSchema = new WatchedResourceFile<>(userPreferencesSchemaFile,
                 JSONUtil::loadJsonSchema);
+    }
+
+    private LlmChatClient chatClient()
+    {
+        // Provider is hardcoded to Ollama for now; once assistant config moves to UI-driven
+        // traits, this becomes traits.getProviderId().
+        return chatClientExtensionPoint.getExtension(OllamaLlmChatClient.ID) //
+                .orElseThrow(() -> new IllegalStateException(
+                        "Ollama LLM client not registered — is the inception-imls-ollama module on "
+                                + "the classpath?"));
     }
 
     @EventListener
@@ -214,7 +229,7 @@ public class AssistantServiceImpl
 
         try {
             var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
-            var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
+            var assistant = new AgentLoop(properties, chatClient(), aSessionOwner, aProject, memory,
                     getEncoding());
             assistant.setSystemMessages(generateSystemMessages(aProject));
             assistant.setMessageStreamHandler(this::handleStreamedMessageFragment);
@@ -248,7 +263,7 @@ public class AssistantServiceImpl
             dispatchMessage(aSessionOwner.getUsername(), aProject, aMessage);
         }
 
-        var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
+        var assistant = new AgentLoop(properties, chatClient(), aSessionOwner, aProject, memory,
                 getEncoding());
         assistant.setSystemMessages(generateSystemMessages(aProject));
         assistant.setMessageStreamHandler(this::handleStreamedMessageFragment);
@@ -274,7 +289,7 @@ public class AssistantServiceImpl
             MTextMessage... aContextMessages)
     {
         var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
-        var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
+        var assistant = new AgentLoop(properties, chatClient(), aSessionOwner, aProject, memory,
                 getEncoding());
         assistant.setIgnoreMemory(true);
         assistant.setSystemMessages(generateSystemMessages(aProject));
@@ -295,7 +310,7 @@ public class AssistantServiceImpl
             String aDataOwner, MTextMessage aMessage)
     {
         var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
-        var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
+        var assistant = new AgentLoop(properties, chatClient(), aSessionOwner, aProject, memory,
                 getEncoding());
         assistant.setSystemMessages(generateSystemMessages(aProject));
         assistant.setEphemeralMessages(generateEphemeralMessages(aProject, aMessage));

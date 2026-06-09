@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.assistant.config;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -228,6 +230,13 @@ public class AssistantPropertiesImpl
          */
         private double temperature = 0.1;
 
+        /**
+         * Free-form, provider-specific generation options merged onto the request (and overriding
+         * the typed settings on key collisions). Keys must match the configured provider's wire
+         * API.
+         */
+        private final Map<String, Object> options = new LinkedHashMap<>();
+
         {
             capabilities.add(AUTO_DETECT_CAPABILITIES);
         }
@@ -299,6 +308,20 @@ public class AssistantPropertiesImpl
         public void setTemperature(double aTemperature)
         {
             temperature = aTemperature;
+        }
+
+        @Override
+        public Map<String, Object> getOptions()
+        {
+            return options;
+        }
+
+        public void setOptions(Map<String, Object> aOptions)
+        {
+            options.clear();
+            if (aOptions != null) {
+                options.putAll(aOptions);
+            }
         }
 
         @Override
