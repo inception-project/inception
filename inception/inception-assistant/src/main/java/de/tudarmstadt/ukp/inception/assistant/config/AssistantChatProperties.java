@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.config;
 
+import java.util.Map;
 import java.util.Set;
 
 public interface AssistantChatProperties
@@ -42,4 +43,13 @@ public interface AssistantChatProperties
     int getContextLength();
 
     String getEncoding();
+
+    /**
+     * Free-form, provider-specific generation options merged onto the request alongside the typed
+     * settings above. Keys must match the configured provider's wire API (e.g. {@code num_ctx},
+     * {@code top_k} for Ollama; {@code max_tokens}, {@code frequency_penalty} for OpenAI). Entries
+     * here override the typed settings when keys collide. The escape hatch for knobs that have no
+     * provider-neutral equivalent.
+     */
+    Map<String, Object> getOptions();
 }

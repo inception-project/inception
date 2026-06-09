@@ -169,7 +169,25 @@ public class OllamaLlmChatClient
     {
         // tool_call_id is not currently part of the OllamaChatMessage DTO; Ollama matches tool
         // results to calls positionally. Drop the id on the way out.
-        return new OllamaChatMessage(aMessage.role().getName(), aMessage.content());
+        var toolCalls = aMessage.toolCalls().stream() //
+                .map(OllamaLlmChatClient::toOllamaToolCall) //
+                .toList();
+        return new OllamaChatMessage(aMessage.role().getName(), aMessage.content(),
+                aMessage.thinking(), toolCalls);
+    }
+
+    private static OllamaToolCall toOllamaToolCall(ToolCall aCall)
+    {
+        var functionCall = new OllamaFunctionCall();
+        functionCall.setName(aCall.name());
+        if (aCall.arguments() != null && !aCall.arguments().isNull()) {
+            @SuppressWarnings("unchecked")
+            var arguments = JSONUtil.getObjectMapper().convertValue(aCall.arguments(), Map.class);
+            functionCall.setArguments(arguments);
+        }
+        var toolCall = new OllamaToolCall();
+        toolCall.setFunction(functionCall);
+        return toolCall;
     }
 
     private static OllamaTool toOllamaTool(ToolDescriptor aDescriptor)

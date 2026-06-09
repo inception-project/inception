@@ -17,7 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm;
 
+import static java.util.Collections.emptyList;
+
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolCall;
 
 /**
  * A single chat message exchanged with the LLM.
@@ -32,12 +38,28 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * @param toolCallId
  *            for {@link Role#TOOL} messages, the id of the call this is the result of (set by the
  *            provider in the preceding assistant turn); {@code null} for all other roles
+ * @param toolCalls
+ *            for {@link Role#ASSISTANT} messages, the tool invocations the model requested on this
+ *            turn; carried back into the conversation history on subsequent turns so the model can
+ *            see its own prior calls. Never {@code null} — empty when the message carries no calls.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record ChatMessage(Role role, String content, String thinking, String toolCallId) {
+public record ChatMessage(Role role, String content, String thinking, String toolCallId,
+        List<ToolCall> toolCalls)
+{
+    public ChatMessage
+    {
+        toolCalls = toolCalls != null ? toolCalls : emptyList();
+    }
+
     public ChatMessage(Role aRole, String aContent)
     {
-        this(aRole, aContent, null, null);
+        this(aRole, aContent, null, null, emptyList());
+    }
+
+    public ChatMessage(Role aRole, String aContent, String aThinking, String aToolCallId)
+    {
+        this(aRole, aContent, aThinking, aToolCallId, emptyList());
     }
 
     public static enum Role

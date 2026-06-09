@@ -65,12 +65,13 @@ public class AssistantAutoConfiguration
     @Bean
     public AssistantService assistantService(SessionRegistry aSessionRegistry,
             SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
-            AssistantProperties aProperties, EncodingRegistry aEncodingRegistry,
-            RetrieverExtensionPoint aRetrieverExtensionPoint,
+            LlmChatClientExtensionPoint aChatClientExtensionPoint, AssistantProperties aProperties,
+            EncodingRegistry aEncodingRegistry, RetrieverExtensionPoint aRetrieverExtensionPoint,
             ToolLibraryExtensionPoint aToolLibraryExtensionPoint)
     {
-        return new AssistantServiceImpl(aSessionRegistry, aMsgTemplate, aOllamaClient, aProperties,
-                aEncodingRegistry, aRetrieverExtensionPoint, aToolLibraryExtensionPoint);
+        return new AssistantServiceImpl(aSessionRegistry, aMsgTemplate, aOllamaClient,
+                aChatClientExtensionPoint, aProperties, aEncodingRegistry, aRetrieverExtensionPoint,
+                aToolLibraryExtensionPoint);
     }
 
     @Bean
