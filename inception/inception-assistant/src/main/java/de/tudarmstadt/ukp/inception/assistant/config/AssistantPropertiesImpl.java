@@ -30,7 +30,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AssistantPropertiesImpl
     implements AssistantProperties
 {
-    /** URL of the Ollama service. */
+    /** Default LLM provider id, used when the chat/embedding sections do not override it. */
+    private String provider = "ollama";
+
+    /** URL of the LLM service. */
     private String url = "http://localhost:11434";
 
     /** The name by which the assistant identifies itself. */
@@ -49,6 +52,17 @@ public class AssistantPropertiesImpl
     private final AssistantUserGuidePropertiesImpl userGuide = new AssistantUserGuidePropertiesImpl();
 
     private @Autowired AssistantDocumentIndexProperties documentIndex;
+
+    @Override
+    public String getProvider()
+    {
+        return provider;
+    }
+
+    public void setProvider(String aProvider)
+    {
+        provider = aProvider;
+    }
 
     public void setApiKey(String aApiKey)
     {
@@ -177,6 +191,15 @@ public class AssistantPropertiesImpl
     public static class AssistantChatPropertiesImpl
         implements AssistantChatProperties
     {
+        /** Chat LLM provider id; {@code null} inherits the top-level {@code assistant.provider}. */
+        private String provider = null;
+
+        /** Chat endpoint URL; {@code null} inherits the top-level {@code assistant.url}. */
+        private String url = null;
+
+        /** Chat API key; {@code null} inherits the top-level {@code assistant.api-key}. */
+        private String apiKey = null;
+
         /** The model used to drive the chat functionality of the assistant. */
         private String model = "llama3.2";
 
@@ -267,6 +290,39 @@ public class AssistantPropertiesImpl
         }
 
         @Override
+        public String getProvider()
+        {
+            return provider;
+        }
+
+        public void setProvider(String aProvider)
+        {
+            provider = aProvider;
+        }
+
+        @Override
+        public String getUrl()
+        {
+            return url;
+        }
+
+        public void setUrl(String aUrl)
+        {
+            url = aUrl;
+        }
+
+        @Override
+        public String getApiKey()
+        {
+            return apiKey;
+        }
+
+        public void setApiKey(String aApiKey)
+        {
+            apiKey = aApiKey;
+        }
+
+        @Override
         public double getTopP()
         {
             return topP;
@@ -350,6 +406,18 @@ public class AssistantPropertiesImpl
     public static class AssistantEmbeddingPropertiesImpl
         implements AssistantEmbeddingProperties
     {
+        /**
+         * Embedding LLM provider id; {@code null} inherits the top-level
+         * {@code assistant.provider}.
+         */
+        private String provider = null;
+
+        /** Embedding endpoint URL; {@code null} inherits the top-level {@code assistant.url}. */
+        private String url = null;
+
+        /** Embedding API key; {@code null} inherits the top-level {@code assistant.api-key}. */
+        private String apiKey = null;
+
         /** The model used to drive the search functionality of the assistant. */
         private String model = "granite-embedding";
 
@@ -393,6 +461,39 @@ public class AssistantPropertiesImpl
         public void setModel(String aModel)
         {
             model = aModel;
+        }
+
+        @Override
+        public String getProvider()
+        {
+            return provider;
+        }
+
+        public void setProvider(String aProvider)
+        {
+            provider = aProvider;
+        }
+
+        @Override
+        public String getUrl()
+        {
+            return url;
+        }
+
+        public void setUrl(String aUrl)
+        {
+            url = aUrl;
+        }
+
+        @Override
+        public String getApiKey()
+        {
+            return apiKey;
+        }
+
+        public void setApiKey(String aApiKey)
+        {
+            apiKey = aApiKey;
         }
 
         @Override

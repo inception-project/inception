@@ -21,6 +21,24 @@ public interface AssistantEmbeddingProperties
 {
     public static final int AUTO_DETECT_DIMENSION = 0;
 
+    /**
+     * @return the LLM provider id for embeddings, or {@code null} to inherit the top-level
+     *         {@code assistant.provider}.
+     */
+    String getProvider();
+
+    /**
+     * @return the embedding endpoint URL, or {@code null} to inherit the top-level
+     *         {@code assistant.url}.
+     */
+    String getUrl();
+
+    /**
+     * @return the embedding API key, or {@code null} to inherit the top-level
+     *         {@code assistant.api-key}.
+     */
+    String getApiKey();
+
     String getModel();
 
     int getSeed();
