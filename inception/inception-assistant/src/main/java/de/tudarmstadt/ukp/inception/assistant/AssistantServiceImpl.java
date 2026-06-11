@@ -70,7 +70,6 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibraryExtension
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClientExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaLlmChatClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaShowRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaShowResponse;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
@@ -120,12 +119,11 @@ public class AssistantServiceImpl
 
     private LlmChatClient chatClient()
     {
-        // Provider is hardcoded to Ollama for now; once assistant config moves to UI-driven
-        // traits, this becomes traits.getProviderId().
-        return chatClientExtensionPoint.getExtension(OllamaLlmChatClient.ID) //
+        var providerId = properties.getChatProvider();
+        return chatClientExtensionPoint.getExtension(providerId) //
                 .orElseThrow(() -> new IllegalStateException(
-                        "Ollama LLM client not registered — is the inception-imls-ollama module on "
-                                + "the classpath?"));
+                        "No LLM client registered for chat provider [" + providerId
+                                + "] — is the corresponding module on the classpath?"));
     }
 
     @EventListener
@@ -447,10 +445,10 @@ public class AssistantServiceImpl
                 OllamaShowResponse modelInfo = null;
                 try {
                     LOG.info("Contacting [{}] to retrieve information about model [{}]...",
-                            properties.getUrl(), chatProperties.getModel());
-                    modelInfo = ollamaClient.getModelInfo(properties.getUrl(),
+                            properties.getChatUrl(), chatProperties.getModel());
+                    modelInfo = ollamaClient.getModelInfo(properties.getChatUrl(),
                             OllamaShowRequest.builder().withModel(chatProperties.getModel()) //
-                                    .withApiKey(properties.getApiKey()) //
+                                    .withApiKey(properties.getChatApiKey()) //
                                     .build());
                 }
                 catch (Exception e) {

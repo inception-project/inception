@@ -393,13 +393,13 @@ public class AgentLoop
     private LlmEndpoint endpoint()
     {
         AuthenticationTraits auth = null;
-        if (isNotBlank(properties.getApiKey())) {
+        if (isNotBlank(properties.getChatApiKey())) {
             var apiKeyAuth = new ApiKeyAuthenticationTraits();
-            apiKeyAuth.setApiKey(properties.getApiKey());
+            apiKeyAuth.setApiKey(properties.getChatApiKey());
             auth = apiKeyAuth;
         }
 
-        return new LlmEndpoint(chatClient.getId(), properties.getUrl(),
+        return new LlmEndpoint(chatClient.getId(), properties.getChatUrl(),
                 properties.getChat().getModel(), auth);
     }
 

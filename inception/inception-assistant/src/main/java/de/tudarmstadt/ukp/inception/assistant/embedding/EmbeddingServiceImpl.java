@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.assistant.embedding;
 
 import static de.tudarmstadt.ukp.inception.assistant.config.AssistantEmbeddingProperties.AUTO_DETECT_DIMENSION;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -38,7 +39,8 @@ import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClientExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaLlmChatClient;
+import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraits;
+import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
 
 public class EmbeddingServiceImpl
     implements EmbeddingService
@@ -140,18 +142,27 @@ public class EmbeddingServiceImpl
 
     private LlmChatClient client()
     {
-        // Provider is hardcoded to Ollama for now; once assistant config moves to UI-driven
-        // traits, this becomes traits.getProviderId().
-        return chatClientExtensionPoint.getExtension(OllamaLlmChatClient.ID) //
+        var providerId = properties.getEmbeddingProvider();
+        return chatClientExtensionPoint.getExtension(providerId) //
                 .orElseThrow(() -> new IllegalStateException(
-                        "Ollama LLM client not registered — is the inception-imls-ollama module on "
-                                + "the classpath?"));
+                        "No LLM client registered for embedding provider [" + providerId
+                                + "] — is the corresponding module on the classpath?"));
     }
 
     private LlmEndpoint endpoint()
     {
-        return new LlmEndpoint(OllamaLlmChatClient.ID, properties.getUrl(),
-                properties.getEmbedding().getModel(), null);
+        return new LlmEndpoint(properties.getEmbeddingProvider(), properties.getEmbeddingUrl(),
+                properties.getEmbedding().getModel(), embeddingAuth());
+    }
+
+    private AuthenticationTraits embeddingAuth()
+    {
+        if (isNotBlank(properties.getEmbeddingApiKey())) {
+            var auth = new ApiKeyAuthenticationTraits();
+            auth.setApiKey(properties.getEmbeddingApiKey());
+            return auth;
+        }
+        return null;
     }
 
     private Map<String, Object> embeddingOptions()
@@ -169,7 +180,7 @@ public class EmbeddingServiceImpl
             if (embeddingProperties.getDimension() == AUTO_DETECT_DIMENSION) {
                 try {
                     LOG.info("Contacting [{}] to auto-detect dimension of model [{}]...",
-                            properties.getUrl(), embeddingProperties.getModel());
+                            properties.getEmbeddingUrl(), embeddingProperties.getModel());
                     var vectors = client().embed(endpoint(),
                             List.of("We just need to know the dimension of the generated "
                                     + "embedding. Thanks!"),

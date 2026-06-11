@@ -28,6 +28,23 @@ public interface AssistantChatProperties
     String CAP_COMPLETION = "completion";
     String CAP_TOOLS = "tools";
 
+    /**
+     * @return the LLM provider id for chat, or {@code null} to inherit the top-level
+     *         {@code assistant.provider}.
+     */
+    String getProvider();
+
+    /**
+     * @return the chat endpoint URL, or {@code null} to inherit the top-level
+     *         {@code assistant.url}.
+     */
+    String getUrl();
+
+    /**
+     * @return the chat API key, or {@code null} to inherit the top-level {@code assistant.api-key}.
+     */
+    String getApiKey();
+
     String getModel();
 
     Set<String> getCapabilities();
