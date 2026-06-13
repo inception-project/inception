@@ -20,13 +20,13 @@ NOTE: If you aim for a Docker-based deployment, it is useful for you to read the
       how the overall setup works. However, you will not have to install Java. If you use Docker Compose, you may also not have
       to install a database. Refer to the <<sect_docker>> section instead.
 
-You can install a Java 21 JDK using the following commands.
+You can install a Java {min-java-version} JDK using the following commands.
 
 .Installing Java from your Linux distribution
 [source,bash]
 ----
 $ apt update
-$ apt install openjdk-21-jdk
+$ apt install openjdk-{min-java-version}-jdk
 ----
 
 Alternative, you can install a more recent Java version e.g. from link:https://adoptium.net/temurin/releases[Adoptium].
@@ -39,6 +39,6 @@ $ apt install gpg
 $ wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null
 $ echo "deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list
 $ apt update
-$ apt install temurin-21-jdk
+$ apt install temurin-{min-java-version}-jdk
 ----
 

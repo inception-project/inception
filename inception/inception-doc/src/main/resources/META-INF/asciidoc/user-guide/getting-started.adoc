@@ -99,7 +99,7 @@ NOTE: **Hey system operators and admins!** If you install {product-name} not for
 
 == Installing Java
 
-In order to run {product-name}, you need to have Java installed in version 11 or higher.
+In order to run {product-name}, you need to have Java installed in version {min-java-version} or higher.
 If you do not have Java installed yet, please install the latest Java version e.g. from link:https://adoptopenjdk.net[AdoptOpenJDK^].
 
 == Download and start {product-name}
