@@ -31,11 +31,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
@@ -58,6 +56,7 @@ import org.springframework.security.core.session.SessionRegistry;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingProperties;
@@ -78,25 +77,26 @@ public class SchedulingServiceImpl
     private final ThreadPoolExecutor executor;
     private final ScheduledExecutorService watchdog;
     private final SessionRegistry sessionRegistry;
+    private final ProjectService projectService;
 
     private final List<Task> runningTasks;
     private final List<Task> enqueuedTasks;
     private final List<Task> pendingAcknowledgement;
-    private final Set<Project> deletionPending;
     private final Map<Project, AtomicInteger> suspended;
 
     @Autowired
     public SchedulingServiceImpl(ApplicationContext aApplicationContext,
-            SchedulingProperties aConfig, SessionRegistry aSessionRegistry)
+            SchedulingProperties aConfig, SessionRegistry aSessionRegistry,
+            ProjectService aProjectService)
     {
         sessionRegistry = aSessionRegistry;
         applicationContext = aApplicationContext;
+        projectService = aProjectService;
         executor = new InspectableThreadPoolExecutor(aConfig.getNumberOfThreads(),
                 aConfig.getQueueSize(), this::beforeExecute, this::afterExecute);
         runningTasks = Collections.synchronizedList(new ArrayList<>());
         enqueuedTasks = Collections.synchronizedList(new ArrayList<>());
         pendingAcknowledgement = Collections.synchronizedList(new ArrayList<>());
-        deletionPending = Collections.synchronizedSet(new LinkedHashSet<>());
         suspended = Collections.synchronizedMap(new LinkedHashMap<>());
         watchdog = Executors.newScheduledThreadPool(1);
         watchdog.scheduleAtFixedRate(this::scheduleEligibleTasks, 5, 5, SECONDS);
@@ -228,7 +228,8 @@ public class SchedulingServiceImpl
     {
         Validate.notNull(aTask, "Task cannot be null");
 
-        if (aTask.getProject() != null && deletionPending.contains(aTask.getProject())) {
+        if (aTask.getProject() != null && aTask.getProject().getId() != null
+                && projectService.isProjectDeletionPending(aTask.getProject().getId())) {
             LOG.debug("Not enqueuing task [{}] for project {} pending deletion", aTask,
                     aTask.getProject());
             return;
@@ -312,9 +313,7 @@ public class SchedulingServiceImpl
         var startTime = currentTimeMillis();
         var timeoutMillis = aTimeout.toMillis();
 
-        while (runningTasks.stream()
-                .anyMatch(t -> aProject.getId() != null ? aProject.equals(t.getProject())
-                        : aProject == t.getProject())) {
+        while (runningTasks.stream().anyMatch(t -> isTaskForProject(t, aProject))) {
             // LOG.trace("Waiting for running tasks to end on project {}", aProject);
 
             if (currentTimeMillis() - startTime > timeoutMillis) {
@@ -326,7 +325,7 @@ public class SchedulingServiceImpl
                 msg.append("\n");
                 msg.append("The following tasks are still running:\n");
                 runningTasks.stream() //
-                        .filter(t -> aProject.equals(t.getProject())) //
+                        .filter(t -> isTaskForProject(t, aProject)) //
                         .forEach(t -> {
                             msg.append("- ").append(t).append("\n");
                             for (var frame : t.getThread().getStackTrace()) {
@@ -551,9 +550,27 @@ public class SchedulingServiceImpl
     @Override
     public void stopAllTasksForProject(Project aProject)
     {
-        Validate.notNull(aProject, "Project name must be specified");
+        Validate.notNull(aProject, "Project must be specified");
 
-        stopAllTasksMatching(t -> t.getProject().equals(aProject));
+        stopAllTasksMatching(t -> isTaskForProject(t, aProject));
+    }
+
+    /**
+     * Matches a task to a project by id, falling back to identity for not-yet-persisted projects.
+     * Using the id (rather than {@link Project#equals}, which compares the slug and treats null
+     * slugs as equal) keeps task matching consistent with the deletion-pending check in
+     * {@link #enqueue} and avoids mismatches when a project has no slug or its slug changes.
+     */
+    private static boolean isTaskForProject(Task aTask, Project aProject)
+    {
+        var taskProject = aTask.getProject();
+        if (taskProject == null) {
+            return false;
+        }
+        if (aProject.getId() != null) {
+            return aProject.getId().equals(taskProject.getId());
+        }
+        return aProject == taskProject;
     }
 
     @Override
@@ -619,7 +636,9 @@ public class SchedulingServiceImpl
     @EventListener
     public void onBeforeProjectRemoved(BeforeProjectRemovedEvent aEvent) throws TimeoutException
     {
-        deletionPending.add(aEvent.getProject());
+        // The project is already marked as pending deletion by ProjectService#removeProject (which
+        // is the sole publisher of this event), so the enqueue() guard already blocks new tasks.
+        // Here we only need to drain tasks that are still running for the project.
         stopAllTasksForProject(aEvent.getProject());
         var timeout = Duration.ofMinutes(1);
         try {
@@ -648,7 +667,6 @@ public class SchedulingServiceImpl
     public void onAfterProjectRemoved(AfterProjectRemovedEvent aEvent) throws IOException
     {
         stopAllTasksForProject(aEvent.getProject());
-        deletionPending.remove(aEvent.getProject());
     }
 
     // Set order so this is handled before session info is removed from sessionRegistry
@@ -745,7 +763,6 @@ public class SchedulingServiceImpl
             getScheduledTasks().forEach(t -> lines.add("  Scheduled   : " + t));
             getRunningTasks().forEach(t -> lines.add("  Running     : " + t));
             suspended.forEach((p, c) -> lines.add("  Suspended   : " + p + " [" + c + "]"));
-            deletionPending.forEach(p -> lines.add("  Deleting    : " + p));
             getTasksPendingAcknowledgment().forEach(t -> lines.add("  Pending ack : " + t));
             if (!lines.isEmpty()) {
                 LOG.debug("Scheduler state:");

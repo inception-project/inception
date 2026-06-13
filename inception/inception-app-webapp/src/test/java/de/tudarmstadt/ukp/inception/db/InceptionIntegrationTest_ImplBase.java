@@ -27,9 +27,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import java.lang.invoke.MethodHandles;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipFile;
+
+import javax.sql.DataSource;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -111,6 +117,27 @@ public abstract class InceptionIntegrationTest_ImplBase
 
     @Autowired
     LearningRecordService learningRecordService;
+
+    @Autowired
+    DataSource dataSource;
+
+    /**
+     * Column names by which a table references the project it belongs to. Most tables use
+     * {@code project} (via {@code @JoinColumn(name = "project")}); a few use a variant. The
+     * orphan-scan ({@link #countProjectScopedRows}) treats any table carrying one of these columns
+     * as project-scoped.
+     */
+    private static final Set<String> PROJECT_COLUMN_NAMES = Set.of("project", "project_id",
+            "projectid");
+
+    /**
+     * Tables deliberately excluded from the orphan-scan because they are known NOT to be purged
+     * when a project is deleted. {@code logged_event} stores the project id as a bare column with
+     * no foreign key, and {@code ProjectServiceImpl#removeProject} does not purge it. Whether that
+     * is intentional is a separate open question - until it is decided, scanning it would make the
+     * test fail on existing behavior rather than on a regression.
+     */
+    private static final Set<String> ORPHAN_SCAN_IGNORED_TABLES = Set.of("logged_event");
 
     @BeforeAll
     static void setupClass(TestInfo aInfo)
@@ -274,5 +301,88 @@ public abstract class InceptionIntegrationTest_ImplBase
         finally {
             projectService.removeProject(project);
         }
+    }
+
+    @Test
+    void testRemovingProjectLeavesNoOrphanedRows() throws Exception
+    {
+        // Import a rich project that populates many project-scoped tables (documents, layers,
+        // features, recommenders, permissions, ...). This exercises both the tables cleaned up by
+        // Java code in removeProject/event listeners and those relying on database ON DELETE
+        // CASCADE - so a single delete checks the whole cascade chain under the current engine.
+        var request = ProjectImportRequest.builder() //
+                .withCreateMissingUsers(true) //
+                .withImportPermissions(true) //
+                .build();
+
+        Project project;
+        try (var zipFile = new ZipFile("src/test/resources/test-project-with-recommenders.zip")) {
+            project = projectExportService.importProject(request, zipFile);
+        }
+        var projectId = project.getId();
+
+        // Guard against a vacuous pass: the imported project must actually leave rows in several
+        // project-scoped tables, otherwise the post-deletion check below would trivially hold even
+        // if the cascade were completely broken.
+        var before = countProjectScopedRows(projectId);
+        assertThat(before.keySet()) //
+                .as("project-scoped tables populated by the imported project: %s", before) //
+                .hasSizeGreaterThanOrEqualTo(3);
+
+        projectService.removeProject(project);
+
+        // After deletion no project-scoped table may still reference the deleted project id.
+        // logged_event is intentionally excluded (see ORPHAN_SCAN_IGNORED_TABLES).
+        var after = countProjectScopedRows(projectId);
+        assertThat(after) //
+                .as("orphaned rows still referencing deleted project %s", projectId) //
+                .isEmpty();
+    }
+
+    /**
+     * Scans the live database schema for every table carrying a project-reference column (see
+     * {@link #PROJECT_COLUMN_NAMES}) and counts the rows referencing the given project. Tables are
+     * discovered via JDBC metadata rather than hard-coded so the scan stays correct as the schema
+     * evolves and works uniformly across all database engines. Only tables that actually have
+     * matching rows are returned.
+     *
+     * @return a map of table name to row count, containing only tables with a non-zero count.
+     */
+    private Map<String, Integer> countProjectScopedRows(long aProjectId) throws SQLException
+    {
+        var counts = new LinkedHashMap<String, Integer>();
+        try (var conn = dataSource.getConnection()) {
+            var meta = conn.getMetaData();
+            var quote = meta.getIdentifierQuoteString();
+
+            // Discover tables that reference a project, keyed by table name -> project column.
+            var projectTables = new LinkedHashMap<String, String>();
+            try (var cols = meta.getColumns(conn.getCatalog(), conn.getSchema(), "%", "%")) {
+                while (cols.next()) {
+                    var table = cols.getString("TABLE_NAME");
+                    var column = cols.getString("COLUMN_NAME");
+                    if (PROJECT_COLUMN_NAMES.contains(column.toLowerCase())
+                            && !ORPHAN_SCAN_IGNORED_TABLES.contains(table.toLowerCase())) {
+                        projectTables.putIfAbsent(table, column);
+                    }
+                }
+            }
+
+            for (var entry : projectTables.entrySet()) {
+                var sql = "SELECT COUNT(*) FROM " + quote + entry.getKey() + quote //
+                        + " WHERE " + quote + entry.getValue() + quote + " = ?";
+                try (var stmt = conn.prepareStatement(sql)) {
+                    stmt.setLong(1, aProjectId);
+                    try (var rs = stmt.executeQuery()) {
+                        rs.next();
+                        var n = rs.getInt(1);
+                        if (n > 0) {
+                            counts.put(entry.getKey(), n);
+                        }
+                    }
+                }
+            }
+        }
+        return counts;
     }
 }
