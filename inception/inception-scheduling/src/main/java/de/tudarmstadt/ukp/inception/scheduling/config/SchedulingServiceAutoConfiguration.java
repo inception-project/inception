@@ -47,9 +47,11 @@ public class SchedulingServiceAutoConfiguration
 
     @Bean
     public SchedulingService schedulingService(ApplicationContext aApplicationContext,
-            SchedulingProperties aConfig, SessionRegistry aSessionRegistry)
+            SchedulingProperties aConfig, SessionRegistry aSessionRegistry,
+            ProjectService aProjectService)
     {
-        return new SchedulingServiceImpl(aApplicationContext, aConfig, aSessionRegistry);
+        return new SchedulingServiceImpl(aApplicationContext, aConfig, aSessionRegistry,
+                aProjectService);
     }
 
     @Bean

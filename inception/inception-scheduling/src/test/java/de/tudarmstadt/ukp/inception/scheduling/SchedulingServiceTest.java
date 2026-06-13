@@ -41,12 +41,14 @@ import org.springframework.context.ApplicationContext;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingProperties;
 
 @ExtendWith(MockitoExtension.class)
 public class SchedulingServiceTest
 {
     private @Mock ApplicationContext mockContext;
+    private @Mock ProjectService projectService;
 
     private SchedulingServiceImpl sut;
 
@@ -56,7 +58,8 @@ public class SchedulingServiceTest
         when(mockContext.getAutowireCapableBeanFactory())
                 .thenReturn(mock(AutowireCapableBeanFactory.class));
 
-        sut = new SchedulingServiceImpl(mockContext, new SchedulingProperties(), null);
+        sut = new SchedulingServiceImpl(mockContext, new SchedulingProperties(), null,
+                projectService);
     }
 
     @AfterEach
