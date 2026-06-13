@@ -1102,6 +1102,7 @@
               <docinfo1>true</docinfo1>
               <project-version>${project.version}</project-version>
               <revnumber>${project.version}</revnumber>
+              <min-java-version>${maven.compiler.release}</min-java-version>
               <product-name>INCEpTION</product-name>
               <product-website-url>https://inception-project.github.io</product-website-url>
               <icons>font</icons>
