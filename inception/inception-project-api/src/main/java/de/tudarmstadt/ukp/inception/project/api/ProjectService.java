@@ -356,6 +356,19 @@ public interface ProjectService
     void removeProject(Project aProject) throws IOException;
 
     /**
+     * Checks whether the given project is currently being removed. This is the authoritative source
+     * of truth for "this project is pending deletion" and can be consulted by other components to
+     * avoid issuing new work against a project that is about to disappear. It becomes {@code true}
+     * at the very start of {@link #removeProject} (before tasks are drained and before the project
+     * row is locked) and {@code false} again once removal has finished.
+     *
+     * @param aProjectId
+     *            the project id
+     * @return whether the project is pending deletion
+     */
+    boolean isProjectDeletionPending(long aProjectId);
+
+    /**
      * List projects accessible by the given user
      *
      * @param aUser

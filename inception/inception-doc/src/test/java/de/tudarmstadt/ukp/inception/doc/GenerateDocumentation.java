@@ -33,6 +33,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.asciidoctor.Asciidoctor;
@@ -68,6 +69,7 @@ public class GenerateDocumentation
                 .attribute("docinfo1", "true") //
                 .attribute("project-version", "DEVELOPER BUILD") //
                 .attribute("revnumber", "DEVELOPER BUILD").attribute("product-name", "INCEpTION") //
+                .attribute("min-java-version", getMinJavaVersion()) //
                 .attribute("product-website-url", "https://inception-project.github.io") //
                 .icons(Attributes.FONT_ICONS) //
                 .tableOfContents(Placement.LEFT) //
@@ -150,6 +152,27 @@ public class GenerateDocumentation
                 createSymbolicLink(linkPath, p.toAbsolutePath());
             }
         }
+    }
+
+    private static final Pattern MIN_JAVA_VERSION_PATTERN = Pattern
+            .compile("<maven\\.compiler\\.release>\\s*(\\d+)\\s*</maven\\.compiler\\.release>");
+
+    /**
+     * Reads the minimum required Java version from the {@code maven.compiler.release} property in
+     * the {@code inception/pom.xml}. This keeps the documentation in sync with the actual build
+     * configuration without manual updates. The Maven-driven documentation build wires the same
+     * property into the {@code min-java-version} AsciiDoc attribute via the asciidoctor plugin
+     * configuration in {@code inception-app-webapp/pom.xml}.
+     */
+    private static String getMinJavaVersion() throws IOException
+    {
+        var pom = getInceptionDir().resolve("pom.xml");
+        var matcher = MIN_JAVA_VERSION_PATTERN.matcher(Files.readString(pom));
+        if (!matcher.find()) {
+            throw new IllegalStateException(
+                    "Could not find maven.compiler.release property in [" + pom + "]");
+        }
+        return matcher.group(1);
     }
 
     private static Path getInceptionDir()

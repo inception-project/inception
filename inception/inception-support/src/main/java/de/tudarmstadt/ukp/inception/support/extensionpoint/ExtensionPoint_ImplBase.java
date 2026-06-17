@@ -27,6 +27,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -71,7 +72,44 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
 
         BOOT_LOG.info("Found [{}] {} extensions", extensions.size(), getClass().getSimpleName());
 
+        if (enforceUniqueIds()) {
+            checkForDuplicateIds(extensions);
+        }
+
         extensionsList = unmodifiableList(extensions);
+    }
+
+    /**
+     * Whether two extensions sharing the same id should fail this extension point at startup.
+     * Default is {@code true} since most extension points look up extensions by id via
+     * {@link #getExtension(String)} and silently shadowing a duplicate would be a real bug.
+     * Override to {@code false} for extension points that intentionally dispatch by
+     * {@link Extension#accepts(Object)} on extensions that share an id (e.g. multiple handlers
+     * registered for the same command).
+     */
+    protected boolean enforceUniqueIds()
+    {
+        return true;
+    }
+
+    private void checkForDuplicateIds(List<E> aExtensions)
+    {
+        // Null ids typically only occur in test wiring that bypasses Spring's BeanNameAware
+        // initialization; lookup via getExtension(id) cannot find them anyway, so don't conflate
+        // them with duplicate-id bugs.
+        var seen = new HashMap<String, E>();
+        for (var ext : aExtensions) {
+            var id = ext.getId();
+            if (id == null) {
+                continue;
+            }
+            var existing = seen.put(id, ext);
+            if (existing != null) {
+                throw new IllegalStateException("Duplicate extension id [" + id + "] in "
+                        + getClass().getSimpleName() + ": [" + existing.getClass().getName()
+                        + "] vs [" + ext.getClass().getName() + "]");
+            }
+        }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -106,8 +144,13 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
     @Override
     public <X extends E> Optional<X> getExtension(String aId)
     {
+        if (aId == null) {
+            return Optional.empty();
+        }
+        // Null-safe: an extension that returns null from getId() (e.g. a Spring-managed
+        // FeatureSupport in a test that bypassed BeanNameAware) is simply not findable here.
         return (Optional<X>) getExtensions().stream() //
-                .filter(fs -> fs.getId().equals(aId)) //
+                .filter(fs -> aId.equals(fs.getId())) //
                 .findFirst();
     }
 }

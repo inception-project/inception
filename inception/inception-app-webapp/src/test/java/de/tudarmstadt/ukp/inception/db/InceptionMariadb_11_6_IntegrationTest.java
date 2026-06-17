@@ -37,8 +37,7 @@ class InceptionMariadb_11_6_IntegrationTest
     static final MariaDBContainer<?> dbContainer = new MariaDBContainer<>("mariadb:11.6.2") //
             .withDatabaseName("testdb") //
             .withUsername("test") //
-            .withPassword("test") //
-            .withConfigurationOverride("mariadb_11_6");
+            .withPassword("test");
 
     static @TempDir Path tempDir;
 

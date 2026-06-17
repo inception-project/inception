@@ -63,6 +63,15 @@ public class AssistantRecommenderFactory
     }
 
     @Override
+    public boolean isDeprecated()
+    {
+        // Hide from the recommender-tool dropdown: the assistant recommender is not
+        // user-configurable
+        // - its instance is created/managed by the assistant subsystem.
+        return true;
+    }
+
+    @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
         // Return a no-op engine since suggestions are created by tools, not by engine execution

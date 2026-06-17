@@ -63,6 +63,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.SetUtils;
@@ -104,6 +105,7 @@ import de.tudarmstadt.ukp.inception.project.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.inception.support.io.FastIOUtils;
 import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
 
 /**
@@ -126,6 +128,13 @@ public class ProjectServiceImpl
     private final List<ProjectInitializer> projectInitializerProxy;
     private final List<FeatureInitializer> featureInitializerProxy;
     private final SecureRandom random;
+
+    /**
+     * Ids of projects currently being deleted. Maintained as the single authoritative source of
+     * truth for "this project is being removed" so that other components (e.g. the scheduling
+     * service) can avoid issuing new work against a project that is about to disappear.
+     */
+    private final Set<Long> deletionPending = ConcurrentHashMap.newKeySet();
 
     private List<ProjectInitializer> projectInitializers;
     private List<FeatureInitializer> featureInitializers;
@@ -783,17 +792,40 @@ public class ProjectServiceImpl
     @Transactional
     public void removeProject(Project aProject) throws IOException
     {
+        Validate.notNull(aProject, "Project must be specified");
+        Validate.notNull(aProject.getId(), "Project must have been saved before it can be removed");
+
         File logFile = null;
+
+        // Mark the project as pending deletion up-front - in memory, before any database access -
+        // so that other components stop issuing work against it (see isProjectDeletionPending).
+        // This must happen before the BeforeProjectRemovedEvent below, and crucially before we
+        // obtain the write lock: the event makes the scheduling service drain running tasks, and
+        // that drain must run while we hold NO lock on the project row. Otherwise a task that
+        // itself needs to update the project row would block on our lock while we wait for it to
+        // finish - a dead-lock.
+        deletionPending.add(aProject.getId());
         try (var logCtx = withProjectLogger(aProject)) {
             var start = System.currentTimeMillis();
 
-            // remove metadata from DB
-            var project = aProject;
-            if (!entityManager.contains(project)) {
-                project = entityManager.merge(project);
-            }
+            // Fire the BeforeProjectRemovedEvent first. The scheduling service (highest-precedence
+            // listener) drains running tasks for the project here while no write lock is held, and
+            // the cascade-cleanup listeners remove the project's child data. Only afterwards do we
+            // lock and delete the project row itself.
+            applicationEventPublisher.publishEvent(new BeforeProjectRemovedEvent(this, aProject));
 
-            applicationEventPublisher.publishEvent(new BeforeProjectRemovedEvent(this, project));
+            // Re-load the project with a write lock. After the drain above, the only remaining
+            // possible concurrent writer of the project row is a direct (non-task) update - this
+            // lock serializes the delete against it so that, under strict snapshot isolation
+            // (MariaDB 11.6+ where innodb_snapshot_isolation defaults to ON), the delete does not
+            // abort with a write-write conflict ("Record has changed since last read in table
+            // 'project'").
+            var project = entityManager.find(Project.class, aProject.getId(),
+                    LockModeType.PESSIMISTIC_WRITE);
+            if (project == null) {
+                LOG.debug("Project [{}] already removed - nothing to do", aProject.getId());
+                return;
+            }
 
             for (var permissions : getProjectPermissions(project)) {
                 entityManager.remove(permissions);
@@ -818,6 +850,9 @@ public class ProjectServiceImpl
             LOG.info("Removed project {} ({})", project,
                     formatDurationWords(System.currentTimeMillis() - start, true, true));
         }
+        finally {
+            deletionPending.remove(aProject.getId());
+        }
 
         // Delete the per-project log file after the logger MDC context has been closed so no
         // further log lines get routed to it. Best-effort: log appenders may still hold the
@@ -825,6 +860,12 @@ public class ProjectServiceImpl
         if (logFile != null && logFile.exists() && !FileUtils.deleteQuietly(logFile)) {
             LOG.warn("Could not delete project log file: [{}]", logFile);
         }
+    }
+
+    @Override
+    public boolean isProjectDeletionPending(long aProjectId)
+    {
+        return deletionPending.contains(aProjectId);
     }
 
     @Override

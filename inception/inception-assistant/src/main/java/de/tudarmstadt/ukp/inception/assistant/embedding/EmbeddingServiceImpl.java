@@ -22,7 +22,9 @@ import static de.tudarmstadt.ukp.inception.assistant.config.AssistantEmbeddingPr
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -33,22 +35,27 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 
 import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaEmbedRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClientExtensionPoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaLlmChatClient;
 
 public class EmbeddingServiceImpl
     implements EmbeddingService
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private final AssistantProperties properties;
-    private final OllamaClient ollamaClient;
+    private static final String OPT_NUM_CTX = "num_ctx";
+    private static final String OPT_SEED = "seed";
 
-    public EmbeddingServiceImpl(AssistantProperties aProperties, OllamaClient aOllamaClient)
+    private final AssistantProperties properties;
+    private final LlmChatClientExtensionPoint chatClientExtensionPoint;
+
+    public EmbeddingServiceImpl(AssistantProperties aProperties,
+            LlmChatClientExtensionPoint aChatClientExtensionPoint)
     {
         properties = aProperties;
-        ollamaClient = aOllamaClient;
+        chatClientExtensionPoint = aChatClientExtensionPoint;
     }
 
     @EventListener
@@ -96,23 +103,11 @@ public class EmbeddingServiceImpl
             objects.add(o);
         }
 
-        var request = OllamaEmbedRequest.builder() //
-                .withModel(properties.getEmbedding().getModel()) //
-                .withInput(strings.toArray(String[]::new)) //
-                .withOption(OllamaOptions.NUM_CTX, properties.getEmbedding().getContextLength()) //
-                .withOption(OllamaOptions.SEED, properties.getEmbedding().getSeed()) //
-                // The following options should not be relevant for embeddings
-                // .withOption(OllamaOptions.TEMPERATURE, 0.0) //
-                // .withOption(OllamaOptions.TOP_P, 0.0) //
-                // .withOption(OllamaOptions.TOP_K, 0) //
-                // .withOption(OllamaOptions.REPEAT_PENALTY, 1.0) //
-                .build();
-
-        var response = ollamaClient.embed(properties.getUrl(), request);
+        var vectors = client().embed(endpoint(), strings, embeddingOptions());
 
         var result = new ArrayList<Pair<T, float[]>>();
-        for (var i = 0; i < response.size(); i++) {
-            result.add(Pair.of(objects.get(i), response.get(i).getValue()));
+        for (var i = 0; i < vectors.size(); i++) {
+            result.add(Pair.of(objects.get(i), vectors.get(i)));
         }
         return result;
     }
@@ -124,7 +119,6 @@ public class EmbeddingServiceImpl
 
         var strings = new ArrayList<String>();
         for (var s : aStrings) {
-
             s = removeEmptyLinesAndTrim(s);
 
             if (s.isEmpty() || hasHighProportionOfShortSequences(s)
@@ -135,18 +129,37 @@ public class EmbeddingServiceImpl
             strings.add(s);
         }
 
-        var request = OllamaEmbedRequest.builder() //
-                .withModel(properties.getEmbedding().getModel()) //
-                .withInput(strings.toArray(String[]::new)) //
-                .withOption(OllamaOptions.NUM_CTX, properties.getEmbedding().getContextLength()) //
-                .withOption(OllamaOptions.SEED, properties.getEmbedding().getSeed()) //
-                // The following options should not be relevant for embeddings
-                // .withOption(OllamaOptions.TEMPERATURE, 0.0) //
-                // .withOption(OllamaOptions.TOP_P, 0.0) //
-                // .withOption(OllamaOptions.TOP_K, 0) //
-                // .withOption(OllamaOptions.REPEAT_PENALTY, 1.0) //
-                .build();
-        return ollamaClient.embed(properties.getUrl(), request);
+        var vectors = client().embed(endpoint(), strings, embeddingOptions());
+
+        var result = new ArrayList<Pair<String, float[]>>();
+        for (var i = 0; i < vectors.size(); i++) {
+            result.add(Pair.of(strings.get(i), vectors.get(i)));
+        }
+        return result;
+    }
+
+    private LlmChatClient client()
+    {
+        // Provider is hardcoded to Ollama for now; once assistant config moves to UI-driven
+        // traits, this becomes traits.getProviderId().
+        return chatClientExtensionPoint.getExtension(OllamaLlmChatClient.ID) //
+                .orElseThrow(() -> new IllegalStateException(
+                        "Ollama LLM client not registered — is the inception-imls-ollama module on "
+                                + "the classpath?"));
+    }
+
+    private LlmEndpoint endpoint()
+    {
+        return new LlmEndpoint(OllamaLlmChatClient.ID, properties.getUrl(),
+                properties.getEmbedding().getModel(), null);
+    }
+
+    private Map<String, Object> embeddingOptions()
+    {
+        var options = new LinkedHashMap<String, Object>();
+        options.put(OPT_NUM_CTX, properties.getEmbedding().getContextLength());
+        options.put(OPT_SEED, properties.getEmbedding().getSeed());
+        return options;
     }
 
     private void autoDetectEmbeddingDimension()
@@ -157,15 +170,14 @@ public class EmbeddingServiceImpl
                 try {
                     LOG.info("Contacting [{}] to auto-detect dimension of model [{}]...",
                             properties.getUrl(), embeddingProperties.getModel());
-                    var embedding = ollamaClient.embed(properties.getUrl(), OllamaEmbedRequest
-                            .builder() //
-                            .withModel(embeddingProperties.getModel()) //
-                            .withInput(
-                                    "We just need to know the dimension of the generated embedding. Thanks!") //
-                            .build()).get(0).getValue();
-                    embeddingProperties.setDimension(embedding.length);
+                    var vectors = client().embed(endpoint(),
+                            List.of("We just need to know the dimension of the generated "
+                                    + "embedding. Thanks!"),
+                            null);
+                    var dim = vectors.get(0).length;
+                    embeddingProperties.setDimension(dim);
                     LOG.info("Auto-detected embedding dimension of model [{}]: {}",
-                            embeddingProperties.getModel(), embeddingProperties.getDimension());
+                            embeddingProperties.getModel(), dim);
                 }
                 catch (Exception e) {
                     if (LOG.isDebugEnabled()) {
@@ -229,5 +241,4 @@ public class EmbeddingServiceImpl
         double proportion = (double) whitespaceOrLineBreakCount / totalChars;
         return proportion > 0.5;
     }
-
 }

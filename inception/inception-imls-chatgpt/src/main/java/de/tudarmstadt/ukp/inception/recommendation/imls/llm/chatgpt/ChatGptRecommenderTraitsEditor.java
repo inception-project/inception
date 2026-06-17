@@ -35,9 +35,9 @@ import org.apache.wicket.validation.validator.UrlValidator;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptClientImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptModel;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ListModelsRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptLlmChatClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelInfo;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Preset;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraitsEditor_ImplBase;
@@ -52,6 +52,7 @@ public class ChatGptRecommenderTraitsEditor
     private static final long serialVersionUID = 1677442652521110324L;
 
     private @SpringBean RecommendationEngineFactory<ChatGptRecommenderTraits> toolFactory;
+    private @SpringBean ChatGptLlmChatClient client;
 
     public ChatGptRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender,
             IModel<List<Preset>> aPresets, IModel<List<Option<?>>> aOptions)
@@ -86,20 +87,19 @@ public class ChatGptRecommenderTraitsEditor
     @Override
     protected List<String> listModels()
     {
-        var url = getTraits().map(LlmRecommenderTraits::getUrl).orElse(null).getObject();
-        var apiKey = ((ApiKeyAuthenticationTraits) getTraits()
-                .map(LlmRecommenderTraits::getAuthentication).orElse(null).getObject()).getApiKey();
+        var traits = getTraits().getObject();
+        var url = traits.getUrl();
+        var auth = (ApiKeyAuthenticationTraits) traits.getAuthentication();
 
-        if (!new UrlValidator(new String[] { "http", "https" }).isValid(url) || isBlank(apiKey)) {
+        if (!new UrlValidator(new String[] { "http", "https" }).isValid(url) || auth == null
+                || isBlank(auth.getApiKey())) {
             return emptyList();
         }
 
-        var client = new ChatGptClientImpl();
         try {
-            return client.listModels(url, ListModelsRequest.builder() //
-                    .withApiKey(apiKey) //
-                    .build()).stream() //
-                    .map(ChatGptModel::getId) //
+            var endpoint = new LlmEndpoint(ChatGptLlmChatClient.ID, url, null, auth);
+            return client.listModels(endpoint).stream() //
+                    .map(ModelInfo::id) //
                     .toList();
         }
         catch (IOException e) {
