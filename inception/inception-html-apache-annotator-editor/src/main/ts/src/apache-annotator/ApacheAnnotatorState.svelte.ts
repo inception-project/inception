@@ -25,4 +25,5 @@ export const annotatorState = $state({
     showImages: true,
     showTables: true,
     protectElements: true,
+    keyboardCursorEnabled: false,
 });

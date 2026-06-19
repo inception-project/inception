@@ -63,6 +63,12 @@
         dispatch('renderingPreferencesChanged', {});
     });
 
+    $effect(() => {
+        annotatorState.keyboardCursorEnabled;
+        savePreferences();
+        dispatch('keyboardCursorPreferencesChanged', {});
+    });
+
     let preferencesDebounceTimeout: number | undefined = undefined;
 
     function savePreferences() {
@@ -79,6 +85,7 @@
                 showDocumentStructure: annotatorState.showDocumentStructure,
                 showImages: annotatorState.showImages,
                 showTables: annotatorState.showTables,
+                keyboardCursorEnabled: annotatorState.keyboardCursorEnabled,
                 documentStructureWidth: annotatorState.documentStructureWidth,
                 protectElements: annotatorState.protectElements,
             });
@@ -86,66 +93,113 @@
     }
 </script>
 
-<div class="bootstrap card card-header border-0 border-bottom rounded-0 p-1" role="toolbar">
-    <div class="d-flex align-items-center">
-        <div class="form-check form-switch mx-2">
-            <input
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="inlineLabelsEnabled"
-                bind:checked={annotatorState.showLabels}
-            />
-            <label class="form-check-label" for="inlineLabelsEnabled">Inline labels</label>
-        </div>
+<div
+    class="bootstrap card-header border-0 border-bottom rounded-0 p-1 d-flex flex-row flex-wrap align-items-center"
+    role="toolbar"
+>
+    <div class="btn-group btn-group-sm" role="group" aria-label="Display options">
+        <input
+            class="btn-check"
+            type="checkbox"
+            id="inlineLabelsEnabled"
+            autocomplete="off"
+            bind:checked={annotatorState.showLabels}
+        />
+        <label
+            class="btn btn-outline-secondary"
+            for="inlineLabelsEnabled"
+            title="Inline labels"
+            aria-label="Inline labels"
+        >
+            <i class="fas fa-tag"></i>
+        </label>
+
         {#if sectionSelector}
-            <div class="form-check form-switch mx-2">
-                <input
-                    class="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    id="aggregatedLabelsEnabled"
-                    bind:checked={annotatorState.showAggregatedLabels}
-                />
-                <label class="form-check-label" for="aggregatedLabelsEnabled">Section labels</label>
-            </div>
+            <input
+                class="btn-check"
+                type="checkbox"
+                id="aggregatedLabelsEnabled"
+                autocomplete="off"
+                bind:checked={annotatorState.showAggregatedLabels}
+            />
+            <label
+                class="btn btn-outline-secondary"
+                for="aggregatedLabelsEnabled"
+                title="Section labels"
+                aria-label="Section labels"
+            >
+                <i class="fas fa-tags"></i>
+            </label>
         {/if}
+
         <!--
-    <div class="form-check form-switch mx-2">
-      <input class="form-check-input" type="checkbox" role="switch" id="showEmptyHighlights" bind:checked={annotatorState.showEmptyHighlights}>
-      <label class="form-check-label" for="showEmptyHighlights">Empties</label>
-    </div>
-    -->
-        <div class="form-check form-switch mx-2">
-            <input
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="imagesEnabled"
-                bind:checked={annotatorState.showImages}
-            />
-            <label class="form-check-label" for="imagesEnabled">Images</label>
-        </div>
-        <div class="form-check form-switch mx-2">
-            <input
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="tablesEnabled"
-                bind:checked={annotatorState.showTables}
-            />
-            <label class="form-check-label" for="tablesEnabled">Tables</label>
-        </div>
-        <div class="form-check form-switch mx-2">
-            <input
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="documentStructureEnabled"
-                bind:checked={annotatorState.showDocumentStructure}
-            />
-            <label class="form-check-label" for="documentStructureEnabled">Outline</label>
-        </div>
+        <input class="btn-check" type="checkbox" id="showEmptyHighlights" autocomplete="off" bind:checked={annotatorState.showEmptyHighlights}>
+        <label class="btn btn-outline-secondary" for="showEmptyHighlights" title="Empty highlights" aria-label="Empty highlights"><i class="fas fa-square"></i></label>
+        -->
+
+        <input
+            class="btn-check"
+            type="checkbox"
+            id="imagesEnabled"
+            autocomplete="off"
+            bind:checked={annotatorState.showImages}
+        />
+        <label
+            class="btn btn-outline-secondary"
+            for="imagesEnabled"
+            title="Images"
+            aria-label="Images"
+        >
+            <i class="fas fa-image"></i>
+        </label>
+
+        <input
+            class="btn-check"
+            type="checkbox"
+            id="tablesEnabled"
+            autocomplete="off"
+            bind:checked={annotatorState.showTables}
+        />
+        <label
+            class="btn btn-outline-secondary"
+            for="tablesEnabled"
+            title="Tables"
+            aria-label="Tables"
+        >
+            <i class="fas fa-table"></i>
+        </label>
+
+        <input
+            class="btn-check"
+            type="checkbox"
+            id="documentStructureEnabled"
+            autocomplete="off"
+            bind:checked={annotatorState.showDocumentStructure}
+        />
+        <label
+            class="btn btn-outline-secondary"
+            for="documentStructureEnabled"
+            title="Outline"
+            aria-label="Outline"
+        >
+            <i class="fas fa-list-ul"></i>
+        </label>
+
+        <input
+            class="btn-check"
+            type="checkbox"
+            id="keyboardCursorEnabled"
+            autocomplete="off"
+            bind:checked={annotatorState.keyboardCursorEnabled}
+        />
+        <label
+            class="btn btn-outline-secondary"
+            for="keyboardCursorEnabled"
+            title="Keyboard cursor"
+            aria-label="Keyboard cursor"
+        >
+            <i class="fas fa-keyboard"></i>
+        </label>
     </div>
 </div>
 

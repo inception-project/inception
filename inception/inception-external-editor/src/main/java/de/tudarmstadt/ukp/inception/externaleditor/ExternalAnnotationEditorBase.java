@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.externaleditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.WicketSecurityUtils.getCsrfTokenFromSession;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils.referenceToUrl;
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.wrapInTryCatch;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.lang.String.format;
@@ -28,6 +29,7 @@ import static org.apache.wicket.markup.head.OnDomReadyHeaderItem.forScript;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Optional;
 
 import org.apache.wicket.Component;
@@ -41,6 +43,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7CssReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
@@ -232,12 +235,39 @@ public abstract class ExternalAnnotationEditorBase
     private String getPropertiesAsJson()
     {
         var props = getProperties();
+        injectIFrameStylesheets(props);
         try {
             return JSONUtil.toInterpretableJsonString(props);
         }
         catch (IOException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    /**
+     * Make FontAwesome available inside the editor IFrame. The document IFrame does not inherit the
+     * host page's stylesheets, so editor toolbars/overlays rendered into the IFrame document cannot
+     * use icons unless FontAwesome is explicitly loaded there. The stylesheet sources are injected
+     * client-side by the external editor loader after the document has loaded, so this covers both
+     * the raw-HTML and the generated-document rendering paths. We only augment editors that already
+     * opt into IFrame stylesheet injection (i.e. that have set stylesheet sources).
+     */
+    private void injectIFrameStylesheets(AnnotationEditorProperties aProps)
+    {
+        var sources = aProps.getStylesheetSources();
+        if (sources == null) {
+            return;
+        }
+
+        var fontAwesome = referenceToUrl(context, FontAwesome7CssReference.instance());
+        if (sources.contains(fontAwesome)) {
+            return;
+        }
+
+        var augmented = new ArrayList<String>(sources.size() + 1);
+        augmented.add(fontAwesome);
+        augmented.addAll(sources);
+        aProps.setStylesheetSources(augmented);
     }
 
     private CharSequence destroyScript()

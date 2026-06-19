@@ -25,6 +25,9 @@
     },
     "showTables": {
       "type": "boolean"
+    },
+    "keyboardCursorEnabled": {
+      "type": "boolean"
     }
   },
   "additionalProperties": false

@@ -108,13 +108,8 @@ export function extendHighlightOverProtectedElements(
     // Clone the range so we don't mutate the caller's target range unexpectedly
     const searchRange = target.cloneRange();
 
-    // Helper to get an element from a node (handles Text nodes)
-    const elementFor = (node: Node): Element | null => {
-        return node instanceof Element ? node : node.parentElement;
-    };
-
-    const startEl = elementFor(searchRange.startContainer);
-    const endEl = elementFor(searchRange.endContainer);
+    const startEl = nodeToElement(searchRange.startContainer);
+    const endEl = nodeToElement(searchRange.endContainer);
 
     // Expand the range such that the start is before the closest protected ancestor of the start container and the end
     // is after the closest protected ancestor of the end container. This ensures that all protected elements
@@ -170,6 +165,13 @@ export function extendHighlightOverProtectedElements(
             for (const name in attributes) {
                 highlight.setAttribute(name, attributes[name]);
             }
+        }
+        // Make wrapper highlights non-editable to keep them atomic for the
+        // browser caret (prevents typing inside protected wrappers).
+        try {
+            highlight.contentEditable = 'false';
+        } catch {
+            // ignore if not supported
         }
         const range = document.createRange();
         range.selectNode(protectedElement);
@@ -329,6 +331,42 @@ export function getInlineLabelClientRect(highlight: Element): DOMRect {
     }
 
     return new DOMRect(r.left, r.top, cr ? cr.left - r.left : 0, r.height);
+}
+
+/**
+ * Coerce a DOM node to its nearest Element: an Element is returned as-is, any other
+ * node (Text, comment, ...) resolves to its parentElement.
+ */
+export function nodeToElement(node: Node | null): Element | null {
+    if (!node) return null;
+    if (node instanceof Element) return node;
+    return node.parentElement;
+}
+
+/**
+ * Resolve the on-screen rectangle of a DOM Range, or null when none is available.
+ * With preferBounding, getBoundingClientRect() is tried first (modern browsers report
+ * it with a correct position and zero width for a collapsed caret), otherwise the
+ * first client rect is preferred; each falls back to the other.
+ */
+export function rangeClientRect(range: Range, preferBounding = false): DOMRect | null {
+    if (preferBounding) {
+        const bounding = range.getBoundingClientRect() as DOMRect;
+        if (bounding && (bounding.height > 0 || bounding.top > 0 || bounding.left > 0)) {
+            return bounding;
+        }
+        const rects = range.getClientRects();
+        if (rects && rects.length > 0) {
+            return rects[0] as DOMRect;
+        }
+        return null;
+    }
+
+    const rects = range.getClientRects();
+    if (rects && rects.length > 0) {
+        return rects[0] as DOMRect;
+    }
+    return (range.getBoundingClientRect() as DOMRect) || null;
 }
 
 /**

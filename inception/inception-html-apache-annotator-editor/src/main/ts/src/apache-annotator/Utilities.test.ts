@@ -59,6 +59,8 @@ import {
     compileNsSelector,
     closestWithMatcher,
     expandSelectionOverProtectedElements,
+    nodeToElement,
+    rangeClientRect,
 } from './Utilities';
 
 describe('expandSelectionOverProtectedElements', () => {
@@ -358,6 +360,10 @@ describe('extendHighlightOverProtectedElements', () => {
         expect(wrapper).not.toBeNull();
         expect(wrapper.tagName.toLowerCase()).toBe('mark');
         expect(wrapper.getAttribute('data-iaa-id')).toBe('v1');
+        // Wrapper highlights must be non-editable so the browser caret treats the
+        // protected element as atomic and cannot type inside it. (jsdom reflects this
+        // on the IDL property rather than the contenteditable attribute.)
+        expect((wrapper as HTMLElement).contentEditable).toBe('false');
 
         // Calling returned callback removes wrapper and calls the old callback
         returned();
@@ -737,5 +743,76 @@ describe('groupHighlightsByVid', () => {
         const list = document.querySelectorAll('.iaa-highlighted') as NodeListOf<Element>;
         const groups = groupHighlightsByVid(list);
         expect(groups.size).toBe(0);
+    });
+});
+
+describe('nodeToElement', () => {
+    it('returns null for a null node', () => {
+        expect(nodeToElement(null)).toBeNull();
+    });
+
+    it('returns an Element node as-is', () => {
+        document.body.innerHTML = `<div id="el">x</div>`;
+        const el = document.getElementById('el') as Element;
+        expect(nodeToElement(el)).toBe(el);
+    });
+
+    it('resolves a Text node to its parent element', () => {
+        document.body.innerHTML = `<div id="el">hello</div>`;
+        const el = document.getElementById('el') as Element;
+        expect(nodeToElement(el.firstChild as Text)).toBe(el);
+    });
+});
+
+describe('rangeClientRect', () => {
+    // Build a minimal Range-like object so the branch logic can be tested without
+    // relying on jsdom layout (which reports empty/zero rects for real ranges).
+    const fakeRange = (opts: {
+        clientRects?: DOMRect[];
+        bounding?: DOMRect | null;
+    }): Range => {
+        return {
+            getClientRects: () =>
+                ({
+                    length: opts.clientRects?.length ?? 0,
+                    0: opts.clientRects?.[0],
+                }) as unknown as DOMRectList,
+            getBoundingClientRect: () => opts.bounding as DOMRect,
+        } as unknown as Range;
+    };
+
+    it('returns the first client rect by default', () => {
+        const first = new DOMRect(10, 20, 5, 12);
+        const rect = rangeClientRect(fakeRange({ clientRects: [first] }));
+        expect(rect).toBe(first);
+    });
+
+    it('falls back to the bounding rect when there are no client rects (default mode)', () => {
+        const bounding = new DOMRect(1, 2, 3, 4);
+        const rect = rangeClientRect(fakeRange({ clientRects: [], bounding }));
+        expect(rect).toBe(bounding);
+    });
+
+    it('returns null when neither client rects nor a bounding rect are available', () => {
+        expect(rangeClientRect(fakeRange({ clientRects: [], bounding: null }))).toBeNull();
+    });
+
+    it('prefers a positioned bounding rect when preferBounding is set', () => {
+        const bounding = new DOMRect(0, 100, 0, 14); // zero width collapsed caret, positioned
+        const first = new DOMRect(0, 0, 5, 14);
+        const rect = rangeClientRect(fakeRange({ clientRects: [first], bounding }), true);
+        expect(rect).toBe(bounding);
+    });
+
+    it('falls back to a client rect when the bounding rect is unpositioned (preferBounding)', () => {
+        const bounding = new DOMRect(0, 0, 0, 0); // height/top/left all zero -> not usable
+        const first = new DOMRect(7, 8, 3, 14);
+        const rect = rangeClientRect(fakeRange({ clientRects: [first], bounding }), true);
+        expect(rect).toBe(first);
+    });
+
+    it('returns null when preferBounding has neither a positioned bounding nor client rects', () => {
+        const bounding = new DOMRect(0, 0, 0, 0);
+        expect(rangeClientRect(fakeRange({ clientRects: [], bounding }), true)).toBeNull();
     });
 });
