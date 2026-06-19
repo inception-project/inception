@@ -46,18 +46,26 @@
     }
 </script>
 
-<div class="bootstrap card card-header border-0 border-bottom rounded-0 p-1" role="toolbar">
-    <div class="d-flex">
-        <div class="form-check form-switch mx-2">
-            <input
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="inlineLabelsEnabled"
-                bind:checked={annotatorState.showLabels}
-            />
-            <label class="form-check-label" for="inlineLabelsEnabled">Labels</label>
-        </div>
+<div
+    class="bootstrap card-header border-0 border-bottom rounded-0 p-1 d-flex flex-row flex-wrap align-items-center"
+    role="toolbar"
+>
+    <div class="btn-group btn-group-sm" role="group" aria-label="Display options">
+        <input
+            class="btn-check"
+            type="checkbox"
+            id="inlineLabelsEnabled"
+            autocomplete="off"
+            bind:checked={annotatorState.showLabels}
+        />
+        <label
+            class="btn btn-outline-secondary"
+            for="inlineLabelsEnabled"
+            title="Labels"
+            aria-label="Labels"
+        >
+            <i class="fas fa-tag"></i>
+        </label>
     </div>
 </div>
 

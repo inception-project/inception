@@ -37,6 +37,7 @@ import {
     type SelectionLike,
     expandSelectionOverProtectedElements,
 } from './Utilities';
+import { KeyboardEditorMode } from './KeyboardEditorMode';
 
 export class ApacheAnnotatorEditor implements AnnotationEditor {
     private ajax: DiamAjax;
@@ -56,6 +57,8 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     private protectedElementsMatcher?: (el: Element) => boolean;
     private activeResizeCleanup: (() => void) | undefined = undefined;
     private documentStructure: DocumentStructureStrategy;
+    private documentContainer: HTMLElement | undefined = undefined;
+    private keyboardMode: KeyboardEditorMode | undefined = undefined;
 
     public constructor(
         element: Element,
@@ -84,6 +87,7 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
             showTables: true,
             documentStructureWidth: 0.2,
             protectElements: true,
+            keyboardCursorEnabled: false,
         };
         let preferences = Object.assign({}, defaultPreferences);
 
@@ -105,6 +109,8 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
                     preferences.documentStructureWidth ?? defaultPreferences.documentStructureWidth;
                 annotatorState.protectElements =
                     preferences.protectElements ?? defaultPreferences.protectElements;
+                annotatorState.keyboardCursorEnabled =
+                    preferences.keyboardCursorEnabled ?? defaultPreferences.keyboardCursorEnabled;
             })
             .then(() => {
                 // Move all content into a document container
@@ -151,6 +157,8 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
                 this.vis.protectedElementSelector = [...protectedElements].join(',');
                 this.selector = new ApacheAnnotatorSelector(this.root, this.ajax);
 
+                this.documentContainer = documentContainer;
+
                 // Add auxiliary controls
                 this.documentStructureNavigator = this.createDocumentNavigator(
                     this.navigatorContainer,
@@ -158,6 +166,15 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
                     this.documentStructure
                 );
                 this.toolbar = this.createToolbar();
+
+                this.keyboardMode = new KeyboardEditorMode(
+                    this.root,
+                    documentContainer,
+                    this.ajax,
+                    this.protectedElementsMatcher,
+                    this.selector
+                );
+                this.keyboardMode.enable(annotatorState.keyboardCursorEnabled);
 
                 this.popover = mount(AnnotationDetailPopOver, {
                     target: this.root.ownerDocument.body,
@@ -337,6 +354,9 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
                         this.navigatorContainer.style.maxWidth = `${width}px`;
                     });
                 },
+                keyboardCursorPreferencesChanged: (e: Event) => {
+                    this.keyboardMode?.enable(annotatorState.keyboardCursorEnabled);
+                },
             },
         });
     }
@@ -422,11 +442,17 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
 
     scrollTo(args: { offset: number; position?: string; pingRanges?: Offsets[] }): void {
         if (!this.initializationComplete) {
-            this.deferredInitializationSteps.push(() => this.vis.scrollTo(args));
+            this.deferredInitializationSteps.push(() => {
+                this.vis.scrollTo(args);
+                // Keep the keyboard caret with the jump target so the next cursor-key
+                // press continues from here instead of scrolling the view back.
+                this.keyboardMode?.moveCaretToOffset(args.offset);
+            });
             return;
         }
 
         this.vis?.scrollTo(args);
+        this.keyboardMode?.moveCaretToOffset(args.offset);
     }
 
     destroy(): void {
@@ -453,5 +479,8 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
 
         this.vis?.destroy();
         this.selector?.destroy();
+        try {
+            this.keyboardMode?.destroy();
+        } catch {}
     }
 }

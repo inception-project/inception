@@ -398,8 +398,38 @@ sec-wrap {
     padding: 5px 15px;
 }
 
-.iaa-menu .iaa-menu-item:hover {
+// Header shown in the keyboard-driven popup to indicate its mode (select/delete).
+.iaa-menu .iaa-menu-header {
+    padding: 3px 15px;
+    font-size: 0.8em;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: gray;
+    border-bottom: solid #eee 1px;
+}
+
+.iaa-menu.iaa-menu-delete .iaa-menu-header {
+    color: rgb(220, 53, 69);
+}
+
+.iaa-menu:focus {
+    outline: none;
+}
+
+.iaa-menu .iaa-menu-item:hover,
+.iaa-menu .iaa-menu-item.iaa-menu-item-active {
     background-color: whitesmoke;
+}
+
+.iaa-menu .iaa-menu-item.iaa-menu-item-active {
+    outline: solid 2px rgba(0, 123, 255, 0.5);
+    outline-offset: -2px;
+}
+
+// In delete mode the active entry is highlighted in red to signal that pressing
+// Enter removes the annotation rather than selecting it.
+.iaa-menu.iaa-menu-delete .iaa-menu-item.iaa-menu-item-active {
+    outline-color: rgba(220, 53, 69, 0.6);
 }
 
 .iaa-menu-item .iaa-label {

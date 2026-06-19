@@ -53,6 +53,11 @@
         root.addEventListener(AnnotationOutEvent.eventType, onAnnotationOut);
         root.addEventListener('mousemove', onMouseMove);
         root.addEventListener('mousedown', onMouseDown);
+        // Keyboard focus lives on a container that is an *ancestor* of `root` (the
+        // document content is nested inside the focused/keyboard element), so keydown
+        // events bubble away from `root` and never reach a listener on it. Listen on
+        // the document instead, which every keydown reaches by bubbling.
+        root.ownerDocument.addEventListener('keydown', onKeyDown);
     });
 
     onDestroy(() => {
@@ -60,6 +65,7 @@
         root.removeEventListener(AnnotationOutEvent.eventType, onAnnotationOut);
         root.removeEventListener('mousemove', onMouseMove);
         root.removeEventListener('mousedown', onMouseDown);
+        root.ownerDocument.removeEventListener('keydown', onKeyDown);
     });
 
     $effect(() => {
@@ -94,6 +100,20 @@
             popoverTimeoutId = undefined;
         }
         annotation = undefined;
+    }
+
+    function onKeyDown(e: KeyboardEvent) {
+        // Once the user starts driving with the keyboard (e.g. keyboard-based caret
+        // navigation), the mouse-hover popover only gets in the way. Hide it the same
+        // way a mouse click does. It reappears when the mouse next hovers an annotation,
+        // so it stays out of the way while the mouse sits still during keyboard use.
+        if (popoverTimeoutId) {
+            window.clearTimeout(popoverTimeoutId);
+            popoverTimeoutId = undefined;
+        }
+        if (annotation) {
+            annotation = undefined;
+        }
     }
 
     function onAnnotationOver(e: AnnotationOverEvent) {

@@ -75,6 +75,37 @@ A line-oriented presentation of the text using inter-linear annotations that als
 
 This editor renders documents imported using a XML/HTML-based format such as <<sect_formats_mhtml>> or <<sect_formats_htmldoc>>. It is build on top of link:https://annotator.apache.org[Apache Annotator]. It supports rendering span annotations but not relations or link features.
 
+[[sect_editors_html_apache_annotator_keyboard]]
+=== Keyboard navigation
+
+The editor offers an optional keyboard cursor that allows navigating the document and creating
+span annotations without using the mouse. It can be turned on using the **Keyboard cursor** toggle
+in the editor toolbar. The setting is remembered as a user preference.
+
+When the keyboard cursor is enabled, a text cursor is placed in the document and the following
+keys are available:
+
+* kbd:[←] / kbd:[→] move the cursor one character to the left or right.
+* kbd:[↑] / kbd:[↓] move the cursor one line up or down.
+* kbd:[Shift + ←] / kbd:[Shift + →] extend (or shrink) the selection one character at a time.
+* kbd:[Enter] creates a span annotation over the current selection.
+* kbd:[Space] selects the annotation at the cursor position.
+* kbd:[Backspace] deletes the annotation at the cursor position.
+
+After creating an annotation, the focus moves to the feature editors in the right sidebar so that
+a label can be entered right away. Pressing kbd:[Esc] returns the focus to the document and places
+the cursor at the end of the annotation that was just created, allowing the next annotation to be
+created without reaching for the mouse.
+
+To act on an existing annotation, move the cursor into its highlight and press kbd:[Space] to select
+it or kbd:[Backspace] to delete it. If a single annotation covers that position, the action is
+applied immediately. If multiple annotations overlap there, a small popup appears listing them: use
+kbd:[↑] / kbd:[↓] to move between the entries, kbd:[Enter] to apply the action to the highlighted
+annotation, or kbd:[Esc] to close the popup without selecting or deleting.
+
+NOTE: When the document contains protected elements (e.g. images or tables), the cursor and
+selection automatically skip over them so that such elements are never partially selected.
+
 [[sect_editors_html_recogitojs]]
 == 🧪 HTML (RecogitoJS)
 

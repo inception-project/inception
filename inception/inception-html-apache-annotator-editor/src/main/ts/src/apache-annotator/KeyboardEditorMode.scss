@@ -1,0 +1,78 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Custom caret used in keyboard annotation mode. The native caret is a thin 1px
+// line that is easy to lose in dense text, so we hide it and draw our own thicker,
+// coloured bar (see KeyboardEditorMode) that briefly pulses whenever it moves to
+// help the user keep track of the editing position.
+.iaa-document-container.iaa-caret-custom {
+    caret-color: transparent;
+}
+
+.iaa-caret-overlay {
+    position: fixed;
+    width: 2px;
+    margin-left: -1px; // centre the 2px bar on the caret position
+    background-color: #007bff;
+    border-radius: 1px;
+    pointer-events: none;
+    z-index: 1000;
+    // Blink, but never fully disappear, so the caret stays locatable at a glance.
+    animation: iaa-caret-blink 1.1s linear infinite;
+}
+
+// While the caret is moving (see KeyboardEditorMode#markCaretMoved) it is held
+// solid -- no blink -- so it stays clearly visible during continuous navigation
+// instead of flickering. The class is removed shortly after movement stops.
+.iaa-caret-overlay.iaa-caret-moving {
+    animation: none;
+    opacity: 1;
+}
+
+// Glow ring around the caret. Invisible at rest, shown instantly while the caret
+// is moving, and fading out over the transition once movement pauses.
+.iaa-caret-ring {
+    position: absolute;
+    inset: -2px;
+    border-radius: 2px;
+    pointer-events: none;
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+    background-color: rgba(0, 123, 255, 0);
+    transition:
+        box-shadow 0.4s ease-out,
+        background-color 0.4s ease-out;
+}
+
+.iaa-caret-overlay.iaa-caret-moving .iaa-caret-ring {
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.4);
+    background-color: rgba(0, 123, 255, 0.3);
+    // Appear instantly on movement; the fade-out happens via the rule above once the
+    // moving class is dropped.
+    transition: none;
+}
+
+@keyframes iaa-caret-blink {
+    0%,
+    50% {
+        opacity: 1;
+    }
+    50.01%,
+    100% {
+        opacity: 0.2;
+    }
+}
