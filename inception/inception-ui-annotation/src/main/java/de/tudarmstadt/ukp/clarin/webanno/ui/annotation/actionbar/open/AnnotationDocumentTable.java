@@ -22,7 +22,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.AnnotationDocumentTableSortKeys.CREATED;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.AnnotationDocumentTableSortKeys.NAME;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.AnnotationDocumentTableSortKeys.SENTENCES;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.AnnotationDocumentTableSortKeys.STATE;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.AnnotationDocumentTableSortKeys.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.AnnotationDocumentTableSortKeys.UPDATED;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.INPUT_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.KEYDOWN_EVENT;
@@ -87,9 +89,9 @@ public class AnnotationDocumentTable
                 item -> item.getState()));
         columns.add(new AnnotationDocumentOpenActionColumn(this, new ResourceModel("DocumentName"),
                 NAME));
-        columns.add(new LambdaColumn<>(new ResourceModel("DocumentTokens"),
+        columns.add(new LambdaColumn<>(new ResourceModel("DocumentTokens"), TOKENS,
                 $ -> renderCount($.getDocument(), DocumentStatistics::tokenCount)));
-        columns.add(new LambdaColumn<>(new ResourceModel("DocumentSentences"),
+        columns.add(new LambdaColumn<>(new ResourceModel("DocumentSentences"), SENTENCES,
                 $ -> renderCount($.getDocument(), DocumentStatistics::sentenceCount)));
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentCreated"), CREATED,
                 $ -> renderDate($.getDocument().getCreated())));
@@ -152,7 +154,7 @@ public class AnnotationDocumentTable
 
     private String renderCount(SourceDocument aDoc, ToLongFunction<DocumentStatistics> aAccessor)
     {
-        var stats = dataProvider.getPageStatistics().get(aDoc.getId());
+        var stats = dataProvider.getStatistics().get(aDoc.getId());
         if (stats == null) {
             return "-";
         }

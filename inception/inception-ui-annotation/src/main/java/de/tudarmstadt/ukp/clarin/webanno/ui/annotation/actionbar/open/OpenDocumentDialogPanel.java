@@ -212,6 +212,10 @@ public class OpenDocumentDialogPanel
     {
         table.getDataProvider().getModel().setObject(listDocuments());
 
+        // Statistics are specific to the selected data owner and document list, so the cached
+        // values are no longer valid once a different user is picked.
+        table.getDataProvider().clearStatistics();
+
         aTarget.add(table);
     }
 
