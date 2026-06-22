@@ -1,0 +1,80 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Transient overlay hosting relation-creation grips. Like .iaa-relation-overlay it is an
+// absolutely-positioned child of the content root and scrolls with the inline marks. Grips are
+// positioned relative to this layer's top-left, so it must be `position: absolute` to act as their
+// containing block (see RelationGripLayer.captureOrigin). It sits above the relation arc overlay
+// (z-index 5) so grips are never hidden behind an arc.
+.iaa-relation-grip-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 6;
+}
+
+// A single grip knob, anchored above the start of its span and color-coded after it. left/top are
+// set inline (the anchor); the negative margins centre the knob horizontally on the span start and
+// lift it clear of the text. Only the knob is interactive — the layer is not.
+.iaa-relation-grip {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    margin-left: -4.5px;
+    margin-top: -9px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background-color: var(--iaa-grip-color, #888888);
+    border: 1px solid var(--bs-body-bg, #ffffff);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+    pointer-events: auto;
+    cursor: grab;
+    transition: transform 0.08s ease-out;
+
+    // Invisible, larger hit target around the small visible knob so the pointer can land on it
+    // easily — and, crucially, so the catchable area reaches down toward the line, shrinking the
+    // dead gap the cursor must cross from the text. Paired with the JS linger (GRIP_LINGER_MS).
+    &::before {
+        content: '';
+        position: absolute;
+        inset: -7px -7px -10px;
+    }
+
+    &:hover {
+        transform: scale(1.35);
+    }
+}
+
+// Echo: while a grip is hovered, every fragment of its owning span gets this class — the
+// inverse of normal highlight-hover. Same kind of glow as `.iaa-hover`, but keyed to the span's own
+// `--iaa-border-color` (which the grip is coloured after) rather than the generic focus colour, so the
+// emphasis visually rhymes with the knob the user is pointing at and the grip→span mapping is obvious.
+.iaa-relation-source-candidate {
+    &:not(.iaa-inline-label) {
+        filter: drop-shadow(0 0 clamp(3px, 0.3em, 10px) var(--iaa-border-color, #888888))
+            brightness(var(--hover-brightness, 1.2));
+    }
+
+    &.iaa-inline-label {
+        border-color: var(--iaa-border-color, #888888);
+        filter: drop-shadow(0 0 clamp(3px, 0.3em, 10px) var(--iaa-border-color, #888888))
+            brightness(var(--hover-brightness, 1.2));
+    }
+}

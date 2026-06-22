@@ -28,8 +28,12 @@ import { createPopper, type Instance } from '@popperjs/core';
  *   selection is offered (no ❌); activating an entry selects it.
  * - `keyboard-delete`: opened via the keyboard to pick an annotation to delete.
  *   Activating an entry deletes it and the entry is styled as destructive.
+ * - `relation-target`: opened by a relation-creation drag that ended on a stack of
+ *   several spans. Activating an entry resolves the
+ *   pending pick callback with the chosen vid instead of selecting/deleting; dismissing
+ *   the popup cancels the relation. No ❌ buttons.
  */
-type PopupMode = 'mouse' | 'keyboard-select' | 'keyboard-delete';
+type PopupMode = 'mouse' | 'keyboard-select' | 'keyboard-delete' | 'relation-target';
 
 export class ApacheAnnotatorSelector {
     private ajax: DiamAjax;
@@ -45,6 +49,10 @@ export class ApacheAnnotatorSelector {
     private focusFallback: HTMLElement | undefined;
     private popupKeydownHandler: ((e: KeyboardEvent) => void) | undefined;
     private popupMode: PopupMode = 'mouse';
+    // In 'relation-target' mode, the drag controller's callback to resolve with the
+    // chosen target vid. Cleared (without being called) when the popup is dismissed,
+    // which the controller treats as a cancel.
+    private pendingTargetPick: ((vid: VID) => void) | undefined;
 
     public constructor(element: Element, ajax: DiamAjax) {
         this.ajax = ajax;
@@ -111,8 +119,24 @@ export class ApacheAnnotatorSelector {
         return true;
     }
 
+    /**
+     * Ask the user which of several overlapping spans is a relation's target. The popup
+     * opens at the drop point; `onPick` fires with the chosen vid, or not at all if the
+     * popup is dismissed (which the caller treats as a cancel). `hls` must already be deduplicated by vid.
+     */
+    public pickRelationTarget(
+        clientX: number,
+        clientY: number,
+        hls: HTMLElement[],
+        onPick: (vid: VID) => void
+    ): void {
+        this.destroyPopup();
+        if (hls.length === 0) return;
+        this.pendingTargetPick = onPick;
+        this.createPopup(clientX, clientY, hls, true, 'relation-target');
+    }
+
     private onMouseDown(event: Event): void {
-        // Destroy popup if clicked outside of popup
         if (!this.isVisible()) {
             return;
         }
@@ -141,6 +165,7 @@ export class ApacheAnnotatorSelector {
         this.activeIndex = -1;
         this.focusFallback = undefined;
         this.popupMode = 'mouse';
+        this.pendingTargetPick = undefined;
     }
 
     public isVisible(): boolean {
@@ -153,7 +178,6 @@ export class ApacheAnnotatorSelector {
         this.destroyPopup();
 
         const hls = event.target instanceof Node ? highlights(event.target) : [];
-        // No need to show selector if there is no annotation
         if (hls.length === 0) return;
 
         if (
@@ -205,12 +229,16 @@ export class ApacheAnnotatorSelector {
         // Make the menu focusable so it can capture keyboard navigation keys.
         this.popupContent.tabIndex = -1;
 
-        // In the keyboard modes, show a header indicating whether picking an entry
-        // selects or deletes it.
+        // Outside plain mouse mode, show a header indicating what activating an entry does.
         if (mode !== 'mouse') {
             const header = document.createElement('div');
             header.classList.add('iaa-menu-header');
-            header.textContent = mode === 'keyboard-delete' ? 'Delete…' : 'Select…';
+            header.textContent =
+                mode === 'keyboard-delete'
+                    ? 'Delete…'
+                    : mode === 'relation-target'
+                      ? 'Relation target…'
+                      : 'Select…';
             this.popupContent.appendChild(header);
         }
 
@@ -303,14 +331,25 @@ export class ApacheAnnotatorSelector {
 
     /**
      * Perform the popup's primary action on an entry: delete in keyboard-delete mode,
-     * otherwise select.
+     * resolve the relation-target pick in relation-target mode, otherwise select.
      */
     private activateItem(event: Event, id: VID) {
         if (this.popupMode === 'keyboard-delete') {
             this.onDeleteAnnotation(event, id);
+        } else if (this.popupMode === 'relation-target') {
+            this.onPickRelationTarget(event, id);
         } else {
             this.onSelectAnnotation(event, id);
         }
+    }
+
+    private onPickRelationTarget(event: Event, id: VID) {
+        event.stopPropagation();
+        // Capture before destroyPopup() clears it: destroy first so the controller's
+        // createRelationAnnotation runs against a torn-down popup, then resolve.
+        const pick = this.pendingTargetPick;
+        this.destroyPopup();
+        pick?.(id);
     }
 
     private onSelectAnnotation(event: Event, id: VID) {

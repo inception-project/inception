@@ -27,7 +27,12 @@ import { ApacheAnnotatorVisualizer } from './ApacheAnnotatorVisualizer.svelte';
 import { ApacheAnnotatorSelector } from './ApacheAnnotatorSelector';
 import { normalizeSectionsForPinning } from './SectionPinning';
 import ApacheAnnotatorToolbar from './ApacheAnnotatorToolbar.svelte';
-import { annotatorState } from './ApacheAnnotatorState.svelte';
+import {
+    annotatorState,
+    defaultAnnotatorPreferences as defaultPreferences,
+    LINE_SPACINGS,
+    type LineSpacing,
+} from './ApacheAnnotatorState.svelte';
 import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte';
 import { mount, tick, unmount } from 'svelte';
 import {
@@ -71,24 +76,13 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
         this.ajax = ajax;
         this.root = element;
         this.userPreferencesKey = userPreferencesKey;
-        // Settled during init by normalizeSectionsForPinning (Step 1 below).
+        // Settled during init by normalizeSectionsForPinning.
         this.sectionSelector = '';
         this.protectedElements = protectedElements;
         this.documentStructure = documentStructure;
         const protectedSel = [...protectedElements].join(',');
         this.protectedElementsMatcher = compileNsSelector(protectedSel) || undefined;
 
-        const defaultPreferences = {
-            showLabels: true,
-            showAggregatedLabels: false,
-            showEmptyHighlights: false,
-            showDocumentStructure: false,
-            showImages: true,
-            showTables: true,
-            documentStructureWidth: 0.2,
-            protectElements: true,
-            keyboardCursorEnabled: false,
-        };
         let preferences = Object.assign({}, defaultPreferences);
 
         ajax.loadPreferences(userPreferencesKey)
@@ -97,6 +91,8 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
                 console.log('Loaded preferences', preferences);
 
                 annotatorState.showLabels = preferences.showLabels ?? defaultPreferences.showLabels;
+                annotatorState.showRelationLabels =
+                    preferences.showRelationLabels ?? defaultPreferences.showRelationLabels;
                 annotatorState.showAggregatedLabels =
                     preferences.showAggregatedLabels ?? defaultPreferences.showAggregatedLabels;
                 annotatorState.showEmptyHighlights =
@@ -111,55 +107,57 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
                     preferences.protectElements ?? defaultPreferences.protectElements;
                 annotatorState.keyboardCursorEnabled =
                     preferences.keyboardCursorEnabled ?? defaultPreferences.keyboardCursorEnabled;
+                const loadedLineSpacing = preferences.lineSpacing ?? defaultPreferences.lineSpacing;
+                annotatorState.lineSpacing = LINE_SPACINGS.includes(
+                    loadedLineSpacing as LineSpacing
+                )
+                    ? (loadedLineSpacing as LineSpacing)
+                    : 'mid';
+                this.applyLineSpacing();
             })
             .then(() => {
-                // Move all content into a document container
                 const documentContainer = this.root.ownerDocument.createElement('div');
                 documentContainer.classList.add('iaa-document-container');
                 [...this.root.ownerDocument.body.children].forEach((child) =>
                     documentContainer.appendChild(child)
                 );
 
-                // Step 1 (rendering fix): make section elements pinnable and
-                // settle the section selector. Schema-free; see SectionPinning.
-                // Must run before the IDs are assigned so they land on the
-                // wrapper elements rather than the soon-to-be-buried originals.
+                // Make section elements pinnable and settle the section selector. This must run
+                // before the IDs are assigned so they land on the wrapper elements rather than the
+                // soon-to-be-buried originals.
                 this.sectionSelector = normalizeSectionsForPinning(
                     documentContainer,
                     sectionElementLocalNames
                 );
                 this.ensureSectionElementsHaveAnId();
 
-                // Step 2 (table of contents): build the outline for the
-                // navigator. Operates on the post-pinning DOM; owns title and
-                // scroll-target extraction per format.
+                // Build the outline for the navigator, operating on the post-pinning DOM.
                 this.documentStructure.preprocess(documentContainer);
 
-                // Set up a container for the document navigation sidebar
                 this.navigatorContainer = this.root.ownerDocument.createElement('div');
                 this.navigatorContainer.classList.add('iaa-document-navigator');
 
-                // Set up a split pane to host the document and the document structure navigation sidebar
                 this.horizSplitPane = this.createHorizontalSplitPane(
                     this.navigatorContainer,
                     documentContainer
                 );
 
-                // Add the split pane to the document
                 this.root.ownerDocument.body.appendChild(this.horizSplitPane);
 
-                // Add the editor components for the document container
+                // The selector is created first so the visualizer's relation-drag controller can
+                // defer multi-hit target disambiguation to it.
+                this.selector = new ApacheAnnotatorSelector(this.root, this.ajax);
                 this.vis = new ApacheAnnotatorVisualizer(
                     this.root,
                     this.ajax,
-                    this.sectionSelector
+                    this.sectionSelector,
+                    (clientX, clientY, targets, onPick) =>
+                        this.selector.pickRelationTarget(clientX, clientY, targets, onPick)
                 );
                 this.vis.protectedElementSelector = [...protectedElements].join(',');
-                this.selector = new ApacheAnnotatorSelector(this.root, this.ajax);
 
                 this.documentContainer = documentContainer;
 
-                // Add auxiliary controls
                 this.documentStructureNavigator = this.createDocumentNavigator(
                     this.navigatorContainer,
                     documentContainer,
@@ -184,10 +182,8 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
                     },
                 });
 
-                // Event handler for creating an annotion or selecting an annotation
                 this.root.addEventListener('mouseup', (e) => this.onMouseUp(e));
 
-                // Event handler for opening the context menu
                 this.root.addEventListener('contextmenu', (e) => this.onRightClick(e));
 
                 // Prevent right-click from triggering a selection event
@@ -233,7 +229,6 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
         divider.addEventListener('mousedown', (e) => {
             if (e.buttons !== 1) return;
 
-            // Clean up any previous resize operation
             if (this.activeResizeCleanup) {
                 this.activeResizeCleanup();
             }
@@ -357,8 +352,35 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
                 keyboardCursorPreferencesChanged: (e: Event) => {
                     this.keyboardMode?.enable(annotatorState.keyboardCursorEnabled);
                 },
+                lineSpacingPreferencesChanged: (e: Event) => {
+                    this.applyLineSpacing();
+                    // The new line-height reflows the text, moving every highlight. Re-materialize
+                    // the locked section dimensions and re-render so arcs/stubs follow the new
+                    // positions. Only the geometry changed — the annotation data is unchanged — so
+                    // re-render from the cached data instead of a full server round-trip.
+                    this.vis?.optimizeLayout('line spacing');
+                    this.vis?.rerender();
+                },
+                relationLabelPreferencesChanged: (e: Event) => {
+                    // Pure visual toggle — the labels are already drawn, so just flip the mode.
+                    this.vis?.refreshRelationLabelMode();
+                },
             },
         });
+    }
+
+    /**
+     * Apply the active line-spacing preset as a class on the editor root, matching the
+     * class-toggle pattern used by the other visual preferences (e.g. `iaa-hide-images`).
+     * The heights live in SCSS; `line-height` inherits down to the document content.
+     */
+    private applyLineSpacing(): void {
+        const root = this.root as HTMLElement;
+        LINE_SPACINGS.forEach((s) => root.classList.remove(`iaa-line-spacing-${s}`));
+        const spacing = LINE_SPACINGS.includes(annotatorState.lineSpacing)
+            ? annotatorState.lineSpacing
+            : 'mid';
+        root.classList.add(`iaa-line-spacing-${spacing}`);
     }
 
     private createDocumentNavigator(

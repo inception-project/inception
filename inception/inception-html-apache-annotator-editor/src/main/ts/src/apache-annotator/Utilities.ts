@@ -47,7 +47,6 @@ export function querySelectorAllInRange(range: Range, selector: string): Element
             : (range.commonAncestorContainer.parentElement as Node) ||
               range.commonAncestorContainer;
 
-    // console.log(`Searching in ${walkerRoot.textContent}`)
     const walker = document.createTreeWalker(walkerRoot, NodeFilter.SHOW_ELEMENT, {
         acceptNode: (node: Node) => {
             return range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
@@ -308,6 +307,26 @@ export function highlights(target: Node | null): HTMLElement[] {
 }
 
 /**
+ * The highlight stack under the given node, innermost-first, with at most one element per VID.
+ * Highlights without a VID are skipped.
+ *
+ * @param target a DOM node.
+ * @returns the deduplicated highlight elements ordered innermost-first.
+ */
+export function distinctHighlightStack(target: Node | null): HTMLElement[] {
+    const stack: HTMLElement[] = [];
+    const seen = new Set<string>();
+    for (const h of highlights(target)) {
+        const vid = h.getAttribute('data-iaa-id');
+        if (vid && !seen.has(vid)) {
+            seen.add(vid);
+            stack.push(h);
+        }
+    }
+    return stack;
+}
+
+/**
  * Calculates the rectangle of the inline label for the given highlight.
  *
  * @param highlight a highlight element.
@@ -387,6 +406,19 @@ export function isPointInRect(point: { x: number; y: number }, rect: DOMRect): b
         point.y >= rect.top &&
         point.y <= rect.bottom
     );
+}
+
+/**
+ * Angle of the `i`-th item in a fan of `n` items, spread symmetrically around 0 over `spread`
+ * radians. A single item (`n === 1`) sits at 0, which also avoids dividing by `n - 1 === 0`.
+ *
+ * @param i zero-based index of the item.
+ * @param n total number of items in the fan.
+ * @param spread total angular spread in radians.
+ * @returns the item's angle in radians, in `[-spread/2, spread/2]`.
+ */
+export function fanAngle(i: number, n: number, spread: number): number {
+    return n === 1 ? 0 : -spread / 2 + (spread * i) / (n - 1);
 }
 
 /**
@@ -603,9 +635,6 @@ export function expandSelectionOverProtectedElements(
     if (focusNode == null) {
         focusNode = sel.focusNode;
     }
-
-    // console.log(`Anchor node ${sel.anchorNode} ${sel.anchorOffset} -> ${anchorNode} ${anchorOffset}`)
-    // console.log(`Focus node ${sel.focusNode} ${sel.focusOffset} -> ${focusNode} ${focusOffset}`)
 
     return { anchorNode, anchorOffset, focusNode, focusOffset };
 }

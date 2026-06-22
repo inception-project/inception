@@ -113,10 +113,31 @@ sec-wrap {
 
 .i7n-wrapper {
     position: relative;
-    line-height: 1.8;
+    line-height: 1.8; // default; overridden by the .iaa-line-spacing-* presets below
     overflow: auto;
     padding-left: var(--vertical-tray-width-left);
     padding-right: var(--vertical-tray-width-right);
+}
+
+/**
+ * Line-spacing presets. Toggled as a class on the editor root by applyLineSpacing();
+ * line-height inherits down to the document content.
+ */
+.iaa-line-spacing-low {
+    line-height: 1.4;
+}
+
+.iaa-line-spacing-mid {
+    line-height: 1.8;
+}
+
+.iaa-line-spacing-high {
+    line-height: 2.6;
+}
+
+.iaa-line-spacing-xhigh {
+    line-height: 5.2; // double the `high` preset; the arc bow scale is already capped (see
+                      // ARC_BOW_SCALE_MAX) so the stacked-arc bow matches `high` rather than scaling further.
 }
 
 /**

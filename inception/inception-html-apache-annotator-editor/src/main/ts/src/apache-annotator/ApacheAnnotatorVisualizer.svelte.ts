@@ -36,14 +36,15 @@ import { ResizeManager } from './ResizeManager';
 import { bgToFgColor } from '@inception-project/inception-js-api/src/util/Coloring';
 import { SectionAnnotationVisualizer } from './SectionAnnotationVisualizer';
 import { SectionAnnotationCreator } from './SectionAnnotationCreator';
+import { RelationVisualizer } from './RelationVisualizer';
+import { RelationGripLayer, GRIP_CLASS } from './RelationGripLayer';
+import { RelationDragController, type PickRelationTarget } from './RelationDragController';
 import {
     groupHighlightsByVid,
     removeClassFromAncestors,
     safeHighlightText,
     compileNsSelector,
 } from './Utilities';
-
-export const CLASS_RELATED = 'iaa-related';
 
 export const NO_LABEL = '◌';
 export const ERROR_LABEL = '🔴';
@@ -77,10 +78,17 @@ export class ApacheAnnotatorVisualizer {
     private sectionSelector: string;
     private sectionAnnotationVisualizer: SectionAnnotationVisualizer;
     private sectionAnnotationCreator: SectionAnnotationCreator;
+    private relationVisualizer: RelationVisualizer;
+    private relationGripLayer: RelationGripLayer;
+    private relationDragController: RelationDragController;
 
     private data?: AnnotatedText;
 
     private scrolling = false;
+    /** Scroll container the relation re-band listener is attached to; detached on destroy. */
+    private scrollContainer?: Element;
+    /** Pending rAF handle coalescing scroll events into one relation re-band per frame. */
+    private relationScrollRaf?: number;
     private lastScrollTop: number | undefined = undefined;
     private lastMarkerTop: number | undefined = undefined;
     private scrollMutationObserver: MutationObserver | undefined = undefined;
@@ -110,7 +118,12 @@ export class ApacheAnnotatorVisualizer {
         }
     }
 
-    constructor(element: Element, ajax: DiamAjax, sectionSelector: string) {
+    constructor(
+        element: Element,
+        ajax: DiamAjax,
+        sectionSelector: string,
+        pickRelationTarget: PickRelationTarget
+    ) {
         this.ajax = ajax;
         this.root = element;
         this.sectionSelector = sectionSelector;
@@ -141,31 +154,65 @@ export class ApacheAnnotatorVisualizer {
             this.ajax,
             this.sectionSelector
         );
+        this.relationVisualizer = new RelationVisualizer(this.root, this.ajax, (vid) =>
+            this.getHighlightsForAnnotation(vid)
+        );
+        this.relationDragController = new RelationDragController(
+            this.root,
+            this.ajax,
+            this.relationVisualizer,
+            pickRelationTarget
+        );
+        this.relationGripLayer = new RelationGripLayer(
+            this.root,
+            (vid) => this.getHighlightsForAnnotation(vid),
+            (grip, e) => this.relationDragController.onGripPointerDown(grip, e)
+        );
 
         // Event handlers for the resizer component
         this.root.addEventListener('mouseover', (e) => this.showResizer(e));
 
-        // Event handlers for custom events
+        // Event handlers for custom events. A relation-creation grip proxies its span, so hovering a
+        // grip emits the same enter/leave events as hovering the span text — bringing up the detail
+        // popover for the grip's annotation (the events bubble through the overlay to the editor root).
         this.root.addEventListener('mouseover', (event) => {
-            if (!(event instanceof MouseEvent) || !(event.target instanceof HTMLElement)) return;
-            const vid = event.target.getAttribute('data-iaa-id');
+            if (!(event instanceof MouseEvent)) return;
+            const vid = this.hoveredAnnotationVid(event.target);
             if (!vid) return;
             const annotation = this.data?.getAnnotation(vid);
             if (!annotation) return;
-            event.target.dispatchEvent(new AnnotationOverEvent(annotation, event));
+            (event.target as Element).dispatchEvent(new AnnotationOverEvent(annotation, event));
         });
         this.root.addEventListener('mouseout', (event) => {
-            if (!(event instanceof MouseEvent) || !(event.target instanceof HTMLElement)) return;
-            const vid = event.target.getAttribute('data-iaa-id');
+            if (!(event instanceof MouseEvent)) return;
+            const vid = this.hoveredAnnotationVid(event.target);
             if (!vid) return;
             const annotation = this.data?.getAnnotation(vid);
             if (!annotation) return;
-            event.target.dispatchEvent(new AnnotationOutEvent(annotation, event));
+            (event.target as Element).dispatchEvent(new AnnotationOutEvent(annotation, event));
         });
 
         // Add event handlers for highlighting extent of the annotation the mouse is currently over
         this.root.addEventListener('mouseover', (e) => this.addHoverHighlight(e as MouseEvent));
         this.root.addEventListener('mouseout', (e) => this.removeHoverHighlight(e as MouseEvent));
+
+        // Surface relation-creation grips for the hovered span stack.
+        this.root.addEventListener('mouseover', (e) =>
+            this.relationGripLayer.handlePointerOver((e as MouseEvent).target)
+        );
+        this.root.addEventListener('mouseleave', () => this.relationGripLayer.clear());
+
+        // Re-band relations on manual scroll, independent of the ViewportTracker (see onContentScroll).
+        this.scrollContainer = this.root.closest('.i7n-wrapper') || this.root;
+        this.scrollContainer.addEventListener('scroll', this.onContentScroll, { passive: true });
+    }
+
+    /**
+     * Apply the current relation-label visibility preference without re-rendering. The labels are
+     * already in the overlay; this just flips the CSS mode class (see RelationVisualizer).
+     */
+    public refreshRelationLabelMode(): void {
+        this.relationVisualizer.setLabelsAlwaysVisible(annotatorState.showRelationLabels);
     }
 
     public optimizeLayout(trigger: string) {
@@ -264,9 +311,9 @@ export class ApacheAnnotatorVisualizer {
 
         try {
             const nodes = element.querySelectorAll(sectionSelector);
-            const measurements : { n: HTMLElement, height: number, width: number }[] = [];
+            const measurements: { n: HTMLElement; height: number; width: number }[] = [];
 
-            // PASS 1: Clear any previously set midnHeight/minWidth styles
+            // Clear any previously set minHeight/minWidth styles
             nodes.forEach((n) => {
                 if (!(n instanceof HTMLElement)) return;
                 n.style.minHeight = '';
@@ -278,9 +325,8 @@ export class ApacheAnnotatorVisualizer {
                 n.style.boxSizing = '';
             });
 
-            // PASS 2: READ (Batch all measurements)
-            // The browser calculates layout once here, and reuses it for subsequent reads
-            // as long as no write operations occur in between.
+            // Read: batch all measurements. The browser calculates layout once here, and
+            // reuses it for subsequent reads as long as no write operations occur in between.
             nodes.forEach((n) => {
                 if (!(n instanceof HTMLElement)) return;
 
@@ -298,9 +344,8 @@ export class ApacheAnnotatorVisualizer {
                 }
             });
 
-            // PASS 3: WRITE (Batch all mutations)
-            // Now we apply styles. This invalidates layout, but since we are done reading,
-            // we don't force a recalculation until the next frame/paint.
+            // Write: batch all mutations. Applying styles invalidates layout, but since we
+            // are done reading, we don't force a recalculation until the next frame/paint.
             measurements.forEach(({ n, height, width }) => {
                 if (height > 0 || width > 0) {
                     n.style.boxSizing = 'border-box';
@@ -333,10 +378,26 @@ export class ApacheAnnotatorVisualizer {
         if (vid) this.resizer.show(vid);
     }
 
+    /**
+     * The annotation vid a hover target represents: a highlight (`data-iaa-id`) or one of its
+     * relation-creation grips, which proxy their span via `data-grip-vid`. The grip deliberately omits
+     * `data-iaa-id` (so `highlights()` / the drop hit-test never treat it as an annotation), so it is
+     * resolved separately here. This lets a grip hover drive the same span echo (`iaa-hover`) and
+     * detail popover as hovering the span text.
+     */
+    private hoveredAnnotationVid(target: EventTarget | null): VID | null {
+        if (!(target instanceof Element)) return null;
+        return (
+            target.getAttribute('data-iaa-id') ??
+            target.closest<HTMLElement>('.' + GRIP_CLASS)?.dataset.gripVid ??
+            null
+        );
+    }
+
     private addHoverHighlight(event: MouseEvent) {
         if (!(event.target instanceof Element)) return;
 
-        const vid = event.target.getAttribute('data-iaa-id');
+        const vid = this.hoveredAnnotationVid(event.target);
         if (!vid) return;
 
         if (this.addHoverTimeout) {
@@ -378,6 +439,17 @@ export class ApacheAnnotatorVisualizer {
         this.doLoadAnnotations({ allowRenderSkip: false });
     }
 
+    /**
+     * Re-render highlights/arcs from the cached annotation data without a server round-trip.
+     * Use for view-only changes (e.g. line spacing) where the geometry changed but the
+     * annotation data did not. No-ops until the first load has populated the cache.
+     */
+    rerender(): void {
+        if (this.data) {
+            this.renderAnnotations(this.data);
+        }
+    }
+
     private doLoadAnnotations(opts: { allowRenderSkip: boolean }): void {
         const allowSkip = opts.allowRenderSkip;
         if (this.loadAnnotationsTimeout) {
@@ -405,6 +477,12 @@ export class ApacheAnnotatorVisualizer {
                 range: this.tracker.currentRange,
                 includeText: false,
                 clipSpans: false,
+                // Request un-clipped arcs with real per-endpoint placeholders (real VID and
+                // window-relative offset) instead of the shared VID_BEFORE/VID_AFTER sentinels,
+                // and pull in relations whose endpoints lie outside the window. Stub tips,
+                // far-endpoint navigation and labels all rely on these real endpoints.
+                clipArcs: false,
+                longArcs: true,
                 format: 'compact_v2',
             };
 
@@ -435,6 +513,8 @@ export class ApacheAnnotatorVisualizer {
 
             this.clearHighlights();
             this.resizer.hide();
+            // Grips reference the old highlight DOM; drop them before it is torn down and rebuilt.
+            this.relationGripLayer.clear();
 
             if (doc.spans) {
                 console.log(`Loaded ${doc.spans.size} span annotations`);
@@ -466,9 +546,8 @@ export class ApacheAnnotatorVisualizer {
                 this.renderVerticalSelectionMarker(doc);
             }
 
-            if (doc.relations) {
-                this.renderSelectedRelationEndpointHighlights(doc);
-            }
+            this.refreshRelationLabelMode();
+            this.renderRelations(doc);
 
             const endTime = performance.now();
             console.log(`Client-side rendering took ${endTime - startTime}ms`);
@@ -480,6 +559,50 @@ export class ApacheAnnotatorVisualizer {
             this.tracker?.resume({ waitFrames: 2, suppressInitialRefresh: true });
         }
     }
+
+    /**
+     * Draw the relation overlay for `doc`, banded around the *current* viewport. Split out of
+     * renderAnnotations so it can also run on bare scroll (see onContentScroll) without a full
+     * span re-render or an Ajax reload.
+     */
+    private renderRelations(doc: AnnotatedText, remeasureContent = true): void {
+        if (doc.relations) {
+            const container = this.root.closest('.i7n-wrapper') || this.root;
+            this.relationVisualizer.render(
+                doc,
+                {
+                    viewport: container.getBoundingClientRect(),
+                    seclusionMargin: SECLUSION_MARGIN_PX,
+                },
+                { remeasureContent }
+            );
+        } else {
+            this.relationVisualizer.clear();
+        }
+    }
+
+    /**
+     * Re-band the relation overlay on manual scroll. Arcs are only drawn for a band around the
+     * current viewport (perf); the band is expressed in viewport coordinates and therefore moves
+     * with the viewport on *every* scroll frame. This is a paint concern, distinct from the
+     * ViewportTracker's data window: the tracker decides which offset range to fetch/render (coarse,
+     * debounced, and deliberately a superset that only changes when new content scrolls in — see
+     * ViewportTracker.handleIntersectRange), whereas the band must follow the viewport continuously
+     * even while the data window stays put. So this handler is not a workaround for the tracker; it
+     * would be needed even with a perfectly tight tracker. Recompute the band directly from
+     * already-loaded data on each scroll frame; this is cheap (redraws arcs only — no Ajax, no span
+     * re-render). Skipped during programmatic scrolling, which drives its own render at completion.
+     */
+    private onContentScroll = (): void => {
+        if (this.scrolling) return;
+        if (this.relationScrollRaf !== undefined) return;
+        this.relationScrollRaf = requestAnimationFrame(() => {
+            this.relationScrollRaf = undefined;
+            // Bare scroll: the content has not reflowed, only the viewport moved. Skip the overlay
+            // resize + bow-scale remeasure (see RelationVisualizer.render); just re-band and redraw.
+            if (this.data) this.renderRelations(this.data, false);
+        });
+    };
 
     private renderVerticalSelectionMarker(doc: AnnotatedText) {
         // We assume for the moment that only one annotation can be selected at a time
@@ -606,24 +729,6 @@ export class ApacheAnnotatorVisualizer {
 
     private getAllTextMarkers() {
         return this.root.querySelectorAll('.iaa-text-marker');
-    }
-
-    private renderSelectedRelationEndpointHighlights(doc: AnnotatedText) {
-        const selectedAnnotationVids = doc.markedAnnotations.get('focus') || [];
-        for (const relation of doc.relations.values()) {
-            if (!selectedAnnotationVids.includes(relation.vid)) {
-                continue;
-            }
-
-            const sourceVid = relation.arguments[0][0];
-            const targetVid = relation.arguments[1][0];
-            this.getHighlightsForAnnotation(sourceVid).forEach((e) =>
-                e.classList.add(CLASS_RELATED)
-            );
-            this.getHighlightsForAnnotation(targetVid).forEach((e) =>
-                e.classList.add(CLASS_RELATED)
-            );
-        }
     }
 
     // eslint-disable-next-line no-undef
@@ -918,6 +1023,9 @@ export class ApacheAnnotatorVisualizer {
             this.scrolling = true;
             this.sectionAnnotationVisualizer.suspend();
             this.sectionAnnotationCreator.suspend();
+            this.relationVisualizer.suspend();
+            // Grip anchors go stale as the content scrolls; clear and let hover re-derive them.
+            this.relationGripLayer.clear();
 
             // Watch the scroll container for DOM mutations during scrolling. Async
             // renders (e.g. section summary spacers) can shift content above the
@@ -989,6 +1097,7 @@ export class ApacheAnnotatorVisualizer {
         this.scrolling = false;
         this.sectionAnnotationCreator.resume();
         this.sectionAnnotationVisualizer.resume();
+        this.relationVisualizer.resume();
         this.lastScrollTop = undefined;
         this.lastMarkerTop = undefined;
     }
@@ -1014,8 +1123,13 @@ export class ApacheAnnotatorVisualizer {
     destroy(): void {
         this.sectionAnnotationCreator.destroy();
         this.sectionAnnotationVisualizer.destroy();
+        this.relationVisualizer.destroy();
+        this.relationGripLayer.destroy();
+        this.relationDragController.destroy();
         this.tracker.disconnect();
         this.sectionTracker.disconnect();
+        this.scrollContainer?.removeEventListener('scroll', this.onContentScroll);
+        if (this.relationScrollRaf !== undefined) cancelAnimationFrame(this.relationScrollRaf);
         this.clearHighlights();
     }
 }
