@@ -28,6 +28,13 @@
     },
     "keyboardCursorEnabled": {
       "type": "boolean"
+    },
+    "showRelationLabels": {
+      "type": "boolean"
+    },
+    "lineSpacing": {
+      "type": "string",
+      "enum": ["low", "mid", "high", "xhigh"]
     }
   },
   "additionalProperties": false

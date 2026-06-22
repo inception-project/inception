@@ -16,25 +16,19 @@
  * limitations under the License.
  */
 
+export const SVG_NS = 'http://www.w3.org/2000/svg';
+
 /**
- * Line-spacing presets. The actual line-heights live in SCSS next to the
- * `.i7n-wrapper` rule (`iaa-line-spacing-low|mid|high|xhigh`); `mid` is the default.
+ * Create an SVG element with an optional class and attributes, stringifying numeric values.
+ * Centralises the createElementNS + setAttribute + classList boilerplate.
  */
-export type LineSpacing = 'low' | 'mid' | 'high' | 'xhigh';
-export const LINE_SPACINGS: readonly LineSpacing[] = ['low', 'mid', 'high', 'xhigh'];
-
-export const defaultAnnotatorPreferences = {
-    showLabels: true,
-    showRelationLabels: true,
-    showAggregatedLabels: false,
-    showEmptyHighlights: false,
-    showDocumentStructure: false,
-    documentStructureWidth: 0.2,
-    showImages: true,
-    showTables: true,
-    protectElements: true,
-    keyboardCursorEnabled: false,
-    lineSpacing: 'mid' as LineSpacing,
-};
-
-export const annotatorState = $state({ ...defaultAnnotatorPreferences });
+export function svgEl<K extends keyof SVGElementTagNameMap>(
+    tag: K,
+    className?: string,
+    attrs: Record<string, string | number> = {}
+): SVGElementTagNameMap[K] {
+    const el = document.createElementNS(SVG_NS, tag) as SVGElementTagNameMap[K];
+    if (className) el.classList.add(className);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+    return el;
+}

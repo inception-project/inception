@@ -205,6 +205,12 @@ export class ViewportTracker {
         this.redrawTimeoutId = undefined;
     }
 
+    /**
+     * The tracked visible offset range. NOTE: this is a *superset* of the strictly-visible range,
+     * not a tight bound — it is only recomputed when elements are added to the visible set, never
+     * when they leave (see handleIntersectRange). Consumers must treat it as "at least this much is
+     * visible" and never assume content outside it is absent.
+     */
     public get currentRange(): [number, number] {
         return this._currentRange;
     }
@@ -238,8 +244,6 @@ export class ViewportTracker {
             style.display === 'table-row' ||
             style.display === 'list-item'
         );
-
-        // return !style.display.startsWith('inline') && !style.display.includes('math')
     }
 
     private initializeElementTracking(element: Element): void {
@@ -253,10 +257,6 @@ export class ViewportTracker {
             this.shouldTrack(e)
         );
         console.debug(`Found ${trackingCandidates.length} tracking candidates`);
-
-        // const displayStyles = new Set<string>()
-        // trackingCandidates.map(e => getComputedStyle(e).display).forEach(e => displayStyles.add(e))
-        // console.debug('Display styles found: ', displayStyles)
 
         if (trackingCandidates.length > 0) {
             trackingCandidates = trackingCandidates.map((e) => {
@@ -316,7 +316,25 @@ export class ViewportTracker {
             // Ignore any entries while paused
             return;
         }
-        // Avoid triggering the callback if no new elements have become visible
+
+        // We only recompute the range / fire the callback when elements have been *added* to the
+        // visible set, never when they merely leave it. This asymmetry is intentional and safe:
+        //
+        //  - An addition can reveal content that lies outside the current range, so consumers
+        //    (e.g. the annotation fetch window) must be told to extend their coverage.
+        //  - A removal can only ever *shrink* the true visible range. Skipping the recompute then
+        //    means `_currentRange` stays wider than strictly necessary, i.e. it becomes a SUPERSET
+        //    of what is actually on screen. That is harmless: every consumer treats the range as
+        //    "cover at least this much", so a superset over-covers but never drops content.
+        //
+        // Removals are still applied to `_visibleElements` below on every batch, so the stale-wide
+        // bounds are pruned lazily on the next addition-bearing batch (which recomputes a tight
+        // range over the then-current set). The net effect is fewer redundant callbacks/loads while
+        // the visible range only contracts (e.g. scrolling to the document end or fast flings),
+        // with the range tightening again as soon as new content scrolls in.
+        //
+        // Invariant for consumers: `currentRange` is a superset of the truly-visible range; do not
+        // rely on it being a tight bound.
         let visibleElementsAdded = 0;
 
         entries.forEach((entry) => {
