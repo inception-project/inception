@@ -26,7 +26,9 @@ import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.KEYD
 import static de.tudarmstadt.ukp.inception.support.lambda.KeyCodes.ENTER;
 import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.CREATED;
 import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.NAME;
+import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.SENTENCES;
 import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.STATE;
+import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.TOKENS;
 import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.UPDATED;
 import static java.time.Duration.ofMillis;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
@@ -88,9 +90,9 @@ public class CurationDocumentTable
                 item -> item.getState()));
         columns.add(new CurationDocumentOpenActionColumn(this, new ResourceModel("DocumentName"),
                 NAME));
-        columns.add(new LambdaColumn<>(new ResourceModel("DocumentTokens"),
+        columns.add(new LambdaColumn<>(new ResourceModel("DocumentTokens"), TOKENS,
                 $ -> renderCount($, DocumentStatistics::tokenCount)));
-        columns.add(new LambdaColumn<>(new ResourceModel("DocumentSentences"),
+        columns.add(new LambdaColumn<>(new ResourceModel("DocumentSentences"), SENTENCES,
                 $ -> renderCount($, DocumentStatistics::sentenceCount)));
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentCreated"), CREATED,
                 $ -> renderDate($.getCreated())));
@@ -163,7 +165,7 @@ public class CurationDocumentTable
 
     private String renderCount(SourceDocument aDoc, ToLongFunction<DocumentStatistics> aAccessor)
     {
-        var stats = dataProvider.getPageStatistics().get(aDoc.getId());
+        var stats = dataProvider.getStatistics().get(aDoc.getId());
         if (stats == null) {
             return "-";
         }
