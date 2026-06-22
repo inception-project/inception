@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument;
 
 import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.NAME;
+import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.SENTENCES;
+import static de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationDocumentTableSortKeys.TOKENS;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
@@ -30,6 +32,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.ToLongFunction;
 import java.util.stream.Stream;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
@@ -51,7 +54,8 @@ public class CurationDocumentTableDataProvider
     private List<SourceDocument> data;
     private SerializableFunction<Collection<SourceDocument>, //
             Map<Long, DocumentStatistics>> statisticsLoader;
-    private transient Map<Long, DocumentStatistics> pageStatistics;
+    private Map<Long, DocumentStatistics> statistics;
+    private boolean statisticsComplete;
 
     public CurationDocumentTableDataProvider(IModel<List<SourceDocument>> aDocuments)
     {
@@ -70,31 +74,47 @@ public class CurationDocumentTableDataProvider
         statisticsLoader = aLoader;
     }
 
-    public Map<Long, DocumentStatistics> getPageStatistics()
+    /**
+     * Statistics available to the table for rendering and sorting. Depending on the active sort,
+     * this holds either the statistics for the current page or - once token/sentence sorting has
+     * been requested - the cached statistics for the whole document set. Returns an empty map if no
+     * loader has been wired or before the table has been rendered.
+     */
+    public Map<Long, DocumentStatistics> getStatistics()
     {
-        return pageStatistics != null ? pageStatistics : emptyMap();
+        return statistics != null ? statistics : emptyMap();
     }
 
     @Override
     public Iterator<? extends SourceDocument> iterator(long aFirst, long aCount)
     {
         var filteredData = filter(data);
+
+        var sortProperty = getSort().getProperty();
+        var sortByStatistics = sortProperty == TOKENS || sortProperty == SENTENCES;
+
+        // Sorting by token/sentence count needs statistics for the whole document set, not just
+        // the currently visible page. Load them for the full (unfiltered) set once and cache them
+        // so that toggling the sort direction or switching back to another sort column does not
+        // trigger another lookup. The document list is fixed for the lifetime of the dialog, so the
+        // cache never needs to be invalidated.
+        if (sortByStatistics && statisticsLoader != null && !statisticsComplete) {
+            statistics = statisticsLoader.apply(data);
+            statisticsComplete = true;
+        }
+
         filteredData.sort(this::comparator);
+
         var page = filteredData //
                 .subList((int) aFirst, (int) (aFirst + aCount));
 
-        if (statisticsLoader != null) {
-            pageStatistics = statisticsLoader.apply(page);
+        // For non-statistics sorts we only need the counts for the visible page - unless the full
+        // set has already been cached, in which case we just reuse it.
+        if (statisticsLoader != null && !statisticsComplete) {
+            statistics = statisticsLoader.apply(page);
         }
 
         return page.iterator();
-    }
-
-    @Override
-    public void detach()
-    {
-        super.detach();
-        pageStatistics = null;
     }
 
     private int comparator(SourceDocument o1, SourceDocument o2)
@@ -105,6 +125,10 @@ public class CurationDocumentTableDataProvider
             return dir * (o1.getName().compareTo(o2.getName()));
         case STATE:
             return dir * (o1.getState().getName().compareTo(o2.getState().getName()));
+        case TOKENS:
+            return dir * compareStatistics(o1, o2, DocumentStatistics::tokenCount);
+        case SENTENCES:
+            return dir * compareStatistics(o1, o2, DocumentStatistics::sentenceCount);
         case CREATED:
             return dir * compare(o1.getCreated(), o2.getCreated());
         case UPDATED:
@@ -112,6 +136,17 @@ public class CurationDocumentTableDataProvider
         default:
             return 0;
         }
+    }
+
+    private int compareStatistics(SourceDocument o1, SourceDocument o2,
+            ToLongFunction<DocumentStatistics> aAccessor)
+    {
+        var stats = getStatistics();
+        var s1 = stats.get(o1.getId());
+        var s2 = stats.get(o2.getId());
+        var v1 = s1 != null ? aAccessor.applyAsLong(s1) : null;
+        var v2 = s2 != null ? aAccessor.applyAsLong(s2) : null;
+        return compare(v1, v2);
     }
 
     private List<SourceDocument> filter(List<SourceDocument> aData)
