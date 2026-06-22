@@ -29,7 +29,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarStateChangedEvent.Side.LEFT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarStateChangedEvent.Side.RIGHT;
 import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPageLayoutState.KEY_LAYOUT_STATE;
+import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference.SIDEBAR_SIZE_DEFAULT;
+import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference.SIDEBAR_SIZE_MAX;
+import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference.SIDEBAR_SIZE_MIN;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
@@ -99,7 +104,6 @@ import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.log.api.EventRepository;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
@@ -202,47 +206,8 @@ public abstract class AnnotationPageBase2
             public void renderHead(org.apache.wicket.Component aComponent,
                     IHeaderResponse aResponse)
             {
-                // Read sidebar sizes from KEY_LAYOUT_STATE directly. Going via
-                // AnnotatorState.getPreferences() returns defaults at page construction time,
-                // because the user preferences are not loaded until actionLoadDocument runs via
-                // the URL fragment behavior — that would init the splitter at 20%, then the
-                // URL-fragment-driven re-render would shift it to the persisted value, producing
-                // a visible jump. KEY_LAYOUT_STATE is per-project and available immediately.
-                double sizeLeft = AnnotationPreference.SIDEBAR_SIZE_DEFAULT;
-                double sizeRight = AnnotationPreference.SIDEBAR_SIZE_DEFAULT;
-                var project = getProject();
-                if (project != null) {
-                    var layoutState = preferencesService.loadTraitsForUserAndProject(
-                            KEY_LAYOUT_STATE, userRepository.getCurrentUser(), project);
-                    sizeLeft = layoutState.getSidebarSizeLeft();
-                    sizeRight = layoutState.getSidebarSizeRight();
-                }
-
-                var minSize = Options.asString(AnnotationPreference.SIDEBAR_SIZE_MIN + "%");
-                var maxSize = Options.asString(AnnotationPreference.SIDEBAR_SIZE_MAX + "%");
-                Options leftPane;
-                if (leftSidebar.isCollapsed()) {
-                    leftPane = new Options("size", Options.asString(LEFT_SIDEBAR_COLLAPSED_SIZE)) //
-                            .set("resizable", false);
-                }
-                else {
-                    leftPane = new Options("size", Options.asString(sizeLeft + "%")) //
-                            .set("min", minSize) //
-                            .set("max", maxSize);
-                }
-                Options rightPane;
-                if (isRightSidebarVisible()) {
-                    rightPane = new Options("size", Options.asString(sizeRight + "%")) //
-                            .set("min", minSize) //
-                            .set("max", maxSize);
-                }
-                else {
-                    rightPane = new Options("size", Options.asString(RIGHT_SIDEBAR_HIDDEN_SIZE)) //
-                            .set("resizable", false);
-                }
-                setOption("panes", leftPane, //
-                        new Options(), //
-                        rightPane);
+                var panes = buildSplitterPanes();
+                setOption("panes", panes[0], panes[1], panes[2]);
                 super.renderHead(aComponent, aResponse);
             }
 
@@ -250,10 +215,10 @@ public abstract class AnnotationPageBase2
             protected void onResize(AjaxRequestTarget aTarget, double[] aSizes)
             {
                 if (aSizes.length >= 1 && !leftSidebar.isCollapsed()) {
-                    persistSidebarSize(SidebarStateChangedEvent.Side.LEFT, aSizes[0]);
+                    persistSidebarSize(LEFT, aSizes[0]);
                 }
                 if (aSizes.length >= 3 && isRightSidebarVisible()) {
-                    persistSidebarSize(SidebarStateChangedEvent.Side.RIGHT, aSizes[2]);
+                    persistSidebarSize(RIGHT, aSizes[2]);
                 }
             }
         };
@@ -295,8 +260,7 @@ public abstract class AnnotationPageBase2
         if (project == null) {
             return;
         }
-        if (aSize < AnnotationPreference.SIDEBAR_SIZE_MIN
-                || aSize > AnnotationPreference.SIDEBAR_SIZE_MAX) {
+        if (aSize < SIDEBAR_SIZE_MIN || aSize > SIDEBAR_SIZE_MAX) {
             return;
         }
 
@@ -332,17 +296,61 @@ public abstract class AnnotationPageBase2
         aTarget.add(actionBar, actionBarToggle);
     }
 
+    private Options[] buildSplitterPanes()
+    {
+        double sizeLeft = SIDEBAR_SIZE_DEFAULT;
+        double sizeRight = SIDEBAR_SIZE_DEFAULT;
+        var project = getProject();
+        if (project != null) {
+            var layoutState = preferencesService.loadTraitsForUserAndProject(KEY_LAYOUT_STATE,
+                    userRepository.getCurrentUser(), project);
+            sizeLeft = layoutState.getSidebarSizeLeft();
+            sizeRight = layoutState.getSidebarSizeRight();
+        }
+
+        var minSize = Options.asString(SIDEBAR_SIZE_MIN + "%");
+        var maxSize = Options.asString(SIDEBAR_SIZE_MAX + "%");
+        Options leftPane;
+        if (leftSidebar.isCollapsed()) {
+            leftPane = new Options("size", Options.asString(LEFT_SIDEBAR_COLLAPSED_SIZE)) //
+                    .set("resizable", false);
+        }
+        else {
+            leftPane = new Options("size", Options.asString(sizeLeft + "%")) //
+                    .set("min", minSize) //
+                    .set("max", maxSize);
+        }
+        Options rightPane;
+        if (isRightSidebarVisible()) {
+            rightPane = new Options("size", Options.asString(sizeRight + "%")) //
+                    .set("min", minSize) //
+                    .set("max", maxSize);
+        }
+        else {
+            rightPane = new Options("size", Options.asString(RIGHT_SIDEBAR_HIDDEN_SIZE)) //
+                    .set("resizable", false);
+        }
+        return new Options[] { leftPane, new Options(), rightPane };
+    }
+
+    private String getSplitterPanesJson()
+    {
+        var panes = buildSplitterPanes();
+        return "[" + panes[0] + "," + panes[1] + "," + panes[2] + "]";
+    }
+
     @OnEvent
     public void onSidebarStateChanged(SidebarStateChangedEvent aEvent)
     {
-        if (aEvent.getSide() != SidebarStateChangedEvent.Side.LEFT) {
+        if (aEvent.getSide() != LEFT) {
             return;
         }
 
-        // Re-render the splitter so its renderHead recomputes the panes config
-        // (left pane fixed and non-resizable when collapsed; restored otherwise).
-        splitterBehavior.destroy(aEvent.getTarget());
-        aEvent.getTarget().add(splitterContainer);
+        var target = aEvent.getTarget();
+
+        splitterBehavior.destroy(target);
+        target.add(leftSidebar);
+        splitterBehavior.reconfigure(target, getSplitterPanesJson());
     }
 
     @Override
