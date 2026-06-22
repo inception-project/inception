@@ -42,6 +42,21 @@
     background-color: var(--bs-secondary-border-subtle) !important;
 }
 
+// Kendo positions the resize handle (grip) at its static position, which leaves it
+// flush against one edge of the splitbar instead of centered across the bar's width.
+// Pin it to the center of the cross-axis so the grip sits in the middle of the divider.
+.k-splitbar-horizontal .k-resize-handle {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+}
+
+.k-splitbar-vertical .k-resize-handle {
+    top: 50% !important;
+    bottom: auto !important;
+    transform: translateY(-50%) !important;
+}
+
 // Adjust the Kendo dropdowns (i.e. the combo box) to use less vertical space and be more in line
 // with the other Bootstrap inputs
 .k-dropdown-wrap {
