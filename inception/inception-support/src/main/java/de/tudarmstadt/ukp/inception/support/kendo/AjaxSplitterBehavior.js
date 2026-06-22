@@ -142,4 +142,25 @@ function destroyInceptionAjaxSplitter(selector) {
   $splitter.removeData('inceptionAjaxSplitter');
   const splitter = $splitter.data('kendoSplitter');
   if (splitter) splitter.destroy();
+  $splitter.removeData('kendoSplitter');
+}
+
+// Re-create the Kendo splitter in place with a new pane configuration, reusing the existing pane
+// DOM elements (and whatever they contain, e.g. an editor iframe) so their state - in particular
+// an iframe's scroll position - survives. Use this instead of destroying the widget and having
+// Wicket re-render the whole splitter when some pane content must be preserved across the change.
+function reconfigureInceptionAjaxSplitter(selector, panes, url, orientation) {
+  const $splitter = $(selector);
+  if (!$splitter.length) return;
+  const state = $splitter.data('inceptionAjaxSplitter');
+  if (state && state.eventNs) {
+    $(window).off(state.eventNs);
+  }
+  const existing = $splitter.data('kendoSplitter');
+  if (existing) existing.destroy();
+  $splitter.removeData('kendoSplitter');
+  $splitter.removeData('inceptionAjaxSplitter');
+  $splitter.children('.k-splitbar').remove();
+  $splitter.kendoSplitter({ orientation: orientation, panes: panes });
+  initInceptionAjaxSplitter(selector, url, orientation);
 }
