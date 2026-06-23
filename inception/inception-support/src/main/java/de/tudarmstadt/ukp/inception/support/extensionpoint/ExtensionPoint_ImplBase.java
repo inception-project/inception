@@ -34,7 +34,9 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
+import org.springframework.core.annotation.Order;
 
 public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
     implements ExtensionPoint<C, E>
@@ -50,6 +52,12 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
         extensionsListProxy = aExtensions;
     }
 
+    // Initialize extension points before any other ContextRefreshedEvent listener so that
+    // services accessing extensions from their own listener (e.g. to look up an extension by id)
+    // find the extension list already populated. Spring does not otherwise define the order in
+    // which @EventListener methods are invoked. Initialization only depends on the
+    // constructor-injected extension list, so running first is always safe.
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
