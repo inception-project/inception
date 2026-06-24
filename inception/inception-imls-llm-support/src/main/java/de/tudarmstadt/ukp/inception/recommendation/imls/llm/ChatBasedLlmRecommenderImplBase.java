@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContextGenerator.VAR_EXAMPLES;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.prompt.PromptContextGenerator.getPromptContextGenerator;
 import static de.tudarmstadt.ukp.inception.scheduling.ProgressScope.SCOPE_UNITS;
-import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
@@ -164,7 +163,11 @@ public abstract class ChatBasedLlmRecommenderImplBase<T extends LlmRecommenderTr
                 traits.getAuthentication(), traits.getCapabilities());
 
         var options = recommenderDefaults(traits.getOptions());
-        var chatOptions = new ChatOptions(aResponseformat, aJsonSchema, emptyList(), options);
+        var chatOptions = ChatOptions.builder() //
+                .withResponseFormat(aResponseformat) //
+                .withJsonSchema(aJsonSchema) //
+                .withOptions(options) //
+                .build();
 
         var result = client.chat(endpoint, aPrompt, chatOptions);
         LOG.trace("[{}] response: [{}]", providerId, result.message().content());

@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions.TEMPERATURE;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions.TOP_P;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -152,6 +155,15 @@ public class OllamaLlmChatClient
                 .withThink(false) //
                 .withStream(aStream);
 
+        // Translate the provider-neutral fields to Ollama's parameters; explicit options below
+        // override them.
+        if (aOptions.temperature() != null) {
+            builder.withOption(TEMPERATURE, aOptions.temperature());
+        }
+        if (aOptions.topP() != null) {
+            builder.withOption(TOP_P, aOptions.topP());
+        }
+
         if (aOptions.options() != null) {
             builder.withExtraOptions(aOptions.options());
         }
@@ -169,7 +181,25 @@ public class OllamaLlmChatClient
     {
         // tool_call_id is not currently part of the OllamaChatMessage DTO; Ollama matches tool
         // results to calls positionally. Drop the id on the way out.
-        return new OllamaChatMessage(aMessage.role().getName(), aMessage.content());
+        var toolCalls = aMessage.toolCalls().stream() //
+                .map(OllamaLlmChatClient::toOllamaToolCall) //
+                .toList();
+        return new OllamaChatMessage(aMessage.role().getName(), aMessage.content(),
+                aMessage.thinking(), toolCalls);
+    }
+
+    private static OllamaToolCall toOllamaToolCall(ToolCall aCall)
+    {
+        var functionCall = new OllamaFunctionCall();
+        functionCall.setName(aCall.name());
+        if (aCall.arguments() != null && !aCall.arguments().isNull()) {
+            @SuppressWarnings("unchecked")
+            var arguments = JSONUtil.getObjectMapper().convertValue(aCall.arguments(), Map.class);
+            functionCall.setArguments(arguments);
+        }
+        var toolCall = new OllamaToolCall();
+        toolCall.setFunction(functionCall);
+        return toolCall;
     }
 
     private static OllamaTool toOllamaTool(ToolDescriptor aDescriptor)

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.config;
 
+import java.util.Map;
 import java.util.Set;
 
 public interface AssistantChatProperties
@@ -26,6 +27,23 @@ public interface AssistantChatProperties
 
     String CAP_COMPLETION = "completion";
     String CAP_TOOLS = "tools";
+
+    /**
+     * @return the LLM provider id for chat, or {@code null} to inherit the top-level
+     *         {@code assistant.provider}.
+     */
+    String getProvider();
+
+    /**
+     * @return the chat endpoint URL, or {@code null} to inherit the top-level
+     *         {@code assistant.url}.
+     */
+    String getUrl();
+
+    /**
+     * @return the chat API key, or {@code null} to inherit the top-level {@code assistant.api-key}.
+     */
+    String getApiKey();
 
     String getModel();
 
@@ -42,4 +60,13 @@ public interface AssistantChatProperties
     int getContextLength();
 
     String getEncoding();
+
+    /**
+     * Free-form, provider-specific generation options merged onto the request alongside the typed
+     * settings above. Keys must match the configured provider's wire API (e.g. {@code num_ctx},
+     * {@code top_k} for Ollama; {@code max_tokens}, {@code frequency_penalty} for OpenAI). Entries
+     * here override the typed settings when keys collide. The escape hatch for knobs that have no
+     * provider-neutral equivalent.
+     */
+    Map<String, Object> getOptions();
 }
