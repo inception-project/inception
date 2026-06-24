@@ -249,7 +249,7 @@
 
 <!-- svelte-ignore css_unused_selector -->
 <style lang="scss">
-    @import 'bootstrap/scss/bootstrap.scss';
+    @use 'bootstrap/scss/bootstrap.scss';
     @import '../style/InceptionEditorIcons.scss';
     @import '../style/InceptionEditorColors.scss';
 

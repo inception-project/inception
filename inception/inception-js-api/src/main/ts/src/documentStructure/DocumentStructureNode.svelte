@@ -119,7 +119,7 @@
 
 <!-- svelte-ignore css_unused_selector -->
 <style lang="scss">
-    @import '../../node_modules/bootstrap/scss/bootstrap.scss';
+    @use 'bootstrap/scss/bootstrap.scss';
 
     :root {
         --animation-speed: 200ms;
