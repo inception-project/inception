@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.pdfeditor2;
 import static de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils.referenceToUrl;
 import static java.util.Arrays.asList;
 
+import java.util.List;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -67,8 +69,8 @@ public class PdfAnnotationEditor
     @Override
     protected Component makeView()
     {
-        AnnotatorState state = getModelObject();
-        String format = state.getDocument().getFormat();
+        var state = getModelObject();
+        var format = state.getDocument().getFormat();
         if (!format.equals(PdfFormatSupport.ID)) {
             return new WrongFileFormatPanel(VIS, format);
         }
@@ -85,11 +87,24 @@ public class PdfAnnotationEditor
         // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
         // defined in main.ts
         props.setEditorFactory("PdfAnnotationEditor.factory()");
-        props.setStylesheetSources(asList(
-                referenceToUrl(servletContext, PdfAnnotationEditorCssResourceReference.get())));
-        props.setScriptSources(asList(referenceToUrl(servletContext,
-                PdfAnnotationEditorJavascriptResourceReference.get())));
         props.setLoadingIndicatorDisabled(true);
         return props;
+    }
+
+    @Override
+    protected List<String> getStylesheetSources()
+    {
+        // super.getStylesheetSources() intentionally not called here - this editor is not
+        // customizable
+        return asList(
+                referenceToUrl(servletContext, PdfAnnotationEditorCssResourceReference.get()));
+    }
+
+    @Override
+    protected List<String> getScriptSources()
+    {
+        // super.getScriptSources() intentionally not called here - this editor is not customizable
+        return asList(referenceToUrl(servletContext,
+                PdfAnnotationEditorJavascriptResourceReference.get()));
     }
 }

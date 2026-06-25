@@ -30,6 +30,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.wicket.Component;
@@ -45,6 +46,7 @@ import org.slf4j.Logger;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7CssReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
@@ -63,6 +65,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.command.QueuedEditorCommandsM
 import de.tudarmstadt.ukp.inception.externaleditor.command.ScrollToCommand;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.externaleditor.resources.ExternalEditorJavascriptResourceReference;
+import de.tudarmstadt.ukp.inception.io.xml.css.StylesheetRegistry;
 import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -87,6 +90,8 @@ public abstract class ExternalAnnotationEditorBase
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean ServletContext context;
     private @SpringBean UserDao userService;
+    private @SpringBean StylesheetRegistry stylesheetRegistry;
+    private @SpringBean DocumentImportExportService documentImportExportService;
 
     private final String editorFactoryId;
 
@@ -129,6 +134,36 @@ public abstract class ExternalAnnotationEditorBase
         return annotationEditorRegistry.getEditorFactory(editorFactoryId);
     }
 
+    protected List<String> getStylesheetSources()
+    {
+        var sources = new ArrayList<String>();
+
+        for (var reference : stylesheetRegistry.listStylesheetReferences()) {
+            sources.add(referenceToUrl(context, reference));
+        }
+
+        return sources;
+    }
+
+    /**
+     * Build the script source list. Format-specific adapters (e.g. the document-structure factory
+     * registered by {@code NisoDocumentStructure.min.js}) must come before the editor JS so their
+     * globals are registered by the time the editor bundle initializes and reads
+     * {@code props.documentStructureFactory}. The external-editor loader inserts scripts with
+     * {@code script.async = false}, so this ordering is honoured.
+     */
+    protected List<String> getScriptSources()
+    {
+        var sources = new ArrayList<String>();
+
+        for (var reference : documentImportExportService
+                .getFormatJavaScripts(getModelObject().getDocument())) {
+            sources.add(referenceToUrl(context, reference));
+        }
+
+        return sources;
+    }
+
     protected DiamAjaxBehavior createDiamBehavior()
     {
         return new DiamAjaxBehavior(contextMenu);
@@ -161,7 +196,7 @@ public abstract class ExternalAnnotationEditorBase
 
         aResponse.render(forReference(ExternalEditorJavascriptResourceReference.get()));
 
-        if (getModelObject().getDocument() != null && getProperties() != null) {
+        if (getModelObject().getDocument() != null) {
             aResponse.render(forScript(wrapInTryCatch(initScript())));
         }
     }
@@ -216,11 +251,17 @@ public abstract class ExternalAnnotationEditorBase
         props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
         props.setDiamWsUrl(constructWsEndpointUrl());
         props.setCsrfToken(getCsrfTokenFromSession());
+        props.setStylesheetSources(getStylesheetSources());
+        props.setScriptSources(getScriptSources());
 
         if (getFactory() instanceof ClientSideUserPreferencesProvider factory) {
             factory.getUserPreferencesKey()
                     .ifPresent(key -> props.setUserPreferencesKey(key.getClientSideKey()));
         }
+
+        documentImportExportService
+                .getFormatDocumentStructureFactory(getModelObject().getDocument())
+                .ifPresent(props::setDocumentStructureFactory);
 
         return props;
     }
