@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_VIRTUOSO;
+import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
@@ -25,6 +26,7 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.PropertyPath;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder;
+import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri;
 
@@ -58,10 +60,11 @@ public interface SPARQLVariables
     Variable VAR_DESC_CANDIDATE = var(VAR_DESCRIPTION_CANDIDATE_NAME);
     Variable VAR_DEPRECATION = var(VAR_DEPRECATION_NAME);
 
-    // Some versions of Virtuoso do not like it when we declare the bif prefix.
-    // Prefix PREFIX_VIRTUOSO_SEARCH = prefix("bif", iri(PREFIX_VIRTUOSO));
-    // Iri VIRTUOSO_QUERY = PREFIX_VIRTUOSO_SEARCH.iri("contains");
-    Iri VIRTUOSO_QUERY = iri(PREFIX_VIRTUOSO, "contains");
+    // The Virtuoso FTS predicate must be rendered as the magic "bif:contains" prefixed name with
+    // the "bif" prefix declared (expanding to the engine-internal "bif:" namespace). The full-IRI
+    // form silently returns no results on stricter Virtuoso instances. See issue #6125.
+    Prefix PREFIX_VIRTUOSO_SEARCH = prefix("bif", iri(PREFIX_VIRTUOSO));
+    Iri VIRTUOSO_QUERY = PREFIX_VIRTUOSO_SEARCH.iri("contains");
 
     Iri OWL_INTERSECTIONOF = iri(OWL.INTERSECTIONOF.stringValue());
     Iri RDF_REST = iri(RDF.REST.stringValue());
