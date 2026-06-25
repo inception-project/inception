@@ -26,6 +26,20 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+    - name: Free disk space
+      # Must run before "Harden Runner" since that disables sudo, which this needs.
+      # Only deletes local files (no network), so it is compatible with the egress block.
+      if: runner.os == 'Linux'
+      uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
+      with:
+        tool-cache: true
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
+        swap-storage: true
+
     - name: Harden Runner
       uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
       with:
