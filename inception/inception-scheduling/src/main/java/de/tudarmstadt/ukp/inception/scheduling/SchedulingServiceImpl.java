@@ -47,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
@@ -83,6 +84,8 @@ public class SchedulingServiceImpl
     private final List<Task> enqueuedTasks;
     private final List<Task> pendingAcknowledgement;
     private final Map<Project, AtomicInteger> suspended;
+
+    private volatile boolean applicationReady = false;
 
     @Autowired
     public SchedulingServiceImpl(ApplicationContext aApplicationContext,
@@ -278,6 +281,12 @@ public class SchedulingServiceImpl
 
         if (!aTask.isReadyToStart()) {
             LOG.debug("Task not yet ready to start - adding to queue: [{}]", aTask);
+            enqueuedTasks.add(aTask);
+            return;
+        }
+
+        if (!applicationReady) {
+            LOG.debug("Application not yet ready - adding to queue: [{}]", aTask);
             enqueuedTasks.add(aTask);
             return;
         }
@@ -497,8 +506,20 @@ public class SchedulingServiceImpl
         logState();
     }
 
+    @EventListener
+    public void onApplicationReady(ApplicationReadyEvent aEvent)
+    {
+        applicationReady = true;
+        LOG.debug("Application ready - releasing queued tasks");
+        scheduleEligibleTasks();
+    }
+
     private synchronized void scheduleEligibleTasks()
     {
+        if (!applicationReady) {
+            return;
+        }
+
         var i = enqueuedTasks.iterator();
 
         while (i.hasNext()) {
