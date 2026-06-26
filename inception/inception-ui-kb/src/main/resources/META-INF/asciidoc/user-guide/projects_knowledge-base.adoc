@@ -64,9 +64,11 @@ The remote knowledge bases, there are the following settings:
   help if the remote server is using a self-signed certificate. It should be avoided to use this
   option in production. Instead, better install the remote certificate into your Java environment
   so it can be validated. 
-* **Default dataset:** A SPARQL endpoint may server multiple datasets. This setting can be used to
-  restrict queries to a specific one. Consult with the operator of the SPARQL server to see which
-  datasets are available.
+* **Datasets:** A SPARQL endpoint may serve multiple datasets (named graphs). This setting can be
+  used to restrict queries to one or more specific datasets. You can enter the dataset IRIs manually
+  or use the **Load available datasets** button to discover the datasets available on the endpoint.
+  Consult with the operator of the SPARQL server if you are unsure which datasets are available.
+  If no dataset is selected, queries run against the default graph.
 
 NOTE: **Changing the URL of a remote KB currently only takes affect after {product-name} is restarted!**
       The updated URL will be shown in the settings, but queries will still be sent to the old URL until you restart {product-name}.
