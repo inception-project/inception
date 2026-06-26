@@ -111,11 +111,11 @@ public class FtsAdapterWikidata
         var language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage()
                 : FALLBACK_LANGUAGE;
 
-        if (aPrefixQuery.isEmpty()) {
+        var sanitizedValue = builder.sanitizeQueryString_FTS(aPrefixQuery);
+
+        if (isBlank(sanitizedValue)) {
             builder.noResult();
         }
-
-        var sanitizedValue = builder.sanitizeQueryString_FTS(aPrefixQuery);
 
         builder.addPattern(PRIMARY, and( //
                 builder.bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
