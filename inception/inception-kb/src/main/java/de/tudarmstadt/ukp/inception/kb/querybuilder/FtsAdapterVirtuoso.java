@@ -108,10 +108,7 @@ public class FtsAdapterVirtuoso
             queryString = virtuosoStartsWithQuery(queryString);
         }
 
-        // If the query string was reduced to nothing, then the query should always return an
-        // empty
-        // result.
-        if (queryString.length() == 2) {
+        if (queryString.isBlank()) {
             builder.noResult();
         }
 
@@ -171,6 +168,10 @@ public class FtsAdapterVirtuoso
             // wildcard
             if (!value.endsWith(" ")) {
                 sanitizedValue = FtsAdapterVirtuoso.virtuosoStartsWithQuery(sanitizedValue);
+            }
+
+            if (isBlank(sanitizedValue)) {
+                continue;
             }
 
             valuePatterns.add(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM).and(
