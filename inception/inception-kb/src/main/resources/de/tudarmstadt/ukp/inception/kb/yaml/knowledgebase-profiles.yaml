@@ -408,6 +408,12 @@ mesh:
   # The endpoint hosts the current release as well as one named graph per year. Restricting the
   # queries to the current-release graph avoids getting the same descriptor back once per year.
   default-dataset: http://id.nlm.nih.gov/mesh
+  # The MeSH ontology/schema - including the rdfs:label sub-property declarations for
+  # meshv:prefLabel and meshv:altLabel - lives in a separate vocab graph. We include it so those
+  # declarations are visible to queries (the per-year duplication concern only affects the
+  # descriptor data graphs, not the schema graph).
+  additional-datasets:
+    - http://id.nlm.nih.gov/mesh/vocab
   access:
     access-url: https://id.nlm.nih.gov/mesh/sparql
     full-text-search: bif:contains
@@ -425,13 +431,10 @@ mesh:
     property-label: http://www.w3.org/2000/01/rdf-schema#label
     property-description: http://www.w3.org/2000/01/rdf-schema#comment
     deprecation-property: http://www.w3.org/2002/07/owl#deprecated
-  additional-matching-properties:
-    - http://id.nlm.nih.gov/mesh/vocab#altLabel
-    # MeSH descriptors carry their name in rdfs:label, but term (T...) and concept (M...) nodes
-    # carry it only in meshv:prefLabel. That property is declared as an rdfs:label sub-property,
-    # but only in the .../mesh/vocab graph which the default-dataset excludes - so it is listed
-    # explicitly here to let such nodes resolve a label instead of falling back to their IRI.
-    - http://id.nlm.nih.gov/mesh/vocab#prefLabel
+  # MeSH descriptors carry their name in rdfs:label, but term (T...) and concept (M...) nodes carry
+  # it only in meshv:prefLabel (and synonyms in meshv:altLabel). Both are declared as rdfs:label
+  # sub-properties in the vocab graph (included via additional-datasets above), so they are resolved
+  # automatically via the sub-property hierarchy - no explicit additional-matching-properties needed.
   info:
     description: |
       Medical Subject Headings (MeSH) is the U.S. National Library of Medicine's controlled
