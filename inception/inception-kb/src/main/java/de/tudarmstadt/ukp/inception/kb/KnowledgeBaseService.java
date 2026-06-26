@@ -393,6 +393,17 @@ public interface KnowledgeBaseService
 
     RepositoryConnection getConnection(KnowledgeBase kb);
 
+    /**
+     * Lists the named graphs (datasets) offered by the given knowledge base. This requires the
+     * knowledge base to be registered (i.e. saved) and may be an expensive operation on large
+     * remote endpoints as it has to enumerate the graphs via a SPARQL query.
+     *
+     * @param aKB
+     *            the knowledge base to query.
+     * @return the IRIs of the named graphs offered by the knowledge base.
+     */
+    List<String> listDatasets(KnowledgeBase aKB) throws QueryEvaluationException;
+
     interface ReadAction<T>
     {
         T accept(RepositoryConnection aConnection);

@@ -58,6 +58,19 @@
       <select wicket:id="fullTextSearchIri" class="form-select" data-size="5"/>
     </div>
   </div>
+  <div class="row form-row" wicket:id="datasetsContainer">
+    <label class="col-form-label col-sm-3" wicket:for="datasets">
+      <wicket:label key="kb.iri.datasets"/>
+    </label>
+    <div class="col-sm-9">
+      <div class="input-group">
+        <select wicket:id="datasets"/>
+        <a wicket:id="loadDatasets" class="btn btn-outline-secondary">
+          <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </div>
 </wicket:panel>
 </body>
 </html>

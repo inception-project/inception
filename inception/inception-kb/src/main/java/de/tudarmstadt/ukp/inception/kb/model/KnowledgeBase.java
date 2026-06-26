@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.model;
 
 import static de.tudarmstadt.ukp.inception.kb.reification.Reification.NONE;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -161,6 +162,16 @@ public class KnowledgeBase
      */
     @Column(nullable = true)
     private String defaultDatasetIri;
+
+    /**
+     * The IRIs of additional datasets (graphs) to include in queries next to the default dataset.
+     * This is useful e.g. when the schema (property/class definitions) of a knowledge base lives in
+     * a separate graph from the instance data (as is the case for MeSH).
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "knowledgebase_add_datasets")
+    @Column(name = "name", nullable = false)
+    private Set<String> additionalDatasetIris = new LinkedHashSet<>();
 
     @Column(nullable = false)
     private boolean readOnly;
@@ -505,6 +516,14 @@ public class KnowledgeBase
         applyRootConcepts(aProfile);
         applyMapping(aProfile.getMapping());
         applyAdditionalLanguages(aProfile);
+        applyAdditionalDatasets(aProfile);
+    }
+
+    public void applyAdditionalDatasets(KnowledgeBaseProfile aProfile)
+    {
+        additionalDatasetIris = new LinkedHashSet<>(
+                aProfile.getAdditionalDatasets() == null ? emptyList()
+                        : aProfile.getAdditionalDatasets());
     }
 
     public void applyAdditionalLanguages(KnowledgeBaseProfile aProfile)
@@ -525,6 +544,16 @@ public class KnowledgeBase
     public void setDefaultDatasetIri(String aDefaultDatasetIri)
     {
         defaultDatasetIri = aDefaultDatasetIri;
+    }
+
+    public Set<String> getAdditionalDatasetIris()
+    {
+        return additionalDatasetIris;
+    }
+
+    public void setAdditionalDatasetIris(Collection<String> aAdditionalDatasetIris)
+    {
+        additionalDatasetIris = new LinkedHashSet<>(aAdditionalDatasetIris);
     }
 
     public void setSkipSslValidation(boolean aSkipSslValidation)

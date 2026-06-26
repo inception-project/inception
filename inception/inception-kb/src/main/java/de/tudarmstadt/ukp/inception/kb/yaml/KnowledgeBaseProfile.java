@@ -79,6 +79,9 @@ public class KnowledgeBaseProfile
     @JsonProperty("default-dataset")
     private String defaultDataset;
 
+    @JsonProperty("additional-datasets")
+    private List<String> additionalDatasets;
+
     @JsonProperty("base-prefix")
     private String basePrefix = IriConstants.INCEPTION_NAMESPACE;
 
@@ -242,6 +245,16 @@ public class KnowledgeBaseProfile
         defaultDataset = aDefaultDataset;
     }
 
+    public List<String> getAdditionalDatasets()
+    {
+        return additionalDatasets;
+    }
+
+    public void setAdditionalDatasets(List<String> aAdditionalDatasets)
+    {
+        additionalDatasets = aAdditionalDatasets;
+    }
+
     public void setBasePrefix(String aBasePrefix)
     {
         basePrefix = aBasePrefix;
@@ -294,6 +307,7 @@ public class KnowledgeBaseProfile
                 && Objects.equals(reification, that.reification) //
                 && Objects.equals(defaultLanguage, that.defaultLanguage) //
                 && Objects.equals(defaultDataset, that.defaultDataset) //
+                && Objects.equals(additionalDatasets, that.additionalDatasets) //
                 && Objects.equals(additionalMatchingProperties, that.additionalMatchingProperties) //
                 && Objects.equals(additionalLanguages, that.additionalLanguages) //
                 && Objects.equals(basePrefix, that.basePrefix);
@@ -303,8 +317,8 @@ public class KnowledgeBaseProfile
     public int hashCode()
     {
         return Objects.hash(name, disabled, type, access, mapping, rootConcepts, info, reification,
-                defaultLanguage, defaultDataset, additionalMatchingProperties, additionalLanguages,
-                basePrefix);
+                defaultLanguage, defaultDataset, additionalDatasets, additionalMatchingProperties,
+                additionalLanguages, basePrefix);
     }
 
     @Override

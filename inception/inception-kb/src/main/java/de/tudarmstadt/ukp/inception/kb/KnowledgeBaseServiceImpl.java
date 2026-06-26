@@ -178,6 +178,8 @@ public class KnowledgeBaseServiceImpl
 {
     private static final int LOCAL_FUZZY_PREFIX_LENGTH = 3;
 
+    private static final int DATASET_ENUMERATION_TIMEOUT_SECONDS = 30;
+
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @PersistenceContext EntityManager entityManager;
@@ -1316,6 +1318,30 @@ public class KnowledgeBaseServiceImpl
     {
         try (var conn = getConnection(kb)) {
             return aAction.accept(conn);
+        }
+    }
+
+    @Override
+    public List<String> listDatasets(KnowledgeBase aKB) throws QueryEvaluationException
+    {
+        try (var watch = new StopWatch(LOG, "listDatasets()")) {
+            return read(aKB, conn -> {
+                var query = conn
+                        .prepareTupleQuery("SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o } }");
+                query.setMaxExecutionTime(DATASET_ENUMERATION_TIMEOUT_SECONDS);
+
+                var datasets = new ArrayList<String>();
+                try (var result = query.evaluate()) {
+                    while (result.hasNext()) {
+                        var g = result.next().getValue("g");
+                        if (g != null) {
+                            datasets.add(g.stringValue());
+                        }
+                    }
+                }
+                datasets.sort(String::compareToIgnoreCase);
+                return datasets;
+            });
         }
     }
 

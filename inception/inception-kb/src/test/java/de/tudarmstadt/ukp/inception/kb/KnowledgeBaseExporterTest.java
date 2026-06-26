@@ -251,6 +251,8 @@ public class KnowledgeBaseExporterTest
         kb.setRootConcepts(asList("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation",
                 "http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation"));
         kb.setDefaultLanguage("en");
+        kb.setAdditionalDatasetIris(
+                asList("http://example.org/graph1", "http://example.org/graph2"));
         return kb;
     }
 }

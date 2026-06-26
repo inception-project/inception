@@ -2133,6 +2133,52 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .isEqualTo("InSecond");
     }
 
+    @Test
+    public void listDatasets_ShouldReturnNamedGraphsExcludingTheDefaultGraph() throws Exception
+    {
+        setUp(Reification.NONE);
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        var schemaGraph = "http://example.org/graph/schema";
+        var instanceGraph = "http://example.org/graph/instances";
+
+        sut.update(kb, conn -> {
+            var vf = conn.getValueFactory();
+            // Statements in two distinct named graphs
+            conn.add(vf.createIRI("http://example.org/s1"), RDFS.LABEL, vf.createLiteral("S1"),
+                    vf.createIRI(schemaGraph));
+            conn.add(vf.createIRI("http://example.org/s2"), RDFS.LABEL, vf.createLiteral("S2"),
+                    vf.createIRI(instanceGraph));
+            // A statement in the default graph (no context) which must not be reported as a graph
+            conn.add(vf.createIRI("http://example.org/s3"), RDFS.LABEL, vf.createLiteral("S3"));
+        });
+
+        var datasets = sut.listDatasets(kb);
+
+        assertThat(datasets) //
+                .as("Named graphs are returned sorted and the default graph is excluded") //
+                .containsExactly(instanceGraph, schemaGraph);
+    }
+
+    @Test
+    public void listDatasets_WithoutNamedGraphs_ShouldReturnEmptyList() throws Exception
+    {
+        setUp(Reification.NONE);
+
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        sut.update(kb, conn -> {
+            var vf = conn.getValueFactory();
+            // Only a statement in the default graph
+            conn.add(vf.createIRI("http://example.org/s1"), RDFS.LABEL, vf.createLiteral("S1"));
+        });
+
+        assertThat(sut.listDatasets(kb)) //
+                .as("No named graphs present") //
+                .isEmpty();
+    }
+
     // Helper
     private Project createProject(String name)
     {

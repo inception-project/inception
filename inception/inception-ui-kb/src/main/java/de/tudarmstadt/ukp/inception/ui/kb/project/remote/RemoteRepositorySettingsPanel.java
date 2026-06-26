@@ -25,6 +25,7 @@ import static java.util.Arrays.asList;
 import java.util.Map;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
@@ -45,6 +46,7 @@ import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCreden
 import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCredentialsAuthenticationTraitsEditor;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
+import de.tudarmstadt.ukp.inception.ui.kb.project.RemoteRepositoryUrlChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.project.validators.Validators;
 
 public class RemoteRepositorySettingsPanel
@@ -56,7 +58,6 @@ public class RemoteRepositorySettingsPanel
 
     private final TextField<String> urlField;
     private final CheckBox skipSslValidation;
-    private final TextField<String> defaultDatasetField;
     private final DropDownChoice<AuthenticationType> authenticationType;
 
     private AuthenticationTraitsEditor<?> authenticationTraitsEditor;
@@ -69,6 +70,8 @@ public class RemoteRepositorySettingsPanel
 
         urlField = new RequiredTextField<>("url");
         urlField.add(Validators.URL_VALIDATOR);
+        urlField.add(
+                new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, this::actionUrlChanged));
         queue(urlField);
 
         authenticationType = new DropDownChoice<>("authenticationType",
@@ -83,11 +86,13 @@ public class RemoteRepositorySettingsPanel
         skipSslValidation = new CheckBox("skipSslValidation", kbModel.bind("kb.skipSslValidation"));
         skipSslValidation.setOutputMarkupPlaceholderTag(true);
         queue(skipSslValidation);
+    }
 
-        defaultDatasetField = new TextField<>("defaultDataset",
-                kbModel.bind("kb.defaultDatasetIri"));
-        defaultDatasetField.add(Validators.IRI_VALIDATOR);
-        queue(defaultDatasetField);
+    private void actionUrlChanged(AjaxRequestTarget aTarget)
+    {
+        // The set of named graphs offered for selection depends on the endpoint. Notify interested
+        // components (e.g. the datasets field) that the URL changed so they can drop stale choices.
+        send(getPage(), Broadcast.BREADTH, new RemoteRepositoryUrlChangedEvent(aTarget));
     }
 
     @SuppressWarnings("unchecked")
