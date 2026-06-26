@@ -37,7 +37,6 @@ import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
-import de.tudarmstadt.ukp.inception.io.xml.css.StylesheetRegistry;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import jakarta.servlet.ServletContext;
 
@@ -51,7 +50,6 @@ public class ApacheAnnotatorHtmlAnnotationEditor
     private @SpringBean DocumentService documentService;
     private @SpringBean ServletContext servletContext;
     private @SpringBean DocumentImportExportService documentImportExportService;
-    private @SpringBean StylesheetRegistry stylesheetSources;
 
     public ApacheAnnotatorHtmlAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
@@ -76,49 +74,29 @@ public class ApacheAnnotatorHtmlAnnotationEditor
         // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
         // defined in main.ts
         props.setEditorFactory("ApacheAnnotatorEditor.factory()");
-        props.setStylesheetSources(getStylesheetSources());
-        props.setScriptSources(getScriptSources());
         props.setSectionElements(
                 documentImportExportService.getSectionElements(getModelObject().getDocument()));
         props.setProtectedElements(
                 documentImportExportService.getProtectedElements(getModelObject().getDocument()));
-        documentImportExportService
-                .getFormatDocumentStructureFactory(getModelObject().getDocument())
-                .ifPresent(props::setDocumentStructureFactory);
         return props;
     }
 
-    private List<String> getStylesheetSources()
+    @Override
+    protected List<String> getStylesheetSources()
     {
         var sources = new ArrayList<String>();
-
         sources.add(referenceToUrl(servletContext, ApacheAnnotatorJsCssResourceReference.get()));
-
-        for (var reference : stylesheetSources.listStylesheetReferences()) {
-            sources.add(referenceToUrl(servletContext, reference));
-        }
-
+        sources.addAll(super.getStylesheetSources());
         return sources;
     }
 
-    /**
-     * Build the script source list. Format-specific adapters come first, editor JS last; the
-     * external-editor loader honours that order by inserting the scripts with
-     * {@code script.async = false}, so the format adapter is guaranteed to have run by the time the
-     * editor bundle initializes and reads {@code props.documentStructureFactory}.
-     */
-    private List<String> getScriptSources()
+    @Override
+    protected List<String> getScriptSources()
     {
         var sources = new ArrayList<String>();
-
-        for (var reference : documentImportExportService
-                .getFormatJavaScripts(getModelObject().getDocument())) {
-            sources.add(referenceToUrl(servletContext, reference));
-        }
-
+        sources.addAll(super.getScriptSources());
         sources.add(
                 referenceToUrl(servletContext, ApacheAnnotatorJsJavascriptResourceReference.get()));
-
         return sources;
     }
 }
