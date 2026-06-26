@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTy
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
@@ -44,6 +45,7 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -80,8 +82,7 @@ public class RemoteRepositorySettingsPanel
 
     private final TextField<String> urlField;
     private final CheckBox skipSslValidation;
-    private final TextField<String> defaultDatasetField;
-    private final MultiSelect<String> additionalDatasetsField;
+    private final MultiSelect<String> datasetsField;
     private final DropDownChoice<AuthenticationType> authenticationType;
 
     private AuthenticationTraitsEditor<?> authenticationTraitsEditor;
@@ -113,12 +114,7 @@ public class RemoteRepositorySettingsPanel
         skipSslValidation.setOutputMarkupPlaceholderTag(true);
         queue(skipSslValidation);
 
-        defaultDatasetField = new TextField<>("defaultDataset",
-                kbModel.bind("kb.defaultDatasetIri"));
-        defaultDatasetField.add(Validators.IRI_VALIDATOR);
-        queue(defaultDatasetField);
-
-        additionalDatasetsField = new MultiSelect<String>("additionalDatasets")
+        datasetsField = new MultiSelect<String>("datasets")
         {
             private static final long serialVersionUID = 1L;
 
@@ -184,10 +180,14 @@ public class RemoteRepositorySettingsPanel
                 response.render(OnDomReadyHeaderItem.forScript(script));
             }
         };
-        additionalDatasetsField.setOutputMarkupId(true);
-        additionalDatasetsField.setModel(kbModel.bind("kb.additionalDatasetIris"));
-        additionalDatasetsField.add(this::validateAdditionalDatasets);
-        queue(additionalDatasetsField);
+        datasetsField.setOutputMarkupId(true);
+        // The legacy "default dataset" has no special role at query time - it is merged into the
+        // query the same way as the additional datasets. So we present a single combined "Datasets"
+        // field. For backwards compatibility we keep storing the first dataset in the legacy
+        // defaultDatasetIri field and only the remaining ones in the additionalDatasetIris.
+        datasetsField.setModel(LambdaModel.of(this::getDatasets, this::setDatasets));
+        datasetsField.add(this::validateDatasets);
+        queue(datasetsField);
 
         // Enumerating the named graphs requires a connection to the endpoint, which is only
         // available once the knowledge base has been saved (i.e. registered).
@@ -195,7 +195,7 @@ public class RemoteRepositorySettingsPanel
         loadDatasetsButton
                 .add(visibleWhen(() -> getModel().getObject().getKb().getRepositoryId() != null));
         loadDatasetsButton.add(new AttributeModifier("title",
-                new StringResourceModel("kb.iri.additionalDatasets.load", this)));
+                new StringResourceModel("kb.iri.datasets.load", this)));
         queue(loadDatasetsButton);
     }
 
@@ -213,11 +213,37 @@ public class RemoteRepositorySettingsPanel
             error("Unable to load graphs from the endpoint: " + e.getMessage());
         }
 
-        aTarget.add(additionalDatasetsField);
+        aTarget.add(datasetsField);
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
-    private void validateAdditionalDatasets(IValidatable<Collection<String>> aValidatable)
+    private Collection<String> getDatasets()
+    {
+        var kb = getModel().getObject().getKb();
+        var datasets = new LinkedHashSet<String>();
+        if (isNotBlank(kb.getDefaultDatasetIri())) {
+            datasets.add(kb.getDefaultDatasetIri());
+        }
+        datasets.addAll(kb.getAdditionalDatasetIris());
+        return datasets;
+    }
+
+    private void setDatasets(Collection<String> aDatasets)
+    {
+        var kb = getModel().getObject().getKb();
+        var datasets = aDatasets != null ? new ArrayList<>(new LinkedHashSet<>(aDatasets))
+                : new ArrayList<String>();
+        if (datasets.isEmpty()) {
+            kb.setDefaultDatasetIri(null);
+            kb.setAdditionalDatasetIris(emptyList());
+        }
+        else {
+            kb.setDefaultDatasetIri(datasets.get(0));
+            kb.setAdditionalDatasetIris(datasets.subList(1, datasets.size()));
+        }
+    }
+
+    private void validateDatasets(IValidatable<Collection<String>> aValidatable)
     {
         for (var iri : aValidatable.getValue()) {
             if (!URIUtil.isValidURIReference(iri)) {
