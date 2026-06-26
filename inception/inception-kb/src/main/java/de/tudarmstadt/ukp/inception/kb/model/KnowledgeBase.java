@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.model;
 
 import static de.tudarmstadt.ukp.inception.kb.reification.Reification.NONE;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -520,12 +521,9 @@ public class KnowledgeBase
 
     public void applyAdditionalDatasets(KnowledgeBaseProfile aProfile)
     {
-        if (aProfile.getAdditionalDatasets() == null) {
-            additionalDatasetIris = emptySet();
-        }
-        else {
-            additionalDatasetIris = new LinkedHashSet<>(aProfile.getAdditionalDatasets());
-        }
+        additionalDatasetIris = new LinkedHashSet<>(
+                aProfile.getAdditionalDatasets() == null ? emptyList()
+                        : aProfile.getAdditionalDatasets());
     }
 
     public void applyAdditionalLanguages(KnowledgeBaseProfile aProfile)

@@ -36,6 +36,7 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.LambdaChoiceRenderer;
 import org.apache.wicket.markup.html.form.NumberTextField;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -69,6 +70,7 @@ public class QuerySettingsPanel
     private final TextField<Integer> queryLimitField;
     private final CheckBox maxQueryLimitCheckBox;
     private final CheckBox useFuzzyCheckBox;
+    private final WebMarkupContainer datasetsContainer;
     private final MultiSelect<String> datasetsField;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
 
@@ -91,6 +93,14 @@ public class QuerySettingsPanel
         maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", Model.of(false));
         add(maxQueryLimitCheckBox);
         add(ftsField("fullTextSearchIri", "kb.fullTextSearchIri"));
+
+        // The datasets field and its "scan" button are refreshed together via an explicit
+        // container. A wicket:enclosure must not be used here: refreshing an enclosed component via
+        // Ajax re-renders the enclosure but does not rebind the Ajax click handler of the sibling
+        // button, so the button would stop working after the first refresh.
+        datasetsContainer = new WebMarkupContainer("datasetsContainer");
+        datasetsContainer.setOutputMarkupId(true);
+        add(datasetsContainer);
 
         datasetsField = new FreeTextMultiSelect("datasets")
         {
@@ -118,7 +128,7 @@ public class QuerySettingsPanel
         // defaultDatasetIri field and only the remaining ones in the additionalDatasetIris.
         datasetsField.setModel(LambdaModel.of(this::getDatasets, this::setDatasets));
         datasetsField.add(this::validateDatasets);
-        add(datasetsField);
+        datasetsContainer.add(datasetsField);
 
         // Enumerating the named graphs requires a connection to the endpoint, which is only
         // available once the knowledge base has been saved (i.e. registered).
@@ -127,7 +137,7 @@ public class QuerySettingsPanel
                 .visibleWhen(() -> kbModel.getObject().getKb().getRepositoryId() != null));
         loadDatasetsButton.add(new AttributeModifier("title",
                 new StringResourceModel("kb.iri.datasets.load", this)));
-        add(loadDatasetsButton);
+        datasetsContainer.add(loadDatasetsButton);
     }
 
     @Override
@@ -139,7 +149,7 @@ public class QuerySettingsPanel
             // The discovered graphs belong to the previous endpoint - drop them so we do not offer
             // datasets that may not exist on the new endpoint.
             availableDatasets.clear();
-            event.getTarget().add(datasetsField);
+            event.getTarget().add(datasetsContainer);
         }
     }
 
@@ -157,7 +167,7 @@ public class QuerySettingsPanel
             error("Unable to load graphs from the endpoint: " + e.getMessage());
         }
 
-        aTarget.add(datasetsField);
+        aTarget.add(datasetsContainer);
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
@@ -175,8 +185,7 @@ public class QuerySettingsPanel
     private void setDatasets(Collection<String> aDatasets)
     {
         var kb = kbModel.getObject().getKb();
-        var datasets = aDatasets != null ? new ArrayList<>(new LinkedHashSet<>(aDatasets))
-                : new ArrayList<String>();
+        var datasets = aDatasets != null ? new ArrayList<>(aDatasets) : new ArrayList<String>();
         if (datasets.isEmpty()) {
             kb.setDefaultDatasetIri(null);
             kb.setAdditionalDatasetIris(emptyList());

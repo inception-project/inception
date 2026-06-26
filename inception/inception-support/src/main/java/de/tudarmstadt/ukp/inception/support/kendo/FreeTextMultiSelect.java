@@ -83,9 +83,11 @@ public abstract class FreeTextMultiSelect
         // form. Rebuild the <select> from the widget value on every change to keep form submission
         // in sync. The bind is guarded by a flag on the widget so that re-running this dom-ready
         // script after an Ajax re-render (which may reuse the same widget instance) does not stack
-        // duplicate change handlers.
-        var script = "(function(){var attach=function(){var ms=$('#" + getMarkupId()
-                + "').data('kendoMultiSelect');if(!ms){setTimeout(attach,50);return;}"
+        // duplicate change handlers. The poll for the widget is capped so that a widget which never
+        // initializes (e.g. it was hidden or removed by an Ajax update before the script ran) does
+        // not keep rescheduling for the lifetime of the page.
+        var script = "(function(){var tries=0;var attach=function(){var ms=$('#" + getMarkupId()
+                + "').data('kendoMultiSelect');if(!ms){if(++tries<100){setTimeout(attach,50);}return;}"
                 + "if(ms._inceptionFreeTextSync){return;}ms._inceptionFreeTextSync=true;"
                 + "ms.bind('change',function(){var v=this.value();var s=$(this.element);"
                 + "s.empty();for(var i=0;i<v.length;i++){"
