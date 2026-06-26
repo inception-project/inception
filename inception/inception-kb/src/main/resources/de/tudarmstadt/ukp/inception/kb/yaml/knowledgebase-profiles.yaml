@@ -401,6 +401,58 @@ go:
     website-url: http://geneontology.org/
     license-url: http://geneontology.org/docs/go-citation-policy/
 
+mesh:
+  name: Medical Subject Headings (MeSH)
+  type: REMOTE
+  default-language: en
+  # The endpoint hosts the current release as well as one named graph per year. Restricting the
+  # queries to the current-release graph avoids getting the same descriptor back once per year.
+  default-dataset: http://id.nlm.nih.gov/mesh
+  access:
+    access-url: https://id.nlm.nih.gov/mesh/sparql
+    full-text-search: bif:contains
+  mapping:
+    # MeSH descriptors are instances of meshv:TopicalDescriptor and form their hierarchy via
+    # meshv:broaderDescriptor (not rdfs:subClassOf), so we use that as the "subclass" relation -
+    # analogous to how the SKOS-based thesauri use skos:broader.
+    class: http://id.nlm.nih.gov/mesh/vocab#TopicalDescriptor
+    subclass-of: http://id.nlm.nih.gov/mesh/vocab#broaderDescriptor
+    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+    label: http://www.w3.org/2000/01/rdf-schema#label
+    description: http://id.nlm.nih.gov/mesh/vocab#scopeNote
+    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    property-label: http://www.w3.org/2000/01/rdf-schema#label
+    property-description: http://www.w3.org/2000/01/rdf-schema#comment
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
+  additional-matching-properties:
+    - http://id.nlm.nih.gov/mesh/vocab#altLabel
+    # MeSH descriptors carry their name in rdfs:label, but term (T...) and concept (M...) nodes
+    # carry it only in meshv:prefLabel. That property is declared as an rdfs:label sub-property,
+    # but only in the .../mesh/vocab graph which the default-dataset excludes - so it is listed
+    # explicitly here to let such nodes resolve a label instead of falling back to their IRI.
+    - http://id.nlm.nih.gov/mesh/vocab#prefLabel
+  info:
+    description: |
+      Medical Subject Headings (MeSH) is the U.S. National Library of Medicine's controlled
+      vocabulary thesaurus used for indexing articles for PubMed. It provides a hierarchically
+      organized terminology of descriptors covering diseases, chemicals and drugs, anatomy,
+      organisms and other biomedical concepts.
+
+      This profile queries the current MeSH release served from the NLM SPARQL endpoint, which is
+      backed by OpenLink Virtuoso.
+
+      Tip: MeSH descriptors, concepts and terms all carry the same names, so by default the
+      concept auto-complete also offers concept (M...) and term (T...) nodes. To restrict it to
+      the canonical descriptors (the entities with a place in the MeSH hierarchy), set the concept
+      feature's "Allowed values" to "concepts only" in the feature settings.
+
+      Find out more at [https://www.nlm.nih.gov/mesh/](https://www.nlm.nih.gov/mesh/).
+    host-institution-name: U.S. National Library of Medicine (NLM)
+    author-name: U.S. National Library of Medicine (NLM)
+    website-url: https://www.nlm.nih.gov/mesh/
+    license-url: https://www.nlm.nih.gov/databases/download/terms_and_conditions.html
+
 snomed-ct:
   name: SNOMED Clinical Terms (manual steps required!)
   type: LOCAL

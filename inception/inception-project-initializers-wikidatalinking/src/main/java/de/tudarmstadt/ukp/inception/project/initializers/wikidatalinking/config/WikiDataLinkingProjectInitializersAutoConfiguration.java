@@ -205,6 +205,18 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
 
     @ConditionalOnBean(KnowledgeBaseService.class)
     @Bean
+    public ProfileBasedKnowledgeBaseInitializer meshKnowledgeBaseInitializer(
+            KnowledgeBaseService aKbService)
+    {
+        var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
+                "MedicalKnowledgeBase.svg");
+        return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("mesh"), thumbnail)
+        {
+        };
+    }
+
+    @ConditionalOnBean(KnowledgeBaseService.class)
+    @Bean
     public ProfileBasedKnowledgeBaseInitializer iaoKnowledgeBaseInitializer(
             KnowledgeBaseService aKbService)
     {

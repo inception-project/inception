@@ -186,6 +186,9 @@ public class KnowledgeBaseServiceRemoteTest
         LOG.info("Time required        : {} ms", duration);
         propertiesKBHandle.stream().limit(10).forEach(h -> LOG.info("   {}", h));
 
+        assumeTrue(aSutConfig.isPropertiesExpected(),
+                "KB does not expose properties through its default dataset");
+
         assertThat(propertiesKBHandle).as("Check that property list is not empty").isNotEmpty();
     }
 
@@ -238,6 +241,17 @@ public class KnowledgeBaseServiceRemoteTest
         kbList.add(TestConfiguration.fromProfile(PROFILES.get("zbw-stw-economics"),
                 "http://zbw.eu/stw/thsys/71020", maxResults, Set.of("http://zbw.eu/stw/thsys/a")));
 
+        // MeSH (OpenLink Virtuoso, see issue #6125). Test identifier is the "Insulin" descriptor
+        // (parent: "Proinsulin" via meshv:broaderDescriptor); "Endocrine System" is a parent-less
+        // top descriptor and thus a root concept. Properties are not expected because MeSH keeps
+        // its schema in a separate vocab graph excluded by the (year-deduplicating) default
+        // dataset.
+        kbList.add(
+                TestConfiguration
+                        .fromProfile(PROFILES.get("mesh"), "http://id.nlm.nih.gov/mesh/D007328",
+                                maxResults, Set.of("http://id.nlm.nih.gov/mesh/D004703"))
+                        .withoutProperties());
+
         // Commenting this out for the moment because we expect that every ontology contains
         // property definitions. However, this one does not include any property definitions!
         // kbList.add(TestConfiguration.fromProfile(PROFILES.get("zbw-gnd"),
@@ -276,6 +290,7 @@ public class KnowledgeBaseServiceRemoteTest
         private final String testIdentifier;
         private final Set<String> rootIdentifier;
         private final Map<String, String> parentChildIdentifier;
+        private boolean propertiesExpected = true;
 
         public TestConfiguration(String aUrl, KnowledgeBase aKb, String aTestIdentifier,
                 Set<String> aRootIdentifier, Map<String, String> aParentChildIdentifier)
@@ -286,6 +301,23 @@ public class KnowledgeBaseServiceRemoteTest
             testIdentifier = aTestIdentifier;
             rootIdentifier = aRootIdentifier;
             parentChildIdentifier = aParentChildIdentifier;
+        }
+
+        /**
+         * Mark this KB as not exposing any properties through its default dataset. MeSH, for
+         * example, keeps its property and class definitions in a separate {@code .../mesh/vocab}
+         * named graph which is intentionally excluded by the profile's default dataset (the data
+         * graph is pinned to avoid getting one copy of every descriptor per yearly snapshot).
+         */
+        TestConfiguration withoutProperties()
+        {
+            propertiesExpected = false;
+            return this;
+        }
+
+        public boolean isPropertiesExpected()
+        {
+            return propertiesExpected;
         }
 
         static TestConfiguration fromProfile(KnowledgeBaseProfile aProfile, String aTestIdentifier,
