@@ -155,19 +155,6 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
 
     @ConditionalOnBean(KnowledgeBaseService.class)
     @Bean
-    public ProfileBasedKnowledgeBaseInitializer babelNetKnowledgeBaseInitializer(
-            KnowledgeBaseService aKbService)
-    {
-        var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
-                "Dictionary.svg");
-        return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("babel_net"),
-                thumbnail)
-        {
-        };
-    }
-
-    @ConditionalOnBean(KnowledgeBaseService.class)
-    @Bean
     public ProfileBasedKnowledgeBaseInitializer dbPediaNetKnowledgeBaseInitializer(
             KnowledgeBaseService aKbService)
     {

@@ -60,33 +60,6 @@ agrovoc:
     author-name: Food and Agriculture Organization (FAO) of the United Nations
     website-url: http://www.fao.org/agrovoc/
 
-babel_net:
-  name: BabelNet
-  type: REMOTE
-  default-language: en
-  default-dataset: http://babelnet.org/rdf/
-  access:
-    access-url: http://babelnet.org/sparql/
-    full-text-search: bif:contains
-  mapping:
-    class: http://www.w3.org/2000/01/rdf-schema#Class
-    subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
-    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-    label: http://www.w3.org/2000/01/rdf-schema#label
-    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
-    description: http://www.w3.org/2000/01/rdf-schema#comment
-    property-label: http://www.w3.org/2000/01/rdf-schema#label
-    property-description: http://www.w3.org/2000/01/rdf-schema#comment
-    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
-    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
-  info:
-    description: |
-      BabelNet is a multilingual lexicalized semantic network and ontology that was automatically 
-      created by linking Wikipedia to WordNet.
-    host-institution-name: Linguistic Computing Laboratory at Sapienza University of Rome
-    author-name: Linguistic Computing Laboratory at Sapienza University of Rome
-    website-url: https://babelnet.org/
-
 db_pedia:
   name: DBpedia (German)
   type: REMOTE
@@ -180,7 +153,11 @@ yago:
   default-language: de
   access:
     access-url: https://yago-knowledge.org/sparql/query
-    # YAGO runs BlazeGraph these days and they seem not to have set up a full text index
+    # YAGO has migrated to a QLever endpoint at https://yago-knowledge.org/sparql/qlever - the old
+    # /sparql/query URL above now only serves the project website and no longer answers SPARQL.
+    # The QLever instance has no full text index built for YAGO (ql:contains-word returns nothing),
+    # so full text search remains disabled. Note also that the class mapping below uses owl:Class,
+    # whereas current YAGO models classes as rdfs:Class.
     # full-text-search: bif:contains
   mapping:
     class: http://www.w3.org/2002/07/owl#Class

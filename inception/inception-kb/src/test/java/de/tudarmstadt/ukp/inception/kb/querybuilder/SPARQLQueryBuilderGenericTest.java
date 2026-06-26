@@ -52,8 +52,7 @@ public class SPARQLQueryBuilderGenericTest
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     // YAGO seems to have problem atm 29-04-2023
-    private static final List<String> SKIPPED_PROFILES = asList("babel_net", "yago", "hpo",
-            "snomed-ct");
+    private static final List<String> SKIPPED_PROFILES = asList("yago", "hpo", "snomed-ct");
 
     public static List<KnowledgeBaseProfile> data() throws Exception
     {

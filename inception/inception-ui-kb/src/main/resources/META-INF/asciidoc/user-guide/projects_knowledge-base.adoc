@@ -37,7 +37,7 @@ Alternatively, you can skip the step to create an empty KB to create a knowledge
 It is also always possible to import data from an RDF file after the creation of a KB. 
 It is also possible to multiple RDF files into the same KB, one after another.
 
-For remote KBs, INCEpTION provides the user with some pre-configured knowledge base such as WikiData, British Museum, BabelNet, DBPediaa or Yago.
+For remote KBs, INCEpTION provides the user with some pre-configured knowledge base such as WikiData, British Museum, DBPediaa or Yago.
 You can also set up a custom remote KB, in which case the user needs to provide the SPARQL endpoint URL for the knowledge base as in the figure below.
 
 [.thumb]
