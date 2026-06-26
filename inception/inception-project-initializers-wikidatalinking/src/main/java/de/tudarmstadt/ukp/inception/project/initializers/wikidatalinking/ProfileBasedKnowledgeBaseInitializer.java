@@ -137,6 +137,12 @@ public class ProfileBasedKnowledgeBaseInitializer
 
         kbService.registerKnowledgeBase(kb, cfg);
 
+        if (profile.getType() == REMOTE) {
+            // For a remote KB, the data lives at the SPARQL endpoint and the access URL is that
+            // endpoint - not a downloadable dump. There is nothing to import.
+            return;
+        }
+
         var accessUrl = profile.getAccess().getAccessUrl();
         if (accessUrl == null) {
             // Nothing to do
