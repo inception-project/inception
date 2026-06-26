@@ -18,8 +18,10 @@
 package de.tudarmstadt.ukp.inception.externaleditor;
 
 import static de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorLoader.PLUGINS_EDITOR_BASE_URL;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.markup.html.basic.Label;
@@ -102,14 +104,30 @@ public class ExternalAnnotationEditor
 
         var props = super.getProperties();
         props.setEditorFactory(pluginDesc.getFactory());
-        props.setStylesheetSources(pluginDesc.getStylesheets().stream() //
-                .map(this::getUrlForPluginAsset) //
-                .collect(toList()));
-        props.setScriptSources(pluginDesc.getScripts().stream() //
-                .map(this::getUrlForPluginAsset) //
-                .collect(toList()));
         props.setSectionElements(pluginDesc.getSectionElements());
 
         return props;
+    }
+
+    @Override
+    protected List<String> getStylesheetSources()
+    {
+        var sources = new ArrayList<String>();
+        getDescription().getStylesheets().stream() //
+                .map(this::getUrlForPluginAsset) //
+                .forEach(sources::add);
+        sources.addAll(super.getStylesheetSources());
+        return sources;
+    }
+
+    @Override
+    protected List<String> getScriptSources()
+    {
+        var sources = new ArrayList<String>();
+        sources.addAll(super.getScriptSources());
+        getDescription().getScripts().stream() //
+                .map(this::getUrlForPluginAsset) //
+                .forEach(sources::add);
+        return sources;
     }
 }

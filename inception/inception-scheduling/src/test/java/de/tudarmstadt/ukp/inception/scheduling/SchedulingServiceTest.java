@@ -37,6 +37,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -60,6 +61,10 @@ public class SchedulingServiceTest
 
         sut = new SchedulingServiceImpl(mockContext, new SchedulingProperties(), null,
                 projectService);
+
+        // Simulate the application having fully started so that tasks are actually dispatched
+        // instead of being parked until the application is ready (cf. onApplicationReady).
+        sut.onApplicationReady(mock(ApplicationReadyEvent.class));
     }
 
     @AfterEach

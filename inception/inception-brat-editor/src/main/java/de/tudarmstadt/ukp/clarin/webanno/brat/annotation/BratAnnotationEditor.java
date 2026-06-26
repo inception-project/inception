@@ -25,6 +25,7 @@ import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
@@ -117,9 +118,22 @@ public class BratAnnotationEditor
         // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
         // defined in main.ts
         props.setEditorFactory("Brat.factory()");
-        props.setStylesheetSources(asList(referenceToUrl(servletContext, BratCssReference.get())));
-        props.setScriptSources(asList(referenceToUrl(servletContext, BratResourceReference.get())));
         return props;
+    }
+
+    @Override
+    protected List<String> getStylesheetSources()
+    {
+        // super.getStylesheetSources() intentionally not called here - this editor is not
+        // customizable
+        return asList(referenceToUrl(servletContext, BratCssReference.get()));
+    }
+
+    @Override
+    protected List<String> getScriptSources()
+    {
+        // super.getScriptSources() intentionally not called here - this editor is not customizable
+        return asList(referenceToUrl(servletContext, BratResourceReference.get()));
     }
 
     @Override

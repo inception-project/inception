@@ -40,7 +40,7 @@ public class FtsAdapterVirtuoso
     @Override
     public void withLabelMatchingExactlyAnyOf(String... aValues)
     {
-        // addPrefix(PREFIX_VIRTUOSO_SEARCH);
+        builder.addPrefix(PREFIX_VIRTUOSO_SEARCH);
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
@@ -68,7 +68,7 @@ public class FtsAdapterVirtuoso
     @Override
     public void withLabelContainingAnyOf(String... aValues)
     {
-        // addPrefix(PREFIX_VIRTUOSO_SEARCH);
+        builder.addPrefix(PREFIX_VIRTUOSO_SEARCH);
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
@@ -96,7 +96,7 @@ public class FtsAdapterVirtuoso
     @Override
     public void withLabelStartingWith(String aPrefixQuery)
     {
-        // addPrefix(PREFIX_VIRTUOSO_SEARCH);
+        builder.addPrefix(PREFIX_VIRTUOSO_SEARCH);
 
         // Strip single quotes and asterisks because they have special semantics
         var queryString = builder.sanitizeQueryString_FTS(aPrefixQuery);
@@ -156,7 +156,7 @@ public class FtsAdapterVirtuoso
     @Override
     public void withLabelMatchingAnyOf(String... aValues)
     {
-        // addPrefix(PREFIX_VIRTUOSO_SEARCH);
+        builder.addPrefix(PREFIX_VIRTUOSO_SEARCH);
 
         var valuePatterns = new ArrayList<GraphPattern>();
         for (var value : aValues) {
