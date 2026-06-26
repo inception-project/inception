@@ -221,7 +221,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
         var outputFile = temporaryFolder.toPath().resolve("outputfile").toFile();
         kb.setType(RepositoryType.REMOTE);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(KnowledgeBaseProfile
-                .readKnowledgeBaseProfiles().get("babel_net").getAccess().getAccessUrl()));
+                .readKnowledgeBaseProfiles().get("db_pedia").getAccess().getAccessUrl()));
 
         try (var os = new FileOutputStream(outputFile)) {
             sut.exportData(kb, RDFFormat.TURTLE, os);
