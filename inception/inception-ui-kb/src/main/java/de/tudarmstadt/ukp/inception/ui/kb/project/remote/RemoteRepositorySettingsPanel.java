@@ -20,23 +20,12 @@ package de.tudarmstadt.ukp.inception.ui.kb.project.remote;
 import static de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType.BASIC;
 import static de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType.OAUTH_CLIENT_CREDENTIALS;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
-import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
@@ -45,21 +34,9 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.validation.IValidatable;
-import org.apache.wicket.validation.ValidationError;
-import org.eclipse.rdf4j.model.util.URIUtil;
-import org.wicketstuff.jquery.core.JQueryBehavior;
-import org.wicketstuff.jquery.core.Options;
-import org.wicketstuff.kendo.ui.KendoDataSource;
-import org.wicketstuff.kendo.ui.form.multiselect.lazy.MultiSelect;
 
-import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraitsEditor;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationType;
 import de.tudarmstadt.ukp.inception.security.client.auth.NoAuthenticationTraitsEditor;
@@ -69,6 +46,7 @@ import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCreden
 import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCredentialsAuthenticationTraitsEditor;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
+import de.tudarmstadt.ukp.inception.ui.kb.project.RemoteRepositoryUrlChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.project.validators.Validators;
 
 public class RemoteRepositorySettingsPanel
@@ -78,18 +56,11 @@ public class RemoteRepositorySettingsPanel
 
     private static final String CID_AUTHENTICATION_TRAITS_EDITOR = "authenticationTraitsEditor";
 
-    private @SpringBean KnowledgeBaseService kbService;
-
     private final TextField<String> urlField;
     private final CheckBox skipSslValidation;
-    private final MultiSelect<String> datasetsField;
     private final DropDownChoice<AuthenticationType> authenticationType;
 
     private AuthenticationTraitsEditor<?> authenticationTraitsEditor;
-
-    // Named graphs fetched on-demand from the remote endpoint to offer as choices in addition to
-    // any IRIs the user enters manually.
-    private final List<String> availableDatasets = new ArrayList<>();
 
     public RemoteRepositorySettingsPanel(String aId,
             CompoundPropertyModel<KnowledgeBaseWrapper> kbModel,
@@ -99,6 +70,8 @@ public class RemoteRepositorySettingsPanel
 
         urlField = new RequiredTextField<>("url");
         urlField.add(Validators.URL_VALIDATOR);
+        urlField.add(
+                new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT, this::actionUrlChanged));
         queue(urlField);
 
         authenticationType = new DropDownChoice<>("authenticationType",
@@ -113,144 +86,13 @@ public class RemoteRepositorySettingsPanel
         skipSslValidation = new CheckBox("skipSslValidation", kbModel.bind("kb.skipSslValidation"));
         skipSslValidation.setOutputMarkupPlaceholderTag(true);
         queue(skipSslValidation);
-
-        datasetsField = new MultiSelect<String>("datasets")
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void onConfigure(KendoDataSource aDataSource)
-            {
-                // This ensures that we get the user input in getChoices
-                aDataSource.set("serverFiltering", true);
-            }
-
-            @Override
-            public void onConfigure(JQueryBehavior aBehavior)
-            {
-                super.onConfigure(aBehavior);
-                aBehavior.setOption("filter", Options.asString("contains"));
-                aBehavior.setOption("autoClose", false);
-            }
-
-            @Override
-            protected List<String> getChoices(String aInput)
-            {
-                // There is no fixed vocabulary of dataset IRIs. We offer the graphs fetched from
-                // the
-                // endpoint (if any) plus whatever has been entered so far, and allow the user to
-                // add
-                // arbitrary IRIs via the current input.
-                var choices = new LinkedHashSet<>(getModelObject());
-                choices.addAll(availableDatasets);
-                var result = new ArrayList<>(choices);
-                if (isNotBlank(aInput)) {
-                    result.remove(aInput);
-                    result.add(0, aInput);
-                }
-                return result;
-            }
-
-            @Override
-            public void convertInput()
-            {
-                var input = getInputAsArray();
-                var list = new ArrayList<String>();
-                if (input != null) {
-                    list.addAll(asList(input));
-                    list.removeIf(StringUtils::isBlank);
-                }
-                setConvertedInput(list);
-            }
-
-            @Override
-            public void renderHead(IHeaderResponse response)
-            {
-                super.renderHead(response);
-                // The Kendo MultiSelect with serverFiltering=true does not reliably sync chip
-                // removals back to the underlying <select> element, so removed items still get
-                // submitted with the form. Rebuild the <select> from the widget value on every
-                // change to keep form submission in sync.
-                var script = "(function(){var attach=function(){var ms=$('#" + getMarkupId()
-                        + "').data('kendoMultiSelect');if(!ms){setTimeout(attach,50);return;}"
-                        + "ms.bind('change',function(){var v=this.value();var s=$(this.element);"
-                        + "s.empty();for(var i=0;i<v.length;i++){"
-                        + "s.append($('<option selected></option>').val(v[i]).text(v[i]));}});};"
-                        + "attach();})();";
-                response.render(OnDomReadyHeaderItem.forScript(script));
-            }
-        };
-        datasetsField.setOutputMarkupId(true);
-        // The legacy "default dataset" has no special role at query time - it is merged into the
-        // query the same way as the additional datasets. So we present a single combined "Datasets"
-        // field. For backwards compatibility we keep storing the first dataset in the legacy
-        // defaultDatasetIri field and only the remaining ones in the additionalDatasetIris.
-        datasetsField.setModel(LambdaModel.of(this::getDatasets, this::setDatasets));
-        datasetsField.add(this::validateDatasets);
-        queue(datasetsField);
-
-        // Enumerating the named graphs requires a connection to the endpoint, which is only
-        // available once the knowledge base has been saved (i.e. registered).
-        var loadDatasetsButton = new LambdaAjaxLink("loadDatasets", this::actionLoadDatasets);
-        loadDatasetsButton
-                .add(visibleWhen(() -> getModel().getObject().getKb().getRepositoryId() != null));
-        loadDatasetsButton.add(new AttributeModifier("title",
-                new StringResourceModel("kb.iri.datasets.load", this)));
-        queue(loadDatasetsButton);
     }
 
-    private void actionLoadDatasets(AjaxRequestTarget aTarget)
+    private void actionUrlChanged(AjaxRequestTarget aTarget)
     {
-        var kb = getModel().getObject().getKb();
-
-        try {
-            availableDatasets.clear();
-            availableDatasets.addAll(kbService.listDatasets(kb));
-            success("Loaded [" + availableDatasets.size() + "] graph(s) from the endpoint.");
-        }
-        catch (RuntimeException e) {
-            availableDatasets.clear();
-            error("Unable to load graphs from the endpoint: " + e.getMessage());
-        }
-
-        aTarget.add(datasetsField);
-        aTarget.addChildren(getPage(), IFeedback.class);
-    }
-
-    private Collection<String> getDatasets()
-    {
-        var kb = getModel().getObject().getKb();
-        var datasets = new LinkedHashSet<String>();
-        if (isNotBlank(kb.getDefaultDatasetIri())) {
-            datasets.add(kb.getDefaultDatasetIri());
-        }
-        datasets.addAll(kb.getAdditionalDatasetIris());
-        return datasets;
-    }
-
-    private void setDatasets(Collection<String> aDatasets)
-    {
-        var kb = getModel().getObject().getKb();
-        var datasets = aDatasets != null ? new ArrayList<>(new LinkedHashSet<>(aDatasets))
-                : new ArrayList<String>();
-        if (datasets.isEmpty()) {
-            kb.setDefaultDatasetIri(null);
-            kb.setAdditionalDatasetIris(emptyList());
-        }
-        else {
-            kb.setDefaultDatasetIri(datasets.get(0));
-            kb.setAdditionalDatasetIris(datasets.subList(1, datasets.size()));
-        }
-    }
-
-    private void validateDatasets(IValidatable<Collection<String>> aValidatable)
-    {
-        for (var iri : aValidatable.getValue()) {
-            if (!URIUtil.isValidURIReference(iri)) {
-                aValidatable.error(
-                        new ValidationError().setMessage("[" + iri + "] is not a valid IRI."));
-            }
-        }
+        // The set of named graphs offered for selection depends on the endpoint. Notify interested
+        // components (e.g. the datasets field) that the URL changed so they can drop stale choices.
+        send(getPage(), Broadcast.BREADTH, new RemoteRepositoryUrlChangedEvent(aTarget));
     }
 
     @SuppressWarnings("unchecked")
