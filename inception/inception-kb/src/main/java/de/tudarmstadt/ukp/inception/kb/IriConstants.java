@@ -42,7 +42,7 @@ public class IriConstants
     public static final String PREFIX_WIKIDATA_ENTITY = "http://www.wikidata.org/entity/";
     public static final String PREFIX_WIKIDATA_DIRECT = "http://www.wikidata.org/prop/direct/";
     public static final String PREFIX_SCHEMA = "http://schema.org/";
-    public static final String PREFIX_VIRTUOSO = "http://www.openlinksw.com/schemas/bif#";
+    public static final String PREFIX_VIRTUOSO = "bif:";
     public static final String PREFIX_RDF4J_LUCENE_SEARCH = "http://www.openrdf.org/contrib/lucenesail#";
     public static final String PREFIX_ALLEGRO_GRAPH_FTI = "http://franz.com/ns/allegrograph/2.2/textindex/";
     public static final String PREFIX_MWAPI = "https://www.mediawiki.org/ontology#API/";
