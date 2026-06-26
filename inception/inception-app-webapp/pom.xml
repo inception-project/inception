@@ -1297,6 +1297,56 @@
     </pluginManagement>
   </build>
   <profiles>
+    <!--
+      - On CI the Docker images pulled by Testcontainers across the whole reactor (the knowledge
+      - base triplestores, Solr, OpenSearch, Keycloak, Kafka and the ~11 database images exercised
+      - by this module's own tests) accumulate and can exhaust the runner disk while the WAR is
+      - being assembled. The web application is the reactor chokepoint: every Docker-using module it
+      - depends on (inception-kb, -external-search-solr, -external-search-opensearch, -security,
+      - -remote) has finished by the time this module builds, so nothing is using those images and
+      - it is a safe place to reclaim the space. We prune twice:
+      -   1. before this module's own database tests run - frees the images the other modules left
+      -      behind, giving the database tests headroom;
+      -   2. before the WAR is assembled - frees this module's database images, which are no longer
+      -      needed once its tests have finished.
+      - Disabled by default so developer machines are untouched; activated explicitly on CI via
+      - -Pci-docker-cleanup. Requires the 'docker' CLI on the PATH.
+    -->
+    <profile>
+      <id>ci-docker-cleanup</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <configuration>
+              <executable>sh</executable>
+              <arguments>
+                <argument>-c</argument>
+                <!-- Log free space before/after; tolerate a non-zero exit so a cleanup hiccup never fails the build -->
+                <argument>echo '=== disk before docker prune ==='; df -h /; docker system prune --all --force || true; echo '=== disk after docker prune ==='; df -h /</argument>
+              </arguments>
+            </configuration>
+            <executions>
+              <execution>
+                <id>prune-docker-images-before-tests</id>
+                <phase>process-test-classes</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>prune-docker-images-before-packaging</id>
+                <phase>prepare-package</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>m2e</id>
       <activation>
