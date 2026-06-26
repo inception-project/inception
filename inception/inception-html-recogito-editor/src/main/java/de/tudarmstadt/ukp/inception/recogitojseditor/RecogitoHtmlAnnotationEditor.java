@@ -18,7 +18,9 @@
 package de.tudarmstadt.ukp.inception.recogitojseditor;
 
 import static de.tudarmstadt.ukp.inception.support.wicket.ServletContextUtils.referenceToUrl;
-import static java.util.Arrays.asList;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
@@ -70,10 +72,24 @@ public class RecogitoHtmlAnnotationEditor
         // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
         // defined in main.ts
         props.setEditorFactory("RecogitoEditor.factory()");
-        props.setStylesheetSources(
-                asList(referenceToUrl(servletContext, RecogitoJsCssResourceReference.get())));
-        props.setScriptSources(asList(
-                referenceToUrl(servletContext, RecogitoJsJavascriptResourceReference.get())));
         return props;
+    }
+
+    @Override
+    protected List<String> getStylesheetSources()
+    {
+        var sources = new ArrayList<String>();
+        sources.add(referenceToUrl(servletContext, RecogitoJsCssResourceReference.get()));
+        sources.addAll(super.getStylesheetSources());
+        return sources;
+    }
+
+    @Override
+    protected List<String> getScriptSources()
+    {
+        var sources = new ArrayList<String>();
+        sources.addAll(super.getScriptSources());
+        sources.add(referenceToUrl(servletContext, RecogitoJsJavascriptResourceReference.get()));
+        return sources;
     }
 }
