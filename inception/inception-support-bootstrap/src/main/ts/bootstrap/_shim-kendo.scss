@@ -85,6 +85,28 @@
     }
 }
 
+// Make Kendo multi-selects behave like a Bootstrap form-control inside input groups. Without this,
+// the widget keeps its 100% width and - because input groups wrap - any adjacent button is pushed
+// onto the next line. We let it flex to fill the remaining space and flatten the corners that touch
+// the neighbouring control so it reads as a single group.
+.input-group {
+    > .k-multiselect {
+        flex: 1 1 auto;
+        width: 1%;
+        min-width: 0;
+
+        &:not(:last-child) {
+            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+        }
+
+        &:not(:first-child) {
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+        }
+    }
+}
+
 // Make Kendo components render with full width inside form groups
 /*
 .form-group .k-widget,

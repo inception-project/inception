@@ -91,6 +91,7 @@ import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder;
+import org.eclipse.rdf4j.sparqlbuilder.core.From;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.core.Projectable;
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
@@ -1451,8 +1452,15 @@ public class SPARQLQueryBuilder
         secondaryPatterns.stream().forEach(query::where);
         optionalLookupPatterns.stream().forEach(query::where);
 
+        var datasets = new ArrayList<From>();
         if (kb.getDefaultDatasetIri() != null) {
-            query.from(dataset(from(iri(kb.getDefaultDatasetIri()))));
+            datasets.add(from(iri(kb.getDefaultDatasetIri())));
+        }
+        for (var additionalDatasetIri : kb.getAdditionalDatasetIris()) {
+            datasets.add(from(iri(additionalDatasetIri)));
+        }
+        if (!datasets.isEmpty()) {
+            query.from(dataset(datasets.toArray(From[]::new)));
         }
 
         int actualLimit = getLimit();

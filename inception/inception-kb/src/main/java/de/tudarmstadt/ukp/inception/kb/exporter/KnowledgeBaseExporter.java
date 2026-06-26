@@ -136,6 +136,7 @@ public class KnowledgeBaseExporter
             exportedKB.setDefaultLanguage(kb.getDefaultLanguage());
             exportedKB.setDefaultDatasetIri(
                     kb.getDefaultDatasetIri() != null ? kb.getDefaultDatasetIri() : null);
+            exportedKB.setAdditionalDatasetIris(new ArrayList<>(kb.getAdditionalDatasetIris()));
             exportedKB.setMaxResults(kb.getMaxResults());
             exportedKB.setSubPropertyIri(kb.getSubPropertyIri());
             exportedKB.setTraits(kb.getTraits());
@@ -254,6 +255,12 @@ public class KnowledgeBaseExporter
             kb.setDefaultDatasetIri(
                     exportedKB.getDefaultDatasetIri() != null ? exportedKB.getDefaultDatasetIri() //
                             : null);
+            if (exportedKB.getAdditionalDatasetIris() != null) {
+                kb.setAdditionalDatasetIris(exportedKB.getAdditionalDatasetIris());
+            }
+            else {
+                kb.setAdditionalDatasetIris(new ArrayList<>());
+            }
             kb.setMaxResults(exportedKB.getMaxResults());
             // If not setting, initialize with default
             if (kb.getMaxResults() == 0) {

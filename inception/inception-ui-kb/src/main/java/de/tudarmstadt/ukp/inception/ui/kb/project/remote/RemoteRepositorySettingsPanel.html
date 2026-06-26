@@ -56,6 +56,19 @@
         <input type="text" wicket:id="defaultDataset" class="form-control" />
       </div>
     </div>
+    <div class="row form-row" wicket:enclosure="additionalDatasets">
+      <label class="col-form-label col-sm-3" wicket:for="additionalDatasets">
+        <wicket:label key="kb.iri.additionalDatasets" />
+      </label>
+      <div class="col-sm-9">
+        <div class="input-group">
+          <select wicket:id="additionalDatasets"/>
+          <a wicket:id="loadDatasets" class="btn btn-outline-secondary">
+            <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+    </div>
   </wicket:panel>
 </body>
 

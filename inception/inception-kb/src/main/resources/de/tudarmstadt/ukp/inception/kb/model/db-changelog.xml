@@ -505,4 +505,20 @@
       </column>
     </createTable>
   </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20260626-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="knowledgebase_add_datasets"/>
+      </not>
+    </preConditions>
+    <createTable tableName="knowledgebase_add_datasets">
+      <column name="knowledgebase_repositoryId" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+  </changeSet>
 </databaseChangeLog>

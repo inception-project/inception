@@ -99,6 +99,9 @@ public class ExportedKnowledgeBase
     @JsonProperty("default_dataset_iri")
     private String defaultDatasetIri;
 
+    @JsonProperty("additional_dataset_iris")
+    private List<String> additionalDatasetIris;
+
     @JsonProperty("max_results")
     private int maxResults;
 
@@ -375,6 +378,16 @@ public class ExportedKnowledgeBase
     public void setDefaultDatasetIri(String aDefaultDatasetIri)
     {
         defaultDatasetIri = aDefaultDatasetIri;
+    }
+
+    public List<String> getAdditionalDatasetIris()
+    {
+        return additionalDatasetIris;
+    }
+
+    public void setAdditionalDatasetIris(List<String> aAdditionalDatasetIris)
+    {
+        additionalDatasetIris = aAdditionalDatasetIris;
     }
 
     public void setUseFuzzy(boolean aUseFuzzy)
