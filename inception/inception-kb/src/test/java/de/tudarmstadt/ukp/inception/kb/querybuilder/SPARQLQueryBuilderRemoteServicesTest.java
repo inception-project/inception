@@ -31,6 +31,7 @@ import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLoc
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.resolvePrefLabelProperties;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 
@@ -48,6 +49,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public class SPARQLQueryBuilderRemoteServicesTest
 {
@@ -59,6 +61,7 @@ public class SPARQLQueryBuilderRemoteServicesTest
     private Repository wikidata;
     private Repository dbpedia;
     private Repository yago;
+    private Repository mesh;
 
     @BeforeEach
     public void setUp()
@@ -80,6 +83,8 @@ public class SPARQLQueryBuilderRemoteServicesTest
         zbwStw = buildSparqlRepository("https://zbw.eu/beta/sparql/stw/query");
         // Web: https://zbw.eu/beta/sparql-lab/?endpoint=https://zbw.eu/beta/sparql/gnd/query
         zbwGnd = buildSparqlRepository("https://zbw.eu/beta/sparql/gnd/query");
+        // Web: https://id.nlm.nih.gov/mesh/query - backed by OpenLink Virtuoso
+        mesh = buildSparqlRepository("https://id.nlm.nih.gov/mesh/sparql");
     }
 
     @BeforeEach
@@ -213,6 +218,61 @@ public class SPARQLQueryBuilderRemoteServicesTest
         assertThat(results).isNotEmpty();
         assertThat(results).extracting(KBHandle::getUiLabel).allMatch(
                 label -> label.contains("Schapiro-Frisch") || label.contains("Stiker-Métral"));
+    }
+
+    /**
+     * Verifies that the Virtuoso full-text search works against a stricter Virtuoso instance (the
+     * NLM MeSH endpoint) where the {@code bif:contains} predicate is only recognized as the magic
+     * prefixed name. Reproduces the lookup that silently returned no results in issue #6125.
+     */
+    @Tag("slow")
+    @Test
+    public void testWithLabelMatchingExactlyAnyOf_MeSH_Virtuoso_FTS() throws Exception
+    {
+        assertIsReachable(mesh);
+
+        applyMeshProfile();
+
+        var prefLabels = resolvePrefLabelProperties(mesh, kb);
+        var results = asHandles(mesh, SPARQLQueryBuilder //
+                .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
+                .withLabelMatchingExactlyAnyOf("Insulin"));
+
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        // The "Insulin" descriptor from the current-release graph must be found (and only once,
+        // i.e. not duplicated across the per-year named graphs).
+        assertThat(results) //
+                .extracting(KBHandle::getIdentifier) //
+                .contains("http://id.nlm.nih.gov/mesh/D007328");
+    }
+
+    @Tag("slow")
+    @Test
+    public void testWithLabelContainingAnyOf_MeSH_Virtuoso_FTS() throws Exception
+    {
+        assertIsReachable(mesh);
+
+        applyMeshProfile();
+
+        var prefLabels = resolvePrefLabelProperties(mesh, kb);
+        var results = asHandles(mesh, SPARQLQueryBuilder //
+                .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
+                .withLabelContainingAnyOf("Insulin"));
+
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.toLowerCase().contains("insulin"));
+    }
+
+    private void applyMeshProfile() throws IOException
+    {
+        var profile = KnowledgeBaseProfile.readKnowledgeBaseProfiles().get("mesh");
+        kb.applyProfile(profile);
+        kb.setMaxResults(100);
     }
 
     @Tag("slow")
