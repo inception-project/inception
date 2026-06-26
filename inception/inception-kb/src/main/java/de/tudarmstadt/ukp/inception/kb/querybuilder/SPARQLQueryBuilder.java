@@ -1452,16 +1452,7 @@ public class SPARQLQueryBuilder
         secondaryPatterns.stream().forEach(query::where);
         optionalLookupPatterns.stream().forEach(query::where);
 
-        var datasets = new ArrayList<From>();
-        if (kb.getDefaultDatasetIri() != null) {
-            datasets.add(from(iri(kb.getDefaultDatasetIri())));
-        }
-        for (var additionalDatasetIri : kb.getAdditionalDatasetIris()) {
-            datasets.add(from(iri(additionalDatasetIri)));
-        }
-        if (!datasets.isEmpty()) {
-            query.from(dataset(datasets.toArray(From[]::new)));
-        }
+        applyDataset(query);
 
         int actualLimit = getLimit();
         if (actualLimit != UNLIMITED) {
@@ -1944,6 +1935,12 @@ public class SPARQLQueryBuilder
                 aRootProperty);
 
         var query = Queries.SELECT().distinct().where(pattern);
+        // The sub-property declarations may live in one of the configured datasets (e.g. for MeSH
+        // they are in the vocab graph added as an additional dataset). The main query restricts the
+        // active graph to those datasets via FROM, so we must scope this query the same way -
+        // otherwise the declarations would be resolved against a different (the endpoint's default)
+        // graph and might not be found at all.
+        applyDataset(query);
 
         var tupleQuery = aConnection.prepareTupleQuery(query.getQueryString());
         tupleQuery.setIncludeInferred(includeInferred);
@@ -1964,6 +1961,26 @@ public class SPARQLQueryBuilder
         catch (QueryEvaluationException e) {
             throw new QueryEvaluationException(
                     e.getMessage() + " while running query:\n" + query.getQueryString(), e);
+        }
+    }
+
+    /**
+     * Restrict the given query to the datasets (named graphs) configured on the knowledge base. A
+     * {@code FROM} clause replaces the active default graph with the merge of the listed graphs, so
+     * any query that needs to see the same data as the main query (e.g. sub-property resolution)
+     * must be scoped identically. Does nothing if no datasets are configured.
+     */
+    private void applyDataset(SelectQuery aQuery)
+    {
+        var datasets = new ArrayList<From>();
+        if (kb.getDefaultDatasetIri() != null) {
+            datasets.add(from(iri(kb.getDefaultDatasetIri())));
+        }
+        for (var additionalDatasetIri : kb.getAdditionalDatasetIris()) {
+            datasets.add(from(iri(additionalDatasetIri)));
+        }
+        if (!datasets.isEmpty()) {
+            aQuery.from(dataset(datasets.toArray(From[]::new)));
         }
     }
 
