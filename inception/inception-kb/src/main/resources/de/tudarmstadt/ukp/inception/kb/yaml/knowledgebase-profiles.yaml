@@ -427,6 +427,11 @@ mesh:
     deprecation-property: http://www.w3.org/2002/07/owl#deprecated
   additional-matching-properties:
     - http://id.nlm.nih.gov/mesh/vocab#altLabel
+    # MeSH descriptors carry their name in rdfs:label, but term (T...) and concept (M...) nodes
+    # carry it only in meshv:prefLabel. That property is declared as an rdfs:label sub-property,
+    # but only in the .../mesh/vocab graph which the default-dataset excludes - so it is listed
+    # explicitly here to let such nodes resolve a label instead of falling back to their IRI.
+    - http://id.nlm.nih.gov/mesh/vocab#prefLabel
   info:
     description: |
       Medical Subject Headings (MeSH) is the U.S. National Library of Medicine's controlled
@@ -436,6 +441,11 @@ mesh:
 
       This profile queries the current MeSH release served from the NLM SPARQL endpoint, which is
       backed by OpenLink Virtuoso.
+
+      Tip: MeSH descriptors, concepts and terms all carry the same names, so by default the
+      concept auto-complete also offers concept (M...) and term (T...) nodes. To restrict it to
+      the canonical descriptors (the entities with a place in the MeSH hierarchy), set the concept
+      feature's "Allowed values" to "concepts only" in the feature settings.
 
       Find out more at [https://www.nlm.nih.gov/mesh/](https://www.nlm.nih.gov/mesh/).
     host-institution-name: U.S. National Library of Medicine (NLM)
