@@ -59,6 +59,35 @@ agrovoc:
     host-institution-name: Food and Agriculture Organization (FAO) of the United Nations
     author-name: Food and Agriculture Organization (FAO) of the United Nations
     website-url: http://www.fao.org/agrovoc/
+  # The 25 documented top concepts (skos:topConceptOf). Pinning them avoids the expensive and
+  # highly variable "concepts without a broader parent" enumeration that would otherwise be run
+  # to discover the roots dynamically. This set is identical to what that enumeration returns.
+  root-concepts:
+    - http://aims.fao.org/aos/agrovoc/c_330834   # activities
+    - http://aims.fao.org/aos/agrovoc/c_330892   # entities
+    - http://aims.fao.org/aos/agrovoc/c_330979   # events
+    - http://aims.fao.org/aos/agrovoc/c_331093   # factors
+    - http://aims.fao.org/aos/agrovoc/c_331061   # features
+    - http://aims.fao.org/aos/agrovoc/c_50227    # groups
+    - http://aims.fao.org/aos/agrovoc/c_330988   # location
+    - http://aims.fao.org/aos/agrovoc/c_330493   # measure
+    - http://aims.fao.org/aos/agrovoc/c_4788     # methods
+    - http://aims.fao.org/aos/agrovoc/c_330919   # objects
+    - http://aims.fao.org/aos/agrovoc/c_49904    # organisms
+    - http://aims.fao.org/aos/agrovoc/c_330704   # phenomena
+    - http://aims.fao.org/aos/agrovoc/c_13586    # processes
+    - http://aims.fao.org/aos/agrovoc/c_6211     # products
+    - http://aims.fao.org/aos/agrovoc/c_49874    # properties
+    - http://aims.fao.org/aos/agrovoc/c_9001017  # resources
+    - http://aims.fao.org/aos/agrovoc/c_331000   # site
+    - http://aims.fao.org/aos/agrovoc/c_330995   # stages
+    - http://aims.fao.org/aos/agrovoc/c_330998   # state
+    - http://aims.fao.org/aos/agrovoc/c_330991   # strategies
+    - http://aims.fao.org/aos/agrovoc/c_330829   # subjects
+    - http://aims.fao.org/aos/agrovoc/c_330705   # substances
+    - http://aims.fao.org/aos/agrovoc/c_330985   # systems
+    - http://aims.fao.org/aos/agrovoc/c_7644     # technology
+    - http://aims.fao.org/aos/agrovoc/c_7778     # time
 
 dblp:
   name: DBLP Computer Science Bibliography
