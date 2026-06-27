@@ -106,6 +106,24 @@ The second run logs a comparison of the medians (`+` = slower / regression,
     listRootConcepts              56.42        32.68     -42.1%
     labelStartingWith             13.79        16.49     +19.6%
 
+### Committed reference results
+
+Reference results are kept under `benchmark/` with the producing commit hash in
+the file name (e.g. `benchmark/sparql-benchmark-1077dc7e2a.csv`). Each file has a
+metadata header recording the commit, date, settings and machine. These files
+double as baselines, so you can compare a working copy directly against a
+recorded reference:
+
+    mvn -pl inception/inception-kb test \
+        -Dinception.benchmark=true \
+        -DexcludedTestCategories=none \
+        -Dtest=SPARQLQueryBuilderBenchmarkTest \
+        -Dinception.benchmark.baseline=benchmark/sparql-benchmark-1077dc7e2a.csv
+
+When recording a new reference, run on a clean working tree so the commit hash in
+the file name and header actually identifies the code that produced it, and add
+the hash to the file name.
+
 ### Notes
 
 - A comparison is only meaningful when both runs use the **same KB set and
