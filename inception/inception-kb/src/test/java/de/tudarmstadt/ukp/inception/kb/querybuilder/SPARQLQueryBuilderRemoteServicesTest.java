@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_QLEVER;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
@@ -62,6 +63,7 @@ public class SPARQLQueryBuilderRemoteServicesTest
     private Repository dbpedia;
     private Repository yago;
     private Repository mesh;
+    private Repository dblp;
 
     @BeforeEach
     public void setUp()
@@ -85,6 +87,8 @@ public class SPARQLQueryBuilderRemoteServicesTest
         zbwGnd = buildSparqlRepository("https://zbw.eu/beta/sparql/gnd/query");
         // Web: https://id.nlm.nih.gov/mesh/query - backed by OpenLink Virtuoso
         mesh = buildSparqlRepository("https://id.nlm.nih.gov/mesh/sparql");
+        // Web: https://sparql.dblp.org - backed by QLever with a full-text index over the literals
+        dblp = buildSparqlRepository("https://sparql.dblp.org/sparql");
     }
 
     @BeforeEach
@@ -266,6 +270,84 @@ public class SPARQLQueryBuilderRemoteServicesTest
         assertThat(results).isNotEmpty();
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.toLowerCase().contains("insulin"));
+    }
+
+    /**
+     * Verifies QLever full-text search against the official DBLP endpoint
+     * ({@code https://sparql.dblp.org/sparql}). The DBLP text index is built over the bibliographic
+     * literals, so {@code ql:contains-entity} binds the matched label literal which the adapter
+     * joins back to the entity via the label property.
+     */
+    @Tag("slow")
+    @Test
+    void testWithLabelMatchingExactlyAnyOf_DBLP_QLever_FTS() throws Exception
+    {
+        assertIsReachable(dblp);
+
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(FTS_QLEVER.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+
+        var prefLabels = resolvePrefLabelProperties(dblp, kb);
+        var results = asHandles(dblp, SPARQLQueryBuilder //
+                .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
+                .withLabelMatchingExactlyAnyOf("Yoshua Bengio"));
+
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        // The person "Yoshua Bengio" has a stable dblp PID IRI.
+        assertThat(results) //
+                .extracting(KBHandle::getIdentifier) //
+                .contains("https://dblp.org/pid/56/953");
+    }
+
+    @Tag("slow")
+    @Test
+    void testWithLabelContainingAnyOf_DBLP_QLever_FTS() throws Exception
+    {
+        assertIsReachable(dblp);
+
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(FTS_QLEVER.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+
+        var prefLabels = resolvePrefLabelProperties(dblp, kb);
+        var results = asHandles(dblp, SPARQLQueryBuilder //
+                .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
+                .withLabelContainingAnyOf("Yoshua Bengio"));
+
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.toLowerCase().contains("yoshua")
+                        && label.toLowerCase().contains("bengio"));
+    }
+
+    @Tag("slow")
+    @Test
+    void testWithLabelStartingWith_DBLP_QLever_FTS() throws Exception
+    {
+        assertIsReachable(dblp);
+
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(FTS_QLEVER.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+
+        var prefLabels = resolvePrefLabelProperties(dblp, kb);
+        var results = asHandles(dblp, SPARQLQueryBuilder //
+                .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
+                .withLabelStartingWith("Yoshua Beng"));
+
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.toLowerCase().startsWith("yoshua beng"));
     }
 
     private void applyMeshProfile() throws IOException

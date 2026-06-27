@@ -49,6 +49,7 @@ public class IriConstants
     public static final String PREFIX_STARDOG = "tag:stardog:api:search:";
     public static final String PREFIX_BLAZEGRAPH = "http://www.bigdata.com/rdf/search#";
     public static final String PREFIX_GRAPHDB = "http://www.ontotext.com/";
+    public static final String PREFIX_QLEVER = "http://qlever.cs.uni-freiburg.de/builtin-functions/";
 
     public static final String UKP_WIKIDATA_SPARQL_ENDPOINT = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
     public static final Set<String> IMPLICIT_NAMESPACES = Set.of(RDF.NAMESPACE, RDFS.NAMESPACE,
@@ -92,6 +93,7 @@ public class IriConstants
     public static final IRI FTS_STARDOG;
     public static final IRI FTS_BLAZEGRAPH;
     public static final IRI FTS_GRAPHDB;
+    public static final IRI FTS_QLEVER;
     public static final IRI FTS_NONE;
 
     public static final List<IRI> CLASS_IRIS;
@@ -124,6 +126,7 @@ public class IriConstants
         FTS_STARDOG = vf.createIRI(PREFIX_STARDOG, "textMatch");
         FTS_BLAZEGRAPH = vf.createIRI(PREFIX_BLAZEGRAPH, "search");
         FTS_GRAPHDB = vf.createIRI(PREFIX_GRAPHDB, "fts");
+        FTS_QLEVER = vf.createIRI(PREFIX_QLEVER, "contains-word");
         FTS_NONE = vf.createIRI("FTS:NONE");
 
         CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS, SKOS.CONCEPT);
@@ -137,7 +140,7 @@ public class IriConstants
         PROPERTY_DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
         DEPRECATION_PROPERTY_IRIS = asList(OWL.DEPRECATED);
         FTS_IRIS = asList(FTS_FUSEKI, FTS_BLAZEGRAPH, FTS_GRAPHDB, FTS_VIRTUOSO, FTS_WIKIDATA,
-                FTS_RDF4J_LUCENE, FTS_STARDOG, FTS_ALLEGRO_GRAPH);
+                FTS_RDF4J_LUCENE, FTS_STARDOG, FTS_ALLEGRO_GRAPH, FTS_QLEVER);
     }
 
     public static String getFtsBackendName(String aFTS)
@@ -172,6 +175,10 @@ public class IriConstants
 
         if (FTS_ALLEGRO_GRAPH.stringValue().equals(aFTS)) {
             return "AllegroGraph";
+        }
+
+        if (FTS_QLEVER.stringValue().equals(aFTS)) {
+            return "QLever (SPARQL+Text)";
         }
 
         return aFTS;

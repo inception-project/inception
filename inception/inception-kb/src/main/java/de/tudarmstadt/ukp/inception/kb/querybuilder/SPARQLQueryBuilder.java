@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_BLAZEGRAPH;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_GRAPHDB;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_QLEVER;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_STARDOG;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
@@ -957,6 +958,10 @@ public class SPARQLQueryBuilder
             return new FtsAdapterAllegroGraph(this);
         }
 
+        if (FTS_QLEVER.equals(ftsMode)) {
+            return new FtsAdapterQLever(this);
+        }
+
         if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
             return new FtsAdapterNoFts(this);
         }
@@ -1091,6 +1096,39 @@ public class SPARQLQueryBuilder
     Expression<?> containsPattern(Variable aVariable, String aSubstring)
     {
         return matchString(CONTAINS, aVariable, aSubstring);
+    }
+
+    /**
+     * RE2-safe variant of {@link #containsPattern}. The "contains all tokens in any order"
+     * semantics are normally expressed via a single look-ahead regex ({@code (?=.*a)(?=.*b)}). Some
+     * engines - notably QLever, which evaluates {@code REGEX} with Google's RE2 library - do not
+     * support look-ahead assertions and reject such queries. This variant emits one unanchored
+     * {@code REGEX} per token instead, which is equivalent for our purposes and uses only
+     * RE2-supported syntax.
+     */
+    Expression<?> containsPatternWithoutLookahead(Variable aVariable, String aSubstring)
+    {
+        var expressions = new ArrayList<Expression<?>>();
+
+        if (filterUsingRegex) {
+            var regexFlags = "";
+            if (caseInsensitive) {
+                regexFlags += "i";
+            }
+
+            for (var token : TOKENKIZER_PATTERN.split(aSubstring)) {
+                if (token.isEmpty()) {
+                    continue;
+                }
+
+                expressions.add(function(REGEX, function(STR, aVariable),
+                        literalOf(asRegexp(token)), literalOf(regexFlags)));
+            }
+        }
+
+        expressions.add(matchKbLanguage(aVariable));
+
+        return and(expressions.toArray(Expression[]::new)).parenthesize();
     }
 
     private static String asRegexp(String aValue)

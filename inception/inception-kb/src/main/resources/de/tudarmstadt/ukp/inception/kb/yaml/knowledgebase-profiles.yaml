@@ -60,6 +60,44 @@ agrovoc:
     author-name: Food and Agriculture Organization (FAO) of the United Nations
     website-url: http://www.fao.org/agrovoc/
 
+dblp:
+  name: DBLP Computer Science Bibliography
+  type: REMOTE
+  default-language: en
+  access:
+    access-url: https://sparql.dblp.org/sparql
+    full-text-search: http://qlever.cs.uni-freiburg.de/builtin-functions/contains-word
+  mapping:
+    class: http://www.w3.org/2000/01/rdf-schema#Class
+    subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+    label: http://www.w3.org/2000/01/rdf-schema#label
+    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+    description: http://www.w3.org/2000/01/rdf-schema#comment
+    property-label: http://www.w3.org/2000/01/rdf-schema#label
+    property-description: http://www.w3.org/2000/01/rdf-schema#comment
+    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
+  info:
+    description: |
+      The dblp computer science bibliography provides open bibliographic information on major
+      computer science journals and proceedings, indexing millions of publications and their
+      authors.
+
+      This profile connects to the official dblp SPARQL endpoint, which is powered by the QLever
+      engine and provides a full-text index built over the bibliographic literals (publication
+      labels/titles and the author names embedded in them). Full-text search therefore matches
+      publications and persons by name via QLever's ql:contains-entity / ql:contains-word
+      predicates.
+
+      For more information, please consult <https://blog.dblp.org/2024/09/09/introducing-our-public-sparql-query-service/>.
+    host-institution-name: Schloss Dagstuhl - Leibniz Center for Informatics / University of Trier
+    author-name: dblp team
+    website-url: https://dblp.org
+  root-concepts:
+    - https://dblp.org/rdf/schema#Publication
+    - https://dblp.org/rdf/schema#Creator
+
 db_pedia:
   name: DBpedia (German)
   type: REMOTE
