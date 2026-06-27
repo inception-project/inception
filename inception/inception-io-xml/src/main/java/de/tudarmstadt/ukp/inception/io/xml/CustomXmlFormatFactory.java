@@ -23,6 +23,7 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDe
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +35,7 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.Application;
 import org.apache.wicket.request.resource.ResourceReference;
+import org.apache.wicket.request.resource.ResourceReferenceRegistry;
 import org.apache.wicket.resource.FileSystemResourceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,34 +76,66 @@ public class CustomXmlFormatFactory
             throw new IllegalStateException(e);
         }
 
-        stylesheetReferences = new ArrayList<ResourceReference>();
         var basePath = description.getBasePath().normalize();
-        for (var stylesheet : description.getStylesheets()) {
-            var stylesheetPath = basePath.resolve(stylesheet).normalize();
-            if (!stylesheetPath.startsWith(basePath)) {
-                LOG.warn("Stylesheet in custom XML format [{}] has illegal path [{}]",
-                        description.getId(), stylesheet);
+        stylesheetReferences = buildReferences(basePath, description.getStylesheets(),
+                "Stylesheet");
+        scriptReferences = buildReferences(basePath, description.getScripts(), "Script");
+    }
+
+    private List<ResourceReference> buildReferences(Path aBasePath, List<String> aResources,
+            String aKind)
+    {
+        var references = new ArrayList<ResourceReference>();
+        for (var resource : aResources) {
+            var resourcePath = aBasePath.resolve(resource).normalize();
+            if (!resourcePath.startsWith(aBasePath)) {
+                LOG.warn("{} in custom XML format [{}] has illegal path [{}]", aKind,
+                        description.getId(), resource);
                 continue;
             }
             var ref = new FileSystemResourceReference(
-                    PLUGINS_XML_FORMAT_BASE_NAME + description.getId() + "/" + stylesheet,
-                    stylesheetPath);
-            wicketApplication.getResourceReferenceRegistry().registerResourceReference(ref);
-            stylesheetReferences.add(ref);
+                    PLUGINS_XML_FORMAT_BASE_NAME + description.getId() + "/" + resource,
+                    resourcePath);
+            references.add(ref);
+        }
+        return references;
+    }
+
+    private ResourceReferenceRegistry resolveRegistry()
+    {
+        // Prefer the application that was handed to us, but fall back to the thread-bound
+        // application if that one is not (yet) initialized.
+        if (wicketApplication != null) {
+            var registry = wicketApplication.getResourceReferenceRegistry();
+            if (registry != null) {
+                return registry;
+            }
         }
 
-        scriptReferences = new ArrayList<ResourceReference>();
-        for (var script : description.getScripts()) {
-            var scriptPath = basePath.resolve(script).normalize();
-            if (!scriptPath.startsWith(basePath)) {
-                LOG.warn("Script in custom XML format [{}] has illegal path [{}]",
-                        description.getId(), script);
-                continue;
-            }
-            var ref = new FileSystemResourceReference(
-                    PLUGINS_XML_FORMAT_BASE_NAME + description.getId() + "/" + script, scriptPath);
-            wicketApplication.getResourceReferenceRegistry().registerResourceReference(ref);
-            scriptReferences.add(ref);
+        if (Application.exists()) {
+            return Application.get().getResourceReferenceRegistry();
+        }
+
+        return null;
+    }
+
+    /**
+     * Register the references with the Wicket application's resource reference registry. The
+     * registry is only available once the Wicket application has been initialized. During early
+     * bean instantiation (e.g. in integration tests) it may not yet be available, so we skip
+     * registration and rely on this method being called again on first access via
+     * {@link #getCssStylesheets()} / {@link #getJavaScripts()}, by which point the registry is
+     * available. Registration is idempotent, so repeating it per access is safe.
+     */
+    private void ensureRegistered(List<ResourceReference> aReferences)
+    {
+        var registry = resolveRegistry();
+        if (registry == null) {
+            return;
+        }
+
+        for (var ref : aReferences) {
+            registry.registerResourceReference(ref);
         }
     }
 
@@ -120,12 +154,14 @@ public class CustomXmlFormatFactory
     @Override
     public List<ResourceReference> getCssStylesheets()
     {
+        ensureRegistered(stylesheetReferences);
         return stylesheetReferences;
     }
 
     @Override
     public List<ResourceReference> getJavaScripts()
     {
+        ensureRegistered(scriptReferences);
         return scriptReferences;
     }
 
