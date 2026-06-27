@@ -294,6 +294,7 @@ Unfortunately, the SPARQL standard does not define a uniform way to perform full
 * link:https://jena.apache.org/documentation/query/text-query.html[Apache Jena Fuseki]
 * link:https://github.com/blazegraph/database/wiki/FullTextSearch[Blazegraph DB]
 * link:https://graphdb.ontotext.com/documentation/11.3/full-text-search.html[GraphDB]
+* link:https://github.com/ad-freiburg/qlever/blob/master/docs/sparql_plus_text.md[QLever (SPARQL+Text)]
 * link:https://rdf4j.org/documentation/programming/lucene/[RDF4J Lucene]
 * link:https://docs.stardog.com/query-stardog/full-text-search[Stardog]
 * link:https://docs.openlinksw.com/virtuoso/rdfsparqlrulefulltext/[Virtuoso]
@@ -327,9 +328,22 @@ To run GraphDB in the way we test it, you need to disable inference via an empty
 <http://www.ontotext.com/config/graphdb#ruleset> "empty";
 ```
 
+==== QLever (SPARQL+Text)
+
+link:https://github.com/ad-freiburg/qlever[QLever] is a SPARQL engine that integrates a separate
+full-text index, queried via the magic predicates `ql:contains-entity` and `ql:contains-word`. This
+support targets QLever instances whose text index was built from the literals of the knowledge base,
+so that entities can be matched by their label. The public
+link:https://sparql.dblp.org/sparql[dblp endpoint] is such an instance and is available as the
+built-in **DBLP Computer Science Bibliography** knowledge base profile.
+
+Note that QLever evaluates `REGEX` using Google's link:https://github.com/google/re2[RE2] library,
+which does not support look-ahead assertions. {product-name} takes this into account when generating
+the queries for QLever.
+
 ==== Stardog
 
-To enable full text search in a Stardog database, create the database with the option 
+To enable full text search in a Stardog database, create the database with the option
 `search.enabled=true`.
 
 .Example creation of FTS-enabled Stardog database

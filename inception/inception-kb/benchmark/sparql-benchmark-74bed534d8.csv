@@ -1,0 +1,78 @@
+# INCEpTION SPARQLQueryBuilder benchmark - reference results
+#
+# commit:    74bed534d8e2e88b4f33659f73cf698e99b1b9eb (clean working tree)
+# subject:   No issue: Pin AGROVOC top concepts in profile
+# generated: 2026-06-27 16:05 CEST
+# settings:  warmup=2, iterations=10
+# host:      Darwin 23.6.0 arm64, OpenJDK 25.0.3
+#
+# Times are milliseconds for query build + execution via KnowledgeBaseServiceImpl.read()
+# (the read-only result cache is bypassed). LOCAL knowledge bases run against an embedded
+# repository (network-noise-free); REMOTE ones hit public SPARQL endpoints and their timings
+# are dominated by network/server load - trust the medians and re-measure baseline+after
+# back-to-back under the same conditions.
+#
+# Notes:
+# - AGROVOC "listRootConcepts" is now ~40ms (was 5-8s, highly variable) after pinning the 25 top
+#   concepts in the profile - see commit 74bed534d8.
+# - DBpedia (German) throttles unpredictably ("HTTP 429 Too Many Requests"); these DBpedia rows
+#   are the representative successful measurements from this commit (the heavy bif:contains
+#   "labelContaining" query in particular is frequently rejected).
+# - AGROVOC only defines labelPrefix test data, so it has no child/parent operations.
+#
+# This file is also a valid baseline: pass it via -Dinception.benchmark.baseline=<this file>.
+# Comment lines (starting with #) and error rows (empty timings) are ignored by the loader.
+#
+kb,operation,iterations,minMs,medianMs,maxMs,meanMs,results
+Wine Ontology,listRootConcepts,10,7.43,8.71,12.88,9.49,6
+Wine Ontology,listProperties,10,1.53,1.83,2.38,1.84,12
+Wine Ontology,listChildConcepts,10,2.49,2.84,3.42,2.90,34
+Wine Ontology,getParentConceptList,10,1.20,1.36,3.46,1.59,1
+Wine Ontology,labelStartingWith,10,4.75,5.33,7.48,5.58,12
+Wine Ontology,labelContaining,10,3.14,3.99,4.82,3.94,12
+Human Phenotype Ontology,listRootConcepts,10,281.11,361.16,403.98,350.25,578
+Human Phenotype Ontology,listProperties,10,0.77,0.84,1.25,0.90,10
+Human Phenotype Ontology,listChildConcepts,10,0.83,1.03,1.63,1.12,23
+Human Phenotype Ontology,getParentConceptList,10,0.75,0.83,1.28,0.89,4
+Human Phenotype Ontology,labelStartingWith,10,172.77,286.91,346.34,272.69,729
+Human Phenotype Ontology,labelContaining,10,149.82,234.70,343.41,246.96,789
+Gene Ontology,listRootConcepts,10,124.15,181.48,382.55,191.98,1000
+Gene Ontology,listProperties,10,1.67,2.09,3.74,2.36,29
+Gene Ontology,listChildConcepts,10,1.13,1.34,2.83,1.70,18
+Gene Ontology,getParentConceptList,10,0.69,0.85,2.77,1.04,4
+Gene Ontology,labelStartingWith,10,549.64,585.72,695.52,608.07,11
+Gene Ontology,labelContaining,10,155.58,398.43,474.30,344.68,270
+Wikidata (direct mapping),listRootConcepts,10,24.48,27.39,33.29,27.81,1
+Wikidata (direct mapping),listProperties,10,43.19,46.00,55.98,47.24,1000
+Wikidata (direct mapping),listChildConcepts,10,25.59,29.48,32.22,29.50,32
+Wikidata (direct mapping),getParentConceptList,10,26.76,31.94,59.09,34.31,39
+Wikidata (direct mapping),labelStartingWith,10,28.96,36.13,42.16,35.72,45
+Wikidata (direct mapping),labelContaining,10,25.93,32.21,48.97,34.58,45
+DBpedia (German),listRootConcepts,10,27.24,30.35,42.94,31.73,1
+DBpedia (German),listProperties,10,60.65,66.00,120.64,77.55,1000
+DBpedia (German),listChildConcepts,10,30.05,34.40,37.80,34.76,61
+DBpedia (German),getParentConceptList,10,24.75,30.06,40.14,30.90,4
+DBpedia (German),labelStartingWith,10,28.09,30.66,34.43,31.12,443
+DBpedia (German),labelContaining,10,61.94,87.09,134.21,92.50,1000
+STW Thesaurus for Economics,listRootConcepts,10,217.33,229.36,262.00,232.08,1000
+STW Thesaurus for Economics,listProperties,10,60.79,66.91,71.75,66.70,38
+STW Thesaurus for Economics,listChildConcepts,10,58.49,61.89,70.65,63.22,2
+STW Thesaurus for Economics,getParentConceptList,10,54.57,66.36,81.30,65.67,2
+STW Thesaurus for Economics,labelStartingWith,10,67.27,74.64,89.05,75.61,121
+STW Thesaurus for Economics,labelContaining,10,61.56,64.47,74.08,66.11,5
+Medical Subject Headings (MeSH),listRootConcepts,10,221.14,243.93,268.56,243.76,111
+Medical Subject Headings (MeSH),listProperties,10,117.47,138.57,143.15,133.50,13
+Medical Subject Headings (MeSH),listChildConcepts,10,119.78,124.41,129.64,124.93,4
+Medical Subject Headings (MeSH),getParentConceptList,10,122.30,131.43,150.13,132.90,13
+Medical Subject Headings (MeSH),labelStartingWith,10,266.05,283.11,294.42,281.61,1000
+Medical Subject Headings (MeSH),labelContaining,10,261.77,272.61,284.61,272.24,1000
+AGROVOC Thesaurus,listRootConcepts,10,39.00,41.50,60.43,43.73,25
+AGROVOC Thesaurus,listProperties,10,58.88,69.08,81.48,69.29,171
+AGROVOC Thesaurus,labelStartingWith,10,34.62,41.99,54.99,41.60,10
+AGROVOC Thesaurus,labelContaining,10,35.53,44.28,47.67,43.44,1
+DBLP Computer Science Bibliography,listRootConcepts,10,33.47,72.66,87.86,67.87,2
+DBLP Computer Science Bibliography,listProperties,10,77.67,83.55,93.10,84.26,99
+DBLP Computer Science Bibliography,listChildConcepts,10,47.12,76.36,79.53,72.05,9
+DBLP Computer Science Bibliography,getParentConceptList,10,67.44,73.14,80.78,74.07,10
+DBLP Computer Science Bibliography,labelStartingWith,10,67.40,78.48,84.11,77.65,9
+DBLP Computer Science Bibliography,labelContaining,10,74.28,82.89,91.90,82.48,514

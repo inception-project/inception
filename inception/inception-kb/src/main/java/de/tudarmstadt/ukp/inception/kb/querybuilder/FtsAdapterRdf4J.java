@@ -159,7 +159,7 @@ public class FtsAdapterRdf4J
 
             var labelFilterExpressions = new ArrayList<Expression<?>>();
             labelFilterExpressions.add(Expressions.equals(str(VAR_LABEL), str(VAR_MATCH_TERM)));
-            labelFilterExpressions.add(builder.matchKbLanguage(VAR_MATCH_TERM));
+            builder.addLanguageConstraint(labelFilterExpressions, VAR_MATCH_TERM);
 
             builder.addProjection(VAR_SCORE);
 
@@ -244,7 +244,7 @@ public class FtsAdapterRdf4J
 
             var labelFilterExpressions = new ArrayList<Expression<?>>();
             labelFilterExpressions.add(Expressions.equals(str(VAR_LABEL), str(VAR_MATCH_TERM)));
-            labelFilterExpressions.add(builder.matchKbLanguage(VAR_MATCH_TERM));
+            builder.addLanguageConstraint(labelFilterExpressions, VAR_MATCH_TERM);
 
             builder.addProjection(VAR_SCORE);
 

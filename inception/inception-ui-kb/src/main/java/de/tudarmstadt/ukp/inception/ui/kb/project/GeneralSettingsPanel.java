@@ -112,14 +112,12 @@ public class GeneralSettingsPanel
 
     private ComboBox<String> languageComboBox(String id, IModel<String> aModel)
     {
-        // Only set kbModel object if it has not been initialized yet
-        if (aModel.getObject() == null) {
-            aModel.setObject("en");
-        }
-
+        // The default language is optional. Leaving it empty means that labels/descriptions in any
+        // language (including untagged ones) are accepted - which is required e.g. for the DBLP
+        // knowledge base and also avoids a costly language filter on some SPARQL engines. We
+        // therefore neither force a default value nor mark the field as required.
         var comboBox = new ComboBox<String>(id, aModel, LANGUAGE_CODES);
         comboBox.setOutputMarkupId(true);
-        comboBox.setRequired(true);
         // Do nothing just update the kbModel values
         comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         return comboBox;

@@ -162,12 +162,15 @@ public class FtsAdapterFuseki
             builder.addProjection(VAR_SCORE);
 
             var labelFilterExpressions = new ArrayList<Expression<?>>();
-            labelFilterExpressions.add(builder.matchKbLanguage(VAR_MATCH_TERM));
+            builder.addLanguageConstraint(labelFilterExpressions, VAR_MATCH_TERM);
 
-            valuePatterns.add(new FusekiFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
+            GraphPattern ftsQuery = new FusekiFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
                     VAR_MATCH_TERM_PROPERTY, fuzzyQuery) //
-                            .withLimit(builder.getLimit()) //
-                            .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
+                            .withLimit(builder.getLimit());
+            if (!labelFilterExpressions.isEmpty()) {
+                ftsQuery = ftsQuery.filter(and(labelFilterExpressions.toArray(Expression[]::new)));
+            }
+            valuePatterns.add(ftsQuery);
         }
 
         if (valuePatterns.isEmpty()) {

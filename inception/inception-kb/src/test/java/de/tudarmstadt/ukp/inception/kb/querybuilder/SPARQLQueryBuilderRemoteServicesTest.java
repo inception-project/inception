@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_QLEVER;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
@@ -34,6 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
+import java.util.List;
 
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.repository.Repository;
@@ -62,6 +64,7 @@ public class SPARQLQueryBuilderRemoteServicesTest
     private Repository dbpedia;
     private Repository yago;
     private Repository mesh;
+    private Repository dblp;
 
     @BeforeEach
     public void setUp()
@@ -85,6 +88,8 @@ public class SPARQLQueryBuilderRemoteServicesTest
         zbwGnd = buildSparqlRepository("https://zbw.eu/beta/sparql/gnd/query");
         // Web: https://id.nlm.nih.gov/mesh/query - backed by OpenLink Virtuoso
         mesh = buildSparqlRepository("https://id.nlm.nih.gov/mesh/sparql");
+        // Web: https://sparql.dblp.org - backed by QLever with a full-text index over the literals
+        dblp = buildSparqlRepository("https://sparql.dblp.org/sparql");
     }
 
     @BeforeEach
@@ -266,6 +271,126 @@ public class SPARQLQueryBuilderRemoteServicesTest
         assertThat(results).isNotEmpty();
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.toLowerCase().contains("insulin"));
+    }
+
+    /**
+     * Verifies QLever full-text search against the official DBLP endpoint
+     * ({@code https://sparql.dblp.org/sparql}). The DBLP text index is built over the bibliographic
+     * literals, so {@code ql:contains-entity} binds the matched label literal which the adapter
+     * joins back to the entity via the label property.
+     */
+    @Tag("slow")
+    @Test
+    void testWithLabelMatchingExactlyAnyOf_DBLP_QLever_FTS() throws Exception
+    {
+        assertIsReachable(dblp);
+
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(FTS_QLEVER.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+
+        var prefLabels = resolvePrefLabelProperties(dblp, kb);
+        var results = asHandles(dblp, SPARQLQueryBuilder //
+                .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
+                .withLabelMatchingExactlyAnyOf("Yoshua Bengio"));
+
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        // The person "Yoshua Bengio" has a stable dblp PID IRI.
+        assertThat(results) //
+                .extracting(KBHandle::getIdentifier) //
+                .contains("https://dblp.org/pid/56/953");
+    }
+
+    @Tag("slow")
+    @Test
+    void testWithLabelContainingAnyOf_DBLP_QLever_FTS() throws Exception
+    {
+        assertIsReachable(dblp);
+
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(FTS_QLEVER.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+
+        var prefLabels = resolvePrefLabelProperties(dblp, kb);
+        var results = asHandles(dblp, SPARQLQueryBuilder //
+                .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
+                .withLabelContainingAnyOf("Yoshua Bengio"));
+
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.toLowerCase().contains("yoshua")
+                        && label.toLowerCase().contains("bengio"));
+    }
+
+    @Tag("slow")
+    @Test
+    void testWithLabelStartingWith_DBLP_QLever_FTS() throws Exception
+    {
+        assertIsReachable(dblp);
+
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(FTS_QLEVER.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+
+        var prefLabels = resolvePrefLabelProperties(dblp, kb);
+        var results = asHandles(dblp, SPARQLQueryBuilder //
+                .forItems(kb) //
+                .withPrefLabelProperties(prefLabels) //
+                .withLabelStartingWith("Yoshua Beng"));
+
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.toLowerCase().startsWith("yoshua beng"));
+    }
+
+    /**
+     * Verifies the root-concept query against the QLever-backed DBLP endpoint. The labels are
+     * retrieved via the pre-resolved label properties used as <b>constant</b> predicates. The naive
+     * query - which embeds an unbound {@code subPropertyOf*} property path and matches the label
+     * via a predicate <i>variable</i> ({@code ?subj ?pMatch ?m}) inside the OPTIONAL - times out /
+     * runs the endpoint out of memory on QLever. No default language is set (as in the dblp
+     * profile) so that the {@code @en}-tagged class labels are returned without a slow
+     * {@code LANG()} filter.
+     */
+    @Tag("slow")
+    @Test
+    void testRootConcepts_DBLP_QLever() throws Exception
+    {
+        assertIsReachable(dblp);
+
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(FTS_QLEVER.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+        kb.setDefaultLanguage(null);
+        kb.setRootConcepts(List.of("https://dblp.org/rdf/schema#Creator",
+                "https://dblp.org/rdf/schema#Publication"));
+
+        var prefLabels = resolvePrefLabelProperties(dblp, kb);
+        var results = asHandles(dblp, SPARQLQueryBuilder //
+                .forClasses(kb) //
+                .withPrefLabelProperties(prefLabels) //
+                .roots() //
+                .retrieveLabel() //
+                .retrieveDescription());
+
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results) //
+                .extracting(KBHandle::getIdentifier) //
+                .containsExactlyInAnyOrder("https://dblp.org/rdf/schema#Creator",
+                        "https://dblp.org/rdf/schema#Publication");
+        assertThat(results) //
+                .filteredOn(h -> "https://dblp.org/rdf/schema#Creator".equals(h.getIdentifier())) //
+                .extracting(KBHandle::getUiLabel) //
+                .containsExactly("Creator");
     }
 
     private void applyMeshProfile() throws IOException

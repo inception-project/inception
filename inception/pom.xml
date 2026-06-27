@@ -778,6 +778,7 @@
                     <inputExclude>/README</inputExclude>
                     <inputExclude>/README.txt</inputExclude>
                     <inputExclude>/README.md</inputExclude>
+                    <inputExclude>/benchmark/**</inputExclude>
                     <inputExclude>/src/main/docker/**</inputExclude>
                     <inputExclude>/src/main/resources/**</inputExclude>
                     <inputExclude>/src/test/resources/**</inputExclude>
