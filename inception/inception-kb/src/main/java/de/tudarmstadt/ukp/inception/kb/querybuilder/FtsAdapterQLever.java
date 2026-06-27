@@ -141,7 +141,7 @@ public class FtsAdapterQLever
             }
 
             valuePatterns.add(textMatch(wordQuery) //
-                    .filter(builder.containsPatternWithoutLookahead(VAR_MATCH_TERM, value)));
+                    .filter(builder.containsPattern(VAR_MATCH_TERM, value)));
         }
 
         if (valuePatterns.isEmpty()) {

@@ -38,19 +38,16 @@ import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.function;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.notEquals;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.or;
-import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.CONTAINS;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANG;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANGMATCHES;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.REGEX;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STR;
-import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STRSTARTS;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.dataset;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.from;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
@@ -92,7 +89,6 @@ import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
-import org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder;
 import org.eclipse.rdf4j.sparqlbuilder.core.From;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
@@ -1097,23 +1093,36 @@ public class SPARQLQueryBuilder
 
     Expression<?> startsWithPattern(Variable aVariable, String aPrefixQuery)
     {
-        return matchString(STRSTARTS, aVariable, aPrefixQuery);
-    }
+        var expressions = new ArrayList<Expression<?>>();
 
-    Expression<?> containsPattern(Variable aVariable, String aSubstring)
-    {
-        return matchString(CONTAINS, aVariable, aSubstring);
+        if (filterUsingRegex) {
+            var regexFlags = "";
+            if (caseInsensitive) {
+                regexFlags += "i";
+            }
+
+            // Match using REGEX (anchored at the start) to be resilient against extra whitespace.
+            var value = "^" + asRegexp(aPrefixQuery) + ".*";
+            expressions.add(function(REGEX, function(STR, aVariable), literalOf(value),
+                    literalOf(regexFlags)));
+        }
+
+        addLanguageConstraint(expressions, aVariable);
+
+        return and(expressions.toArray(Expression[]::new)).parenthesize();
     }
 
     /**
-     * RE2-safe variant of {@link #containsPattern}. The "contains all tokens in any order"
-     * semantics are normally expressed via a single look-ahead regex ({@code (?=.*a)(?=.*b)}). Some
-     * engines - notably QLever, which evaluates {@code REGEX} with Google's RE2 library - do not
-     * support look-ahead assertions and reject such queries. This variant emits one unanchored
-     * {@code REGEX} per token instead, which is equivalent for our purposes and uses only
-     * RE2-supported syntax.
+     * Builds a "contains all search tokens in any order" filter as one unanchored {@code REGEX} per
+     * token, AND-ed together. This deliberately avoids expressing it as a single look-ahead regex
+     * ({@code (?=.*a)(?=.*b)}): some engines - notably QLever (which evaluates {@code REGEX} with
+     * Google's RE2 library) and MarkLogic - do not support look-ahead assertions and reject such
+     * queries. The per-token form is logically equivalent ({@code (?=.*a)(?=.*b)} is the same as
+     * "contains a AND contains b") and uses only widely-supported regex syntax; the separate
+     * conjuncts also tend to be friendlier to query planners, which can reorder and short-circuit
+     * them independently.
      */
-    Expression<?> containsPatternWithoutLookahead(Variable aVariable, String aSubstring)
+    Expression<?> containsPattern(Variable aVariable, String aSubstring)
     {
         var expressions = new ArrayList<Expression<?>>();
 
@@ -1180,46 +1189,6 @@ public class SPARQLQueryBuilder
                 function(REGEX, function(STR, aVariable), literalOf(value), literalOf(regexFlags)));
         addLanguageConstraint(expressions, aVariable);
         return expressions;
-    }
-
-    private Expression<?> matchString(SparqlFunction aFunction, Variable aVariable, String aValue)
-    {
-        var expressions = new ArrayList<Expression<?>>();
-
-        if (filterUsingRegex) {
-            var regexFlags = "";
-            if (caseInsensitive) {
-                regexFlags += "i";
-            }
-
-            String value;
-            switch (aFunction) {
-            // Match using REGEX to be resilient against extra whitespace
-            case STRSTARTS:
-                // Match at start
-                value = "^" + asRegexp(aValue) + ".*";
-                break;
-            case CONTAINS:
-                // Match anywhere
-                value = Stream.of(TOKENKIZER_PATTERN.split(aValue)) //
-                        .map(t -> "(?=.*" + asRegexp(t) + ")") //
-                        .collect(joining());
-                // value = Stream.of(TOKENKIZER_PATTERN.split(aValue)) //
-                // .map(t -> asRegexp(t)) //
-                // .collect(joining("|"));
-                break;
-            default:
-                throw new IllegalArgumentException(
-                        "Only STRSTARTS and CONTAINS are supported, but got [" + aFunction + "]");
-            }
-
-            expressions.add(function(REGEX, function(STR, aVariable), literalOf(value),
-                    literalOf(regexFlags)));
-        }
-
-        addLanguageConstraint(expressions, aVariable);
-
-        return and(expressions.toArray(Expression[]::new)).parenthesize();
     }
 
     /**
