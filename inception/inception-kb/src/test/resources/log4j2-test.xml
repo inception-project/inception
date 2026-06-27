@@ -13,7 +13,11 @@
     <Logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="ERROR"/>
     
     <Logger name="de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder" level="WARN"/>
-    
+
+    <!-- The benchmark's report (timings table + BENCHMARK_CSV lines) is logged at INFO and is the
+         whole point of running it, so make sure it is visible. -->
+    <Logger name="de.tudarmstadt.ukp.inception.kb.SPARQLQueryBuilderBenchmarkTest" level="INFO"/>
+
     <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />
     </Root>
