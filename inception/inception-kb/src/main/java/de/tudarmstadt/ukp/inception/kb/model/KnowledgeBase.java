@@ -515,6 +515,7 @@ public class KnowledgeBase
 
         applyRootConcepts(aProfile);
         applyMapping(aProfile.getMapping());
+        applyAdditionalMatchingProperties(aProfile);
         applyAdditionalLanguages(aProfile);
         applyAdditionalDatasets(aProfile);
     }
