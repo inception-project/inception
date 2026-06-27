@@ -158,6 +158,86 @@ db_pedia:
   root-concepts:
     - http://www.w3.org/2002/07/owl#Thing
 
+eurovoc:
+  name: EuroVoc (EU Vocabularies / CELLAR)
+  type: REMOTE
+  default-language: en
+  access:
+    access-url: https://publications.europa.eu/webapi/rdf/sparql
+    full-text-search: bif:contains
+  mapping:
+    class: http://www.w3.org/2004/02/skos/core#Concept
+    subclass-of: http://www.w3.org/2004/02/skos/core#broader
+    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+    label: http://www.w3.org/2004/02/skos/core#prefLabel
+    description: http://www.w3.org/2004/02/skos/core#definition
+    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    property-label: http://www.w3.org/2004/02/skos/core#prefLabel
+    property-description: http://www.w3.org/2004/02/skos/core#definition
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
+  additional-matching-properties:
+    - http://www.w3.org/2004/02/skos/core#altLabel
+  info:
+    description: |
+      EuroVoc is the European Union's multilingual, multidisciplinary thesaurus covering the
+      activities of the EU, with particular emphasis on parliamentary and legal subject areas.
+      It contains roughly 7,000 concepts organised into 21 domains and 127 micro-thesauri, and
+      is available in all official EU languages. EuroVoc is maintained and published by the
+      Publications Office of the European Union and is used to index documents in EUR-Lex and
+      across other EU services.
+
+      This profile queries EuroVoc through CELLAR, the central content and metadata repository of
+      the Publications Office, via its public SPARQL endpoint. Concepts are exposed as SKOS
+      (skos:Concept / skos:broader / skos:prefLabel / skos:altLabel), making EuroVoc a natural
+      target for linking subject matter in legal documents (e.g. Akoma Ntoso / LegalDocML) to
+      canonical EU concept IRIs.
+
+      For more information, please consult <https://op.europa.eu/en/web/eu-vocabularies>.
+    host-institution-name: Publications Office of the European Union
+    author-name: Publications Office of the European Union
+    website-url: https://op.europa.eu/en/web/eu-vocabularies/eurovoc
+
+eu-corporate-bodies:
+  name: EU Corporate Bodies (EU Vocabularies / CELLAR)
+  type: REMOTE
+  default-language: en
+  access:
+    access-url: https://publications.europa.eu/webapi/rdf/sparql
+    full-text-search: bif:contains
+  mapping:
+    class: http://publications.europa.eu/ontology/euvoc#Corporate
+    subclass-of: http://www.w3.org/2004/02/skos/core#broader
+    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+    label: http://www.w3.org/2004/02/skos/core#prefLabel
+    description: http://www.w3.org/2004/02/skos/core#definition
+    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    property-label: http://www.w3.org/2004/02/skos/core#prefLabel
+    property-description: http://www.w3.org/2004/02/skos/core#definition
+    deprecation-property: http://www.w3.org/2002/07/owl#deprecated
+  additional-matching-properties:
+    - http://www.w3.org/2004/02/skos/core#altLabel
+  info:
+    description: |
+      The Corporate Bodies Named Authority List (NAL) of the EU Vocabularies, covering EU
+      institutions, bodies, offices and agencies (e.g. the European Commission, the Council, the
+      European Parliament, EFSA, the European Central Bank) as well as historical and associated
+      bodies. It contains roughly 2,000 corporate bodies, each with a preferred label and
+      alternative labels (including acronyms such as "STECF" or "ECB") in the official EU
+      languages, organised into a broader/narrower hierarchy.
+
+      This profile queries the list through CELLAR, the central content and metadata repository of
+      the Publications Office, via its public SPARQL endpoint. Concepts are typed
+      euvoc:Corporate and carry SKOS labels (skos:prefLabel / skos:altLabel), making this a
+      natural target for linking institutional actors named in legal documents (e.g. Akoma Ntoso
+      / LegalDocML) to canonical EU corporate-body IRIs.
+
+      For more information, please consult <https://op.europa.eu/en/web/eu-vocabularies>.
+    host-institution-name: Publications Office of the European Union
+    author-name: Publications Office of the European Union
+    website-url: https://op.europa.eu/en/web/eu-vocabularies/concept-scheme/-/resource?uri=http://publications.europa.eu/resource/authority/corporate-body
+
 wikidata:
   name: Wikidata (direct mapping)
   type: REMOTE

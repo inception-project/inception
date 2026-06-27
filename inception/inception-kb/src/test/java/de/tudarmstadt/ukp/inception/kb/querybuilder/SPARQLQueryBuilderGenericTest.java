@@ -58,9 +58,21 @@ public class SPARQLQueryBuilderGenericTest
     {
         var profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
 
+        // Optional focus filter: set INCEPTION_KB_TEST_PROFILES (env) or
+        // -Dinception.kb.test.profiles (system property) to a comma-separated list of profile ids
+        // to run the generic suite against only those profiles. Empty/unset = all profiles.
+        var focusEnv = System.getenv("INCEPTION_KB_TEST_PROFILES");
+        var focus = (focusEnv != null ? focusEnv
+                : System.getProperty("inception.kb.test.profiles", "")).trim();
+        var focusProfiles = focus.isEmpty() ? List.<String> of() : asList(focus.split("\\s*,\\s*"));
+
         var dataList = new ArrayList<KnowledgeBaseProfile>();
         for (var entry : profiles.entrySet()) {
-            if (SKIPPED_PROFILES.contains(entry.getKey())) {
+            if (!focusProfiles.isEmpty() && !focusProfiles.contains(entry.getKey())) {
+                continue;
+            }
+
+            if (focusProfiles.isEmpty() && SKIPPED_PROFILES.contains(entry.getKey())) {
                 continue;
             }
 

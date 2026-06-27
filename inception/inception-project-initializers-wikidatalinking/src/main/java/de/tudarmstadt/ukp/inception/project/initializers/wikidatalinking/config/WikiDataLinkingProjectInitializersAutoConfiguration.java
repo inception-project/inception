@@ -180,6 +180,32 @@ public class WikiDataLinkingProjectInitializersAutoConfiguration
 
     @ConditionalOnBean(KnowledgeBaseService.class)
     @Bean
+    public ProfileBasedKnowledgeBaseInitializer euCorporateBodiesKnowledgeBaseInitializer(
+            KnowledgeBaseService aKbService)
+    {
+        var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
+                "GenericKnowledgeBase.svg");
+        return new ProfileBasedKnowledgeBaseInitializer(aKbService,
+                PROFILES.get("eu-corporate-bodies"), thumbnail)
+        {
+        };
+    }
+
+    @ConditionalOnBean(KnowledgeBaseService.class)
+    @Bean
+    public ProfileBasedKnowledgeBaseInitializer euroVocKnowledgeBaseInitializer(
+            KnowledgeBaseService aKbService)
+    {
+        var thumbnail = new PackageResourceReference(WikiDataKnowledgeBaseInitializer.class,
+                "GenericKnowledgeBase.svg");
+        return new ProfileBasedKnowledgeBaseInitializer(aKbService, PROFILES.get("eurovoc"),
+                thumbnail)
+        {
+        };
+    }
+
+    @ConditionalOnBean(KnowledgeBaseService.class)
+    @Bean
     public ProfileBasedKnowledgeBaseInitializer geneOntologyKnowledgeBaseInitializer(
             KnowledgeBaseService aKbService)
     {
