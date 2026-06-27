@@ -605,6 +605,13 @@ public class SPARQLQueryBuilderBenchmarkTest
         configs.add(BenchmarkConfiguration.fromProfile("agrovoc", profiles) //
                 .labelPrefix("wheat"));
 
+        // REMOTE - DBLP Computer Science Bibliography (QLever-backed, contains-word FTS). The
+        // structural operations run against the small RDF schema; FTS matches publications/persons.
+        configs.add(BenchmarkConfiguration.fromProfile("dblp", profiles) //
+                .parentForChildren("https://dblp.org/rdf/schema#Publication") //
+                .leafForAncestors("https://dblp.org/rdf/schema#Person") //
+                .labelPrefix("Knuth"));
+
         // Allow restricting the set via -Dinception.benchmark.kbs=wikidata,mesh
         var filter = System.getProperty("inception.benchmark.kbs");
         if (filter != null && !filter.isBlank()) {

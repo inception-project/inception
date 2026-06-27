@@ -63,7 +63,10 @@ agrovoc:
 dblp:
   name: DBLP Computer Science Bibliography
   type: REMOTE
-  default-language: en
+  # No default language: the bibliographic literals (author names, titles) are untagged, while the
+  # schema labels (e.g. for the Creator/Publication classes) carry an "en" tag. Leaving the language
+  # unconstrained matches both. It also avoids a LANG()-based FILTER inside the OPTIONAL label lookup
+  # which is pathologically slow on the QLever-backed endpoint.
   access:
     access-url: https://sparql.dblp.org/sparql
     full-text-search: http://qlever.cs.uni-freiburg.de/builtin-functions/contains-word

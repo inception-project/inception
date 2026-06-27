@@ -248,11 +248,16 @@ public class SPARQLQueryBuilder
 
         protected List<Iri> getAdditionalMatchingProperties(KnowledgeBase aKb)
         {
+            return getAdditionalMatchingPropertiesAsStrings(aKb).stream() //
+                    .map(Rdf::iri) //
+                    .toList();
+        }
+
+        protected Collection<String> getAdditionalMatchingPropertiesAsStrings(KnowledgeBase aKb)
+        {
             switch (this) {
             case ITEM, CLASS, INSTANCE:
-                return aKb.getAdditionalMatchingProperties().stream() //
-                        .map(Rdf::iri) //
-                        .toList();
+                return aKb.getAdditionalMatchingProperties();
             case PROPERTY:
                 return emptyList();
             default:
@@ -1126,7 +1131,7 @@ public class SPARQLQueryBuilder
             }
         }
 
-        expressions.add(matchKbLanguage(aVariable));
+        addLanguageConstraint(expressions, aVariable);
 
         return and(expressions.toArray(Expression[]::new)).parenthesize();
     }
@@ -1171,7 +1176,7 @@ public class SPARQLQueryBuilder
         var expressions = new ArrayList<Expression<?>>();
         expressions.add(
                 function(REGEX, function(STR, aVariable), literalOf(value), literalOf(regexFlags)));
-        expressions.add(matchKbLanguage(aVariable));
+        addLanguageConstraint(expressions, aVariable);
         return expressions;
     }
 
@@ -1210,9 +1215,22 @@ public class SPARQLQueryBuilder
                     literalOf(regexFlags)));
         }
 
-        expressions.add(matchKbLanguage(aVariable));
+        addLanguageConstraint(expressions, aVariable);
 
         return and(expressions.toArray(Expression[]::new)).parenthesize();
+    }
+
+    /**
+     * Appends the {@link #matchKbLanguage(Variable) language matching filter} to the given list of
+     * expressions - unless the knowledge base has no language constraints, in which case nothing is
+     * added.
+     */
+    private void addLanguageConstraint(List<Expression<?>> aExpressions, Variable aVariable)
+    {
+        var languageConstraint = matchKbLanguage(aVariable);
+        if (languageConstraint != null) {
+            aExpressions.add(languageConstraint);
+        }
     }
 
     List<String> getFallbackLanguages()
@@ -1220,12 +1238,29 @@ public class SPARQLQueryBuilder
         return fallbackLanguages;
     }
 
+    boolean hasLanguageConstraints()
+    {
+        return StringUtils.isNotBlank(kb.getDefaultLanguage()) || !fallbackLanguages.isEmpty();
+    }
+
+    /**
+     * Builds the language matching filter for the given variable - or {@code null} if the knowledge
+     * base has neither a default language nor any fallback languages configured. In that case we do
+     * not constrain the language at all (labels/descriptions in any language - including untagged
+     * ones - are accepted). This is important e.g. for QLever-backed endpoints where a
+     * {@code FILTER ( LANG(?m) ... )} inside an {@code OPTIONAL} forces the engine to materialize
+     * every label literal before joining, which is pathologically slow.
+     */
     Expression<?> matchKbLanguage(Variable aVariable)
     {
+        if (!hasLanguageConstraints()) {
+            return null;
+        }
+
         var defaultLang = kb.getDefaultLanguage();
 
         var languages = new ArrayList<Expression<?>>();
-        if (defaultLang != null) {
+        if (StringUtils.isNotBlank(defaultLang)) {
             // Match with default language
             languages.add(function(LANGMATCHES, function(LANG, aVariable), literalOf(defaultLang)));
         }
@@ -1382,8 +1417,15 @@ public class SPARQLQueryBuilder
     {
         if (!mode.getAdditionalMatchingProperties(kb).isEmpty()) {
             addPreferredLabelProjections(projections);
-            labelPropertyBindings.add(bindPrefLabelProperties(VAR_PREF_LABEL_PROPERTY));
-            retrieveOptionalWithLanguage(VAR_PREF_LABEL_PROPERTY, VAR_PREF_LABEL);
+            if (!preResolvedPrefLabelProperties.isEmpty()) {
+                // Pre-resolved: retrieve via the concrete label properties as constant predicates.
+                retrieveOptionalWithConstantPredicates(preResolvedPrefLabelProperties,
+                        VAR_PREF_LABEL);
+            }
+            else {
+                labelPropertyBindings.add(bindPrefLabelProperties(VAR_PREF_LABEL_PROPERTY));
+                retrieveOptionalWithLanguage(VAR_PREF_LABEL_PROPERTY, VAR_PREF_LABEL);
+            }
         }
 
         // If the label is already retrieved, do nothing
@@ -1392,8 +1434,21 @@ public class SPARQLQueryBuilder
         }
 
         addMatchTermProjections(projections);
-        labelPropertyBindings.add(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY));
-        retrieveOptionalWithLanguage(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM);
+        if (!preResolvedPrefLabelProperties.isEmpty()) {
+            // Pre-resolved: retrieve the match term via the concrete label and additional matching
+            // properties as constant predicates. Using a property *variable* here (?subj ?p ?m) is
+            // pathologically slow on some engines (e.g. QLever allocates gigabytes trying to
+            // materialize the whole predicate space inside the OPTIONAL), whereas a fixed predicate
+            // (?subj <label> ?m) is cheap.
+            var matchProperties = new LinkedHashSet<String>();
+            matchProperties.addAll(preResolvedPrefLabelProperties);
+            matchProperties.addAll(preResolvedAdditionalMatchingProperties);
+            retrieveOptionalWithConstantPredicates(matchProperties, VAR_MATCH_TERM);
+        }
+        else {
+            labelPropertyBindings.add(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY));
+            retrieveOptionalWithLanguage(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM);
+        }
 
         return this;
     }
@@ -1424,13 +1479,44 @@ public class SPARQLQueryBuilder
 
     private void retrieveOptionalWithLanguage(RdfPredicate aProperty, Variable aVariable)
     {
-        var pattern = VAR_SUBJECT.has(aProperty, aVariable) //
-                .filter(matchKbLanguage(aVariable));
+        var triple = VAR_SUBJECT.has(aProperty, aVariable);
+
+        // If the knowledge base has no language constraints, we retrieve the value without any
+        // language filter at all. Putting a LANG()-based FILTER inside the OPTIONAL is very
+        // expensive on some engines (e.g. QLever), as it forces materialization of all candidate
+        // literals before the optional join.
+        GraphPattern pattern = hasLanguageConstraints() ? triple.filter(matchKbLanguage(aVariable))
+                : triple;
 
         // Virtuoso has trouble with multiple OPTIONAL clauses causing results which would
         // normally match to be removed from the results set. Using a UNION seems to address this
         // labelPatterns.forEach(pattern -> addPattern(Priority.SECONDARY, optional(pattern)));
         addPattern(OPTIONAL_LOOKUP, optional(union(pattern)));
+    }
+
+    /**
+     * Retrieve an optional value bound via any of the given properties used as <b>constant</b>
+     * predicates (i.e. {@code OPTIONAL { { ?subj <p1> ?v } UNION { ?subj <p2> ?v } ... }}). This is
+     * used instead of binding a property variable and matching {@code ?subj ?pVar ?v} when the
+     * effective properties have been pre-resolved - a fixed predicate lets engines use their POS
+     * index directly, whereas a predicate variable forces materialization of the entire predicate
+     * space inside the OPTIONAL on some engines (e.g. QLever).
+     */
+    private void retrieveOptionalWithConstantPredicates(Collection<String> aProperties,
+            Variable aVariable)
+    {
+        var branches = aProperties.stream() //
+                .map(p -> (GraphPattern) VAR_SUBJECT.has(iri(p), aVariable)) //
+                .toArray(GraphPattern[]::new);
+
+        var body = union(branches);
+
+        // See retrieveOptionalWithLanguage() for why the language filter is omitted when the
+        // knowledge base has no language constraints.
+        GraphPattern pattern = hasLanguageConstraints() ? body.filter(matchKbLanguage(aVariable))
+                : body;
+
+        addPattern(OPTIONAL_LOOKUP, optional(pattern));
     }
 
     @Override
@@ -1678,7 +1764,7 @@ public class SPARQLQueryBuilder
     private List<KBHandle> reduceRedundantResults(List<KBHandle> aHandles)
     {
         var langPrio = new ArrayList<>();
-        if (kb.getDefaultLanguage() != null) {
+        if (StringUtils.isNotBlank(kb.getDefaultLanguage())) {
             langPrio.add(kb.getDefaultLanguage());
         }
         langPrio.addAll(fallbackLanguages);
@@ -1701,8 +1787,8 @@ public class SPARQLQueryBuilder
             }
             // Found an exact language match -> use that one instead
             // Note that having a language implies that there is a label!
-            else if (langPrio.indexOf(current.getLanguage()) > langPrio
-                    .indexOf(handle.getLanguage())) {
+            else if (languagePriority(langPrio, current.getLanguage()) > languagePriority(langPrio,
+                    handle.getLanguage())) {
                 replace = true;
             }
 
@@ -1719,6 +1805,18 @@ public class SPARQLQueryBuilder
         LOG.trace("Output: {}", cMap.values());
 
         return cMap.values().stream().limit(getLimit()).collect(Collectors.toList());
+    }
+
+    /**
+     * Priority of the given language in the preference list - lower is better. Languages not in the
+     * list (which can happen now that a knowledge base without any configured language matches
+     * labels in <i>any</i> language) are ranked last rather than first, so that e.g. an untagged
+     * label is still preferred over an arbitrary tagged one.
+     */
+    private static int languagePriority(List<?> aLangPrio, String aLanguage)
+    {
+        var index = aLangPrio.indexOf(aLanguage);
+        return index >= 0 ? index : Integer.MAX_VALUE;
     }
 
     private void extractLabel(KBHandle aTargetHandle, BindingSet aSourceBindings)
@@ -1944,10 +2042,18 @@ public class SPARQLQueryBuilder
     @Override
     public Set<String> resolvePrefLabelProperties(RepositoryConnection aConnection)
     {
-        var pLabel = mode.getLabelProperty(kb);
         var properties = new LinkedHashSet<String>();
 
-        resolveSubProperties(aConnection, pLabel, properties);
+        // Always include the configured label property itself. The sub-property query below relies
+        // on the zero-or-more path also returning the root property, but some engines (e.g. QLever)
+        // only do so if the property appears as a node in the graph - which is not the case if it
+        // is
+        // only ever used in predicate position (as with rdfs:label on the DBLP endpoint). Seeding
+        // it
+        // explicitly makes the result robust across engines.
+        properties.add(mode.getLabelPropertyAsString(kb));
+
+        resolveSubProperties(aConnection, mode.getLabelProperty(kb), properties);
 
         return properties;
     }
@@ -1957,8 +2063,10 @@ public class SPARQLQueryBuilder
     {
         var properties = new LinkedHashSet<String>();
 
-        for (var pAddSearch : mode.getAdditionalMatchingProperties(kb)) {
-            resolveSubProperties(aConnection, pAddSearch, properties);
+        for (var pAddSearch : mode.getAdditionalMatchingPropertiesAsStrings(kb)) {
+            // Always include the configured property itself - see resolvePrefLabelProperties().
+            properties.add(pAddSearch);
+            resolveSubProperties(aConnection, iri(pAddSearch), properties);
         }
 
         return properties;

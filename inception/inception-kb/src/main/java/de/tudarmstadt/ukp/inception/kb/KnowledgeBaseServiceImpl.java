@@ -129,6 +129,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpHeaders;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
@@ -149,6 +150,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.model.RemoteRepositoryTraits;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQuery;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryPrimaryConditions;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
 import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
 import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
@@ -188,6 +190,14 @@ public class KnowledgeBaseServiceImpl
     private final KnowledgeBaseProperties properties;
 
     private final LoadingCache<QueryKey, List<KBHandle>> queryCache;
+
+    // The effective pref-label / additional-matching properties of a KB are resolved from the
+    // endpoint (following the sub-property hierarchy of the configured label properties). This is
+    // stable as long as the KB configuration and schema do not change, so for read-only KBs we
+    // cache the resolved properties and re-use them across queries instead of resolving them at the
+    // endpoint over and over again. The cache is invalidated when the KB configuration changes.
+    private final Cache<LabelPropertiesKey, ResolvedLabelProperties> labelPropertiesCache;
+
     private final MemoryOAuthSessionRepository<KnowledgeBase> oAuthSessionRepository;
 
     @Value("spring.application.name")
@@ -200,6 +210,10 @@ public class KnowledgeBaseServiceImpl
         properties = aKBProperties;
 
         queryCache = createQueryCache(aKBProperties);
+        labelPropertiesCache = Caffeine.newBuilder() //
+                .maximumSize(1_000) //
+                .expireAfterAccess(aKBProperties.getCacheExpireDelay()) //
+                .build();
         oAuthSessionRepository = new MemoryOAuthSessionRepository<>();
 
         kbRepositoriesRoot = new File(aRepoProperties.getPath(), "kb");
@@ -983,8 +997,9 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (var watch = new StopWatch(LOG, "readConcept(%s)", aIdentifier)) {
-            var query = SPARQLQueryBuilder.forClasses(aKB) //
-                    .withIdentifier(aIdentifier) //
+            var query = SPARQLQueryBuilder.forClasses(aKB);
+            preResolveLabelProperties(aKB, query, false);
+            query.withIdentifier(aIdentifier) //
                     .excludeInferred() //
                     .retrieveLabel() //
                     .retrieveDescription() //
@@ -1039,8 +1054,9 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (var watch = new StopWatch(LOG, "listAllConcepts()")) {
-            var query = SPARQLQueryBuilder.forClasses(aKB) //
-                    .retrieveLabel() //
+            var query = SPARQLQueryBuilder.forClasses(aKB);
+            preResolveLabelProperties(aKB, query, false);
+            query.retrieveLabel() //
                     .retrieveDescription() //
                     .retrieveDeprecation() //
                     .excludeInferred();
@@ -1076,8 +1092,9 @@ public class KnowledgeBaseServiceImpl
     public Optional<KBProperty> readProperty(KnowledgeBase aKB, String aIdentifier)
     {
         try (var watch = new StopWatch(LOG, "readProperty(%s)", aIdentifier)) {
-            var query = SPARQLQueryBuilder.forProperties(aKB) //
-                    .withIdentifier(aIdentifier) //
+            var query = SPARQLQueryBuilder.forProperties(aKB);
+            preResolveLabelProperties(aKB, query, true);
+            query.withIdentifier(aIdentifier) //
                     .retrieveDescription() //
                     .retrieveLabel() //
                     .retrieveDeprecation().retrieveDomainAndRange() //
@@ -1126,8 +1143,9 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (var watch = new StopWatch(LOG, "listProperties()")) {
-            var query = SPARQLQueryBuilder.forProperties(aKB) //
-                    .retrieveLabel() //
+            var query = SPARQLQueryBuilder.forProperties(aKB);
+            preResolveLabelProperties(aKB, query, true);
+            query.retrieveLabel() //
                     .retrieveDescription() //
                     .retrieveDeprecation() //
                     .retrieveDomainAndRange() //
@@ -1165,8 +1183,9 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (var watch = new StopWatch(LOG, "readInstance(%s)", aIdentifier)) {
-            var query = SPARQLQueryBuilder.forInstances(aKB) //
-                    .withIdentifier(aIdentifier) //
+            var query = SPARQLQueryBuilder.forInstances(aKB);
+            preResolveLabelProperties(aKB, query, false);
+            query.withIdentifier(aIdentifier) //
                     .retrieveDescription() //
                     .retrieveLabel() //
                     .retrieveDeprecation().excludeInferred();
@@ -1219,8 +1238,9 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listInstances(KnowledgeBase aKB, String aConceptIri, boolean aAll)
     {
         try (var watch = new StopWatch(LOG, "readInstance(%s)", aConceptIri)) {
-            var query = SPARQLQueryBuilder.forInstances(aKB) //
-                    .childrenOf(aConceptIri) //
+            var query = SPARQLQueryBuilder.forInstances(aKB);
+            preResolveLabelProperties(aKB, query, false);
+            query.childrenOf(aConceptIri) //
                     .retrieveLabel() //
                     .retrieveDescription() //
                     .retrieveDeprecation();
@@ -1351,8 +1371,9 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (var watch = new StopWatch(LOG, "listDomainProperties(%s)", aDomain)) {
-            var query = SPARQLQueryBuilder.forProperties(aKB) //
-                    .matchingDomain(aDomain) //
+            var query = SPARQLQueryBuilder.forProperties(aKB);
+            preResolveLabelProperties(aKB, query, true);
+            query.matchingDomain(aDomain) //
                     .retrieveLabel() //
                     .retrieveDescription() //
                     .retrieveDeprecation() //
@@ -1377,7 +1398,9 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (var watch = new StopWatch(LOG, "listRootConcepts()")) {
-            var query = SPARQLQueryBuilder.forClasses(aKB).roots().retrieveLabel()
+            var query = SPARQLQueryBuilder.forClasses(aKB);
+            preResolveLabelProperties(aKB, query, false);
+            query.roots().retrieveLabel() //
                     .retrieveDescription() //
                     .retrieveDeprecation();
 
@@ -1415,8 +1438,9 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (var watch = new StopWatch(LOG, "getConceptForInstance(%s)", aIdentifier)) {
-            var query = SPARQLQueryBuilder.forClasses(aKB) //
-                    .parentsOf(aIdentifier) //
+            var query = SPARQLQueryBuilder.forClasses(aKB);
+            preResolveLabelProperties(aKB, query, false);
+            query.parentsOf(aIdentifier) //
                     .retrieveLabel() //
                     .retrieveDescription() //
                     .retrieveDeprecation();
@@ -1438,8 +1462,9 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (var watch = new StopWatch(LOG, "getParentConceptList(%s)", aIdentifier)) {
-            var query = SPARQLQueryBuilder.forClasses(aKB) //
-                    .ancestorsOf(aIdentifier) //
+            var query = SPARQLQueryBuilder.forClasses(aKB);
+            preResolveLabelProperties(aKB, query, false);
+            query.ancestorsOf(aIdentifier) //
                     .retrieveLabel() //
                     .retrieveDescription() //
                     .retrieveDeprecation();
@@ -1462,8 +1487,9 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (var watch = new StopWatch(LOG, "listChildConcepts(%s)", aParentIdentifier)) {
-            var query = SPARQLQueryBuilder.forClasses(aKB) //
-                    .childrenOf(aParentIdentifier) //
+            var query = SPARQLQueryBuilder.forClasses(aKB);
+            preResolveLabelProperties(aKB, query, false);
+            query.childrenOf(aParentIdentifier) //
                     .retrieveLabel() //
                     .retrieveDescription() //
                     .retrieveDeprecation() //
@@ -1581,8 +1607,9 @@ public class KnowledgeBaseServiceImpl
     public Optional<KBHandle> readHandle(KnowledgeBase aKB, String aIdentifier)
     {
         try (var watch = new StopWatch(LOG, "readHandle(%s)", aIdentifier)) {
-            var query = SPARQLQueryBuilder.forItems(aKB) //
-                    .withIdentifier(aIdentifier) //
+            var query = SPARQLQueryBuilder.forItems(aKB);
+            preResolveLabelProperties(aKB, query, false);
+            query.withIdentifier(aIdentifier) //
                     .retrieveLabel() //
                     .retrieveDescription() //
                     .retrieveDeprecation();
@@ -1662,8 +1689,9 @@ public class KnowledgeBaseServiceImpl
     {
         // Result is already bounded by the VALUES clause from withIdentifier; a SPARQL LIMIT
         // would risk truncating legitimate multi-row-per-id output (languages × OPTIONALs).
-        var query = SPARQLQueryBuilder.forItems(aKB) //
-                .withIdentifier(aIds.toArray(String[]::new)) //
+        var query = SPARQLQueryBuilder.forItems(aKB);
+        preResolveLabelProperties(aKB, query, false);
+        query.withIdentifier(aIds.toArray(String[]::new)) //
                 .retrieveLabel() //
                 .retrieveDescription() //
                 .retrieveDeprecation() //
@@ -2032,6 +2060,46 @@ public class KnowledgeBaseServiceImpl
     }
 
     /**
+     * Resolve the effective pref-label and additional-matching properties of the given KB at the
+     * endpoint and configure them on the given query. This replaces the {@code subPropertyOf*}
+     * property path that would otherwise be embedded into every label-retrieving query with a plain
+     * {@code VALUES} clause - which is both faster in general and avoids pathological behavior on
+     * some engines (e.g. QLever times out on the unbound property path). For read-only KBs the
+     * resolved properties are cached, so the resolution query is sent to the endpoint only once.
+     *
+     * @param aPropertyMode
+     *            whether the query targets properties ({@code true}) or concepts/instances
+     *            ({@code false}). Both resolve different label properties, so they are cached
+     *            separately.
+     */
+    private void preResolveLabelProperties(KnowledgeBase aKB, SPARQLQueryPrimaryConditions aQuery,
+            boolean aPropertyMode)
+    {
+        var resolved = aKB.isReadOnly()
+                ? labelPropertiesCache.get(new LabelPropertiesKey(aKB, aPropertyMode),
+                        key -> resolveLabelProperties(aKB, aQuery))
+                : resolveLabelProperties(aKB, aQuery);
+
+        aQuery.withPrefLabelProperties(resolved.prefLabelProperties());
+        aQuery.withAdditionalMatchingProperties(resolved.additionalMatchingProperties());
+    }
+
+    private ResolvedLabelProperties resolveLabelProperties(KnowledgeBase aKB,
+            SPARQLQueryPrimaryConditions aQuery)
+    {
+        try (var conn = getConnection(aKB)) {
+            return new ResolvedLabelProperties(aQuery.resolvePrefLabelProperties(conn),
+                    aQuery.resolveAdditionalMatchingProperties(conn));
+        }
+    }
+
+    private record LabelPropertiesKey(KnowledgeBase kb, boolean propertyMode) {}
+
+    private record ResolvedLabelProperties(Set<String> prefLabelProperties,
+            Set<String> additionalMatchingProperties)
+    {}
+
+    /**
      * If the KB configuration of a project is changed, clear the caches of any KBs of that project.
      * 
      * @param aEvent
@@ -2044,6 +2112,10 @@ public class KnowledgeBaseServiceImpl
         queryCache.asMap().keySet().stream()
                 .filter(key -> key.kb.getProject().equals(aEvent.getProject()))
                 .forEach(key -> queryCache.invalidate(key));
+
+        labelPropertiesCache.asMap().keySet().stream()
+                .filter(key -> key.kb().getProject().equals(aEvent.getProject()))
+                .forEach(key -> labelPropertiesCache.invalidate(key));
     }
 
     @EventListener

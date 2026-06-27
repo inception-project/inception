@@ -286,8 +286,8 @@ public class SPARQLQueryBuilderLocalTestScenarios
                         SPARQLQueryBuilderLocalTestScenarios::testWithLabelMatchingExactlyAnyOf_withLanguage),
                 new Scenario("thatExistsReturnsTrueWhenDataQueriedForExists",
                         SPARQLQueryBuilderLocalTestScenarios::thatExistsReturnsTrueWhenDataQueriedForExists),
-                new Scenario("thatOnlyLabelsAndDescriptionsWithNoLanguageAreRetrieved",
-                        SPARQLQueryBuilderLocalTestScenarios::thatOnlyLabelsAndDescriptionsWithNoLanguageAreRetrieved),
+                new Scenario("thatLabelsInAnyLanguageAreRetrievedWhenNoDefaultLanguage",
+                        SPARQLQueryBuilderLocalTestScenarios::thatLabelsInAnyLanguageAreRetrievedWhenNoDefaultLanguage),
                 new Scenario("thatLabelsAndDescriptionsWithLanguageArePreferred",
                         SPARQLQueryBuilderLocalTestScenarios::thatLabelsAndDescriptionsWithLanguageArePreferred),
                 new Scenario("thatSearchOverMultipleLabelsWorks",
@@ -403,13 +403,14 @@ public class SPARQLQueryBuilderLocalTestScenarios
     }
 
     /**
-     * If the KB has no default language set, then only labels and descriptions with no language at
-     * all should be returned.
-     * 
+     * If the KB has no default language set, then labels and descriptions in <b>any</b> language
+     * are returned (including untagged ones). When a value is available both with and without a
+     * language tag, the untagged one is preferred.
+     *
      * @throws Exception
      *             -
      */
-    static void thatOnlyLabelsAndDescriptionsWithNoLanguageAreRetrieved(Repository aRepository,
+    static void thatLabelsInAnyLanguageAreRetrievedWhenNoDefaultLanguage(Repository aRepository,
             KnowledgeBase aKB)
         throws Exception
     {
@@ -418,19 +419,32 @@ public class SPARQLQueryBuilderLocalTestScenarios
         importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        var results = asHandles(aRepository, SPARQLQueryBuilder //
+        // green-goblin has both untagged and language-tagged labels/descriptions - the untagged
+        // ones
+        // are preferred.
+        var greenGoblin = asHandles(aRepository, SPARQLQueryBuilder //
                 .forItems(aKB) //
                 .withIdentifier("http://example.org/#green-goblin") //
                 .retrieveLabel() //
                 .retrieveDescription());
 
-        assertThat(results).isNotEmpty();
-        assertThat(results)
+        assertThat(greenGoblin)
                 .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
                         "description", "language")
                 .containsExactlyInAnyOrder(KBHandle.builder()
                         .withIdentifier("http://example.org/#green-goblin").withName("Green Goblin")
                         .withDescription("Little green monster").build());
+
+        // automobile has only language-tagged labels - previously none would be returned (the
+        // untagged-only filter excluded them), now one of them is.
+        var automobile = asHandles(aRepository, SPARQLQueryBuilder //
+                .forItems(aKB) //
+                .withIdentifier("http://example.org/#automobile") //
+                .retrieveLabel());
+
+        assertThat(automobile).hasSize(1);
+        assertThat(automobile.get(0).getName()).isIn("Automobil", "automobile", "automóvil",
+                "automóvel", "auto");
     }
 
     /**

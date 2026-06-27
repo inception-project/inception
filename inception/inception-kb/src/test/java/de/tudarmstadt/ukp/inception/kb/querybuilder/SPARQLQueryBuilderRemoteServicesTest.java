@@ -35,6 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
+import java.util.List;
 
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.repository.Repository;
@@ -348,6 +349,48 @@ public class SPARQLQueryBuilderRemoteServicesTest
         assertThat(results).isNotEmpty();
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.toLowerCase().startsWith("yoshua beng"));
+    }
+
+    /**
+     * Verifies the root-concept query against the QLever-backed DBLP endpoint. The labels are
+     * retrieved via the pre-resolved label properties used as <b>constant</b> predicates. The naive
+     * query - which embeds an unbound {@code subPropertyOf*} property path and matches the label
+     * via a predicate <i>variable</i> ({@code ?subj ?pMatch ?m}) inside the OPTIONAL - times out /
+     * runs the endpoint out of memory on QLever. No default language is set (as in the dblp
+     * profile) so that the {@code @en}-tagged class labels are returned without a slow
+     * {@code LANG()} filter.
+     */
+    @Tag("slow")
+    @Test
+    void testRootConcepts_DBLP_QLever() throws Exception
+    {
+        assertIsReachable(dblp);
+
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(FTS_QLEVER.stringValue());
+        kb.setLabelIri(RDFS.LABEL.stringValue());
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+        kb.setDefaultLanguage(null);
+        kb.setRootConcepts(List.of("https://dblp.org/rdf/schema#Creator",
+                "https://dblp.org/rdf/schema#Publication"));
+
+        var prefLabels = resolvePrefLabelProperties(dblp, kb);
+        var results = asHandles(dblp, SPARQLQueryBuilder //
+                .forClasses(kb) //
+                .withPrefLabelProperties(prefLabels) //
+                .roots() //
+                .retrieveLabel() //
+                .retrieveDescription());
+
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results) //
+                .extracting(KBHandle::getIdentifier) //
+                .containsExactlyInAnyOrder("https://dblp.org/rdf/schema#Creator",
+                        "https://dblp.org/rdf/schema#Publication");
+        assertThat(results) //
+                .filteredOn(h -> "https://dblp.org/rdf/schema#Creator".equals(h.getIdentifier())) //
+                .extracting(KBHandle::getUiLabel) //
+                .containsExactly("Creator");
     }
 
     private void applyMeshProfile() throws IOException
