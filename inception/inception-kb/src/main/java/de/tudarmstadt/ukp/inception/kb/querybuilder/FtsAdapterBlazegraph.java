@@ -160,13 +160,16 @@ public class FtsAdapterBlazegraph
             builder.addProjection(SPARQLQueryBuilder.VAR_SCORE);
 
             var labelFilterExpressions = new ArrayList<Expression<?>>();
-            labelFilterExpressions.add(builder.matchKbLanguage(VAR_MATCH_TERM));
+            builder.addLanguageConstraint(labelFilterExpressions, VAR_MATCH_TERM);
 
-            valuePatterns.add(new BlazegraphFtsQuery(SPARQLQueryBuilder.VAR_SUBJECT,
+            GraphPattern ftsQuery = new BlazegraphFtsQuery(SPARQLQueryBuilder.VAR_SUBJECT,
                     SPARQLQueryBuilder.VAR_SCORE, SPARQLQueryBuilder.VAR_MATCH_TERM,
                     SPARQLQueryBuilder.VAR_MATCH_TERM_PROPERTY, fuzzyQuery) //
-                            .withLimit(builder.getLimit()) //
-                            .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
+                            .withLimit(builder.getLimit());
+            if (!labelFilterExpressions.isEmpty()) {
+                ftsQuery = ftsQuery.filter(and(labelFilterExpressions.toArray(Expression[]::new)));
+            }
+            valuePatterns.add(ftsQuery);
         }
 
         if (valuePatterns.isEmpty()) {

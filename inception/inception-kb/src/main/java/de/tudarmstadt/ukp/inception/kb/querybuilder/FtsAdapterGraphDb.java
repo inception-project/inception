@@ -200,10 +200,13 @@ public class FtsAdapterGraphDb
 
     private GraphPattern match(String aFtsQuery, Expression<?> aFilter, String lang)
     {
-        return new GraphDbFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM, VAR_MATCH_TERM_PROPERTY,
-                aFtsQuery) //
+        GraphPattern pattern = new GraphDbFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
+                VAR_MATCH_TERM_PROPERTY, aFtsQuery) //
                         .withLanguage(lang) //
-                        .withLimit(builder.getLimit()) //
-                        .filter(aFilter);
+                        .withLimit(builder.getLimit());
+
+        // No language constraints -> no FILTER (a null filter would produce an invalid empty
+        // FILTER and fail when the query string is rendered).
+        return aFilter != null ? pattern.filter(aFilter) : pattern;
     }
 }

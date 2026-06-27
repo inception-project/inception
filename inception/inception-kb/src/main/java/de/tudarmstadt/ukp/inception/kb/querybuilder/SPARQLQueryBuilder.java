@@ -65,11 +65,13 @@ import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.IdentityHashMap;
 import java.util.IllformedLocaleException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -1225,7 +1227,7 @@ public class SPARQLQueryBuilder
      * expressions - unless the knowledge base has no language constraints, in which case nothing is
      * added.
      */
-    private void addLanguageConstraint(List<Expression<?>> aExpressions, Variable aVariable)
+    void addLanguageConstraint(List<Expression<?>> aExpressions, Variable aVariable)
     {
         var languageConstraint = matchKbLanguage(aVariable);
         if (languageConstraint != null) {
@@ -1728,6 +1730,10 @@ public class SPARQLQueryBuilder
     {
         try (var result = tupleQuery.evaluate()) {
             var handles = new ArrayList<KBHandle>();
+            // Language tag of each handle's description (per result row). Tracked separately
+            // because KBHandle does not retain the description language and we need it to prefer
+            // e.g. an untagged description over an arbitrary tagged one when merging rows.
+            var descriptionLanguages = new IdentityHashMap<KBHandle, String>();
             while (result.hasNext()) {
                 var bindings = result.next();
                 if (bindings.size() == 0) {
@@ -1745,7 +1751,7 @@ public class SPARQLQueryBuilder
                 handle.setKB(kb);
 
                 extractLabel(handle, bindings);
-                extractDescription(handle, bindings);
+                extractDescription(handle, bindings, descriptionLanguages);
                 extractRange(handle, bindings);
                 extractDomain(handle, bindings);
                 extractScore(handle, bindings);
@@ -1754,14 +1760,15 @@ public class SPARQLQueryBuilder
                 handles.add(handle);
             }
 
-            return reduceRedundantResults(handles);
+            return reduceRedundantResults(handles, descriptionLanguages);
         }
     }
 
     /**
      * Make sure that each result is only represented once, preferably in the default language.
      */
-    private List<KBHandle> reduceRedundantResults(List<KBHandle> aHandles)
+    private List<KBHandle> reduceRedundantResults(List<KBHandle> aHandles,
+            Map<KBHandle, String> aDescriptionLanguages)
     {
         var langPrio = new ArrayList<>();
         if (StringUtils.isNotBlank(kb.getDefaultLanguage())) {
@@ -1785,11 +1792,23 @@ public class SPARQLQueryBuilder
             if (current.getName() == null && handle.getName() != null) {
                 replace = true;
             }
-            // Found an exact language match -> use that one instead
-            // Note that having a language implies that there is a label!
-            else if (languagePriority(langPrio, current.getLanguage()) > languagePriority(langPrio,
-                    handle.getLanguage())) {
-                replace = true;
+            else {
+                // Prefer the better-matching label language. When the label languages are
+                // equally preferred (e.g. both untagged because the KB has no configured
+                // language), prefer the candidate whose description language is most consistent
+                // with its label so that we do not e.g. pair an English label with a German
+                // description when a matching or language-neutral description is available.
+                // Note that having a language implies that there is a label!
+                var currentLabelPrio = languagePriority(langPrio, current.getLanguage());
+                var handleLabelPrio = languagePriority(langPrio, handle.getLanguage());
+                if (handleLabelPrio < currentLabelPrio) {
+                    replace = true;
+                }
+                else if (handleLabelPrio == currentLabelPrio
+                        && descriptionConsistency(handle, aDescriptionLanguages) //
+                                < descriptionConsistency(current, aDescriptionLanguages)) {
+                    replace = true;
+                }
             }
 
             if (replace) {
@@ -1815,8 +1834,33 @@ public class SPARQLQueryBuilder
      */
     private static int languagePriority(List<?> aLangPrio, String aLanguage)
     {
-        var index = aLangPrio.indexOf(aLanguage);
+        // Some engines (e.g. Blazegraph) report untagged literals with an empty language tag
+        // rather than none at all. Normalize these to null so they match the untagged entry in
+        // the priority list and are preferred over arbitrary tagged values.
+        var language = StringUtils.isBlank(aLanguage) ? null : aLanguage;
+        var index = aLangPrio.indexOf(language);
         return index >= 0 ? index : Integer.MAX_VALUE;
+    }
+
+    /**
+     * Rates how well a handle's description language fits its label language - lower is better:
+     * {@code 0} if they are the same (including both being untagged), {@code 1} if the description
+     * is untagged and thus language-neutral, {@code 2} otherwise. This keeps a handle's label and
+     * description in the same language instead of mixing e.g. an English label with a German
+     * description.
+     */
+    private static int descriptionConsistency(KBHandle aHandle,
+            Map<KBHandle, String> aDescriptionLanguages)
+    {
+        var labelLanguage = StringUtils.trimToNull(aHandle.getLanguage());
+        var descriptionLanguage = StringUtils.trimToNull(aDescriptionLanguages.get(aHandle));
+        if (StringUtils.equals(descriptionLanguage, labelLanguage)) {
+            return 0;
+        }
+        if (descriptionLanguage == null) {
+            return 1;
+        }
+        return 2;
     }
 
     private void extractLabel(KBHandle aTargetHandle, BindingSet aSourceBindings)
@@ -1860,15 +1904,16 @@ public class SPARQLQueryBuilder
         return Optional.empty();
     }
 
-    private void extractDescription(KBHandle aTargetHandle, BindingSet aSourceBindings)
+    private void extractDescription(KBHandle aTargetHandle, BindingSet aSourceBindings,
+            Map<KBHandle, String> aDescriptionLanguages)
     {
         var description = aSourceBindings.getBinding(VAR_DESCRIPTION_NAME);
         var descCandidate = aSourceBindings.getBinding(VAR_DESCRIPTION_CANDIDATE_NAME);
-        if (description != null) {
-            aTargetHandle.setDescription(description.getValue().stringValue());
-        }
-        else if (descCandidate != null) {
-            aTargetHandle.setDescription(descCandidate.getValue().stringValue());
+        var descriptionBinding = description != null ? description : descCandidate;
+        if (descriptionBinding != null) {
+            aTargetHandle.setDescription(descriptionBinding.getValue().stringValue());
+            aDescriptionLanguages.put(aTargetHandle,
+                    extractLanguage(descriptionBinding).orElse(null));
         }
     }
 

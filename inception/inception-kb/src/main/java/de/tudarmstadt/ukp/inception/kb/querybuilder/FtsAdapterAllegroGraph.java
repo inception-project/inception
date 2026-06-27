@@ -103,11 +103,14 @@ public class FtsAdapterAllegroGraph
             builder.addProjection(VAR_SCORE);
 
             var labelFilterExpressions = new ArrayList<Expression<?>>();
-            labelFilterExpressions.add(builder.matchKbLanguage(VAR_MATCH_TERM));
+            builder.addLanguageConstraint(labelFilterExpressions, VAR_MATCH_TERM);
 
-            valuePatterns.add(new AllegroGraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
-                    VAR_MATCH_TERM_PROPERTY, query)
-                            .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
+            GraphPattern ftsQuery = new AllegroGraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
+                    VAR_MATCH_TERM_PROPERTY, query);
+            if (!labelFilterExpressions.isEmpty()) {
+                ftsQuery = ftsQuery.filter(and(labelFilterExpressions.toArray(Expression[]::new)));
+            }
+            valuePatterns.add(ftsQuery);
         }
 
         if (valuePatterns.isEmpty()) {
@@ -141,7 +144,7 @@ public class FtsAdapterAllegroGraph
 
         var labelFilterExpressions = new ArrayList<Expression<?>>();
         labelFilterExpressions.add(builder.startsWithPattern(VAR_MATCH_TERM, aPrefixQuery));
-        labelFilterExpressions.add(builder.matchKbLanguage(VAR_MATCH_TERM));
+        builder.addLanguageConstraint(labelFilterExpressions, VAR_MATCH_TERM);
 
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
@@ -174,11 +177,14 @@ public class FtsAdapterAllegroGraph
             builder.addProjection(VAR_SCORE);
 
             var labelFilterExpressions = new ArrayList<Expression<?>>();
-            labelFilterExpressions.add(builder.matchKbLanguage(VAR_MATCH_TERM));
+            builder.addLanguageConstraint(labelFilterExpressions, VAR_MATCH_TERM);
 
-            valuePatterns.add(new AllegroGraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
-                    VAR_MATCH_TERM_PROPERTY, query) //
-                            .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
+            GraphPattern ftsQuery = new AllegroGraphFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
+                    VAR_MATCH_TERM_PROPERTY, query);
+            if (!labelFilterExpressions.isEmpty()) {
+                ftsQuery = ftsQuery.filter(and(labelFilterExpressions.toArray(Expression[]::new)));
+            }
+            valuePatterns.add(ftsQuery);
         }
 
         if (valuePatterns.isEmpty()) {
