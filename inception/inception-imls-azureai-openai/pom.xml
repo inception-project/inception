@@ -132,8 +132,14 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
-            <ignoredNonTestScopedDependencies>
-              <dependency>org.slf4j:slf4j-api</dependency>
+            <!--
+              - slf4j-api is required transitively at compile time by a compile-scoped
+              - dependency (Eclipse resolves it on the compile classpath), but no main source
+              - here imports it directly, so analyze-only mis-flags it as test-only. Keep it at
+              - compile scope for Eclipse and tell the analyzer to ignore the false positive.
+              -->
+            <ignoredNonTestScopedDependencies combine.children="append">
+              <ignoredNonTestScopedDependency>org.slf4j:slf4j-api</ignoredNonTestScopedDependency>
             </ignoredNonTestScopedDependencies>
           </configuration>
         </plugin>
