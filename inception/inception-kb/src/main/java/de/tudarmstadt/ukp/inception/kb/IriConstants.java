@@ -50,6 +50,7 @@ public class IriConstants
     public static final String PREFIX_BLAZEGRAPH = "http://www.bigdata.com/rdf/search#";
     public static final String PREFIX_GRAPHDB = "http://www.ontotext.com/";
     public static final String PREFIX_QLEVER = "http://qlever.cs.uni-freiburg.de/builtin-functions/";
+    public static final String PREFIX_MARKLOGIC = "http://marklogic.com/cts#";
 
     public static final String UKP_WIKIDATA_SPARQL_ENDPOINT = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
     public static final Set<String> IMPLICIT_NAMESPACES = Set.of(RDF.NAMESPACE, RDFS.NAMESPACE,
@@ -94,6 +95,7 @@ public class IriConstants
     public static final IRI FTS_BLAZEGRAPH;
     public static final IRI FTS_GRAPHDB;
     public static final IRI FTS_QLEVER;
+    public static final IRI FTS_MARKLOGIC;
     public static final IRI FTS_NONE;
 
     public static final List<IRI> CLASS_IRIS;
@@ -127,6 +129,7 @@ public class IriConstants
         FTS_BLAZEGRAPH = vf.createIRI(PREFIX_BLAZEGRAPH, "search");
         FTS_GRAPHDB = vf.createIRI(PREFIX_GRAPHDB, "fts");
         FTS_QLEVER = vf.createIRI(PREFIX_QLEVER, "contains-word");
+        FTS_MARKLOGIC = vf.createIRI(PREFIX_MARKLOGIC, "contains");
         FTS_NONE = vf.createIRI("FTS:NONE");
 
         CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS, SKOS.CONCEPT);
@@ -140,7 +143,7 @@ public class IriConstants
         PROPERTY_DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
         DEPRECATION_PROPERTY_IRIS = asList(OWL.DEPRECATED);
         FTS_IRIS = asList(FTS_FUSEKI, FTS_BLAZEGRAPH, FTS_GRAPHDB, FTS_VIRTUOSO, FTS_WIKIDATA,
-                FTS_RDF4J_LUCENE, FTS_STARDOG, FTS_ALLEGRO_GRAPH, FTS_QLEVER);
+                FTS_RDF4J_LUCENE, FTS_STARDOG, FTS_ALLEGRO_GRAPH, FTS_QLEVER, FTS_MARKLOGIC);
     }
 
     public static String getFtsBackendName(String aFTS)
@@ -179,6 +182,10 @@ public class IriConstants
 
         if (FTS_QLEVER.stringValue().equals(aFTS)) {
             return "QLever (SPARQL+Text)";
+        }
+
+        if (FTS_MARKLOGIC.stringValue().equals(aFTS)) {
+            return "MarkLogic";
         }
 
         return aFTS;
