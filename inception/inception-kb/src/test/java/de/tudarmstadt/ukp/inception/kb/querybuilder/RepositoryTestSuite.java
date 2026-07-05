@@ -25,6 +25,7 @@ import org.junit.platform.suite.api.Suite;
         AllegroGraphRepositoryTest.class, //
         BlazegraphRepositoryTest.class, //
         FusekiRepositoryTest.class, //
+        MarkLogicRepositoryTest.class, //
         Rdf4JRepositoryTest.class, //
         StardogRepositoryTest.class, //
         VirtuosoRepositoryTest.class })

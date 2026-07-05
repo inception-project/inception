@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_MARKLOGIC;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestScenarios.initRdfsMapping;
 import static java.util.List.of;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -71,5 +72,46 @@ public class SPARQLQueryBuilderTest
         assertThat(query) //
                 .as("no language filter is emitted when no language is configured") //
                 .doesNotContain("LANGMATCHES").doesNotContain("LANG(");
+    }
+
+    private SPARQLQueryBuilder markLogicBuilder()
+    {
+        var kb = new KnowledgeBase();
+        initRdfsMapping(kb);
+        kb.setDefaultLanguage("en");
+        kb.setMaxResults(100);
+        kb.setFullTextSearchIri(FTS_MARKLOGIC.stringValue());
+        var sut = new SPARQLQueryBuilder(kb, Mode.ITEM);
+        sut.withPrefLabelProperties(of("http://www.w3.org/2000/01/rdf-schema#label"));
+        return sut;
+    }
+
+    @Test
+    public void thatMarkLogicContainingEmitsCtsContainsPerToken() throws Exception
+    {
+        var query = markLogicBuilder() //
+                .withLabelContainingAnyOf("Green Goblin") //
+                .selectQuery().getQueryString();
+
+        assertThat(query) //
+                .as("the MarkLogic cts namespace is declared") //
+                .contains("PREFIX cts: <http://marklogic.com/cts#>");
+        assertThat(query) //
+                .as("a substring cts:contains / cts:word-query filter is emitted per token") //
+                .contains("cts:contains( ?m, cts:word-query( \"*green*\", \"wildcarded\" ) )") //
+                .contains("cts:contains( ?m, cts:word-query( \"*goblin*\", \"wildcarded\" ) )");
+    }
+
+    @Test
+    public void thatMarkLogicStartingWithWildcardsTheLastToken() throws Exception
+    {
+        var query = markLogicBuilder() //
+                .withLabelStartingWith("Green Gob") //
+                .selectQuery().getQueryString();
+
+        assertThat(query) //
+                .as("the unfinished last token becomes a wildcarded prefix query") //
+                .contains("cts:contains( ?m, cts:word-query( \"green\" ) )") //
+                .contains("cts:word-query( \"gob*\", \"wildcarded\" )");
     }
 }

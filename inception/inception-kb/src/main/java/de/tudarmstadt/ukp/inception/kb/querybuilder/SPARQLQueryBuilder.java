@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_ALLEGRO_GRAPH;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_BLAZEGRAPH;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_GRAPHDB;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_MARKLOGIC;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_QLEVER;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
@@ -963,6 +964,10 @@ public class SPARQLQueryBuilder
 
         if (FTS_QLEVER.equals(ftsMode)) {
             return new FtsAdapterQLever(this);
+        }
+
+        if (FTS_MARKLOGIC.equals(ftsMode)) {
+            return new FtsAdapterMarkLogic(this);
         }
 
         if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
