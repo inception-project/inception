@@ -498,11 +498,6 @@
       <artifactId>inception-pdf-editor2</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-review-editor</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
     <!-- VERSIONING -->
     <dependency>
@@ -1230,7 +1225,6 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-apache-annotator-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-recogito-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pdf-editor2</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-review-editor</usedDependency>
               <!-- INCEpTION IO Modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-bioc</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-brat</usedDependency>
