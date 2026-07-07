@@ -71,16 +71,6 @@
   </distributionManagement>
 
   <properties>
-    <!--
-      - TEMPORARY: Spotless formatting check is disabled while the Eclipse P2
-      - update site (download.eclipse.org) used to provision the Eclipse JDT
-      - formatter is unavailable (HTTP 500 / stream resets). This breaks
-      - `spotless:check` in both CI and the .githooks pre-commit hook.
-      - Only the check goal is skipped; `spotless:apply` still works once the
-      - Eclipse download server is back. Remove this property to re-enable.
-      -->
-    <spotless.check.skip>true</spotless.check.skip>
-
     <build-ant-version>1.10.15</build-ant-version>
     <build-groovy-version>5.0.6</build-groovy-version>
 
