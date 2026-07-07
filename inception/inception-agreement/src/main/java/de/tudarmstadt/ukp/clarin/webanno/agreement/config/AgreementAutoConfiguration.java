@@ -23,6 +23,7 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementService;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.cohenkappa.CohenKappaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.fleisskappa.FleissKappaAgreementMeasureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.gamma.GammaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha.KrippendorffAlphaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing.KrippendorffAlphaUnitizingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -67,5 +68,11 @@ public class AgreementAutoConfiguration
     public KrippendorffAlphaUnitizingAgreementMeasureSupport krippendorffAlphaUnitizingAgreementMeasureSupport()
     {
         return new KrippendorffAlphaUnitizingAgreementMeasureSupport();
+    }
+
+    @Bean
+    public GammaAgreementMeasureSupport gammaAgreementMeasureSupport()
+    {
+        return new GammaAgreementMeasureSupport();
     }
 }
