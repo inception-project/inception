@@ -158,6 +158,27 @@ public class AeroPermissionControllerTest
     }
 
     @Test
+    public void thatEmptyRolesIsNoOp() throws Exception
+    {
+        adminActor.grantProjectRole(1, "user", "ANNOTATOR", "CURATOR") //
+                .andExpect(status().isOk());
+
+        // Assigning with no roles must not fail and must leave the permissions unchanged.
+        adminActor.grantProjectRoleWithoutRoles(1, "user") //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body[0].role").value("CURATOR"))
+                .andExpect(jsonPath("$.body[1].role").value("ANNOTATOR"));
+
+        // Revoking with no roles must not fail and must leave the permissions unchanged.
+        adminActor.revokeProjectRoleWithoutRoles(1, "user") //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body[0].role").value("CURATOR"))
+                .andExpect(jsonPath("$.body[1].role").value("ANNOTATOR"));
+    }
+
+    @Test
     public void thatNonAdminCannotChangePermissions() throws Exception
     {
         userActor.grantProjectRole(1, "user", "MANAGER") //
