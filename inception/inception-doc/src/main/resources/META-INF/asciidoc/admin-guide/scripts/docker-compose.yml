@@ -23,6 +23,7 @@ services:
       interval: 20s
       timeout: 10s
       retries: 10
+    restart: unless-stopped
     networks:
       inception-net:
 
