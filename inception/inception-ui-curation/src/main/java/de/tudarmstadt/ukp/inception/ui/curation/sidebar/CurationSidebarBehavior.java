@@ -105,7 +105,7 @@ public class CurationSidebarBehavior
         var sessionOwner = userService.getCurrentUsername();
         var doc = aEvent.getDocument();
         var project = doc.getProject();
-        var isCurationSessionActive = isSessionActive(project);
+        var sessionActiveBefore = isSessionActive(project);
 
         var params = page.getPageParameters();
         var dataOwner = aEvent.getDocumentOwner();
@@ -122,10 +122,17 @@ public class CurationSidebarBehavior
 
         handleSessionActivationPageParameters(page, params, doc, sessionOwner);
 
+        // On the dedicated curation page, a curation session is always active. We start it here
+        // rather than in the CurationPage constructor so that the sessionActiveBefore check above
+        // can tell a freshly started session apart from an ongoing one.
+        if (page instanceof CurationPage && !isSessionActive(project)) {
+            curationSessionService.startSession(sessionOwner, project, false);
+        }
+
         ensureDataOwnerMatchesCurationTarget(page, project, sessionOwner, dataOwner);
-        if (!isCurationSessionActive) {
-            curationSessionService.setDefaultSelectedUsersForDocument(aEvent.getSessionOwner(),
-                    aEvent.getDocument());
+
+        if (!sessionActiveBefore) {
+            curationSessionService.setDefaultSelectedUsersForDocument(sessionOwner, doc);
         }
 
         var prefs = preferencesService

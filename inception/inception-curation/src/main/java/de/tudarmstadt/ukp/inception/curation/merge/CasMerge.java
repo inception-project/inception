@@ -52,6 +52,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.TypeAdapter_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentPosition;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationPosition;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanPosition;
@@ -235,6 +236,16 @@ public class CasMerge
             eventPublisher
                     .publishEvent(new BulkAnnotationEvent(this, aTargetDocument, aTargetUsername));
         }
+
+        // Merging re-creates/updates the agreed annotations through the layer adapters, and every
+        // adapter create/edit call updates the resumption location to the begin offset of the
+        // annotation it just touched. Since annotations are merged in document order, the
+        // resumption
+        // location would end up pointing near the end of the document, causing the curation editor
+        // to open scrolled to the bottom. Reset the resumption location to the start of the
+        // document
+        // so the editor opens at the top.
+        TypeAdapter_ImplBase.setResumptionLocation(aTargetCas, 0);
 
         return localContext;
     }
