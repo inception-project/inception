@@ -146,11 +146,11 @@ public class PermissionController
                     User to assign the permissions to.
                     """) //
             String aSubjectUser, //
-            @RequestParam(PARAM_ROLES) //
+            @RequestParam(name = PARAM_ROLES, required = false) //
             @Schema(description = """
                     Project roles to assign.
                     """, //
-                    allowableValues = { "USER", "CURATOR", "ADMIN" }) //
+                    allowableValues = { "ANNOTATOR", "CURATOR", "MANAGER" }) //
             List<String> aRoles)
         throws Exception
     {
@@ -168,9 +168,12 @@ public class PermissionController
 
         var subjectUser = getUser(aSubjectUser);
 
-        var roles = aRoles.stream().map(PermissionLevel::valueOf).toArray(PermissionLevel[]::new);
-
-        projectService.assignRole(project, subjectUser, roles);
+        // An empty/absent role list is a no-op - we simply return the current permissions.
+        if (aRoles != null && !aRoles.isEmpty()) {
+            var roles = aRoles.stream().map(PermissionLevel::valueOf)
+                    .toArray(PermissionLevel[]::new);
+            projectService.assignRole(project, subjectUser, roles);
+        }
 
         var permissions = projectService.listProjectPermissionLevel(subjectUser, project).stream()
                 .map(RPermission::new) //
@@ -195,11 +198,11 @@ public class PermissionController
                     User to assign the permissions to.
                     """) //
             String aSubjectUser, //
-            @RequestParam(PARAM_ROLES) //
+            @RequestParam(name = PARAM_ROLES, required = false) //
             @Schema(description = """
                     Project roles to revoke.
                     """, //
-                    allowableValues = { "USER", "CURATOR", "ADMIN" }) //
+                    allowableValues = { "ANNOTATOR", "CURATOR", "MANAGER" }) //
             List<String> aRoles)
         throws Exception
     {
@@ -217,11 +220,13 @@ public class PermissionController
 
         var subjectUser = getUser(aSubjectUser);
 
-        var roles = aRoles.stream() //
-                .map(PermissionLevel::valueOf) //
-                .toArray(PermissionLevel[]::new);
-
-        projectService.revokeRole(project, subjectUser, roles);
+        // An empty/absent role list is a no-op - we simply return the current permissions.
+        if (aRoles != null && !aRoles.isEmpty()) {
+            var roles = aRoles.stream() //
+                    .map(PermissionLevel::valueOf) //
+                    .toArray(PermissionLevel[]::new);
+            projectService.revokeRole(project, subjectUser, roles);
+        }
 
         var permissions = projectService.listProjectPermissionLevel(subjectUser, project).stream()
                 .map(RPermission::new) //
