@@ -39,6 +39,7 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -51,6 +52,7 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationSessionServiceImpl;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
 @DataJpaTest(showSql = false, //
@@ -69,6 +71,7 @@ public class CurationSidebarServiceTest
     private @Autowired TestEntityManager testEntityManager;
 
     private @MockitoBean DocumentService documentService;
+    private @MockitoBean PreferencesService preferencesService;
     private @MockitoBean SessionRegistry sessionRegistry;
     private @MockitoBean ProjectService projectService;
     private @MockitoBean UserDao userRegistry;
@@ -86,9 +89,9 @@ public class CurationSidebarServiceTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        var curationSessionService = new CurationSessionServiceImpl(
-                testEntityManager.getEntityManager(), sessionRegistry, projectService, userRegistry,
-                curationSidebarProperties, curationDocumentService);
+        var curationSessionService = new CurationSessionServiceImpl(preferencesService,
+                sessionRegistry, projectService, userRegistry, curationSidebarProperties,
+                curationDocumentService, documentService);
 
         sut = curationSessionService;
 
@@ -111,7 +114,8 @@ public class CurationSidebarServiceTest
         testDocument = new SourceDocument("testDoc", testProject, "text");
         testEntityManager.persist(testDocument);
 
-        sut.setSelectedUsers("current", testProject.getId(), asList(kevin, beate));
+        var candidates = asList(AnnotationSet.forUser(kevin), AnnotationSet.forUser(beate));
+        sut.setSelectedDataOwners("current", testProject.getId(), candidates, candidates);
     }
 
     @AfterEach
@@ -123,7 +127,8 @@ public class CurationSidebarServiceTest
     @Test
     public void listUsersReadyForCuration_NoFinishedUsers()
     {
-        var finishedUsers = sut.listUsersReadyForCuration("current", testProject, testDocument);
+        var finishedUsers = sut.listDataOwnersReadyForCuration("current", testProject,
+                testDocument);
 
         assertThat(finishedUsers).isEmpty();
     }

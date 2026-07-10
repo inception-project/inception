@@ -105,7 +105,6 @@ public class CurationSidebarBehavior
         var sessionOwner = userService.getCurrentUsername();
         var doc = aEvent.getDocument();
         var project = doc.getProject();
-        var sessionActiveBefore = isSessionActive(project);
 
         var params = page.getPageParameters();
         var dataOwner = aEvent.getDocumentOwner();
@@ -122,18 +121,10 @@ public class CurationSidebarBehavior
 
         handleSessionActivationPageParameters(page, params, doc, sessionOwner);
 
-        // On the dedicated curation page, a curation session is always active. We start it here
-        // rather than in the CurationPage constructor so that the sessionActiveBefore check above
-        // can tell a freshly started session apart from an ongoing one.
-        if (page instanceof CurationPage && !isSessionActive(project)) {
-            curationSessionService.startSession(sessionOwner, project, false);
-        }
-
+        // On the dedicated curation page the session is started in the CurationPage constructor, so
+        // it is always active here. On the annotation page it is (de)activated via the URL
+        // parameters handled above.
         ensureDataOwnerMatchesCurationTarget(page, project, sessionOwner, dataOwner);
-
-        if (!sessionActiveBefore) {
-            curationSessionService.setDefaultSelectedUsersForDocument(sessionOwner, doc);
-        }
 
         var prefs = preferencesService
                 .loadDefaultTraitsForProject(KEY_CURATION_SIDEBAR_MANAGER_PREFS, project);
@@ -161,12 +152,12 @@ public class CurationSidebarBehavior
                 // if an initial merge is required.
                 documentService.readAnnotationCas(state.getDocument(),
                         AnnotationSet.forUser(state.getUser()), FORCE_CAS_UPGRADE);
-                var selectedUsers = curationSessionService.getSelectedUsers(sessionOwner,
-                        project.getId());
+                var selectedDataOwners = curationSessionService
+                        .listDataOwnersReadyForCuration(sessionOwner, project, doc);
 
                 var workflow = curationService.readOrCreateCurationWorkflow(state.getProject());
                 var mergeStrategyFactory = curationSidebarService.merge(state, workflow,
-                        state.getUser().getUsername(), selectedUsers, true);
+                        state.getUser().getUsername(), selectedDataOwners, true);
 
                 page.success(
                         "Performed initial merge using [" + mergeStrategyFactory.getLabel() + "].");

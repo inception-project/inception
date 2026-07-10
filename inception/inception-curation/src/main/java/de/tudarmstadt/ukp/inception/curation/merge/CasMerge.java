@@ -244,7 +244,8 @@ public class CasMerge
         // location would end up pointing near the end of the document, causing the curation editor
         // to open scrolled to the bottom. Reset the resumption location to the start of the
         // document
-        // so the editor opens at the top.
+        // so the editor opens at the top - after a (re-)merge or bulk merge the curator reviews the
+        // document from the beginning.
         TypeAdapter_ImplBase.setResumptionLocation(aTargetCas, 0);
 
         return localContext;
