@@ -66,6 +66,15 @@
           <div class="card-header">
             <wicket:message key="usersLabel"/>
             <div class="actions">
+              <a wicket:id="selectAll" class="btn btn-secondary">
+                <i class="far fa-check-square" wicket:message="title:selectAll"></i>
+              </a>
+              <a wicket:id="selectNone" class="btn btn-secondary">
+                <i class="far fa-square" wicket:message="title:selectNone"></i>
+              </a>
+              <a wicket:id="invertSelection" class="btn btn-secondary">
+                <i class="fas fa-exchange-alt" wicket:message="title:invertSelection"></i>
+              </a>
               <button wicket:id="merge" class="btn btn-secondary">
                 <i class="fas fa-sync" wicket:message="title:merge"></i>
               </button>

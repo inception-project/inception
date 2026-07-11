@@ -350,14 +350,18 @@ public class CurationEditorExtension
             CAS aSrcCas, List<AnnotationFeature> aNonCuratableFeatures)
     {
         var sessionOwner = userRepository.getCurrentUsername();
-        var selectedUsers = curationSessionService.listUsersReadyForCuration(sessionOwner,
+        var selectedDataOwners = curationSessionService.listDataOwnersReadyForCuration(sessionOwner,
                 aDocument.getProject(), aDocument);
 
-        if (selectedUsers.isEmpty()) {
+        if (selectedDataOwners.isEmpty()) {
             return emptyList();
         }
 
-        var casses = collectCasses(aDocument, aDataOwner, aCas, selectedUsers);
+        // The editable target CAS goes first, then the read-only CASes of the other data owners.
+        var casses = new LinkedHashMap<String, CAS>();
+        casses.put(aDataOwner.getUsername(), aCas);
+        documentService.readAllAnnotationCases(aDocument, selectedDataOwners)
+                .forEach(casses::putIfAbsent);
 
         var srcFs = selectFsByAddr(aSrcCas, vid.getId());
         var casDiff = createDiff(casses, aLayer, srcFs);
@@ -407,29 +411,6 @@ public class CurationEditorExtension
 
         var srcAnnotation = (AnnotationFS) aSourceFs;
         return createDiff(aCasses, aLayer, srcAnnotation.getBegin(), srcAnnotation.getEnd());
-    }
-
-    private Map<String, CAS> collectCasses(SourceDocument aDocument, User aDataOwner, CAS aCas,
-            List<User> selectedUsers)
-    {
-        var casses = new LinkedHashMap<String, CAS>();
-
-        // This is the CAS that the user can actively edit
-        casses.put(aDataOwner.getUsername(), aCas);
-
-        for (var user : selectedUsers) {
-            try {
-                var userCas = documentService.readAnnotationCas(aDocument,
-                        AnnotationSet.forUser(user.getUsername()));
-                casses.put(user.getUsername(), userCas);
-            }
-            catch (IOException e) {
-                LOG.error("Could not retrieve CAS for user [{}] and project {}", user.getUsername(),
-                        aDocument.getProject(), e);
-            }
-        }
-
-        return casses;
     }
 
     private CasDiff createDiff(Map<String, CAS> aCasses, AnnotationLayer aLayer, int aBegin,

@@ -495,6 +495,22 @@ public interface DocumentService
         throws IOException;
 
     /**
+     * Best-effort read of the annotation CASes for the given data owners. Each CAS is read in
+     * exclusive-write access without upgrade, i.e. a fresh private copy of the latest persisted
+     * state (in contrast to {@link #readAllCasesSharedNoUpgrade}, which returns shared read-only
+     * CASes). A data owner whose CAS cannot be read is logged and omitted rather than failing the
+     * whole batch.
+     *
+     * @param aDocument
+     *            the source document.
+     * @param aDataOwners
+     *            the data owners whose annotation CASes should be read.
+     * @return a map from data owner id to CAS, in the iteration order of {@code aDataOwners}.
+     */
+    Map<String, CAS> readAllAnnotationCases(SourceDocument aDocument,
+            Collection<AnnotationSet> aDataOwners);
+
+    /**
      * Read the initial CAS for the given document. If the CAS does not exist then it is created.
      * This method does not perform an upgrade of the type@Override system in the CAS.
      * 

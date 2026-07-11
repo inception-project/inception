@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.annotation.layer.document.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.forUser;
 import static de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport.FEATURE_NAME_ORDER;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
@@ -85,7 +84,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.CreateDocumentAnnotationRequest;
@@ -754,38 +752,19 @@ public class DocumentMetadataAnnotationSelectionPanel
             return Map.of();
         }
 
-        var selectedUsers = curationSessionService.listUsersReadyForCuration(sessionOwner,
+        var selectedDataOwners = curationSessionService.listDataOwnersReadyForCuration(sessionOwner,
                 state.getProject(), state.getDocument());
-        if (selectedUsers.isEmpty()) {
+        if (selectedDataOwners.isEmpty()) {
             return Map.of();
         }
 
         var targetUser = state.getUser().getUsername();
-        var selectedUsernames = selectedUsers.stream() //
-                .map(User::getUsername) //
-                .filter(username -> !targetUser.equals(username)) //
-                .distinct() //
-                .sorted() //
-                .toList();
 
+        // The editable target CAS goes first, then the read-only CASes of the other data owners.
         var casses = new LinkedHashMap<String, CAS>();
         casses.put(targetUser, aTargetCas);
-
-        for (var user : selectedUsers) {
-            if (targetUser.equals(user.getUsername())) {
-                continue;
-            }
-
-            try {
-                var sourceCas = documentService.readAnnotationCas(state.getDocument(),
-                        forUser(user));
-                casses.put(user.getUsername(), sourceCas);
-            }
-            catch (IOException e) {
-                LOG.error("Unable to read source CAS for curation user [{}]", user.getUsername(),
-                        e);
-            }
-        }
+        documentService.readAllAnnotationCases(state.getDocument(), selectedDataOwners)
+                .forEach(casses::putIfAbsent);
 
         if (casses.size() <= 1) {
             return Map.of();
@@ -797,7 +776,10 @@ public class DocumentMetadataAnnotationSelectionPanel
         var layersByName = metadataLayers.stream()
                 .collect(toMap(AnnotationLayer::getName, identity()));
         var candidatesByLayer = new LinkedHashMap<String, List<CurationCandidate>>();
-        var totalAnnotatorCount = selectedUsernames.size();
+        // Derive the denominator from the CASes actually read (excluding the target CAS) so it
+        // stays consistent with the numerator - readAllAnnotationCases silently omits owners
+        // whose CAS fails to read, which would otherwise inflate the denominator.
+        var totalAnnotatorCount = casses.size() - 1;
 
         for (var cfgSet : diff.getConfigurationSets()) {
             var layer = layersByName.get(cfgSet.getPosition().getType());

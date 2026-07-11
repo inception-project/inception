@@ -290,11 +290,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>jakarta.persistence</groupId>
-      <artifactId>jakarta.persistence-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-layer-relation</artifactId>
       <version>${project.version}</version>

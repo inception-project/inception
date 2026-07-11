@@ -28,9 +28,9 @@ import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.refreshPage
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -56,7 +56,6 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
@@ -67,7 +66,6 @@ import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
-import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -77,7 +75,6 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormChoiceComponent
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 
 public class CurationSidebar
     extends AnnotationSidebar_ImplBase
@@ -98,14 +95,12 @@ public class CurationSidebar
     private @SpringBean CurationSidebarService curationSidebarService;
     private @SpringBean CurationService curationService;
     private @SpringBean CurationMergeService curationMergeService;
-    private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean CurationSidebarProperties curationSidebarProperties;
 
-    private CheckGroup<User> selectedUsers;
+    private CheckGroup<AnnotationSet> selectedUsers;
     private DropDownChoice<String> curationTargetChoice;
-    private ListView<User> users;
-    private IModel<Map<String, AnnotationSet>> dataOwners;
+    private ListView<AnnotationSet> users;
     private final Form<Void> usersForm;
     private CheckBox showMerged;
     private CheckBox showScore;
@@ -279,8 +274,6 @@ public class CurationSidebar
 
         curationSessionService.startSession(sessionOwner, state.getProject(),
                 !curationTargetChoice.getModelObject().equals(CURATION_USER));
-        curationSessionService.setDefaultSelectedUsersForDocument(sessionOwner,
-                getModelObject().getDocument());
 
         showMerged.setModelObject(curationSidebarService.isShowAll(sessionOwner, project));
 
@@ -319,32 +312,50 @@ public class CurationSidebar
         form.setOutputMarkupPlaceholderTag(true);
         form.add(visibleWhen(() -> isSessionActive() && !users.getModelObject().isEmpty()));
 
+        form.add(new LambdaAjaxLink("selectAll", this::actionSelectAll));
+        form.add(new LambdaAjaxLink("selectNone", this::actionSelectNone));
+        form.add(new LambdaAjaxLink("invertSelection", this::actionInvertSelection));
+
         form.add(new LambdaAjaxButton<>("merge", this::actionOpenMergeDialog)
                 .add(visibleWhenNot(isTargetFinished)));
 
-        users = new ListView<User>("users", LoadableDetachableModel.of(this::listCuratableUsers))
+        users = new ListView<AnnotationSet>("users",
+                LoadableDetachableModel.of(this::listCuratableDataOwners))
         {
             private static final long serialVersionUID = 1L;
 
             @Override
-            protected void populateItem(ListItem<User> aItem)
+            protected void populateItem(ListItem<AnnotationSet> aItem)
             {
-                aItem.add(new Check<User>("user", aItem.getModel()));
+                aItem.add(new Check<AnnotationSet>("user", aItem.getModel()));
                 aItem.add(new Label("name", maybeAnonymizeUsername(aItem)));
             }
         };
 
-        // Resolve the current/former/deactivated markers for the whole curatable-user list in a
-        // single batch instead of one permission lookup per rendered row.
-        dataOwners = LoadableDetachableModel
-                .of(() -> documentService.getDataOwners(getModelObject().getProject(),
-                        users.getModelObject().stream().map(User::getUsername).toList()));
+        selectedUsers = new CheckGroup<AnnotationSet>("selectedUsers");
+        // Wicket reads the CheckGroup model once per rendered Check (i.e. once per annotator
+        // row). A LoadableDetachableModel resolves the selected set a single time per request
+        // and caches it, instead of re-entering the curation session service - and its lock -
+        // for every row and rebuilding the set each time.
+        selectedUsers.setModel(new LoadableDetachableModel<Collection<AnnotationSet>>()
+        {
+            private static final long serialVersionUID = 1L;
 
-        selectedUsers = new CheckGroup<User>("selectedUsers");
-        selectedUsers.setModel(new LambdaModelAdapter<>( //
-                () -> curationSessionService.getSelectedUsers(sessionOwner, project.getId()), //
-                (_users) -> curationSessionService.setSelectedUsers(sessionOwner, project.getId(),
-                        _users)));
+            @Override
+            protected Collection<AnnotationSet> load()
+            {
+                return new ArrayList<>(curationSessionService.getSelectedDataOwners(sessionOwner,
+                        project.getId(), users.getModelObject()));
+            }
+
+            @Override
+            public void setObject(Collection<AnnotationSet> aSelected)
+            {
+                curationSessionService.setSelectedDataOwners(sessionOwner, project.getId(),
+                        users.getModelObject(), aSelected);
+                super.setObject(aSelected);
+            }
+        });
         selectedUsers.add(
                 new LambdaAjaxFormChoiceComponentUpdatingBehavior(this::actionChangeVisibleUsers));
         selectedUsers.add(users);
@@ -353,48 +364,68 @@ public class CurationSidebar
         return form;
     }
 
-    private IModel<String> maybeAnonymizeUsername(ListItem<User> aUserListItem)
+    private IModel<String> maybeAnonymizeUsername(ListItem<AnnotationSet> aDataOwnerListItem)
     {
         var project = getModelObject().getProject();
         if (project.isAnonymousCuration()
                 && !projectService.hasRole(userRepository.getCurrentUser(), project, MANAGER)) {
-            return Model.of("Anonymized annotator " + (aUserListItem.getIndex() + 1));
+            return Model.of("Anonymized annotator " + (aDataOwnerListItem.getIndex() + 1));
         }
 
-        // Mark data owners that no longer hold the annotator permission (e.g. removed from the
-        // project or role changed) so the curator can tell them apart from current annotators. The
-        // markers are resolved in a single batch (see dataOwners).
-        var user = aUserListItem.getModelObject();
-        var dataOwner = dataOwners.getObject().get(user.getUsername());
-        return Model.of(dataOwner != null ? dataOwner.displayName() : user.getUiName());
-    }
-
-    @Override
-    protected void onDetach()
-    {
-        if (dataOwners != null) {
-            dataOwners.detach();
-        }
-
-        super.onDetach();
+        return Model.of(aDataOwnerListItem.getModelObject().displayName());
     }
 
     /**
      * retrieve annotators of this document which finished annotating
      */
-    private List<User> listCuratableUsers()
+    private List<AnnotationSet> listCuratableDataOwners()
     {
         var doc = getModelObject().getDocument();
         if (doc == null) {
             return Collections.emptyList();
         }
 
-        return curationSessionService.listCuratableUsers(userRepository.getCurrentUsername(), doc);
+        return curationSessionService.listCuratableDataOwners(userRepository.getCurrentUsername(),
+                doc);
     }
 
     private void actionChangeVisibleUsers(AjaxRequestTarget aTarget)
     {
         aTarget.add(usersForm);
         getAnnotationPage().actionRefreshDocument(aTarget);
+    }
+
+    private void actionSelectAll(AjaxRequestTarget aTarget)
+    {
+        var candidates = users.getModelObject();
+        setSelectedDataOwners(candidates);
+        actionChangeVisibleUsers(aTarget);
+    }
+
+    private void actionSelectNone(AjaxRequestTarget aTarget)
+    {
+        setSelectedDataOwners(Collections.emptyList());
+        actionChangeVisibleUsers(aTarget);
+    }
+
+    private void actionInvertSelection(AjaxRequestTarget aTarget)
+    {
+        var sessionOwner = userRepository.getCurrentUsername();
+        var projectId = getModelObject().getProject().getId();
+        var candidates = users.getModelObject();
+        var selected = curationSessionService.getSelectedDataOwners(sessionOwner, projectId,
+                candidates);
+        var inverted = candidates.stream().filter(candidate -> !selected.contains(candidate))
+                .toList();
+        setSelectedDataOwners(inverted);
+        actionChangeVisibleUsers(aTarget);
+    }
+
+    private void setSelectedDataOwners(Collection<AnnotationSet> aSelected)
+    {
+        var sessionOwner = userRepository.getCurrentUsername();
+        var projectId = getModelObject().getProject().getId();
+        curationSessionService.setSelectedDataOwners(sessionOwner, projectId,
+                users.getModelObject(), aSelected);
     }
 }

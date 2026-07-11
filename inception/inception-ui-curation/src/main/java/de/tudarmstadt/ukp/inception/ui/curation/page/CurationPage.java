@@ -32,6 +32,7 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarBehavior;
@@ -46,6 +47,7 @@ public class CurationPage
     private @SpringBean UserDao userRepository;
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean CurationDocumentService curationDocumentService;
+    private @SpringBean CurationSessionService curationSessionService;
 
     public CurationPage(PageParameters aPageParameters)
     {
@@ -55,6 +57,9 @@ public class CurationPage
 
         var state = getModelObject();
         state.enableExtension(CurationEditorExtension.EXTENSION_ID);
+
+        curationSessionService.startSession(userRepository.getCurrentUsername(), state.getProject(),
+                false);
     }
 
     @Override

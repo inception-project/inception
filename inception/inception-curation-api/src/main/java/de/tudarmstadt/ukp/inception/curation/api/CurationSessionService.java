@@ -19,16 +19,35 @@ package de.tudarmstadt.ukp.inception.curation.api;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface CurationSessionService
 {
-    List<User> getSelectedUsers(String aCurrentUser, long aProjectId);
+    /**
+     * @return the subset of {@code aCandidates} that is currently selected for curation, i.e. the
+     *         candidates the session owner has not explicitly deselected. The session stores the
+     *         <em>deselected</em> data owners, so a candidate that was never deselected counts as
+     *         selected - this is why a freshly started session curates all annotators by default.
+     */
+    Set<AnnotationSet> getSelectedDataOwners(String aCurrentUser, long aProjectId,
+            Collection<AnnotationSet> aCandidates);
 
-    void setSelectedUsers(String aCurrentUser, long aProjectId, Collection<User> aUsers);
+    /**
+     * Record the selection state for the given {@code aCandidates}: any candidate not contained in
+     * {@code aSelected} becomes deselected, any candidate contained in {@code aSelected} is
+     * un-deselected. The deselected state is kept per project and keyed by data owner, and the
+     * state of data owners outside {@code aCandidates} is left untouched. So a data owner that does
+     * not appear as a candidate for the current document keeps its previous state, but a data owner
+     * that is a candidate in several documents shares a single project-wide selection state -
+     * toggling such a data owner while curating one document also affects the others.
+     */
+    void setSelectedDataOwners(String aCurrentUser, long aProjectId,
+            Collection<AnnotationSet> aCandidates, Collection<AnnotationSet> aSelected);
 
     @Deprecated
     boolean existsSession(String aSessionOwner, long aProjectId);
@@ -51,10 +70,8 @@ public interface CurationSessionService
 
     void setShowScore(String aSessionOwner, Long aProjectId, boolean aValue);
 
-    List<User> listUsersReadyForCuration(String aUsername, Project aProject,
+    List<AnnotationSet> listDataOwnersReadyForCuration(String aUsername, Project aProject,
             SourceDocument aDocument);
 
-    List<User> listCuratableUsers(String aSessionOwner, SourceDocument aDocument);
-
-    void setDefaultSelectedUsersForDocument(String aSessionOwner, SourceDocument aDocument);
+    List<AnnotationSet> listCuratableDataOwners(String aSessionOwner, SourceDocument aDocument);
 }
