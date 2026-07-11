@@ -1100,6 +1100,23 @@ public class DocumentServiceImpl
         return casses;
     }
 
+    @Override
+    public Map<String, CAS> readAllAnnotationCases(SourceDocument aDocument,
+            Collection<AnnotationSet> aDataOwners)
+    {
+        var casses = new LinkedHashMap<String, CAS>();
+        for (var dataOwner : aDataOwners) {
+            try {
+                casses.put(dataOwner.id(), readAnnotationCas(aDocument, dataOwner));
+            }
+            catch (IOException e) {
+                LOG.error("Could not retrieve CAS for data owner [{}] in project {}",
+                        dataOwner.id(), aDocument.getProject(), e);
+            }
+        }
+        return casses;
+    }
+
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override

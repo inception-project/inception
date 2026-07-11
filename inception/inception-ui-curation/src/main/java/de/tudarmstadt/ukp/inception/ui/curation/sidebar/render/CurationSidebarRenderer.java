@@ -24,7 +24,6 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -45,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanPosition;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.api.CurationVID;
@@ -141,13 +139,13 @@ public class CurationSidebarRenderer
     {
         var sessionOwner = userRepository.getCurrentUsername();
 
-        var selectedUsers = curationSessionService.listUsersReadyForCuration(sessionOwner,
+        var selectedDataOwners = curationSessionService.listDataOwnersReadyForCuration(sessionOwner,
                 aRequest.getProject(), aRequest.getSourceDocument());
-        if (selectedUsers.isEmpty()) {
+        if (selectedDataOwners.isEmpty()) {
             return;
         }
 
-        var casDiff = createDiff(aRequest, selectedUsers);
+        var casDiff = createDiff(aRequest, selectedDataOwners);
         renderDiff(aVdoc, aRequest, casDiff);
     }
 
@@ -339,24 +337,13 @@ public class CurationSidebarRenderer
         return sourceConfiguration.map($ -> $.getAID(aTargetUser) != null).orElse(false);
     }
 
-    private CasDiff createDiff(RenderRequest aRequest, List<User> selectedUsers)
+    private CasDiff createDiff(RenderRequest aRequest, List<AnnotationSet> selectedDataOwners)
     {
+        // The editable target CAS goes first, then the read-only CASes of the other data owners.
         var casses = new LinkedHashMap<String, CAS>();
-
-        // This is the CAS that the user can actively edit
         casses.put(aRequest.getAnnotationUser().getUsername(), aRequest.getCas());
-
-        for (var user : selectedUsers) {
-            try {
-                var userCas = documentService.readAnnotationCas(aRequest.getSourceDocument(),
-                        AnnotationSet.forUser(user));
-                casses.put(user.getUsername(), userCas);
-            }
-            catch (IOException e) {
-                LOG.error("Could not retrieve CAS for user [{}] and project {}", user.getUsername(),
-                        aRequest.getProject(), e);
-            }
-        }
+        documentService.readAllAnnotationCases(aRequest.getSourceDocument(), selectedDataOwners)
+                .forEach(casses::putIfAbsent);
 
         var adapters = diffAdapterRegistry.getDiffAdapters(aRequest.getVisibleLayers());
         return doDiff(adapters, casses, aRequest.getWindowBeginOffset(),

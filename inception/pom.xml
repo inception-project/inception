@@ -799,6 +799,24 @@
       </build>
     </profile>
     <profile>
+      <!--
+        Skip the RAT license check on Microsoft Windows. apache-rat 0.18 has a Windows-only defect
+        (RAT-559, fixed only on the unreleased next version) where DocumentName.getName() mangles the
+        drive-letter root, so the target/** exclusions fail to match and RAT flags Maven build outputs
+        as unapproved. The check remains active on all non-Windows platforms, which is sufficient since
+        license compliance is OS-independent.
+      -->
+      <id>skip-rat-on-windows</id>
+      <activation>
+        <os>
+          <family>windows</family>
+        </os>
+      </activation>
+      <properties>
+        <rat.skip>true</rat.skip>
+      </properties>
+    </profile>
+    <profile>
       <id>run-jcasgen</id>
       <activation>
         <file>

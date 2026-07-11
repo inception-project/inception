@@ -44,10 +44,10 @@ public class CurationPage
 {
     private static final long serialVersionUID = 8665608337791132617L;
 
-    private @SpringBean CurationSessionService curationSessionService;
     private @SpringBean UserDao userRepository;
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean CurationDocumentService curationDocumentService;
+    private @SpringBean CurationSessionService curationSessionService;
 
     public CurationPage(PageParameters aPageParameters)
     {
@@ -55,11 +55,11 @@ public class CurationPage
 
         add(new CurationSidebarBehavior());
 
-        var sessionOwner = userRepository.getCurrentUsername();
         var state = getModelObject();
         state.enableExtension(CurationEditorExtension.EXTENSION_ID);
 
-        curationSessionService.startSession(sessionOwner, state.getProject(), false);
+        curationSessionService.startSession(userRepository.getCurrentUsername(), state.getProject(),
+                false);
     }
 
     @Override

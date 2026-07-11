@@ -105,7 +105,6 @@ public class CurationSidebarBehavior
         var sessionOwner = userService.getCurrentUsername();
         var doc = aEvent.getDocument();
         var project = doc.getProject();
-        var isCurationSessionActive = isSessionActive(project);
 
         var params = page.getPageParameters();
         var dataOwner = aEvent.getDocumentOwner();
@@ -122,11 +121,10 @@ public class CurationSidebarBehavior
 
         handleSessionActivationPageParameters(page, params, doc, sessionOwner);
 
+        // On the dedicated curation page the session is started in the CurationPage constructor, so
+        // it is always active here. On the annotation page it is (de)activated via the URL
+        // parameters handled above.
         ensureDataOwnerMatchesCurationTarget(page, project, sessionOwner, dataOwner);
-        if (!isCurationSessionActive) {
-            curationSessionService.setDefaultSelectedUsersForDocument(aEvent.getSessionOwner(),
-                    aEvent.getDocument());
-        }
 
         var prefs = preferencesService
                 .loadDefaultTraitsForProject(KEY_CURATION_SIDEBAR_MANAGER_PREFS, project);
@@ -154,12 +152,12 @@ public class CurationSidebarBehavior
                 // if an initial merge is required.
                 documentService.readAnnotationCas(state.getDocument(),
                         AnnotationSet.forUser(state.getUser()), FORCE_CAS_UPGRADE);
-                var selectedUsers = curationSessionService.getSelectedUsers(sessionOwner,
-                        project.getId());
+                var selectedDataOwners = curationSessionService
+                        .listDataOwnersReadyForCuration(sessionOwner, project, doc);
 
                 var workflow = curationService.readOrCreateCurationWorkflow(state.getProject());
                 var mergeStrategyFactory = curationSidebarService.merge(state, workflow,
-                        state.getUser().getUsername(), selectedUsers, true);
+                        state.getUser().getUsername(), selectedDataOwners, true);
 
                 page.success(
                         "Performed initial merge using [" + mergeStrategyFactory.getLabel() + "].");

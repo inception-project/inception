@@ -208,6 +208,13 @@ class MockAeroClient
                 .param("roles", aRoles));
     }
 
+    ResultActions grantProjectRoleWithoutRoles(long aProjectId, String aUser) throws Exception
+    {
+        return mvc.perform(post(API_BASE + "/projects/" + aProjectId + "/permissions/" + aUser) //
+                .with(csrf().asHeader()) //
+                .with(user(username).roles(roles)));
+    }
+
     ResultActions listPermissionsForUser(long aProjectId, String aUser) throws Exception
     {
         return mvc.perform(get(API_BASE + "/projects/" + aProjectId + "/permissions/" + aUser) //
@@ -229,6 +236,13 @@ class MockAeroClient
                 .with(csrf().asHeader()) //
                 .with(user(username).roles(roles)) //
                 .param("roles", aRoles));
+    }
+
+    ResultActions revokeProjectRoleWithoutRoles(long aProjectId, String aUser) throws Exception
+    {
+        return mvc.perform(delete(API_BASE + "/projects/" + aProjectId + "/permissions/" + aUser) //
+                .with(csrf().asHeader()) //
+                .with(user(username).roles(roles)));
     }
 
     ResultActions listTasks(long aProjectId) throws Exception
