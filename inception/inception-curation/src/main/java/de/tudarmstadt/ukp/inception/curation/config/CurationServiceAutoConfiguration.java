@@ -52,6 +52,7 @@ import de.tudarmstadt.ukp.inception.curation.settings.CurationProjectSettingsPan
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarPropertiesImpl;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import jakarta.persistence.EntityManager;
@@ -91,13 +92,14 @@ public class CurationServiceAutoConfiguration
 
     @Bean
     @Primary
-    public CurationSessionService curationSessionService(EntityManager aEntityManager,
+    public CurationSessionService curationSessionService(PreferencesService aPreferencesService,
             SessionRegistry aSessionRegistry, ProjectService aProjectService, UserDao aUserRegistry,
             CurationSidebarProperties aCurationSidebarProperties,
-            CurationDocumentService aCurationDocumentService)
+            CurationDocumentService aCurationDocumentService, DocumentService aDocumentService)
     {
-        return new CurationSessionServiceImpl(aEntityManager, aSessionRegistry, aProjectService,
-                aUserRegistry, aCurationSidebarProperties, aCurationDocumentService);
+        return new CurationSessionServiceImpl(aPreferencesService, aSessionRegistry,
+                aProjectService, aUserRegistry, aCurationSidebarProperties,
+                aCurationDocumentService, aDocumentService);
     }
 
     @Bean

@@ -32,6 +32,7 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -231,8 +232,9 @@ class CurationSidebarRendererTest
 
         when(userRepository.getCurrentUsername()).thenReturn(curator.getUsername());
 
-        when(curationSessionService.listUsersReadyForCuration(curator.getUsername(), project, doc))
-                .thenReturn(asList(anno1, anno2));
+        when(curationSessionService.listDataOwnersReadyForCuration(curator.getUsername(), project,
+                doc)).thenReturn(
+                        asList(AnnotationSet.forUser(anno1), AnnotationSet.forUser(anno2)));
 
         var allFeaturesInProject = asList(spanLayerLinkFeature, spanLayerValueFeature);
 
@@ -717,10 +719,10 @@ class CurationSidebarRendererTest
         vdoc.setText(aText);
         vdoc.setWindow(0, aText.length());
 
-        when(documentService.readAnnotationCas(doc, AnnotationSet.forUser(anno1.getUsername())))
-                .thenReturn(anno1Cas);
-        when(documentService.readAnnotationCas(doc, AnnotationSet.forUser(anno2.getUsername())))
-                .thenReturn(anno2Cas);
+        var annotatorCasses = new LinkedHashMap<String, CAS>();
+        annotatorCasses.put(anno1.getUsername(), anno1Cas);
+        annotatorCasses.put(anno2.getUsername(), anno2Cas);
+        when(documentService.readAllAnnotationCases(any(), any())).thenReturn(annotatorCasses);
 
         return RenderRequest.builder() //
                 .withDocument(doc, curator) //

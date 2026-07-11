@@ -18,19 +18,20 @@
 package de.tudarmstadt.ukp.inception.curation.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.inception.curation.model.CurationSessionPreferences.KEY_CURATION_SESSION;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.unmodifiableList;
-import static java.util.stream.Collectors.toSet;
+import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toCollection;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.springframework.context.event.EventListener;
@@ -40,47 +41,50 @@ import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
-import de.tudarmstadt.ukp.inception.curation.model.CurationSettings;
-import de.tudarmstadt.ukp.inception.curation.model.CurationSettingsId;
+import de.tudarmstadt.ukp.inception.curation.model.CurationSessionPreferences;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import jakarta.persistence.EntityManager;
 
 public class CurationSessionServiceImpl
     implements CurationSessionService
 {
     private final ConcurrentMap<CurationSessionKey, CurationSession> sessions;
 
-    private final EntityManager entityManager;
+    private final PreferencesService preferencesService;
     private final SessionRegistry sessionRegistry;
     private final ProjectService projectService;
     private final UserDao userRegistry;
     private final CurationSidebarProperties curationSidebarProperties;
     private final CurationDocumentService curationDocumentService;
+    private final DocumentService documentService;
 
-    public CurationSessionServiceImpl(EntityManager aEntityManager,
+    public CurationSessionServiceImpl(PreferencesService aPreferencesService,
             SessionRegistry aSessionRegistry, ProjectService aProjectService, UserDao aUserRegistry,
             CurationSidebarProperties aCurationSidebarProperties,
-            CurationDocumentService aCurationDocumentService)
+            CurationDocumentService aCurationDocumentService, DocumentService aDocumentService)
     {
         sessions = new ConcurrentHashMap<>();
-        entityManager = aEntityManager;
+        preferencesService = aPreferencesService;
         sessionRegistry = aSessionRegistry;
         projectService = aProjectService;
         userRegistry = aUserRegistry;
         curationSidebarProperties = aCurationSidebarProperties;
         curationDocumentService = aCurationDocumentService;
+        documentService = aDocumentService;
     }
 
     @Transactional
     @Override
-    public void setSelectedUsers(String aSessionOwner, long aProjectId,
-            Collection<User> aSelectedUsers)
+    public void setSelectedDataOwners(String aSessionOwner, long aProjectId,
+            Collection<AnnotationSet> aCandidates, Collection<AnnotationSet> aSelected)
     {
         synchronized (sessions) {
             var session = sessions.get(new CurationSessionKey(aSessionOwner, aProjectId));
@@ -88,55 +92,84 @@ public class CurationSessionServiceImpl
                 return;
             }
 
-            session.setSelectedUsers(aSelectedUsers);
+            var deselected = new LinkedHashSet<>(session.getDeselectedDataOwners());
+            deselected.removeAll(aCandidates);
+            for (var candidate : aCandidates) {
+                if (!aSelected.contains(candidate)) {
+                    deselected.add(candidate);
+                }
+            }
+            session.setDeselectedDataOwners(deselected);
         }
     }
 
     @Transactional
     @Override
-    public List<User> getSelectedUsers(String aSessionOwner, long aProjectId)
+    public Set<AnnotationSet> getSelectedDataOwners(String aSessionOwner, long aProjectId,
+            Collection<AnnotationSet> aCandidates)
     {
         synchronized (sessions) {
             var session = sessions.get(new CurationSessionKey(aSessionOwner, aProjectId));
             if (session == null) {
-                return emptyList();
+                return emptySet();
             }
 
-            var selectedUsers = session.getSelectedUsers();
-            return selectedUsers == null ? emptyList() : unmodifiableList(selectedUsers);
+            var selected = new LinkedHashSet<>(aCandidates);
+            selected.removeAll(session.getDeselectedDataOwners());
+            return selected;
         }
     }
 
     @Transactional
     @Override
-    public List<User> listUsersReadyForCuration(String aSessionOwner, Project aProject,
-            SourceDocument aDocument)
+    public List<AnnotationSet> listDataOwnersReadyForCuration(String aSessionOwner,
+            Project aProject, SourceDocument aDocument)
     {
+        String curationTarget;
+        Set<AnnotationSet> deselected;
         synchronized (sessions) {
             var session = sessions.get(new CurationSessionKey(aSessionOwner, aProject.getId()));
             if (session == null) {
                 return emptyList();
             }
 
-            var selectedUsers = session.getSelectedUsers();
-            if (selectedUsers == null || selectedUsers.isEmpty()) {
-                return emptyList();
-            }
-
-            var finishedUsers = curationDocumentService.listCuratableUsers(aDocument);
-            finishedUsers.retainAll(selectedUsers);
-            return finishedUsers;
+            curationTarget = session.getCurationTarget();
+            deselected = new LinkedHashSet<>(session.getDeselectedDataOwners());
         }
+
+        // The curatable-user lookup hits the database, so we run it outside the sessions lock,
+        // having captured the session state we need above.
+        return listCuratableUserNames(aDocument, aSessionOwner, curationTarget).stream() //
+                .map(AnnotationSet::forUser) //
+                .filter(dataOwner -> !deselected.contains(dataOwner)) //
+                .toList();
     }
 
     @Transactional
     @Override
-    public List<User> listCuratableUsers(String aSessionOwner, SourceDocument aDocument)
+    public List<AnnotationSet> listCuratableDataOwners(String aSessionOwner,
+            SourceDocument aDocument)
     {
-        var curationTarget = getCurationTarget(aSessionOwner, aDocument.getProject().getId());
-        return curationDocumentService.listCuratableUsers(aDocument).stream()
-                .filter(user -> !user.getUsername().equals(aSessionOwner)
-                        || curationTarget.equals(CURATION_USER))
+        var project = aDocument.getProject();
+        var curationTarget = getCurationTarget(aSessionOwner, project.getId());
+        var curatableUserNames = listCuratableUserNames(aDocument, aSessionOwner, curationTarget);
+
+        var dataOwners = documentService.getDataOwners(project, curatableUserNames);
+        return curatableUserNames.stream().map(dataOwners::get).toList();
+    }
+
+    /**
+     * @return the usernames of the annotators that can be curated for the given document: the
+     *         curatable users, excluding the session owner unless they are curating into their own
+     *         document (i.e. the curation target is not the {@code CURATION_USER}).
+     */
+    private List<String> listCuratableUserNames(SourceDocument aDocument, String aSessionOwner,
+            String aCurationTarget)
+    {
+        return curationDocumentService.listCuratableUsers(aDocument).stream() //
+                .map(User::getUsername) //
+                .filter(username -> !username.equals(aSessionOwner)
+                        || CURATION_USER.equals(aCurationTarget)) //
                 .toList();
     }
 
@@ -166,21 +199,6 @@ public class CurationSessionServiceImpl
         synchronized (sessions) {
             sessions.remove(new CurationSessionKey(aSessionOwner, aProjectId));
         }
-    }
-
-    @Override
-    public void setDefaultSelectedUsersForDocument(String aSessionOwner, SourceDocument aDocument)
-    {
-        var project = aDocument.getProject();
-
-        if (!existsSession(aSessionOwner, project.getId())) {
-            return;
-        }
-
-        // The set of curatable annotators can change from document to document, so we reset the
-        // selected users every time the document is switched
-        setSelectedUsers(aSessionOwner, project.getId(),
-                listCuratableUsers(aSessionOwner, aDocument));
     }
 
     @Transactional
@@ -319,84 +337,63 @@ public class CurationSessionServiceImpl
 
     private CurationSession readSession(String aSessionOwner, long aProjectId)
     {
-        var settings = queryDBForSetting(aSessionOwner, aProjectId);
+        var user = userRegistry.get(aSessionOwner);
+        var project = projectService.getProject(aProjectId);
+
+        var traits = (user != null && project != null) ? preferencesService
+                .loadOptionalTraitsForUserAndProject(KEY_CURATION_SESSION, user, project)
+                .orElse(null) : null;
 
         CurationSession state;
-        if (settings.isEmpty()) {
+        if (traits == null) {
             state = new CurationSession(aSessionOwner);
         }
         else {
-            var setting = settings.get(0);
-            var project = projectService.getProject(aProjectId);
-            var users = new ArrayList<User>();
-            if (!setting.getSelectedUserNames().isEmpty()) {
-                setting.getSelectedUserNames().stream().map(username -> userRegistry.get(username))
-                        .filter(user -> projectService.hasAnyRole(user, project)) //
-                        .forEach(users::add);
-            }
-            state = new CurationSession(setting.getCurationUserName(), users);
+            var deselectedDataOwners = traits.getDeselectedDataOwners().stream() //
+                    .map(AnnotationSet::forUser) //
+                    .collect(toCollection(LinkedHashSet::new));
+            state = new CurationSession(traits.getCurationTarget(), deselectedDataOwners);
         }
 
         sessions.put(new CurationSessionKey(aSessionOwner, aProjectId), state);
         return state;
     }
 
-    private List<CurationSettings> queryDBForSetting(String aSessionOwner, long aProjectId)
-    {
-        Validate.notBlank(aSessionOwner, "Session owner must be specified");
-        Validate.notNull(aProjectId, "Project must be specified");
-
-        var query = "FROM " + CurationSettings.class.getName() //
-                + " o WHERE o.username = :username " //
-                + "AND o.projectId = :projectId";
-
-        return entityManager //
-                .createQuery(query, CurationSettings.class) //
-                .setParameter("username", aSessionOwner) //
-                .setParameter("projectId", aProjectId) //
-                .setMaxResults(1) //
-                .getResultList();
-    }
-
     /**
-     * Write settings for all projects of this user to the data base
+     * Write this user's active curation sessions to the preferences store.
      */
     private void storeCurationSettings(User aSessionOwner)
     {
-        var aUsername = aSessionOwner.getUsername();
+        var username = aSessionOwner.getUsername();
 
-        for (var project : projectService.listAccessibleProjects(aSessionOwner)) {
-            var projectId = project.getId();
-            Set<String> usernames = null;
-            if (sessions.containsKey(new CurationSessionKey(aUsername, projectId))) {
-
-                var state = sessions.get(new CurationSessionKey(aUsername, projectId));
-                // user does not exist anymore or is anonymous authentication
-                if (state == null) {
+        // Snapshot the traits for this user's active sessions under the lock, then persist them
+        // outside it. We iterate only the sessions this user actually has instead of scanning all
+        // accessible projects.
+        var traitsByProject = new LinkedHashMap<Long, CurationSessionPreferences>();
+        synchronized (sessions) {
+            for (var entry : sessions.entrySet()) {
+                if (!entry.getKey().username.equals(username)) {
                     continue;
                 }
 
-                if (state.getSelectedUsers() != null) {
-                    usernames = state.getSelectedUsers().stream() //
-                            .map(User::getUsername) //
-                            .collect(toSet());
-                }
-
-                // get setting from context and update values if it exists, else save new setting
-                // to db
-                var setting = entityManager.find(CurationSettings.class,
-                        new CurationSettingsId(projectId, aUsername));
-
-                if (setting != null) {
-                    setting.setSelectedUserNames(usernames);
-                    setting.setCurationUserName(state.getCurationTarget());
-                }
-                else {
-                    setting = new CurationSettings(aUsername, projectId, state.getCurationTarget(),
-                            usernames);
-                    entityManager.persist(setting);
-                }
+                var state = entry.getValue();
+                var traits = new CurationSessionPreferences();
+                traits.setCurationTarget(state.getCurationTarget());
+                traits.setDeselectedDataOwners(state.getDeselectedDataOwners().stream() //
+                        .map(AnnotationSet::id) //
+                        .collect(toCollection(LinkedHashSet::new)));
+                traitsByProject.put(entry.getKey().projectId, traits);
             }
+        }
+
+        for (var entry : traitsByProject.entrySet()) {
+            var project = projectService.getProject(entry.getKey());
+            if (project == null) {
+                continue;
+            }
+
+            preferencesService.saveTraitsForUserAndProject(KEY_CURATION_SESSION, aSessionOwner,
+                    project, entry.getValue());
         }
     }
 
@@ -439,7 +436,9 @@ public class CurationSessionServiceImpl
 
     private class CurationSession
     {
-        private List<User> selectedUsers;
+        // The data owners the session owner has explicitly deselected. Everything not listed here
+        // counts as selected, so an empty set means "curate all annotators".
+        private Set<AnnotationSet> deselectedDataOwners = new LinkedHashSet<>();
         // to find source document of the curated document
         // the curationdoc can be retrieved from user (CURATION or current) and projectId
         private String curationTarget;
@@ -451,20 +450,21 @@ public class CurationSessionServiceImpl
             curationTarget = aUser;
         }
 
-        public CurationSession(String aCurationTarget, List<User> aSelectedUsers)
+        public CurationSession(String aCurationTarget,
+                Collection<AnnotationSet> aDeselectedDataOwners)
         {
             curationTarget = aCurationTarget;
-            selectedUsers = new ArrayList<>(aSelectedUsers);
+            deselectedDataOwners = new LinkedHashSet<>(aDeselectedDataOwners);
         }
 
-        public List<User> getSelectedUsers()
+        public Set<AnnotationSet> getDeselectedDataOwners()
         {
-            return selectedUsers;
+            return deselectedDataOwners;
         }
 
-        public void setSelectedUsers(Collection<User> aSelectedUsers)
+        public void setDeselectedDataOwners(Collection<AnnotationSet> aDeselectedDataOwners)
         {
-            selectedUsers = new ArrayList<>(aSelectedUsers);
+            deselectedDataOwners = new LinkedHashSet<>(aDeselectedDataOwners);
         }
 
         public String getCurationTarget()

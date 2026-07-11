@@ -223,6 +223,54 @@ NOTE: Mind that you cannot arbitrarily switch between volume-managed and host-st
 
 There is a lot more that you can do using Docker and Docker Compose. Please see the link:https://docs.docker.com/compose/[docker-compose reference] for details.
 
+=== Starting automatically after reboot
+
+The `restart: unless-stopped` policy in the Compose script causes Docker to bring the containers
+back up after a crash and after the Docker daemon itself restarts - but only for containers that
+still *exist*. It does not help if the stack was torn down with `docker-compose down` (which
+*removes* the containers), and it does nothing to run `docker-compose up` in the first place after a
+host reboot if you normally start the stack by hand. To reliably start {product-name} whenever the
+host boots, register the Compose project as a systemd service.
+
+Assuming your Compose script lives in `/srv/inception`, create the file
+`/etc/systemd/system/inception.service` with the following content:
+
+[source,ini,subs="+attributes"]
+----
+[Unit]
+Description={product-name} (Docker Compose)
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/srv/inception
+ExecStart=/usr/bin/docker compose -p inception up -d
+ExecStop=/usr/bin/docker compose -p inception down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
+----
+
+Then enable and start the service:
+
+[source,shell,subs="+attributes"]
+----
+$ sudo systemctl daemon-reload
+$ sudo systemctl enable --now inception
+----
+
+From now on the stack is started on every boot and stopped cleanly on shutdown. Because systemd runs
+`docker compose up` itself, this approach does not rely on the containers surviving a reboot and thus
+also covers the case where they were previously removed with `docker-compose down`.
+
+NOTE: The unit above uses the `docker compose` (Compose V2) plugin. If your host still uses the
+      standalone `docker-compose` binary, replace `/usr/bin/docker compose` with the path to
+      `docker-compose` (e.g. `/usr/local/bin/docker-compose`).
+
 === Upgrading with Docker Compose
 
 When new versions of {product-name} are released, they may at times include an updated Docker Compose example file.

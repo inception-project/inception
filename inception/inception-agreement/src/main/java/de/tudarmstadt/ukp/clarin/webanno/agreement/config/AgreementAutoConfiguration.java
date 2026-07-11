@@ -24,6 +24,8 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.cohenkappa.CohenKappaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.fleisskappa.FleissKappaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.gamma.GammaAgreementMeasureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.gwetac1.GwetAC1AgreementMeasureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.gwetac2.GwetAC2AgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha.KrippendorffAlphaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing.KrippendorffAlphaUnitizingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -74,5 +76,19 @@ public class AgreementAutoConfiguration
     public GammaAgreementMeasureSupport gammaAgreementMeasureSupport()
     {
         return new GammaAgreementMeasureSupport();
+    }
+
+    @Bean
+    public GwetAC1AgreementMeasureSupport gwetAC1AgreementMeasureSupport(
+            AnnotationSchemaService aAnnotationService, DiffAdapterRegistry aDiffAdapterRegistry)
+    {
+        return new GwetAC1AgreementMeasureSupport(aAnnotationService, aDiffAdapterRegistry);
+    }
+
+    @Bean
+    public GwetAC2AgreementMeasureSupport gwetAC2AgreementMeasureSupport(
+            AnnotationSchemaService aAnnotationService, DiffAdapterRegistry aDiffAdapterRegistry)
+    {
+        return new GwetAC2AgreementMeasureSupport(aAnnotationService, aDiffAdapterRegistry);
     }
 }

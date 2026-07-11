@@ -164,7 +164,7 @@ public class CurationSidebarServiceImpl
     @Override
     @Transactional
     public MergeStrategyFactory<?> merge(AnnotatorState aState, CurationWorkflow aWorkflow,
-            String aCurator, Collection<User> aUsers, boolean aClearTargetCas)
+            String aCurator, Collection<AnnotationSet> aDataOwners, boolean aClearTargetCas)
         throws IOException, UIMAException
     {
         MergeStrategyFactory factory = curationService.getMergeStrategyFactory(aWorkflow);
@@ -174,7 +174,8 @@ public class CurationSidebarServiceImpl
         var aTargetCas = retrieveCurationCAS(aCurator, doc.getProject().getId(), doc).orElseThrow(
                 () -> new IllegalArgumentException("No target CAS configured in curation state"));
 
-        var userCases = documentService.readAllCasesSharedNoUpgrade(doc, aUsers);
+        var userCases = documentService.readAllCasesSharedNoUpgrade(doc,
+                aDataOwners.stream().map(AnnotationSet::id).toArray(String[]::new));
 
         // FIXME: should merging not overwrite the current users annos? (can result in
         // deleting the users annotations!!!), currently fixed by warn message to user
