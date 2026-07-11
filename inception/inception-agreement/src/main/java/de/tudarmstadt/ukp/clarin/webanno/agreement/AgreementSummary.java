@@ -28,6 +28,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.DoubleStream;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.aligning.FullAligningAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.FullUnitizingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -122,6 +123,10 @@ public class AgreementSummary
             return new AgreementSummary(result);
         }
 
+        if (aResult instanceof FullAligningAgreementResult result) {
+            return new AgreementSummary(result);
+        }
+
         throw new IllegalArgumentException(
                 "Unsupported result type: [" + aResult.getClass().getName() + "]");
     }
@@ -141,6 +146,18 @@ public class AgreementSummary
     }
 
     public AgreementSummary(FullUnitizingAgreementResult aResult)
+    {
+        this((FullAgreementResult_ImplBase<?>) aResult);
+
+        incompleteSetsByLabel = -1;
+        incompleteSetsByPosition = -1;
+        relevantSetCount = -1;
+        completeSetCount = -1;
+        usedSetCount = -1;
+        pluralitySets = -1;
+    }
+
+    public AgreementSummary(FullAligningAgreementResult aResult)
     {
         this((FullAgreementResult_ImplBase<?>) aResult);
 

@@ -95,7 +95,15 @@ The basic idea is to divide the estimated variance of within the items by the es
 | Chance-corrected inter-rater agreement for unitizing studies with multiple raters.
 As a model for expected disagreement, all possible unitizations for the given continuum and raters are considered.
 Note that units coded with the same categories by a single annotator may not overlap with each other.
-If such units are detected, the system will pass the unit starting earliest and being longest to the agreement and will skip all of the other overlapping units. 
+If such units are detected, the system will pass the unit starting earliest and being longest to the agreement and will skip all of the other overlapping units.
+
+| Gamma (γ)
+| Aligning
+| Chance-corrected inter-rater agreement for multiple raters following Mathet et al. (2015).
+The annotations of the raters are aligned such that the overall disagreement (disorder) with respect to position and label is minimal.
+The expected disorder is estimated by sampling random annotation sets from the statistical characteristics of the actual annotations (cf. pygamma-agreement).
+Note that the sampling is performed with a fixed seed, so repeated calculations on the same data yield the same result.
+Zero-width annotations are not supported and skipped.
 |====
 
 
@@ -133,6 +141,12 @@ Partial overlap agreement is calculated based the character overlap, not on the 
 That means, if one annotator annotates *the blackboard* and another annotator annotates only *blackboard*, the partial overlap is comparatively high because *blackboard* is a substantial portion of the span, even though an entire word is missing from the first annotator's span.
 Relation and chain layers are presently not supported by the unitizing measures.
 For document metadata layers, partial overlap is not applicable, as the entire document is considered as a single position.
+
+.Aligning measures
+Aligning measures (e.g. gamma) are related to unitizing measures in that they also operate on character offsets instead of fixed positions.
+However, instead of considering all possible unitizations, they search for an optimal alignment between the annotations of the different annotators - i.e. an alignment that minimizes the overall disagreement (disorder) with respect to position and label.
+The observed disorder is then set into relation to the disorder expected by chance, which is estimated using a randomized (Monte-Carlo) procedure.
+Relation and chain layers are presently not supported by the aligning measures.
 
 == Incomplete annotations
 
