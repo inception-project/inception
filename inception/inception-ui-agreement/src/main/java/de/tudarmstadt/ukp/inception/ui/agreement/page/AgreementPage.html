@@ -17,6 +17,19 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style>
+    /* The measure control looks like the feature dropdown (form-select) but acts as a
+       dialog trigger. The form-select class gives it the chevron and makes Bootstrap's
+       form-floating label float automatically; we just need to align the value vertically
+       (the link does not do this like a native select) and show a pointer cursor. */
+    .measure-select {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+  </style>
+</wicket:head>
 <body>
   <wicket:extend>
     <div class="flex-content flex-v-container flex-gutter">
@@ -35,10 +48,14 @@
                 <select wicket:id="layerAndFeature" class="form-select"/>
                 <label wicket:for="layerAndFeature"><wicket:label key="feature"/></label>
               </div>
-              <div class="form-row form-floating" wicket:enclosure="measure">
-                <select wicket:id="measure" class="form-select"/>
-                <label wicket:for="measure"><wicket:label key="measure"/></label>
+              <div class="form-row form-floating">
+                <a wicket:id="chooseMeasure"
+                   class="form-select measure-select text-truncate text-reset text-decoration-none">
+                  <span wicket:id="selectedMeasure"></span>
+                </a>
+                <label><wicket:message key="measure"/></label>
               </div>
+              <div wicket:id="measureDialog"></div>
               <div wicket:id="traitsContainer">
                 <div wicket:id="traits"></div>
               </div>

@@ -17,12 +17,17 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.gamma;
 
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureParadigm.ALIGNING;
+
+import java.util.Optional;
+
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.dkpro.statistics.agreement.aligning.AligningAnnotationStudy;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureParadigm;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
@@ -56,9 +61,29 @@ public class GammaAgreementMeasureSupport
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public Optional<String> getDescription()
     {
-        return SpanLayerSupport.TYPE.equals(aLayer.getType());
+        return Optional.of("Aligns annotations across raters while scoring agreement, tolerating "
+                + "differences in both boundaries and labels. Suitable when annotators may segment "
+                + "and label the text differently.");
+    }
+
+    @Override
+    public AgreementMeasureParadigm getParadigm()
+    {
+        return ALIGNING;
+    }
+
+    @Override
+    public Optional<String> getInapplicabilityReason(AnnotationLayer aLayer,
+            AnnotationFeature aFeature)
+    {
+        if (!SpanLayerSupport.TYPE.equals(aLayer.getType())) {
+            return Optional.of("Gamma aligns annotations by their text position, so it only "
+                    + "supports span layers.");
+        }
+
+        return Optional.empty();
     }
 
     @Override

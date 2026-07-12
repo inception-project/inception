@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style>
+    .measure-card {
+      transition: box-shadow .3s;
+      border-color: var(--bs-secondary-color) !important;
+      text-align: start;
+    }
+    .measure-card:hover:not(:disabled) {
+      box-shadow: 0 0 10px var(--bs-tertiary-color);
+    }
+    .measure-card:disabled {
+      opacity: .55;
+    }
+    /* The modal body is the scroll container. It has no padding of its own so the sticky
+       paradigm headers can span its full width; the horizontal padding lives on the header
+       and on the card grid instead. */
+    .measure-dialog-body {
+      padding: 0;
+    }
+    .paradigm-heading {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      /* Opaque, full-width background so cards scroll cleanly underneath. The top padding
+         covers the strip above the text, and the negative top margin on the following card
+         grid pulls the cards up so none peek above the header. */
+      background-color: var(--bs-modal-bg, var(--bs-body-bg));
+      border-bottom: 1px solid var(--bs-border-color);
+      padding: 1rem 1.5rem .5rem 1.5rem;
+    }
+    .paradigm-cards {
+      padding: 1rem 1.5rem 0 1.5rem;
+    }
+  </style>
+</wicket:head>
+<wicket:panel>
+  <div class="modal-header">
+    <h5 class="modal-title">
+      <wicket:message key="selectMeasureDialogTitle">Choose an agreement measure</wicket:message>
+    </h5>
+    <button wicket:id="closeDialog" type="button" class="btn-close" aria-label="Close"></button>
+  </div>
+  <div class="modal-body measure-dialog-body overflow-auto p-0 pb-3">
+    <div wicket:id="paradigms">
+      <div>
+        <div class="paradigm-heading">
+          <h6 class="mb-0" wicket:id="paradigmName"/>
+          <small class="text-muted" wicket:id="paradigmDescription"/>
+        </div>
+        <div class="paradigm-cards row row-cols-1 row-cols-md-2 g-3">
+          <div wicket:id="measures" class="col d-flex">
+            <button wicket:id="select" class="card measure-card d-flex flex-grow-1 p-3">
+              <div class="d-flex flex-column w-100">
+                <h6 class="card-title mb-1" wicket:id="name"/>
+                <p class="card-text small text-muted mb-2" wicket:id="description"/>
+                <div class="mb-1">
+                  <span wicket:id="capabilities" class="badge bg-secondary me-1">
+                    <span wicket:id="capability"/>
+                  </span>
+                </div>
+                <div class="small text-warning-emphasis fst-italic" wicket:id="reason"/>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</wicket:panel>
+</html>

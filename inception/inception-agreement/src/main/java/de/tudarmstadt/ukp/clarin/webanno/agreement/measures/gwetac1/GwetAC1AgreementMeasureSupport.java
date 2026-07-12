@@ -17,7 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.gwetac1;
 
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CHANCE_CORRECTED;
+import static java.util.EnumSet.of;
+
+import java.util.Optional;
+import java.util.Set;
+
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCodingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
@@ -54,6 +61,20 @@ public class GwetAC1AgreementMeasureSupport
     }
 
     @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of("Chance-corrected agreement designed to be more robust than Kappa when "
+                + "labels are highly imbalanced, avoiding the paradox of low scores despite high "
+                + "observed agreement.");
+    }
+
+    @Override
+    public Set<AgreementMeasureCapability> getDeclaredCapabilities()
+    {
+        return of(CHANCE_CORRECTED);
+    }
+
+    @Override
     public AgreementMeasure<FullCodingAgreementResult> createMeasure(AnnotationLayer aLayer,
             AnnotationFeature aFeature, DefaultAgreementTraits aTraits)
     {
@@ -64,6 +85,9 @@ public class GwetAC1AgreementMeasureSupport
     @Override
     public boolean isSupportingMoreThanTwoRaters()
     {
-        return true;
+        // Gwet's AC1 does not implement DKPro's IMultiRaterAgreement, so the underlying
+        // GwetAC1Agreement throws for studies with more than two raters. Unlike its weighted
+        // extension AC2, AC1 is pairwise-only.
+        return false;
     }
 }

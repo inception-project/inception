@@ -17,10 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.gwetac2;
 
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CHANCE_CORRECTED;
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.WEIGHTED;
+import static java.util.EnumSet.of;
+
+import java.util.Optional;
+import java.util.Set;
+
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCodingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
@@ -54,6 +62,21 @@ public class GwetAC2AgreementMeasureSupport
     public String getName()
     {
         return "Gwet's AC2 (coding / nominal)";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional
+                .of("The weighted extension of Gwet's AC1: chance-corrected agreement that is "
+                        + "robust to imbalanced labels and additionally credits near-misses as partial "
+                        + "agreement via a distance function.");
+    }
+
+    @Override
+    public Set<AgreementMeasureCapability> getDeclaredCapabilities()
+    {
+        return of(CHANCE_CORRECTED, WEIGHTED);
     }
 
     @Override

@@ -17,7 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.cohenkappa;
 
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CATEGORY_SPECIFIC;
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CHANCE_CORRECTED;
+import static java.util.EnumSet.of;
+
+import java.util.Optional;
+import java.util.Set;
+
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCodingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
@@ -51,6 +59,19 @@ public class CohenKappaAgreementMeasureSupport
     public String getName()
     {
         return "Cohen's Kappa (coding)";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of("Chance-corrected agreement between exactly two raters on categorical "
+                + "labels. The classic choice for two-annotator studies.");
+    }
+
+    @Override
+    public Set<AgreementMeasureCapability> getDeclaredCapabilities()
+    {
+        return of(CHANCE_CORRECTED, CATEGORY_SPECIFIC);
     }
 
     @Override

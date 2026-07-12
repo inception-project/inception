@@ -17,7 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.fleisskappa;
 
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CATEGORY_SPECIFIC;
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CHANCE_CORRECTED;
+import static java.util.EnumSet.of;
+
+import java.util.Optional;
+import java.util.Set;
+
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCodingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
@@ -51,6 +59,19 @@ public class FleissKappaAgreementMeasureSupport
     public String getName()
     {
         return "Fleiss' Kappa (coding)";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of("Chance-corrected agreement on categorical labels generalised to any "
+                + "number of raters. The multi-rater counterpart of Cohen's Kappa.");
+    }
+
+    @Override
+    public Set<AgreementMeasureCapability> getDeclaredCapabilities()
+    {
+        return of(CHANCE_CORRECTED, CATEGORY_SPECIFIC);
     }
 
     @Override

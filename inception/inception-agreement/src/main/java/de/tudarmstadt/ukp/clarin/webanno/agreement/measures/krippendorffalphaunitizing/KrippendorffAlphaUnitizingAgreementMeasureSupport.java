@@ -17,12 +17,21 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing;
 
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CATEGORY_SPECIFIC;
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureParadigm.UNITIZING;
+import static java.util.EnumSet.of;
+
+import java.util.Optional;
+import java.util.Set;
+
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.dkpro.statistics.agreement.unitizing.IUnitizingAnnotationStudy;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureParadigm;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
@@ -56,13 +65,36 @@ public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     }
 
     @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public Optional<String> getDescription()
     {
-        if (SpanLayerSupport.TYPE.equals(aLayer.getType())) {
-            return true;
+        return Optional.of("Measures how consistently raters segment the text into units, based on "
+                + "character offsets. Use this when the disagreement of interest is about "
+                + "boundaries rather than labels. Operates on span positions, so it does not "
+                + "require a feature.");
+    }
+
+    @Override
+    public AgreementMeasureParadigm getParadigm()
+    {
+        return UNITIZING;
+    }
+
+    @Override
+    public Set<AgreementMeasureCapability> getDeclaredCapabilities()
+    {
+        return of(CATEGORY_SPECIFIC);
+    }
+
+    @Override
+    public Optional<String> getInapplicabilityReason(AnnotationLayer aLayer,
+            AnnotationFeature aFeature)
+    {
+        if (!SpanLayerSupport.TYPE.equals(aLayer.getType())) {
+            return Optional.of("The unitizing measure works on text segments, so it only supports "
+                    + "span layers.");
         }
 
-        return false;
+        return Optional.empty();
     }
 
     @Override

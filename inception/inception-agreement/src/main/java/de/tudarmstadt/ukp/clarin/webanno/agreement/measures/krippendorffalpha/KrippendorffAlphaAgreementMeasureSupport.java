@@ -17,10 +17,19 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha;
 
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CATEGORY_SPECIFIC;
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CHANCE_CORRECTED;
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.WEIGHTED;
+import static java.util.EnumSet.of;
+
+import java.util.Optional;
+import java.util.Set;
+
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCodingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
@@ -54,6 +63,20 @@ public class KrippendorffAlphaAgreementMeasureSupport
     public String getName()
     {
         return "Krippendorff's Alpha (coding / nominal)";
+    }
+
+    @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of("Chance-corrected agreement on categorical labels that generalises to "
+                + "any number of raters and tolerates missing annotations. A robust default for "
+                + "studies with more than two annotators.");
+    }
+
+    @Override
+    public Set<AgreementMeasureCapability> getDeclaredCapabilities()
+    {
+        return of(CHANCE_CORRECTED, WEIGHTED, CATEGORY_SPECIFIC);
     }
 
     @Override
