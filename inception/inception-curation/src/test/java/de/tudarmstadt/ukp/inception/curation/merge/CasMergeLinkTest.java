@@ -38,6 +38,7 @@ import static org.apache.uima.fit.util.FSUtil.getFeature;
 import static org.apache.uima.fit.util.FSUtil.setFeature;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 
 import java.lang.invoke.MethodHandles;
@@ -434,6 +435,40 @@ public class CasMergeLinkTest
                     .containsExactlyInAnyOrder( //
                             asList(matLink(LINKS_FEATURE, "role1", NamedEntity.class, 1, 1)), //
                             asList(matLink(LINKS_FEATURE, "role2", NamedEntity.class, 1, 1)));
+        }
+
+        @Test
+        public void thatPreserveExistingStillFillsAllLinksOfAnEmptySlot() throws Exception
+        {
+            slotHostDiffAdapter.addLinkFeature("links", "role", "target", MULTIPLE_TARGETS_ONE_ROLE,
+                    INCLUDE);
+
+            // The annotators agree on a host with two links to two distinct targets. The curation
+            // document does not yet contain this slot, so - even though preserve-existing is on -
+            // both agreed links must be merged in: preserve-existing only guards slots which were
+            // already filled before the merge. This is the regression case where the second link
+            // used to be dropped because the first link (added earlier in the same merge run) made
+            // the slot look already-filled.
+            buildAnnotation(sourceCas1, HOST_TYPE) //
+                    .at(0, 0) //
+                    .withFeature(LINKS_FEATURE, //
+                            makeLinkFS(sourceCas1, "role1", 1, 1), //
+                            makeLinkFS(sourceCas1, "role1", 2, 2))
+                    .buildAndAddToIndexes();
+
+            var casMap = Map.of("source1", sourceCas1.getCas());
+            var diff = doDiff(diffAdapters, casMap).toResult();
+            sut.setPreserveExisting(true);
+            sut.mergeCas(diff, document, DUMMY_USER, targetCas.getCas(), casMap);
+
+            assertThat(targetCas.select(HOST_TYPE).asList()) //
+                    .as("Both agreed links were merged into the previously empty slot") //
+                    .singleElement() //
+                    .extracting(host -> toMaterializedLinks(host, LINKS_FEATURE, "role", "target"),
+                            list(MaterializedLink.class)) //
+                    .containsExactlyInAnyOrder( //
+                            matLink(LINKS_FEATURE, "role1", NamedEntity.class, 1, 1), //
+                            matLink(LINKS_FEATURE, "role1", NamedEntity.class, 2, 2));
         }
 
         @Test

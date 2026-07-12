@@ -147,6 +147,26 @@ public class CasMerge
     }
 
     /**
+     * If enabled, the merge does not overwrite annotations that are already present in the target
+     * CAS. Empty positions are still filled and - where the layer permits it - additional
+     * annotations are still stacked, but a position already occupied by an existing annotation
+     * (e.g. a decision made by a curator) is left untouched instead of being updated to the merged
+     * value. This is used when merging into a target document that has not been cleared beforehand.
+     *
+     * @param aPreserveExisting
+     *            whether to preserve annotations already present in the target.
+     */
+    public void setPreserveExisting(boolean aPreserveExisting)
+    {
+        context.setPreserveExisting(aPreserveExisting);
+    }
+
+    public boolean isPreserveExisting()
+    {
+        return context.isPreserveExisting();
+    }
+
+    /**
      * Using {@code DiffResult}, determine the annotations to be deleted from the randomly generated
      * MergeCase. The initial Merge CAs is stored under a name {@code CurationPanel#CURATION_USER}.
      * <p>
@@ -229,8 +249,8 @@ public class CasMerge
         mergeRelationLayers(aDiff, aTargetDocument, aTargetUsername, aTargetCas, aCasMap,
                 localContext, type2layer, layerNames);
 
-        LOG.trace("Merge complete. Created:  {} Updated: {}", localContext.created,
-                localContext.updated);
+        LOG.trace("Merge complete. Created:  {} Updated: {} Preserved: {}", localContext.created,
+                localContext.updated, localContext.preserved);
 
         if (eventPublisher != null) {
             eventPublisher
@@ -305,6 +325,12 @@ public class CasMerge
                     break;
                 }
             }
+            catch (AnnotationPreservedException e) {
+                LOG.trace(" `-> preserved document annotation [{}]: {}", sourceFS.getAddress(),
+                        e.getMessage());
+                localContext.preserved++;
+                localContext.messages.add(LogMessage.info(this, "%s", e.getMessage()));
+            }
             catch (AnnotationException e) {
                 LOG.trace(" `-> not merged document annotation [{}]: {}", sourceFS.getAddress(),
                         e.getMessage());
@@ -373,6 +399,12 @@ public class CasMerge
                     break;
                 }
             }
+            catch (AnnotationPreservedException e) {
+                LOG.trace(" `-> preserved relation annotation [{}]: {}", sourceFS.getAddress(),
+                        e.getMessage());
+                aLocalContext.preserved++;
+                aLocalContext.messages.add(LogMessage.info(this, "%s", e.getMessage()));
+            }
             catch (AnnotationException e) {
                 LOG.trace(" `-> not merged relation annotation [{}]: {}", sourceFS.getAddress(),
                         e.getMessage());
@@ -440,6 +472,11 @@ public class CasMerge
                     break;
                 }
             }
+            catch (AnnotationPreservedException e) {
+                LOG.trace(" `-> preserved link [{}]: {}", sourceFS.getAddress(), e.getMessage());
+                aLocalContext.preserved++;
+                aLocalContext.messages.add(LogMessage.info(this, "%s", e.getMessage()));
+            }
             catch (AnnotationException e) {
                 LOG.trace(" `-> not merged link [{}]: {}", sourceFS.getAddress(), e.getMessage());
                 aLocalContext.notMerged++;
@@ -505,6 +542,12 @@ public class CasMerge
                     localContext.updated++;
                     break;
                 }
+            }
+            catch (AnnotationPreservedException e) {
+                LOG.trace(" `-> preserved span annotation [{}]: {}", sourceFS.getAddress(),
+                        e.getMessage());
+                localContext.preserved++;
+                localContext.messages.add(LogMessage.info(this, "%s", e.getMessage()));
             }
             catch (AnnotationException e) {
                 LOG.trace(" `-> not merged span annotation [{}]: {}", sourceFS.getAddress(),

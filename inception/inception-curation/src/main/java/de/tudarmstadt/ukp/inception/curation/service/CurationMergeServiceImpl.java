@@ -98,6 +98,11 @@ public class CurationMergeServiceImpl
                         aCassesToMerge);
             }
             else {
+                // Merge into the target CAS without clearing it beforehand. Annotations already
+                // present in the target (e.g. decisions made by a curator) are preserved: empty
+                // positions are filled and additional annotations are stacked where the layer
+                // permits it, but existing annotations are not overwritten.
+                casMerge.setPreserveExisting(true);
                 return casMerge.mergeCas(diff, aDocument, aTargetCasUserName, aTargetCas,
                         aCassesToMerge);
             }

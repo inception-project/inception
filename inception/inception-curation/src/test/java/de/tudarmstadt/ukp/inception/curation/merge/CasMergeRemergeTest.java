@@ -38,6 +38,7 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 
 import java.util.Collection;
@@ -54,6 +55,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanPosition;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.curation.SpanDiffAdapterImpl;
@@ -312,6 +314,117 @@ public class CasMergeRemergeTest
 
         assertThat(select(curatorCas.getCas(), hostType)).hasSize(1);
         assertThat(calculateState(result)).isEqualTo(INCOMPLETE);
+    }
+
+    /**
+     * When merging into a target CAS without clearing it first (preserve-existing mode), empty
+     * positions are filled while positions already occupied by an existing annotation (e.g. a
+     * curator decision) are left untouched instead of being overwritten with the merged value. See
+     * issue #5996.
+     */
+    @SuppressWarnings("javadoc")
+    @Test
+    public void thatMergeWithoutClearingPreservesExistingAndFillsEmpty() throws Exception
+    {
+        // Two annotators agree on POS "Y" at [0,4] and POS "Z" at [5,9]
+        var user1 = CasFactory.createText("word word");
+        createTokenAndOptionalPos(user1, 0, 4, "Y");
+        createTokenAndOptionalPos(user1, 5, 9, "Z");
+
+        var user2 = CasFactory.createText("word word");
+        createTokenAndOptionalPos(user2, 0, 4, "Y");
+        createTokenAndOptionalPos(user2, 5, 9, "Z");
+
+        var casByUser = new LinkedHashMap<String, CAS>();
+        casByUser.put("user1", user1);
+        casByUser.put("user2", user2);
+
+        // The curator has already decided on POS "X" at [0,4] and left [5,9] empty
+        var curatorCas = CasFactory.createText("word word");
+        createTokenAndOptionalPos(curatorCas, 0, 4, "X");
+        createTokenAndOptionalPos(curatorCas, 5, 9, null);
+
+        var result = doDiff(diffAdapters, casByUser).toResult();
+
+        // Merge WITHOUT clearing the target CAS, preserving annotations already present
+        sut.setMergeStrategy(new MergeIncompleteStrategy());
+        sut.setPreserveExisting(true);
+        var mergeContext = sut.mergeCas(result, document, DUMMY_USER, curatorCas, casByUser);
+
+        // The curator's decision at [0,4] is preserved (not overwritten to "Y") and the empty
+        // position at [5,9] is filled with the agreed-upon "Z".
+        assertThat(curatorCas.select(POS.class).asList()) //
+                .extracting(pos -> pos.getBegin(), pos -> pos.getEnd(), POS::getPosValue) //
+                .containsExactlyInAnyOrder( //
+                        tuple(0, 4, "X"), //
+                        tuple(5, 9, "Z"));
+
+        // The preserved curator decision is counted as preserved - not as an ordinary skip
+        // (notMerged) and not conflated with the "already identical" case.
+        assertThat(mergeContext.preserved) //
+                .as("The curator's preserved POS decision is counted separately") //
+                .isEqualTo(1);
+        assertThat(mergeContext.created) //
+                .as("The agreed-upon POS at the empty position is created") //
+                .isEqualTo(1);
+    }
+
+    /**
+     * In preserve-existing mode, a curator annotation on a stacking-capable layer must not block
+     * merging an agreed-upon annotation at a different, unoccupied position of the same layer -
+     * only the occupied position itself is left untouched. See issue #5996.
+     */
+    @SuppressWarnings("javadoc")
+    @Test
+    public void thatMergeWithoutClearingStillFillsUnoccupiedPositionsOnStackingLayer()
+        throws Exception
+    {
+        // Two annotators agree on a Named Entity "LOC" at [5,9]
+        var user1 = CasFactory.createText("word word");
+        createTokenAndOptionalNe(user1, 0, 4, null);
+        createTokenAndOptionalNe(user1, 5, 9, "LOC");
+
+        var user2 = CasFactory.createText("word word");
+        createTokenAndOptionalNe(user2, 0, 4, null);
+        createTokenAndOptionalNe(user2, 5, 9, "LOC");
+
+        var casByUser = new LinkedHashMap<String, CAS>();
+        casByUser.put("user1", user1);
+        casByUser.put("user2", user2);
+
+        // The curator has already decided on a Named Entity "PER" at [0,4]
+        var curatorCas = CasFactory.createText("word word");
+        createTokenAndOptionalNe(curatorCas, 0, 4, "PER");
+        createTokenAndOptionalNe(curatorCas, 5, 9, null);
+
+        var result = doDiff(diffAdapters, casByUser).toResult();
+
+        // Merge WITHOUT clearing the target CAS, preserving annotations already present
+        sut.setMergeStrategy(new MergeIncompleteStrategy());
+        sut.setPreserveExisting(true);
+        sut.mergeCas(result, document, DUMMY_USER, curatorCas, casByUser);
+
+        // The curator's Named Entity at [0,4] is preserved and, although the layer already contains
+        // an annotation, the agreed-upon Named Entity at the unoccupied [5,9] is still merged in.
+        assertThat(curatorCas.select(NamedEntity.class).asList()) //
+                .extracting(ne -> ne.getBegin(), ne -> ne.getEnd(), NamedEntity::getValue) //
+                .containsExactlyInAnyOrder( //
+                        tuple(0, 4, "PER"), //
+                        tuple(5, 9, "LOC"));
+    }
+
+    private AnnotationFS createTokenAndOptionalNe(CAS aCas, int aBegin, int aEnd, String aValue)
+    {
+        if (aValue != null) {
+            buildAnnotation(aCas, NamedEntity.class) //
+                    .at(aBegin, aEnd) //
+                    .withFeature(NamedEntity._FeatName_value, aValue) //
+                    .buildAndAddToIndexes();
+        }
+
+        return buildAnnotation(aCas, Token.class) //
+                .at(aBegin, aEnd) //
+                .buildAndAddToIndexes();
     }
 
     private AnnotationFS createTokenAndOptionalPos(CAS aCas, int aBegin, int aEnd, String aPos)

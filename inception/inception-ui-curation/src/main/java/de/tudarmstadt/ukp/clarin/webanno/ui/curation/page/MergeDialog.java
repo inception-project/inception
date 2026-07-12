@@ -24,7 +24,9 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
@@ -36,7 +38,6 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.settings.MergeStrategyPanel;
@@ -102,8 +103,14 @@ public class MergeDialog
         challengeModel.detach();
         expectedResponseModel.detach();
 
-        setModelObject(new State());
-        aTarget.focusComponent(conentPanel.responseField);
+        var state = new State();
+        setModelObject(state);
+
+        // The response field lives inside the challenge container, which is only rendered when
+        // discarding already curated annotations. Only focus it when it is actually visible.
+        if (state.clearTargetCas) {
+            aTarget.focusComponent(conentPanel.responseField);
+        }
 
         open(aTarget);
     }
@@ -132,8 +139,10 @@ public class MergeDialog
     {
         State state = aForm.getModelObject();
 
-        // Check if the challenge was met
-        if (!Objects.equals(expectedResponseModel.getObject(), state.response)) {
+        // The challenge only guards the destructive case where already curated annotations are
+        // discarded. When only filling in not-yet-curated positions, no challenge is required.
+        if (state.clearTargetCas
+                && !Objects.equals(expectedResponseModel.getObject(), state.response)) {
             info("Your response did not meet the challenge.");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
@@ -186,7 +195,7 @@ public class MergeDialog
 
         String response;
         boolean saveSettingsAsDefault;
-        boolean clearTargetCas = true;
+        boolean clearTargetCas = false;
 
         public boolean isSaveSettingsAsDefault()
         {
@@ -214,6 +223,13 @@ public class MergeDialog
 
             queue(new Form<>("form", aModel));
             queue(new Label("title", titleModel));
+
+            // The challenge only needs to be met when already curated annotations are discarded.
+            // It is therefore only shown when the discard option is enabled.
+            var challengeContainer = new WebMarkupContainer("challengeContainer");
+            challengeContainer.setOutputMarkupPlaceholderTag(true);
+            challengeContainer.add(visibleWhen(() -> aModel.getObject().clearTargetCas));
+            queue(challengeContainer);
             var challenge = new Label("challenge", challengeModel);
             challenge.setEscapeModelStrings(false); // SAFE - challengeModel is a ResourceModel
             // which can only come from a trusted resource bundle
@@ -224,9 +240,16 @@ public class MergeDialog
             queue(responseField);
             queue(new MergeStrategyPanel("mergeStrategySettings", curationWorkflowModel));
             queue(new CheckBox("saveSettingsAsDefault").setOutputMarkupId(true));
-            // On the curation page, the option to (not) clear the target CAS is not (yet) supported
-            queue(new CheckBox("clearTargetCas").setOutputMarkupId(true)
-                    .add(visibleWhen(() -> getPage() instanceof AnnotationPage)));
+            queue(new AjaxCheckBox("clearTargetCas")
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void onUpdate(AjaxRequestTarget aTarget)
+                {
+                    aTarget.add(challengeContainer);
+                }
+            }.setOutputMarkupId(true));
             queue(new LambdaAjaxButton<>("confirm", MergeDialog.this::onConfirmInternal)
                     .triggerAfterSubmit());
             queue(new LambdaAjaxLink("closeDialog", MergeDialog.this::onCancelInternal));

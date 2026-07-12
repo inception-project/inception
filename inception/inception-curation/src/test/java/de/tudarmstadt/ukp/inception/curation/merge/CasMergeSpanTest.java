@@ -33,6 +33,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -44,6 +47,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 
 @Execution(CONCURRENT)
@@ -65,6 +69,32 @@ class CasMergeSpanTest
 
         assertThat(targetCas.select(NamedEntity.class).coveredBy(0, 0).asList()) //
                 .hasSize(1);
+    }
+
+    @Test
+    void thatFailureToCopyFeaturesLeavesNoPartialSpanAndIsReported() throws Exception
+    {
+        // Setting the feature value fails, e.g. because the value is not in the tagset and the
+        // tagset cannot be extended.
+        doThrow(new IllegalFeatureValueException("Value not in tagset")) //
+                .when(schemaService).createMissingTag(any(), eq("BADTAG"));
+
+        var sourceCas = createCas();
+        var sourceFS = createNEAnno(sourceCas, "BADTAG", 0, 0);
+
+        var targetCas = createCas();
+        createToken(targetCas, 0, 0);
+
+        // The failure while copying features must be surfaced to the caller (so it is counted as
+        // not-merged) rather than swallowed and reported as a successful merge.
+        assertThatExceptionOfType(AnnotationException.class) //
+                .isThrownBy(() -> sut.mergeSpanAnnotation(document, DUMMY_USER, neLayer, targetCas,
+                        sourceFS));
+
+        // The half-built span must have been rolled back so no partial annotation is left behind.
+        assertThat(targetCas.select(NamedEntity.class).asList()) //
+                .as("No partial span annotation is left behind after a failed feature copy") //
+                .isEmpty();
     }
 
     @Test

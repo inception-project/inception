@@ -26,6 +26,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationMergeMode.FILL_ONLY;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationMergeMode.LOAD_ONLY;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationMergeMode.RECREATE;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
@@ -528,7 +531,7 @@ public class LegacyCurationPage
             }
 
             var mergeCas = readOrCreateCurationCas(curationService.getDefaultMergeStrategy(project),
-                    false);
+                    LOAD_ONLY);
 
             // Initialize timestamp in state
             curationDocumentService.getCurationCasTimestamp(state.getDocument())
@@ -554,7 +557,7 @@ public class LegacyCurationPage
         LOG.trace("END LOAD_DOCUMENT_ACTION");
     }
 
-    public CAS readOrCreateCurationCas(MergeStrategy aMergeStrategy, boolean aForceRecreateCas)
+    public CAS readOrCreateCurationCas(MergeStrategy aMergeStrategy, CurationMergeMode aMergeMode)
         throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
         var state = getModelObject();
@@ -583,7 +586,7 @@ public class LegacyCurationPage
 
         var templateUser = curatableUsers.get(0);
         var curationCas = readCurationCas(state, state.getDocument(), casses,
-                templateUser.getUsername(), true, aMergeStrategy, aForceRecreateCas);
+                templateUser.getUsername(), true, aMergeStrategy, aMergeMode);
 
         return curationCas;
     }
@@ -701,7 +704,7 @@ public class LegacyCurationPage
                 curatableUsers);
 
         var editorCas = readCurationCas(aState, aState.getDocument(), casses, null, false,
-                curationService.getDefaultMergeStrategy(getProject()), false);
+                curationService.getDefaultMergeStrategy(getProject()), LOAD_ONLY);
 
         casses.put(CURATION_USER, editorCas);
 
@@ -750,12 +753,19 @@ public class LegacyCurationPage
      */
     private CAS readCurationCas(AnnotatorState aState, SourceDocument aDocument,
             Map<String, CAS> aCasses, String aTemplateUser, boolean aUpgrade,
-            MergeStrategy aMergeStrategy, boolean aForceRecreateCas)
+            MergeStrategy aMergeStrategy, CurationMergeMode aMergeMode)
         throws UIMAException, IOException
     {
         CAS mergeCas;
 
-        if (aForceRecreateCas || !curationDocumentService.existsCurationCas(aDocument)) {
+        var curationCasExists = curationDocumentService.existsCurationCas(aDocument);
+
+        // If no curation CAS exists yet, there is nothing to load or merge into, so we always have
+        // to recreate it from the annotators - regardless of the requested merge mode.
+        var effectiveMergeMode = curationCasExists ? aMergeMode : RECREATE;
+
+        switch (effectiveMergeMode) {
+        case RECREATE:
             // We need a modifiable copy of some annotation document which we can use to initialize
             // the curation CAS. This is an exceptional case where UNMANAGED_ACCESS is the correct
             // choice
@@ -765,14 +775,34 @@ public class LegacyCurationPage
                     mergeCas, aCasses, aMergeStrategy, aState.getAnnotationLayers(), true);
             curationDocumentService.deleteCurationCas(aDocument);
             curationDocumentService.writeCurationCas(mergeCas, aDocument, false);
-        }
-        else {
+            break;
+        case FILL_ONLY:
+            // Merge into the existing curation CAS without clearing it first, so that annotations
+            // already present in the curation document (e.g. curator decisions) are preserved. As
+            // we mutate and persist the target CAS, it must be upgraded to the current type system
+            // first - just like in the LOAD_ONLY case below.
+            mergeCas = curationDocumentService.readCurationCas(aDocument);
+
+            if (aUpgrade) {
+                curationDocumentService.upgradeCurationCas(mergeCas, aDocument);
+            }
+
+            curationMergeService.mergeCasses(aState.getDocument(), aState.getUser().getUsername(),
+                    mergeCas, aCasses, aMergeStrategy, aState.getAnnotationLayers(), false);
+            curationDocumentService.writeCurationCas(mergeCas, aDocument, true);
+            break;
+        case LOAD_ONLY:
+            // Load the existing curation CAS as-is without merging anything into it.
             mergeCas = curationDocumentService.readCurationCas(aDocument);
 
             if (aUpgrade) {
                 curationDocumentService.upgradeCurationCas(mergeCas, aDocument);
                 curationDocumentService.writeCurationCas(mergeCas, aDocument, true);
             }
+            break;
+        default:
+            throw new IllegalArgumentException(
+                    "Unsupported curation merge mode [" + effectiveMergeMode + "]");
         }
 
         curationDocumentService.getCurationCasTimestamp(aState.getDocument())

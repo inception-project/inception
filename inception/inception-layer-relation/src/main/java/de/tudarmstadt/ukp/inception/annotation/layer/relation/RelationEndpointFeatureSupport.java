@@ -22,8 +22,10 @@ import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.Relatio
 import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.PREFIX_SOURCE;
 import static de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport.PREFIX_TARGET;
 import static java.util.Arrays.asList;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.hasSameType;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
+import static org.apache.uima.cas.text.AnnotationPredicates.colocated;
 
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
@@ -33,6 +35,8 @@ import java.util.Optional;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -191,6 +195,22 @@ public class RelationEndpointFeatureSupport
     public <V> V getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
         throw new NotImplementedException("Relation endpoints do not support getFeatureValue");
+    }
+
+    @Override
+    public boolean isFeatureValueEqual(AnnotationFeature aFeature, FeatureStructure aFS1,
+            FeatureStructure aFS2)
+    {
+        // Endpoints cannot be read via getFeatureValue. However, endpoint equivalence is already
+        // covered by the position comparison in RelationAdapterImpl.isSamePosition (which
+        // isEquivalentAnnotation checks before iterating over the features). We compare the
+        // endpoint
+        // type and offsets using the same primitives as RelationAdapterImpl.isSameEndpoint instead
+        // of failing with a NotImplementedException.
+        var endpoint1 = FSUtil.getFeature(aFS1, aFeature.getName(), AnnotationFS.class);
+        var endpoint2 = FSUtil.getFeature(aFS2, aFeature.getName(), AnnotationFS.class);
+
+        return hasSameType(endpoint1, endpoint2) && colocated(endpoint1, endpoint2);
     }
 
     @Override

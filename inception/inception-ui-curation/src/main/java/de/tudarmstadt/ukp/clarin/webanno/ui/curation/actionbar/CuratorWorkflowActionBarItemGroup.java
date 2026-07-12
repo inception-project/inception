@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationMergeMode.FILL_ONLY;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationMergeMode.RECREATE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static wicket.contrib.input.events.EventType.click;
 import static wicket.contrib.input.events.key.KeyType.Ctrl;
@@ -177,7 +179,8 @@ public class CuratorWorkflowActionBarItemGroup
             aTarget.addChildren(getPage(), IFeedback.class);
         }
 
-        ((LegacyCurationPage) page).readOrCreateCurationCas(mergeStrategy, true);
+        var mergeMode = aForm.getModelObject().isClearTargetCas() ? RECREATE : FILL_ONLY;
+        ((LegacyCurationPage) page).readOrCreateCurationCas(mergeStrategy, mergeMode);
 
         // ... and load it
         page.actionLoadDocument(aTarget);
