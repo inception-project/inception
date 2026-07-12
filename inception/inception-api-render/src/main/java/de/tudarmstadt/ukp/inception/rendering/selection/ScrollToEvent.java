@@ -23,28 +23,44 @@ import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.EditorBoundEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 
 public class ScrollToEvent
+    implements EditorBoundEvent
 {
+    private final AnnotatorViewState source;
     private final AjaxRequestTarget requestHandler;
     private final int offset;
     private final List<VRange> pingRanges;
     private final FocusPosition position;
 
-    public ScrollToEvent(AjaxRequestTarget aRequestHandler, int aOffset, VRange aPingRange,
-            FocusPosition aPos)
+    public ScrollToEvent(AnnotatorViewState aSource, AjaxRequestTarget aRequestHandler, int aOffset,
+            VRange aPingRange, FocusPosition aPos)
     {
-        this(aRequestHandler, aOffset, aPingRange != null ? asList(aPingRange) : null, aPos);
+        this(aSource, aRequestHandler, aOffset, aPingRange != null ? asList(aPingRange) : null,
+                aPos);
     }
 
-    public ScrollToEvent(AjaxRequestTarget aRequestHandler, int aOffset, List<VRange> aPingRanges,
-            FocusPosition aPos)
+    public ScrollToEvent(AnnotatorViewState aSource, AjaxRequestTarget aRequestHandler, int aOffset,
+            List<VRange> aPingRanges, FocusPosition aPos)
     {
+        source = aSource;
         requestHandler = aRequestHandler;
         offset = aOffset;
         position = aPos;
         pingRanges = aPingRanges;
+    }
+
+    /**
+     * @return the annotator state that originated this scroll request. An editor should only react
+     *         to events originating from its own state so that paging one editor does not scroll
+     *         other editors sharing the same page (e.g. a reference-document sidebar viewer).
+     */
+    public AnnotatorViewState getSource()
+    {
+        return source;
     }
 
     public AjaxRequestTarget getRequestHandler()

@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
@@ -67,13 +66,13 @@ public class LazyDetailsHandler
             Request aRequest)
     {
         try {
-            var page = (AnnotationPageBase) aTarget.getPage();
+            var context = aBehavior.getContext();
 
-            CasProvider casProvider = () -> page.getEditorCas();
+            CasProvider casProvider = () -> context.getEditorCas();
 
             // Parse annotation ID if present in request
             var paramId = getVid(aRequest);
-            var state = page.getModelObject();
+            var state = context.getAnnotatorState();
             var details = lazyDetailsLookupService.lookupLazyDetails(
                     aRequest.getRequestParameters(), paramId, casProvider, state.getDocument(),
                     state.getUser(), state.getWindowBeginOffset(), state.getWindowEndOffset());

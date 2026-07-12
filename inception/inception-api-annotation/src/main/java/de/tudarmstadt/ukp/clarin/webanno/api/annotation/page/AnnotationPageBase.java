@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
@@ -78,6 +79,7 @@ import jakarta.persistence.NoResultException;
 
 public abstract class AnnotationPageBase
     extends ProjectPageBase
+    implements DiamContext
 {
     private static final long serialVersionUID = -1133219266479577443L;
 
@@ -156,6 +158,18 @@ public abstract class AnnotationPageBase
     public AnnotatorState getModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();
+    }
+
+    @Override
+    public AnnotatorState getAnnotatorState()
+    {
+        return getModelObject();
+    }
+
+    @Override
+    public AnnotationActionHandler getActionHandler()
+    {
+        return getAnnotationActionHandler();
     }
 
     protected SourceDocument getDocumentFromParameters(Project aProject,

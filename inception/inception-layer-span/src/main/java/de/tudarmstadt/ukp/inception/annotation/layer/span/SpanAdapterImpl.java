@@ -315,9 +315,7 @@ public class SpanAdapterImpl
     @Override
     public Selection select(VID aVid, AnnotationFS aAnno)
     {
-        var selection = new Selection();
-        selection.selectSpan(aAnno);
-        return selection;
+        return Selection.span(aAnno);
     }
 
     @Override

@@ -22,9 +22,9 @@ import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 /**
  * Any handlers with a later priority that this one should be called only after a potentially armed
@@ -46,9 +46,9 @@ public class ImplicitUnarmSlotHandler
     }
 
     @Override
-    public boolean accepts(Request aRequest)
+    public boolean accepts(DiamRequest aRequest)
     {
-        AnnotatorState state = getAnnotatorState();
+        var state = aRequest.getContext().getAnnotatorState();
         if (state.isSlotArmed()) {
             state.clearArmedSlot();
         }

@@ -22,6 +22,7 @@ import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -53,9 +54,9 @@ public class DeleteAnnotationHandler
     }
 
     @Override
-    public boolean accepts(Request aRequest)
+    public boolean accepts(DiamRequest aRequest)
     {
-        return super.accepts(aRequest) && !getAnnotatorState().isSlotArmed();
+        return super.accepts(aRequest) && !aRequest.getContext().getAnnotatorState().isSlotArmed();
     }
 
     @Override
@@ -63,9 +64,9 @@ public class DeleteAnnotationHandler
             Request aRequest)
     {
         try {
-            var page = getPage();
+            var context = aBehavior.getContext();
 
-            page.ensureIsEditable();
+            context.getActionHandler().ensureIsEditable();
 
             var vid = VID.parseOptional(
                     aRequest.getRequestParameters().getParameterValue(PARAM_ID).toOptionalString());
@@ -74,16 +75,16 @@ public class DeleteAnnotationHandler
                 return new DefaultAjaxResponse(getAction(aRequest));
             }
 
-            var cas = page.getEditorCas();
-            var state = page.getModelObject();
+            var cas = context.getEditorCas();
+            var state = context.getAnnotatorState();
 
             var fs = ICasUtil.selectAnnotationByAddr(cas, vid.getId());
 
             var adapter = schemaService.findAdapter(state.getProject(), fs);
-            state.getSelection().set(adapter.select(vid, fs));
+            state.setSelection(adapter.select(vid, fs));
 
-            page.getAnnotationActionHandler().actionSelect(aTarget);
-            page.getAnnotationActionHandler().actionDelete(aTarget);
+            context.getActionHandler().actionSelect(aTarget);
+            context.getActionHandler().actionDelete(aTarget);
 
             return new DefaultAjaxResponse(getAction(aRequest));
         }

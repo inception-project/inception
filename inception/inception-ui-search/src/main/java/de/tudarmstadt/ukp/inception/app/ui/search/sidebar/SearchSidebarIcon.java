@@ -82,6 +82,12 @@ public class SearchSidebarIcon
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
+        // Only render our markers into our own editor, not into other editors on the page (e.g. the
+        // reference-document viewer or curation panes) even if they show the same document (#6146).
+        if (aEvent.getRequest().getState() != getModelObject()) {
+            return;
+        }
+
         var searchOptions = SearchOptionsMetaDataKey.get(getPage());
 
         var query = searchOptions.map(SearchOptions::getQuery);

@@ -19,14 +19,28 @@ package de.tudarmstadt.ukp.inception.rendering.pipeline;
 
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.EditorBoundEvent;
+
 public class RenderSlotsEvent
+    implements EditorBoundEvent
 {
+    private final AnnotatorViewState source;
 
     private final IPartialPageRequestHandler requestHandler;
 
-    public RenderSlotsEvent(IPartialPageRequestHandler aRequestHandler)
+    public RenderSlotsEvent(AnnotatorViewState aSource, IPartialPageRequestHandler aRequestHandler)
     {
+        source = aSource;
         requestHandler = aRequestHandler;
+    }
+
+    /**
+     * @return the editor state whose slots are being (re-)rendered, or {@code null} if unknown.
+     */
+    public AnnotatorViewState getSource()
+    {
+        return source;
     }
 
     public IPartialPageRequestHandler getRequestHandler()

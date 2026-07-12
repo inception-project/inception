@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.image.feature.ImageFeatureSupport;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -160,6 +161,12 @@ public class ImageSidebar
     @OnEvent
     public void onRenderRequested(RenderRequestedEvent aEvent)
     {
+        // Only react to renders of the editor this sidebar belongs to, not to renders of other
+        // editors on the page even if they show the same document (#6146).
+        if (!aEvent.isFor(getModelObject())) {
+            return;
+        }
+
         aEvent.getRequestHandler().add(mainContainer);
     }
 
@@ -175,8 +182,8 @@ public class ImageSidebar
 
             var layer = annotationService.findLayer(state.getProject(), fs);
             if (SpanLayerSupport.TYPE.equals(layer.getType())) {
-                state.getSelection().selectSpan(aHandle.getVid(), cas, aHandle.getBegin(),
-                        aHandle.getEnd());
+                state.setSelection(Selection.span(aHandle.getVid(), cas, aHandle.getBegin(),
+                        aHandle.getEnd()));
             }
             else if (RelationLayerSupport.TYPE.equals(layer.getType())) {
                 var adapter = (RelationAdapter) annotationService.getAdapter(layer);
@@ -184,7 +191,7 @@ public class ImageSidebar
                         AnnotationFS.class);
                 var targetFS = FSUtil.getFeature(fs, adapter.getTargetFeatureName(),
                         AnnotationFS.class);
-                state.getSelection().selectArc(aHandle.getVid(), originFS, targetFS);
+                state.setSelection(Selection.arc(aHandle.getVid(), originFS, targetFS));
             }
             else {
                 return;

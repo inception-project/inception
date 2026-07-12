@@ -51,7 +51,7 @@ public class DocumentMetadataSidebar
     {
         super.onInitialize();
 
-        add(diamBehavior = new DiamAjaxBehavior());
+        add(diamBehavior = new DiamAjaxBehavior(findParent(AnnotationPageBase2.class)));
         add(new SvelteBehavior());
     }
 

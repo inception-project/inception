@@ -68,6 +68,7 @@ import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderSlotsEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
+import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerTypes;
 
 /**
@@ -239,12 +240,40 @@ public class AnnotatorStateImpl
         constraints = aConstraints;
     }
 
-    private final Selection selection = new Selection();
+    private Selection selection = Selection.unselected();
 
     @Override
     public Selection getSelection()
     {
         return selection;
+    }
+
+    @Override
+    public void setSelection(Selection aSelection)
+    {
+        if (Objects.equals(selection, aSelection)) {
+            return;
+        }
+
+        selection = aSelection;
+
+        fireSelectionChanged();
+    }
+
+    private void fireSelectionChanged()
+    {
+        RequestCycle requestCycle = RequestCycle.get();
+
+        if (requestCycle == null) {
+            return;
+        }
+
+        Optional<IPageRequestHandler> handler = requestCycle.find(IPageRequestHandler.class);
+        if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
+            Page page = (Page) handler.get().getPage();
+            page.send(page, BREADTH, new SelectionChangedEvent(this,
+                    requestCycle.find(AjaxRequestTarget.class).orElse(null)));
+        }
     }
 
     @Override
@@ -682,7 +711,7 @@ public class AnnotatorStateImpl
     @Override
     public void reset()
     {
-        getSelection().clear();
+        clearSelection();
         clearArmedSlot();
         clearRememberedFeatures();
         focusUnitIndex = 0;
@@ -735,7 +764,7 @@ public class AnnotatorStateImpl
         Optional<IPageRequestHandler> handler = requestCycle.find(IPageRequestHandler.class);
         if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
             Page page = (Page) handler.get().getPage();
-            page.send(page, BREADTH, new RenderSlotsEvent(
+            page.send(page, BREADTH, new RenderSlotsEvent(this,
                     requestCycle.find(IPartialPageRequestHandler.class).orElse(null)));
         }
     }
@@ -855,7 +884,7 @@ public class AnnotatorStateImpl
         Optional<IPageRequestHandler> handler = requestCycle.find(IPageRequestHandler.class);
         if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
             Page page = (Page) handler.get().getPage();
-            page.send(page, BREADTH, new AnnotatorViewportChangedEvent(
+            page.send(page, BREADTH, new AnnotatorViewportChangedEvent(this,
                     requestCycle.find(AjaxRequestTarget.class).orElse(null)));
         }
     }

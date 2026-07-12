@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -47,9 +48,11 @@ import org.slf4j.Logger;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7CssReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
+import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
@@ -58,6 +61,7 @@ import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewExtensionPoint;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.externaleditor.command.CommandQueue;
 import de.tudarmstadt.ukp.inception.externaleditor.command.EditorCommand;
 import de.tudarmstadt.ukp.inception.externaleditor.command.LoadAnnotationsCommand;
@@ -76,6 +80,7 @@ import jakarta.servlet.ServletContext;
 
 public abstract class ExternalAnnotationEditorBase
     extends AnnotationEditorBase
+    implements DiamContext
 {
     private static final long serialVersionUID = -196999336741495239L;
 
@@ -166,7 +171,42 @@ public abstract class ExternalAnnotationEditorBase
 
     protected DiamAjaxBehavior createDiamBehavior()
     {
-        return new DiamAjaxBehavior(contextMenu);
+        // The editor serves as its own DIAM context so that its handlers resolve this editor's
+        // state, CAS and action handler - not the hosting page's. This lets an embedded editor
+        // (e.g. a read-only reference document in a sidebar) operate on its own document.
+        return new DiamAjaxBehavior(this, contextMenu);
+    }
+
+    @Override
+    public AnnotatorState getAnnotatorState()
+    {
+        return getModelObject();
+    }
+
+    @Override
+    public CAS getEditorCas() throws IOException
+    {
+        return getCasProvider().get();
+    }
+
+    @Override
+    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            int aBegin, int aEnd)
+        throws IOException, AnnotationException
+    {
+        // Forward the target document to the action handler, which is the host-scoped seam:
+        // switching to a different document is the concern of whatever hosts the editor. The main
+        // editor's detail panel switches the page to that document (so a cross-document scroll-to
+        // opens it before centering); a read-only reference-document viewer's handler ignores
+        // navigation (passive), so navigation stays local instead of driving the main editor's
+        // page.
+        getActionHandler().actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd);
+    }
+
+    @Override
+    public void actionRefreshDocument(AjaxRequestTarget aTarget)
+    {
+        requestRender(aTarget);
     }
 
     protected Component getViewComponent()
@@ -216,12 +256,16 @@ public abstract class ExternalAnnotationEditorBase
         // We cannot use a @OnEvent annotation for this because it will not handle
         // events for non-visible components - and the editor may not be visible in the
         // hierarchy a this time
-        if (aEvent.getPayload() instanceof ScrollToEvent event) {
+        // Only react to scroll requests originating from our own state. The event is broadcast to
+        // the whole page, so without this filter paging one editor would also scroll every other
+        // editor on the page (e.g. a read-only reference-document sidebar viewer).
+        if (aEvent.getPayload() instanceof ScrollToEvent event
+                && event.getSource() == getModelObject()) {
             var command = new ScrollToCommand(event.getOffset(), event.getPosition());
             if (event.getPingRanges() != null && !event.getPingRanges().isEmpty()) {
                 command.setPingRanges(event.getPingRanges());
             }
-            QueuedEditorCommandsMetaDataKey.get().add(command);
+            QueuedEditorCommandsMetaDataKey.get(this).add(command);
 
             // Do not call our requestRender because we do not want to unnecessarily add the
             // LoadAnnotationsCommand
@@ -234,7 +278,7 @@ public abstract class ExternalAnnotationEditorBase
     @Override
     public void requestRender(AjaxRequestTarget aTarget)
     {
-        QueuedEditorCommandsMetaDataKey.get().add(renderCommand());
+        QueuedEditorCommandsMetaDataKey.get(this).add(renderCommand());
 
         super.requestRender(aTarget);
     }
@@ -318,7 +362,7 @@ public abstract class ExternalAnnotationEditorBase
 
     private String initScript()
     {
-        var commandQueue = QueuedEditorCommandsMetaDataKey.get();
+        var commandQueue = QueuedEditorCommandsMetaDataKey.get(this);
         // // If we initialize the editor, it should auto-load the annotations - we do nothing
         // commandQueue.removeIf(cmd -> cmd instanceof LoadAnnotationsCommand);
         return assembleScript(commandQueue);
@@ -326,7 +370,7 @@ public abstract class ExternalAnnotationEditorBase
 
     private String renderScript()
     {
-        return assembleScript(QueuedEditorCommandsMetaDataKey.get());
+        return assembleScript(QueuedEditorCommandsMetaDataKey.get(this));
     }
 
     private String assembleScript(CommandQueue aCommandQueue)

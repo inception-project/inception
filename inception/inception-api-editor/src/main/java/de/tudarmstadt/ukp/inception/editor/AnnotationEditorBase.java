@@ -171,7 +171,7 @@ public abstract class AnnotationEditorBase
                 // Fire render event into UI
                 extensionRegistry.fireRenderRequested(aTarget, getModelObject());
                 aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
-                        new RenderRequestedEvent(aTarget));
+                        new RenderRequestedEvent(getModelObject(), aTarget));
             }
         }
         catch (IllegalStateException e) {

@@ -17,24 +17,38 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.command;
 
+import java.util.HashMap;
+
+import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.request.cycle.RequestCycle;
 
 public class QueuedEditorCommandsMetaDataKey
-    extends MetaDataKey<CommandQueue>
+    extends MetaDataKey<HashMap<String, CommandQueue>>
 {
     private static final long serialVersionUID = 102615176759478581L;
 
     public final static QueuedEditorCommandsMetaDataKey INSTANCE = new QueuedEditorCommandsMetaDataKey();
 
-    public static CommandQueue get()
+    /**
+     * Get the per-request command queue for the given editor. The queue is keyed by the editor's
+     * markup ID so that each editor accumulates and drains only its own commands. Multiple editors
+     * may share a page (e.g. the main editor plus a read-only reference-document sidebar viewer);
+     * without per-editor scoping, rendering one editor would replay another editor's queued
+     * commands - so paging one editor could scroll the other.
+     *
+     * @param aEditor
+     *            the editor whose command queue is requested
+     * @return the command queue for that editor in the current request cycle
+     */
+    public static CommandQueue get(Component aEditor)
     {
-        RequestCycle requestCycle = RequestCycle.get();
-        CommandQueue commandQueue = requestCycle.getMetaData(INSTANCE);
-        if (commandQueue == null) {
-            commandQueue = new CommandQueue();
-            requestCycle.setMetaData(INSTANCE, commandQueue);
+        var requestCycle = RequestCycle.get();
+        var queues = requestCycle.getMetaData(INSTANCE);
+        if (queues == null) {
+            queues = new HashMap<>();
+            requestCycle.setMetaData(INSTANCE, queues);
         }
-        return commandQueue;
+        return queues.computeIfAbsent(aEditor.getMarkupId(), $ -> new CommandQueue());
     }
 }

@@ -33,7 +33,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition;
@@ -48,24 +48,24 @@ public class DefaultPagingNavigator
 
     private @SpringBean KeyBindingsProperties keyBindings;
 
-    private AnnotationPageBase page;
+    private DiamContext context;
     private NumberTextField<Integer> gotoPageTextField;
     private FocusPosition defaultFocusPosition = FocusPosition.TOP;
 
-    public DefaultPagingNavigator(String aId, AnnotationPageBase aPage)
+    public DefaultPagingNavigator(String aId, DiamContext aContext)
     {
         super(aId);
 
         setOutputMarkupPlaceholderTag(true);
 
-        page = aPage;
+        context = aContext;
 
         Form<Void> form = new Form<>("form");
         gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
-        // Using a LambdaModel here because the model object in the page may change and we want to
-        // always get the right one
-        gotoPageTextField.setModel(PropertyModel
-                .of(LoadableDetachableModel.of(() -> aPage.getModel()), "firstVisibleUnitIndex"));
+        // Using a LambdaModel here because the annotator state may change and we want to always get
+        // the right one
+        gotoPageTextField.setModel(PropertyModel.of(
+                LoadableDetachableModel.of(aContext::getAnnotatorState), "firstVisibleUnitIndex"));
         // FIXME minimum and maximum should be obtained from the annotator state
         gotoPageTextField.setMinimum(1);
         // gotoPageTextField.setMaximum(LambdaModel.of(() ->
@@ -112,48 +112,48 @@ public class DefaultPagingNavigator
 
     private boolean contentFitsFullyIntoVisibleWindow()
     {
-        AnnotatorState state = page.getModelObject();
+        AnnotatorState state = context.getAnnotatorState();
         return state.getUnitCount() <= state.getPreferences().getWindowSize();
     }
 
     public AnnotatorState getModelObject()
     {
-        return page.getModelObject();
+        return context.getAnnotatorState();
     }
 
     protected void actionShowPreviousPage(AjaxRequestTarget aTarget) throws Exception
     {
-        CAS cas = page.getEditorCas();
+        CAS cas = context.getEditorCas();
         getModelObject().moveToPreviousPage(cas, defaultFocusPosition);
-        page.actionRefreshDocument(aTarget);
+        context.actionRefreshDocument(aTarget);
     }
 
     protected void actionShowNextPage(AjaxRequestTarget aTarget) throws Exception
     {
-        CAS cas = page.getEditorCas();
+        CAS cas = context.getEditorCas();
         getModelObject().moveToNextPage(cas, defaultFocusPosition);
-        page.actionRefreshDocument(aTarget);
+        context.actionRefreshDocument(aTarget);
     }
 
     protected void actionShowFirstPage(AjaxRequestTarget aTarget) throws Exception
     {
-        CAS cas = page.getEditorCas();
+        CAS cas = context.getEditorCas();
         getModelObject().moveToFirstPage(cas, defaultFocusPosition);
-        page.actionRefreshDocument(aTarget);
+        context.actionRefreshDocument(aTarget);
     }
 
     protected void actionShowLastPage(AjaxRequestTarget aTarget) throws Exception
     {
-        CAS cas = page.getEditorCas();
+        CAS cas = context.getEditorCas();
         getModelObject().moveToLastPage(cas, defaultFocusPosition);
-        page.actionRefreshDocument(aTarget);
+        context.actionRefreshDocument(aTarget);
     }
 
     private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm) throws Exception
     {
-        CAS cas = page.getEditorCas();
+        CAS cas = context.getEditorCas();
         getModelObject().moveToUnit(cas, gotoPageTextField.getModelObject(), defaultFocusPosition);
-        page.actionRefreshDocument(aTarget);
+        context.actionRefreshDocument(aTarget);
     }
 
     public void setDefaultFocusPosition(FocusPosition aPos)
@@ -172,6 +172,11 @@ public class DefaultPagingNavigator
     @OnEvent
     public void onAnnotatorViewStateChangedEvent(AnnotatorViewportChangedEvent aEvent)
     {
+        // Only react to viewport changes in the editor this navigator belongs to (#6146).
+        if (!aEvent.isFor(getModelObject())) {
+            return;
+        }
+
         aEvent.getRequestHandler().add(gotoPageTextField);
     }
 }

@@ -27,7 +27,7 @@ import org.apache.wicket.Page;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 
@@ -54,7 +54,7 @@ public class NoPagingStrategy
     @Override
     public DefaultPagingNavigator createPageNavigator(String aId, Page aPage)
     {
-        var navi = new DefaultPagingNavigator(aId, (AnnotationPageBase) aPage);
+        var navi = new DefaultPagingNavigator(aId, (DiamContext) aPage);
         navi.setOutputMarkupPlaceholderTag(true);
         navi.setVisible(false);
         return navi;

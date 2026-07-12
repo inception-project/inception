@@ -117,7 +117,7 @@ public class DiamAnnotationBrowser
 
     protected DiamAjaxBehavior createDiamBehavior()
     {
-        return new DiamAjaxBehavior(contextMenu);
+        return new DiamAjaxBehavior(findParent(AnnotationPageBase.class), contextMenu);
     }
 
     @Override

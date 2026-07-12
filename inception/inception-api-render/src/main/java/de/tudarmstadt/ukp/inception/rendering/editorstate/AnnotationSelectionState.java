@@ -25,6 +25,24 @@ public interface AnnotationSelectionState
     Selection getSelection();
 
     /**
+     * Replace the current selection. This is the single choke point through which the selection of
+     * an editor changes; it broadcasts a {@code SelectionChangedEvent} carrying this state as the
+     * source (cf. #6146) when the selection actually changes.
+     *
+     * @param aSelection
+     *            the new selection (use {@link #clearSelection()} to clear).
+     */
+    void setSelection(Selection aSelection);
+
+    /**
+     * Clear the current selection. Convenience for {@code setSelection(Selection.unselected())}.
+     */
+    default void clearSelection()
+    {
+        setSelection(Selection.unselected());
+    }
+
+    /**
      * Mark a slot in the given feature state as armed. Note that this feature state does not
      * necessarily belong to the feature states for the annotation detail panel (cf.
      * {@link AnnotatorState#getFeatureStates()}) but may belong to some other feature editor

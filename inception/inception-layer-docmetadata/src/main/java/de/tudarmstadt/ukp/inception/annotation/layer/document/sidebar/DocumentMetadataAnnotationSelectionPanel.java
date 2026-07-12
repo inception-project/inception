@@ -85,6 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
+import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.CreateDocumentAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerAdapter;
@@ -944,6 +945,10 @@ public class DocumentMetadataAnnotationSelectionPanel
     @OnEvent
     public void onDocumentMetadataEvent(DocumentMetadataEvent aEvent)
     {
+        if (!appliesToThisEditor(aEvent)) {
+            return;
+        }
+
         aEvent.getRequestTarget().ifPresent(target -> target.add(layersContainer));
         annotationPage.actionRefreshDocument(aEvent.getRequestTarget().orElse(null));
     }
@@ -951,8 +956,26 @@ public class DocumentMetadataAnnotationSelectionPanel
     @OnEvent
     public void onFeatureValueUpdated(FeatureValueUpdatedEvent aEvent)
     {
+        if (!appliesToThisEditor(aEvent)) {
+            return;
+        }
+
         aEvent.getRequestTarget().ifPresent(target -> target.add(layersContainer));
         annotationPage.actionRefreshDocument((aEvent.getRequestTarget().orElse(null)));
+    }
+
+    /**
+     * These are backend (hybrid) events broadcast page-wide, so - now that a page may host more
+     * than one editor - we must check that the change actually concerns the document/owner shown in
+     * this editor before reacting. Mirrors the content-tuple guard in
+     * {@code AnnotationPageBase2.onFeatureValueUpdatedEvent}.
+     */
+    private boolean appliesToThisEditor(AnnotationEvent aEvent)
+    {
+        var state = getModelObject();
+        return Objects.equals(state.getProject(), aEvent.getProject())
+                && Objects.equals(state.getDocument(), aEvent.getDocument())
+                && Objects.equals(state.getUser().getUsername(), aEvent.getDocumentOwner());
     }
 
     protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,

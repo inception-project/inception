@@ -251,7 +251,6 @@ public class RelationAdapterImpl
     @Override
     public Selection select(VID aVid, AnnotationFS aAnno)
     {
-        var selection = new Selection();
         var src = getSourceAnnotation(aAnno);
         var tgt = getTargetAnnotation(aAnno);
 
@@ -262,8 +261,7 @@ public class RelationAdapterImpl
                     AnnotationFS.class);
         }
 
-        selection.selectArc(VID.of(aAnno), src, tgt);
-        return selection;
+        return Selection.arc(VID.of(aAnno), src, tgt);
     }
 
     @Override

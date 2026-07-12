@@ -68,7 +68,7 @@ public abstract class PagingStrategy_ImplBase
         switch (aPos) {
         case TOP: {
             aState.setPageBegin(aCas, unit.getBegin());
-            fireScrollToEvent(aOffset, aPingRanges, aPos);
+            fireScrollToEvent(aState, aOffset, aPingRanges, aPos);
             break;
         }
         case CENTERED: {
@@ -79,7 +79,7 @@ public abstract class PagingStrategy_ImplBase
 
             aState.setPageBegin(aCas, firstUnit.getBegin());
             aState.setFocusUnitIndex(unit.getIndex());
-            fireScrollToEvent(aOffset, aPingRanges, aPos);
+            fireScrollToEvent(aState, aOffset, aPingRanges, aPos);
             break;
         }
         default:
@@ -94,7 +94,8 @@ public abstract class PagingStrategy_ImplBase
         moveToOffset(aState, aCas, aOffset, aPingRange != null ? asList(aPingRange) : null, aPos);
     }
 
-    private void fireScrollToEvent(int aOffset, List<VRange> aPingRanges, FocusPosition aPos)
+    private void fireScrollToEvent(AnnotatorViewState aSource, int aOffset,
+            List<VRange> aPingRanges, FocusPosition aPos)
     {
         var requestCycle = RequestCycle.get();
 
@@ -106,7 +107,8 @@ public abstract class PagingStrategy_ImplBase
         if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
             var page = (Page) handler.get().getPage();
             var target = requestCycle.find(AjaxRequestTarget.class).orElse(null);
-            page.send(page, BREADTH, new ScrollToEvent(target, aOffset, aPingRanges, aPos));
+            page.send(page, BREADTH,
+                    new ScrollToEvent(aSource, target, aOffset, aPingRanges, aPos));
         }
     }
 }

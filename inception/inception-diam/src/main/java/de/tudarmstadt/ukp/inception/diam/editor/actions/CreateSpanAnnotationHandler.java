@@ -29,7 +29,6 @@ import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.CreateSpanAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter;
@@ -75,19 +74,20 @@ public class CreateSpanAnnotationHandler
             Request aRequest)
     {
         try {
-            var page = getPage();
-            page.ensureIsEditable();
+            var context = aBehavior.getContext();
+            context.getActionHandler().ensureIsEditable();
 
-            var state = getAnnotatorState();
+            var state = context.getAnnotatorState();
             var layer = state.getDefaultAnnotationLayer();
             if (layer == null) {
+                var page = getPage();
                 page.info(
                         "Cannot create annotation: this project does not define any span annotation layers.");
                 aTarget.addChildren(page, IFeedback.class);
                 return new DefaultAjaxResponse(getAction(aRequest));
             }
 
-            var cas = page.getEditorCas();
+            var cas = context.getEditorCas();
             var range = getRangeFromRequest(state, aRequest.getRequestParameters(), cas);
 
             var adapter = schemaService.getAdapter(layer);
@@ -124,7 +124,7 @@ public class CreateSpanAnnotationHandler
                 }
             }
 
-            commitAnnotation(aTarget, page, state, selection);
+            commitAnnotation(aTarget, context, state, selection);
 
             return new DefaultAjaxResponse(getAction(aRequest));
         }
@@ -149,14 +149,5 @@ public class CreateSpanAnnotationHandler
         var end = aState.getWindowBeginOffset() + offsetLists.get(offsetLists.size() - 1).getEnd();
 
         return rangeClippedToDocument(aCas, begin, end);
-    }
-
-    private void commitAnnotation(AjaxRequestTarget aTarget, AnnotationPageBase page,
-            AnnotatorState state, Selection selection)
-        throws IOException, AnnotationException
-    {
-        state.getSelection().set(selection);
-        page.getAnnotationActionHandler().actionSelect(aTarget);
-        page.getAnnotationActionHandler().writeEditorCas();
     }
 }

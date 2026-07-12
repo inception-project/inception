@@ -92,7 +92,7 @@ public class SavePreferences
                         "Client-side user preferences not allowed for given key");
             }
 
-            var project = getAnnotatorState().getProject();
+            var project = aBehavior.getContext().getAnnotatorState().getProject();
             var sessionOwner = userService.getCurrentUser();
             var dataString = aRequest.getRequestParameters().getParameterValue(PARAM_DATA);
             var data = fromValidatedJsonString(ClientSidePreferenceMapValue.class,

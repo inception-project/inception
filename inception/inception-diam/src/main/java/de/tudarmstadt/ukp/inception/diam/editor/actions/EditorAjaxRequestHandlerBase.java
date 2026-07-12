@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
 import static java.util.Arrays.asList;
 
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -29,8 +30,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
@@ -59,11 +62,6 @@ public abstract class EditorAjaxRequestHandlerBase
         return (AnnotationPageBase) getAjaxRequestTarget().getPage();
     }
 
-    protected AnnotatorState getAnnotatorState()
-    {
-        return getPage().getModelObject();
-    }
-
     protected String getAction(Request aRequest)
     {
         return aRequest.getRequestParameters().getParameterValue(PARAM_ACTION).toString();
@@ -81,6 +79,19 @@ public abstract class EditorAjaxRequestHandlerBase
         var token = aRequest.getRequestParameters().getParameterValue(PARAM_TOKEN).toString();
         aTarget.prependJavaScript(
                 "document['DIAM_TRANSPORT_BUFFER']['" + token + "'] = " + json + ";");
+    }
+
+    /**
+     * Set the given selection as the current selection and commit it to the editor CAS through the
+     * context's action handler.
+     */
+    protected void commitAnnotation(AjaxRequestTarget aTarget, DiamContext aContext,
+            AnnotatorState aState, Selection aSelection)
+        throws IOException, AnnotationException
+    {
+        aState.setSelection(aSelection);
+        aContext.getActionHandler().actionSelect(aTarget);
+        aContext.getActionHandler().writeEditorCas();
     }
 
     protected DefaultAjaxResponse handleError(String aMessage, Exception e)

@@ -26,6 +26,7 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemContext;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemRegistry;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
@@ -50,9 +51,9 @@ public class ShowContextMenuHandler
     }
 
     @Override
-    public boolean accepts(Request aRequest)
+    public boolean accepts(DiamRequest aRequest)
     {
-        var paramId = getVid(aRequest);
+        var paramId = getVid(aRequest.getRequest());
         return super.accepts(aRequest) && paramId.isSet() && !paramId.isSynthetic()
                 && !paramId.isSlotSet();
     }
@@ -75,9 +76,12 @@ public class ShowContextMenuHandler
 
             var vid = getVid(aRequest);
 
-            for (var ext : contextMenuItemRegistry
-                    .getExtensions(new ContextMenuItemContext(vid, getPage()))) {
-                items.add(ext.createMenuItem(vid, clientX, clientY));
+            // Bind the menu to the editor that received the request (its context / behavior),
+            // not to the main editor's page, so its items act on that editor (cf. #6146).
+            var ctx = new ContextMenuItemContext(vid, aBehavior.getContext(), aBehavior);
+
+            for (var ext : contextMenuItemRegistry.getExtensions(ctx)) {
+                items.add(ext.createMenuItem(ctx, clientX, clientY));
             }
 
             if (!items.isEmpty()) {

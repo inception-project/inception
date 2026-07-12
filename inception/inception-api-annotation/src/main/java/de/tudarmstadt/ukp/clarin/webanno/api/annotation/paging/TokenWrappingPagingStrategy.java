@@ -29,7 +29,7 @@ import org.apache.wicket.Page;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
@@ -133,6 +133,6 @@ public class TokenWrappingPagingStrategy
     @Override
     public DefaultPagingNavigator createPageNavigator(String aId, Page aPage)
     {
-        return new DefaultPagingNavigator(aId, (AnnotationPageBase) aPage);
+        return new DefaultPagingNavigator(aId, (DiamContext) aPage);
     }
 }

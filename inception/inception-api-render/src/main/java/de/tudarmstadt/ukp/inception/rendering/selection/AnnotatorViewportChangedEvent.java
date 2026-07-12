@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.rendering.selection;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.EditorBoundEvent;
 
 /**
  * Fired by {@link AnnotatorState} if the parameters controlling the viewport have changed.
@@ -38,13 +40,25 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
  * @see AnnotatorState#getWindowEndOffset()
  */
 public class AnnotatorViewportChangedEvent
+    implements EditorBoundEvent
 {
+    private final AnnotatorViewState source;
 
     private final AjaxRequestTarget requestHandler;
 
-    public AnnotatorViewportChangedEvent(AjaxRequestTarget aRequestHandler)
+    public AnnotatorViewportChangedEvent(AnnotatorViewState aSource,
+            AjaxRequestTarget aRequestHandler)
     {
+        source = aSource;
         requestHandler = aRequestHandler;
+    }
+
+    /**
+     * @return the editor state whose viewport changed, or {@code null} if unknown.
+     */
+    public AnnotatorViewState getSource()
+    {
+        return source;
     }
 
     public AjaxRequestTarget getRequestHandler()

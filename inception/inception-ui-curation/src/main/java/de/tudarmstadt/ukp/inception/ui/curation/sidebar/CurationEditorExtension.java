@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
@@ -260,7 +261,7 @@ public class CurationEditorExtension
 
         // open created/updates FS in annotation detail editor panel
         var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.targetAddress());
-        aState.getSelection().selectSpan(mergedAnno);
+        aState.setSelection(Selection.span(mergedAnno));
     }
 
     private void mergeRelation(AnnotatorState aState, CAS aTargetCas, VID aVid, String aSrcUser,
@@ -274,7 +275,7 @@ public class CurationEditorExtension
 
         // open created/updates FS in annotation detail editor panel
         var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.targetAddress());
-        aState.getSelection().selectArc(mergedAnno);
+        aState.setSelection(Selection.arc(mergedAnno));
     }
 
     private void mergeSpan(AnnotatorState aState, CAS aTargetCas, VID aVid, String aSrcUser,
@@ -288,7 +289,7 @@ public class CurationEditorExtension
 
         // open created/updates FS in annotation detail editor panel
         var mergedAnno = selectAnnotationByAddr(aTargetCas, mergeResult.targetAddress());
-        aState.getSelection().selectSpan(mergedAnno);
+        aState.setSelection(Selection.span(mergedAnno));
     }
 
     @Override

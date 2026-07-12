@@ -49,20 +49,41 @@ public class DocumentNamePanel
 
     public DocumentNamePanel(String id, final IModel<AnnotatorState> aModel)
     {
+        this(id, aModel, null);
+    }
+
+    /**
+     * @param aEditable
+     *            whether the described editor is editable; controls the read-only badge. When
+     *            {@code null}, editability is derived from the enclosing {@link AnnotationPageBase}
+     *            (legacy behavior). Pass an explicit model when the panel is not hosted directly by
+     *            the page it describes - e.g. an editor embedded in a sidebar, whose editability
+     *            differs from the surrounding page.
+     */
+    public DocumentNamePanel(String id, final IModel<AnnotatorState> aModel,
+            IModel<Boolean> aEditable)
+    {
         super(id, aModel);
         setOutputMarkupId(true);
-        queue(new WebMarkupContainer("read-only").add(visibleWhen(() -> {
+
+        var editable = aEditable != null ? aEditable : (IModel<Boolean>) () -> {
             var page = findParent(AnnotationPageBase.class);
-            return page != null ? !page.isEditable() : false;
-        })));
+            return page != null ? page.isEditable() : true;
+        };
+        queue(new WebMarkupContainer("read-only").add(visibleWhen(() -> !editable.getObject())));
         queue(new Label("user", aModel.map(AnnotatorState::getUser).map(User::getUiName))
                 .add(visibleWhenNot(aModel.map(AnnotatorState::getUser)
                         .map(u -> u.getUsername().equals(userService.getCurrentUsername())))));
         queue(new Label("project", aModel.map(AnnotatorState::getProject).map(Project::getName)));
         queue(new Label("projectId", aModel.map(AnnotatorState::getProject).map(Project::getId))
                 .add(visibleWhen(() -> DEVELOPMENT == getApplication().getConfigurationType())));
+        // The document badge (controlled via wicket:enclosure) must hide when no document is
+        // selected - otherwise it renders as an empty name with an empty "()" id (e.g. in the
+        // reference-document sidebar before a document has been loaded). A Label with a null model
+        // still counts as visible, so guard visibility explicitly on the document being present.
         queue(new Label("document",
-                aModel.map(AnnotatorState::getDocument).map(SourceDocument::getName)));
+                aModel.map(AnnotatorState::getDocument).map(SourceDocument::getName))
+                        .add(visibleWhen(aModel.map(AnnotatorState::getDocument).isPresent())));
         queue(new Label("documentId",
                 aModel.map(AnnotatorState::getDocument).map(SourceDocument::getId)).add(
                         visibleWhen(() -> DEVELOPMENT == getApplication().getConfigurationType())));

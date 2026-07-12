@@ -351,6 +351,12 @@ public class LegacyCurationPage
     @OnEvent
     public void onSelectionChangedEvent(SelectionChangedEvent aEvent)
     {
+        // Only react to selection changes in this page's own editor state, not in other editors /
+        // panes hosted on the page (#6146).
+        if (!aEvent.isFor(getModelObject())) {
+            return;
+        }
+
         actionRefreshDocument(aEvent.getRequestHandler());
     }
 

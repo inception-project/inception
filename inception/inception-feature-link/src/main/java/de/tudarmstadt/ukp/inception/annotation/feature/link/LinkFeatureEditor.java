@@ -702,6 +702,12 @@ public class LinkFeatureEditor
     @OnEvent
     public void onRenderSlotsEvent(RenderSlotsEvent aEvent)
     {
+        // Only react to slot arming in the editor this feature editor belongs to, not in other
+        // editors on the page even if they show the same document (#6146).
+        if (!aEvent.isFor(stateModel.getObject())) {
+            return;
+        }
+
         // Redraw because it could happen that another slot is armed, replacing this.
         aEvent.getRequestHandler().add(this);
     }

@@ -208,6 +208,13 @@ public class ExternalSearchAnnotationSidebar
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
+        // Only render our highlights into our own editor, not into other editors on the page (e.g.
+        // the reference-document viewer or curation panes) even if they show the same document
+        // (#6146).
+        if (aEvent.getRequest().getState() != getAnnotationPage().getModelObject()) {
+            return;
+        }
+
         ExternalSearchUserState searchState = searchStateModel.getObject();
 
         // highlight keywords if a document is selected from result list
