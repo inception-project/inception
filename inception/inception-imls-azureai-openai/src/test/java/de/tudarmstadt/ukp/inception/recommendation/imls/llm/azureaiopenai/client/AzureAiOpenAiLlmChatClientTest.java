@@ -15,18 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client;
 
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage.Role.ASSISTANT;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage.Role.TOOL;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage.Role.USER;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.List.of;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Test;
@@ -37,21 +35,25 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.FinishReason;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolCall;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolDescriptor;
+import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
 /**
- * Offline unit tests for {@link ChatGptLlmChatClient} exercising request building and wire-response
- * mapping without a live OpenAI server. Live-server behavior is covered by
- * {@link ChatGptLlmChatClientIntegrationTest}.
+ * Offline unit tests for {@link AzureAiOpenAiLlmChatClient} exercising request building and
+ * wire-response mapping without a live Azure OpenAI server. Live-server behavior is covered by
+ * {@link AzureAiOpenAiClientIntegrationTest}.
  */
-class ChatGptLlmChatClientTest
+class AzureAiOpenAiLlmChatClientTest
 {
-    private final CapturingChatGptClient client = new CapturingChatGptClient();
-    private final ChatGptLlmChatClient sut = new ChatGptLlmChatClient(client);
+    private final CapturingAzureAiOpenAiClient client = new CapturingAzureAiOpenAiClient();
+    private final AzureAiOpenAiLlmChatClient sut = new AzureAiOpenAiLlmChatClient(client);
 
     private static LlmEndpoint endpoint()
     {
-        return new LlmEndpoint(ChatGptLlmChatClient.ID, "http://localhost", "some-model", null);
+        var auth = new ApiKeyAuthenticationTraits();
+        auth.setApiKey("secret-key");
+        return new LlmEndpoint(AzureAiOpenAiLlmChatClient.ID, "http://localhost", "some-model",
+                auth);
     }
 
     private static ToolDescriptor weatherTool()
@@ -129,6 +131,22 @@ class ChatGptLlmChatClientTest
                 .contains("Berlin");
     }
 
+    /**
+     * Azure identifies the model via the deployment embedded in the URL, so the {@code model} field
+     * must be {@code @JsonIgnore} and never appear in the serialized request body.
+     */
+    @Test
+    void testModelIsNotSerializedOnTheWire() throws Exception
+    {
+        client.response = cannedTextResponse("ok");
+
+        sut.chat(endpoint(), of(new ChatMessage(USER, "Hi")), ChatOptions.defaults());
+
+        var json = JSONUtil.toJsonString(client.lastRequest);
+        assertThat(json).doesNotContain("\"model\"");
+        assertThat(json).doesNotContain("some-model");
+    }
+
     @Test
     void testResponseMappingWithToolCallsUsageAndFinishReason() throws Exception
     {
@@ -158,7 +176,8 @@ class ChatGptLlmChatClientTest
                   "usage": { "prompt_tokens": 11, "completion_tokens": 7, "total_tokens": 18 }
                 }
                 """;
-        client.response = JSONUtil.getObjectMapper().readValue(json, ChatCompletionResponse.class);
+        client.response = JSONUtil.getObjectMapper().readValue(json,
+                AzureAiChatCompletionResponse.class);
 
         var result = sut.chat(endpoint(), of(new ChatMessage(USER, "Weather?")),
                 ChatOptions.defaults());
@@ -195,7 +214,8 @@ class ChatGptLlmChatClientTest
                   ]
                 }
                 """;
-        client.response = JSONUtil.getObjectMapper().readValue(json, ChatCompletionResponse.class);
+        client.response = JSONUtil.getObjectMapper().readValue(json,
+                AzureAiChatCompletionResponse.class);
 
         var result = sut.chat(endpoint(), of(new ChatMessage(USER, "Go")), ChatOptions.defaults());
 
@@ -225,14 +245,14 @@ class ChatGptLlmChatClientTest
                 .finishReason();
     }
 
-    private static ChatCompletionResponse cannedTextResponse(String aContent)
+    private static AzureAiChatCompletionResponse cannedTextResponse(String aContent)
     {
-        var message = new ChatCompletionMessage("assistant", aContent);
-        var choice = new ChatCompletionChoice();
+        var message = new AzureAiChatCompletionMessage("assistant", aContent);
+        var choice = new AzureAiChatCompletionChoice();
         choice.setIndex(0);
         choice.setMessage(message);
         choice.setFinishReason("stop");
-        var response = new ChatCompletionResponse();
+        var response = new AzureAiChatCompletionResponse();
         response.setChoices(asList(choice));
         return response;
     }
@@ -241,16 +261,17 @@ class ChatGptLlmChatClientTest
      * Records the last request and returns a canned response, so the adapter can be exercised with
      * no live server.
      */
-    private static final class CapturingChatGptClient
-        implements ChatGptClient
+    private static final class CapturingAzureAiOpenAiClient
+        implements AzureAiOpenAiClient
     {
-        private ChatCompletionRequest lastRequest;
-        private ChatCompletionRequest lastStreamRequest;
-        private ChatCompletionResponse response;
-        private ChatCompletionResponse streamResponse;
+        private AzureAiChatCompletionRequest lastRequest;
+        private AzureAiChatCompletionRequest lastStreamRequest;
+        private AzureAiChatCompletionResponse response;
+        private AzureAiChatCompletionResponse streamResponse;
 
         @Override
-        public ChatCompletionResponse chat(String aUrl, ChatCompletionRequest aRequest)
+        public AzureAiChatCompletionResponse generate(String aUrl,
+                AzureAiChatCompletionRequest aRequest)
             throws IOException
         {
             lastRequest = aRequest;
@@ -258,19 +279,12 @@ class ChatGptLlmChatClientTest
         }
 
         @Override
-        public ChatCompletionResponse chat(String aUrl, ChatCompletionRequest aRequest,
-                Consumer<String> aContentCallback)
+        public AzureAiChatCompletionResponse generate(String aUrl,
+                AzureAiChatCompletionRequest aRequest, Consumer<String> aContentCallback)
             throws IOException
         {
             lastStreamRequest = aRequest;
             return streamResponse;
-        }
-
-        @Override
-        public List<ChatGptModel> listModels(String aUrl, ListModelsRequest aRequest)
-            throws IOException
-        {
-            return emptyList();
         }
     }
 }

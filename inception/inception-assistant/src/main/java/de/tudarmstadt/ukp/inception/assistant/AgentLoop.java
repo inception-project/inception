@@ -17,8 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.assistant;
 
+import static com.github.victools.jsonschema.generator.Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT;
 import static com.github.victools.jsonschema.generator.OptionPreset.PLAIN_JSON;
 import static com.github.victools.jsonschema.generator.SchemaVersion.DRAFT_2020_12;
+import static com.github.victools.jsonschema.module.jackson.JacksonOption.RESPECT_JSONPROPERTY_REQUIRED;
+import static de.tudarmstadt.ukp.inception.assistant.LlmAuth.apiKeyAuth;
 import static de.tudarmstadt.ukp.inception.assistant.config.AssistantChatProperties.CAP_TOOLS;
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.ASSISTANT;
 import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
@@ -27,10 +30,13 @@ import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.USER;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolUtils.getFunctionActor;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolUtils.getFunctionName;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolUtils.getStop;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelCapability.STREAMING;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelCapability.TOOLS;
 import static java.lang.Math.floorDiv;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -53,11 +59,9 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.victools.jsonschema.generator.Option;
 import com.github.victools.jsonschema.generator.SchemaGenerator;
 import com.github.victools.jsonschema.generator.SchemaGeneratorConfigBuilder;
 import com.github.victools.jsonschema.module.jackson.JacksonModule;
-import com.github.victools.jsonschema.module.jackson.JacksonOption;
 import com.knuddels.jtokkit.api.Encoding;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -85,8 +89,6 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolCall;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolDescriptor;
-import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraits;
-import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import tools.jackson.databind.JsonNode;
 
@@ -110,10 +112,6 @@ public class AgentLoop
      * How much of the available context window to use (in percent) before cutting messages.
      */
     private static final int CONTEXT_LENGTH_SAFETY_PERCENTAGE = 90;
-
-    private static final String OPT_NUM_CTX = "num_ctx";
-    private static final String OPT_TOP_K = "top_k";
-    private static final String OPT_REPEAT_PENALTY = "repeat_penalty";
 
     private final AssistantProperties properties;
     private final LlmChatClient chatClient;
@@ -153,8 +151,8 @@ public class AgentLoop
         memory = aMemory;
         encoding = aEncoding;
         generator = new SchemaGenerator(new SchemaGeneratorConfigBuilder(DRAFT_2020_12, PLAIN_JSON) //
-                .with(Option.FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT) //
-                .with(new JacksonModule(JacksonOption.RESPECT_JSONPROPERTY_REQUIRED)) //
+                .with(FORBIDDEN_ADDITIONAL_PROPERTIES_BY_DEFAULT) //
+                .with(new JacksonModule(RESPECT_JSONPROPERTY_REQUIRED)) //
                 .build());
     }
 
@@ -242,10 +240,12 @@ public class AgentLoop
         var responseId = aResponseId != null ? aResponseId : UUID.randomUUID();
         var chatProperties = properties.getChat();
 
+        var adapterCapabilities = chatClient.supportedCapabilities();
+
         var toolBindings = new LinkedHashMap<String, ToolBinding>();
         var toolDescriptors = new ArrayList<ToolDescriptor>();
         if (isToolCallingEnabled() && chatProperties.getCapabilities().contains(CAP_TOOLS)
-                && !tools.isEmpty()) {
+                && adapterCapabilities.contains(TOOLS) && !tools.isEmpty()) {
             try {
                 collectTools(toolDescriptors, toolBindings);
             }
@@ -269,14 +269,22 @@ public class AgentLoop
                 .notDone() //
                 .build());
 
-        // Generate the actual response
+        // Generate the actual response. Prefer streaming, but fall back to a plain (non-streaming)
+        // exchange when the adapter does not declare STREAMING support.
         var startTime = currentTimeMillis();
         var firstTokenTime = new AtomicLong(0l);
-        var response = chatClient.chatStream(endpoint(), toChatMessages(aMessages), options,
-                chunk -> {
-                    firstTokenTime.compareAndSet(0l, currentTimeMillis());
-                    recordAndStreamChunk(responseId, chunk);
-                });
+        ChatResult response;
+        if (adapterCapabilities.contains(STREAMING)) {
+            response = chatClient.chatStream(endpoint(), toChatMessages(aMessages), options,
+                    chunk -> {
+                        firstTokenTime.compareAndSet(0l, currentTimeMillis());
+                        recordAndStreamChunk(responseId, chunk);
+                    });
+        }
+        else {
+            response = chatClient.chat(endpoint(), toChatMessages(aMessages), options);
+            firstTokenTime.compareAndSet(0l, currentTimeMillis());
+        }
         var tokens = completionTokens(response);
         var endTime = currentTimeMillis();
 
@@ -368,6 +376,19 @@ public class AgentLoop
 
     private ChatMessage toChatMessage(MChatMessage aMsg)
     {
+        // TODO [tool_call_id]: OpenAI/Azure require the provider-assigned tool-call id to be echoed
+        // back on both the assistant message (ToolCall.id()) and the TOOL-role result message
+        // (ChatMessage.toolCallId). The neutral ToolCall.id() IS captured by the OpenAI/Azure
+        // adapters on the response (see *LlmChatClient.toToolCalls -> wireCall.getId()), but the
+        // assistant-side model drops it: MToolCall (assistant-api) has no id field, so it is lost
+        // in
+        // AgentLoop.turn() when the MToolCall is built, and there is no way to correlate a TOOL
+        // result message back to its originating call here. Wiring this end-to-end requires adding
+        // an `id` to MToolCall (+ builder) in inception-assistant-api, threading call.id() into it
+        // in
+        // turn(), and setting it here for both the ASSISTANT re-emit and the TOOL result (4th ctor
+        // arg). Until then we pass null and rely on positional matching (works for Ollama; OpenAI/
+        // Azure single-tool-per-turn turns tolerate it). Deferred as a follow-up.
         List<ToolCall> toolCalls = emptyList();
         if (isNotEmpty(aMsg.toolCalls())) {
             toolCalls = aMsg.toolCalls().stream() //
@@ -392,24 +413,14 @@ public class AgentLoop
 
     private LlmEndpoint endpoint()
     {
-        AuthenticationTraits auth = null;
-        if (isNotBlank(properties.getChatApiKey())) {
-            var apiKeyAuth = new ApiKeyAuthenticationTraits();
-            apiKeyAuth.setApiKey(properties.getChatApiKey());
-            auth = apiKeyAuth;
-        }
-
         return new LlmEndpoint(chatClient.getId(), properties.getChatUrl(),
-                properties.getChat().getModel(), auth);
+                properties.getChat().getModel(), apiKeyAuth(properties.getChatApiKey()));
     }
 
     private ChatOptions buildOptions(AssistantChatProperties chatProperties, JsonNode aJsonSchema,
             List<ToolDescriptor> aTools)
     {
         var options = new LinkedHashMap<String, Object>();
-        options.put(OPT_NUM_CTX, chatProperties.getContextLength());
-        options.put(OPT_TOP_K, chatProperties.getTopK());
-        options.put(OPT_REPEAT_PENALTY, chatProperties.getRepeatPenalty());
 
         // Provider-specific escape hatch: explicit options override the typed settings.
         if (chatProperties.getOptions() != null) {
@@ -422,6 +433,9 @@ public class AgentLoop
                 .withOptions(options) //
                 .withTemperature(chatProperties.getTemperature()) //
                 .withTopP(chatProperties.getTopP()) //
+                .withContextLength(chatProperties.getContextLength()) //
+                .withTopK(chatProperties.getTopK()) //
+                .withRepeatPenalty(chatProperties.getRepeatPenalty()) //
                 .build();
     }
 
@@ -448,7 +462,7 @@ public class AgentLoop
     private static Map<String, Object> toArgumentMap(JsonNode aArguments)
     {
         if (aArguments == null || aArguments.isNull()) {
-            return new LinkedHashMap<>();
+            return emptyMap();
         }
 
         return JSONUtil.getObjectMapper().convertValue(aArguments, Map.class);

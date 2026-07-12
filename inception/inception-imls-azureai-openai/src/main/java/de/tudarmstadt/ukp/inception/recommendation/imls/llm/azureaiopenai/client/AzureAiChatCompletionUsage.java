@@ -17,56 +17,43 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AzureAiChatCompletionResponse
+public class AzureAiChatCompletionUsage
 {
-    private @JsonProperty("model") String model;
-    private @JsonProperty("created") long createdAt;
-    private @JsonProperty("choices") List<AzureAiChatCompletionChoice> choices;
-    private @JsonProperty("usage") AzureAiChatCompletionUsage usage;
+    private @JsonProperty("prompt_tokens") long promptTokens;
+    private @JsonProperty("completion_tokens") long completionTokens;
+    private @JsonProperty("total_tokens") long totalTokens;
 
-    public String getModel()
+    public long getPromptTokens()
     {
-        return model;
+        return promptTokens;
     }
 
-    public void setModel(String aModel)
+    public void setPromptTokens(long aPromptTokens)
     {
-        model = aModel;
+        promptTokens = aPromptTokens;
     }
 
-    public long getCreatedAt()
+    public long getCompletionTokens()
     {
-        return createdAt;
+        return completionTokens;
     }
 
-    public void setCreatedAt(long aCreatedAt)
+    public void setCompletionTokens(long aCompletionTokens)
     {
-        createdAt = aCreatedAt;
+        completionTokens = aCompletionTokens;
     }
 
-    public List<AzureAiChatCompletionChoice> getChoices()
+    public long getTotalTokens()
     {
-        return choices;
+        return totalTokens;
     }
 
-    public void setChoices(List<AzureAiChatCompletionChoice> aChoices)
+    public void setTotalTokens(long aTotalTokens)
     {
-        choices = aChoices;
-    }
-
-    public AzureAiChatCompletionUsage getUsage()
-    {
-        return usage;
-    }
-
-    public void setUsage(AzureAiChatCompletionUsage aUsage)
-    {
-        usage = aUsage;
+        totalTokens = aTotalTokens;
     }
 }

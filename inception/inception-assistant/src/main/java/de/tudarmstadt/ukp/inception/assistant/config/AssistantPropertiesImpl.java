@@ -208,6 +208,12 @@ public class AssistantPropertiesImpl
          * {@code tools}. With {@code auto} the system queries the LLM service during startup to
          * determine the model's capabilities; setting this manually overrides the detection and
          * avoids the startup query.
+         * <p>
+         * {@code auto} is exclusive: if it is present, any other tokens listed alongside it are
+         * ignored and the capabilities are taken solely from detection. When the provider exposes
+         * no capability introspection (e.g. the OpenAI API), detection falls back to the
+         * capabilities the adapter statically declares it supports. To pin capabilities on such a
+         * provider, list them explicitly (e.g. {@code [completion, tools]}) without {@code auto}.
          */
         // Default ([auto]) is declared in META-INF/additional-spring-configuration-metadata.json
         // because the metadata processor cannot read instance initializer blocks.

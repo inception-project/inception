@@ -30,8 +30,9 @@ import tools.jackson.databind.JsonNode;
 
 /**
  * Per-call generation parameters for {@link LlmChatClient#chat}. Provider-neutral knobs that most
- * providers share ({@link #temperature}, {@link #topP}) are first-class fields; anything without a
- * neutral equivalent (e.g. {@code num_ctx}, {@code top_k} for Ollama) rides in {@link #options}.
+ * providers share ({@link #temperature}, {@link #topP}, {@link #topK}, {@link #repeatPenalty},
+ * {@link #contextLength}) are first-class fields; anything without a neutral equivalent rides in
+ * {@link #options}.
  * <p>
  * Each adapter is responsible for translating the neutral fields into its backend's parameters (the
  * wire name is the adapter's to decide, not assumed here) and for letting matching {@link #options}
@@ -50,6 +51,12 @@ import tools.jackson.databind.JsonNode;
  *            sampling temperature, or {@code null} to leave the provider default
  * @param topP
  *            nucleus-sampling threshold, or {@code null} to leave the provider default
+ * @param topK
+ *            top-k sampling limit, or {@code null} to leave the provider default
+ * @param repeatPenalty
+ *            penalty applied to repeated tokens, or {@code null} to leave the provider default
+ * @param contextLength
+ *            size of the context window to use, or {@code null} to leave the provider default
  */
 public record ChatOptions( //
         ResponseFormat responseFormat, //
@@ -57,7 +64,10 @@ public record ChatOptions( //
         List<ToolDescriptor> tools, //
         Map<String, Object> options, //
         Double temperature, //
-        Double topP)
+        Double topP, //
+        Integer topK, //
+        Double repeatPenalty, //
+        Integer contextLength)
 {
     public ChatOptions
     {
@@ -71,7 +81,7 @@ public record ChatOptions( //
     public ChatOptions(ResponseFormat aResponseFormat, JsonNode aJsonSchema,
             List<ToolDescriptor> aTools, Map<String, Object> aOptions)
     {
-        this(aResponseFormat, aJsonSchema, aTools, aOptions, null, null);
+        this(aResponseFormat, aJsonSchema, aTools, aOptions, null, null, null, null, null);
     }
 
     public static ChatOptions defaults()
@@ -92,6 +102,9 @@ public record ChatOptions( //
         private Map<String, Object> options = emptyMap();
         private Double temperature;
         private Double topP;
+        private Integer topK;
+        private Double repeatPenalty;
+        private Integer contextLength;
 
         private Builder()
         {
@@ -133,9 +146,28 @@ public record ChatOptions( //
             return this;
         }
 
+        public Builder withTopK(Integer aTopK)
+        {
+            topK = aTopK;
+            return this;
+        }
+
+        public Builder withRepeatPenalty(Double aRepeatPenalty)
+        {
+            repeatPenalty = aRepeatPenalty;
+            return this;
+        }
+
+        public Builder withContextLength(Integer aContextLength)
+        {
+            contextLength = aContextLength;
+            return this;
+        }
+
         public ChatOptions build()
         {
-            return new ChatOptions(responseFormat, jsonSchema, tools, options, temperature, topP);
+            return new ChatOptions(responseFormat, jsonSchema, tools, options, temperature, topP,
+                    topK, repeatPenalty, contextLength);
         }
     }
 }

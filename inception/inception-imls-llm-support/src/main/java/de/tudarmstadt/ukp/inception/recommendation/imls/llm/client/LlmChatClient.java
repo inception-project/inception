@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -117,5 +118,17 @@ public interface LlmChatClient
     default List<ModelInfo> listModels(LlmEndpoint aEndpoint) throws IOException
     {
         return List.of();
+    }
+
+    /**
+     * Describe the model configured on the endpoint, so the assistant can auto-detect its context
+     * window and declared capabilities instead of assuming a specific provider. Returns
+     * {@link Optional#empty()} when the provider exposes no such introspection API (the caller then
+     * keeps its configured defaults). Adapters translate their backend's own capability tokens into
+     * {@link ModelCapability} values.
+     */
+    default Optional<ModelDetails> describeModel(LlmEndpoint aEndpoint) throws IOException
+    {
+        return Optional.empty();
     }
 }

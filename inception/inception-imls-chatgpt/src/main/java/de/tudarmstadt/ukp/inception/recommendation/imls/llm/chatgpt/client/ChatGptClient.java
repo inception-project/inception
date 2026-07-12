@@ -19,10 +19,25 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
 
 public interface ChatGptClient
 {
-    String chat(String aUrl, ChatCompletionRequest aRequest) throws IOException;
+    /**
+     * Perform a non-streaming chat completion. Returns the parsed wire response (choices, usage,
+     * finish reason); the neutral mapping to {@code ChatResult} is the adapter's job.
+     */
+    ChatCompletionResponse chat(String aUrl, ChatCompletionRequest aRequest) throws IOException;
+
+    /**
+     * Perform a streaming (SSE) chat completion. {@code aContentCallback} receives each content
+     * delta as it arrives; the returned {@link ChatCompletionResponse} is assembled from the stream
+     * and carries the full content, tool calls, finish reason, and (when
+     * {@code stream_options.include_usage} was requested) usage.
+     */
+    ChatCompletionResponse chat(String aUrl, ChatCompletionRequest aRequest,
+            Consumer<String> aContentCallback)
+        throws IOException;
 
     List<ChatGptModel> listModels(String aUrl, ListModelsRequest aRequest) throws IOException;
 }

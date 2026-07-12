@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.assistant.embedding;
 
 import static de.tudarmstadt.ukp.inception.assistant.config.AssistantEmbeddingProperties.AUTO_DETECT_DIMENSION;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -39,8 +38,8 @@ import de.tudarmstadt.ukp.inception.assistant.config.AssistantProperties;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClientExtensionPoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
+import de.tudarmstadt.ukp.inception.assistant.LlmAuth;
 import de.tudarmstadt.ukp.inception.security.client.auth.AuthenticationTraits;
-import de.tudarmstadt.ukp.inception.security.client.auth.apikey.ApiKeyAuthenticationTraits;
 
 public class EmbeddingServiceImpl
     implements EmbeddingService
@@ -157,12 +156,7 @@ public class EmbeddingServiceImpl
 
     private AuthenticationTraits embeddingAuth()
     {
-        if (isNotBlank(properties.getEmbeddingApiKey())) {
-            var auth = new ApiKeyAuthenticationTraits();
-            auth.setApiKey(properties.getEmbeddingApiKey());
-            return auth;
-        }
-        return null;
+        return LlmAuth.apiKeyAuth(properties.getEmbeddingApiKey());
     }
 
     private Map<String, Object> embeddingOptions()

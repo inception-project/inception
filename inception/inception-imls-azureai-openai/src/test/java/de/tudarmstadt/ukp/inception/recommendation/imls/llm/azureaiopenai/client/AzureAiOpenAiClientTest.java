@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,13 +27,13 @@ import org.junit.jupiter.api.Test;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ServerSentEventReader;
 
 /**
- * Offline unit tests for {@link ChatGptClientImpl}'s SSE stream assembly, driven by canned
+ * Offline unit tests for {@link AzureAiOpenAiClientImpl}'s SSE stream assembly, driven by canned
  * {@code data:} lines (parsed via {@link ServerSentEventReader}) with no live server. Live-server
- * behavior is covered by {@link OpenAiClientIntegrationTest}.
+ * behavior is covered by {@link AzureAiOpenAiClientIntegrationTest}.
  */
-class OpenAiClientTest
+class AzureAiOpenAiClientTest
 {
-    private final ChatGptClientImpl sut = new ChatGptClientImpl();
+    private final AzureAiOpenAiClientImpl sut = new AzureAiOpenAiClientImpl();
 
     @Test
     void testSseContentAssemblyAndCallbacks() throws Exception

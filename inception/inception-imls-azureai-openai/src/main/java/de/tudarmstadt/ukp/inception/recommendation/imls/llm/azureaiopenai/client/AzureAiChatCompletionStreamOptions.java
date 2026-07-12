@@ -17,56 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * The Azure OpenAI {@code stream_options} object. With {@code include_usage=true}, the final
+ * streamed chunk carries a {@code usage} block (otherwise streaming responses omit usage entirely).
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AzureAiChatCompletionResponse
+public class AzureAiChatCompletionStreamOptions
 {
-    private @JsonProperty("model") String model;
-    private @JsonProperty("created") long createdAt;
-    private @JsonProperty("choices") List<AzureAiChatCompletionChoice> choices;
-    private @JsonProperty("usage") AzureAiChatCompletionUsage usage;
+    private final @JsonProperty("include_usage") boolean includeUsage;
 
-    public String getModel()
+    public AzureAiChatCompletionStreamOptions(boolean aIncludeUsage)
     {
-        return model;
+        includeUsage = aIncludeUsage;
     }
 
-    public void setModel(String aModel)
+    public boolean isIncludeUsage()
     {
-        model = aModel;
-    }
-
-    public long getCreatedAt()
-    {
-        return createdAt;
-    }
-
-    public void setCreatedAt(long aCreatedAt)
-    {
-        createdAt = aCreatedAt;
-    }
-
-    public List<AzureAiChatCompletionChoice> getChoices()
-    {
-        return choices;
-    }
-
-    public void setChoices(List<AzureAiChatCompletionChoice> aChoices)
-    {
-        choices = aChoices;
-    }
-
-    public AzureAiChatCompletionUsage getUsage()
-    {
-        return usage;
-    }
-
-    public void setUsage(AzureAiChatCompletionUsage aUsage)
-    {
-        usage = aUsage;
+        return includeUsage;
     }
 }

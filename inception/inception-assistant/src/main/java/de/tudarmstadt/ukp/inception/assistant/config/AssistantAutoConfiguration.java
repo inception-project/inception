@@ -64,13 +64,13 @@ public class AssistantAutoConfiguration
 {
     @Bean
     public AssistantService assistantService(SessionRegistry aSessionRegistry,
-            SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
+            SimpMessagingTemplate aMsgTemplate,
             LlmChatClientExtensionPoint aChatClientExtensionPoint, AssistantProperties aProperties,
             EncodingRegistry aEncodingRegistry, RetrieverExtensionPoint aRetrieverExtensionPoint,
             ToolLibraryExtensionPoint aToolLibraryExtensionPoint)
     {
-        return new AssistantServiceImpl(aSessionRegistry, aMsgTemplate, aOllamaClient,
-                aChatClientExtensionPoint, aProperties, aEncodingRegistry, aRetrieverExtensionPoint,
+        return new AssistantServiceImpl(aSessionRegistry, aMsgTemplate, aChatClientExtensionPoint,
+                aProperties, aEncodingRegistry, aRetrieverExtensionPoint,
                 aToolLibraryExtensionPoint);
     }
 
