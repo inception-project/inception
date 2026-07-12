@@ -93,7 +93,12 @@ public class ICasUtil
      * @param aFeature
      *            the feature to retrieve the value from
      * @return the feature value of this {@code Feature} on this annotation
+     * @deprecated Unused. Only primitive ranges are handled; for any non-primitive range (arrays,
+     *             lists, feature-structure references) this silently returns {@code null} instead
+     *             of the actual value, which is easy to mistake for an unset feature. Do not use
+     *             without first fixing the non-primitive handling.
      */
+    @Deprecated
     public static Object getFeatureValue(FeatureStructure aFS, Feature aFeature)
     {
         switch (aFeature.getRange().getName()) {
@@ -123,7 +128,12 @@ public class ICasUtil
      * @param aFeature
      *            a feature
      * @return the feature value of this {@code Feature} on this annotation
+     * @deprecated Unused. The handling of non-primitive ranges is asymmetric: only
+     *             {@code uima.cas.StringArray} yields an empty collection while every other array,
+     *             list or feature-structure range falls through to {@code null}. Do not use without
+     *             first making the non-primitive defaults consistent.
      */
+    @Deprecated
     public static Object getDefaultFeatureValue(Feature aFeature)
     {
         switch (aFeature.getRange().getName()) {
@@ -248,7 +258,7 @@ public class ICasUtil
         }
 
         // Trivial case: same address
-        if (aFs1.getCAS() == aFs1.getCAS() && getAddr(aFs1) == getAddr(aFs1)) {
+        if (aFs1.getCAS() == aFs2.getCAS() && getAddr(aFs1) == getAddr(aFs2)) {
             return true;
         }
 
