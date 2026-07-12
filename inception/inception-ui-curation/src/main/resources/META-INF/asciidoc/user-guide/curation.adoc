@@ -112,7 +112,7 @@ In this mode, you can find a **Curation sidebar** on the left side of the page.
 In this sidebar, you can configure which annotators you want to see in the document view.
 If document metadata layers are configured in the project, you can curate document-level
 annotations in the **Document Metadata sidebar** in this mode.
-You can also restart the curation process for a document using the **Re-merge** button.
+You can also restart the curation process for a document using the **Re-merge** button (see <<re-merging>>).
 
 // In this mode, you can select the target to which your curated annotations are added:
 // 
@@ -127,6 +127,29 @@ You can also restart the curation process for a document using the **Re-merge** 
 // role in addition to the *curator* role.
 //
 // Example: `http://localhost:8080/p/PROJECT/curate/DOC-ID?curationTargetOwn=true`.
+
+[#re-merging]
+== Re-merging
+
+When a document is first opened for curation, {product-name} performs an automatic pre-merge of the annotators' data into the curation document (see <<merging-strategies>>).
+The **Re-merge** button on the curation page allows you to run this automatic merge again at any time, for example after the annotators have changed their annotations or after you have changed the merge strategy.
+
+The **Re-merge** dialog offers the following options:
+
+* **Discard already curated annotations:** controls what happens to annotations that are already present in the curation document when the re-merge is run.
++
+--
+** When *disabled* (the default), the existing curated annotations are kept.
+   The auto-merge only fills in positions that have not been curated yet and leaves your existing decisions untouched.
+   This is useful when you have already curated part of the document and only want to pull in newly agreed-upon annotations without losing your work.
+** When *enabled*, the curation document is cleared first and then fully recreated from the annotators' data.
+   Any annotations you have already curated are discarded.
+   Because this is a destructive operation, you are asked to confirm it by typing the document name into a challenge field before it can be performed.
+--
+* **Merge strategy:** the strategy used for the pre-merge (see <<merging-strategies>>).
+  You can also save the chosen settings as the new project default.
+
+NOTE: If the curation document does not exist yet, there is nothing to preserve and the document is always created from the annotators' data regardless of the *Discard already curated annotations* option.
 
 [#merging-strategies]
 == Merging strategies

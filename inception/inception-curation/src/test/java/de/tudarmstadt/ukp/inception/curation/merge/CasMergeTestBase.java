@@ -57,11 +57,13 @@ import de.tudarmstadt.ukp.inception.annotation.feature.bool.BooleanFeatureSuppor
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportPropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistryImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.DocumentMetadataLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.curation.DocumentMetadataDiffAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationEndpointFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupportImpl;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationDiffAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
@@ -100,6 +102,8 @@ public class CasMergeTestBase
     protected AnnotationLayer depLayer;
     protected AnnotationFeature depFeature;
     protected AnnotationFeature depFlavorFeature;
+    protected AnnotationFeature depSourceFeature;
+    protected AnnotationFeature depTargetFeature;
     protected AnnotationLayer slotLayer;
     protected AnnotationFeature slotFeature;
     protected AnnotationFeature slotFeature2;
@@ -245,6 +249,29 @@ public class CasMergeTestBase
         depFlavorFeature.setProject(project);
         depFlavorFeature.setVisible(true);
         depFlavorFeature.setCuratable(true);
+
+        // Relation endpoint features as they are synthesized by the schema service in production.
+        // Without these, the merge code never iterates over the endpoint features and thus does not
+        // exercise RelationEndpointFeatureSupport during equivalence checks (see #5996).
+        depSourceFeature = new AnnotationFeature();
+        depSourceFeature.setName(RelationLayerSupport.FEAT_REL_SOURCE);
+        depSourceFeature.setEnabled(true);
+        depSourceFeature.setType(RelationLayerSupport.PREFIX_SOURCE + Token.class.getName());
+        depSourceFeature.setUiName("Source");
+        depSourceFeature.setLayer(depLayer);
+        depSourceFeature.setProject(project);
+        depSourceFeature.setVisible(true);
+        depSourceFeature.setCuratable(true);
+
+        depTargetFeature = new AnnotationFeature();
+        depTargetFeature.setName(RelationLayerSupport.FEAT_REL_TARGET);
+        depTargetFeature.setEnabled(true);
+        depTargetFeature.setType(RelationLayerSupport.PREFIX_TARGET + Token.class.getName());
+        depTargetFeature.setUiName("Target");
+        depTargetFeature.setLayer(depLayer);
+        depTargetFeature.setProject(project);
+        depTargetFeature.setVisible(true);
+        depTargetFeature.setCuratable(true);
 
         slotLayer = new AnnotationLayer(HOST_TYPE, HOST_TYPE, SpanLayerSupport.TYPE, project, false,
                 SINGLE_TOKEN, NO_OVERLAP);
@@ -416,7 +443,8 @@ public class CasMergeTestBase
                         return asList();
                     }
                     if (type.getName().equals(Dependency.class.getName())) {
-                        return asList(depFeature, depFlavorFeature);
+                        return asList(depFeature, depFlavorFeature, depSourceFeature,
+                                depTargetFeature);
                     }
                     if (type.getName().equals(POS.class.getName())) {
                         return asList(posFeature, posCoarseFeature);
@@ -451,9 +479,10 @@ public class CasMergeTestBase
                     () -> schemaService.listAnnotationFeature(type));
         });
 
-        featureSupportRegistry = new FeatureSupportRegistryImpl(
-                asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
-                        new NumberFeatureSupport(), new LinkFeatureSupport(schemaService)));
+        featureSupportRegistry = new FeatureSupportRegistryImpl(asList(
+                new StringFeatureSupport(new StringFeatureSupportPropertiesImpl(), schemaService),
+                new BooleanFeatureSupport(), new NumberFeatureSupport(),
+                new LinkFeatureSupport(schemaService), new RelationEndpointFeatureSupport()));
         featureSupportRegistry.init();
 
         var layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());

@@ -107,8 +107,17 @@ class CasMergeRelation
                 // If there was an error while setting the features, then we skip the entire
                 // annotation
                 relationAdapter.delete(aDocument, aDataOwner, aTargetCas, VID.of(mergedRelation));
+                throw e;
             }
             return new CasMergeOperationResult(CREATED, getAddr(mergedRelation));
+        }
+        // Modify the existing relation with this one - unless we are asked to preserve annotations
+        // already present in the target (e.g. curator decisions), in which case we leave the
+        // existing relation untouched.
+        else if (aContext.isPreserveExisting()) {
+            throw new AnnotationPreservedException(
+                    "The target position is already occupied by an existing relation which is "
+                            + "preserved.");
         }
         else {
             var mergeTargetFS = existingAnnos.get(0);

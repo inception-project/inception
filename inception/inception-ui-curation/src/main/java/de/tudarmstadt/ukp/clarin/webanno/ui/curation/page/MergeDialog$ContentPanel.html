@@ -27,6 +27,20 @@
       <div class="container-fluid">
         <div class="row form-row">
           <div class="col-sm-12">
+            <div class="form-check form-switch">
+              <input wicket:id="clearTargetCas" class="form-check-input" type="checkbox" role="switch" />
+              <label wicket:for="clearTargetCas" class="form-check-label">
+                Discard already curated annotations
+              </label>
+              <div class="form-text">
+                If unchecked, existing annotations in the curation document are kept and only
+                positions not yet curated are filled in by the auto-merge.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row form-row" wicket:id="challengeContainer">
+          <div class="col-sm-12">
             <p>
               <wicket:container wicket:id="challenge" />
             </p>
@@ -41,16 +55,6 @@
         <div class="row form-row">
           <div class="col-sm-12">
             <div wicket:id="mergeStrategySettings" />
-          </div>
-        </div>
-        <div class="row form-row" wicket:enclosure="clearTargetCas">
-          <div class="col-sm-12">
-            <div class="form-check">
-              <input wicket:id="clearTargetCas" class="form-check-input" type="checkbox" />
-              <label wicket:for="clearTargetCas" class="form-check-label">
-                Discard already curated annotations
-              </label>
-            </div>
           </div>
         </div>
       </div>

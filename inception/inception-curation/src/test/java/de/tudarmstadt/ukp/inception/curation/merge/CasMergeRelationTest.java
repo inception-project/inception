@@ -31,6 +31,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import java.util.LinkedHashMap;
@@ -45,6 +48,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.api.adapter.IllegalFeatureValueException;
 
 @Execution(CONCURRENT)
 public class CasMergeRelationTest
@@ -82,6 +86,41 @@ public class CasMergeRelationTest
     }
 
     @Test
+    void thatFailureToCopyFeaturesLeavesNoPartialRelationAndIsReported() throws Exception
+    {
+        // Setting the feature value fails, e.g. because the value is not in the tagset and the
+        // tagset cannot be extended.
+        doThrow(new IllegalFeatureValueException("Value not in tagset")) //
+                .when(schemaService).createMissingTag(any(), eq("BADTAG"));
+
+        // Set up source - the relation carries a dependency type which cannot be copied
+        var srcToken = createTokenAndOptionalPos(sourceCas, 0, 0, "NN");
+        var tgtToken = createTokenAndOptionalPos(sourceCas, 1, 1, "NN");
+        var clickedFs = buildAnnotation(sourceCas, Dependency.class) //
+                .at(tgtToken.getBegin(), tgtToken.getEnd()) //
+                .withFeature(FEAT_REL_SOURCE, srcToken) //
+                .withFeature(FEAT_REL_TARGET, tgtToken) //
+                .withFeature(depFeature.getName(), "BADTAG") //
+                .buildAndAddToIndexes();
+
+        // Set up target
+        createTokenAndOptionalPos(targetCas, 0, 0, "NN");
+        createTokenAndOptionalPos(targetCas, 1, 1, "NN");
+
+        // The failure while copying features must be surfaced to the caller (so it is counted as
+        // not-merged) rather than swallowed and reported as a successful merge.
+        assertThatExceptionOfType(AnnotationException.class) //
+                .isThrownBy(() -> sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer,
+                        targetCas, clickedFs));
+
+        // The half-built relation must have been rolled back so no partial annotation is left
+        // behind.
+        assertThat(targetCas.select(Dependency.class).asList()) //
+                .as("No partial relation annotation is left behind after a failed feature copy") //
+                .isEmpty();
+    }
+
+    @Test
     public void simpleCopyRelationToStackedTargetsTest() throws Exception
     {
         // Set up source
@@ -111,6 +150,9 @@ public class CasMergeRelationTest
         // Set up target
         createDependencyWithTokenAndPos(targetCas, 0, 0, "NN", 1, 1, "NN");
 
+        // Merging into a target that already contains an equivalent relation must be rejected with
+        // an AnnotationException - not fail with a NotImplementedException while checking relation
+        // endpoint feature equality. See issue #5996 (re-merge without prior document reset).
         assertThatExceptionOfType(AnnotationException.class) //
                 .as("Reject merging relation which already exists")
                 .isThrownBy(() -> sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer,

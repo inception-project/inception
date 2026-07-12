@@ -27,6 +27,7 @@ public class PerCasMergeContext
     int updated = 0;
     int created = 0;
     int notMerged = 0;
+    int preserved = 0;
 
     final Set<LogMessage> messages = new LinkedHashSet<LogMessage>();
 }

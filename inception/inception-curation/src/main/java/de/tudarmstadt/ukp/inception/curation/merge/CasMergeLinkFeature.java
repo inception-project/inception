@@ -77,6 +77,18 @@ class CasMergeLinkFeature
 
         List<LinkWithRoleModel> targetLinks = adapter.getFeatureValue(slotFeature, targetLinkHost);
 
+        // If we are asked to preserve annotations already present in the target (e.g. curator
+        // decisions) and the slot was already filled when the merge started, we leave it untouched.
+        // Adding further links would modify a slot decision the curator has already made. We check
+        // against the state at the start of the merge (not the current state) so that links added
+        // to a previously empty slot earlier in this same merge run do not block merging further
+        // agreed-upon links into that slot.
+        if (aContext.isPreserveExisting() && aContext.wasSlotFilledBeforeMerge(targetLinkHost,
+                slotFeature, !targetLinks.isEmpty())) {
+            throw new AnnotationPreservedException(
+                    "The target slot is already filled and is preserved.");
+        }
+
         var newLink = new LinkWithRoleModel(sourceLink);
         newLink.targetAddr = getAddr(targetLinkTarget);
 

@@ -77,7 +77,13 @@ class CasMergeDocument
             }
             return new CasMergeOperationResult(CREATED, mergedSpanAddr);
         }
-        // b) if stacking is not allowed, modify the existing annotation with this one
+        // b) if stacking is not allowed, modify the existing annotation with this one - unless we
+        // are asked to preserve annotations already present in the target (e.g. curator decisions),
+        // in which case we leave the existing annotation untouched.
+        else if (aContext.isPreserveExisting()) {
+            throw new AnnotationPreservedException(
+                    "The target already contains a document annotation which is preserved.");
+        }
         else {
             var annoToUpdate = existingAnnos.get(0);
             copyFeatures(aContext, aDocument, aDataOwner, adapter, annoToUpdate, aSourceFs);
