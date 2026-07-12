@@ -24,16 +24,21 @@ import static de.tudarmstadt.ukp.inception.assistant.model.MChatRoles.SYSTEM;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toPrettyJsonString;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toCollection;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,9 +72,11 @@ import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvide
 import de.tudarmstadt.ukp.inception.project.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.project.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolLibraryExtensionPoint;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaShowRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaShowResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClientExtensionPoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelCapability;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelDetails;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
@@ -81,7 +88,7 @@ public class AssistantServiceImpl
     private final SessionRegistry sessionRegistry;
     private final SimpMessagingTemplate msgTemplate;
     private final MemoryManager memoryManager;
-    private final OllamaClient ollamaClient;
+    private final LlmChatClientExtensionPoint chatClientExtensionPoint;
     private final AssistantProperties properties;
     private final EncodingRegistry encodingRegistry;
     private final RetrieverExtensionPoint retrieverExtensionPoint;
@@ -93,15 +100,15 @@ public class AssistantServiceImpl
     private WatchedResourceFile<Schema> userPreferencesSchema;
 
     public AssistantServiceImpl(SessionRegistry aSessionRegistry,
-            SimpMessagingTemplate aMsgTemplate, OllamaClient aOllamaClient,
-            AssistantProperties aProperties, EncodingRegistry aEncodingRegistry,
-            RetrieverExtensionPoint aRetrieverExtensionPoint,
+            SimpMessagingTemplate aMsgTemplate,
+            LlmChatClientExtensionPoint aChatClientExtensionPoint, AssistantProperties aProperties,
+            EncodingRegistry aEncodingRegistry, RetrieverExtensionPoint aRetrieverExtensionPoint,
             ToolLibraryExtensionPoint aToolLibraryExtensionPoint)
     {
         sessionRegistry = aSessionRegistry;
         msgTemplate = aMsgTemplate;
         memoryManager = new MemoryManager();
-        ollamaClient = aOllamaClient;
+        chatClientExtensionPoint = aChatClientExtensionPoint;
         properties = aProperties;
         encodingRegistry = aEncodingRegistry;
         retrieverExtensionPoint = aRetrieverExtensionPoint;
@@ -113,10 +120,54 @@ public class AssistantServiceImpl
                 JSONUtil::loadJsonSchema);
     }
 
+    private LlmChatClient chatClient()
+    {
+        var providerId = properties.getChatProvider();
+        return chatClientExtensionPoint.getExtension(providerId) //
+                .orElseThrow(() -> new IllegalStateException(
+                        "No LLM client registered for chat provider [" + providerId
+                                + "] — is the corresponding module on the classpath?"));
+    }
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
+        validateProviderConfiguration();
         autoDetectModelCapabilities();
+    }
+
+    /**
+     * Validates at startup that the configured chat (and, if set, embedding) provider ids resolve
+     * to a registered {@link LlmChatClient}. A misconfigured assistant should not take down the
+     * whole application context, so we log an actionable ERROR (listing the available provider ids)
+     * instead of throwing.
+     */
+    private void validateProviderConfiguration()
+    {
+        var chatProvider = properties.getChatProvider();
+        if (isBlank(chatProvider)
+                || chatClientExtensionPoint.getExtension(chatProvider).isEmpty()) {
+            LOG.error("No LLM client is registered for the configured chat provider [{}]. "
+                    + "The assistant will not work until this is fixed. Available providers: [{}]",
+                    chatProvider, availableProviderIds());
+        }
+
+        var embeddingProvider = properties.getEmbeddingProvider();
+        if (isNotBlank(embeddingProvider)
+                && chatClientExtensionPoint.getExtension(embeddingProvider).isEmpty()) {
+            LOG.error(
+                    "No LLM client is registered for the configured embedding provider [{}]. "
+                            + "Embedding-based features will not work until this is fixed. "
+                            + "Available providers: [{}]",
+                    embeddingProvider, availableProviderIds());
+        }
+    }
+
+    private String availableProviderIds()
+    {
+        return chatClientExtensionPoint.getExtensions().stream() //
+                .map(LlmChatClient::getId) //
+                .collect(joining(", "));
     }
 
     // Set order so this is handled before session info is removed from sessionRegistry
@@ -214,7 +265,7 @@ public class AssistantServiceImpl
 
         try {
             var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
-            var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
+            var assistant = new AgentLoop(properties, chatClient(), aSessionOwner, aProject, memory,
                     getEncoding());
             assistant.setSystemMessages(generateSystemMessages(aProject));
             assistant.setMessageStreamHandler(this::handleStreamedMessageFragment);
@@ -248,7 +299,7 @@ public class AssistantServiceImpl
             dispatchMessage(aSessionOwner.getUsername(), aProject, aMessage);
         }
 
-        var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
+        var assistant = new AgentLoop(properties, chatClient(), aSessionOwner, aProject, memory,
                 getEncoding());
         assistant.setSystemMessages(generateSystemMessages(aProject));
         assistant.setMessageStreamHandler(this::handleStreamedMessageFragment);
@@ -274,7 +325,7 @@ public class AssistantServiceImpl
             MTextMessage... aContextMessages)
     {
         var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
-        var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
+        var assistant = new AgentLoop(properties, chatClient(), aSessionOwner, aProject, memory,
                 getEncoding());
         assistant.setIgnoreMemory(true);
         assistant.setSystemMessages(generateSystemMessages(aProject));
@@ -295,7 +346,7 @@ public class AssistantServiceImpl
             String aDataOwner, MTextMessage aMessage)
     {
         var memory = memoryManager.getMemory(aSessionOwner.getUsername(), aProject);
-        var assistant = new AgentLoop(properties, ollamaClient, aSessionOwner, aProject, memory,
+        var assistant = new AgentLoop(properties, chatClient(), aSessionOwner, aProject, memory,
                 getEncoding());
         assistant.setSystemMessages(generateSystemMessages(aProject));
         assistant.setEphemeralMessages(generateEphemeralMessages(aProject, aMessage));
@@ -429,14 +480,11 @@ public class AssistantServiceImpl
 
         synchronized (chatProperties) {
             if (autoDetectCapabilities || autoDetectContextLength) {
-                OllamaShowResponse modelInfo = null;
+                ModelDetails details = null;
                 try {
                     LOG.info("Contacting [{}] to retrieve information about model [{}]...",
-                            properties.getUrl(), chatProperties.getModel());
-                    modelInfo = ollamaClient.getModelInfo(properties.getUrl(),
-                            OllamaShowRequest.builder().withModel(chatProperties.getModel()) //
-                                    .withApiKey(properties.getApiKey()) //
-                                    .build());
+                            properties.getChatUrl(), chatProperties.getModel());
+                    details = chatClient().describeModel(chatEndpoint()).orElse(null);
                 }
                 catch (Exception e) {
                     if (LOG.isDebugEnabled()) {
@@ -448,9 +496,8 @@ public class AssistantServiceImpl
                 }
 
                 if (autoDetectContextLength) {
-                    if (modelInfo != null && modelInfo.info() != null
-                            && modelInfo.info().getContextLength() != null) {
-                        chatProperties.setContextLength(modelInfo.info().getContextLength());
+                    if (details != null && details.contextLength() != null) {
+                        chatProperties.setContextLength(details.contextLength());
                         LOG.info("Auto-detected context length: {}",
                                 chatProperties.getContextLength());
                     }
@@ -463,19 +510,68 @@ public class AssistantServiceImpl
                 }
 
                 if (autoDetectCapabilities) {
-                    if (modelInfo != null && CollectionUtils.isNotEmpty(modelInfo.capabilities())) {
-                        chatProperties.setCapabilities(modelInfo.capabilities());
+                    if (details != null && !details.capabilities().isEmpty()) {
+                        chatProperties.setCapabilities(toAssistantCapabilities(details));
                         LOG.info("Auto-detected capabilties dimension of model [{}]: {}",
                                 chatProperties.getModel(), chatProperties.getCapabilities());
                     }
                     else {
-                        chatProperties.setCapabilities(Set.of(CAP_COMPLETION));
-                        LOG.info("Unable to auto-detect capabilities - using default: {}",
-                                chatProperties.getCapabilities());
+                        // The provider exposes no per-model capability introspection (e.g. the
+                        // OpenAI API has no such endpoint). Fall back to the capabilities the
+                        // adapter statically declares it supports rather than assuming
+                        // completion-only, so tool calling stays available on such providers.
+                        var staticCaps = toAssistantCapabilities(
+                                chatClient().supportedCapabilities());
+                        if (!staticCaps.isEmpty()) {
+                            chatProperties.setCapabilities(staticCaps);
+                            LOG.info(
+                                    "Model reported no capabilities - using adapter-declared "
+                                            + "capabilities for [{}]: {}",
+                                    chatClient().getId(), staticCaps);
+                        }
+                        else {
+                            chatProperties.setCapabilities(Set.of(CAP_COMPLETION));
+                            LOG.info("Unable to auto-detect capabilities - using default: {}",
+                                    chatProperties.getCapabilities());
+                        }
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Translates the neutral {@link ModelCapability} set reported by the client into the
+     * assistant's own String capability tokens. Capabilities with no assistant-level equivalent are
+     * ignored. For an Ollama model reporting {@code completion}+{@code tools} this yields the same
+     * {@code {completion, tools}} set the previous Ollama-specific code produced.
+     */
+    private static Set<String> toAssistantCapabilities(ModelDetails aDetails)
+    {
+        return toAssistantCapabilities(aDetails.capabilities());
+    }
+
+    private static Set<String> toAssistantCapabilities(Collection<ModelCapability> aCapabilities)
+    {
+        return aCapabilities.stream() //
+                .map(AssistantServiceImpl::toAssistantCapability) //
+                .filter(c -> c != null) //
+                .collect(toCollection(LinkedHashSet::new));
+    }
+
+    private static String toAssistantCapability(ModelCapability aCapability)
+    {
+        return switch (aCapability) {
+        case CHAT -> CAP_COMPLETION;
+        case TOOLS -> CAP_TOOLS;
+        default -> null; // no assistant-level equivalent
+        };
+    }
+
+    private LlmEndpoint chatEndpoint()
+    {
+        return new LlmEndpoint(chatClient().getId(), properties.getChatUrl(),
+                properties.getChat().getModel(), LlmAuth.apiKeyAuth(properties.getChatApiKey()));
     }
 
     static record AssistantStateKey(String user, long projectId) {}

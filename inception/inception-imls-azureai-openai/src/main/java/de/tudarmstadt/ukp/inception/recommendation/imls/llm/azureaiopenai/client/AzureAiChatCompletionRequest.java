@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static java.util.Arrays.asList;
 
@@ -30,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolDescriptor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.DoubleOption;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.Option;
 
@@ -56,6 +58,10 @@ public class AzureAiChatCompletionRequest
     private final @JsonInclude(NON_NULL) @JsonProperty("temperature") Double temperature;
     private final @JsonInclude(NON_NULL) @JsonProperty("top_p") Double topP;
     private final @JsonInclude(NON_NULL) @JsonProperty("seed") Integer seed;
+    private final @JsonInclude(NON_NULL) @JsonProperty("reasoning_effort") String reasoningEffort;
+    private final @JsonInclude(NON_EMPTY) @JsonProperty("tools") List<AzureAiChatCompletionTool> tools;
+    private final @JsonInclude(NON_NULL) @JsonProperty("stream") Boolean stream;
+    private final @JsonInclude(NON_NULL) @JsonProperty("stream_options") AzureAiChatCompletionStreamOptions streamOptions;
 
     private final List<AzureAiChatCompletionMessage> messages;
 
@@ -69,6 +75,11 @@ public class AzureAiChatCompletionRequest
         temperature = TEMPERATURE.get(builder.options);
         seed = SEED.get(builder.options);
         topP = TOP_P.get(builder.options);
+        reasoningEffort = builder.reasoningEffort;
+        tools = builder.tools.isEmpty() ? null : builder.tools;
+        stream = builder.stream ? Boolean.TRUE : null;
+        // Ask Azure OpenAI to include a final usage chunk when streaming; harmless otherwise.
+        streamOptions = builder.stream ? new AzureAiChatCompletionStreamOptions(true) : null;
     }
 
     public String getApiKey()
@@ -111,6 +122,26 @@ public class AzureAiChatCompletionRequest
         return seed;
     }
 
+    public String getReasoningEffort()
+    {
+        return reasoningEffort;
+    }
+
+    public List<AzureAiChatCompletionTool> getTools()
+    {
+        return tools;
+    }
+
+    public Boolean getStream()
+    {
+        return stream;
+    }
+
+    public AzureAiChatCompletionStreamOptions getStreamOptions()
+    {
+        return streamOptions;
+    }
+
     public static Builder builder()
     {
         return new Builder();
@@ -123,6 +154,9 @@ public class AzureAiChatCompletionRequest
         private AzureAiGenerateResponseFormat format;
         private Map<Option<?>, Object> options = new HashMap<>();
         private List<AzureAiChatCompletionMessage> messages = new ArrayList<>();
+        private final List<AzureAiChatCompletionTool> tools = new ArrayList<>();
+        private String reasoningEffort;
+        private boolean stream;
 
         private Builder()
         {
@@ -168,6 +202,46 @@ public class AzureAiChatCompletionRequest
         public Builder withFormat(AzureAiGenerateResponseFormat aFormat)
         {
             format = aFormat;
+            return this;
+        }
+
+        /**
+         * Translates the provider-neutral {@link ToolDescriptor}s into Azure OpenAI's
+         * {@code tools[{"type":"function","function":{...}}]} wire shape. The
+         * {@code parametersSchema()} JSON node is passed straight through as the function's
+         * {@code parameters}.
+         */
+        public Builder withTools(List<ToolDescriptor> aTools)
+        {
+            tools.clear();
+            if (aTools != null) {
+                for (var descriptor : aTools) {
+                    var function = AzureAiChatCompletionFunction.builder() //
+                            .withName(descriptor.name()) //
+                            .withDescription(descriptor.description()) //
+                            .withParameters(descriptor.parametersSchema()) //
+                            .build();
+                    tools.add(AzureAiChatCompletionTool.builder() //
+                            .withFunction(function) //
+                            .build());
+                }
+            }
+            return this;
+        }
+
+        /**
+         * Sets the Azure OpenAI {@code reasoning_effort} wire value ({@code low}/{@code medium}/
+         * {@code high}); {@code null} omits the field. Only reasoning models honor it.
+         */
+        public Builder withReasoningEffort(String aReasoningEffort)
+        {
+            reasoningEffort = aReasoningEffort;
+            return this;
+        }
+
+        public Builder withStream(boolean aStream)
+        {
+            stream = aStream;
             return this;
         }
 

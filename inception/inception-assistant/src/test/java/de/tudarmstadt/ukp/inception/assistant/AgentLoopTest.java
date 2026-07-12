@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.inception.assistant.config.AssistantPropertiesImpl;
 import de.tudarmstadt.ukp.inception.assistant.model.MTextMessage;
 import de.tudarmstadt.ukp.inception.assistant.tool.ClockToolLibrary;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaLlmChatClient;
 import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
 
 class AgentLoopTest
@@ -51,6 +52,7 @@ class AgentLoopTest
 
     private EncodingRegistry encodingRegistry = Encodings.newLazyEncodingRegistry();
     private OllamaClientImpl client = new OllamaClientImpl();
+    private OllamaLlmChatClient chatClient = new OllamaLlmChatClient(client);
 
     private AssistantPropertiesImpl props;
     private Memory memory;
@@ -82,7 +84,7 @@ class AgentLoopTest
     @Test
     void chatAgainstOllama() throws Exception
     {
-        var sut = new AgentLoop(props, client, user, null, memory, encoding);
+        var sut = new AgentLoop(props, chatClient, user, null, memory, encoding);
 
         var input = List.of(MTextMessage.builder() //
                 .withContent("Hello") //
@@ -104,7 +106,7 @@ class AgentLoopTest
     {
         // Setup AgentLoop with ClockToolLibrary
         props.getChat().setCapabilities(Set.of("tools"));
-        var sut = new AgentLoop(props, client, user, null, memory, encoding);
+        var sut = new AgentLoop(props, chatClient, user, null, memory, encoding);
         sut.addToolLibrary(new ClockToolLibrary());
         sut.setToolCallingEnabled(true);
 
@@ -163,7 +165,7 @@ class AgentLoopTest
                 .withActor("tester") //
                 .build();
 
-        var sut = new AgentLoop(props, client, user, null, memory, encoding);
+        var sut = new AgentLoop(props, chatClient, user, null, memory, encoding);
 
         sut.loop(null, "integration-test", message);
 

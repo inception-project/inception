@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.assistant.config;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +30,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AssistantPropertiesImpl
     implements AssistantProperties
 {
-    /** URL of the Ollama service. */
+    /** Default LLM provider id, used when the chat/embedding sections do not override it. */
+    private String provider = "ollama";
+
+    /** URL of the LLM service. */
     private String url = "http://localhost:11434";
 
     /** The name by which the assistant identifies itself. */
@@ -47,6 +52,17 @@ public class AssistantPropertiesImpl
     private final AssistantUserGuidePropertiesImpl userGuide = new AssistantUserGuidePropertiesImpl();
 
     private @Autowired AssistantDocumentIndexProperties documentIndex;
+
+    @Override
+    public String getProvider()
+    {
+        return provider;
+    }
+
+    public void setProvider(String aProvider)
+    {
+        provider = aProvider;
+    }
 
     public void setApiKey(String aApiKey)
     {
@@ -175,6 +191,15 @@ public class AssistantPropertiesImpl
     public static class AssistantChatPropertiesImpl
         implements AssistantChatProperties
     {
+        /** Chat LLM provider id; {@code null} inherits the top-level {@code assistant.provider}. */
+        private String provider = null;
+
+        /** Chat endpoint URL; {@code null} inherits the top-level {@code assistant.url}. */
+        private String url = null;
+
+        /** Chat API key; {@code null} inherits the top-level {@code assistant.api-key}. */
+        private String apiKey = null;
+
         /** The model used to drive the chat functionality of the assistant. */
         private String model = "llama3.2";
 
@@ -183,6 +208,12 @@ public class AssistantPropertiesImpl
          * {@code tools}. With {@code auto} the system queries the LLM service during startup to
          * determine the model's capabilities; setting this manually overrides the detection and
          * avoids the startup query.
+         * <p>
+         * {@code auto} is exclusive: if it is present, any other tokens listed alongside it are
+         * ignored and the capabilities are taken solely from detection. When the provider exposes
+         * no capability introspection (e.g. the OpenAI API), detection falls back to the
+         * capabilities the adapter statically declares it supports. To pin capabilities on such a
+         * provider, list them explicitly (e.g. {@code [completion, tools]}) without {@code auto}.
          */
         // Default ([auto]) is declared in META-INF/additional-spring-configuration-metadata.json
         // because the metadata processor cannot read instance initializer blocks.
@@ -228,6 +259,13 @@ public class AssistantPropertiesImpl
          */
         private double temperature = 0.1;
 
+        /**
+         * Free-form, provider-specific generation options merged onto the request (and overriding
+         * the typed settings on key collisions). Keys must match the configured provider's wire
+         * API.
+         */
+        private final Map<String, Object> options = new LinkedHashMap<>();
+
         {
             capabilities.add(AUTO_DETECT_CAPABILITIES);
         }
@@ -255,6 +293,39 @@ public class AssistantPropertiesImpl
         public void setModel(String aModel)
         {
             model = aModel;
+        }
+
+        @Override
+        public String getProvider()
+        {
+            return provider;
+        }
+
+        public void setProvider(String aProvider)
+        {
+            provider = aProvider;
+        }
+
+        @Override
+        public String getUrl()
+        {
+            return url;
+        }
+
+        public void setUrl(String aUrl)
+        {
+            url = aUrl;
+        }
+
+        @Override
+        public String getApiKey()
+        {
+            return apiKey;
+        }
+
+        public void setApiKey(String aApiKey)
+        {
+            apiKey = aApiKey;
         }
 
         @Override
@@ -302,6 +373,20 @@ public class AssistantPropertiesImpl
         }
 
         @Override
+        public Map<String, Object> getOptions()
+        {
+            return options;
+        }
+
+        public void setOptions(Map<String, Object> aOptions)
+        {
+            options.clear();
+            if (aOptions != null) {
+                options.putAll(aOptions);
+            }
+        }
+
+        @Override
         public int getContextLength()
         {
             return contextLength;
@@ -327,6 +412,18 @@ public class AssistantPropertiesImpl
     public static class AssistantEmbeddingPropertiesImpl
         implements AssistantEmbeddingProperties
     {
+        /**
+         * Embedding LLM provider id; {@code null} inherits the top-level
+         * {@code assistant.provider}.
+         */
+        private String provider = null;
+
+        /** Embedding endpoint URL; {@code null} inherits the top-level {@code assistant.url}. */
+        private String url = null;
+
+        /** Embedding API key; {@code null} inherits the top-level {@code assistant.api-key}. */
+        private String apiKey = null;
+
         /** The model used to drive the search functionality of the assistant. */
         private String model = "granite-embedding";
 
@@ -370,6 +467,39 @@ public class AssistantPropertiesImpl
         public void setModel(String aModel)
         {
             model = aModel;
+        }
+
+        @Override
+        public String getProvider()
+        {
+            return provider;
+        }
+
+        public void setProvider(String aProvider)
+        {
+            provider = aProvider;
+        }
+
+        @Override
+        public String getUrl()
+        {
+            return url;
+        }
+
+        public void setUrl(String aUrl)
+        {
+            url = aUrl;
+        }
+
+        @Override
+        public String getApiKey()
+        {
+            return apiKey;
+        }
+
+        public void setApiKey(String aApiKey)
+        {
+            apiKey = aApiKey;
         }
 
         @Override

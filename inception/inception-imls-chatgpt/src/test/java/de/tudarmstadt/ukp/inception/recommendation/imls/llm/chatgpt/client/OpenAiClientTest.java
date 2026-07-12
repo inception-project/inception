@@ -17,61 +17,135 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client;
 
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.ChatGptRecommenderTraits.OPENAI_API_URL;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptResponseFormatType.JSON_OBJECT;
-import static org.assertj.core.api.Assumptions.assumeThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ServerSentEventReader;
+
+/**
+ * Offline unit tests for {@link ChatGptClientImpl}'s SSE stream assembly, driven by canned
+ * {@code data:} lines (parsed via {@link ServerSentEventReader}) with no live server. Live-server
+ * behavior is covered by {@link OpenAiClientIntegrationTest}.
+ */
 class OpenAiClientTest
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private final ChatGptClientImpl sut = new ChatGptClientImpl();
 
-    private static final String CHATGPT_BASE_URL = System.getProperty("chatgpt-base-url",
-            OPENAI_API_URL);
-    private static final String CHATGPT_API_KEY = System.getProperty("chatgpt-api-key");
-
-    private ChatGptClientImpl sut = new ChatGptClientImpl();
-
-    @BeforeAll
-    static void setupClass()
+    @Test
+    void testSseContentAssemblyAndCallbacks() throws Exception
     {
-        assumeThat(CHATGPT_BASE_URL).isNotBlank();
-        assumeThat(CHATGPT_API_KEY).isNotBlank();
+        var lines = List.of( //
+                "data: {\"model\":\"gpt-4o\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Hel\"}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"content\":\"lo\"}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"stop\"}]}", //
+                "", //
+                "data: {\"choices\":[],\"usage\":{\"prompt_tokens\":5,\"completion_tokens\":2,\"total_tokens\":7}}", //
+                "", //
+                "data: [DONE]");
+
+        var deltas = new ArrayList<String>();
+        var response = sut.assembleSseStream(ServerSentEventReader.parse(lines.stream()),
+                "fallback-model", deltas::add);
+
+        assertThat(deltas).containsExactly("Hel", "lo");
+        assertThat(response.getModel()).isEqualTo("gpt-4o");
+        assertThat(response.getChoices().get(0).getMessage().getContent()).isEqualTo("Hello");
+        assertThat(response.getChoices().get(0).getFinishReason()).isEqualTo("stop");
+        assertThat(response.getUsage().getPromptTokens()).isEqualTo(5);
+        assertThat(response.getUsage().getCompletionTokens()).isEqualTo(2);
+        assertThat(response.getUsage().getTotalTokens()).isEqualTo(7);
     }
 
     @Test
-    void testNonStream() throws Exception
+    void testSseToolCallFragmentsAreMergedByIndex() throws Exception
     {
-        var response = sut.chat(CHATGPT_BASE_URL, ChatCompletionRequest.builder() //
-                .withApiKey(CHATGPT_API_KEY) //
-                .withPrompt("Tell me a joke.") //
-                .build());
-        LOG.info("Response: [{}]", response.trim());
+        var lines = List.of( //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"id\":\"call_1\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"{\\\"city\\\":\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"\\\"Berlin\\\"}\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"tool_calls\"}]}", //
+                "", //
+                "data: [DONE]");
+
+        var response = sut.assembleSseStream(ServerSentEventReader.parse(lines.stream()), "m",
+                null);
+
+        var toolCalls = response.getChoices().get(0).getMessage().getToolCalls();
+        assertThat(toolCalls).hasSize(1);
+        assertThat(toolCalls.get(0).getId()).isEqualTo("call_1");
+        assertThat(toolCalls.get(0).getFunction().getName()).isEqualTo("get_weather");
+        assertThat(toolCalls.get(0).getFunction().getArguments())
+                .isEqualTo("{\"city\":\"Berlin\"}");
+        assertThat(response.getChoices().get(0).getFinishReason()).isEqualTo("tool_calls");
     }
 
     @Test
-    void testJson() throws Exception
+    void testSseToolCallFragmentsWithoutIndexAreMergedIntoOneCall() throws Exception
     {
-        var response = sut.chat(CHATGPT_BASE_URL, ChatCompletionRequest.builder() //
-                .withApiKey(CHATGPT_API_KEY) //
-                .withPrompt("Generate a JSON map with the key/value pairs `a = 1` and `b = 2`") //
-                .withResponseFormat(ChatGptResponseFormat.builder().withType(JSON_OBJECT).build()) //
-                .build());
-        LOG.info("Response: [{}]", response.trim());
+        // Some OpenAI-compatible servers omit "index" on continuation chunks. The id-less
+        // continuation fragments must merge into the call started by the first (id-bearing)
+        // fragment rather than each spawning a fresh call.
+        var lines = List.of( //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"id\":\"call_1\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"function\":{\"arguments\":\"{\\\"city\\\":\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"function\":{\"arguments\":\"\\\"Berlin\\\"}\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"tool_calls\"}]}", //
+                "", //
+                "data: [DONE]");
+
+        var response = sut.assembleSseStream(ServerSentEventReader.parse(lines.stream()), "m",
+                null);
+
+        var toolCalls = response.getChoices().get(0).getMessage().getToolCalls();
+        assertThat(toolCalls).hasSize(1);
+        assertThat(toolCalls.get(0).getId()).isEqualTo("call_1");
+        assertThat(toolCalls.get(0).getFunction().getName()).isEqualTo("get_weather");
+        assertThat(toolCalls.get(0).getFunction().getArguments())
+                .isEqualTo("{\"city\":\"Berlin\"}");
     }
 
     @Test
-    void testListModel() throws Exception
+    void testSseMultipleToolCallsWithoutIndexAreKeptSeparate() throws Exception
     {
-        var response = sut.listModels(CHATGPT_BASE_URL, ListModelsRequest.builder() //
-                .withApiKey(CHATGPT_API_KEY) //
-                .build());
-        LOG.info("Response: [{}]", response);
+        // Two distinct calls, each streamed as an id-bearing opener followed by an id-less
+        // continuation, all without "index". A new id must start a new call while id-less
+        // fragments extend the call opened most recently.
+        var lines = List.of( //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"id\":\"call_1\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\":\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"function\":{\"arguments\":\"\\\"Berlin\\\"}\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"id\":\"call_2\",\"type\":\"function\",\"function\":{\"name\":\"get_time\",\"arguments\":\"{\\\"tz\\\":\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"function\":{\"arguments\":\"\\\"CET\\\"}\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"tool_calls\"}]}", //
+                "", //
+                "data: [DONE]");
+
+        var response = sut.assembleSseStream(ServerSentEventReader.parse(lines.stream()), "m",
+                null);
+
+        var toolCalls = response.getChoices().get(0).getMessage().getToolCalls();
+        assertThat(toolCalls).hasSize(2);
+        assertThat(toolCalls.get(0).getId()).isEqualTo("call_1");
+        assertThat(toolCalls.get(0).getFunction().getName()).isEqualTo("get_weather");
+        assertThat(toolCalls.get(0).getFunction().getArguments())
+                .isEqualTo("{\"city\":\"Berlin\"}");
+        assertThat(toolCalls.get(1).getId()).isEqualTo("call_2");
+        assertThat(toolCalls.get(1).getFunction().getName()).isEqualTo("get_time");
+        assertThat(toolCalls.get(1).getFunction().getArguments()).isEqualTo("{\"tz\":\"CET\"}");
     }
 }

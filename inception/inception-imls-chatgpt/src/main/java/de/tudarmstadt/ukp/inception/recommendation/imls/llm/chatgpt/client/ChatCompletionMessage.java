@@ -17,7 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -25,6 +31,8 @@ public class ChatCompletionMessage
 {
     private @JsonProperty("role") String role;
     private @JsonProperty("content") String content;
+    private @JsonInclude(NON_EMPTY) @JsonProperty("tool_calls") List<ChatCompletionToolCall> toolCalls;
+    private @JsonInclude(NON_NULL) @JsonProperty("tool_call_id") String toolCallId;
 
     public ChatCompletionMessage()
     {
@@ -35,6 +43,15 @@ public class ChatCompletionMessage
     {
         role = aRole;
         content = aContent;
+    }
+
+    public ChatCompletionMessage(String aRole, String aContent,
+            List<ChatCompletionToolCall> aToolCalls, String aToolCallId)
+    {
+        role = aRole;
+        content = aContent;
+        toolCalls = aToolCalls;
+        toolCallId = aToolCallId;
     }
 
     public String getRole()
@@ -55,5 +72,25 @@ public class ChatCompletionMessage
     public void setContent(String aContent)
     {
         content = aContent;
+    }
+
+    public List<ChatCompletionToolCall> getToolCalls()
+    {
+        return toolCalls;
+    }
+
+    public void setToolCalls(List<ChatCompletionToolCall> aToolCalls)
+    {
+        toolCalls = aToolCalls;
+    }
+
+    public String getToolCallId()
+    {
+        return toolCallId;
+    }
+
+    public void setToolCallId(String aToolCallId)
+    {
+        toolCallId = aToolCallId;
     }
 }

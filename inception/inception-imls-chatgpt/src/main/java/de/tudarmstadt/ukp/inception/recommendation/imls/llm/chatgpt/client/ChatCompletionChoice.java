@@ -25,6 +25,7 @@ public class ChatCompletionChoice
 {
     private @JsonProperty("index") int index;
     private @JsonProperty("message") ChatCompletionMessage message;
+    private @JsonProperty("delta") ChatCompletionMessage delta;
     private @JsonProperty("finish_reason") String finishReason;
 
     public int getIndex()
@@ -45,6 +46,20 @@ public class ChatCompletionChoice
     public void setMessage(ChatCompletionMessage aMessage)
     {
         message = aMessage;
+    }
+
+    /**
+     * The incremental message delta carried by a streaming chunk (OpenAI sends {@code delta} on
+     * streamed responses in place of the complete {@code message}).
+     */
+    public ChatCompletionMessage getDelta()
+    {
+        return delta;
+    }
+
+    public void setDelta(ChatCompletionMessage aDelta)
+    {
+        delta = aDelta;
     }
 
     public String getFinishReason()

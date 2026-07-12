@@ -109,12 +109,14 @@ Tune the balance between more randomness (high >= 1.0) and less randomness (low,
 | `r50k_base`, `p50k_base`, `p50k_edit`, `cl100k_base` or `o200k_base`
 
 | `assistant.chat.capabilities`
-| The capabilities of the model. 
-  Relevant values are `auto`, `completion`, and `tools`. 
+| The capabilities of the model.
+  Relevant values are `auto`, `completion`, and `tools`.
   If set to `auto`, the system will query the LLM service during startup to determine the capabilities of the model.
+  Auto-detection is only available for providers that expose a model-introspection API (e.g. Ollama); for other providers (such as OpenAI or Azure OpenAI) the query returns nothing and the system falls back to `completion` — set this value explicitly for those providers.
   You can use this setting to override the detected capabilities.
   E.g. if the model is reluctant to use tools and you prefer {product-name} to proactively provide context from the documents in the project, just provide `completion` here.
   It is also useful to avoid unnecessary queries to the LLM service during startup if you know the capabilities of the model already.
+  Regardless of what is configured here, a capability only takes effect if the selected provider's client is able to deliver it: capabilities the provider client does not support are silently ignored.
 | `auto`
 | `completion`, `tools`
 |===

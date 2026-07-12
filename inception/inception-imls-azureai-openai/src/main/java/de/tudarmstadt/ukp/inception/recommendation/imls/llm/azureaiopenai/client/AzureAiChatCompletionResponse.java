@@ -28,6 +28,7 @@ public class AzureAiChatCompletionResponse
     private @JsonProperty("model") String model;
     private @JsonProperty("created") long createdAt;
     private @JsonProperty("choices") List<AzureAiChatCompletionChoice> choices;
+    private @JsonProperty("usage") AzureAiChatCompletionUsage usage;
 
     public String getModel()
     {
@@ -57,5 +58,15 @@ public class AzureAiChatCompletionResponse
     public void setChoices(List<AzureAiChatCompletionChoice> aChoices)
     {
         choices = aChoices;
+    }
+
+    public AzureAiChatCompletionUsage getUsage()
+    {
+        return usage;
+    }
+
+    public void setUsage(AzureAiChatCompletionUsage aUsage)
+    {
+        usage = aUsage;
     }
 }

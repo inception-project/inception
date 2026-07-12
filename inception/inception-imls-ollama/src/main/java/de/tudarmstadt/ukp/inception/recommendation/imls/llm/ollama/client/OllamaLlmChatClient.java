@@ -17,11 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client;
 
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatOptionsTranslator.applyIfPresent;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions.NUM_CTX;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions.REPEAT_PENALTY;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions.TEMPERATURE;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions.TOP_K;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaOptions.TOP_P;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -30,10 +38,13 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatChunk;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatOptions;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatResult;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.FinishReason;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.JsonResponseSanitizer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelCapability;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelDetails;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelInfo;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ReasoningEffort;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolCall;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolDescriptor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.UsageInfo;
@@ -87,7 +98,7 @@ public class OllamaLlmChatClient
     {
         var request = buildChatRequest(aEndpoint, aMessages, aOptions, false);
         var response = client.chat(aEndpoint.url(), request);
-        return toChatResult(response);
+        return toChatResult(response, aOptions.isJsonRequested());
     }
 
     @Override
@@ -107,7 +118,7 @@ public class OllamaLlmChatClient
             aOnChunk.accept(new ChatChunk(msg.content(), msg.thinking()));
         };
         var response = client.chat(aEndpoint.url(), request, callback);
-        return toChatResult(response);
+        return toChatResult(response, aOptions.isJsonRequested());
     }
 
     @Override
@@ -137,6 +148,48 @@ public class OllamaLlmChatClient
                 .toList();
     }
 
+    @Override
+    public Optional<ModelDetails> describeModel(LlmEndpoint aEndpoint) throws IOException
+    {
+        var response = client.getModelInfo(aEndpoint.url(), OllamaShowRequest.builder() //
+                .withModel(aEndpoint.model()) //
+                .withApiKey(apiKey(aEndpoint)) //
+                .build());
+
+        var contextLength = response.info() != null ? response.info().getContextLength() : null;
+
+        var capabilities = EnumSet.noneOf(ModelCapability.class);
+        if (response.capabilities() != null) {
+            response.capabilities().stream() //
+                    .map(OllamaLlmChatClient::toModelCapability) //
+                    .filter(c -> c != null) //
+                    .forEach(capabilities::add);
+        }
+
+        return Optional.of(new ModelDetails(contextLength, capabilities));
+    }
+
+    /**
+     * Translates one of Ollama's own capability tokens (as reported by {@code ollama show}) into
+     * the provider-neutral {@link ModelCapability}. Returns {@code null} for tokens that have no
+     * neutral equivalent (e.g. {@code insert}) or that are unknown, so callers can filter them out.
+     */
+    private static ModelCapability toModelCapability(String aOllamaCapability)
+    {
+        if (aOllamaCapability == null) {
+            return null;
+        }
+
+        return switch (aOllamaCapability) {
+        case "completion" -> ModelCapability.CHAT;
+        case "tools" -> ModelCapability.TOOLS;
+        case "vision" -> ModelCapability.VISION;
+        case "thinking" -> ModelCapability.THINKING;
+        case "embedding" -> ModelCapability.EMBEDDINGS;
+        default -> null; // e.g. "insert" - no neutral equivalent
+        };
+    }
+
     private OllamaChatRequest buildChatRequest(LlmEndpoint aEndpoint, List<ChatMessage> aMessages,
             ChatOptions aOptions, boolean aStream)
     {
@@ -149,8 +202,16 @@ public class OllamaLlmChatClient
                 .withModel(aEndpoint.model()) //
                 .withMessages(messages) //
                 .withFormat(toFormat(aOptions)) //
-                .withThink(false) //
+                .withThink(toThink(aOptions.reasoningEffort())) //
                 .withStream(aStream);
+
+        // Translate the provider-neutral fields to Ollama's parameters; explicit options below
+        // override them.
+        applyIfPresent(aOptions.temperature(), v -> builder.withOption(TEMPERATURE, v));
+        applyIfPresent(aOptions.topP(), v -> builder.withOption(TOP_P, v));
+        applyIfPresent(aOptions.contextLength(), v -> builder.withOption(NUM_CTX, v));
+        applyIfPresent(aOptions.topK(), v -> builder.withOption(TOP_K, v));
+        applyIfPresent(aOptions.repeatPenalty(), v -> builder.withOption(REPEAT_PENALTY, v));
 
         if (aOptions.options() != null) {
             builder.withExtraOptions(aOptions.options());
@@ -169,7 +230,25 @@ public class OllamaLlmChatClient
     {
         // tool_call_id is not currently part of the OllamaChatMessage DTO; Ollama matches tool
         // results to calls positionally. Drop the id on the way out.
-        return new OllamaChatMessage(aMessage.role().getName(), aMessage.content());
+        var toolCalls = aMessage.toolCalls().stream() //
+                .map(OllamaLlmChatClient::toOllamaToolCall) //
+                .toList();
+        return new OllamaChatMessage(aMessage.role().getName(), aMessage.content(),
+                aMessage.thinking(), toolCalls);
+    }
+
+    private static OllamaToolCall toOllamaToolCall(ToolCall aCall)
+    {
+        var functionCall = new OllamaFunctionCall();
+        functionCall.setName(aCall.name());
+        if (aCall.arguments() != null && !aCall.arguments().isNull()) {
+            @SuppressWarnings("unchecked")
+            var arguments = JSONUtil.getObjectMapper().convertValue(aCall.arguments(), Map.class);
+            functionCall.setArguments(arguments);
+        }
+        var toolCall = new OllamaToolCall();
+        toolCall.setFunction(functionCall);
+        return toolCall;
     }
 
     private static OllamaTool toOllamaTool(ToolDescriptor aDescriptor)
@@ -218,12 +297,13 @@ public class OllamaLlmChatClient
         return builder.build();
     }
 
-    private static ChatResult toChatResult(OllamaChatResponse aResponse)
+    private static ChatResult toChatResult(OllamaChatResponse aResponse, boolean aJsonRequested)
     {
         var ollamaMessage = aResponse.getMessage();
         var content = ollamaMessage != null && ollamaMessage.content() != null //
                 ? ollamaMessage.content() //
                 : "";
+        content = JsonResponseSanitizer.stripCodeFenceIf(aJsonRequested, content);
         var role = ollamaMessage != null && ollamaMessage.role() != null //
                 ? roleFromOllama(ollamaMessage.role()) //
                 : ChatMessage.Role.ASSISTANT;
@@ -281,6 +361,27 @@ public class OllamaLlmChatClient
             return JsonNodeFactory.instance.textNode("json");
         }
         return null;
+    }
+
+    /**
+     * Maps the neutral {@link ReasoningEffort} to Ollama's {@code think} wire value: {@code null} /
+     * {@code MODEL_DEFAULT} omit the field (model default), {@code NONE} sends {@code false}, and
+     * the levels pass through as their lowercase strings (Ollama honors {@code low}/{@code medium}/
+     * {@code high}/{@code max} on models that support them). Returns {@code null} to omit.
+     */
+    private static Object toThink(ReasoningEffort aEffort)
+    {
+        if (aEffort == null) {
+            return null;
+        }
+        return switch (aEffort) {
+        case MODEL_DEFAULT -> null;
+        case NONE -> Boolean.FALSE;
+        case LOW -> "low";
+        case MEDIUM -> "medium";
+        case HIGH -> "high";
+        case MAX -> "max";
+        };
     }
 
     private static String apiKey(LlmEndpoint aEndpoint)

@@ -25,6 +25,7 @@ public class AzureAiChatCompletionChoice
 {
     private @JsonProperty("index") int index;
     private @JsonProperty("message") AzureAiChatCompletionMessage message;
+    private @JsonProperty("delta") AzureAiChatCompletionMessage delta;
     private @JsonProperty("finish_reason") String finishReason;
 
     public int getIndex()
@@ -45,6 +46,20 @@ public class AzureAiChatCompletionChoice
     public void setMessage(AzureAiChatCompletionMessage aMessage)
     {
         message = aMessage;
+    }
+
+    /**
+     * @return the incremental message delta carried by a streaming chunk (Azure OpenAI sends
+     *         {@code delta} on streamed responses in place of the complete {@code message}).
+     */
+    public AzureAiChatCompletionMessage getDelta()
+    {
+        return delta;
+    }
+
+    public void setDelta(AzureAiChatCompletionMessage aDelta)
+    {
+        delta = aDelta;
     }
 
     public String getFinishReason()

@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 @JsonTypeName(MCallResponse.TYPE_CALL_RESPONSE)
 public record MCallResponse<T>(UUID id, String role, String actor, boolean internal,
         boolean ephemeral, MPerformanceMetrics performance, List<MReference> references,
-        String toolName, UUID context, Map<String, Object> arguments, T payload)
+        String toolCallId, String toolName, UUID context, Map<String, Object> arguments, T payload)
     implements MChatMessage
 {
 
@@ -42,7 +42,8 @@ public record MCallResponse<T>(UUID id, String role, String actor, boolean inter
     {
         this(aBuilder.id, aBuilder.role, aBuilder.actor, aBuilder.internal, aBuilder.ephemeral,
                 aBuilder.performance, aBuilder.references.values().stream().toList(),
-                aBuilder.toolName, aBuilder.context, aBuilder.arguments, aBuilder.payload);
+                aBuilder.toolCallId, aBuilder.toolName, aBuilder.context, aBuilder.arguments,
+                aBuilder.payload);
     }
 
     @JsonProperty(MMessage.TYPE_FIELD)
@@ -82,6 +83,7 @@ public record MCallResponse<T>(UUID id, String role, String actor, boolean inter
         private MPerformanceMetrics performance;
         private final Map<String, MReference> references = new LinkedHashMap<>();
         private final Map<String, Object> arguments = new LinkedHashMap<>();
+        private String toolCallId;
         private String toolName;
         private String toolActor;
         private T payload;
@@ -164,11 +166,13 @@ public record MCallResponse<T>(UUID id, String role, String actor, boolean inter
             arguments.clear();
 
             if (aToolCall == null) {
+                toolCallId = null;
                 toolName = null;
                 toolActor = null;
                 return this;
             }
 
+            toolCallId = aToolCall.id();
             toolName = ToolUtils.getFunctionName(aToolCall.method());
             toolActor = aToolCall.actor();
             for (var arg : aToolCall.arguments().entrySet()) {
@@ -185,8 +189,8 @@ public record MCallResponse<T>(UUID id, String role, String actor, boolean inter
             var effectiveActor = actor != null ? actor : (toolActor != null ? toolActor : "Tool");
 
             return new MCallResponse<>(effectiveId, role, effectiveActor, internal, ephemeral,
-                    performance, references.values().stream().toList(), toolName, context,
-                    arguments, payload);
+                    performance, references.values().stream().toList(), toolCallId, toolName,
+                    context, arguments, payload);
         }
     }
 }
