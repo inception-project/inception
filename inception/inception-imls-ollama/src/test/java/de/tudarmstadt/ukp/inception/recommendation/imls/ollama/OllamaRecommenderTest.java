@@ -71,7 +71,7 @@ class OllamaRecommenderTest
 {
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final String DEFAULT_MODEL = "ministral-3:8b";
+    private static final String DEFAULT_MODEL = "nemotron-3-nano:4b";
 
     private @Mock AnnotationSchemaService schemaSerivce;
 

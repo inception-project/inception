@@ -66,6 +66,17 @@
       <artifactId>junit-jupiter-api</artifactId>
     </dependency>
 
+    <!-- Testcontainers - used by the LLM test-support helpers (e.g. OllamazureContainer).
+         Compile-scoped because they are part of this module's main API. -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-junit-jupiter</artifactId>
+    </dependency>
+
     <!-- UIMA -->
     <dependency>
       <groupId>org.apache.uima</groupId>
@@ -97,4 +108,25 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <usedDependencies combine.children="append">
+              <!--
+                - Not referenced by this module's own code, but re-exported so that consumers of
+                - the LLM test-support helpers get the @Testcontainers/@Container JUnit 5
+                - integration alongside the core testcontainers API.
+              -->
+              <usedDependency>org.testcontainers:testcontainers-junit-jupiter</usedDependency>
+            </usedDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>

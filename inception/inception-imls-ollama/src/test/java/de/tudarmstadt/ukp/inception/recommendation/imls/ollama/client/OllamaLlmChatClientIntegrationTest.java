@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.Tool;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolParam;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatChunk;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatOptions;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ReasoningEffort;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.FinishReason;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolDescriptor;
@@ -49,15 +50,18 @@ import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
 
 /**
  * Exercises {@link OllamaLlmChatClient} against a locally running Ollama. Requires {@code
- * ministral-3:8b} and {@code granite-embedding:278m-fp16} to be pulled; skipped if no Ollama is
- * reachable.
+ * nemotron-3-nano:4b} (chat/tool/JSON/thinking) and {@code granite-embedding:278m-fp16}
+ * (embeddings) to be pulled; skipped if no Ollama is reachable.
  */
 class OllamaLlmChatClientIntegrationTest
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final String CHAT_MODEL = "ministral-3:8b";
+    private static final String CHAT_MODEL = "nemotron-3-nano:4b";
     private static final String EMBED_MODEL = "granite-embedding:278m-fp16";
+    // nemotron-3-nano is a hybrid model: the same model serves the chat/tool/JSON tests and the
+    // thinking tests (it has a toggleable thinking channel).
+    private static final String THINKING_MODEL = CHAT_MODEL;
 
     private final OllamaLlmChatClient sut = new OllamaLlmChatClient(
             new OllamaClientImpl(HttpClient.newBuilder().build(), new OllamaMetricsImpl()));
@@ -87,6 +91,48 @@ class OllamaLlmChatClientIntegrationTest
         assertThat(result.finishReason()).isNotNull();
         assertThat(result.usage()).isNotNull();
         assertThat(result.usage().totalTokens()).isPositive();
+    }
+
+    /**
+     * A reasoning model, left at its default thinking behavior (the client no longer forces
+     * {@code think=false}), must still return a non-empty final answer in {@code content} — the
+     * reasoning goes into {@code thinking}, not instead of the answer.
+     */
+    @Test
+    void testChatWithThinkingModelDefault() throws Exception
+    {
+        var messages = List.of(new ChatMessage(USER, "What is 17 + 25? Answer briefly."));
+
+        var result = sut.chat(endpoint(THINKING_MODEL), messages, ChatOptions.defaults());
+
+        LOG.info("Content: [{}]", result.message().content());
+        LOG.info("Thinking: [{}]", result.message().thinking());
+        assertThat(result.message().content()) //
+                .as("final answer is not swallowed by the thinking output") //
+                .isNotBlank();
+    }
+
+    /**
+     * Explicitly requesting reasoning via {@link ChatOptions#reasoningEffort()} must surface the
+     * model's reasoning in {@code thinking} while still returning the final answer in
+     * {@code content}.
+     */
+    @Test
+    void testChatWithThinkingEnabled() throws Exception
+    {
+        var messages = List.of(new ChatMessage(USER, "What is 17 + 25? Answer briefly."));
+        var options = ChatOptions.builder().withReasoningEffort(ReasoningEffort.HIGH).build();
+
+        var result = sut.chat(endpoint(THINKING_MODEL), messages, options);
+
+        LOG.info("Content: [{}]", result.message().content());
+        LOG.info("Thinking: [{}]", result.message().thinking());
+        assertThat(result.message().thinking()) //
+                .as("reasoning is surfaced separately when reasoning effort is requested") //
+                .isNotBlank();
+        assertThat(result.message().content()) //
+                .as("final answer is still present alongside the thinking") //
+                .isNotBlank();
     }
 
     @Test

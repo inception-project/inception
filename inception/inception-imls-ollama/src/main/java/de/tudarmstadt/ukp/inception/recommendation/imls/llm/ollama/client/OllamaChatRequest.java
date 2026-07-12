@@ -42,7 +42,9 @@ public class OllamaChatRequest
     private String model;
     private List<OllamaChatMessage> messages;
     private boolean stream;
-    private @JsonInclude(Include.NON_NULL) Boolean think;
+    // Ollama accepts a boolean (true/false) or a level string ("low"/"medium"/"high"/"max"),
+    // depending on the model; hence Object. null omits the field (model default).
+    private @JsonInclude(Include.NON_NULL) Object think;
     private @JsonInclude(Include.NON_NULL) JsonNode format;
     private @JsonInclude(Include.NON_DEFAULT) boolean raw;
     private @JsonInclude(Include.NON_EMPTY) Map<String, Object> options = new HashMap<>();
@@ -121,7 +123,9 @@ public class OllamaChatRequest
         private String model;
         private List<OllamaChatMessage> messages = new ArrayList<>();
         private final List<OllamaTool> tools = new ArrayList<>();
-        private Boolean think = false;
+        // null = omit the wire field so Ollama applies the model default (thinking models think,
+        // others don't). A Boolean forces on/off; a level string ("low".."max") tunes depth.
+        private Object think = null;
 
         private JsonNode format;
         private boolean raw;
@@ -222,8 +226,14 @@ public class OllamaChatRequest
             return this;
         }
 
-        // FIXME: ollama would also support low/medium/high for some models
-        public <T> Builder withThink(Boolean aThink)
+        /**
+         * @param aThink
+         *            {@code null} to omit the field (model default), {@link Boolean} to force
+         *            thinking on/off, or a level string ({@code "low"}/{@code "medium"}/
+         *            {@code "high"}/{@code "max"}) to tune reasoning depth. gpt-oss-style models
+         *            accept only the level strings.
+         */
+        public Builder withThink(Object aThink)
         {
             think = aThink;
             return this;

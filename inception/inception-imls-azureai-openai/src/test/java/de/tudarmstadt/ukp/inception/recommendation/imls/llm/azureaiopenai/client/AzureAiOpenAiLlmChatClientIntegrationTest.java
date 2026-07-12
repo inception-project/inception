@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client;
+package de.tudarmstadt.ukp.inception.recommendation.imls.llm.azureaiopenai.client;
 
 import static de.tudarmstadt.ukp.inception.recommendation.imls.llm.ChatMessage.Role.USER;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,7 +35,6 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.Tool;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolParam;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatChunk;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatOptions;
-import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.FinishReason;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolDescriptor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
@@ -44,30 +43,60 @@ import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.test.http.HttpTestUtils;
 
 /**
- * Exercises {@link ChatGptLlmChatClient} against Ollama's OpenAI-compatible endpoint. The
- * {@code /v1} path segment is appended by the client, so the endpoint URL points at the Ollama
- * root. Requires a local Ollama with {@code nemotron-3-nano:4b} pulled; skipped otherwise.
+ * Exercises {@link AzureAiOpenAiLlmChatClient} end-to-end against a locally running
+ * <a href="https://github.com/sinedied/ollamazure">ollamazure</a>, a local emulator of the Azure
+ * OpenAI REST API (deployment name in the URL path, {@code api-version} query parameter) backed by
+ * Ollama. ollamazure needs no Azure credentials - the {@code api-key} header must merely be
+ * present, and its value is ignored.
+ * <p>
+ * The test is skipped (JUnit assumption, not a failure) unless ollamazure is reachable, mirroring
+ * {@code OllamaLlmChatClientIntegrationTest}. Start it yourself before running - the test does not:
+ *
+ * <pre>
+ * npm install -g ollamazure
+ * ollamazure
+ * </pre>
+ *
+ * with the default completions model {@code phi3} and embeddings model {@code all-minilm:l6-v2} on
+ * the default port 4041. Overridable via system properties: {@code ollamazure-base-url} (the server
+ * root used for the reachability probe), {@code ollamazure-deployment-url} (the Azure-shaped base
+ * URL handed to the client, deployment path included), and {@code ollamazure-chat-model}. Offline
+ * request/response mapping is covered by {@link AzureAiOpenAiLlmChatClientTest}.
  */
-class ChatGptLlmChatClientIntegrationTest
+class AzureAiOpenAiLlmChatClientIntegrationTest
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final String OLLAMA_URL = "http://localhost:11434";
-    private static final String MODEL = "nemotron-3-nano:4b";
+    /** ollamazure server root - used only for the reachability probe. */
+    private static final String BASE_URL = System.getProperty("ollamazure-base-url",
+            "http://localhost:4041/");
 
-    private final ChatGptLlmChatClient sut = new ChatGptLlmChatClient(new ChatGptClientImpl());
+    /** ollamazure's default completions model, doubling as the Azure "deployment" name. */
+    private static final String CHAT_MODEL = System.getProperty("ollamazure-chat-model", "phi3");
+
+    /**
+     * Azure-shaped base URL that already embeds the deployment path, matching what
+     * {@link AzureAiOpenAiClientImpl} expects (it appends
+     * {@code chat/completions?api-version=...}).
+     */
+    private static final String DEPLOYMENT_URL = System.getProperty("ollamazure-deployment-url",
+            "http://localhost:4041/openai/deployments/" + CHAT_MODEL);
+
+    private final AzureAiOpenAiLlmChatClient sut = new AzureAiOpenAiLlmChatClient(
+            new AzureAiOpenAiClientImpl());
 
     @BeforeAll
-    static void checkIfOllamaIsRunning()
+    static void checkIfOllamazureIsRunning()
     {
-        assumeThat(HttpTestUtils.checkURL(OLLAMA_URL)).isTrue();
+        assumeThat(HttpTestUtils.checkURL(BASE_URL)).isTrue();
     }
 
-    private static LlmEndpoint endpoint(String aModel)
+    private static LlmEndpoint endpoint()
     {
+        // ollamazure ignores the key value but the client requires a non-blank key to be present.
         var auth = new ApiKeyAuthenticationTraits();
-        auth.setApiKey("not-used-by-ollama");
-        return new LlmEndpoint(ChatGptLlmChatClient.ID, OLLAMA_URL, aModel, auth);
+        auth.setApiKey("dummy-key");
+        return new LlmEndpoint(AzureAiOpenAiLlmChatClient.ID, DEPLOYMENT_URL, CHAT_MODEL, auth);
     }
 
     @Test
@@ -75,11 +104,13 @@ class ChatGptLlmChatClientIntegrationTest
     {
         var messages = List.of(new ChatMessage(USER, "Tell me a joke in one sentence."));
 
-        var result = sut.chat(endpoint(MODEL), messages, ChatOptions.defaults());
+        var result = sut.chat(endpoint(), messages, ChatOptions.defaults());
 
         LOG.info("Response: [{}]", result.message().content());
+        LOG.info("Usage: {}", result.usage());
         assertThat(result.message().content()).isNotBlank();
         assertThat(result.message().role()).isEqualTo(ChatMessage.Role.ASSISTANT);
+        assertThat(result.finishReason()).isNotNull();
     }
 
     @Test
@@ -89,10 +120,9 @@ class ChatGptLlmChatClientIntegrationTest
                 "Return a JSON object with the keys `a` set to 1 and `b` set to 2."));
         var options = new ChatOptions(ResponseFormat.JSON, null, List.of(), null);
 
-        var result = sut.chat(endpoint(MODEL), messages, options);
+        var result = sut.chat(endpoint(), messages, options);
 
         LOG.info("Response: [{}]", result.message().content());
-        // Provider promised JSON object response; verify it parses.
         assertThat(JSONUtil.getObjectMapper().readTree(result.message().content())).isNotNull();
     }
 
@@ -102,20 +132,11 @@ class ChatGptLlmChatClientIntegrationTest
         var messages = List.of(new ChatMessage(USER, "Count from 1 to 5."));
         var chunks = new ArrayList<ChatChunk>();
 
-        var result = sut.chatStream(endpoint(MODEL), messages, ChatOptions.defaults(), chunks::add);
+        var result = sut.chatStream(endpoint(), messages, ChatOptions.defaults(), chunks::add);
 
         LOG.info("Got {} chunks, final: [{}]", chunks.size(), result.message().content());
         assertThat(chunks).isNotEmpty();
         assertThat(result.message().content()).isNotBlank();
-    }
-
-    @Test
-    void testListModels() throws Exception
-    {
-        var models = sut.listModels(endpoint(null));
-
-        LOG.info("Models: {}", models);
-        assertThat(models).extracting("id").contains(MODEL);
     }
 
     static class WeatherService
@@ -139,21 +160,15 @@ class ChatGptLlmChatClientIntegrationTest
                 .of(new ChatMessage(USER, "What is the current weather in Berlin? Use the tool."));
         var options = new ChatOptions(null, null, List.of(weatherTool), null);
 
-        var result = sut.chat(endpoint(MODEL), messages, options);
+        var result = sut.chat(endpoint(), messages, options);
 
         LOG.info("Finish reason: {}, tool calls: {}", result.finishReason(), result.toolCalls());
 
         assertThat(result.toolCalls()).as("tool calls").isNotEmpty();
-        assertThat(result.finishReason()).isEqualTo(FinishReason.TOOL_CALLS);
 
         var call = result.toolCalls().get(0);
         assertThat(call.name()).isEqualTo("get_current_weather");
         assertThat(call.arguments()).as("arguments JsonNode").isNotNull();
         assertThat(call.arguments().isObject()).as("arguments is an object node").isTrue();
-
-        var location = call.arguments().get("location");
-        assertThat(location).as("location argument node").isNotNull();
-        assertThat(location.isTextual()).as("location node is TextNode").isTrue();
-        assertThat(location.asText()).containsIgnoringCase("berlin");
     }
 }

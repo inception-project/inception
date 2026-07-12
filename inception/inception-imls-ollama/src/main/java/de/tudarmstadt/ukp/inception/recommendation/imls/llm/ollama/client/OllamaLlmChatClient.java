@@ -38,11 +38,13 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatChunk;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatOptions;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatResult;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.FinishReason;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.JsonResponseSanitizer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelCapability;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelDetails;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelInfo;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ReasoningEffort;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolCall;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolDescriptor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.UsageInfo;
@@ -96,7 +98,7 @@ public class OllamaLlmChatClient
     {
         var request = buildChatRequest(aEndpoint, aMessages, aOptions, false);
         var response = client.chat(aEndpoint.url(), request);
-        return toChatResult(response);
+        return toChatResult(response, aOptions.isJsonRequested());
     }
 
     @Override
@@ -116,7 +118,7 @@ public class OllamaLlmChatClient
             aOnChunk.accept(new ChatChunk(msg.content(), msg.thinking()));
         };
         var response = client.chat(aEndpoint.url(), request, callback);
-        return toChatResult(response);
+        return toChatResult(response, aOptions.isJsonRequested());
     }
 
     @Override
@@ -200,7 +202,7 @@ public class OllamaLlmChatClient
                 .withModel(aEndpoint.model()) //
                 .withMessages(messages) //
                 .withFormat(toFormat(aOptions)) //
-                .withThink(false) //
+                .withThink(toThink(aOptions.reasoningEffort())) //
                 .withStream(aStream);
 
         // Translate the provider-neutral fields to Ollama's parameters; explicit options below
@@ -295,12 +297,13 @@ public class OllamaLlmChatClient
         return builder.build();
     }
 
-    private static ChatResult toChatResult(OllamaChatResponse aResponse)
+    private static ChatResult toChatResult(OllamaChatResponse aResponse, boolean aJsonRequested)
     {
         var ollamaMessage = aResponse.getMessage();
         var content = ollamaMessage != null && ollamaMessage.content() != null //
                 ? ollamaMessage.content() //
                 : "";
+        content = JsonResponseSanitizer.stripCodeFenceIf(aJsonRequested, content);
         var role = ollamaMessage != null && ollamaMessage.role() != null //
                 ? roleFromOllama(ollamaMessage.role()) //
                 : ChatMessage.Role.ASSISTANT;
@@ -358,6 +361,27 @@ public class OllamaLlmChatClient
             return JsonNodeFactory.instance.textNode("json");
         }
         return null;
+    }
+
+    /**
+     * Maps the neutral {@link ReasoningEffort} to Ollama's {@code think} wire value: {@code null} /
+     * {@code MODEL_DEFAULT} omit the field (model default), {@code NONE} sends {@code false}, and
+     * the levels pass through as their lowercase strings (Ollama honors {@code low}/{@code medium}/
+     * {@code high}/{@code max} on models that support them). Returns {@code null} to omit.
+     */
+    private static Object toThink(ReasoningEffort aEffort)
+    {
+        if (aEffort == null) {
+            return null;
+        }
+        return switch (aEffort) {
+        case MODEL_DEFAULT -> null;
+        case NONE -> Boolean.FALSE;
+        case LOW -> "low";
+        case MEDIUM -> "medium";
+        case HIGH -> "high";
+        case MAX -> "max";
+        };
     }
 
     private static String apiKey(LlmEndpoint aEndpoint)

@@ -38,9 +38,11 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatChunk;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatOptions;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ChatResult;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.FinishReason;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.JsonResponseSanitizer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelCapability;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ReasoningEffort;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ToolCall;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.UsageInfo;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.response.ResponseFormat;
@@ -90,7 +92,10 @@ public class AzureAiOpenAiLlmChatClient
     {
         var request = buildChatRequest(aEndpoint, aMessages, aOptions, false);
         var response = client.generate(aEndpoint.url(), request);
-        return toChatResult(response);
+        // Trim surrounding whitespace as the pre-refactor path did. Only on the non-streaming path:
+        // the streaming path forwards raw deltas to the caller, so trimming the final content there
+        // would make it disagree with what was already streamed.
+        return trimContent(toChatResult(response, aOptions.isJsonRequested()));
     }
 
     @Override
@@ -103,7 +108,7 @@ public class AzureAiOpenAiLlmChatClient
         // surfaced; thinking stays null.
         Consumer<String> contentCallback = delta -> aOnChunk.accept(new ChatChunk(delta, null));
         var response = client.generate(aEndpoint.url(), request, contentCallback);
-        return toChatResult(response);
+        return toChatResult(response, aOptions.isJsonRequested());
     }
 
     private AzureAiChatCompletionRequest buildChatRequest(LlmEndpoint aEndpoint,
@@ -126,6 +131,10 @@ public class AzureAiOpenAiLlmChatClient
                 v -> builder.withOption(AzureAiChatCompletionRequest.TEMPERATURE, v));
         applyIfPresent(aOptions.topP(),
                 v -> builder.withOption(AzureAiChatCompletionRequest.TOP_P, v));
+        // Azure OpenAI reasoning_effort only accepts low/medium/high; the neutral effort is clamped
+        // and MODEL_DEFAULT/NONE map to null (field omitted) by toOpenAiReasoningEffort.
+        applyIfPresent(toOpenAiReasoningEffort(aOptions.reasoningEffort()),
+                builder::withReasoningEffort);
 
         if (aOptions.options() != null) {
             builder.withExtraOptions(aOptions.options());
@@ -170,7 +179,8 @@ public class AzureAiOpenAiLlmChatClient
         return toolCall;
     }
 
-    private static ChatResult toChatResult(AzureAiChatCompletionResponse aResponse)
+    private static ChatResult toChatResult(AzureAiChatCompletionResponse aResponse,
+            boolean aJsonRequested)
     {
         if (aResponse.getChoices() == null || aResponse.getChoices().isEmpty()) {
             return new ChatResult(new ChatMessage(ChatMessage.Role.ASSISTANT, ""), emptyList(),
@@ -181,6 +191,7 @@ public class AzureAiOpenAiLlmChatClient
         var message = choice.getMessage();
 
         var content = message != null && message.getContent() != null ? message.getContent() : "";
+        content = JsonResponseSanitizer.stripCodeFenceIf(aJsonRequested, content);
 
         var toolCalls = toToolCalls(message);
 
@@ -190,6 +201,19 @@ public class AzureAiOpenAiLlmChatClient
 
         return new ChatResult(new ChatMessage(ChatMessage.Role.ASSISTANT, content, null, null),
                 toolCalls, finishReason, usage);
+    }
+
+    private static ChatResult trimContent(ChatResult aResult)
+    {
+        var message = aResult.message();
+        if (message == null || message.content() == null) {
+            return aResult;
+        }
+
+        var trimmed = new ChatMessage(message.role(), message.content().trim(), message.thinking(),
+                message.toolCallId(), message.toolCalls());
+        return new ChatResult(trimmed, aResult.toolCalls(), aResult.finishReason(),
+                aResult.usage());
     }
 
     private static List<ToolCall> toToolCalls(AzureAiChatCompletionMessage aMessage)
@@ -298,5 +322,32 @@ public class AzureAiOpenAiLlmChatClient
         }
 
         return null;
+    }
+
+    /**
+     * Maps the neutral {@link ReasoningEffort} to the Azure OpenAI {@code reasoning_effort} wire
+     * value, which only accepts {@code low}/{@code medium}/{@code high}.
+     * {@link ReasoningEffort#MODEL_DEFAULT} returns {@code null} so the field is omitted.
+     * {@link ReasoningEffort#NONE} also returns {@code null} and thereby <em>degrades</em> to the
+     * model default: Azure OpenAI has no "off" switch, so unlike Ollama we cannot suppress
+     * reasoning — omitting the field lets a reasoning model reason at its default and a
+     * non-reasoning model ignore it. {@link ReasoningEffort#MAX} clamps to {@code high} (there is
+     * no higher wire level).
+     *
+     * @param aEffort
+     *            the neutral effort, possibly {@code null}
+     * @return the wire value, or {@code null} to omit the field
+     */
+    private static String toOpenAiReasoningEffort(ReasoningEffort aEffort)
+    {
+        if (aEffort == null) {
+            return null;
+        }
+        return switch (aEffort) {
+        case MODEL_DEFAULT, NONE -> null;
+        case LOW -> "low";
+        case MEDIUM -> "medium";
+        case HIGH, MAX -> "high";
+        };
     }
 }

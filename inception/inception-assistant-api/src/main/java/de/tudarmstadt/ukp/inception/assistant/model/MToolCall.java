@@ -32,13 +32,14 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.llm.AnnotationEditorCont
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ToolUtils;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
-public record MToolCall(String actor, @JsonIgnore Object instance, @JsonIgnore Method method,
-        @JsonIgnore boolean stop, String name, Map<String, Object> arguments)
+public record MToolCall(String id, String actor, @JsonIgnore Object instance,
+        @JsonIgnore Method method, @JsonIgnore boolean stop, String name,
+        Map<String, Object> arguments)
 {
     private MToolCall(Builder builder)
     {
-        this(builder.actor, builder.instance, builder.method, builder.stop, builder.name,
-                new LinkedHashMap<>(builder.arguments));
+        this(builder.id, builder.actor, builder.instance, builder.method, builder.stop,
+                builder.name, new LinkedHashMap<>(builder.arguments));
     }
 
     public Object invoke(User aSessionOwner, Project aProject, SourceDocument aDocument,
@@ -100,6 +101,7 @@ public record MToolCall(String actor, @JsonIgnore Object instance, @JsonIgnore M
 
     public static final class Builder
     {
+        private String id;
         private Object instance;
         private String name;
         private Method method;
@@ -109,6 +111,12 @@ public record MToolCall(String actor, @JsonIgnore Object instance, @JsonIgnore M
 
         private Builder()
         {
+        }
+
+        public Builder withId(String aId)
+        {
+            id = aId;
+            return this;
         }
 
         public Builder withActor(String aActor)

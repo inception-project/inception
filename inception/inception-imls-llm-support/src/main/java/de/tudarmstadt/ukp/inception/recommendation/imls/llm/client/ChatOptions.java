@@ -57,6 +57,10 @@ import tools.jackson.databind.JsonNode;
  *            penalty applied to repeated tokens, or {@code null} to leave the provider default
  * @param contextLength
  *            size of the context window to use, or {@code null} to leave the provider default
+ * @param reasoningEffort
+ *            requested reasoning/thinking effort, or {@code null} /
+ *            {@link ReasoningEffort#MODEL_DEFAULT} to leave the model default (only meaningful for
+ *            models that support reasoning)
  */
 public record ChatOptions( //
         ResponseFormat responseFormat, //
@@ -67,7 +71,8 @@ public record ChatOptions( //
         Double topP, //
         Integer topK, //
         Double repeatPenalty, //
-        Integer contextLength)
+        Integer contextLength, //
+        ReasoningEffort reasoningEffort)
 {
     public ChatOptions
     {
@@ -81,12 +86,22 @@ public record ChatOptions( //
     public ChatOptions(ResponseFormat aResponseFormat, JsonNode aJsonSchema,
             List<ToolDescriptor> aTools, Map<String, Object> aOptions)
     {
-        this(aResponseFormat, aJsonSchema, aTools, aOptions, null, null, null, null, null);
+        this(aResponseFormat, aJsonSchema, aTools, aOptions, null, null, null, null, null, null);
     }
 
     public static ChatOptions defaults()
     {
         return new ChatOptions(null, null, emptyList(), emptyMap());
+    }
+
+    /**
+     * @return whether the caller requested JSON output, i.e. a {@link #jsonSchema()} was supplied
+     *         or the {@link #responseFormat()} is {@link ResponseFormat#JSON}. Adapters use this to
+     *         decide whether to unwrap a Markdown code fence from the model content.
+     */
+    public boolean isJsonRequested()
+    {
+        return jsonSchema != null || responseFormat == ResponseFormat.JSON;
     }
 
     public static Builder builder()
@@ -105,6 +120,7 @@ public record ChatOptions( //
         private Integer topK;
         private Double repeatPenalty;
         private Integer contextLength;
+        private ReasoningEffort reasoningEffort;
 
         private Builder()
         {
@@ -164,10 +180,16 @@ public record ChatOptions( //
             return this;
         }
 
+        public Builder withReasoningEffort(ReasoningEffort aReasoningEffort)
+        {
+            reasoningEffort = aReasoningEffort;
+            return this;
+        }
+
         public ChatOptions build()
         {
             return new ChatOptions(responseFormat, jsonSchema, tools, options, temperature, topP,
-                    topK, repeatPenalty, contextLength);
+                    topK, repeatPenalty, contextLength, reasoningEffort);
         }
     }
 }

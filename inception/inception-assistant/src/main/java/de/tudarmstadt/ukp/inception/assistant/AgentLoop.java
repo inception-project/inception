@@ -282,8 +282,11 @@ public class AgentLoop
                     });
         }
         else {
-            response = chatClient.chat(endpoint(), toChatMessages(aMessages), options);
+            // For a non-streaming exchange the entire response arrives at once, so there is no
+            // meaningful time-to-first-token. Treat the delay as zero and attribute the full
+            // wall-clock time to the duration below.
             firstTokenTime.compareAndSet(0l, currentTimeMillis());
+            response = chatClient.chat(endpoint(), toChatMessages(aMessages), options);
         }
         var tokens = completionTokens(response);
         var endTime = currentTimeMillis();
@@ -297,6 +300,7 @@ public class AgentLoop
                 }
 
                 toolCalls.add(MToolCall.builder() //
+                        .withId(call.id()) //
                         .withActor(binding.actor()) //
                         .withInstance(binding.service()) //
                         .withName(call.name()) //
@@ -376,29 +380,24 @@ public class AgentLoop
 
     private ChatMessage toChatMessage(MChatMessage aMsg)
     {
-        // TODO [tool_call_id]: OpenAI/Azure require the provider-assigned tool-call id to be echoed
-        // back on both the assistant message (ToolCall.id()) and the TOOL-role result message
-        // (ChatMessage.toolCallId). The neutral ToolCall.id() IS captured by the OpenAI/Azure
-        // adapters on the response (see *LlmChatClient.toToolCalls -> wireCall.getId()), but the
-        // assistant-side model drops it: MToolCall (assistant-api) has no id field, so it is lost
-        // in
-        // AgentLoop.turn() when the MToolCall is built, and there is no way to correlate a TOOL
-        // result message back to its originating call here. Wiring this end-to-end requires adding
-        // an `id` to MToolCall (+ builder) in inception-assistant-api, threading call.id() into it
-        // in
-        // turn(), and setting it here for both the ASSISTANT re-emit and the TOOL result (4th ctor
-        // arg). Until then we pass null and rely on positional matching (works for Ollama; OpenAI/
-        // Azure single-tool-per-turn turns tolerate it). Deferred as a follow-up.
+        // OpenAI/Azure require the provider-assigned tool-call id to be echoed back on both the
+        // assistant message (ToolCall.id()) and the TOOL-role result message
+        // (ChatMessage.toolCallId) so the model can correlate a result to its originating call.
+        // Ollama ignores the id and matches positionally, so passing it through is harmless there.
         List<ToolCall> toolCalls = emptyList();
         if (isNotEmpty(aMsg.toolCalls())) {
             toolCalls = aMsg.toolCalls().stream() //
-                    .map(tc -> new ToolCall(null, tc.name(),
+                    .map(tc -> new ToolCall(tc.id(), tc.name(),
                             JSONUtil.getObjectMapper().valueToTree(tc.arguments()))) //
                     .toList();
         }
 
+        // For a TOOL-role result message, echo back the id of the call it answers.
+        var toolCallId = aMsg instanceof MCallResponse<?> callResponse ? callResponse.toolCallId()
+                : null;
+
         return new ChatMessage(roleOf(aMsg.role()), aMsg.textRepresentation(), aMsg.thinking(),
-                null, toolCalls);
+                toolCallId, toolCalls);
     }
 
     private static ChatMessage.Role roleOf(String aRole)

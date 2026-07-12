@@ -238,7 +238,7 @@ public class AzureAiOpenAiClientImpl
         }
 
         for (var deltaCall : aDeltaCalls) {
-            var index = deltaCall.getIndex() != null ? deltaCall.getIndex() : aAccumulator.size();
+            var index = resolveToolCallIndex(aAccumulator, deltaCall.getIndex(), deltaCall.getId());
             var target = aAccumulator.computeIfAbsent(index, i -> {
                 var tc = new AzureAiChatCompletionToolCall();
                 tc.setIndex(i);
@@ -266,6 +266,29 @@ public class AzureAiOpenAiClientImpl
                 }
             }
         }
+    }
+
+    /**
+     * Resolves the accumulator key for a tool-call delta. Well-behaved OpenAI-compatible servers
+     * send an explicit {@code index} on every fragment; that is always authoritative. When a server
+     * omits it, a fragment carrying an {@code id} marks the start of a new call (next free index),
+     * whereas an id-less continuation fragment (only {@code arguments}) belongs to the call started
+     * most recently, i.e. the highest index seen so far. Using {@code aAccumulator.size()} as the
+     * fallback mis-merged such continuations into a fresh index, splitting one call into several.
+     */
+    private static int resolveToolCallIndex(
+            TreeMap<Integer, AzureAiChatCompletionToolCall> aAccumulator, Integer aIndex,
+            String aId)
+    {
+        if (aIndex != null) {
+            return aIndex;
+        }
+
+        if (aId == null && !aAccumulator.isEmpty()) {
+            return aAccumulator.lastKey();
+        }
+
+        return aAccumulator.isEmpty() ? 0 : aAccumulator.lastKey() + 1;
     }
 
     private static AzureAiChatCompletionResponse assembleStreamedResponse(String aModel,

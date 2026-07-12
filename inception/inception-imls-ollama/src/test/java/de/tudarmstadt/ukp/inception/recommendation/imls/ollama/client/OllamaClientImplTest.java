@@ -52,7 +52,7 @@ import tools.jackson.databind.node.JsonNodeFactory;
 
 class OllamaClientImplTest
 {
-    private static final String DEFAULT_MODEL = "ministral-3:8b";
+    private static final String DEFAULT_MODEL = "nemotron-3-nano:4b";
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 

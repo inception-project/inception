@@ -87,4 +87,65 @@ class OpenAiClientTest
                 .isEqualTo("{\"city\":\"Berlin\"}");
         assertThat(response.getChoices().get(0).getFinishReason()).isEqualTo("tool_calls");
     }
+
+    @Test
+    void testSseToolCallFragmentsWithoutIndexAreMergedIntoOneCall() throws Exception
+    {
+        // Some OpenAI-compatible servers omit "index" on continuation chunks. The id-less
+        // continuation fragments must merge into the call started by the first (id-bearing)
+        // fragment rather than each spawning a fresh call.
+        var lines = List.of( //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"id\":\"call_1\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"function\":{\"arguments\":\"{\\\"city\\\":\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"function\":{\"arguments\":\"\\\"Berlin\\\"}\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"tool_calls\"}]}", //
+                "", //
+                "data: [DONE]");
+
+        var response = sut.assembleSseStream(ServerSentEventReader.parse(lines.stream()), "m",
+                null);
+
+        var toolCalls = response.getChoices().get(0).getMessage().getToolCalls();
+        assertThat(toolCalls).hasSize(1);
+        assertThat(toolCalls.get(0).getId()).isEqualTo("call_1");
+        assertThat(toolCalls.get(0).getFunction().getName()).isEqualTo("get_weather");
+        assertThat(toolCalls.get(0).getFunction().getArguments())
+                .isEqualTo("{\"city\":\"Berlin\"}");
+    }
+
+    @Test
+    void testSseMultipleToolCallsWithoutIndexAreKeptSeparate() throws Exception
+    {
+        // Two distinct calls, each streamed as an id-bearing opener followed by an id-less
+        // continuation, all without "index". A new id must start a new call while id-less
+        // fragments extend the call opened most recently.
+        var lines = List.of( //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"id\":\"call_1\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\":\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"function\":{\"arguments\":\"\\\"Berlin\\\"}\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"id\":\"call_2\",\"type\":\"function\",\"function\":{\"name\":\"get_time\",\"arguments\":\"{\\\"tz\\\":\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"function\":{\"arguments\":\"\\\"CET\\\"}\"}}]}}]}", //
+                "", //
+                "data: {\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"tool_calls\"}]}", //
+                "", //
+                "data: [DONE]");
+
+        var response = sut.assembleSseStream(ServerSentEventReader.parse(lines.stream()), "m",
+                null);
+
+        var toolCalls = response.getChoices().get(0).getMessage().getToolCalls();
+        assertThat(toolCalls).hasSize(2);
+        assertThat(toolCalls.get(0).getId()).isEqualTo("call_1");
+        assertThat(toolCalls.get(0).getFunction().getName()).isEqualTo("get_weather");
+        assertThat(toolCalls.get(0).getFunction().getArguments())
+                .isEqualTo("{\"city\":\"Berlin\"}");
+        assertThat(toolCalls.get(1).getId()).isEqualTo("call_2");
+        assertThat(toolCalls.get(1).getFunction().getName()).isEqualTo("get_time");
+        assertThat(toolCalls.get(1).getFunction().getArguments()).isEqualTo("{\"tz\":\"CET\"}");
+    }
 }
