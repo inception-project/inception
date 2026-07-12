@@ -29,6 +29,7 @@ import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -53,8 +54,8 @@ import org.wicketstuff.jquery.ui.settings.JQueryUILibrarySettings;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.ReadOnlyActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.comment.AnnotatorCommentDialogPanel;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
@@ -69,13 +70,18 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRe
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerBase;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
+import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
@@ -85,6 +91,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
 public abstract class BratSuggestionVisualizer
     extends Panel
+    implements DiamContext
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -173,7 +180,7 @@ public abstract class BratSuggestionVisualizer
                 AjaxEventBehavior.onEvent("click", _t -> actionShowAnnotatorComment(_t, annDoc)));
         queue(commentSymbol);
 
-        controller = new DiamAjaxBehavior() //
+        controller = new DiamAjaxBehavior(this) //
                 .setGlobalHandlersEnabled(false) //
                 .addPriorityHandler(new CurationLazyDetailsHandler()) //
                 .addPriorityHandler(new CurationActionAjaxRequestHandler());
@@ -247,6 +254,49 @@ public abstract class BratSuggestionVisualizer
     public AnnotatorSegmentState getModelObject()
     {
         return (AnnotatorSegmentState) getDefaultModelObject();
+    }
+
+    // The visualizer acts as the read-only DIAM context for its priority handlers: state and CAS
+    // are resolved per-segment (the annotator's own document), and its action handler rejects any
+    // mutation (editability is a property of the action handler).
+
+    private final AnnotationActionHandler actionHandler = new ReadOnlyActionHandler(
+            this::getEditorCas);
+
+    @Override
+    public AnnotatorState getAnnotatorState()
+    {
+        return getModelObject().getAnnotatorState();
+    }
+
+    @Override
+    public CAS getEditorCas() throws IOException
+    {
+        var segment = getModelObject();
+        return documentService.readAnnotationCas(segment.getAnnotatorState().getDocument(),
+                AnnotationSet.forUser(segment.getUser().getUsername()));
+    }
+
+    @Override
+    public AnnotationActionHandler getActionHandler()
+    {
+        return actionHandler;
+    }
+
+    @Override
+    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            int aBegin, int aEnd)
+        throws IOException, AnnotationException
+    {
+        // Passive read-only view: the action handler ignores navigation, so this does not scroll
+        // and never drives the main editor.
+        getActionHandler().actionJump(aTarget, aBegin, aEnd);
+    }
+
+    @Override
+    public void actionRefreshDocument(AjaxRequestTarget aTarget)
+    {
+        render(aTarget);
     }
 
     @Override
@@ -381,13 +431,10 @@ public abstract class BratSuggestionVisualizer
                 final var request = getRequest().getPostParameters();
                 final var paramId = BratRequestUtils.getVidFromRequest(request);
 
-                var segment = getModelObject();
-                var state = segment.getAnnotatorState();
-                CasProvider casProvider = () -> documentService.readAnnotationCas(
-                        segment.getAnnotatorState().getDocument(),
-                        AnnotationSet.forUser(segment.getUser().getUsername()));
+                var context = aBehavior.getContext();
+                var state = context.getAnnotatorState();
                 var result = lazyDetailsLookupService.lookupLazyDetails(request, paramId,
-                        casProvider, state.getDocument(), segment.getUser(),
+                        context::getEditorCas, state.getDocument(), getModelObject().getUser(),
                         state.getWindowBeginOffset(), state.getWindowEndOffset());
                 attachResponse(aTarget, aRequest, toInterpretableJsonString(result));
 
@@ -425,7 +472,7 @@ public abstract class BratSuggestionVisualizer
         }
 
         @Override
-        public boolean accepts(Request aRequest)
+        public boolean accepts(DiamRequest aRequest)
         {
             return true;
         }

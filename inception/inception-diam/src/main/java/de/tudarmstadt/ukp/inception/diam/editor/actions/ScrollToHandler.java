@@ -21,15 +21,14 @@ import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotatio
 
 import java.io.IOException;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactRangeList;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -67,12 +66,11 @@ public class ScrollToHandler
             Request aRequest)
     {
         try {
-            var page = getPage();
-            var cas = page.getEditorCas();
+            var context = aBehavior.getContext();
 
             var requestParameters = aRequest.getRequestParameters();
 
-            scrollTo(aTarget, page, cas, requestParameters);
+            scrollTo(aTarget, context, requestParameters);
 
             return new DefaultAjaxResponse(getAction(aRequest));
         }
@@ -81,15 +79,16 @@ public class ScrollToHandler
         }
     }
 
-    private void scrollTo(AjaxRequestTarget aTarget, AnnotationPageBase page, CAS cas,
+    private void scrollTo(AjaxRequestTarget aTarget, DiamContext aContext,
             IRequestParameters requestParameters)
         throws IOException, AnnotationException
     {
         var vid = VID
                 .parseOptional(requestParameters.getParameterValue(PARAM_ID).toOptionalString());
 
-        var project = page.getModelObject().getProject();
-        var doc = page.getModelObject().getDocument();
+        var state = aContext.getAnnotatorState();
+        var project = state.getProject();
+        var doc = state.getDocument();
         var docId = requestParameters.getParameterValue(PARAM_DOCUMENT_ID).toLong(-1);
         if (docId != -1) {
             doc = documentService.getSourceDocument(project.getId(), docId);
@@ -98,15 +97,17 @@ public class ScrollToHandler
             }
         }
 
+        // Navigation acts on the editor that received the request (via its context), not
+        // unconditionally on the main editor's page.
         if (vid.isSet() && !vid.isSynthetic()) {
-            var fs = selectAnnotationByAddr(page.getEditorCas(), vid.getId());
-            page.actionShowSelectedDocument(aTarget, doc, fs.getBegin(), fs.getEnd());
+            var fs = selectAnnotationByAddr(aContext.getEditorCas(), vid.getId());
+            aContext.actionShowSelectedDocument(aTarget, doc, fs.getBegin(), fs.getEnd());
             return;
         }
 
         if (!requestParameters.getParameterValue(PARAM_OFFSETS).isEmpty()) {
-            var offsets = getRangeFromRequest(requestParameters, cas);
-            page.actionShowSelectedDocument(aTarget, doc, offsets.getBegin(), offsets.getEnd());
+            var offsets = getRangeFromRequest(requestParameters);
+            aContext.actionShowSelectedDocument(aTarget, doc, offsets.getBegin(), offsets.getEnd());
             return;
         }
     }
@@ -116,7 +117,7 @@ public class ScrollToHandler
      * selected annotations or offsets contained in the request for the creation of a new
      * annotation.
      */
-    private Range getRangeFromRequest(IRequestParameters request, CAS aCas) throws IOException
+    private Range getRangeFromRequest(IRequestParameters request) throws IOException
     {
         var offsets = request.getParameterValue(PARAM_OFFSETS).toString();
 

@@ -19,17 +19,32 @@ package de.tudarmstadt.ukp.inception.rendering.selection;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.EditorBoundEvent;
+
 /**
- * Fired by {@link Selection} when the selection changes.
+ * Fired when the selection of an editor changes. Carries the originating editor state as
+ * {@link #getSource() source} so consumers can react only to their own editor (cf. #6146).
  */
 public class SelectionChangedEvent
+    implements EditorBoundEvent
 {
+    private final AnnotatorViewState source;
 
     private final AjaxRequestTarget requestHandler;
 
-    public SelectionChangedEvent(AjaxRequestTarget aRequestHandler)
+    public SelectionChangedEvent(AnnotatorViewState aSource, AjaxRequestTarget aRequestHandler)
     {
+        source = aSource;
         requestHandler = aRequestHandler;
+    }
+
+    /**
+     * @return the editor state whose selection changed, or {@code null} if unknown.
+     */
+    public AnnotatorViewState getSource()
+    {
+        return source;
     }
 
     public AjaxRequestTarget getRequestHandler()

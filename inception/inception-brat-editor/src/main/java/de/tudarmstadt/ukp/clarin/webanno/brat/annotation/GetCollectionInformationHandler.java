@@ -58,7 +58,7 @@ class GetCollectionInformationHandler
             Request aRequest)
     {
         try {
-            var result = getCollectionInformation(getAnnotatorState());
+            var result = getCollectionInformation(aBehavior.getContext().getAnnotatorState());
             BratRequestUtils.attachResponse(aTarget, vis, result);
             return new DefaultAjaxResponse(getAction(aRequest));
         }

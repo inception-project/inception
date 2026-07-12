@@ -182,7 +182,7 @@ public class CurationDocumentNavigator
 
     public void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
     {
-        getModelObject().getSelection().clear();
+        getModelObject().clearSelection();
         page.getFooterItems().getObject().stream()
                 .filter(component -> component instanceof CurationOpenDocumentDialog)
                 .map(component -> (CurationOpenDocumentDialog) component) //

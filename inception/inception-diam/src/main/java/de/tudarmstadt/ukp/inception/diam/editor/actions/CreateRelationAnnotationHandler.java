@@ -31,7 +31,6 @@ import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -40,10 +39,9 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.CreateRelation
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -107,43 +105,43 @@ public class CreateRelationAnnotationHandler
         var clientX = cm.getClientX().getAsInt();
         var clientY = cm.getClientY().getAsInt();
 
-        actionArc(aBehavior, aTarget, originSpan, targetSpan, clientX, clientY);
+        actionArc(aBehavior.getContext(), aBehavior, aTarget, originSpan, targetSpan, clientX,
+                clientY);
     }
 
-    public void actionArc(ContextMenuLookup aBehavior, AjaxRequestTarget aTarget, VID originSpan,
-            VID targetSpan, int aClientX, int aClientY)
+    public void actionArc(DiamContext aContext, ContextMenuLookup aBehavior,
+            AjaxRequestTarget aTarget, VID originSpan, VID targetSpan, int aClientX, int aClientY)
         throws NotEditableException, IOException, AnnotationException, IllegalPlacementException
     {
-        var page = getPage();
-        page.ensureIsEditable();
+        aContext.getActionHandler().ensureIsEditable();
 
         if (originSpan.isSynthetic() || targetSpan.isSynthetic()) {
+            var page = getPage();
             page.error("Relations cannot be created from/to synthetic annotations");
             aTarget.addChildren(page, IFeedback.class);
             return;
         }
 
-        var cas = page.getEditorCas();
-        var state = getAnnotatorState();
+        var cas = aContext.getEditorCas();
+        var state = aContext.getAnnotatorState();
         var originFs = selectAnnotationByAddr(cas, originSpan.getId());
         var originLayer = schemaService.findLayer(state.getProject(), originFs);
         var originAdapter = schemaService.getAdapter(originLayer);
 
         if (originAdapter instanceof ChainAdapter chainAdapter) {
-            createChainLink(chainAdapter, aTarget, originSpan, targetSpan);
+            createChainLink(aContext, chainAdapter, aTarget, originSpan, targetSpan);
         }
         else {
-            createRelationAnnotation(aBehavior, aTarget, originLayer, originSpan, targetSpan,
-                    aClientX, aClientY);
+            createRelationAnnotation(aContext, aBehavior, aTarget, originLayer, originSpan,
+                    targetSpan, aClientX, aClientY);
         }
     }
 
-    private void createChainLink(ChainAdapter chainAdapter, AjaxRequestTarget aTarget,
-            VID aOriginSpan, VID aTargetSpan)
+    private void createChainLink(DiamContext aContext, ChainAdapter chainAdapter,
+            AjaxRequestTarget aTarget, VID aOriginSpan, VID aTargetSpan)
         throws IOException, AnnotationException
     {
-        var page = getPage();
-        var cas = page.getEditorCas();
+        var cas = aContext.getEditorCas();
         var originFs = selectAnnotationByAddr(cas, aOriginSpan.getId());
         var targetFs = selectAnnotationByAddr(cas, aTargetSpan.getId());
 
@@ -152,7 +150,7 @@ public class CreateRelationAnnotationHandler
                     "Cannot create links between chain elements on different layers");
         }
 
-        var state = getAnnotatorState();
+        var state = aContext.getAnnotatorState();
         var request = new CreateRelationAnnotationRequest(state.getDocument(),
                 state.getUser().getUsername(), cas, originFs, targetFs);
 
@@ -169,13 +167,13 @@ public class CreateRelationAnnotationHandler
             }
         }
 
-        commitAnnotation(aTarget, page, state, selection);
+        commitAnnotation(aTarget, aContext, state, selection);
 
     }
 
-    private void createRelationAnnotation(ContextMenuLookup aBehavior, AjaxRequestTarget aTarget,
-            AnnotationLayer originLayer, VID aOriginSpan, VID aTargetSpan, int aClientX,
-            int aClientY)
+    private void createRelationAnnotation(DiamContext aContext, ContextMenuLookup aBehavior,
+            AjaxRequestTarget aTarget, AnnotationLayer originLayer, VID aOriginSpan,
+            VID aTargetSpan, int aClientX, int aClientY)
         throws AnnotationException, IllegalPlacementException, IOException
     {
         var candidateLayers = schemaService.getRelationLayersFor(originLayer);
@@ -186,7 +184,7 @@ public class CreateRelationAnnotationHandler
 
         if (candidateLayers.size() == 1) {
             var relationLayer = candidateLayers.get(0);
-            createRelationAnnotation(aTarget, relationLayer, aOriginSpan, aTargetSpan);
+            createRelationAnnotation(aContext, aTarget, relationLayer, aOriginSpan, aTargetSpan);
             return;
         }
 
@@ -197,25 +195,28 @@ public class CreateRelationAnnotationHandler
         items.add(new MenuCategoryHeader("Select layer..."));
         for (var layer : candidateLayers) {
             items.add(new LambdaMenuItem(layer.getUiName(), $ -> {
-                // We need to fetch the bean here again because it is not serializable and
-                // the AJAX callback here needs to be serializable
+                // The handler is a Spring bean and thus not serializable, so we re-resolve it
+                // here where the AJAX callback needs to be serializable. The context, on the
+                // other hand, is held by the (serializable) DiamAjaxBehavior and can be carried
+                // across the serialization boundary, so we keep serving the editor that opened
+                // the menu instead of re-deriving the main editor's page.
                 var handler = ApplicationContextProvider.getApplicationContext()
                         .getBean(CreateRelationAnnotationHandler.class);
-                handler.createRelationAnnotation($, layer, aOriginSpan, aTargetSpan);
+                aContext.getActionHandler().ensureIsEditable();
+                handler.createRelationAnnotation(aContext, $, layer, aOriginSpan, aTargetSpan);
             }));
         }
 
         cm.onOpen(aTarget, aClientX, aClientY);
     }
 
-    private void createRelationAnnotation(AjaxRequestTarget aTarget, AnnotationLayer relationLayer,
-            VID origin, VID target)
+    private void createRelationAnnotation(DiamContext aContext, AjaxRequestTarget aTarget,
+            AnnotationLayer relationLayer, VID origin, VID target)
         throws AnnotationException, IOException
     {
-        var state = getAnnotatorState();
+        var state = aContext.getAnnotatorState();
 
-        var page = getPage();
-        var cas = page.getEditorCas();
+        var cas = aContext.getEditorCas();
         var originFs = selectAnnotationByAddr(cas, origin.getId());
         var targetFs = selectAnnotationByAddr(cas, target.getId());
 
@@ -246,15 +247,6 @@ public class CreateRelationAnnotationHandler
             }
         }
 
-        commitAnnotation(aTarget, page, state, selection);
-    }
-
-    private void commitAnnotation(AjaxRequestTarget aTarget, AnnotationPageBase page,
-            AnnotatorState state, Selection selection)
-        throws IOException, AnnotationException
-    {
-        state.getSelection().set(selection);
-        page.getAnnotationActionHandler().actionSelect(aTarget);
-        page.getAnnotationActionHandler().writeEditorCas();
+        commitAnnotation(aTarget, aContext, state, selection);
     }
 }

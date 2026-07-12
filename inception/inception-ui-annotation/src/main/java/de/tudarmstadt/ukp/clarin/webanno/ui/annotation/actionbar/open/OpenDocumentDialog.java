@@ -23,6 +23,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
 import org.danekja.java.util.function.serializable.SerializableBiFunction;
+import org.danekja.java.util.function.serializable.SerializableConsumer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -37,9 +38,24 @@ public class OpenDocumentDialog
 
     private final SerializableBiFunction<Project, User, List<AnnotationDocument>> docListProvider;
     private final IModel<AnnotatorState> state;
+    private final SerializableConsumer<AjaxRequestTarget> onDocumentSelected;
 
     public OpenDocumentDialog(String aId, IModel<AnnotatorState> aModel,
             SerializableBiFunction<Project, User, List<AnnotationDocument>> aDocListProvider)
+    {
+        this(aId, aModel, aDocListProvider, null);
+    }
+
+    /**
+     * @param aOnDocumentSelected
+     *            invoked after the chosen document has been set on the state model, to load it into
+     *            the host. If {@code null}, the enclosing annotation page is loaded (historic
+     *            behavior). A sidebar-hosted viewer passes its own load action here so the
+     *            selection does not leak into the main editor.
+     */
+    public OpenDocumentDialog(String aId, IModel<AnnotatorState> aModel,
+            SerializableBiFunction<Project, User, List<AnnotationDocument>> aDocListProvider,
+            SerializableConsumer<AjaxRequestTarget> aOnDocumentSelected)
     {
         super(aId);
         setOutputMarkupId(true);
@@ -47,11 +63,13 @@ public class OpenDocumentDialog
 
         docListProvider = aDocListProvider;
         state = aModel;
+        onDocumentSelected = aOnDocumentSelected;
     }
 
     public void show(AjaxRequestTarget aTarget)
     {
-        var content = new OpenDocumentDialogPanel(ModalDialog.CONTENT_ID, state, docListProvider);
+        var content = new OpenDocumentDialogPanel(ModalDialog.CONTENT_ID, state, docListProvider,
+                onDocumentSelected);
         super.open(content, aTarget);
     }
 }

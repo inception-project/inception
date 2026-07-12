@@ -67,7 +67,7 @@ public class LoadPreferences
             var key = new ClientSidePreferenceKey<ClientSidePreferenceMapValue>(
                     ClientSidePreferenceMapValue.class,
                     aRequest.getRequestParameters().getParameterValue(PARAM_KEY).toString());
-            var project = getAnnotatorState().getProject();
+            var project = aBehavior.getContext().getAnnotatorState().getProject();
             var sessionOwner = userService.getCurrentUser();
             var prefs = preferencesService.loadTraitsForUserAndProject(key, sessionOwner, project);
             var json = JSONUtil.toInterpretableJsonString(prefs);

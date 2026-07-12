@@ -278,7 +278,7 @@ public class CurationSidebar
         showMerged.setModelObject(curationSidebarService.isShowAll(sessionOwner, project));
 
         state.setUser(curationSessionService.getCurationTargetUser(sessionOwner, project));
-        state.getSelection().clear();
+        state.clearSelection();
 
         getAnnotationPage().actionLoadDocument(aTarget);
     }
@@ -296,7 +296,7 @@ public class CurationSidebar
         var sessionOwner = userRepository.getCurrentUser();
 
         state.setUser(userRepository.getCurrentUser());
-        state.getSelection().clear();
+        state.clearSelection();
 
         curationSessionService.closeSession(sessionOwner.getUsername(), state.getProject().getId());
 

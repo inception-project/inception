@@ -541,45 +541,34 @@ public class ChainAdapterImpl
     @Override
     public Selection select(VID aVid, AnnotationFS aAnno)
     {
-        var selection = new Selection();
-
         if (aVid.getSubId() == 1) {
-            selection.selectArc(aVid, aAnno, getNextLink(aAnno));
-        }
-        else {
-            selection.selectSpan(aAnno);
+            return Selection.arc(aVid, aAnno, getNextLink(aAnno));
         }
 
-        return selection;
+        return Selection.span(aAnno);
     }
 
     @Override
     public Selection selectSpan(AnnotationFS aAnno)
     {
-        var selection = new Selection();
-        selection.selectSpan(aAnno);
-        return selection;
+        return Selection.span(aAnno);
     }
 
     @Override
     public Selection selectLink(AnnotationFS aAnno)
     {
-        var selection = new Selection();
-
         var nextLink = getNextLink(aAnno);
         if (nextLink != null) {
-            selection.selectArc(new VID(aAnno, 1, VID.NONE, VID.NONE), aAnno, nextLink);
-            return selection;
+            return Selection.arc(new VID(aAnno, 1, VID.NONE, VID.NONE), aAnno, nextLink);
         }
 
         var chain = getChainForLink(aAnno.getCAS(), aAnno);
         var prevLink = getPrevLink(chain, aAnno);
         if (prevLink != null) {
-            selection.selectArc(new VID(aAnno, 1, VID.NONE, VID.NONE), prevLink, aAnno);
-            return selection;
+            return Selection.arc(new VID(aAnno, 1, VID.NONE, VID.NONE), prevLink, aAnno);
         }
 
-        return selection;
+        return Selection.unselected();
     }
 
     @Override

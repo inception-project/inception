@@ -30,7 +30,9 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.api.MoveSpanAnnotation
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
+import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -66,16 +68,16 @@ public class MoveSpanAnnotationHandler
             Request aRequest)
     {
         try {
-            var page = getPage();
+            var context = aBehavior.getContext();
 
-            page.ensureIsEditable();
+            context.getActionHandler().ensureIsEditable();
 
-            var cas = page.getEditorCas();
+            var cas = context.getEditorCas();
             var vid = getVid(aRequest);
-            var state = getAnnotatorState();
+            var state = context.getAnnotatorState();
             var range = getRangeFromRequest(state, aRequest.getRequestParameters(), cas);
-            moveSpan(aTarget, cas, vid, range);
-            page.writeEditorCas(cas);
+            moveSpan(context, aTarget, cas, vid, range);
+            context.getActionHandler().writeEditorCas();
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
@@ -83,10 +85,11 @@ public class MoveSpanAnnotationHandler
         }
     }
 
-    private void moveSpan(AjaxRequestTarget aTarget, CAS aCas, VID aVid, Range aRange)
+    private void moveSpan(DiamContext aContext, AjaxRequestTarget aTarget, CAS aCas, VID aVid,
+            Range aRange)
         throws IOException, AnnotationException
     {
-        var state = getAnnotatorState();
+        var state = aContext.getAnnotatorState();
 
         var annoFs = ICasUtil.selectAnnotationByAddr(aCas, aVid.getId());
 
@@ -100,7 +103,7 @@ public class MoveSpanAnnotationHandler
 
         var sel = state.getSelection();
         if (sel.isSet() && sel.getAnnotation().getId() == aVid.getId()) {
-            state.getSelection().selectSpan(annoFs);
+            state.setSelection(Selection.span(annoFs));
         }
     }
 }

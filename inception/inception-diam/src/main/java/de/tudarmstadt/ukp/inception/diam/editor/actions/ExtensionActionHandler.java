@@ -22,6 +22,7 @@ import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
@@ -51,9 +52,9 @@ public class ExtensionActionHandler
     }
 
     @Override
-    public boolean accepts(Request aRequest)
+    public boolean accepts(DiamRequest aRequest)
     {
-        return getVid(aRequest).isSynthetic();
+        return getVid(aRequest.getRequest()).isSynthetic();
     }
 
     @Override
@@ -61,14 +62,14 @@ public class ExtensionActionHandler
             Request aRequest)
     {
         try {
-            var page = getPage();
-            page.ensureIsEditable();
+            var context = aBehavior.getContext();
+            context.getActionHandler().ensureIsEditable();
 
             var action = getAction(aRequest);
             var paramId = getVid(aRequest);
-            var cas = page.getEditorCas();
+            var cas = context.getEditorCas();
 
-            extensionRegistry.fireAction(page.getAnnotationActionHandler(), page.getModelObject(),
+            extensionRegistry.fireAction(context.getActionHandler(), context.getAnnotatorState(),
                     aTarget, cas, paramId, action);
 
             return new DefaultAjaxResponse(action);

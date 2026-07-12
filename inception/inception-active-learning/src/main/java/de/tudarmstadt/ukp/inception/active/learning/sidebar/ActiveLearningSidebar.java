@@ -111,6 +111,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Del
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderAnnotationsEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -892,7 +893,7 @@ public class ActiveLearningSidebar
             // Clear the annotation detail editor and the selection to avoid confusions with the
             // highlight because the selection highlight from the right sidebar and the one from
             // the AL sidebar have the same color!
-            state.getSelection().clear();
+            state.clearSelection();
             aTarget.add((Component) getActionHandler());
 
             getAnnotationPage().actionShowSelectedDocument(aTarget, sourceDocument,
@@ -1163,8 +1164,8 @@ public class ActiveLearningSidebar
         CAS cas = this.getCasProvider().get();
         Optional<AnnotationFS> anno = getMatchingAnnotation(cas, aRecord);
         if (anno.isPresent()) {
-            state.getSelection().selectSpan(VID.of(anno.get()), cas, aRecord.getOffsetBegin(),
-                    aRecord.getOffsetEnd());
+            state.setSelection(Selection.span(VID.of(anno.get()), cas, aRecord.getOffsetBegin(),
+                    aRecord.getOffsetEnd()));
             getActionHandler().actionDelete(aTarget);
         }
     }
@@ -1403,6 +1404,12 @@ public class ActiveLearningSidebar
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
+        // Only render our markers into our own editor, not into other editors on the page (e.g. the
+        // reference-document viewer or curation panes) even if they show the same document (#6146).
+        if (aEvent.getRequest().getState() != getModelObject()) {
+            return;
+        }
+
         renderHighlights(aEvent.getVDocument());
     }
 

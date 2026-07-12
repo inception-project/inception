@@ -68,6 +68,8 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.search.DocumentStatistics;
 import de.tudarmstadt.ukp.inception.search.SearchService;
+import org.danekja.java.util.function.serializable.SerializableConsumer;
+
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
@@ -99,13 +101,28 @@ public class OpenDocumentDialogPanel
     private final IModel<Boolean> finishedDocumentsSkippedByNavigation;
 
     private final SerializableBiFunction<Project, User, List<AnnotationDocument>> docListProvider;
+    private final SerializableConsumer<AjaxRequestTarget> onDocumentSelected;
 
     public OpenDocumentDialogPanel(String aId, IModel<AnnotatorState> aState,
             SerializableBiFunction<Project, User, List<AnnotationDocument>> aDocListProvider)
     {
+        this(aId, aState, aDocListProvider, null);
+    }
+
+    /**
+     * @param aOnDocumentSelected
+     *            invoked after the chosen document has been set on the state model, to actually
+     *            load it into the host (page or sidebar). If {@code null}, the enclosing
+     *            {@link AnnotationPageBase} is loaded, reproducing the historic behavior.
+     */
+    public OpenDocumentDialogPanel(String aId, IModel<AnnotatorState> aState,
+            SerializableBiFunction<Project, User, List<AnnotationDocument>> aDocListProvider,
+            SerializableConsumer<AjaxRequestTarget> aOnDocumentSelected)
+    {
         super(aId, aState);
 
         docListProvider = aDocListProvider;
+        onDocumentSelected = aOnDocumentSelected;
 
         queue(userListChoice = createUserListChoice(CID_USER));
 
@@ -298,7 +315,12 @@ public class OpenDocumentDialogPanel
             getModelObject().setUser(userListChoice.getModelObject().get());
         }
 
-        ((AnnotationPageBase) getPage()).actionLoadDocument(aEvent.getTarget());
+        if (onDocumentSelected != null) {
+            onDocumentSelected.accept(aEvent.getTarget());
+        }
+        else {
+            ((AnnotationPageBase) getPage()).actionLoadDocument(aEvent.getTarget());
+        }
 
         findParent(ModalDialog.class).close(aEvent.getTarget());
     }

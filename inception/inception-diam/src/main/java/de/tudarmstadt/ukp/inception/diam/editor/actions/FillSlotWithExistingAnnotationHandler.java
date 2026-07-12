@@ -22,6 +22,7 @@ import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
@@ -48,14 +49,14 @@ public class FillSlotWithExistingAnnotationHandler
             Request aRequest)
     {
         try {
-            var page = getPage();
-            page.ensureIsEditable();
+            var context = aBehavior.getContext();
+            context.getActionHandler().ensureIsEditable();
 
-            var cas = page.getEditorCas();
+            var cas = context.getEditorCas();
             var slotFillerId = getVid(aRequest);
             // When filling a slot, the current selection is *NOT* changed. The Span annotation
             // which owns the slot that is being filled remains selected!
-            page.getAnnotationActionHandler().actionFillSlot(aTarget, cas, slotFillerId);
+            context.getActionHandler().actionFillSlot(aTarget, cas, slotFillerId);
 
             return new DefaultAjaxResponse(getAction(aRequest));
         }
@@ -65,9 +66,9 @@ public class FillSlotWithExistingAnnotationHandler
     }
 
     @Override
-    public boolean accepts(Request aRequest)
+    public boolean accepts(DiamRequest aRequest)
     {
-        return super.accepts(aRequest) && getAnnotatorState().isSlotArmed()
-                && getVid(aRequest).isSet();
+        return super.accepts(aRequest) && aRequest.getContext().getAnnotatorState().isSlotArmed()
+                && getVid(aRequest.getRequest()).isSet();
     }
 }

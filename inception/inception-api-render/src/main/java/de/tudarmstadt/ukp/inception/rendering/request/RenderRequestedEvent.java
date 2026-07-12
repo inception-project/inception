@@ -19,13 +19,29 @@ package de.tudarmstadt.ukp.inception.rendering.request;
 
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.EditorBoundEvent;
+
 public class RenderRequestedEvent
+    implements EditorBoundEvent
 {
+    private final AnnotatorViewState source;
+
     private final IPartialPageRequestHandler requestHandler;
 
-    public RenderRequestedEvent(IPartialPageRequestHandler aRequestHandler)
+    public RenderRequestedEvent(AnnotatorViewState aSource,
+            IPartialPageRequestHandler aRequestHandler)
     {
+        source = aSource;
         requestHandler = aRequestHandler;
+    }
+
+    /**
+     * @return the editor state that requested the render, or {@code null} if unknown.
+     */
+    public AnnotatorViewState getSource()
+    {
+        return source;
     }
 
     public IPartialPageRequestHandler getRequestHandler()

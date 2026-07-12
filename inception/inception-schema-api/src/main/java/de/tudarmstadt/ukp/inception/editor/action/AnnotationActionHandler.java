@@ -23,6 +23,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -86,6 +87,37 @@ public interface AnnotationActionHandler
 
     void actionJump(AjaxRequestTarget aTarget, int aBegin, int aEnd)
         throws IOException, AnnotationException;
+
+    /**
+     * Navigate to the given document at the given offsets.
+     * <p>
+     * The default stays within the editor's current document, scrolling to the offsets via
+     * {@link #actionJump(AjaxRequestTarget, int, int)} - appropriate for a self-contained editor
+     * (e.g. a read-only reference-document viewer). A handler that hosts a document-switchable
+     * editor (the main editor's detail panel) overrides this to switch the displayed document to
+     * {@code aDocument} first. This is the seam through which a cross-document scroll-to (search
+     * hit / cross-document link) opens the target document instead of jumping to raw offsets in the
+     * currently displayed one.
+     *
+     * @param aTarget
+     *            the AJAX target
+     * @param aDocument
+     *            the document to show
+     * @param aBegin
+     *            the offset to scroll to
+     * @param aEnd
+     *            the corresponding end offset
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
+     */
+    default void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            int aBegin, int aEnd)
+        throws IOException, AnnotationException
+    {
+        actionJump(aTarget, aBegin, aEnd);
+    }
 
     /**
      * Delete currently selected annotation.
@@ -179,4 +211,32 @@ public interface AnnotationActionHandler
     CAS getEditorCas() throws IOException;
 
     void writeEditorCas() throws IOException, AnnotationException;
+
+    /**
+     * @return whether the editor served by this handler accepts mutations.
+     */
+    default boolean isEditable()
+    {
+        try {
+            ensureIsEditable();
+            return true;
+        }
+        catch (AnnotationException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Fail closed if the editor served by this handler does not accept mutations. Mutating callers
+     * invoke this before touching the CAS.
+     * <p>
+     * Editability is an authorization decision with no safe default - a permissive default would
+     * fail open (silently allowing mutations on read-only/finished documents), a restrictive one
+     * would silently disable legitimately editable handlers. Every implementor must therefore make
+     * this decision explicitly.
+     *
+     * @throws AnnotationException
+     *             if the editor is not editable.
+     */
+    void ensureIsEditable() throws AnnotationException;
 }

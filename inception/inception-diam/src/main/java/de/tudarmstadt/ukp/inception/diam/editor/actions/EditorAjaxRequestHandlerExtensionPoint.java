@@ -19,12 +19,11 @@ package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
 import java.util.Optional;
 
-import org.apache.wicket.request.Request;
-
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
 public interface EditorAjaxRequestHandlerExtensionPoint
-    extends ExtensionPoint<Request, EditorAjaxRequestHandler>
+    extends ExtensionPoint<DiamRequest, EditorAjaxRequestHandler>
 {
-    Optional<EditorAjaxRequestHandler> getHandler(Request aRequest);
+    Optional<EditorAjaxRequestHandler> getHandler(DiamRequest aRequest);
 }

@@ -220,6 +220,12 @@ public class RecommendationSidebar
     @OnEvent
     public void onRenderRequested(RenderRequestedEvent aEvent)
     {
+        // Only react to renders of the editor this sidebar belongs to, not to renders of other
+        // editors on the page even if they show the same document (#6146).
+        if (!aEvent.isFor(getModelObject())) {
+            return;
+        }
+
         aEvent.getRequestHandler().add(warning);
     }
 

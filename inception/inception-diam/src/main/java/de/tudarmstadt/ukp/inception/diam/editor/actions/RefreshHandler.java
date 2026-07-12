@@ -48,7 +48,9 @@ public class RefreshHandler
             Request aRequest)
     {
         try {
-            getPage().actionRefreshDocument(aTarget);
+            // Refresh acts on the editor that received the request (via its context), not
+            // unconditionally on the main editor's page.
+            aBehavior.getContext().actionRefreshDocument(aTarget);
             return new DefaultAjaxResponse();
         }
         catch (Exception e) {

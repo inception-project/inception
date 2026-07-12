@@ -28,6 +28,7 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializerImpl;
@@ -80,7 +81,7 @@ public class LoadAnnotationsHandler
             Request aRequest)
     {
         try {
-            var request = prepareRenderRequest(aRequest);
+            var request = prepareRenderRequest(aBehavior.getContext(), aRequest);
             var vdoc = renderingPipeline.render(request);
             var json = serializeToWireFormat(aRequest, request, vdoc);
             attachResponse(aTarget, aRequest, json);
@@ -91,10 +92,10 @@ public class LoadAnnotationsHandler
         }
     }
 
-    private RenderRequest prepareRenderRequest(Request aRequest) throws IOException
+    private RenderRequest prepareRenderRequest(DiamContext aContext, Request aRequest)
+        throws IOException
     {
-        var page = getPage();
-        var state = getAnnotatorState();
+        var state = aContext.getAnnotatorState();
 
         var begin = aRequest.getRequestParameters().getParameterValue(PARAM_BEGIN)
                 .toInt(state.getWindowBeginOffset());
@@ -112,7 +113,7 @@ public class LoadAnnotationsHandler
         return RenderRequest.builder() //
                 .withState(state) //
                 .withSessionOwner(userService.getCurrentUser()) //
-                .withCas(page.getEditorCas()) //
+                .withCas(aContext.getEditorCas()) //
                 .withWindow(begin, end) //
                 .withText(includeText) //
                 .withClipSpans(clipSpans) //

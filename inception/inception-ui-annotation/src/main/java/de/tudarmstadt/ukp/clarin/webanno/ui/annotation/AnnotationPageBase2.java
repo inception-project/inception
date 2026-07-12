@@ -394,6 +394,12 @@ public abstract class AnnotationPageBase2
     @OnEvent
     public void onSelectionChangedEvent(SelectionChangedEvent aEvent)
     {
+        // Only react to selection changes in our own editor, not in other editors on the page
+        // (e.g. the reference-document viewer) even if they show the same document (#6146).
+        if (!aEvent.isFor(getModelObject())) {
+            return;
+        }
+
         actionRefreshDocument(aEvent.getRequestHandler());
     }
 
@@ -450,6 +456,12 @@ public abstract class AnnotationPageBase2
     @OnEvent
     public void onViewStateChanged(AnnotatorViewportChangedEvent aEvent)
     {
+        // Only react to viewport changes in our own editor, not in other editors on the page
+        // (e.g. the reference-document viewer) even if they show the same document (#6146).
+        if (!aEvent.isFor(getModelObject())) {
+            return;
+        }
+
         // Partial page updates only need to be triggered if we are in a partial page update request
         if (aEvent.getRequestHandler() == null) {
             return;

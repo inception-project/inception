@@ -387,11 +387,17 @@ public abstract class AnnotationDetailEditorPanel
         // ... if the SLOT HOST annotation is NOT open in the detail panel on the right, then
         // select SLOT FILLER an open it there
         else {
-            state.getSelection().selectSpan(selectAnnotationByAddr(aCas, slotFillerAddr));
+            state.setSelection(Selection.span(selectAnnotationByAddr(aCas, slotFillerAddr)));
             actionSelect(aTarget);
         }
 
         state.clearArmedSlot();
+    }
+
+    @Override
+    public void ensureIsEditable() throws AnnotationException
+    {
+        editorPage.ensureIsEditable();
     }
 
     @Override
@@ -422,7 +428,7 @@ public abstract class AnnotationDetailEditorPanel
         var adapter = annotationService
                 .getAdapter(annotationService.findLayer(state.getProject(), annoFs));
 
-        state.getSelection().set(adapter.select(aVid, annoFs));
+        state.setSelection(adapter.select(aVid, annoFs));
         actionSelect(aTarget);
     }
 
@@ -448,6 +454,17 @@ public abstract class AnnotationDetailEditorPanel
     {
         editorPage.actionShowSelectedDocument(aTarget, getModelObject().getDocument(), aBegin,
                 aEnd);
+    }
+
+    @Override
+    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            int aBegin, int aEnd)
+        throws IOException, AnnotationException
+    {
+        // The main editor is hosted by a page that can switch documents. Unlike actionJump (which
+        // stays in the current document), honor the requested target document so a cross-document
+        // scroll-to (search hit / cross-document link) opens that document before centering.
+        editorPage.actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd);
     }
 
     @Deprecated
@@ -665,7 +682,7 @@ public abstract class AnnotationDetailEditorPanel
             // Load the feature editors with the remembered values (if any)
             loadFeatureEditorModels(aTarget);
             var selection = createNewAnnotation(aTarget, adapter, aCas);
-            state.getSelection().set(selection);
+            state.setSelection(selection);
             loadFeatureEditorModels(aTarget);
         }
 
@@ -954,7 +971,7 @@ public abstract class AnnotationDetailEditorPanel
 
         internalCompleteAnnotation(aTarget, cas);
 
-        selection.selectArc(newRelation);
+        state.setSelection(Selection.arc(newRelation));
     }
 
     @Override
@@ -1142,6 +1159,12 @@ public abstract class AnnotationDetailEditorPanel
     @OnEvent
     public void onSelectionChangedEvent(SelectionChangedEvent aEvent)
     {
+        // The detail panel is bound to the main editor and must not rebuild itself from a selection
+        // change originating in another editor on the page (D1/D2, #6146).
+        if (!aEvent.isFor(getModelObject())) {
+            return;
+        }
+
         if (aEvent.getRequestHandler() != null) {
             try {
                 refresh(aEvent.getRequestHandler());
@@ -1182,7 +1205,7 @@ public abstract class AnnotationDetailEditorPanel
                     .anyMatch(ann -> ann._id() == id);
 
             if (!annotationStillExists) {
-                selection.clear();
+                getModelObject().clearSelection();
                 aEvent.getRequestTarget().ifPresent(this::refresh);
             }
         }
@@ -1312,7 +1335,7 @@ public abstract class AnnotationDetailEditorPanel
 
         // Clear selection and feature states
         state.getFeatureStates().clear();
-        state.getSelection().clear();
+        state.clearSelection();
 
         // Refresh the selectable layers dropdown
         state.refreshSelectableLayers(schemaProperties::isLayerBlocked);

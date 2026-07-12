@@ -66,7 +66,7 @@ public class AssistantPanel
 
         add(new SvelteBehavior());
 
-        add(diamBehavior = new DiamAjaxBehavior(null));
+        add(diamBehavior = new DiamAjaxBehavior(findParent(AnnotationPageBase.class)));
     }
 
     @Override

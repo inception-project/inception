@@ -139,7 +139,7 @@ public class BratAnnotationEditor
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
-        var cmdQueue = QueuedEditorCommandsMetaDataKey.get();
+        var cmdQueue = QueuedEditorCommandsMetaDataKey.get(this);
         var collInfo = collectionInformationHandler.getCollectionInformation(getModelObject());
         cmdQueue.add(new LoadCollectionCommand(collInfo));
         cmdQueue.add(new LoadAnnotationsCommand());

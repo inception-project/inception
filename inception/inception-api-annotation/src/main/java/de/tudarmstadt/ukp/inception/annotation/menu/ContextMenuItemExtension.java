@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.annotation.menu;
 
 import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
 
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
 public interface ContextMenuItemExtension
@@ -37,5 +36,5 @@ public interface ContextMenuItemExtension
         return true;
     }
 
-    IMenuItem createMenuItem(VID aVid, int aClientX, int aClientY);
+    IMenuItem createMenuItem(ContextMenuItemContext aCtx, int aClientX, int aClientY);
 }

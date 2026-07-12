@@ -20,10 +20,10 @@ package de.tudarmstadt.ukp.inception.diam.editor.actions;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.wicket.request.Request;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
 
@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBa
  * </p>
  */
 public class EditorAjaxRequestHandlerExtensionPointImpl
-    extends ExtensionPoint_ImplBase<Request, EditorAjaxRequestHandler>
+    extends ExtensionPoint_ImplBase<DiamRequest, EditorAjaxRequestHandler>
     implements EditorAjaxRequestHandlerExtensionPoint
 {
     public EditorAjaxRequestHandlerExtensionPointImpl(
@@ -44,7 +44,7 @@ public class EditorAjaxRequestHandlerExtensionPointImpl
     }
 
     @Override
-    public Optional<EditorAjaxRequestHandler> getHandler(Request aRequest)
+    public Optional<EditorAjaxRequestHandler> getHandler(DiamRequest aRequest)
     {
         return getExtensions().stream() //
                 .filter(handler -> handler.accepts(aRequest)) //
@@ -61,7 +61,7 @@ public class EditorAjaxRequestHandlerExtensionPointImpl
     }
 
     @Override
-    public List<EditorAjaxRequestHandler> getExtensions(Request aContext)
+    public List<EditorAjaxRequestHandler> getExtensions(DiamRequest aContext)
     {
         // EditorAjaxRequestHandler::accept may have side-effects! In particular the
         // ImplicitUnarmSlotHandler. You do not want this side effect to unarm a slot while

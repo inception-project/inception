@@ -21,12 +21,13 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 import jakarta.servlet.http.HttpServletRequest;
 
 public interface EditorAjaxRequestHandler
-    extends Extension<Request>
+    extends Extension<DiamRequest>
 {
     int PRIO_CONTEXT_MENU = -10;
     int PRIO_RENDER_HANDLER = 0;
@@ -62,10 +63,10 @@ public interface EditorAjaxRequestHandler
     String getCommand();
 
     @Override
-    default boolean accepts(Request aRequest)
+    default boolean accepts(DiamRequest aRequest)
     {
-        return getCommand().equals(
-                aRequest.getRequestParameters().getParameterValue(PARAM_ACTION).toOptionalString());
+        return getCommand().equals(aRequest.getRequest().getRequestParameters()
+                .getParameterValue(PARAM_ACTION).toOptionalString());
     }
 
     AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, Request aRequest);

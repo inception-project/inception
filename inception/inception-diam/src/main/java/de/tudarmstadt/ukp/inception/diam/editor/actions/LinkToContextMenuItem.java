@@ -26,12 +26,10 @@ import java.io.IOException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemContext;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemExtension;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
@@ -52,7 +50,7 @@ public class LinkToContextMenuItem
     @Override
     public boolean accepts(ContextMenuItemContext aCtx)
     {
-        var state = aCtx.page().getModelObject();
+        var state = aCtx.context().getAnnotatorState();
 
         // Origin of the relation needs to be a span
         if (!state.getSelection().isSpan()) {
@@ -61,7 +59,7 @@ public class LinkToContextMenuItem
 
         // Target also needs to be a span
         try {
-            var cas = aCtx.page().getEditorCas();
+            var cas = aCtx.context().getEditorCas();
             var ann = selectAnnotationByAddr(cas, aCtx.vid().getId());
             if (ann == null) {
                 return false;
@@ -80,35 +78,32 @@ public class LinkToContextMenuItem
     }
 
     @Override
-    public IMenuItem createMenuItem(VID aVid, int aClientX, int aClientY)
+    public IMenuItem createMenuItem(ContextMenuItemContext aCtx, int aClientX, int aClientY)
     {
         return new LambdaMenuItem("Link to ...", $ -> {
             // Ensure that lambda is serializable
             getApplicationContext() //
                     .getBean(LinkToContextMenuItem.class) //
-                    .actionLinkTo($, aVid, aClientX, aClientY);
+                    .actionLinkTo($, aCtx, aClientX, aClientY);
         });
     }
 
-    private void actionLinkTo(AjaxRequestTarget aTarget, VID paramId, int aClientX, int aClientY)
+    private void actionLinkTo(AjaxRequestTarget aTarget, ContextMenuItemContext aCtx, int aClientX,
+            int aClientY)
         throws IOException, AnnotationException
     {
-        var page = (AnnotationPageBase) aTarget.getPage();
+        // Act on the editor the context menu was opened in, not on the main editor's page.
+        var context = aCtx.context();
 
-        var maybeContextMenuLookup = page.getContextMenuLookup();
-        if (!maybeContextMenuLookup.isPresent()) {
-            return;
-        }
+        context.getActionHandler().ensureIsEditable();
 
-        page.ensureIsEditable();
-
-        var state = page.getModelObject();
+        var state = context.getAnnotatorState();
 
         if (!state.getSelection().isSpan()) {
             return;
         }
 
-        createRelationAnnotationHandler.actionArc(maybeContextMenuLookup.get(), aTarget,
-                state.getSelection().getAnnotation(), paramId, aClientX, aClientY);
+        createRelationAnnotationHandler.actionArc(context, aCtx.contextMenuLookup(), aTarget,
+                state.getSelection().getAnnotation(), aCtx.vid(), aClientX, aClientY);
     }
 }

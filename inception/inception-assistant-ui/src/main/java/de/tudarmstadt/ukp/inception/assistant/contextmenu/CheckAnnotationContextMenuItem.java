@@ -32,7 +32,6 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemContext;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemExtension;
 import de.tudarmstadt.ukp.inception.assistant.sidebar.AssistantSidebarFactory;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
@@ -58,10 +57,10 @@ public class CheckAnnotationContextMenuItem
     @Override
     public boolean accepts(ContextMenuItemContext aCtx)
     {
-        var state = aCtx.page().getModelObject();
+        var state = aCtx.context().getAnnotatorState();
 
         try {
-            var cas = aCtx.page().getEditorCas();
+            var cas = aCtx.context().getEditorCas();
             var ann = selectAnnotationByAddr(cas, aCtx.vid().getId());
             if (ann == null) {
                 return false;
@@ -76,7 +75,7 @@ public class CheckAnnotationContextMenuItem
     }
 
     @Override
-    public IMenuItem createMenuItem(VID aVid, int aClientX, int aClientY)
+    public IMenuItem createMenuItem(ContextMenuItemContext aCtx, int aClientX, int aClientY)
     {
         return new LambdaMenuItem("Check ...", "fa-regular fa-comments", $ -> {
             // Need to fetch the item from the application context statically to make the
@@ -84,32 +83,30 @@ public class CheckAnnotationContextMenuItem
             // serializable
             getApplicationContext() //
                     .getBean(CheckAnnotationContextMenuItem.class) //
-                    .actionCheck($, aVid, aClientX, aClientY);
+                    .actionCheck($, aCtx, aClientX, aClientY);
         });
     }
 
-    private void actionCheck(AjaxRequestTarget aTarget, VID paramId, int aClientX, int aClientY)
+    private void actionCheck(AjaxRequestTarget aTarget, ContextMenuItemContext aCtx, int aClientX,
+            int aClientY)
         throws IOException
     {
+        // Revealing the assistant sidebar is a page-level action; the page hosts the sidebar
+        // regardless of which editor the context menu was opened in.
         var page = (AnnotationPageBase) aTarget.getPage();
-
-        var maybeContextMenuLookup = page.getContextMenuLookup();
-        if (!maybeContextMenuLookup.isPresent()) {
-            return;
-        }
-
         page.visitChildren(SidebarPanel.class,
                 (c, v) -> ((SidebarPanel) c).showTab(aTarget, assistantSidebarFactory.getId()));
 
+        // The annotation being checked belongs to the editor the menu was opened in.
         var sessionOwner = userService.getCurrentUser();
-        var state = page.getModelObject();
+        var state = aCtx.context().getAnnotatorState();
         schedulingService.enqueue(CheckAnnotationTask.builder() //
                 .withTrigger("Context menu") //
                 .withSessionOwner(sessionOwner) //
                 .withProject(state.getProject()) //
                 .withDocument(state.getDocument()) //
                 .withDataOwner(state.getUser().getUsername()) //
-                .withAnnotation(paramId) //
+                .withAnnotation(aCtx.vid()) //
                 .build());
     }
 }

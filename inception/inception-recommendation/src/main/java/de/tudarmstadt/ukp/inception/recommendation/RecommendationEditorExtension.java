@@ -204,7 +204,7 @@ public class RecommendationEditorExtension
         page.writeEditorCas(aCas);
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
-        aState.getSelection().set(adapter.select(VID.of(annotation), annotation));
+        aState.setSelection(adapter.select(VID.of(annotation), annotation));
         page.getAnnotationActionHandler().actionSelect(aTarget);
 
         // Send a UI event that the suggestion has been accepted
@@ -247,7 +247,7 @@ public class RecommendationEditorExtension
 
         // Trigger a re-rendering of the document
         var page = aTarget.getPage();
-        page.send(page, BREADTH, new SelectionChangedEvent(aTarget));
+        page.send(page, BREADTH, new SelectionChangedEvent(aState, aTarget));
     }
 
     @Override

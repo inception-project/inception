@@ -193,7 +193,7 @@ public class DocumentNavigator
 
     public void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
     {
-        page.getModelObject().getSelection().clear();
+        page.getModelObject().clearSelection();
         page.getFooterItems().getObject().stream()
                 .filter(component -> component instanceof OpenDocumentDialog)
                 .map(component -> (OpenDocumentDialog) component).findFirst()

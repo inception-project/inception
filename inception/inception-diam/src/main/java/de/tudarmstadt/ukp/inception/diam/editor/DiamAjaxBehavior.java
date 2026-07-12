@@ -21,6 +21,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -30,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
+import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
 import de.tudarmstadt.ukp.inception.support.http.ServerTimingWatch;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
@@ -48,16 +50,21 @@ public class DiamAjaxBehavior
 
     private boolean globalHandlersEnabled = true;
 
+    private DiamContext context;
+
     private final ContextMenu contextMenu;
 
-    public DiamAjaxBehavior()
+    public DiamAjaxBehavior(DiamContext aContext)
     {
-        this(null);
+        this(aContext, null);
     }
 
-    public DiamAjaxBehavior(ContextMenu aContextMenu)
+    public DiamAjaxBehavior(DiamContext aContext, ContextMenu aContextMenu)
     {
+        Validate.notNull(aContext, "DiamContext must be set");
+
         contextMenu = aContextMenu;
+        context = aContext;
     }
 
     public DiamAjaxBehavior addPriorityHandler(EditorAjaxRequestHandler aHandler)
@@ -72,6 +79,15 @@ public class DiamAjaxBehavior
         return this;
     }
 
+    /**
+     * @return the editor-scoped context through which handlers resolve state, CAS, action handler
+     *         and editability. Never {@code null} — it is mandatory and set at construction.
+     */
+    public DiamContext getContext()
+    {
+        return context;
+    }
+
     @Override
     protected void onBind()
     {
@@ -81,10 +97,10 @@ public class DiamAjaxBehavior
     @Override
     protected void respond(AjaxRequestTarget aTarget)
     {
-        var request = RequestCycle.get().getRequest();
+        var diamRequest = new DiamRequest(context, RequestCycle.get().getRequest());
 
         var priorityHandler = priorityHandlers.stream() //
-                .filter(handler -> handler.accepts(request)) //
+                .filter(handler -> handler.accepts(diamRequest)) //
                 .findFirst();
 
         if (priorityHandler.isPresent()) {
@@ -93,7 +109,7 @@ public class DiamAjaxBehavior
         }
 
         if (globalHandlersEnabled) {
-            handlers.getHandler(request) //
+            handlers.getHandler(diamRequest) //
                     .ifPresent(h -> call(aTarget, h));
         }
     }

@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureEditor;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
@@ -351,7 +352,7 @@ public class DocumentMetadataAnnotationDetailPanel
         try {
             var cas = jcasProvider.get();
             var fs = ICasUtil.selectAnnotationByAddr(cas, aEvent.getLinkWithRoleModel().targetAddr);
-            state.getObject().getSelection().selectSpan(fs);
+            state.getObject().setSelection(Selection.span(fs));
             if (state.getObject().getSelection().getAnnotation().isSet()) {
                 actionHandler.actionDelete(target);
 
