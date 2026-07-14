@@ -16,11 +16,7 @@
  * limitations under the License.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import {
-    type TocLevel,
-    generateTOC,
-    generateTOCIndex,
-} from './DocumentStructureNavigatorUtils';
+import { type TocLevel, generateTOC, generateTOCIndex } from './DocumentStructureNavigatorUtils';
 
 let container: HTMLElement;
 

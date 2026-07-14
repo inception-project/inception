@@ -110,7 +110,8 @@ export default class DocumentMetadataSidebarFactory {
         const vid = item.dataset.annotationSidebarVid as VID | undefined;
         const layerId = Number(item.dataset.annotationSidebarLayerId);
         const layerName = item.dataset.annotationSidebarLayerName;
-        const kind = (item.dataset.annotationSidebarKind as SidebarKind | undefined) ?? 'annotation';
+        const kind =
+            (item.dataset.annotationSidebarKind as SidebarKind | undefined) ?? 'annotation';
         const label = item.dataset.annotationSidebarLabel?.trim() || undefined;
         const score = Number(item.dataset.annotationSidebarScore ?? Number.NaN);
 

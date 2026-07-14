@@ -55,8 +55,7 @@ export class HtmlDocumentStructure implements DocumentStructureStrategy {
     private wrapHeadingSectionsIn(container: Element, counter: { n: number }) {
         const doc = container.ownerDocument;
         const isHeading = (node: Node): node is HTMLElement =>
-            node.nodeType === Node.ELEMENT_NODE &&
-            /^h[1-6]$/i.test((node as Element).localName);
+            node.nodeType === Node.ELEMENT_NODE && /^h[1-6]$/i.test((node as Element).localName);
 
         // Snapshot ALL child nodes (elements, text, comments) so we can move
         // them in document order. Iterating .children would drop text nodes,

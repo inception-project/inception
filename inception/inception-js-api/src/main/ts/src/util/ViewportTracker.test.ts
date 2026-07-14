@@ -44,7 +44,13 @@ class MockIntersectionObserver {
     // Simulate entries being observed
     simulate(entries: Partial<IntersectionObserverEntry>[] = []) {
         // Cast to the right type for callback invocation
-        const full = entries.map((e) => ({ isIntersecting: !!e.isIntersecting, target: e.target } as IntersectionObserverEntry));
+        const full = entries.map(
+            (e) =>
+                ({
+                    isIntersecting: !!e.isIntersecting,
+                    target: e.target,
+                }) as IntersectionObserverEntry
+        );
         this.cb(full, this as unknown as IntersectionObserver);
     }
 }
@@ -175,7 +181,10 @@ describe('ViewportTracker (pause/resume)', () => {
         const obs = MockIntersectionObserver.lastInstance;
         expect(obs).toBeTruthy();
 
-        obs!.simulate([{ isIntersecting: true, target: a }, { isIntersecting: true, target: b }]);
+        obs!.simulate([
+            { isIntersecting: true, target: a },
+            { isIntersecting: true, target: b },
+        ]);
         vi.advanceTimersByTime(300);
 
         expect(cb).toHaveBeenCalled();

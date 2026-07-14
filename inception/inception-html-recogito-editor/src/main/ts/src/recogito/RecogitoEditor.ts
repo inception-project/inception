@@ -44,14 +44,27 @@ import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/wid
 try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const HighlighterModule = require('@recogito/recogito-js/src/highlighter/Highlighter');
-    const Highlighter = HighlighterModule && HighlighterModule.default ? HighlighterModule.default : HighlighterModule;
+    const Highlighter =
+        HighlighterModule && HighlighterModule.default
+            ? HighlighterModule.default
+            : HighlighterModule;
     if (Highlighter && Highlighter.prototype && !Highlighter.prototype._inceptionPatched) {
         const orig = Highlighter.prototype._addAnnotation;
         Highlighter.prototype._addAnnotation = function (annotation) {
             try {
                 const positions = this.charOffsetsToDOMPosition([annotation.start, annotation.end]);
-                if (!positions || positions.length < 2 || !positions[0] || !positions[1] || !positions[0].node || !positions[1].node) {
-                    console.warn('Skipping annotation due to missing DOM positions (early patch)', (annotation && annotation.underlying) || annotation);
+                if (
+                    !positions ||
+                    positions.length < 2 ||
+                    !positions[0] ||
+                    !positions[1] ||
+                    !positions[0].node ||
+                    !positions[1].node
+                ) {
+                    console.warn(
+                        'Skipping annotation due to missing DOM positions (early patch)',
+                        (annotation && annotation.underlying) || annotation
+                    );
                     return;
                 }
             } catch (e) {
@@ -160,21 +173,39 @@ export class RecogitoEditor implements AnnotationEditor {
                 const wrapper = element.ownerDocument.createElement('div');
                 Array.from(element.childNodes).forEach((child) => wrapper.appendChild(child));
                 element.appendChild(wrapper);
- 
+
                 // Monkeypatch Recogito Highlighter at runtime to avoid uncaught
                 // errors when annotation char offsets cannot be mapped to DOM
                 // nodes. This is done at runtime (not by editing
                 // node_modules) so the fix survives rebuilds.
                 try {
                     // eslint-disable-next-line @typescript-eslint/no-var-requires
-                    const Highlighter = require('@recogito/recogito-js/src/highlighter/Highlighter').default;
-                    if (Highlighter && Highlighter.prototype && !Highlighter.prototype._inceptionPatched) {
+                    const Highlighter =
+                        require('@recogito/recogito-js/src/highlighter/Highlighter').default;
+                    if (
+                        Highlighter &&
+                        Highlighter.prototype &&
+                        !Highlighter.prototype._inceptionPatched
+                    ) {
                         const orig = Highlighter.prototype._addAnnotation;
                         Highlighter.prototype._addAnnotation = function (annotation) {
                             try {
-                                const positions = this.charOffsetsToDOMPosition([annotation.start, annotation.end]);
-                                if (!positions || positions.length < 2 || !positions[0] || !positions[1] || !positions[0].node || !positions[1].node) {
-                                    console.warn('Skipping annotation due to missing DOM positions', (annotation && annotation.underlying) || annotation);
+                                const positions = this.charOffsetsToDOMPosition([
+                                    annotation.start,
+                                    annotation.end,
+                                ]);
+                                if (
+                                    !positions ||
+                                    positions.length < 2 ||
+                                    !positions[0] ||
+                                    !positions[1] ||
+                                    !positions[0].node ||
+                                    !positions[1].node
+                                ) {
+                                    console.warn(
+                                        'Skipping annotation due to missing DOM positions',
+                                        (annotation && annotation.underlying) || annotation
+                                    );
                                     return;
                                 }
                             } catch (e) {

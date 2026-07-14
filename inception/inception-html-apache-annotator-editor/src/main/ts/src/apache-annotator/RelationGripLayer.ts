@@ -238,15 +238,12 @@ export class RelationGripLayer {
         const n = group.length;
         const delta = n > 1 ? FAN_SPREAD_RAD / (n - 1) : 0;
         const radius =
-            n > 1
-                ? Math.max(FAN_BASE_RADIUS_PX, FAN_MIN_CHORD_PX / (2 * Math.sin(delta / 2)))
-                : 0;
+            n > 1 ? Math.max(FAN_BASE_RADIUS_PX, FAN_MIN_CHORD_PX / (2 * Math.sin(delta / 2))) : 0;
 
         group.forEach((spec, i) => {
             const angle = fanAngle(i, n, FAN_SPREAD_RAD);
             const left = spec.left - this.origin.left + radius * Math.sin(angle);
-            const top =
-                spec.top - this.origin.top - GRIP_RISE_PX - radius * (1 - Math.cos(angle));
+            const top = spec.top - this.origin.top - GRIP_RISE_PX - radius * (1 - Math.cos(angle));
             this.layer.appendChild(this.createGrip(spec, left, top));
         });
     }

@@ -19,18 +19,22 @@
 // Loads bootstrap with our overrides applied. Downstream partials pull bootstrap
 // symbols from here via `@use 'inception-bootstrap-config' as *;`.
 @forward '../node_modules/bootstrap/scss/bootstrap' with (
-  $card-spacer-y: 0.25rem,    // Original: .75rem
-  $card-spacer-x: 0.75rem,    // Original: 1.25rem
-  $navbar-padding-y: 0px,     // Original: $spacer * .5
-  $navbar-padding-x: 0px,     // Original: null
-  $grid-breakpoints: (
-    xs: 0,
-    sm: 576px,
-    md: 768px,
-    lg: 992px,
-    xl: 1200px,
-    xxl: 1600px,
-  )
+    $card-spacer-y: 0.25rem,
+    // Original: .75rem
+    $card-spacer-x: 0.75rem,
+    // Original: 1.25rem
+    $navbar-padding-y: 0px,
+    // Original: $spacer * .5
+    $navbar-padding-x: 0px,
+    // Original: null
+    $grid-breakpoints: (
+            xs: 0,
+            sm: 576px,
+            md: 768px,
+            lg: 992px,
+            xl: 1200px,
+            xxl: 1600px,
+        )
 );
 
 // INCEpTION variables: Footer

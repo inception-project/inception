@@ -88,8 +88,18 @@
             {:else if message['@type'] === 'callResponse'}
                 <div class="message-body">
                     <strong>Called tool: {message.toolName}</strong>
-                    <div>{message.arguments ? JSON.stringify(message.arguments, null, 2) : 'no arguments'}</div>
-                    <div class="call-payload">{typeof message.payload === 'string' ? message.payload : message.payload ? JSON.stringify(message.payload, null, 2) : 'no payload'}</div>
+                    <div>
+                        {message.arguments
+                            ? JSON.stringify(message.arguments, null, 2)
+                            : 'no arguments'}
+                    </div>
+                    <div class="call-payload">
+                        {typeof message.payload === 'string'
+                            ? message.payload
+                            : message.payload
+                              ? JSON.stringify(message.payload, null, 2)
+                              : 'no payload'}
+                    </div>
                 </div>
             {:else}
                 <div class="message-body">Unknown message type: {message['@type']}</div>
@@ -234,7 +244,6 @@
         font-size: smaller;
         color: var(--bs-body-color-secondary);
     }
-
 
     .copy-button {
         visibility: hidden;

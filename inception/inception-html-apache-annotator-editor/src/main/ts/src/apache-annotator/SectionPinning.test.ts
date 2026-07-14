@@ -149,9 +149,7 @@ describe('normalizeSectionsForPinning', () => {
         // and it must resolve to exactly both wrappers (outer + inner), not the
         // buried originals.
         expect(selector).toBe(WRAPPER_SELECTOR);
-        expect(new Set(container.querySelectorAll(selector))).toEqual(
-            new Set(Array.from(wraps))
-        );
+        expect(new Set(container.querySelectorAll(selector))).toEqual(new Set(Array.from(wraps)));
     });
 
     it('preserves text content in document order so annotation offsets do not shift', () => {

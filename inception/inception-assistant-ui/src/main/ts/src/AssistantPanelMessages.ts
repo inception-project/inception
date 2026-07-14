@@ -136,7 +136,10 @@ export function buildGroups(messages: MChatMessage[]): MGroupItem[] {
             // last element in the group. If there is no buffered group,
             // behave as before and emit the content message as a single item.
             if (temp.length > 0) {
-                console.debug('[assistant] Appending content message to running group and flushing:', m.id);
+                console.debug(
+                    '[assistant] Appending content message to running group and flushing:',
+                    m.id
+                );
                 temp.push(m);
                 flushTemp(true);
             } else {

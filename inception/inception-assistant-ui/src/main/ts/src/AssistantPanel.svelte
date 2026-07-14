@@ -477,7 +477,9 @@
 
                     <PerformanceFooter
                         performance={message.performance}
-                        show={(((message.content || message.role !== 'assistant') && !message.collapsed) || (thinking && !message.thinkingCollapsed))}
+                        show={((message.content || message.role !== 'assistant') &&
+                            !message.collapsed) ||
+                            (thinking && !message.thinkingCollapsed)}
                     />
                 </div>
             {:else}
@@ -532,19 +534,24 @@
                             tabIndex={item.lastMessage.internal ? 0 : undefined}
                         >
                             {#if item.lastMessage.content || item.lastMessage.role !== 'assistant'}
-                                    <MessageContent
-                                        message={item.lastMessage}
-                                        thinkingHtml={item.activeThinkingHtml}
-                                        onToggleThinking={toggleCollapseThinking}
-                                        onToggleCollapse={toggleCollapse}
-                                        onCopy={copyToClipboard}
-                                        onClickHandler={handleClick}
-                                    />
+                                <MessageContent
+                                    message={item.lastMessage}
+                                    thinkingHtml={item.activeThinkingHtml}
+                                    onToggleThinking={toggleCollapseThinking}
+                                    onToggleCollapse={toggleCollapse}
+                                    onCopy={copyToClipboard}
+                                    onClickHandler={handleClick}
+                                />
                             {/if}
 
                             <PerformanceFooter
                                 performance={item.lastMessage.performance}
-                                show={(((item.lastMessage.content || item.lastMessage.role !== 'assistant') && !item.lastMessage.collapsed) || (item.activeThinkingHtml && item.activeThinkingMessage && !item.activeThinkingMessage.thinkingCollapsed))}
+                                show={((item.lastMessage.content ||
+                                    item.lastMessage.role !== 'assistant') &&
+                                    !item.lastMessage.collapsed) ||
+                                    (item.activeThinkingHtml &&
+                                        item.activeThinkingMessage &&
+                                        !item.activeThinkingMessage.thinkingCollapsed)}
                             />
                         </div>
                     {/if}
@@ -571,7 +578,9 @@
 
                                 <PerformanceFooter
                                     performance={message.performance}
-                                    show={(((message.content || message.role !== 'assistant') && !message.collapsed) || (thinking && !message.thinkingCollapsed))}
+                                    show={((message.content || message.role !== 'assistant') &&
+                                        !message.collapsed) ||
+                                        (thinking && !message.thinkingCollapsed)}
                                 />
                             </div>
                         {/each}

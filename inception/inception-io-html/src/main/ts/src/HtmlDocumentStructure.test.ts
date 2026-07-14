@@ -55,13 +55,8 @@ function textInOrder(root: Node): string {
  */
 function outline(root: Element): string[] {
     const result: string[] = [];
-    const walker = root.ownerDocument.createTreeWalker(
-        root,
-        NodeFilter.SHOW_ELEMENT,
-        (n) =>
-            (n as Element).localName === 'sec-wrap'
-                ? NodeFilter.FILTER_ACCEPT
-                : NodeFilter.FILTER_SKIP
+    const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, (n) =>
+        (n as Element).localName === 'sec-wrap' ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP
     );
     const depth = new Map<Element, number>();
     let cur: Element | null;
@@ -74,7 +69,9 @@ function outline(root: Element): string[] {
             p = p.parentElement;
         }
         depth.set(cur, d);
-        const heading = cur.querySelector(':scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6');
+        const heading = cur.querySelector(
+            ':scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6'
+        );
         const title = heading?.textContent?.trim() ?? '?';
         result.push(`${'  '.repeat(d)}${heading?.localName ?? '?'}: ${title}`);
     }
@@ -113,8 +110,7 @@ describe('HtmlDocumentStructure', () => {
         });
 
         it('returns to outer level on higher-rank heading', () => {
-            container.innerHTML =
-                '<h1>A</h1><h2>A.1</h2><h3>A.1.a</h3><h2>A.2</h2><h1>B</h1>';
+            container.innerHTML = '<h1>A</h1><h2>A.1</h2><h3>A.1.a</h3><h2>A.2</h2><h1>B</h1>';
             new HtmlDocumentStructure().preprocess(container);
             expect(outline(container)).toEqual([
                 'h1: A',
@@ -127,8 +123,7 @@ describe('HtmlDocumentStructure', () => {
 
         it('recurses into wrapper elements without direct headings', () => {
             // body has no direct heading; main and article wrap the content
-            container.innerHTML =
-                '<main><article><h1>A</h1><p/><h2>B</h2></article></main>';
+            container.innerHTML = '<main><article><h1>A</h1><p/><h2>B</h2></article></main>';
             new HtmlDocumentStructure().preprocess(container);
             // The wrap happens inside the deepest wrapper that actually holds
             // headings (the <article>). The outline still threads through.
@@ -138,15 +133,13 @@ describe('HtmlDocumentStructure', () => {
         it('recurses into wrapper siblings when outer container has direct headings (regression)', () => {
             // Copilot reviewer case: outer has h1 AND a <section> with nested h2.
             // Before fix the h2 was silently dropped from the outline.
-            container.innerHTML =
-                '<h1>A</h1><section><h2>B</h2></section>';
+            container.innerHTML = '<h1>A</h1><section><h2>B</h2></section>';
             new HtmlDocumentStructure().preprocess(container);
             expect(outline(container)).toEqual(['h1: A', '  h2: B']);
         });
 
         it('preserves document-order text across the wrap pass', () => {
-            container.innerHTML =
-                '\n  <h1>A</h1>\n  <p>one</p>\n  <h2>B</h2>\n  <p>two</p>\n';
+            container.innerHTML = '\n  <h1>A</h1>\n  <p>one</p>\n  <h2>B</h2>\n  <p>two</p>\n';
             const before = textInOrder(container);
             new HtmlDocumentStructure().preprocess(container);
             const after = textInOrder(container);
@@ -190,9 +183,7 @@ describe('HtmlDocumentStructure', () => {
                 );
                 let n: Node | null;
                 while ((n = w.nextNode())) {
-                    out.push(
-                        `${n.nodeType === Node.COMMENT_NODE ? 'C' : 'T'}:${n.nodeValue}`
-                    );
+                    out.push(`${n.nodeType === Node.COMMENT_NODE ? 'C' : 'T'}:${n.nodeValue}`);
                 }
                 return out;
             };
@@ -222,9 +213,9 @@ describe('HtmlDocumentStructure', () => {
             // pre-existing element is untouched
             expect(preExisting.id).toBe('sec-wrap-0');
             // and the generated id is unique
-            expect(
-                container.ownerDocument.querySelectorAll(`[id="${generated!.id}"]`).length
-            ).toBe(1);
+            expect(container.ownerDocument.querySelectorAll(`[id="${generated!.id}"]`).length).toBe(
+                1
+            );
         });
 
         it('sets data-level to the heading rank', () => {
@@ -240,9 +231,7 @@ describe('HtmlDocumentStructure', () => {
         it('returns the trimmed text of a direct child heading', () => {
             container.innerHTML = '<sec-wrap><h2>  Section title  </h2></sec-wrap>';
             const section = container.querySelector('sec-wrap')!;
-            expect(new HtmlDocumentStructure().extractTitle(section)).toBe(
-                'Section title'
-            );
+            expect(new HtmlDocumentStructure().extractTitle(section)).toBe('Section title');
         });
 
         it('returns undefined if there is no direct child heading', () => {

@@ -57,12 +57,7 @@ describe('TeiDocumentStructure', () => {
     describe('preprocess', () => {
         it('does not modify the DOM', () => {
             container.appendChild(
-                el(
-                    'div',
-                    el('head', 'A'),
-                    el('p', 'x'),
-                    el('div', el('head', 'B'), el('p', 'y'))
-                )
+                el('div', el('head', 'A'), el('p', 'x'), el('div', el('head', 'B'), el('p', 'y')))
             );
             const before = container.innerHTML;
             new TeiDocumentStructure().preprocess(container);
@@ -74,9 +69,7 @@ describe('TeiDocumentStructure', () => {
         it('returns the trimmed text of a direct child head', () => {
             const section = el('div', el('head', '  Section title  '));
             container.appendChild(section);
-            expect(new TeiDocumentStructure().extractTitle(section)).toBe(
-                'Section title'
-            );
+            expect(new TeiDocumentStructure().extractTitle(section)).toBe('Section title');
         });
 
         it('returns undefined when there is no direct child head', () => {

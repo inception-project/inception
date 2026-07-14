@@ -84,8 +84,7 @@ export function renderRelation(a: RelationAnnotation): HTMLDivElement {
     // independently visible and hoverable.
     const BASE_DISTANCE = 30;
     const STACK_SPACING = 12;
-    const distance =
-        BASE_DISTANCE + STACK_SPACING * (a.stackIndex - (a.stackSize - 1) / 2);
+    const distance = BASE_DISTANCE + STACK_SPACING * (a.stackIndex - (a.stackSize - 1) / 2);
     const control = findBezierControlPoint(a.x1, a.y1, a.x2, a.y2, distance);
 
     // Create Outline.

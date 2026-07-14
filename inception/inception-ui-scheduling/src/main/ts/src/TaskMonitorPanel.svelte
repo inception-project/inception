@@ -154,8 +154,7 @@
         let format: 'text' | 'json' | 'jsonl' = 'text';
         if (ev && ev.ctrlKey) {
             format = 'json';
-        }
-        else if (ev && ev.altKey) {
+        } else if (ev && ev.altKey) {
             format = 'jsonl';
         }
 
@@ -180,14 +179,14 @@
                 content = JSON.stringify(data, null, 2);
                 filename = `task-${item.id}-log.json`;
                 mime = 'application/json';
-            }
-            else if (format === 'jsonl') {
-                const lines = data.map((m) => JSON.stringify({ level: m.level, message: m.message, source: m.source }));
+            } else if (format === 'jsonl') {
+                const lines = data.map((m) =>
+                    JSON.stringify({ level: m.level, message: m.message, source: m.source })
+                );
                 content = lines.join('\n');
                 filename = `task-${item.id}-log.jsonl`;
                 mime = 'application/x-ndjson';
-            }
-            else {
+            } else {
                 // Plain text: include source if present
                 content = data
                     .map((m) => {

@@ -23,20 +23,17 @@
 // update-bun-lock.sh -- edit the canonical file rather than the copies.
 // =======================================================================
 
-import { defineConfig } from 'vite'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
+import { defineConfig } from 'vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { svelteTesting } from '@testing-library/svelte/vite';
 
-export default defineConfig(({mode}) => ({
-  plugins: [
-    svelte(),
-    svelteTesting()
-  ],
+export default defineConfig(({ mode }) => ({
+  plugins: [svelte(), svelteTesting()],
   test: {
     globals: true,
-    environment: 'jsdom'
+    environment: 'jsdom',
   },
   resolve: {
     conditions: mode === 'test' ? ['browser'] : [],
-  }
-}))
+  },
+}));

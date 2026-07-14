@@ -75,8 +75,7 @@ export class SectionAnnotationCreator {
             // happens to carry data-section-type) is still labelled by its own
             // tag name.
             const wrapperType =
-                e.localName === 'sec-wrap' &&
-                e.namespaceURI === 'http://www.w3.org/1999/xhtml'
+                e.localName === 'sec-wrap' && e.namespaceURI === 'http://www.w3.org/1999/xhtml'
                     ? e.getAttribute('data-section-type')
                     : null;
             e.setAttribute('data-iaa-section-type', wrapperType || e.localName);
