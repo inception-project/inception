@@ -17,46 +17,46 @@
      * limitations under the License.
      */
 
-    import { onMount, onDestroy, tick } from "svelte";
-    import dayjs from "dayjs";
-    import * as echarts from "echarts";
+    import { onMount, onDestroy, tick } from 'svelte';
+    import dayjs from 'dayjs';
+    import * as echarts from 'echarts';
 
     export let dataUrl: string;
     export let devMode: boolean = false;
 
     // Known document states (ordering for display)
     const STATE_ORDER = [
-        "NEW",
-        "ANNOTATION_IN_PROGRESS",
-        "ANNOTATION_FINISHED",
-        "CURATION_IN_PROGRESS",
-        "CURATION_FINISHED",
+        'NEW',
+        'ANNOTATION_IN_PROGRESS',
+        'ANNOTATION_FINISHED',
+        'CURATION_IN_PROGRESS',
+        'CURATION_FINISHED',
     ];
 
     // Colors taken from `SourceDocumentState.getColor()` in the Java model
     const STATE_COLORS: Record<string, string> = {
-        NEW: "#00000000",
-        ANNOTATION_IN_PROGRESS: "#FFBF0080",
-        ANNOTATION_FINISHED: "#00BF00FF",
-        CURATION_IN_PROGRESS: "#FF00BF80",
-        CURATION_FINISHED: "#3232FFFF",
+        NEW: '#00000000',
+        ANNOTATION_IN_PROGRESS: '#FFBF0080',
+        ANNOTATION_FINISHED: '#00BF00FF',
+        CURATION_IN_PROGRESS: '#FF00BF80',
+        CURATION_FINISHED: '#3232FFFF',
     };
 
     // Default stacking order (bottom -> top). Exclude NEW from stacking.
     const STACK_ORDER = [
-        "CURATION_FINISHED",
-        "CURATION_IN_PROGRESS",
-        "ANNOTATION_FINISHED",
-        "ANNOTATION_IN_PROGRESS",
+        'CURATION_FINISHED',
+        'CURATION_IN_PROGRESS',
+        'ANNOTATION_FINISHED',
+        'ANNOTATION_IN_PROGRESS',
     ];
 
     // Component state
     let snapshots: Array<{ day: string; counts: Record<string, number> }> = [];
     let loading = false;
     let error: string | null = null;
-    let range: "max" | "year" | "quarter" | "month" | "week" = "max";
-    let projection: "none" | "week" | "month" | "quarter" | "year" = "quarter";
-    let metric: "documents" | "tokens" | "sentences" = "documents";
+    let range: 'max' | 'year' | 'quarter' | 'month' | 'week' = 'max';
+    let projection: 'none' | 'week' | 'month' | 'quarter' | 'year' = 'quarter';
+    let metric: 'documents' | 'tokens' | 'sentences' = 'documents';
     let chartDiv: HTMLDivElement | null = null;
     let chart: echarts.ECharts | null = null;
     let resizeObserver: ResizeObserver | null = null;
@@ -65,7 +65,7 @@
 
     // Test mode state
     let testModeEnabled = false;
-    let simulatedToday = dayjs().format("YYYY-MM-DD");
+    let simulatedToday = dayjs().format('YYYY-MM-DD');
 
     function scheduleResize() {
         if (_resizeTimer) {
@@ -73,7 +73,11 @@
             _resizeTimer = null;
         }
         _resizeTimer = window.setTimeout(() => {
-            try { chart?.resize(); } catch (e) { /* ignore */ }
+            try {
+                chart?.resize();
+            } catch (e) {
+                /* ignore */
+            }
             _resizeTimer = null;
         }, 120);
     }
@@ -86,16 +90,16 @@
 
         try {
             let url = dataUrl;
-            if (range !== "max") {
+            if (range !== 'max') {
                 const from = computeFrom(range);
-                const sep = url.indexOf("?") === -1 ? "?" : "&";
+                const sep = url.indexOf('?') === -1 ? '?' : '&';
                 url = `${url}${sep}from=${encodeURIComponent(from)}`;
             }
 
-            if (projection && projection !== "none") {
+            if (projection && projection !== 'none') {
                 const to = computeTo(projection);
                 if (to) {
-                    const sep = url.indexOf("?") === -1 ? "?" : "&";
+                    const sep = url.indexOf('?') === -1 ? '?' : '&';
                     url = `${url}${sep}to=${encodeURIComponent(to)}`;
                 }
             }
@@ -103,12 +107,12 @@
             // Add simulated "now" parameter if test mode is enabled
             if (testModeEnabled && simulatedToday) {
                 const nowParam = dayjs(simulatedToday).toISOString();
-                const sep = url.indexOf("?") === -1 ? "?" : "&";
+                const sep = url.indexOf('?') === -1 ? '?' : '&';
                 url = `${url}${sep}now=${encodeURIComponent(nowParam)}`;
             }
 
-            if (metric && metric !== "documents") {
-                const sep = url.indexOf("?") === -1 ? "?" : "&";
+            if (metric && metric !== 'documents') {
+                const sep = url.indexOf('?') === -1 ? '?' : '&';
                 url = `${url}${sep}metric=${encodeURIComponent(metric.toUpperCase())}`;
             }
 
@@ -145,8 +149,7 @@
                     _observedEl = chartDiv;
                 }
             }
-        }
-        catch (e) {
+        } catch (e) {
             // ignore - platform may not support ResizeObserver
         }
 
@@ -162,69 +165,63 @@
     function computeFrom(range: string) {
         const now = dayjs();
         switch (range) {
-            case "year":
-                return now.subtract(1, "year").toISOString();
-            case "quarter":
-                return now.subtract(3, "month").toISOString();
-            case "month":
-                return now.subtract(1, "month").toISOString();
-            case "week":
-                return now.subtract(1, "week").toISOString();
+            case 'year':
+                return now.subtract(1, 'year').toISOString();
+            case 'quarter':
+                return now.subtract(3, 'month').toISOString();
+            case 'month':
+                return now.subtract(1, 'month').toISOString();
+            case 'week':
+                return now.subtract(1, 'week').toISOString();
             default:
-                return "";
+                return '';
         }
     }
 
     function computeTo(projection: string) {
         const now = dayjs();
         switch (projection) {
-            case "year":
-                return now.add(1, "year").toISOString();
-            case "quarter":
-                return now.add(3, "month").toISOString();
-            case "month":
-                return now.add(1, "month").toISOString();
-            case "week":
-                return now.add(1, "week").toISOString();
+            case 'year':
+                return now.add(1, 'year').toISOString();
+            case 'quarter':
+                return now.add(3, 'month').toISOString();
+            case 'month':
+                return now.add(1, 'month').toISOString();
+            case 'week':
+                return now.add(1, 'week').toISOString();
             default:
-                return "";
+                return '';
         }
     }
 
     function prepareChartData() {
         // Normalize dates to YYYY-MM-DD and build continuous date array between first and last day
-        const days = snapshots.map((s) => dayjs(s.day).startOf("day"));
+        const days = snapshots.map((s) => dayjs(s.day).startOf('day'));
         const sorted = days.sort((a, b) => a.valueOf() - b.valueOf());
         if (sorted.length === 0) return { dateArr: [], series: [] };
         const start = sorted[0];
         const end = sorted[sorted.length - 1];
         const dateArr: string[] = [];
-        for (
-            let d = start;
-            d.isBefore(end) || d.isSame(end);
-            d = d.add(1, "day")
-        ) {
-            dateArr.push(d.format("YYYY-MM-DD"));
+        for (let d = start; d.isBefore(end) || d.isSame(end); d = d.add(1, 'day')) {
+            dateArr.push(d.format('YYYY-MM-DD'));
         }
 
         // build a map from day -> counts
         const map = new Map<string, Record<string, number>>();
         snapshots.forEach((s) => {
-            map.set(dayjs(s.day).format("YYYY-MM-DD"), s.counts || {});
+            map.set(dayjs(s.day).format('YYYY-MM-DD'), s.counts || {});
         });
         // Backward-fill all states per date and compute per-state arrays plus a total
         const allStates = STATE_ORDER.slice();
         const perStateData: Record<string, number[]> = {};
-        allStates.forEach(
-            (s) => (perStateData[s] = new Array(dateArr.length).fill(0)),
-        );
+        allStates.forEach((s) => (perStateData[s] = new Array(dateArr.length).fill(0)));
 
         // First pass: place snapshot values at their dates
         for (let i = 0; i < dateArr.length; i++) {
             const counts = map.get(dateArr[i]);
             if (counts) {
                 for (const s of allStates) {
-                    if (typeof counts[s] === "number") {
+                    if (typeof counts[s] === 'number') {
                         perStateData[s][i] = counts[s];
                     }
                 }
@@ -236,7 +233,7 @@
             let currentValue = 0;
             for (let i = dateArr.length - 1; i >= 0; i--) {
                 const counts = map.get(dateArr[i]);
-                if (counts && typeof counts[s] === "number") {
+                if (counts && typeof counts[s] === 'number') {
                     currentValue = counts[s];
                 }
                 perStateData[s][i] = currentValue;
@@ -254,13 +251,13 @@
         }
 
         // Use STACK_ORDER (bottom -> top) but ensure entries exist in STATE_ORDER and exclude NEW
-        const stackOrder = STACK_ORDER.filter(
-            (s) => s !== "NEW" && STATE_ORDER.includes(s),
-        );
+        const stackOrder = STACK_ORDER.filter((s) => s !== 'NEW' && STATE_ORDER.includes(s));
 
         // split into past (stacked area) and future (line-only) parts
         // Use simulated today if test mode is enabled, otherwise use actual today
-        const cutoff = testModeEnabled ? dayjs(simulatedToday).startOf("day") : dayjs().startOf("day");
+        const cutoff = testModeEnabled
+            ? dayjs(simulatedToday).startOf('day')
+            : dayjs().startOf('day');
         let lastPastIndex = -1;
         for (let i = 0; i < dateArr.length; i++) {
             const d = dayjs(dateArr[i]);
@@ -273,124 +270,119 @@
         const futureSeries: any[] = [];
 
         for (const state of stackOrder) {
-            const color = STATE_COLORS[state] || "#888888";
+            const color = STATE_COLORS[state] || '#888888';
             // past data: values up to lastPastIndex, null afterwards (so stacking stops cleanly)
-            const pastData = perStateData[state].map((v, idx) =>
-                idx <= lastPastIndex ? v : null,
-            );
+            const pastData = perStateData[state].map((v, idx) => (idx <= lastPastIndex ? v : null));
             pastSeries.push({
                 name: state,
-                type: "line",
-                stack: "total",
+                type: 'line',
+                stack: 'total',
                 areaStyle: {},
-                emphasis: { focus: "series" },
+                emphasis: { focus: 'series' },
                 data: pastData,
                 lineStyle: { color },
                 itemStyle: { color },
                 z: 10,
             });
 
-                // future data: include lastPastIndex for line continuity, starts rendering after
-                    const futureData: Array<number | null> = new Array(dateArr.length).fill(null);
+            // future data: include lastPastIndex for line continuity, starts rendering after
+            const futureData: Array<number | null> = new Array(dateArr.length).fill(null);
 
-                    // Ensure continuity: set the value at lastPastIndex to match the past data
-                    if (lastPastIndex >= 0) {
-                        futureData[lastPastIndex] = perStateData[state][lastPastIndex];
+            // Ensure continuity: set the value at lastPastIndex to match the past data
+            if (lastPastIndex >= 0) {
+                futureData[lastPastIndex] = perStateData[state][lastPastIndex];
+            }
+
+            // gather indices where we have an explicit snapshot value for this state
+            const knownIndices: number[] = [];
+            for (let i = 0; i < dateArr.length; i++) {
+                const counts = map.get(dateArr[i]);
+                if (counts && typeof counts[state] === 'number') {
+                    knownIndices.push(i);
+                }
+            }
+
+            // Start from lastPastIndex + 1 for the remaining future points
+            for (let i = lastPastIndex + 1; i < dateArr.length; i++) {
+                // find bounding known indices
+                let left = -1;
+                let right = -1;
+                for (let k = 0; k < knownIndices.length; k++) {
+                    const ki = knownIndices[k];
+                    if (ki <= i) left = ki;
+                    if (ki >= i) {
+                        right = ki;
+                        break;
                     }
+                }
 
-                    // gather indices where we have an explicit snapshot value for this state
-                    const knownIndices: number[] = [];
-                    for (let i = 0; i < dateArr.length; i++) {
-                        const counts = map.get(dateArr[i]);
-                        if (counts && typeof counts[state] === 'number') {
-                            knownIndices.push(i);
-                        }
-                    }
+                // Use step interpolation: hold value from left until we reach the next known point
+                if (left >= 0) {
+                    futureData[i] = perStateData[state][left];
+                } else if (right >= 0) {
+                    // only right known (rare) -> use right
+                    futureData[i] = perStateData[state][right];
+                } else {
+                    futureData[i] = null;
+                }
+            }
 
-                    // Start from lastPastIndex + 1 for the remaining future points
-                    for (let i = lastPastIndex + 1; i < dateArr.length; i++) {
-                        // find bounding known indices
-                        let left = -1;
-                        let right = -1;
-                        for (let k = 0; k < knownIndices.length; k++) {
-                            const ki = knownIndices[k];
-                            if (ki <= i) left = ki;
-                            if (ki >= i) { right = ki; break; }
-                        }
-
-                        // Use step interpolation: hold value from left until we reach the next known point
-                        if (left >= 0) {
-                            futureData[i] = perStateData[state][left];
-                        }
-                        else if (right >= 0) {
-                            // only right known (rare) -> use right
-                            futureData[i] = perStateData[state][right];
-                        }
-                        else {
-                            futureData[i] = null;
-                        }
-                    }
-
-                    futureSeries.push({
-                        name: state + ' (future)',
-                        type: 'line',
-                        stack: 'future', // Use separate stack to avoid duplication with past at boundary
-                        data: futureData,
-                        showSymbol: false,
-                        lineStyle: { color, opacity: 0.5 },
-                        itemStyle: { color },
-                        connectNulls: true,
-                        areaStyle: { opacity: 0 },
-                        z: 20
-                    });
+            futureSeries.push({
+                name: state + ' (future)',
+                type: 'line',
+                stack: 'future', // Use separate stack to avoid duplication with past at boundary
+                data: futureData,
+                showSymbol: false,
+                lineStyle: { color, opacity: 0.5 },
+                itemStyle: { color },
+                connectNulls: true,
+                areaStyle: { opacity: 0 },
+                z: 20,
+            });
         }
 
         // past total (for visual reference) and future total (line only)
-        const pastTotal = totalArr.map((v, idx) =>
-            idx <= lastPastIndex ? v : null,
-        );
-        const futureTotal = totalArr.map((v, idx) =>
-            idx >= lastPastIndex ? v : null,
-        );
+        const pastTotal = totalArr.map((v, idx) => (idx <= lastPastIndex ? v : null));
+        const futureTotal = totalArr.map((v, idx) => (idx >= lastPastIndex ? v : null));
 
         // total past: we still want a visible line on top of areas for past
         const totalPastSeries = {
-            name: "TOTAL",
-            type: "line",
+            name: 'TOTAL',
+            type: 'line',
             data: pastTotal,
-            lineStyle: { width: 2, color: "#000" },
-            itemStyle: { color: "#000" },
+            lineStyle: { width: 2, color: '#000' },
+            itemStyle: { color: '#000' },
             showSymbol: false,
-            emphasis: { focus: "series" },
+            emphasis: { focus: 'series' },
             z: 1,
         };
 
         const totalFutureSeries = {
-            name: "TOTAL",
-            type: "line",
+            name: 'TOTAL',
+            type: 'line',
             data: futureTotal,
-            lineStyle: { width: 2, color: "#000", opacity: 0.5 },
-            itemStyle: { color: "#000" },
+            lineStyle: { width: 2, color: '#000', opacity: 0.5 },
+            itemStyle: { color: '#000' },
             showSymbol: false,
-            emphasis: { focus: "series" },
+            emphasis: { focus: 'series' },
             z: 2,
         };
 
         // vertical 'Today' mark line as separate invisible series with markLine
-        const todayStr = testModeEnabled ? simulatedToday : dayjs().format("YYYY-MM-DD");
+        const todayStr = testModeEnabled ? simulatedToday : dayjs().format('YYYY-MM-DD');
         const todayMarkerSeries = {
-            name: "TodayMarker",
-            type: "line",
+            name: 'TodayMarker',
+            type: 'line',
             data: Array(dateArr.length).fill(null),
             markLine: {
                 silent: true,
                 data: [{ xAxis: todayStr }],
-                symbol: ["none", "diamond"],
-                label: { 
-                    formatter: testModeEnabled ? `Today (simulated)` : "Today", 
-                    position: "end" 
+                symbol: ['none', 'diamond'],
+                label: {
+                    formatter: testModeEnabled ? `Today (simulated)` : 'Today',
+                    position: 'end',
                 },
-                lineStyle: { color: "#000", type: "dashed", width: 1 },
+                lineStyle: { color: '#000', type: 'dashed', width: 1 },
             },
             z: 15,
         };
@@ -409,8 +401,7 @@
     function renderChart() {
         if (!chartDiv) return;
         const { dateArr, series, stackOrder } = prepareChartData();
-        const displayStates =
-            stackOrder || STATE_ORDER.filter((s) => s !== "NEW");
+        const displayStates = stackOrder || STATE_ORDER.filter((s) => s !== 'NEW');
 
         // If an existing chart instance is attached to a different DOM node, dispose it
         if (chart) {
@@ -431,20 +422,17 @@
 
         const option = {
             tooltip: {
-                trigger: "axis",
+                trigger: 'axis',
                 formatter: (params: any) => {
-                    if (!params || params.length === 0) return "";
+                    if (!params || params.length === 0) return '';
                     const date = params[0].axisValue;
                     let result = `${date}<br/>`;
 
                     // Group series by base name, picking non-null value from past or future
-                    const stateValues = new Map<
-                        string,
-                        { marker: string; value: number }
-                    >();
+                    const stateValues = new Map<string, { marker: string; value: number }>();
                     for (const p of params) {
                         let baseName = p.seriesName;
-                        if (baseName === "TodayMarker") continue;
+                        if (baseName === 'TodayMarker') continue;
 
                         if (p.value != null && !stateValues.has(baseName)) {
                             stateValues.set(baseName, {
@@ -462,30 +450,32 @@
                 },
             },
             // place legend at top to avoid overlapping with the slider
-            legend: { data: [...displayStates, "TOTAL"], top: 8 },
+            legend: { data: [...displayStates, 'TOTAL'], top: 8 },
             toolbox: { feature: { saveAsImage: {}, restore: {} }, right: 10 },
             // reserve space via grid so slider and legend don't overlap
             grid: {
-                left: "3%",
-                right: "3%",
+                left: '3%',
+                right: '3%',
                 top: 50,
                 bottom: 50,
                 containLabel: true,
             },
             dataZoom: [
-                { type: "inside", xAxisIndex: 0 },
-                { type: "slider", xAxisIndex: 0, bottom: 8 },
+                { type: 'inside', xAxisIndex: 0 },
+                { type: 'slider', xAxisIndex: 0, bottom: 8 },
             ],
-            xAxis: { type: "category", boundaryGap: false, data: dateArr },
-            yAxis: { type: "value", name: metric.charAt(0).toUpperCase() + metric.slice(1), nameLocation: "middle", nameGap: 50 },
-            color: [
-                ...displayStates.map((s) => STATE_COLORS[s] || "#888888"),
-                "#000000",
-            ],
+            xAxis: { type: 'category', boundaryGap: false, data: dateArr },
+            yAxis: {
+                type: 'value',
+                name: metric.charAt(0).toUpperCase() + metric.slice(1),
+                nameLocation: 'middle',
+                nameGap: 50,
+            },
+            color: [...displayStates.map((s) => STATE_COLORS[s] || '#888888'), '#000000'],
             series,
         };
 
-        chart.setOption(option, { replaceMerge: ["series"] });
+        chart.setOption(option, { replaceMerge: ['series'] });
         // ensure correct sizing after mount
         try {
             chart.resize();
@@ -506,8 +496,9 @@
                     _observedEl = null;
                 }
                 resizeObserver.disconnect();
+            } catch (e) {
+                /* ignore */
             }
-            catch (e) { /* ignore */ }
             resizeObserver = null;
         }
         window.removeEventListener('resize', scheduleResize);
@@ -524,7 +515,7 @@
     }
 
     export function formatDate(iso?: string) {
-        return iso ? dayjs(iso).format("YYYY-MM-DD") : "";
+        return iso ? dayjs(iso).format('YYYY-MM-DD') : '';
     }
 </script>
 
@@ -549,7 +540,13 @@
         </select>
 
         <label for="metric-select" class="ms-3 me-2">Metric</label>
-        <select id="metric-select" class="form-select" bind:value={metric} on:change={load} title="Documents counts one per doc; Tokens/Sentences weight each doc by its count in the search index (unindexed and deleted docs contribute zero).">
+        <select
+            id="metric-select"
+            class="form-select"
+            bind:value={metric}
+            on:change={load}
+            title="Documents counts one per doc; Tokens/Sentences weight each doc by its count in the search index (unindexed and deleted docs contribute zero)."
+        >
             <option value="documents">Documents</option>
             <option value="tokens">Tokens</option>
             <option value="sentences">Sentences</option>
@@ -557,24 +554,34 @@
     </div>
 
     {#if devMode}
-        <div class="d-flex flex-row align-items-center mb-2 p-2 bg-warning bg-opacity-10 border border-warning rounded">
+        <div
+            class="d-flex flex-row align-items-center mb-2 p-2 bg-warning bg-opacity-10 border border-warning rounded"
+        >
             <label class="form-check-label me-3">
-                <input type="checkbox" class="form-check-input me-1" bind:checked={testModeEnabled} on:change={load} />
+                <input
+                    type="checkbox"
+                    class="form-check-input me-1"
+                    bind:checked={testModeEnabled}
+                    on:change={load}
+                />
                 Test Mode
             </label>
             {#if testModeEnabled}
                 <label for="simulated-today" class="me-2">Simulated Today:</label>
-                <input 
-                    type="date" 
-                    id="simulated-today" 
-                    class="form-control" 
-                    style="width: auto;" 
-                    bind:value={simulatedToday} 
-                    on:change={load} 
+                <input
+                    type="date"
+                    id="simulated-today"
+                    class="form-control"
+                    style="width: auto;"
+                    bind:value={simulatedToday}
+                    on:change={load}
                 />
-                <button 
-                    class="btn btn-sm btn-outline-secondary ms-2" 
-                    on:click={() => { simulatedToday = dayjs().format("YYYY-MM-DD"); load(); }}
+                <button
+                    class="btn btn-sm btn-outline-secondary ms-2"
+                    on:click={() => {
+                        simulatedToday = dayjs().format('YYYY-MM-DD');
+                        load();
+                    }}
                 >
                     Reset
                 </button>
@@ -608,10 +615,15 @@
     .text-danger {
         color: #b00020;
     }
-    .chart-wrapper { position: relative; }
+    .chart-wrapper {
+        position: relative;
+    }
     .chart-overlay {
         position: absolute;
-        left: 0; top: 0; right: 0; bottom: 0;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
         display: flex;
         align-items: center;
         justify-content: center;

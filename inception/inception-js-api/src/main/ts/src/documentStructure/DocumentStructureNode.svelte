@@ -21,11 +21,7 @@
     import { onMount } from 'svelte';
     import DocumentStructureNode from './DocumentStructureNode.svelte';
 
-    function removeClassFromAncestors(
-        start: Element,
-        className: string,
-        root?: Element | null
-    ) {
+    function removeClassFromAncestors(start: Element, className: string, root?: Element | null) {
         let current: Element | null = start.parentElement;
         while (current) {
             try {
@@ -85,12 +81,7 @@
             >
                 <span aria-hidden="true">▶</span>
             </button>
-            <button
-                type="button"
-                onclick={scrollTo}
-                class="link"
-                title={displayTitle}
-            >
+            <button type="button" onclick={scrollTo} class="link" title={displayTitle}>
                 {#if tocLevel.label}
                     <span class="text-muted fw-lighter">{tocLevel.label}</span>
                 {/if}

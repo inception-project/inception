@@ -42,7 +42,11 @@ export interface DiamWebsocket {
 
     disconnect(): void;
 
-    subscribeToViewport(viewportTopic: string, callback: dataCallback, options?: DiamWebsocketSubscribeOptions): void;
+    subscribeToViewport(
+        viewportTopic: string,
+        callback: dataCallback,
+        options?: DiamWebsocketSubscribeOptions
+    ): void;
 
     unsubscribeFromViewport(): void;
 }

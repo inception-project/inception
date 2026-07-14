@@ -15,8 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Client, Stomp, type StompSubscription, type IFrame, type frameCallbackType, type IMessage } from '@stomp/stompjs';
-import { type DiamWebsocket, type DiamWebsocketConnectOptions, type DiamWebsocketSubscribeOptions } from '@inception-project/inception-js-api';
+import {
+    Client,
+    Stomp,
+    type StompSubscription,
+    type IFrame,
+    type frameCallbackType,
+    type IMessage,
+} from '@stomp/stompjs';
+import {
+    type DiamWebsocket,
+    type DiamWebsocketConnectOptions,
+    type DiamWebsocketSubscribeOptions,
+} from '@inception-project/inception-js-api';
 import * as jsonpatch from 'fast-json-patch';
 
 /**
@@ -58,7 +69,7 @@ export class DiamWebsocketImpl implements DiamWebsocket {
         }
 
         this.stompClient.onConnect = (frame) => {
-            if (!this.stompClient) return
+            if (!this.stompClient) return;
             this.stompClient.subscribe('/user/queue/errors', this.handleProtocolError);
             if (this.onConnect) {
                 this.onConnect(frame);
@@ -87,12 +98,16 @@ export class DiamWebsocketImpl implements DiamWebsocket {
         console.log(msg);
     }
 
-    subscribeToViewport(aViewportTopic: string, callback: dataCallback, options?: DiamWebsocketSubscribeOptions) {
-        if (!this.stompClient) return
+    subscribeToViewport(
+        aViewportTopic: string,
+        callback: dataCallback,
+        options?: DiamWebsocketSubscribeOptions
+    ) {
+        if (!this.stompClient) return;
 
-        let selectorMap: Record<string, string|string[]> = {
+        let selectorMap: Record<string, string | string[]> = {
             'X-DIAM-FORMAT': 'compact_v2',
-            'X-DIAM-EXTENSIONS': []
+            'X-DIAM-EXTENSIONS': [],
         };
 
         if (options) {
@@ -121,16 +136,24 @@ export class DiamWebsocketImpl implements DiamWebsocket {
 
         this.unsubscribeFromViewport();
 
-        this.initSubscription = this.stompClient.subscribe('/app' + aViewportTopic, (msg) => {
-            this.data = JSON.parse(msg.body);
-            callback(this.data);
-        }, headers);
+        this.initSubscription = this.stompClient.subscribe(
+            '/app' + aViewportTopic,
+            (msg) => {
+                this.data = JSON.parse(msg.body);
+                callback(this.data);
+            },
+            headers
+        );
 
-        this.updateSubscription = this.stompClient.subscribe('/topic' + aViewportTopic, (msg) => {
-            const update = JSON.parse(msg.body);
-            this.data = jsonpatch.applyPatch(this.data, update.diff).newDocument;
-            callback(this.data);
-        }, headers);
+        this.updateSubscription = this.stompClient.subscribe(
+            '/topic' + aViewportTopic,
+            (msg) => {
+                const update = JSON.parse(msg.body);
+                this.data = jsonpatch.applyPatch(this.data, update.diff).newDocument;
+                callback(this.data);
+            },
+            headers
+        );
     }
 
     unsubscribeFromViewport() {
@@ -143,8 +166,10 @@ export class DiamWebsocketImpl implements DiamWebsocket {
     }
 }
 
-export function makeHeaders(selectorMap: Record<string, string | string[]>): Record<string, string> {
-    let headers: Record<string, string> = {}
+export function makeHeaders(
+    selectorMap: Record<string, string | string[]>
+): Record<string, string> {
+    let headers: Record<string, string> = {};
     for (const [key, value] of Object.entries(selectorMap)) {
         if (value === null || value === undefined || value === '') {
             continue;
@@ -164,17 +189,19 @@ export function makeHeaders(selectorMap: Record<string, string | string[]>): Rec
 
 /**
  * Converts a map of header requirements into a Spring SpEL selector string.
- * @param selectorMap - A dictionary where keys are header names and values are 
+ * @param selectorMap - A dictionary where keys are header names and values are
  * either a single string (exact match) or an array of strings (all must match).
  * @returns The formatted SpEL selector string, or undefined if no valid selectors were provided.
  */
-export function buildSelectorHeader(selectorMap: Record<string, string | string[]>): string | undefined {
+export function buildSelectorHeader(
+    selectorMap: Record<string, string | string[]>
+): string | undefined {
     const selectorConditions: string[] = [];
 
     for (const [key, value] of Object.entries(selectorMap)) {
         // Skip null, undefined, or empty strings
         if (value === null || value === undefined || value === '') {
-            continue; 
+            continue;
         }
 
         if (Array.isArray(value)) {

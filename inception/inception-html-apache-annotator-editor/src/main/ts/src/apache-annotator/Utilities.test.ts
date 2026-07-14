@@ -767,10 +767,7 @@ describe('nodeToElement', () => {
 describe('rangeClientRect', () => {
     // Build a minimal Range-like object so the branch logic can be tested without
     // relying on jsdom layout (which reports empty/zero rects for real ranges).
-    const fakeRange = (opts: {
-        clientRects?: DOMRect[];
-        bounding?: DOMRect | null;
-    }): Range => {
+    const fakeRange = (opts: { clientRects?: DOMRect[]; bounding?: DOMRect | null }): Range => {
         return {
             getClientRects: () =>
                 ({

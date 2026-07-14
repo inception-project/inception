@@ -58,9 +58,7 @@ function escapeName(name: string): string {
     if (css?.escape) return css.escape(name);
     // Minimal fallback: backslash-escape every non-(alphanumeric/-/_) character,
     // and a leading digit, matching the relevant parts of CSS.escape's contract.
-    return name
-        .replace(/^[0-9]/, (d) => `\\3${d} `)
-        .replace(/[^a-zA-Z0-9\-_]/g, (c) => `\\${c}`);
+    return name.replace(/^[0-9]/, (d) => `\\3${d} `).replace(/[^a-zA-Z0-9\-_]/g, (c) => `\\${c}`);
 }
 
 /**

@@ -43,7 +43,7 @@ describe('buildSelectorHeader', () => {
     it('returns equality selector for non-empty arrays (sorted)', () => {
         const selectorMap = { 'X-DIAM-EXTENSIONS': ['b', 'a'] };
         const selector = buildSelectorHeader(selectorMap);
-        expect(selector).toBe("headers['X-DIAM-EXTENSIONS'] == '[\"a\",\"b\"]'");
+        expect(selector).toBe('headers[\'X-DIAM-EXTENSIONS\'] == \'["a","b"]\'');
     });
 
     it('returns undefined for empty map', () => {
@@ -52,7 +52,12 @@ describe('buildSelectorHeader', () => {
     });
 
     it('builds combined selector for format and extensions', () => {
-        const selector = buildSelectorHeader({ 'X-DIAM-FORMAT': 'compact', 'X-DIAM-EXTENSIONS': [] });
-        expect(selector).toBe("headers['X-DIAM-FORMAT'] == 'compact' and headers['X-DIAM-EXTENSIONS'] == '[]'");
+        const selector = buildSelectorHeader({
+            'X-DIAM-FORMAT': 'compact',
+            'X-DIAM-EXTENSIONS': [],
+        });
+        expect(selector).toBe(
+            "headers['X-DIAM-FORMAT'] == 'compact' and headers['X-DIAM-EXTENSIONS'] == '[]'"
+        );
     });
 });

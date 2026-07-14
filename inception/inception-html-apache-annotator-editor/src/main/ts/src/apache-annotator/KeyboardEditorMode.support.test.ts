@@ -55,7 +55,6 @@ describe('caretOffsetOf', () => {
 
         expect(caretOffsetOf(root, range)).toBe(0);
     });
-
 });
 
 describe('findFirstWordStartOffset', () => {
@@ -83,15 +82,27 @@ describe('isSelectionBackward', () => {
     it('is false for a forward selection within a single text node', () => {
         document.body.innerHTML = `<div id="root">abcdef</div>`;
         const text = (document.getElementById('root') as Element).firstChild as Text;
-        expect(isSelectionBackward({ anchorNode: text, anchorOffset: 1, focusNode: text, focusOffset: 4 }))
-            .toBe(false);
+        expect(
+            isSelectionBackward({
+                anchorNode: text,
+                anchorOffset: 1,
+                focusNode: text,
+                focusOffset: 4,
+            })
+        ).toBe(false);
     });
 
     it('is true for a backward selection within a single text node', () => {
         document.body.innerHTML = `<div id="root">abcdef</div>`;
         const text = (document.getElementById('root') as Element).firstChild as Text;
-        expect(isSelectionBackward({ anchorNode: text, anchorOffset: 4, focusNode: text, focusOffset: 1 }))
-            .toBe(true);
+        expect(
+            isSelectionBackward({
+                anchorNode: text,
+                anchorOffset: 4,
+                focusNode: text,
+                focusOffset: 1,
+            })
+        ).toBe(true);
     });
 
     it('is true when the focus node precedes the anchor node in document order', () => {
@@ -99,16 +110,24 @@ describe('isSelectionBackward', () => {
         const a = (document.getElementById('a') as Element).firstChild as Text;
         const b = (document.getElementById('b') as Element).firstChild as Text;
         // anchor in b, focus in a -> focus precedes anchor -> backward
-        expect(isSelectionBackward({ anchorNode: b, anchorOffset: 0, focusNode: a, focusOffset: 0 }))
-            .toBe(true);
+        expect(
+            isSelectionBackward({ anchorNode: b, anchorOffset: 0, focusNode: a, focusOffset: 0 })
+        ).toBe(true);
         // anchor in a, focus in b -> forward
-        expect(isSelectionBackward({ anchorNode: a, anchorOffset: 0, focusNode: b, focusOffset: 0 }))
-            .toBe(false);
+        expect(
+            isSelectionBackward({ anchorNode: a, anchorOffset: 0, focusNode: b, focusOffset: 0 })
+        ).toBe(false);
     });
 
     it('is false when either endpoint is missing', () => {
-        expect(isSelectionBackward({ anchorNode: null, anchorOffset: 0, focusNode: null, focusOffset: 0 }))
-            .toBe(false);
+        expect(
+            isSelectionBackward({
+                anchorNode: null,
+                anchorOffset: 0,
+                focusNode: null,
+                focusOffset: 0,
+            })
+        ).toBe(false);
     });
 });
 
@@ -136,8 +155,7 @@ describe('findProtectedBounds', () => {
     });
 
     it('walks up to the OUTERMOST protected ancestor when protected elements nest', () => {
-        document.body.innerHTML =
-            `<div id="root">ab<span class="protected outer">C<span class="protected inner">DE</span>F</span>g</div>`;
+        document.body.innerHTML = `<div id="root">ab<span class="protected outer">C<span class="protected inner">DE</span>F</span>g</div>`;
         const root = document.getElementById('root') as Element;
         const innerText = root.querySelector('.inner')!.firstChild;
         // Outer protected span starts after 'ab' (2), spans 'CDEF' (length 4) -> end 6.

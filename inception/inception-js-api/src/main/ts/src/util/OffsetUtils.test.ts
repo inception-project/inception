@@ -83,7 +83,7 @@ describe('offsetToRange', () => {
             expect(r.toString()).toBe('def');
             expect(r.startContainer.nodeType).toBe(Node.TEXT_NODE);
             expect((r.startContainer as Text).data).toBe(
-                'def',
+                'def'
                 // failure hint
             );
             expect(r.startOffset).toBe(0);
@@ -177,8 +177,8 @@ describe('offsetToRange', () => {
     it('round-trips with calculateStartOffset / calculateEndOffset for an interior element', () => {
         const root = makeRoot('aa<b>bbb</b>cc');
         const b = root.querySelector('b')!;
-        const begin = calculateStartOffset(root, b);   // 2
-        const end = calculateEndOffset(root, b);       // 5
+        const begin = calculateStartOffset(root, b); // 2
+        const end = calculateEndOffset(root, b); // 5
         expect(begin).toBe(2);
         expect(end).toBe(5);
 

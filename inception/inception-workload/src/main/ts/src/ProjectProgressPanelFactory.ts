@@ -19,17 +19,20 @@ import ProjectProgressPanel from './ProjectProgressPanel.svelte';
 import { mount, unmount } from 'svelte';
 
 export default class ProgressPanelFactory {
-  static instance: any;
+    static instance: any;
 
-  constructor(args: any) {
-    ProgressPanelFactory.instance = mount(ProjectProgressPanel, { target: args.target, props: args.props });
-  }
-
-  $destroy() {
-    const i = ProgressPanelFactory.instance;
-    if (i) {
-      unmount(i);
-      ProgressPanelFactory.instance = null;
+    constructor(args: any) {
+        ProgressPanelFactory.instance = mount(ProjectProgressPanel, {
+            target: args.target,
+            props: args.props,
+        });
     }
-  }
+
+    $destroy() {
+        const i = ProgressPanelFactory.instance;
+        if (i) {
+            unmount(i);
+            ProgressPanelFactory.instance = null;
+        }
+    }
 }

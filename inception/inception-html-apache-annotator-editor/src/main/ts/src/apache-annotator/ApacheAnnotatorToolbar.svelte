@@ -239,11 +239,7 @@
         </label>
     </div>
 
-    <div
-        class="input-group input-group-sm w-auto ms-1"
-        role="group"
-        aria-label="Line spacing"
-    >
+    <div class="input-group input-group-sm w-auto ms-1" role="group" aria-label="Line spacing">
         <span class="input-group-text" title="Line spacing" aria-hidden="true">
             <i class="fas fa-bars"></i>
         </span>

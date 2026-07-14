@@ -76,7 +76,9 @@ export class ViewportTracker {
         this.pauseCount++;
         if (this.pauseCount > 1) {
             this.paused = true;
-            console.debug(`ViewportTracker pause count increased to ${this.pauseCount}; already paused`);
+            console.debug(
+                `ViewportTracker pause count increased to ${this.pauseCount}; already paused`
+            );
             return;
         }
 
@@ -109,7 +111,9 @@ export class ViewportTracker {
             this.pauseCount--;
             if (this.pauseCount > 0) {
                 this.paused = true;
-                console.debug(`ViewportTracker pause count decreased to ${this.pauseCount}; still paused`);
+                console.debug(
+                    `ViewportTracker pause count decreased to ${this.pauseCount}; still paused`
+                );
                 return;
             }
         }
@@ -146,7 +150,7 @@ export class ViewportTracker {
             typeof (globalThis as any).requestAnimationFrame === 'function'
                 ? (globalThis as any).requestAnimationFrame.bind(globalThis)
                 : (cb: FrameRequestCallback) => {
-                      return (setTimeout(() => cb(Date.now()), 16) as unknown) as number;
+                      return setTimeout(() => cb(Date.now()), 16) as unknown as number;
                   };
 
         let frames = 0;
@@ -289,9 +293,9 @@ export class ViewportTracker {
         // public getter continue to observe updates.
         this._visibleElements.forEach((e) => {
             if (!leafTrackingCandidates.has(e)) {
-                this._visibleElements.delete(e)
+                this._visibleElements.delete(e);
             }
-        })
+        });
 
         // If paused we do not create an observer now
         if (this.paused) {
@@ -299,7 +303,10 @@ export class ViewportTracker {
             return;
         }
 
-        this.observer = new IntersectionObserver((e, o) => this.handleIntersectRange(e, o), options);
+        this.observer = new IntersectionObserver(
+            (e, o) => this.handleIntersectRange(e, o),
+            options
+        );
         leafTrackingCandidates.forEach((e) => this.observer!.observe(e));
 
         const endTime = new Date().getTime();

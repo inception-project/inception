@@ -42,7 +42,7 @@ export const DEFAULT_ARROW_MARKER_GEOMETRY: ArrowMarkerGeometry = {
     height: 7,
     orient: 'auto-start-reverse',
     markerUnits: 'userSpaceOnUse',
-    path: 'M 0 0 L 10 5 L 0 10 z'
+    path: 'M 0 0 L 10 5 L 0 10 z',
 };
 
 /**

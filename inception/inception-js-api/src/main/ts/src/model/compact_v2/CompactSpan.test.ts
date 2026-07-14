@@ -17,10 +17,7 @@
  */
 import { it, expect } from 'vitest';
 import { AnnotatedText, Span, Comment } from '..';
-import {
-    type CompactComment,
-    unpackCompactComments,
-} from './CompactComment';
+import { type CompactComment, unpackCompactComments } from './CompactComment';
 
 it('Unpacking works', async () => {
     const doc = new AnnotatedText();

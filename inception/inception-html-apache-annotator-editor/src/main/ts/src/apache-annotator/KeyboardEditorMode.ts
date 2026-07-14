@@ -445,7 +445,11 @@ export class KeyboardEditorMode {
     }
 
     private findProtectedBounds(node: Node | null): { start: number; end: number } | null {
-        return support.findProtectedBounds(this.documentContainer, node, this.protectedElementsMatcher);
+        return support.findProtectedBounds(
+            this.documentContainer,
+            node,
+            this.protectedElementsMatcher
+        );
     }
 
     private safeCaretOffset(offset: number): number {

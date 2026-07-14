@@ -16,18 +16,23 @@
      * See the License for the specific language governing permissions and
      * limitations under the License.
      */
-    
-     export let performance: any;
+
+    export let performance: any;
     export let show: boolean = false;
 </script>
 
 {#if performance && show}
     <div class="performance-footer fw-ligher">
         <small><i class="fas fa-pause me-1"></i>{(performance.delay / 1000).toFixed(2)}s</small>
-        <small><i class="far fa-clock ms-2 me-1"></i>{(performance.duration / 1000).toFixed(2)}s</small>
+        <small
+            ><i class="far fa-clock ms-2 me-1"></i>{(performance.duration / 1000).toFixed(
+                2
+            )}s</small
+        >
         <small
             ><i class="fas fa-stream ms-2 me-1"></i>{(
-                performance.tokens / (performance.duration / 1000)
+                performance.tokens /
+                (performance.duration / 1000)
             ).toFixed(2)}t/s</small
         >
     </div>

@@ -17,10 +17,7 @@
 -->
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
-    import {
-        type TocLevel,
-        generateTOC,
-    } from './DocumentStructureNavigatorUtils';
+    import { type TocLevel, generateTOC } from './DocumentStructureNavigatorUtils';
     import type { DocumentStructureStrategy } from './DocumentStructureStrategy';
     import DocumentStructureNode from './DocumentStructureNode.svelte';
 
@@ -31,10 +28,8 @@
 
     let { documentContainer, structure }: Props = $props();
 
-    let tocRoot: TocLevel = generateTOC(
-        documentContainer,
-        structure.sectionSelector,
-        (s) => structure.extractTitle(s)
+    let tocRoot: TocLevel = generateTOC(documentContainer, structure.sectionSelector, (s) =>
+        structure.extractTitle(s)
     );
     let observer: IntersectionObserver | undefined;
     let observeTargetToLevel = new Map<Element, TocLevel>();
