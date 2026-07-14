@@ -32,5 +32,6 @@ outdated-packages-report.txt
 outdated-packages-summary.txt
 PLAN*.md
 PLAN_*.md
+ISSUE_*.md
 .claude
 .sass-cache/
