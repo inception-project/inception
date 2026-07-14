@@ -12,6 +12,8 @@ import {
     unpackCompactAnnotatedTextV2,
     type DiamAjax,
     type Offsets,
+    type ViewportScrollPosition,
+    type ViewportScrollTarget,
     AnnotatedText,
     Span,
     Relation,
@@ -341,6 +343,105 @@ export function scrollTo(args: {
     markerLayer.appendChild(ping);
     ping.firstElementChild?.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
     setTimeout(() => ping.remove(), 2000); // Need to defer so scrolling can complete
+}
+
+/**
+ * @return the scrollable viewport container of the PDF.js viewer.
+ */
+function getScrollContainer(): HTMLElement | null {
+    return document.getElementById('viewer')?.parentElement ?? null;
+}
+
+/** @return the `.page` element for a 1-based page number, or null if it is not in the DOM. */
+function getPageElement(pageNumber: number): HTMLElement | null {
+    return document.querySelector<HTMLElement>(`.page[data-page-number="${pageNumber}"]`);
+}
+
+/**
+ * @return the scroll distance a page occupies, i.e. the gap between this page's top and the next page's top, for the
+ * last page the page's own box height.
+ */
+function getPageScrollDistance(pageNumber: number, aRect: DOMRect): number {
+    const next = getPageElement(pageNumber + 1);
+    if (next) {
+        const distance = next.getBoundingClientRect().top - aRect.top;
+        // Guard against a degenerate/zero reading (e.g. next page not yet laid out).
+        if (distance > 0) return distance;
+    }
+    return aRect.height;
+}
+
+/**
+ * @return the position of the the PDF page straddling the viewport top, and the fraction is the viewport
+ * top's progress through that page's height.
+ */
+export function getViewportScrollPosition(): ViewportScrollPosition | null {
+    const container = getScrollContainer();
+    if (!container) return null;
+
+    const containerTop = container.getBoundingClientRect().top;
+
+    // The anchor page is the first `.page` whose bottom is below the viewport top - i.e. the page
+    // the viewport top currently sits within. Pages render top-to-bottom in document order.
+    const pageElements = Array.from(
+        document.querySelectorAll<HTMLElement>('.page[data-page-number]')
+    );
+    let anchorElement: HTMLElement | undefined;
+    for (const pageElement of pageElements) {
+        if (pageElement.getBoundingClientRect().bottom > containerTop) {
+            anchorElement = pageElement;
+            break;
+        }
+    }
+    if (!anchorElement) return null;
+
+    const page = textLayer.getPage(Number(anchorElement.dataset.pageNumber));
+    if (!page) return null;
+
+    const rect = anchorElement.getBoundingClientRect();
+    const distance = getPageScrollDistance(page.index, rect);
+    const fraction =
+        distance > 0 ? Math.min(1, Math.max(0, (containerTop - rect.top) / distance)) : 0;
+
+    // Overall scroll progress lets the receiver blend toward its own extreme near the top/bottom
+    // (see ViewportScrollPosition.scrollProgress), so scrolling just off an extreme no longer snaps.
+    const maxScroll = container.scrollHeight - container.clientHeight;
+    const scrollProgress = maxScroll > 0 ? container.scrollTop / maxScroll : 0;
+
+    return { begin: page.range[0], end: page.range[1], fraction, scrollProgress };
+}
+
+export function scrollToViewportPosition(pos: ViewportScrollTarget): void {
+    const container = getScrollContainer();
+    if (!container) return;
+
+    const page = textLayer.findPageForTextOffsetClamped(pos.begin);
+    if (!page) return;
+
+    const pageElement = getPageElement(page.index);
+    if (!pageElement) return;
+
+    const containerTop = container.getBoundingClientRect().top;
+    const rect = pageElement.getBoundingClientRect();
+    const fraction = Math.min(1, Math.max(0, pos.fraction));
+    const distance = getPageScrollDistance(page.index, rect);
+
+    // Interpolate position within the page's scroll distance
+    const anchoredTop = container.scrollTop + (rect.top - containerTop) + fraction * distance;
+
+    const maxScroll = container.scrollHeight - container.clientHeight;
+
+    // Ensure smooth scrolling near the start and end of the document
+    let target = anchoredTop;
+    if (pos.scrollProgress !== undefined && maxScroll > 0) {
+        const progressTop = pos.scrollProgress * maxScroll;
+        const BAND = 0.15; // fraction of the scroll range over which to blend at each end
+        const p = pos.scrollProgress;
+        const nearness = Math.max(0, 1 - Math.min(p, 1 - p) / BAND); // 1 at extreme → 0 by BAND
+        target = nearness * progressTop + (1 - nearness) * anchoredTop;
+    }
+
+    container.scrollTop = target;
 }
 
 export function getAnnotations() {

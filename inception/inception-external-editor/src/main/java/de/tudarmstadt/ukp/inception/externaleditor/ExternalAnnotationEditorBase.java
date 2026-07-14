@@ -214,6 +214,12 @@ public abstract class ExternalAnnotationEditorBase
         return vis;
     }
 
+    @Override
+    public Optional<String> getViewportSyncClientId()
+    {
+        return Optional.ofNullable(vis).map(Component::getMarkupId);
+    }
+
     public DiamAjaxBehavior getDiamBehavior()
     {
         return diamBehavior;

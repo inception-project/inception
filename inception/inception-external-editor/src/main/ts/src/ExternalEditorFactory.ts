@@ -21,11 +21,14 @@ import {
     type AnnotationEditorProperties,
     type DiamClientFactory,
 } from '@inception-project/inception-js-api';
+import { ViewportSyncHub } from './ViewportSyncHub';
 
 const PROP_EDITOR = '__editor__';
 const PROP_INITIALIZING = '__initializing__';
 
 export class ExternalEditorFactory implements AnnotationEditorFactory {
+    readonly viewportSync = new ViewportSyncHub();
+
     async getOrInitialize(
         element: Node,
         diam: DiamClientFactory,
@@ -111,6 +114,12 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
             delete element[PROP_INITIALIZING];
             console.debug('[getOrInitialize] Promise chain completed');
 
+            // Scroll events do not cross the iframe boundary; observe them on the iframe
+            // document (capture phase) and hand them to the host-level viewport-sync hub
+            if (iframe.id && iframe.contentDocument) {
+                this.viewportSync.register(iframe.id, element[PROP_EDITOR], iframe.contentDocument);
+            }
+
             // Restoring visibility
             if (!props.loadingIndicatorDisabled) {
                 loadingIndicator?.remove();
@@ -123,6 +132,22 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
         element[PROP_EDITOR] = await this.loadEditorResources(window, props).then((win) => {
             return this.initEditor(win, element as HTMLElement, diam, props);
         });
+
+        if (element instanceof HTMLElement && element.id) {
+            // The scroll container is typically an *ancestor* of the editor element (e.g. the brat
+            // editor scrolls a `.scrolling` wrapper above its `vis` div), so we neither listen nor
+            // scope on the editor element itself. Scroll does not bubble, but a capture-phase
+            // listener on the owner document sees any descendant's scrolls (mirroring the iframe
+            // path, which observes the iframe's contentDocument). We scope by the container so its
+            // own scrolls are accepted; disjoint containers keep several editors' scrolls apart.
+            const scope = this.resolveScrollContainer(element);
+            this.viewportSync.register(
+                element.id,
+                element[PROP_EDITOR],
+                element.ownerDocument,
+                scope
+            );
+        }
 
         return element[PROP_EDITOR];
     }
@@ -325,7 +350,23 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
         });
     }
 
+    private resolveScrollContainer(element: HTMLElement): Element {
+        let node: HTMLElement | null = element;
+        while (node && node !== node.ownerDocument.body) {
+            const overflowY = node.ownerDocument.defaultView?.getComputedStyle(node).overflowY;
+            if (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') {
+                return node;
+            }
+            node = node.parentElement;
+        }
+        return element;
+    }
+
     destroy(element: Node): void {
+        if (element instanceof HTMLElement && element.id) {
+            this.viewportSync.unregister(element.id);
+        }
+
         if (element[PROP_EDITOR] != null) {
             element[PROP_EDITOR].destroy();
             console.info('Destroyed editor');

@@ -528,6 +528,16 @@ public abstract class AnnotationPageBase2
                         .add(visibleWhen(() -> getModelObject().getDocument() != null)));
     }
 
+    /**
+     * @return the main annotation editor component, or {@code null} if none has been created yet.
+     *         Allows page components hosting a second editor (e.g. the reference-document sidebar)
+     *         to coordinate with the main editor, e.g. for viewport synchronization.
+     */
+    public AnnotationEditorBase getAnnotationEditor()
+    {
+        return annotationEditor;
+    }
+
     private SidebarPanel createLeftSidebar(String aId)
     {
         return new SidebarPanel(aId, detailEditor, () -> getEditorCas(), AnnotationPageBase2.this);

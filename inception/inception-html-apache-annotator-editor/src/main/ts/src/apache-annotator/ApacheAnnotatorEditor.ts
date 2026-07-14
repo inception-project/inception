@@ -20,6 +20,8 @@ import {
     type DiamAjax,
     type DocumentStructureStrategy,
     type Offsets,
+    type ViewportScrollPosition,
+    type ViewportScrollTarget,
     calculateStartOffset,
 } from '@inception-project/inception-js-api';
 import DocumentStructureNavigator from '@inception-project/inception-js-api/src/documentStructure/DocumentStructureNavigator.svelte';
@@ -475,6 +477,16 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
 
         this.vis?.scrollTo(args);
         this.keyboardMode?.moveCaretToOffset(args.offset);
+    }
+
+    getViewportScrollPosition(): ViewportScrollPosition | null {
+        if (!this.initializationComplete) return null;
+        return this.vis?.getViewportScrollPosition() ?? null;
+    }
+
+    scrollToViewportPosition(pos: ViewportScrollTarget): void {
+        if (!this.initializationComplete) return;
+        this.vis?.scrollToViewportPosition(pos);
     }
 
     destroy(): void {

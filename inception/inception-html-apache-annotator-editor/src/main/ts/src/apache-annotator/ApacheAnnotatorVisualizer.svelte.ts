@@ -22,6 +22,8 @@ import {
     type DiamAjax,
     type DiamLoadAnnotationsOptions,
     type VID,
+    type ViewportScrollPosition,
+    type ViewportScrollTarget,
     offsetToRange,
     AnnotatedText,
     Span,
@@ -39,6 +41,7 @@ import { SectionAnnotationCreator } from './SectionAnnotationCreator';
 import { RelationVisualizer } from './RelationVisualizer';
 import { RelationGripLayer, GRIP_CLASS } from './RelationGripLayer';
 import { RelationDragController, type PickRelationTarget } from './RelationDragController';
+import { ApacheAnnotatorSyncController } from './ApacheAnnotatorSyncController';
 import {
     groupHighlightsByVid,
     removeClassFromAncestors,
@@ -81,6 +84,7 @@ export class ApacheAnnotatorVisualizer {
     private relationVisualizer: RelationVisualizer;
     private relationGripLayer: RelationGripLayer;
     private relationDragController: RelationDragController;
+    private syncController: ApacheAnnotatorSyncController;
 
     private data?: AnnotatedText;
 
@@ -205,6 +209,13 @@ export class ApacheAnnotatorVisualizer {
         // Re-band relations on manual scroll, independent of the ViewportTracker (see onContentScroll).
         this.scrollContainer = this.root.closest('.i7n-wrapper') || this.root;
         this.scrollContainer.addEventListener('scroll', this.onContentScroll, { passive: true });
+
+        // Editor-to-editor viewport synchronization. The scroll container is read lazily so the
+        // controller always sees the current one.
+        this.syncController = new ApacheAnnotatorSyncController(
+            this.root,
+            () => this.scrollContainer
+        );
     }
 
     /**
@@ -1071,6 +1082,14 @@ export class ApacheAnnotatorVisualizer {
         }
     }
 
+    getViewportScrollPosition(): ViewportScrollPosition | null {
+        return this.syncController.getViewportScrollPosition();
+    }
+
+    scrollToViewportPosition(pos: ViewportScrollTarget): void {
+        this.syncController.scrollToViewportPosition(pos);
+    }
+
     private schedule(timeout: number, callback: () => void): number {
         if (typeof window.requestIdleCallback == 'undefined') {
             return window.setTimeout(callback, timeout);
@@ -1100,6 +1119,7 @@ export class ApacheAnnotatorVisualizer {
         this.relationVisualizer.resume();
         this.lastScrollTop = undefined;
         this.lastMarkerTop = undefined;
+        this.syncController.reset();
     }
 
     private clearHighlights(): void {

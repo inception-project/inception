@@ -15,10 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export {
-    AnnotationEditor,
-    type ViewportScrollPosition,
-    type ViewportScrollTarget,
-} from './AnnotationEditor';
-export { AnnotationEditorFactory } from './AnnotationEditorFactory';
-export { AnnotationEditorProperties } from './AnnotationEditorProperties';
+package de.tudarmstadt.ukp.inception.ui.refdoc.config;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import de.tudarmstadt.ukp.inception.ui.refdoc.ReferenceDocumentSidebarFactory;
+
+@ConditionalOnWebApplication
+@Configuration
+public class ReferenceDocumentSidebarAutoConfiguration
+{
+    @Bean
+    public ReferenceDocumentSidebarFactory referenceDocumentSidebarFactory()
+    {
+        return new ReferenceDocumentSidebarFactory();
+    }
+}

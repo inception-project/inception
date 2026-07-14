@@ -54,23 +54,69 @@ import { VID } from '../protocol/Protocol';
  * which doesn't yet create the actual SVG representation.
  */
 export class DocumentData {
+    /** The full document text this data was built for. */
     text: string;
+
+    /** The text split into chunks (roughly, tokens/whitespace-delimited pieces) used for layout. */
     chunks: Array<Chunk> = [];
+
+    /** Span annotations (entities) indexed by their {@link VID}. */
     spans: Record<VID, Entity> = {};
+
+    /** Arcs indexed by the id of the {@link EventDesc} they were derived from. */
     arcById: Record<VID, Arc> = {};
+
+    /** All arcs (relations/event roles) to be rendered. */
     arcs: Array<Arc> = [];
+
+    /**
+     * Event descriptors indexed by event number. These are built both from actual events and
+     * synthesized from relations (see {@code buildEventDescsFromRelations}) and carry the arc
+     * label/color information.
+     */
     eventDescs: Record<VID, EventDesc> = {};
+
+    /** Comments attached to a whole sentence/row, indexed by sentence (row) number. */
     sentComment: Record<number, Comment> = {};
+
+    /** Sentences/rows flagged for highlighting, indexed by sentence (row) number. */
     markedSent: Record<number, boolean> = {};
+
     /**
      * Template SVG text elements. Clone these and fill in any missing information (translate, fill)
      * before adding them to the SVG.
      */
     spanAnnTexts: Record<string, SVGText> = {};
+
+    /**
+     * Span fragments grouped into vertical stacks ("towers") by their {@code towerId}, so that
+     * fragments sharing a tower are laid out at a consistent height.
+     */
     towers: Record<string, Fragment[]> = {};
+
+    /**
+     * The order in which spans are drawn/stacked, as a permutation of span {@link VID}s produced by
+     * {@code determineDrawOrder}.
+     */
     spanDrawOrderPermutation: Array<VID> = [];
+
+    /** Precomputed layout sizes (font metrics, box dimensions) used during rendering. */
     sizes: Sizes;
+
+    /**
+     * Set when the server response represents an error rather than renderable data; the UI checks
+     * this and skips rendering when true.
+     */
     exception = false;
+
+    /**
+     * The trailing y after the last row was placed by {@code renderRows}, i.e. the bottom edge of
+     * the laid-out content in SVG user units. The brat SVG is rendered with {@code viewBox} height
+     * equal to its pixel height (see {@code Visualizer.renderData}), so the vertical user->pixel
+     * scale is 1 and this value is directly comparable to viewport pixel measurements. Undefined
+     * until the first render completes.
+     */
+    contentHeight?: number;
 
     constructor(text: string) {
         this.text = text;

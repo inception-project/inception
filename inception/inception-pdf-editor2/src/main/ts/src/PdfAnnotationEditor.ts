@@ -16,12 +16,20 @@
  * limitations under the License.
  */
 import AbstractAnnotation from './pdfanno/core/src/model/AbstractAnnotation';
-import type { AnnotationEditor, DiamAjax, Offsets } from '@inception-project/inception-js-api';
+import type {
+    AnnotationEditor,
+    DiamAjax,
+    Offsets,
+    ViewportScrollPosition,
+    ViewportScrollTarget,
+} from '@inception-project/inception-js-api';
 import './PdfAnnotationEditor.scss';
 import {
     initPdfAnno,
     getAnnotations as doLoadAnnotations,
     scrollTo,
+    getViewportScrollPosition,
+    scrollToViewportPosition,
     destroy as destroyPdfAnno,
 } from './pdfanno/pdfanno';
 
@@ -64,6 +72,14 @@ export class PdfAnnotationEditor implements AnnotationEditor {
     scrollTo(args: { offset: number; position?: string; pingRanges?: Offsets[] }): void {
         // console.log(`SCROLLING! ${args.offset} ${args.position}`)
         scrollTo(args);
+    }
+
+    getViewportScrollPosition(): ViewportScrollPosition | null {
+        return getViewportScrollPosition();
+    }
+
+    scrollToViewportPosition(pos: ViewportScrollTarget): void {
+        scrollToViewportPosition(pos);
     }
 
     private cancelRightClick(e: Event): void {

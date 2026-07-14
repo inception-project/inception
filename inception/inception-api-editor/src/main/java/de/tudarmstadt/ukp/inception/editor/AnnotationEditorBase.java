@@ -120,6 +120,16 @@ public abstract class AnnotationEditorBase
     }
 
     /**
+     * @return the markup id under which this editor's client-side counterpart registers with the
+     *         host page's viewport-sync hub, if the editor participates in cross-editor scroll
+     *         synchronization. Editors that do not support it return an empty optional.
+     */
+    public Optional<String> getViewportSyncClientId()
+    {
+        return Optional.empty();
+    }
+
+    /**
      * Schedules a rendering call via at the end of the given AJAX cycle. This method can be called
      * multiple times, even for the same annotation editor, but only resulting in a single rendering
      * call.

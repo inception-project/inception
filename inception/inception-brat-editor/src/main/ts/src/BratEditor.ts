@@ -20,6 +20,8 @@ import type {
     AnnotationEditorProperties,
     DiamAjax,
     Offsets,
+    ViewportScrollPosition,
+    ViewportScrollTarget,
 } from '@inception-project/inception-js-api';
 import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte';
 import { Ajax } from './ajax/Ajax';
@@ -111,6 +113,14 @@ export class BratEditor implements AnnotationEditor {
 
     scrollTo(args: { offset: number; position?: string; pingRanges?: Offsets[] }): void {
         this.visualizer.scrollTo(args);
+    }
+
+    getViewportScrollPosition(): ViewportScrollPosition | null {
+        return this.visualizer.getViewportScrollPosition();
+    }
+
+    scrollToViewportPosition(pos: ViewportScrollTarget): void {
+        this.visualizer.scrollToViewportPosition(pos);
     }
 
     destroy(): void {
