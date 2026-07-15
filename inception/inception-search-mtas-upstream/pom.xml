@@ -102,6 +102,16 @@
       <plugin>
         <groupId>com.helger.maven</groupId>
         <artifactId>ph-javacc-maven-plugin</artifactId>
+        <!--
+          Pinned to 2.8.2 for this vendored MTAS grammar. ph-javacc 4.0.0+ switched
+          the generator from classic JavaCC to the ParserGeneratorCC fork, whose 2.0.0
+          codegen (bundled in 5.x) unconditionally appends a trailing
+          "Missing return statement" throw after every production body. The MTAS
+          grammars (e.g. MtasFunctionParser.jj) end productions with an unconditional
+          `throw new ParseException(...)`, so that appended throw becomes an unreachable
+          statement and javac rejects the generated parser. Do not bump without patching
+          the vendored grammars. See rules.xml for the matching version pin.
+        -->
         <version>2.8.2</version>
         <executions>
           <execution>
