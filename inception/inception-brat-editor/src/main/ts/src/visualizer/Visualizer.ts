@@ -439,7 +439,7 @@ export class Visualizer {
      * {@link findClosestVerticalScrollable} would not catch it); we resolve that wrapper directly
      * and only fall back to the generic walk-up for non-standard hosts.
      */
-    private getScrollContainer(): HTMLElement | null {
+    getScrollContainer(): HTMLElement | null {
         const byClass = this.svgContainer?.closest('.scrolling');
         if (byClass instanceof HTMLElement) {
             return byClass;

@@ -31,6 +31,10 @@ type PeerEditor = {
     editor: AnnotationEditor;
     scrollTarget: EventTarget;
     listener: (event: Event) => void;
+    /**
+     * The element whose scrolling moves this editor's viewport, or undefined if the editor scrolls
+     * its whole document.
+     */
     scope?: Element;
     rafHandle?: number;
     suppressUntil: number;
@@ -45,25 +49,25 @@ export class ViewportSyncHub {
     private peers = new Map<string, PeerEditor>();
     private links = new Map<string, string>();
 
-    register(
-        aId: string,
-        aEditor: AnnotationEditor,
-        aScrollTarget: EventTarget,
-        aScope?: Element
-    ): void {
+    /**
+     * Register an editor as a scroll-sync peer under the given (host-page markup) id. When {@code aScope}
+     * is omitted the editor's whole document is treated as the viewport.
+     */
+    register(aId: string, aEditor: AnnotationEditor, aScope?: Element): void {
         if (!aId) return;
 
         this.unregister(aId);
 
+        const scrollTarget: EventTarget = aScope?.ownerDocument ?? aScope ?? document;
         const peer: PeerEditor = {
             id: aId,
             editor: aEditor,
-            scrollTarget: aScrollTarget,
+            scrollTarget,
             scope: aScope,
             listener: (event: Event) => this.onScroll(peer, event),
             suppressUntil: 0,
         };
-        aScrollTarget.addEventListener('scroll', peer.listener, {
+        scrollTarget.addEventListener('scroll', peer.listener, {
             capture: true,
             passive: true,
         });
@@ -113,11 +117,14 @@ export class ViewportSyncHub {
             const target = aEvent.target;
             if (target instanceof Node && !aPeer.scope.contains(target)) return;
         } else {
-            // Scope-less (iframe) peers: the capture-phase listener on the iframe document also
-            // sees scrolls of scrollers nested inside it (a scrollable table, <pre>, resize box).
-            // Those don't move the editor's viewport, so mirroring them is at best wasted work and
-            // at worst a spurious position. Only the document's own scroll - target is the Document
-            // or its root scrolling element - counts as this editor's viewport scroll.
+            // Scope-less peers - the editor did not declare a scroll container, so its viewport is
+            // the document itself (e.g. an XML document scrolling as a whole inside its iframe). The
+            // capture-phase listener also sees scrolls of scrollers nested inside the document (a
+            // scrollable table, <pre>, resize box); those don't move the editor's viewport, so
+            // mirroring them is at best wasted work and at worst a spurious position. Only the
+            // document's own scroll - target is the Document or its root scrolling element - counts.
+            // Editors whose viewport is an inner wrapper (brat, Apache Annotator) declare that
+            // wrapper via getScrollContainer() and take the scoped branch above instead.
             const target = aEvent.target;
             const doc = aPeer.scrollTarget as Document;
             const root = doc.scrollingElement ?? doc.documentElement;

@@ -19,11 +19,13 @@ import './ApacheAnnotatorEditor.scss';
 import {
     ViewportTracker,
     unpackCompactAnnotatedTextV2,
+    type AnnotationEditor,
     type DiamAjax,
     type DiamLoadAnnotationsOptions,
     type VID,
     type ViewportScrollPosition,
     type ViewportScrollTarget,
+    type ViewportSyncPeer,
     offsetToRange,
     AnnotatedText,
     Span,
@@ -1088,6 +1090,14 @@ export class ApacheAnnotatorVisualizer {
 
     scrollToViewportPosition(pos: ViewportScrollTarget): void {
         this.syncController.scrollToViewportPosition(pos);
+    }
+
+    connectToHub(aHub: ViewportSyncPeer, aId: string, aEditor: AnnotationEditor): void {
+        this.syncController.connectToHub(aHub, aId, aEditor);
+    }
+
+    disconnectFromHub(): void {
+        this.syncController.disconnectFromHub();
     }
 
     private schedule(timeout: number, callback: () => void): number {

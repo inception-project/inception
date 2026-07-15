@@ -16,8 +16,10 @@
  * limitations under the License.
  */
 import {
+    type AnnotationEditor,
     type ViewportScrollPosition,
     type ViewportScrollTarget,
+    type ViewportSyncPeer,
     offsetToRange,
     calculateStartOffset,
     calculateEndOffset,
@@ -63,9 +65,35 @@ export class ApacheAnnotatorSyncController {
     private lastAppliedViewportScrollPosition: { begin: number; fraction: number } | undefined =
         undefined;
 
+    /** The hub this controller has registered its editor with, and the id it used. */
+    private hub?: ViewportSyncPeer;
+    private hubPeerId?: string;
+
     constructor(root: Element, getScrollContainer: () => Element | undefined) {
         this.root = root;
         this.getScrollContainer = getScrollContainer;
+    }
+
+    /**
+     * Register {@code aEditor} with the scroll-sync {@code aHub} under {@code aId}, scoped to the
+     * editor's current scroll container. This controller owns viewport-sync for the editor, so it is
+     * the natural place to hand the container to the hub - the container getter it already holds is
+     * exactly the scope the hub needs. The caller (the editor) is responsible for calling this only
+     * once its viewport exists. Re-registers if called again (e.g. after the container is rebuilt).
+     */
+    connectToHub(aHub: ViewportSyncPeer, aId: string, aEditor: AnnotationEditor): void {
+        this.hub = aHub;
+        this.hubPeerId = aId;
+        aHub.register(aId, aEditor, this.getScrollContainer() ?? undefined);
+    }
+
+    /** Remove the editor from the hub it was registered with via {@link connectToHub}. */
+    disconnectFromHub(): void {
+        if (this.hub && this.hubPeerId) {
+            this.hub.unregister(this.hubPeerId);
+        }
+        this.hub = undefined;
+        this.hubPeerId = undefined;
     }
 
     /**

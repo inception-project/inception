@@ -486,8 +486,7 @@ export function compileNsSelector(selector?: string | null): ((el: Element) => b
 
     if (selector === '') return null;
     type Token =
-        | { type: 'css'; sel: string }
-        | { type: 'ns'; namespace: string | '*'; localName: string };
+        { type: 'css'; sel: string } | { type: 'ns'; namespace: string | '*'; localName: string };
 
     const parts: string[] = [];
     let buf = '';

@@ -22,6 +22,7 @@ import type {
     Offsets,
     ViewportScrollPosition,
     ViewportScrollTarget,
+    ViewportSyncPeer,
 } from '@inception-project/inception-js-api';
 import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte';
 import { Ajax } from './ajax/Ajax';
@@ -41,6 +42,8 @@ export class BratEditor implements AnnotationEditor {
     resizer: ResizeManager;
     resizeObserver: ResizeObserver;
     popover: AnnotationDetailPopOver;
+    private viewportSyncHub?: ViewportSyncPeer;
+    private viewportSyncId?: string;
 
     public constructor(element: Element, ajax: DiamAjax, props: AnnotationEditorProperties) {
         const markupId = element.getAttribute('id');
@@ -123,8 +126,25 @@ export class BratEditor implements AnnotationEditor {
         this.visualizer.scrollToViewportPosition(pos);
     }
 
+    connectViewportSync(aHub: ViewportSyncPeer, aId: string): void {
+        this.viewportSyncHub = aHub;
+        this.viewportSyncId = aId;
+        // Brat builds its `.scrolling` wrapper synchronously with the visualizer, so the container
+        // is available immediately - register right away with it as the scope.
+        aHub.register(aId, this, this.visualizer.getScrollContainer() ?? undefined);
+    }
+
+    disconnectViewportSync(): void {
+        if (this.viewportSyncHub && this.viewportSyncId) {
+            this.viewportSyncHub.unregister(this.viewportSyncId);
+        }
+        this.viewportSyncHub = undefined;
+        this.viewportSyncId = undefined;
+    }
+
     destroy(): void {
         console.log('Destroying BratEditor');
+        this.disconnectViewportSync();
         if (this.popover) {
             unmount(this.popover);
         }

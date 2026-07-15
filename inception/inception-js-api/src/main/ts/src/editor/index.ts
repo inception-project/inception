@@ -17,6 +17,7 @@
  */
 export {
     AnnotationEditor,
+    type ViewportSyncPeer,
     type ViewportScrollPosition,
     type ViewportScrollTarget,
 } from './AnnotationEditor';

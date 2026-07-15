@@ -60,6 +60,25 @@ export type ViewportScrollTarget = {
     scrollProgress?: number;
 };
 
+/**
+ * The peer-facing view of the host-page scroll-sync hub: the subset an editor uses to add and
+ * remove itself as a sync peer. Kept minimal (and defined here rather than importing the concrete
+ * hub) so an editor can register without depending on the external-editor module that owns the hub.
+ */
+export interface ViewportSyncPeer {
+    /**
+     * Register {@code aEditor} as a scroll-sync peer under {@code aId}. The editor passes the element
+     * whose scrolling moves its viewport as {@code aScope} - the hub listens on that element's owner
+     * document and uses it to tell the editor's own scroll apart from unrelated scrolls of nested
+     * scrollers sharing the same document. Omit {@code aScope} when the editor scrolls its whole
+     * document.
+     */
+    register(aId: string, aEditor: AnnotationEditor, aScope?: Element): void;
+
+    /** Remove the peer previously registered under {@code aId}, detaching its scroll listener. */
+    unregister(aId: string): void;
+}
+
 export interface AnnotationEditor {
     loadAnnotations(): void;
 
@@ -86,6 +105,20 @@ export interface AnnotationEditor {
      * to a pixel position with its own layout. {@code end} defaults to {@code begin} if omitted.
      */
     scrollToViewportPosition?(pos: ViewportScrollTarget): void;
+
+    /**
+     * Add this editor to the scroll-sync {@code aHub} under {@code aId} (a host-page markup id chosen
+     * by the backend, which drives linking). The editor registers itself - rather than the hub or
+     * the factory reaching in - because it owns its layout and so knows which of the elements it owns
+     * actually scrolls; it passes that element to {@link ViewportSyncPeer.register} as the scope.
+     * The editor should call this once its viewport is built (so the scroll container exists), and
+     * re-run it if the container is rebuilt. Implementations remember {@code aHub}/{@code aId} so
+     * {@link disconnectViewportSync} can undo it.
+     */
+    connectViewportSync?(aHub: ViewportSyncPeer, aId: string): void;
+
+    /** Remove this editor from the hub it was connected to via {@link connectViewportSync}. */
+    disconnectViewportSync?(): void;
 
     destroy(): void;
 }
