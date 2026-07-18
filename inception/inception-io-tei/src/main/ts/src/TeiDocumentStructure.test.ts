@@ -21,7 +21,12 @@ import { TeiDocumentStructure } from './TeiDocumentStructure';
 let container: HTMLElement;
 
 beforeEach(() => {
-    container = document.createElement('div');
+    // Use a non-<div> container so it stands in for the TEI <body>/<text>
+    // wrapper that structural <div>s actually live under. extractKey's
+    // @n-path walk stops at the first non-<div> ancestor, so the container's
+    // tag name defines where a path is rooted -- a <div> container would
+    // wrongly become part of every path.
+    container = document.createElement('section');
     document.body.appendChild(container);
 });
 
@@ -106,6 +111,102 @@ describe('TeiDocumentStructure', () => {
             const section = el('div', el('p', 'only body'));
             container.appendChild(section);
             expect(new TeiDocumentStructure().scrollTarget(section)).toBe(section);
+        });
+    });
+
+    describe('extractKey', () => {
+        it('returns xml:id when present', () => {
+            const section = el('div', el('head', 'A'));
+            section.setAttribute('xml:id', 'chapter-1');
+            container.appendChild(section);
+            expect(new TeiDocumentStructure().extractKey(section)).toBe('chapter-1');
+        });
+
+        it('prefers xml:id over the @n-path', () => {
+            const section = el('div', el('head', 'A'));
+            section.setAttribute('xml:id', 'chapter-1');
+            section.setAttribute('n', '1');
+            container.appendChild(section);
+            expect(new TeiDocumentStructure().extractKey(section)).toBe('chapter-1');
+        });
+
+        it('falls back to a single-segment @n-path for a top-level div', () => {
+            const section = el('div', el('head', 'A'));
+            section.setAttribute('n', '1');
+            container.appendChild(section);
+            expect(new TeiDocumentStructure().extractKey(section)).toBe('1');
+        });
+
+        it('builds a slash-separated @n-path from the chain of div ancestors', () => {
+            // A bare @n is only unique among siblings; the path 1/4/5 is what
+            // makes a level-3 section globally identifiable.
+            const inner = el('div', el('head', 'C'));
+            inner.setAttribute('n', '5');
+            const mid = el('div', el('head', 'B'), inner);
+            mid.setAttribute('n', '4');
+            const top = el('div', el('head', 'A'), mid);
+            top.setAttribute('n', '1');
+            container.appendChild(top);
+            expect(new TeiDocumentStructure().extractKey(inner)).toBe('1/4/5');
+        });
+
+        it('separates with / so full-path @n cannot collide with nested local @n', () => {
+            // Full-path @n="1.1" on a single div must not produce the same key as two nested
+            // divs with local @n="1". With '/' as the separator the two are distinct.
+            const fullPath = el('div', el('head', 'X'));
+            fullPath.setAttribute('n', '1.1');
+            container.appendChild(fullPath);
+
+            const outer = el('div', el('head', 'A'));
+            outer.setAttribute('n', '1');
+            const nested = el('div', el('head', 'B'));
+            nested.setAttribute('n', '1');
+            outer.appendChild(nested);
+            container.appendChild(outer);
+
+            const s = new TeiDocumentStructure();
+            expect(s.extractKey(fullPath)).toBe('1.1'); // single segment, kept verbatim
+            expect(s.extractKey(nested)).toBe('1/1'); // two segments
+            expect(s.extractKey(fullPath)).not.toBe(s.extractKey(nested));
+        });
+
+        it('stops the path at the first non-div ancestor', () => {
+            // A <body>/<text> wrapper terminates the chain, so the path is
+            // relative to the outermost div -- not affected by non-div parents.
+            const inner = el('div', el('head', 'B'));
+            inner.setAttribute('n', '2');
+            const top = el('div', el('head', 'A'), inner);
+            top.setAttribute('n', '1');
+            const body = el('body', top);
+            container.appendChild(body);
+            expect(new TeiDocumentStructure().extractKey(inner)).toBe('1/2');
+        });
+
+        it('returns undefined when a div ancestor in the chain lacks @n (gap)', () => {
+            // The path cannot be reconstructed identically on the peer if a
+            // link is missing, so no key is emitted.
+            const inner = el('div', el('head', 'C'));
+            inner.setAttribute('n', '5');
+            const mid = el('div', el('head', 'B'), inner); // no @n -- gap
+            const top = el('div', el('head', 'A'), mid);
+            top.setAttribute('n', '1');
+            container.appendChild(top);
+            expect(new TeiDocumentStructure().extractKey(inner)).toBeUndefined();
+        });
+
+        it('returns undefined when the section itself lacks @n and xml:id', () => {
+            const section = el('div', el('head', 'A'));
+            container.appendChild(section);
+            expect(new TeiDocumentStructure().extractKey(section)).toBeUndefined();
+        });
+
+        it('reads xml:id supplied as a namespaced attribute', () => {
+            // When the document is parsed as XML rather than HTML, xml:id lands
+            // as a namespaced attribute rather than one literally named "xml:id".
+            const section = el('div', el('head', 'A'));
+            section.setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:id', 'chapter-ns');
+            container.appendChild(section);
+            expect(new TeiDocumentStructure().extractKey(section)).toBe('chapter-ns');
         });
     });
 

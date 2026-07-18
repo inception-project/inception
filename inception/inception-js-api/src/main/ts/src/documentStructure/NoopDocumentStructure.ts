@@ -33,6 +33,10 @@ export class NoopDocumentStructure implements DocumentStructureStrategy {
         return undefined;
     }
 
+    extractKey(): string | undefined {
+        return undefined;
+    }
+
     scrollTarget(section: Element): Element {
         return section;
     }

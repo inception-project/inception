@@ -154,6 +154,9 @@ export class ViewportSyncHub {
                 end: pos.end,
                 fraction: pos.fraction,
                 scrollProgress: pos.scrollProgress,
+                sectionKey: pos.sectionKey,
+                sectionFraction: pos.sectionFraction,
+                sectionKeySequence: pos.sectionKeySequence,
             });
         });
     }

@@ -16,7 +16,12 @@
  * limitations under the License.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { type TocLevel, generateTOC, generateTOCIndex } from './DocumentStructureNavigatorUtils';
+import {
+    type TocLevel,
+    generateTOC,
+    generateTOCIndex,
+    generateTOCKeyIndex,
+} from './DocumentStructureNavigatorUtils';
 
 let container: HTMLElement;
 
@@ -46,6 +51,18 @@ function sec(title: string | undefined, ...children: Node[]): HTMLElement {
 /** Default extractor used by the suite. */
 function extractTitle(el: Element): string | undefined {
     return el.getAttribute('data-title') ?? undefined;
+}
+
+/** Structural-key extractor used by the key-related tests. */
+function extractKey(el: Element): string | undefined {
+    return el.getAttribute('data-key') ?? undefined;
+}
+
+/** Build a section carrying both a title and a structural key. */
+function keyedSec(title: string, key: string | undefined, ...children: Node[]): HTMLElement {
+    const e = sec(title, ...children);
+    if (key !== undefined) e.setAttribute('data-key', key);
+    return e;
 }
 
 /**
@@ -136,6 +153,28 @@ describe('generateTOC', () => {
         const toc = generateTOC(container, 'test-sec', extractTitle);
         expect(outline(toc)).toEqual(['match']);
     });
+
+    it('populates key from extractKey when supplied', () => {
+        container.appendChild(keyedSec('A', 'k-a', keyedSec('A.1', 'k-a-1')));
+        const toc = generateTOC(container, 'test-sec', extractTitle, extractKey);
+        const a = toc.children[0];
+        expect(a.key).toBe('k-a');
+        expect(a.children[0].key).toBe('k-a-1');
+    });
+
+    it('leaves key undefined when extractKey is omitted', () => {
+        container.appendChild(keyedSec('A', 'k-a'));
+        const toc = generateTOC(container, 'test-sec', extractTitle);
+        expect(toc.children[0].key).toBeUndefined();
+    });
+
+    it('leaves key undefined for a section extractKey returns undefined for', () => {
+        // Titled section, but no key -- must still appear in the outline.
+        container.appendChild(keyedSec('A', undefined));
+        const toc = generateTOC(container, 'test-sec', extractTitle, extractKey);
+        expect(toc.children[0].title).toBe('A');
+        expect(toc.children[0].key).toBeUndefined();
+    });
 });
 
 describe('generateTOCIndex', () => {
@@ -173,5 +212,50 @@ describe('generateTOCIndex', () => {
 
         const idx = generateTOCIndex(generateTOC(container, 'test-sec', extractTitle));
         expect(Object.keys(idx)).toEqual(['a-1']);
+    });
+});
+
+describe('generateTOCKeyIndex', () => {
+    it('returns an empty map for an empty TOC', () => {
+        const toc = generateTOC(container, 'test-sec', extractTitle, extractKey);
+        expect(generateTOCKeyIndex(toc)).toEqual({});
+    });
+
+    it('indexes every keyed section by its structural key', () => {
+        container.appendChild(keyedSec('A', 'k-a', keyedSec('A.1', 'k-a-1')));
+        container.appendChild(keyedSec('B', 'k-b'));
+
+        const idx = generateTOCKeyIndex(
+            generateTOC(container, 'test-sec', extractTitle, extractKey)
+        );
+
+        expect(Object.keys(idx).sort()).toEqual(['k-a', 'k-a-1', 'k-b']);
+        expect(idx['k-a'].title).toBe('A');
+        expect(idx['k-a-1'].title).toBe('A.1');
+        expect(idx['k-b'].title).toBe('B');
+    });
+
+    it('skips sections that have no key (so a lookup miss means "no matching key")', () => {
+        // A has a title but no key; A.1 is keyed. Only A.1 is indexed.
+        container.appendChild(keyedSec('A', undefined, keyedSec('A.1', 'k-a-1')));
+
+        const idx = generateTOCKeyIndex(
+            generateTOC(container, 'test-sec', extractTitle, extractKey)
+        );
+        expect(Object.keys(idx)).toEqual(['k-a-1']);
+    });
+
+    it('keeps the first section in document order when two share a key', () => {
+        // A weaker positional fallback key could collide; the first wins.
+        const first = keyedSec('First', 'dup');
+        const second = keyedSec('Second', 'dup');
+        container.appendChild(first);
+        container.appendChild(second);
+
+        const idx = generateTOCKeyIndex(
+            generateTOC(container, 'test-sec', extractTitle, extractKey)
+        );
+        expect(Object.keys(idx)).toEqual(['dup']);
+        expect(idx['dup'].title).toBe('First');
     });
 });

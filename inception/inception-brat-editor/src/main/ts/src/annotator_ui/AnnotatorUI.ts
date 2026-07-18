@@ -340,10 +340,12 @@ export class AnnotatorUI {
         const noNumArcType = this.arcOptions && this.arcOptions.type;
 
         spanDesc.arcs.map((possibleArc) => {
-            if (!(
-                (this.arcOptions && possibleArc.type === noNumArcType) ||
-                !(this.arcOptions && this.arcOptions.old_target)
-            )) {
+            if (
+                !(
+                    (this.arcOptions && possibleArc.type === noNumArcType) ||
+                    !(this.arcOptions && this.arcOptions.old_target)
+                )
+            ) {
                 return undefined;
             }
 

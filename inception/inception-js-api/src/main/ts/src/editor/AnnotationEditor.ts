@@ -37,6 +37,28 @@ export type ViewportScrollPosition = {
      * 1 = at the very bottom).
      */
     scrollProgress?: number;
+    /**
+     * Key of the scroll-sync region covering the viewport top, when the two documents share a
+     * structure (regions are derived from DocumentStructureStrategy section keys). Lets a receiver
+     * align by matching region rather than by absolute character offset -- correct even between two
+     * different documents. Absent when there is no structure or no covering region; the receiver then
+     * falls back to offset/fraction/scrollProgress anchoring.
+     */
+    sectionKey?: string;
+    /**
+     * The viewport top's position within the keyed region as a pixel fraction in [0,1] (paired with
+     * sectionKey). The receiver places its own viewport top at the same fraction of its matching
+     * region's pixel span.
+     */
+    sectionFraction?: number;
+    /**
+     * The source's full ordered list of scroll-sync region keys (document order). Lets a receiver
+     * that has no region for {@code sectionKey} still align sensibly: it looks for the nearest keys
+     * before/after {@code sectionKey} in this sequence that it DOES have a region for, and brackets
+     * between them (interpolating if both are found, freezing at the one found boundary if only one
+     * is, falling back to offset sync if neither is). Absent when the source has no structure.
+     */
+    sectionKeySequence?: string[];
 };
 
 /**
@@ -58,6 +80,25 @@ export type ViewportScrollTarget = {
      * 1 = at the very bottom).
      */
     scrollProgress?: number;
+    /**
+     * Key of the scroll-sync region to align to, when the source and this receiver share a document
+     * structure. When present and this receiver has a matching region, the receiver scrolls
+     * region-fractionally by {@code sectionFraction} instead of using {@code begin}. Ignored on a key
+     * miss, so a {@link ViewportScrollPosition} remains assignable here and the offset path stays the
+     * default.
+     */
+    sectionKey?: string;
+    /**
+     * The viewport top's pixel fraction in [0,1] within the keyed region (paired with sectionKey).
+     * The receiver places its viewport top at the same fraction of its matching region's pixel span.
+     */
+    sectionFraction?: number;
+    /**
+     * The source's full ordered list of scroll-sync region keys (document order), used to bracket a
+     * {@code sectionKey} the receiver has no region for. See
+     * {@link ViewportScrollPosition.sectionKeySequence}.
+     */
+    sectionKeySequence?: string[];
 };
 
 /**

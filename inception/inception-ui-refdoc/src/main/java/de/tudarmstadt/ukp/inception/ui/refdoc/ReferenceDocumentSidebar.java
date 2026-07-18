@@ -24,6 +24,8 @@ import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAw
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationNavigationUserPrefs.KEY_ANNOTATION_NAVIGATION_USER_PREFS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.ui.refdoc.ReferenceDocumentSidebarState.KEY_REFERENCE_DOCUMENT_SIDEBAR_STATE;
 import static java.lang.String.format;
@@ -77,7 +79,6 @@ import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
-import de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import jakarta.persistence.NoResultException;
@@ -130,7 +131,7 @@ public class ReferenceDocumentSidebar
     private boolean scrollSyncEnabled = false;
     private transient boolean syncingViewport = false;
 
-    private final LambdaAjaxLink scrollSyncToggle;
+    private final WebMarkupContainer scrollSyncGroup;
 
     // The editor and CAS provider for the reference document currently shown (null while none).
     private AnnotationEditorBase editor;
@@ -213,12 +214,24 @@ public class ReferenceDocumentSidebar
 
         // Two-way scroll synchronization with the main editor. Only meaningful while a document is
         // shown; whether it actually engages is gated in scrollSyncScript().
-        scrollSyncToggle = new LambdaAjaxLink("toggleScrollSync", this::actionToggleScrollSync);
+        // The tooltip sits on the group, not on the button: browsers deliver no pointer events to a
+        // disabled button, so a title on the button itself would stay invisible precisely when it
+        // explains why the toggle cannot be used.
+        scrollSyncGroup = new WebMarkupContainer("scrollSyncGroup");
+        scrollSyncGroup.setOutputMarkupPlaceholderTag(true);
+        scrollSyncGroup.add(visibleWhen(() -> state.getDocument() != null));
+        scrollSyncGroup.add(AttributeModifier.replace("title",
+                LambdaModel.of(() -> isScrollSyncPossible()
+                        ? "Synchronize scrolling with the main editor"
+                        : "Scroll synchronization is unavailable while a paged editor shows a "
+                                + "different document than the main editor")));
+        actionBar.add(scrollSyncGroup);
+
+        var scrollSyncToggle = new LambdaAjaxLink("toggleScrollSync", this::actionToggleScrollSync);
         scrollSyncToggle.add(new Icon("toggleScrollSyncIcon",
                 LambdaModel.of(() -> scrollSyncEnabled ? link_s : link_slash_s)));
-        scrollSyncToggle.setOutputMarkupPlaceholderTag(true);
-        scrollSyncToggle.add(visibleWhen(() -> state.getDocument() != null));
-        actionBar.add(scrollSyncToggle);
+        scrollSyncToggle.add(enabledWhen(this::isScrollSyncPossible));
+        scrollSyncGroup.add(scrollSyncToggle);
 
         openDialog = new OpenDocumentDialog("openDialog", Model.of((AnnotatorState) state),
                 getAnnotationPage()::listAccessibleDocuments, this::actionLoadDocument);
@@ -289,7 +302,7 @@ public class ReferenceDocumentSidebar
                     sessionOwner, project, sidebarState);
         }
 
-        aTarget.add(scrollSyncToggle);
+        aTarget.add(scrollSyncGroup);
         scrollSyncScript().ifPresent(aTarget::appendJavaScript);
     }
 
@@ -321,8 +334,29 @@ public class ReferenceDocumentSidebar
 
     private boolean isScrollSyncActive()
     {
-        return scrollSyncEnabled
-                && Objects.equals(getModelObject().getDocument(), state.getDocument());
+        return scrollSyncEnabled && isScrollSyncPossible();
+    }
+
+    private boolean isScrollSyncPossible()
+    {
+        if (state.getDocument() == null) {
+            return false;
+        }
+
+        var refDocPaged = !(state.getPagingStrategy() instanceof NoPagingStrategy);
+        var mainPaged = !(getModelObject().getPagingStrategy() instanceof NoPagingStrategy);
+        if ((mainPaged && !refDocPaged) || (!mainPaged && refDocPaged)) {
+            // Mixed mode cannot sync
+            return false;
+        }
+
+        if (mainPaged && refDocPaged && !Objects.equals(state.getPagingStrategy().getClass(),
+                getModelObject().getPagingStrategy().getClass())) {
+            // If both editors are paging, they must have the same paging regime
+            return false;
+        }
+
+        return true;
     }
 
     @Override
@@ -433,7 +467,7 @@ public class ReferenceDocumentSidebar
             aTarget.add(documentNamePanel);
             aTarget.add(documentNavigation);
             aTarget.add(pagingNavigator);
-            aTarget.add(scrollSyncToggle);
+            aTarget.add(scrollSyncGroup);
             aTarget.add(get(MID_NUMBER_OF_PAGES));
 
             scrollSyncScript().ifPresent(aTarget::appendJavaScript);
@@ -478,7 +512,7 @@ public class ReferenceDocumentSidebar
             var cas = casProvider.get();
             state.reset();
             state.getPagingStrategy().recalculatePage(state, cas);
-            state.moveToUnit(cas, 0, FocusPosition.TOP);
+            state.moveToUnit(cas, 0, TOP);
 
             newEditor = editor;
         }
@@ -532,8 +566,7 @@ public class ReferenceDocumentSidebar
         throws IOException, AnnotationException
     {
         // A self-contained viewer scrolls within its own document and does not switch documents;
-        // the
-        // read-only action handler ignores navigation, so this stays local.
+        // the read-only action handler ignores navigation, so this stays local.
         getActionHandler().actionJump(aTarget, aBegin, aEnd);
     }
 
@@ -559,6 +592,12 @@ public class ReferenceDocumentSidebar
 
         var mainState = getModelObject();
 
+        // If not showing the same document, we cannot sync by character offset - bail out
+        if (!Objects.equals(mainState.getDocument(), state.getDocument())) {
+            return;
+        }
+
+        // ... otherwise we can sync by character offset.
         try {
             syncingViewport = true;
 
@@ -568,8 +607,7 @@ public class ReferenceDocumentSidebar
                 if (editor == null || mainEditor == null) {
                     return;
                 }
-                state.moveToOffset(getEditorCas(), mainState.getWindowBeginOffset(),
-                        FocusPosition.TOP);
+                state.moveToOffset(getEditorCas(), mainState.getWindowBeginOffset(), TOP);
                 editor.requestRender(target);
                 target.add(pagingNavigator);
                 target.add(get(MID_NUMBER_OF_PAGES));
@@ -580,8 +618,7 @@ public class ReferenceDocumentSidebar
                 if (mainEditor == null) {
                     return;
                 }
-                mainState.moveToOffset(getCasProvider().get(), state.getWindowBeginOffset(),
-                        FocusPosition.TOP);
+                mainState.moveToOffset(getCasProvider().get(), state.getWindowBeginOffset(), TOP);
                 mainEditor.requestRender(target);
             }
         }

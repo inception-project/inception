@@ -17,12 +17,38 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <!--
+    Header layout tweaks scoped to the (narrow) reference-document sidebar; the main editor's much
+    wider header is unaffected.
+
+    The header keeps the main editor's horizontal "name | position+toggle" row so the position
+    label stays inline to the right of the name instead of consuming an extra line. The name block
+    is allowed to shrink (min-width:0) and its badges truncate with an ellipsis (via .project-name
+    / .document-name in DocumentNamePanel), so a long document name no longer squashes the position
+    label - the name yields space to it instead.
+
+    The position label is a PositionInfoPanel: the unit position ("N-M / K sentences") and the
+    document position ("[doc i / n]") are separate spans. We keep each part intact (no mid-phrase
+    break) but allow a break *between* them, so in a narrow sidebar the "[doc i / n]" part drops to
+    a second line only when it genuinely does not fit rather than the whole label wrapping mid-word.
+  -->
+  <style>
+    .refdoc-sidebar-document-name {
+      min-width: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.25rem;
+    }
+  </style>
+</wicket:head>
 <wicket:panel>
   <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
     <div class="flex-content flex-v-container card overflow-hidden">
-      <div class="card-header d-flex justify-content-between border-bottom-0">
-        <div wicket:id="documentNamePanel"></div>
-        <div class="d-flex">
+      <div class="card-header d-flex justify-content-between border-bottom-0 pt-2">
+        <div wicket:id="documentNamePanel" class="refdoc-sidebar-document-name"></div>
+        <div class="d-flex refdoc-sidebar-header-meta">
           <div wicket:id="numberOfPages" class="small text-muted align-self-center"></div>
           <button wicket:id="toggleActionBar" class="btn btn-sm btn-outline-secondary border-0">
             <i wicket:id="toggleActionBarIcon"/>
@@ -48,9 +74,8 @@
                 <i class="far fa-caret-square-right"></i>
               </button>
             </div>
-            <div class="btn-group">
-              <button wicket:id="toggleScrollSync" class="btn btn-action-bar" type="button"
-                      title="Synchronize scrolling with the main editor (takes effect while showing the same document)">
+            <div wicket:id="scrollSyncGroup" class="btn-group">
+              <button wicket:id="toggleScrollSync" class="btn btn-action-bar" type="button">
                 <i wicket:id="toggleScrollSyncIcon"/>
               </button>
             </div>

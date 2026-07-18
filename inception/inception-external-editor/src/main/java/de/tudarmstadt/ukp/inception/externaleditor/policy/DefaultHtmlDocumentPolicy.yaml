@@ -72,6 +72,9 @@ policies:
   - action: PASS
     attributes: ["class"]
     matching: "[a-zA-Z0-9\\s,\\-_]+"
+  - action: PASS
+    attributes: ["id"]
+    matching: "[a-zA-Z0-9\\-_:.]+"
   # Data attributes
   - action: PASS
     attribute_patterns: ["data-.*"]
