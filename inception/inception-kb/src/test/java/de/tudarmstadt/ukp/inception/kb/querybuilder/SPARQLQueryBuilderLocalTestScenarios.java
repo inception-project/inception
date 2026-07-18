@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
-import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClientBuilder;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClient;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandle;
@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -367,8 +368,10 @@ public class SPARQLQueryBuilderLocalTestScenarios
 
     static Repository buildSparqlRepository(String aUrl)
     {
-        var repo = new SPARQLRepository(aUrl);
-        repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
+        var creds = extractCredentials(aUrl);
+        var repo = new SPARQLRepository(creds.urlWithoutUserInfo());
+        applyCredentials(repo, creds);
+        repo.setHttpClient(newPerThreadSslCheckingHttpClient());
         repo.setAdditionalHttpHeaders(Map.of("User-Agent", "INCEpTION/0.0.1-SNAPSHOT"));
         repo.init();
         return repo;
@@ -376,11 +379,40 @@ public class SPARQLQueryBuilderLocalTestScenarios
 
     static Repository buildSparqlRepository(String aQueryUrl, String aUpdateUrl)
     {
-        var repo = new SPARQLRepository(aQueryUrl, aUpdateUrl);
-        repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
+        var queryCreds = extractCredentials(aQueryUrl);
+        var updateCreds = extractCredentials(aUpdateUrl);
+        var repo = new SPARQLRepository(queryCreds.urlWithoutUserInfo(),
+                updateCreds.urlWithoutUserInfo());
+        applyCredentials(repo, queryCreds);
+        repo.setHttpClient(newPerThreadSslCheckingHttpClient());
         repo.setAdditionalHttpHeaders(Map.of("User-Agent", "INCEpTION/0.0.1-SNAPSHOT"));
         repo.init();
         return repo;
+    }
+
+    private record UrlCredentials(String urlWithoutUserInfo, String user, String password) {}
+
+    // Apache HttpClient 5 (used by RDF4J 6's default HTTP client) rejects URIs with a userinfo
+    // component. Split user:pass@ out of the URL and pass it via setUsernameAndPassword instead.
+    private static UrlCredentials extractCredentials(String aUrl)
+    {
+        var uri = URI.create(aUrl);
+        var userInfo = uri.getRawUserInfo();
+        if (userInfo == null) {
+            return new UrlCredentials(aUrl, null, null);
+        }
+        var sep = userInfo.indexOf(':');
+        var user = sep < 0 ? userInfo : userInfo.substring(0, sep);
+        var password = sep < 0 ? "" : userInfo.substring(sep + 1);
+        var stripped = aUrl.replace(userInfo + "@", "");
+        return new UrlCredentials(stripped, user, password);
+    }
+
+    private static void applyCredentials(SPARQLRepository aRepo, UrlCredentials aCreds)
+    {
+        if (aCreds.user() != null) {
+            aRepo.setUsernameAndPassword(aCreds.user(), aCreds.password());
+        }
     }
 
     /**
