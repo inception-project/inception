@@ -46,6 +46,13 @@ export interface DocumentStructureStrategy {
     extractTitle(section: Element): string | undefined;
 
     /**
+     * A stable structural key identifying this section, used to align the
+     * scroll position of two documents that share a document structure (see
+     * the reference-document sidebar's by-key scroll sync).
+     */
+    extractKey(section: Element): string | undefined;
+
+    /**
      * The element to scroll into view when the user clicks a TOC entry.
      * Usually the heading/title inside the section. Falls back to the
      * section itself.

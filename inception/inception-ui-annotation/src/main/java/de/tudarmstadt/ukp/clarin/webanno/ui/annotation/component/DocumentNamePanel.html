@@ -21,6 +21,23 @@
 <html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 
+<wicket:head>
+  <style>
+    .project-name {
+      max-width: 30em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .document-name {
+      max-width: 30em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  </style>
+</wicket:head>
 <body>
   <wicket:panel>
     <span wicket:id="read-only" class="badge text-bg-warning">
@@ -31,14 +48,16 @@
       <i class="fas fa-user"></i>
       <wicket:container wicket:id="user"/>
     </span>
-    <span wicket:enclosure="project" class="badge border border-secondary text-secondary">
+    <span wicket:id="projectBadge"
+          class="project-name badge border border-secondary text-secondary">
       <i class="fas fa-archive"></i>
       <wicket:container wicket:id="project"/>
       <wicket:enclosure child="projectId">
         (<wicket:container wicket:id="projectId"/>)
       </wicket:enclosure>
     </span>
-    <span wicket:enclosure="document" class="badge border border-secondary text-secondary">
+    <span wicket:id="documentBadge"
+          class="document-name badge border border-secondary text-secondary">
       <i class="fas fa-file"></i>
       <wicket:container wicket:id="document"/>
       <wicket:enclosure child="documentId">

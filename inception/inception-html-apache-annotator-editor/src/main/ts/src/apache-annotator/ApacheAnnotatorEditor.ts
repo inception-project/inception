@@ -20,9 +20,11 @@ import {
     type DiamAjax,
     type DocumentStructureStrategy,
     type Offsets,
+    type TocLevel,
     type ViewportScrollPosition,
     type ViewportScrollTarget,
     type ViewportSyncPeer,
+    buildDocumentStructure,
     calculateStartOffset,
 } from '@inception-project/inception-js-api';
 import DocumentStructureNavigator from '@inception-project/inception-js-api/src/documentStructure/DocumentStructureNavigator.svelte';
@@ -68,6 +70,7 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     private activeResizeCleanup: (() => void) | undefined = undefined;
     private documentStructure: DocumentStructureStrategy;
     private documentContainer: HTMLElement | undefined = undefined;
+    private tocRoot: TocLevel | undefined = undefined;
     private keyboardMode: KeyboardEditorMode | undefined = undefined;
 
     public constructor(
@@ -136,8 +139,8 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
                 );
                 this.ensureSectionElementsHaveAnId();
 
-                // Build the outline for the navigator, operating on the post-pinning DOM.
                 this.documentStructure.preprocess(documentContainer);
+                this.tocRoot = buildDocumentStructure(documentContainer, this.documentStructure);
 
                 this.navigatorContainer = this.root.ownerDocument.createElement('div');
                 this.navigatorContainer.classList.add('iaa-document-navigator');
@@ -161,12 +164,19 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
                 );
                 this.vis.protectedElementSelector = [...protectedElements].join(',');
 
+                this.vis.setSyncDocumentStructure({
+                    sectionSelector: () => this.documentStructure.sectionSelector,
+                    extractKey: (section) => this.documentStructure.extractKey(section),
+                    tocRoot: () => this.tocRoot,
+                });
+
                 this.documentContainer = documentContainer;
 
                 this.documentStructureNavigator = this.createDocumentNavigator(
                     this.navigatorContainer,
                     documentContainer,
-                    this.documentStructure
+                    this.documentStructure,
+                    this.tocRoot
                 );
                 this.toolbar = this.createToolbar();
 
@@ -404,13 +414,15 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
     private createDocumentNavigator(
         target: HTMLElement,
         documentContainer: HTMLElement,
-        structure: DocumentStructureStrategy
+        structure: DocumentStructureStrategy,
+        tocRoot: TocLevel
     ) {
         return mount(DocumentStructureNavigator, {
             target,
             props: {
                 documentContainer,
                 structure,
+                tocRoot,
             },
         });
     }

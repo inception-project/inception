@@ -52,6 +52,11 @@ export class HtmlDocumentStructure implements DocumentStructureStrategy {
         return section.querySelector(DIRECT_HEADING_SELECTOR) ?? section;
     }
 
+    extractKey(section: Element): string | undefined {
+        const headingId = section.querySelector(DIRECT_HEADING_SELECTOR)?.id;
+        return headingId || section.id || undefined;
+    }
+
     private wrapHeadingSectionsIn(container: Element, counter: { n: number }) {
         const doc = container.ownerDocument;
         const isHeading = (node: Node): node is HTMLElement =>

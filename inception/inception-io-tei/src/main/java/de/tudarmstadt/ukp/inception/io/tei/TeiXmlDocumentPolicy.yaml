@@ -131,6 +131,7 @@ policies:
     action: PASS
   - { attributes: ["fform", "nform"],  on_elements: ["tok"], action: "PASS" }
   - { attributes: ["class", "type"], action: "PASS" }
+  - { attributes: ["{http://www.w3.org/XML/1998/namespace}id", "n"], on_elements: ["div"], action: "PASS" }
   - { attributes: ["place", "n"], on_elements: ["note"], action: "PASS" }
   - { attributes: ["n"], on_elements: ["pb"], action: "PASS" }
   - { attributes: ["type", "place"], on_elements: ["fw"], action: "PASS" }

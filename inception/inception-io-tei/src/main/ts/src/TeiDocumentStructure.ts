@@ -45,4 +45,33 @@ export class TeiDocumentStructure implements DocumentStructureStrategy {
     scrollTarget(section: Element): Element {
         return section.querySelector(':scope > head') ?? section;
     }
+
+    extractKey(section: Element): string | undefined {
+        // If there is an xml:id, we use that.
+        const xmlId =
+            section.getAttributeNS('http://www.w3.org/XML/1998/namespace', 'id') ??
+            section.getAttribute('xml:id');
+        if (xmlId) {
+            return xmlId;
+        }
+
+        // Otherwise we try to derive a key from the @n attributes of this section and its ancestors.
+        return this.nPath(section);
+    }
+
+    private nPath(section: Element): string | undefined {
+        const segments: string[] = [];
+        // TEI uses <div> for sections; we walk the <div> chain to build a unique path of @n values.
+        // If any <div> lacks @n, the path is incomplete and we return undefined.
+        let current: Element | null = section;
+        while (current && current.localName === 'div') {
+            const n = current.getAttribute('n');
+            if (!n) {
+                return undefined;
+            }
+            segments.unshift(n);
+            current = current.parentElement;
+        }
+        return segments.length ? segments.join('/') : undefined;
+    }
 }

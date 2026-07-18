@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -74,16 +75,18 @@ public class DocumentNamePanel
         queue(new Label("user", aModel.map(AnnotatorState::getUser).map(User::getUiName))
                 .add(visibleWhenNot(aModel.map(AnnotatorState::getUser)
                         .map(u -> u.getUsername().equals(userService.getCurrentUsername())))));
-        queue(new Label("project", aModel.map(AnnotatorState::getProject).map(Project::getName)));
+        var projectName = aModel.map(AnnotatorState::getProject).map(Project::getName);
+        queue(new WebMarkupContainer("projectBadge")
+                .add(AttributeModifier.replace("title", projectName)));
+        queue(new Label("project", projectName));
         queue(new Label("projectId", aModel.map(AnnotatorState::getProject).map(Project::getId))
                 .add(visibleWhen(() -> DEVELOPMENT == getApplication().getConfigurationType())));
-        // The document badge (controlled via wicket:enclosure) must hide when no document is
-        // selected - otherwise it renders as an empty name with an empty "()" id (e.g. in the
-        // reference-document sidebar before a document has been loaded). A Label with a null model
-        // still counts as visible, so guard visibility explicitly on the document being present.
-        queue(new Label("document",
-                aModel.map(AnnotatorState::getDocument).map(SourceDocument::getName))
-                        .add(visibleWhen(aModel.map(AnnotatorState::getDocument).isPresent())));
+
+        var documentName = aModel.map(AnnotatorState::getDocument).map(SourceDocument::getName);
+        queue(new WebMarkupContainer("documentBadge") //
+                .add(AttributeModifier.replace("title", documentName)) //
+                .add(visibleWhen(aModel.map(AnnotatorState::getDocument).isPresent())));
+        queue(new Label("document", documentName));
         queue(new Label("documentId",
                 aModel.map(AnnotatorState::getDocument).map(SourceDocument::getId)).add(
                         visibleWhen(() -> DEVELOPMENT == getApplication().getConfigurationType())));

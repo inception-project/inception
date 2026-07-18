@@ -29,7 +29,6 @@ import java.util.regex.Pattern;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
@@ -88,14 +87,7 @@ public class LineOrientedPagingStrategy
     @Override
     public Component createPositionLabel(String aId, IModel<AnnotatorState> aModel)
     {
-        var label = new Label(aId, () -> {
-            var state = aModel.getObject();
-            return String.format("%d-%d / %d lines [doc %d / %d]", state.getFirstVisibleUnitIndex(),
-                    state.getLastVisibleUnitIndex(), state.getUnitCount(),
-                    state.getDocumentIndex() + 1, state.getNumberOfDocuments());
-        });
-        label.setOutputMarkupPlaceholderTag(true);
-        return label;
+        return new PositionInfoPanel(aId, aModel, "lines");
     }
 
     @Override

@@ -26,7 +26,6 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
@@ -119,15 +118,7 @@ public class TokenWrappingPagingStrategy
     @Override
     public Component createPositionLabel(String aId, IModel<AnnotatorState> aModel)
     {
-        Label label = new Label(aId, () -> {
-            AnnotatorState state = aModel.getObject();
-            return String.format("%d-%d / %d blocks [doc %d / %d]",
-                    state.getFirstVisibleUnitIndex(), state.getLastVisibleUnitIndex(),
-                    state.getUnitCount(), state.getDocumentIndex() + 1,
-                    state.getNumberOfDocuments());
-        });
-        label.setOutputMarkupPlaceholderTag(true);
-        return label;
+        return new PositionInfoPanel(aId, aModel, "blocks");
     }
 
     @Override

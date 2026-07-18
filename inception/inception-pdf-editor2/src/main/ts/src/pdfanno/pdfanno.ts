@@ -29,6 +29,7 @@ import { Rectangle } from '../vmodel/Rectangle';
 import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/widget/AnnotationDetailPopOver.svelte';
 import { mount, unmount } from 'svelte';
 import { transform } from './core/src/UI/utils';
+import { blendTowardScrollProgress } from './ViewportSyncUtils';
 
 // TODO make it a global const.
 // const svgLayerId = 'annoLayer'
@@ -348,7 +349,7 @@ export function scrollTo(args: {
 /**
  * @return the scrollable viewport container of the PDF.js viewer.
  */
-function getScrollContainer(): HTMLElement | null {
+export function getScrollContainer(): HTMLElement | null {
     return document.getElementById('viewer')?.parentElement ?? null;
 }
 
@@ -432,16 +433,7 @@ export function scrollToViewportPosition(pos: ViewportScrollTarget): void {
     const maxScroll = container.scrollHeight - container.clientHeight;
 
     // Ensure smooth scrolling near the start and end of the document
-    let target = anchoredTop;
-    if (pos.scrollProgress !== undefined && maxScroll > 0) {
-        const progressTop = pos.scrollProgress * maxScroll;
-        const BAND = 0.15; // fraction of the scroll range over which to blend at each end
-        const p = pos.scrollProgress;
-        const nearness = Math.max(0, 1 - Math.min(p, 1 - p) / BAND); // 1 at extreme → 0 by BAND
-        target = nearness * progressTop + (1 - nearness) * anchoredTop;
-    }
-
-    container.scrollTop = target;
+    container.scrollTop = blendTowardScrollProgress(anchoredTop, pos.scrollProgress, maxScroll);
 }
 
 export function getAnnotations() {

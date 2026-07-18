@@ -260,9 +260,12 @@ public abstract class AnnotationPageBase2
         if (project == null) {
             return;
         }
-        if (aSize < SIDEBAR_SIZE_MIN || aSize > SIDEBAR_SIZE_MAX) {
-            return;
-        }
+
+        // Do not reject sizes outside [MIN, MAX] here: dragging the splitter toward the middle
+        // produces a reported size at (or just above) SIDEBAR_SIZE_MAX due to splitbar-width
+        // rounding, and rejecting it would silently drop the user's drag so the pane snaps back to
+        // its previously stored size on the next page load. The trait setters below already clamp
+        // the value into range, so we simply let them store the clamped size.
 
         var sessionOwner = userRepository.getCurrentUser();
         var layoutState = preferencesService.loadTraitsForUserAndProject(KEY_LAYOUT_STATE,

@@ -43,7 +43,10 @@ import { SectionAnnotationCreator } from './SectionAnnotationCreator';
 import { RelationVisualizer } from './RelationVisualizer';
 import { RelationGripLayer, GRIP_CLASS } from './RelationGripLayer';
 import { RelationDragController, type PickRelationTarget } from './RelationDragController';
-import { ApacheAnnotatorSyncController } from './ApacheAnnotatorSyncController';
+import {
+    ApacheAnnotatorSyncController,
+    type SyncStructureAccessors,
+} from './ApacheAnnotatorSyncController';
 import {
     groupHighlightsByVid,
     removeClassFromAncestors,
@@ -218,6 +221,14 @@ export class ApacheAnnotatorVisualizer {
             this.root,
             () => this.scrollContainer
         );
+    }
+
+    /**
+     * Provide the document-structure inputs used for by-key scroll sync. Forwarded to the sync
+     * controller; called by the editor once the document outline has been built.
+     */
+    public setSyncDocumentStructure(structure: SyncStructureAccessors): void {
+        this.syncController.setDocumentStructure(structure);
     }
 
     /**

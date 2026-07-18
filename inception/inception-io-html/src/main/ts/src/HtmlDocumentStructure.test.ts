@@ -262,6 +262,44 @@ describe('HtmlDocumentStructure', () => {
         });
     });
 
+    describe('extractKey', () => {
+        it('prefers a source id on the section heading', () => {
+            container.innerHTML =
+                '<sec-wrap id="sec-wrap-3"><h2 id="introduction">Intro</h2></sec-wrap>';
+            const section = container.querySelector('sec-wrap')!;
+            expect(new HtmlDocumentStructure().extractKey(section)).toBe('introduction');
+        });
+
+        it('falls back to the generated sec-wrap id when the heading has no id', () => {
+            container.innerHTML = '<sec-wrap id="sec-wrap-3"><h2>Intro</h2></sec-wrap>';
+            const section = container.querySelector('sec-wrap')!;
+            expect(new HtmlDocumentStructure().extractKey(section)).toBe('sec-wrap-3');
+        });
+
+        it('falls back to the section id when there is no heading at all', () => {
+            container.innerHTML = '<sec-wrap id="sec-wrap-3"><div>body</div></sec-wrap>';
+            const section = container.querySelector('sec-wrap')!;
+            expect(new HtmlDocumentStructure().extractKey(section)).toBe('sec-wrap-3');
+        });
+
+        it('returns undefined when neither the heading nor the section carries an id', () => {
+            container.innerHTML = '<sec-wrap><h2>Intro</h2></sec-wrap>';
+            const section = container.querySelector('sec-wrap')!;
+            expect(new HtmlDocumentStructure().extractKey(section)).toBeUndefined();
+        });
+
+        it('produces the generated id assigned by preprocess as the fallback key', () => {
+            container.innerHTML = '<h1>A</h1><h2>B</h2>';
+            const s = new HtmlDocumentStructure();
+            s.preprocess(container);
+            const wraps = container.querySelectorAll('sec-wrap');
+            // No source ids, so the key is the preprocess-assigned sec-wrap-N.
+            expect(s.extractKey(wraps[0])).toBe(wraps[0].id);
+            expect(s.extractKey(wraps[1])).toBe(wraps[1].id);
+            expect(wraps[0].id).not.toBe(wraps[1].id);
+        });
+    });
+
     describe('sectionSelector', () => {
         it('matches the synthetic wrapper element', () => {
             const s = new HtmlDocumentStructure();
