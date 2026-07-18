@@ -64,6 +64,28 @@ export function findPageForTextOffset(offset: number): VPage | undefined {
 }
 
 /**
+ * Like {@link findPageForTextOffset}, but clamps to the first/last page when the offset falls
+ * outside the document instead of returning {@code undefined}. An offset at or past the last page's
+ * end (offset >= lastPage.range[1]) or before the first page's start resolves to the nearest page,
+ * so callers that only need to locate a page for scrolling stay well-defined at the boundaries.
+ */
+export function findPageForTextOffsetClamped(offset: number): VPage | undefined {
+    if (!pages || pages.length === 0) {
+        console.error(`No pages available. Cannot find page for offset [${offset}]`);
+        return undefined;
+    }
+
+    const page = pages.find((p) => p.range[0] <= offset && offset < p.range[1]);
+    if (page) {
+        return page;
+    }
+
+    const firstPage = pages[0];
+    const lastPage = pages[pages.length - 1];
+    return offset < firstPage.range[0] ? firstPage : lastPage;
+}
+
+/**
  * Find the glyph at the given position in the PDF document. This operation uses the glyph
  * position data that is provided by the server.
  *

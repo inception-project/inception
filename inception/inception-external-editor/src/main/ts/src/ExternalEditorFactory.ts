@@ -21,11 +21,14 @@ import {
     type AnnotationEditorProperties,
     type DiamClientFactory,
 } from '@inception-project/inception-js-api';
+import { ViewportSyncHub } from './ViewportSyncHub';
 
 const PROP_EDITOR = '__editor__';
 const PROP_INITIALIZING = '__initializing__';
 
 export class ExternalEditorFactory implements AnnotationEditorFactory {
+    readonly viewportSync = new ViewportSyncHub();
+
     async getOrInitialize(
         element: Node,
         diam: DiamClientFactory,
@@ -111,6 +114,10 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
             delete element[PROP_INITIALIZING];
             console.debug('[getOrInitialize] Promise chain completed');
 
+            if (iframe.id && iframe.contentDocument) {
+                element[PROP_EDITOR].connectViewportSync?.(this.viewportSync, iframe.id);
+            }
+
             // Restoring visibility
             if (!props.loadingIndicatorDisabled) {
                 loadingIndicator?.remove();
@@ -123,6 +130,10 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
         element[PROP_EDITOR] = await this.loadEditorResources(window, props).then((win) => {
             return this.initEditor(win, element as HTMLElement, diam, props);
         });
+
+        if (element instanceof HTMLElement && element.id) {
+            element[PROP_EDITOR].connectViewportSync?.(this.viewportSync, element.id);
+        }
 
         return element[PROP_EDITOR];
     }
@@ -326,6 +337,10 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
     }
 
     destroy(element: Node): void {
+        if (element instanceof HTMLElement && element.id) {
+            this.viewportSync.unregister(element.id);
+        }
+
         if (element[PROP_EDITOR] != null) {
             element[PROP_EDITOR].destroy();
             console.info('Destroyed editor');

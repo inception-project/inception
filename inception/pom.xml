@@ -198,6 +198,7 @@
     <module>inception-ui-dashboard-api</module>
     <module>inception-ui-project</module>
     <module>inception-ui-annotation</module>
+    <module>inception-ui-refdoc</module>
     <module>inception-ui-scheduling</module>
     <module>inception-ui-tagsets</module>
     <module>inception-sharing</module>

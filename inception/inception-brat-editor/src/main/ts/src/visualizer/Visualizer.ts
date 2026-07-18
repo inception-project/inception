@@ -48,6 +48,8 @@ import { DocumentData } from './DocumentData';
 import { ENTITY, Entity, TRIGGER } from './Entity';
 import { EQUIV, EventDesc, RELATION } from './EventDesc';
 import { Chunk } from './Chunk';
+import { BratSyncController } from './BratSyncController';
+import { type RowGeometrySource } from './ScrollSyncRowCache';
 import { Fragment } from './Fragment';
 import type { SegmenterAdapter } from './SegmenterAnalysis';
 import { Arc } from './Arc';
@@ -97,6 +99,8 @@ import {
     AnnotationOutEvent,
     AnnotationOverEvent,
     type Offsets,
+    type ViewportScrollPosition,
+    type ViewportScrollTarget,
     Relation,
     Span,
     bgToFgColor,
@@ -221,6 +225,16 @@ export class Visualizer {
     private isRenderRequested = false;
     private drawing = false;
     private redraw = false;
+
+    /**
+     * Editor-to-editor viewport synchronization (offset+fraction reporting and scrolling). Owns the
+     * per-layout row-geometry cache; {@link BratSyncController.invalidate} is called from the render
+     * funnel. Reads the scroll container and row-geometry inputs lazily from this visualizer.
+     */
+    private syncController = new BratSyncController(
+        () => this.getScrollContainer(),
+        () => this.getRowGeometrySource()
+    );
 
     private entityTypes: Record<string, EntityTypeDto> = {};
     private relationTypes: Record<string, RelationTypeDto> = {};
@@ -418,6 +432,46 @@ export class Visualizer {
                 .after(() => ping.remove());
         }
     }
+
+    /**
+     * The vertically scrolling ancestor of the SVG. The brat markup wraps the visualizer in a
+     * `div.scrolling` (overflow: auto via CSS class, so the inline-style-only
+     * {@link findClosestVerticalScrollable} would not catch it); we resolve that wrapper directly
+     * and only fall back to the generic walk-up for non-standard hosts.
+     */
+    getScrollContainer(): HTMLElement | null {
+        const byClass = this.svgContainer?.closest('.scrolling');
+        if (byClass instanceof HTMLElement) {
+            return byClass;
+        }
+        return findClosestVerticalScrollable(this.svg.node);
+    }
+
+    /**
+     * Assemble the current inputs the {@link BratSyncController} needs to (re)measure row geometry,
+     * or null when there is no rendered document to measure. Kept here because it reads this
+     * visualizer's live render state (SVG node, chunks, window offset, sizes).
+     */
+    private getRowGeometrySource(): RowGeometrySource | null {
+        if (!this.data) return null;
+
+        return {
+            svgNode: this.svg.node,
+            chunks: this.data.chunks,
+            windowBegin: this.sourceData?.windowBegin || 0,
+            defaultLineHeight: this.data.sizes.texts.height || 20,
+            contentBottom: this.data.contentHeight,
+        };
+    }
+
+    getViewportScrollPosition(): ViewportScrollPosition | null {
+        return this.syncController.getViewportScrollPosition();
+    }
+
+    scrollToViewportPosition(pos: ViewportScrollTarget): void {
+        this.syncController.scrollToViewportPosition(pos);
+    }
+
     /**
      * Get the priority of the given comment class.
      *
@@ -3774,6 +3828,11 @@ export class Visualizer {
             Util.profileStart('render');
             this.dispatcher.post('startedRendering', [this.args]);
 
+            // The layout is about to change, so any cached row geometry for viewport-sync is stale.
+            // Drop it here (the single funnel for every render/patch/repage/resize) and let it be
+            // rebuilt lazily on the next sync frame.
+            this.syncController.invalidate();
+
             if (!sourceData && !this.data) {
                 this.dispatcher.post('doneRendering', [this.args]);
                 return;
@@ -3881,6 +3940,7 @@ export class Visualizer {
 
             Util.profileStart('rows');
             const y = this.renderRows(this.data, rows, sentNumGroup, backgroundGroup);
+            this.data.contentHeight = y;
             Util.profileEnd('rows');
 
             Util.profileStart('chunkFinish');
