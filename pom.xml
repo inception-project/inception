@@ -272,7 +272,7 @@
     <types-jquery.version>^3.5.20</types-jquery.version>
     <types-stompjs.version>^2.3.5</types-stompjs.version>
     <types-urijs.version>^1.19.20</types-urijs.version>
-    <undici.version>~7.24.0</undici.version>
+    <undici.version>~7.28.0</undici.version>
     <uuid.version>^14.0.0</uuid.version>
     <urijs.version>^1.19.11</urijs.version>
     <vite.version>^8.0.16</vite.version>
