@@ -111,7 +111,7 @@ jobs:
 
     - name: Build with Maven
       if: "!(matrix.os == 'ubuntu-latest' && github.event_name == 'push')"
-      run: mvn --show-version --batch-mode --errors --fail-at-end --no-transfer-progress clean verify -T 1C ${{ matrix.os == 'ubuntu-latest' && '-Pci-docker-cleanup' || '' }}
+      run: mvn --show-version --batch-mode --errors --fail-at-end --no-transfer-progress clean verify ${{ matrix.os == 'ubuntu-latest' && '-Pci-docker-cleanup' || '' }}
 
     - name: Build with Maven and publish artifacts
       if: matrix.os == 'ubuntu-latest' && github.event_name == 'push'

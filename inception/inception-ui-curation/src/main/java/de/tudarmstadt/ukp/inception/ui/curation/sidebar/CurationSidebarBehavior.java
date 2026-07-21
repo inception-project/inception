@@ -105,7 +105,6 @@ public class CurationSidebarBehavior
         var sessionOwner = userService.getCurrentUsername();
         var doc = aEvent.getDocument();
         var project = doc.getProject();
-        var sessionActiveBefore = isSessionActive(project);
 
         var params = page.getPageParameters();
         var dataOwner = aEvent.getDocumentOwner();
@@ -122,18 +121,19 @@ public class CurationSidebarBehavior
 
         handleSessionActivationPageParameters(page, params, doc, sessionOwner);
 
-        // On the dedicated curation page, a curation session is always active. We start it here
-        // rather than in the CurationPage constructor so that the sessionActiveBefore check above
-        // can tell a freshly started session apart from an ongoing one.
+        // On the dedicated curation page, a curation session is always active.
         if (page instanceof CurationPage && !isSessionActive(project)) {
             curationSessionService.startSession(sessionOwner, project, false);
         }
 
         ensureDataOwnerMatchesCurationTarget(page, project, sessionOwner, dataOwner);
 
-        if (!sessionActiveBefore) {
-            curationSessionService.setDefaultSelectedUsersForDocument(sessionOwner, doc);
-        }
+        // The set of curatable annotators can change from document to document. As a stop-gap
+        // until the curation selection model is reworked (cf. #5996 in 42.0), we re-activate all
+        // annotators available for the document every time a document is opened - not only when the
+        // session is first started - so that curators do not have to manually (re-)select
+        // annotators after switching documents.
+        curationSessionService.setDefaultSelectedUsersForDocument(sessionOwner, doc);
 
         var prefs = preferencesService
                 .loadDefaultTraitsForProject(KEY_CURATION_SIDEBAR_MANAGER_PREFS, project);
