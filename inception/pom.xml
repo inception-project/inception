@@ -603,8 +603,8 @@
           <artifactId>apache-rat-plugin</artifactId>
           <version>0.18</version>
           <configuration>
-            <!-- Workaround for a race condition in the SCM ignore file handler -->
-            <parseSCMIgnoresAsExcludes>false</parseSCMIgnoresAsExcludes>
+            <!-- Exclude SCM files as path matchers only; avoids the .gitignore file-processor race under -T (no parseSCMIgnoresAsExcludes) -->
+            <inputExcludeStd>STANDARD_SCMS</inputExcludeStd>
           </configuration>
         </plugin>
         <plugin>
