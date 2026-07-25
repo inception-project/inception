@@ -26,6 +26,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMess
 import java.io.FileInputStream;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.RequiredTextField;
@@ -205,7 +206,8 @@ public class KnowledgeBaseDetailsPanel
                     kb.getName(), kb.getRepositoryId(), kb.getProject().getName(),
                     kb.getProject().getId(), e);
         }
-        aTarget.add(content);
+
+        send(getPage(), Broadcast.BREADTH, new KnowledgeBaseStatisticsChangedEvent(aTarget));
     }
 
     private void actionDelete(AjaxRequestTarget aTarget)
