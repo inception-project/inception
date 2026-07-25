@@ -132,6 +132,7 @@ You also pass additional options to the Java runtime through the `JAVA_OPTS` env
 
 By default, {product-name} runs with the UID 2000 and the GID 2000. On startup, any files belonging to {product-name} are automatically reassigned to these UID/GID, in the Docker container itself as well as in any volume potentially mounted under `/export` within the container. If you need the application to run as a different UID/GID, you can override these values when starting the container using the `APP_UID` and `APP_GID` environment variables.
 
+[source,shell,subs="+attributes"]
 ----
 $ docker run -it -e APP_UID=1234 -e APP_GID=4321 ghcr.io/inception-project/inception:{revnumber}
 ----

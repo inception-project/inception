@@ -76,7 +76,7 @@ There, you can mark it as executable.
 +
 Alternatively, you can start the application from the command line:
 +
-[source,text]
+[source,text,subs="+attributes"]
 ----
 $ java -jar inception-app-standalone-{revnumber}.jar
 ----
