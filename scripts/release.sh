@@ -171,11 +171,52 @@ cmd_status() {
   say ""
 
   # --- Git tag -------------------------------------------------------------
+  # The remote tag is what makes a release a release; a purely local tag means
+  # the release was never pushed. The local tag is still worth resolving,
+  # because a leftover one from an aborted `release:prepare` shadows the real
+  # one and would make every local check look at the wrong commit.
   say "${C_BOLD}Git tag${C_RESET}"
-  if git -C "$PROJECT_ROOT" rev-parse -q --verify "refs/tags/$tag" >/dev/null 2>&1; then
-    mark_ok "$tag exists locally"
+  local local_sha='' remote_sha='' remote_commit='' remote_out remote_ok=1
+  local_sha="$(git -C "$PROJECT_ROOT" rev-parse -q --verify "refs/tags/$tag^{commit}" \
+    2>/dev/null || true)"
+
+  # `git ls-remote` exits 0 both for "no such tag" (no output) and, once piped,
+  # for a failure to reach the remote -- so the two must be told apart by
+  # capturing output and status separately rather than by exit code alone.
+  #
+  # Release tags are annotated, so refs/tags/X reports the *tag object* while
+  # refs/tags/X^{} reports the commit it points at. Ask for both and prefer the
+  # peeled line: comparing the tag object against a local commit would flag a
+  # mismatch on every annotated tag. Peeling remotely also avoids depending on
+  # the tag object being present in the local object store.
+  if remote_out="$(git -C "$PROJECT_ROOT" ls-remote --tags origin \
+        "refs/tags/$tag" "refs/tags/$tag^{}" 2>/dev/null)"; then
+    remote_ok=0
+    remote_sha="$(awk -v t="refs/tags/$tag" '$2 == t {print $1}' <<<"$remote_out")"
+    remote_commit="$(awk -v p="refs/tags/$tag^{}" '$2 == p {print $1}' <<<"$remote_out")"
+    # A lightweight tag has no peeled line; there the ref itself is the commit.
+    [ -n "$remote_commit" ] || remote_commit="$remote_sha"
+  fi
+
+  if [ "$remote_ok" -ne 0 ]; then
+    mark_note "could not query origin (offline?)"
+  elif [ -n "$remote_sha" ]; then
+    mark_ok "$tag pushed to origin"
   else
-    mark_missing "$tag does not exist locally"
+    mark_missing "$tag not pushed to origin"
+  fi
+
+  if [ -n "$local_sha" ]; then
+    if [ -n "$remote_commit" ] && [ "$remote_commit" != "$local_sha" ]; then
+      mark_missing "local $tag points at a different commit than origin"
+      printf '            %slocal:  %s%s\n' "$C_DIM" "$local_sha" "$C_RESET"
+      printf '            %sorigin: %s%s\n' "$C_DIM" "$remote_commit" "$C_RESET"
+    else
+      mark_note "also present locally (${local_sha:0:9})"
+    fi
+  elif [ "$remote_ok" -eq 0 ] && [ -n "$remote_sha" ]; then
+    # Perfectly normal -- a fresh clone, or the release was cut elsewhere.
+    mark_note "not present locally (run: git fetch --tags)"
   fi
   say ""
 
