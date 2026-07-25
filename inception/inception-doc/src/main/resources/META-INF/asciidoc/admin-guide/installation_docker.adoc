@@ -154,6 +154,10 @@ Using Docker Compose, you can manage multiple related containers. This section i
 Docker Compose to jointly set up a {product-name} container as well as a database container (i.e. 
 link:https://hub.docker.com/_/mariadb/[this one]).
 
+The commands in this section use the `docker compose` (Compose V2) plugin. If your host still uses
+the standalone `docker-compose` binary, use `docker-compose` instead of `docker compose` in all of
+them.
+
 The following Compose script sets these containers up.
 
 [source,text,subs="+attributes"]
@@ -167,7 +171,7 @@ the containers.
 
 [source,shell,subs="+attributes"]
 ----
-$ docker-compose -p inception up -d
+$ docker compose -p inception up -d
 ----
 
 This will start two docker containers: `inception_db_1`, and `inception_app_1`. 
@@ -191,7 +195,7 @@ start them again later, the data will still be there - try it out!
 
 [source,shell,subs="+attributes"]
 ----
-$ docker-compose -p inception down
+$ docker compose -p inception down
 ----
 
 You can list the Docker volumes on your system using
@@ -211,7 +215,7 @@ file. You can also choose to override the default location for the database data
 ----
 $ export INCEPTION_HOME=/srv/inception/app-data 
 $ export INCEPTION_DB_HOME=/srv/inception/db-data
-$ docker-compose -f docker-compose.yml -p inception up
+$ docker compose -f docker-compose.yml -p inception up
 ----
 
 If you are running Docker on Linux, the data of the volumes should end up on the file system anyway
@@ -222,7 +226,7 @@ you mount the data to folders on your host.
 
 NOTE: Mind that you cannot arbitrarily switch between volume-managed and host-stored data. Choose wisely.
 
-There is a lot more that you can do using Docker and Docker Compose. Please see the link:https://docs.docker.com/compose/[docker-compose reference] for details.
+There is a lot more that you can do using Docker and Docker Compose. Please see the link:https://docs.docker.com/compose/[Docker Compose reference] for details.
 
 === Upgrading with Docker Compose
 
