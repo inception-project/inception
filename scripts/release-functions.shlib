@@ -1,0 +1,225 @@
+#!/usr/bin/env bash
+#
+# Licensed to the Technische Universität Darmstadt under one
+#  or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The Technische Universität Darmstadt
+# licenses this file to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Shared definitions for the release helper scripts.
+#
+# Sourced, not executed: `release.sh` and the per-subcommand scripts each pull
+# this in so that the notion of what a release consists of - the expected
+# artifacts, the version rules, the output helpers - exists in exactly one
+# place. Sourcing rather than duplicating is deliberate: the beta rules below
+# are easy to get subtly wrong in a second copy.
+#
+# Anything used by more than one subcommand belongs here. Anything used by
+# exactly one belongs in that subcommand's script.
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+
+REPO="inception-project/inception"
+
+# The GitHub Pages site lives in a separate repository. It carries the release
+# index (`releases.yml`) and a per-release copy of the documentation.
+PAGES_REPO="inception-project/inception-project.github.io"
+PAGES_RELEASES_YML="_data/releases.yml"
+
+# Resolve the project root from *this file's* location, so it is correct no
+# matter which script sourced it or what the current working directory is.
+# BASH_SOURCE[0] is this library even when sourced, which is what we want:
+# every release script lives in the same scripts/ directory.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+
+# Release artifacts are built from target/checkout (the tag release:perform
+# checks out), because their names come from ${project.version} and the working
+# tree is still on a SNAPSHOT. Fall back to the working tree so a hand-made
+# local build is still found.
+if [ -d "$PROJECT_ROOT/target/checkout/inception" ]; then
+  BUILD_ROOT="$PROJECT_ROOT/target/checkout"
+else
+  BUILD_ROOT="$PROJECT_ROOT"
+fi
+
+MACOS_TARGET="$BUILD_ROOT/inception/inception-dist-macos/target"
+WIN_TARGET="$BUILD_ROOT/inception/inception-dist-win/target"
+WEBAPP_TARGET="$BUILD_ROOT/inception/inception-app-webapp/target"
+
+# ---------------------------------------------------------------------------
+# Output helpers
+# ---------------------------------------------------------------------------
+
+if [ -t 1 ]; then
+  C_RESET=$'\033[0m'; C_BOLD=$'\033[1m'; C_DIM=$'\033[2m'
+  C_GREEN=$'\033[32m'; C_YELLOW=$'\033[33m'; C_RED=$'\033[31m'
+else
+  C_RESET=''; C_BOLD=''; C_DIM=''; C_GREEN=''; C_YELLOW=''; C_RED=''
+fi
+
+info() { printf '%s\n' "$*"; }
+warn() { printf '%s\n' "${C_YELLOW}WARNING:${C_RESET} $*" >&2; }
+die() { printf '%s\n' "${C_RED}ERROR:${C_RESET} $*" >&2; exit 1; }
+
+# Status markers. Deliberately ASCII-safe words rather than symbols only, so
+# the output stays readable when redirected to a file or a CI log.
+mark_ok()      { printf '  %sok%s      %s\n' "$C_GREEN" "$C_RESET" "$*"; }
+mark_missing() { printf '  %smissing%s %s\n' "$C_YELLOW" "$C_RESET" "$*"; }
+mark_note()    { printf '  %s-%s       %s\n' "$C_DIM" "$C_RESET" "$*"; }
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+require_tool() {
+  command -v "$1" >/dev/null 2>&1 || die "Required tool '$1' not found in PATH."
+}
+
+# Print the size of a file in a human readable form, or nothing if absent.
+file_size() {
+  if [ -f "$1" ]; then
+    du -h "$1" | awk '{print $1}'
+  fi
+}
+
+# The git tag used for a given version.
+tag_for() { printf 'inception-%s\n' "$1"; }
+
+# The project version from a pom. The first <version> inside the project's own
+# <artifactId>..<packaging> block; the one before it belongs to the parent.
+pom_version() {
+  sed -n '/<artifactId>inception<\/artifactId>/,/<packaging>/p' "$1" 2>/dev/null \
+    | sed -n 's|.*<version>\(.*\)</version>.*|\1|p' | tail -1
+}
+
+# release:perform checks the tag out into target/checkout, leaving a tree whose
+# poms carry the released version. It survives the release (release.properties
+# does not - perform deletes it on success), so it is the best guess at "the
+# version I just released" when none is given.
+RELEASE_CHECKOUT_POM="$PROJECT_ROOT/target/checkout/pom.xml"
+
+version_from_checkout() {
+  [ -f "$RELEASE_CHECKOUT_POM" ] || return 1
+  local v; v="$(pom_version "$RELEASE_CHECKOUT_POM")"
+  # A SNAPSHOT there means the checkout is stale or from an aborted run, not a
+  # released version -- better to say nothing than to report on the wrong one.
+  case "$v" in
+    ''|*-SNAPSHOT) return 1 ;;
+    *) printf '%s\n' "$v" ;;
+  esac
+}
+
+# The checkout is not cleaned up between releases, so it can be left over from an
+# earlier one - and an earlier version reads as perfectly valid, which would
+# quietly push or attach artifacts for the wrong release.
+#
+# Comparing against the working tree's version does not work: right after
+# releasing 41.2 the tree is legitimately on 41.3-SNAPSHOT, so any "tree has moved
+# on" rule fires on every correct run. What actually distinguishes a stale
+# checkout is that its version is already published on GitHub.
+#
+# A warning, not an error: re-running a step against the release just made is
+# legitimate, and only the caller knows which they meant.
+warn_if_checkout_published() {
+  local v="$1" state
+  state="$(gh release view "$(tag_for "$v")" --repo "$REPO" --json isDraft \
+    --jq '.isDraft' 2>/dev/null)" || return 0
+  [ "$state" = "false" ] || return 0
+  warn "target/checkout is for $v, which is already published."
+  warn "If you meant to release a newer version, run 'release.sh maven' first."
+}
+
+# Native installers are named after the base version *without* any beta
+# suffix, e.g. the inception-41.0-beta-2 release contains
+# INCEpTION-41.0-x86_64.msi, while the JAR keeps the full version.
+base_version_for() { printf '%s\n' "${1%%-beta*}"; }
+
+is_beta_version() { [ "$(base_version_for "$1")" != "$1" ]; }
+
+# Betas are published to the snapshots repository, not to the release one:
+# only final releases go to ghcr.io/inception-project/inception. Verified
+# against ghcr.io -- 41.0-beta-1 and 41.0-beta-2 exist under
+# inception-snapshots and are absent from inception.
+#
+# This is the third consequence of the beta distinction, after the installer
+# naming above and the image repository in kubernetes.yml, which is why it gets
+# a named function rather than an inline test at the point of use.
+image_repo_for() {
+  if is_beta_version "$1"; then
+    printf 'ghcr.io/inception-project/inception-snapshots\n'
+  else
+    printf 'ghcr.io/inception-project/inception\n'
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Expected artifacts
+# ---------------------------------------------------------------------------
+
+# Emits "<label>|<local-path>|<asset-name>" for every artifact a release is
+# expected to carry. This single definition is what `status` checks and what
+# later subcommands (draft/upload) will consume, so the notion of "complete"
+# lives in exactly one place.
+expected_artifacts() {
+  local version="$1"
+  local base; base="$(base_version_for "$version")"
+
+  printf 'macOS DMG (Apple Silicon)|%s|%s\n' \
+    "$MACOS_TARGET/jpackage-aarch64/INCEpTION-$base-aarch64.dmg" \
+    "INCEpTION-$base-aarch64.dmg"
+  printf 'macOS DMG (Intel)|%s|%s\n' \
+    "$MACOS_TARGET/jpackage-x86_64/INCEpTION-$base-x86_64.dmg" \
+    "INCEpTION-$base-x86_64.dmg"
+  printf 'Windows MSI|%s|%s\n' \
+    "$WIN_TARGET/jpackage-x86_64/INCEpTION-$base-x86_64.msi" \
+    "INCEpTION-$base-x86_64.msi"
+  printf 'Executable JAR|%s|%s\n' \
+    "$WEBAPP_TARGET/inception-app-webapp-$version-standalone.jar" \
+    "inception-app-webapp-$version-standalone.jar"
+  printf 'JAR signature|%s|%s\n' \
+    "$WEBAPP_TARGET/inception-app-webapp-$version-standalone.jar.asc" \
+    "inception-app-webapp-$version-standalone.jar.asc"
+
+  # The generated example scripts, so users can grab a compose file pinned to
+  # this release instead of copying one out of the documentation. Note releases
+  # up to 41.2 did not carry these - they are an addition, not a restoration.
+  local script_name image_repo
+  while IFS='|' read -r script_name image_repo; do
+    printf 'Example script (%s)|%s|%s\n' \
+      "$script_name" "$GENERATED_SCRIPTS_DIR/$script_name" "$script_name"
+  done < <(generated_scripts)
+}
+
+# ---------------------------------------------------------------------------
+# Generated example scripts
+# ---------------------------------------------------------------------------
+
+# The admin guide ships downloadable example scripts that must name the version
+# being released. Emits "<file>|<image-repo>" for each: the image repository is
+# the string the version has to be pinned to, and it is *not* the same for all
+# of them -- kubernetes.yml pulls from inception-snapshots.
+#
+# Deliberately no placeholder spelling here. Asserting that the file names the
+# requested version catches an unsubstituted placeholder of any spelling as
+# well as a file left over from an earlier version's build. Grepping for one
+# literal placeholder would not: the spelling changes from {revnumber} to
+# @project.version@ with the fix for #6186.
+generated_scripts() {
+  printf 'docker-compose.yml|ghcr.io/inception-project/inception\n'
+  printf 'docker-compose-mysql8.yml|ghcr.io/inception-project/inception\n'
+  printf 'kubernetes.yml|ghcr.io/inception-project/inception-snapshots\n'
+}
+
+GENERATED_SCRIPTS_DIR="$WEBAPP_TARGET/generated-docs/admin-guide/scripts"
