@@ -187,8 +187,12 @@ public final class TypeUtil
                 continue;
             }
 
-            var labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
-            var label = defaultString(aFs.getFeatureValueAsString(labelFeature));
+            var maybeLabelFeature = FeatureUtil.getFeature(aFs, feature);
+            if (maybeLabelFeature.isEmpty()) {
+                continue;
+            }
+
+            var label = defaultString(aFs.getFeatureValueAsString(maybeLabelFeature.get()));
 
             if (bratLabelText.length() > 0 && label.length() > 0) {
                 bratLabelText.append(TypeAdapter.FEATURE_SEPARATOR);

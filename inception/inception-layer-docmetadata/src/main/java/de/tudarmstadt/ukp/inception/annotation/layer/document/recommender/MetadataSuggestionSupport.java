@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil;
 
 public class MetadataSuggestionSupport
     extends SuggestionSupport_ImplBase
@@ -196,9 +197,7 @@ public class MetadataSuggestionSupport
         var adapter = schemaService.getAdapter(aLayer);
         var traits = adapter.getTraits(DocumentMetadataLayerTraits.class).get();
         for (var feature : schemaService.listSupportedFeatures(aLayer)) {
-            var feat = predictedType.getFeatureByBaseName(feature.getName());
-
-            if (feat == null) {
+            if (FeatureUtil.getFeature(predictedType, feature).isEmpty()) {
                 // The feature does not exist in the type system of the CAS. Probably it has not
                 // been upgraded to the latest version of the type system yet. If this is the case,
                 // we'll just skip this feature.

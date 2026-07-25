@@ -107,6 +107,7 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
@@ -1066,7 +1067,7 @@ public abstract class AnnotationDetailEditorPanel
                 continue;
             }
 
-            if (aFS != null && aFS.getType().getFeatureByBaseName(feature.getName()) == null) {
+            if (aFS != null && FeatureUtil.getFeature(aFS, feature).isEmpty()) {
                 error("The annotation typesystem seems to be out of date, try re-opening the document!");
                 LOG.error("Unable to find [{}] in the current CAS typesystem", feature.getName());
                 aTarget.addChildren(getPage(), IFeedback.class);

@@ -276,12 +276,13 @@ public interface FeatureSupport<T>
      */
     default List<String> renderFeatureValues(AnnotationFeature aFeature, FeatureStructure aFs)
     {
-        var labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
-        if (labelFeature == null) {
+        var maybeLabelFeature = FeatureUtil.getFeature(aFs, aFeature);
+        if (maybeLabelFeature.isEmpty()) {
             return emptyList();
         }
 
-        var featureValue = renderFeatureValue(aFeature, aFs.getFeatureValueAsString(labelFeature));
+        var featureValue = renderFeatureValue(aFeature,
+                aFs.getFeatureValueAsString(maybeLabelFeature.get()));
         if (featureValue == null) {
             return emptyList();
         }
@@ -363,7 +364,7 @@ public interface FeatureSupport<T>
     {
         Object value;
 
-        var f = aFS.getType().getFeatureByBaseName(aFeature.getName());
+        var f = FeatureUtil.getFeature(aFS, aFeature).orElse(null);
 
         if (f == null) {
             value = getNullFeatureValue(aFeature, aFS);
@@ -503,12 +504,9 @@ public interface FeatureSupport<T>
     default FeatureStructure getFS(CAS aCas, AnnotationFeature aFeature, int aAddress)
     {
         var fs = selectFsByAddr(aCas, aAddress);
-        var feature = fs.getType().getFeatureByBaseName(aFeature.getName());
 
-        if (feature == null) {
-            throw new IllegalArgumentException("On [" + fs.getType().getName() + "] the feature ["
-                    + aFeature.getName() + "] does not exist.");
-        }
+        FeatureUtil.getMandatoryFeature(fs, aFeature);
+
         return fs;
     }
 

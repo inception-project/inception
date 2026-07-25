@@ -228,6 +228,10 @@ public class CurationSidebarRenderer
                     if (!feature.isEnabled()) {
                         continue;
                     }
+
+                    if (!adapter.isFeatureDeclared(ann, feature)) {
+                        continue;
+                    }
                     if (constraintsEvaluator.isHiddenConditionalFeature(constraints, ann,
                             feature)) {
                         continue;
