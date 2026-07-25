@@ -34,6 +34,11 @@ set -euo pipefail
 
 REPO="inception-project/inception"
 
+# The GitHub Pages site lives in a separate repository. It carries the release
+# index (`releases.yml`) and a per-release copy of the documentation.
+PAGES_REPO="inception-project/inception-project.github.io"
+PAGES_RELEASES_YML="_data/releases.yml"
+
 # Resolve the project root from this script's location so the script works
 # regardless of the current working directory.
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -117,6 +122,28 @@ expected_artifacts() {
 }
 
 # ---------------------------------------------------------------------------
+# Generated example scripts
+# ---------------------------------------------------------------------------
+
+# The admin guide ships downloadable example scripts that must name the version
+# being released. Emits "<file>|<image-repo>" for each: the image repository is
+# the string the version has to be pinned to, and it is *not* the same for all
+# of them -- kubernetes.yml pulls from inception-snapshots.
+#
+# Deliberately no placeholder spelling here. Asserting that the file names the
+# requested version catches an unsubstituted placeholder of any spelling as
+# well as a file left over from an earlier version's build. Grepping for one
+# literal placeholder would not: the spelling changes from {revnumber} to
+# @project.version@ with the fix for #6186.
+generated_scripts() {
+  printf 'docker-compose.yml|ghcr.io/inception-project/inception\n'
+  printf 'docker-compose-mysql8.yml|ghcr.io/inception-project/inception\n'
+  printf 'kubernetes.yml|ghcr.io/inception-project/inception-snapshots\n'
+}
+
+GENERATED_SCRIPTS_DIR="$WEBAPP_TARGET/generated-docs/admin-guide/scripts"
+
+# ---------------------------------------------------------------------------
 # status
 # ---------------------------------------------------------------------------
 
@@ -175,19 +202,45 @@ cmd_status() {
   done < <(expected_artifacts "$version")
   say ""
 
-  # --- Docker Compose file -------------------------------------------------
-  say "${C_BOLD}Docker Compose file${C_RESET}"
-  local compose="$WEBAPP_TARGET/generated-docs/admin-guide/scripts/docker-compose.yml"
-  if [ -f "$compose" ]; then
-    if grep -q '{revnumber}' "$compose"; then
-      mark_missing "contains unsubstituted {revnumber} placeholder"
-      printf '            %s%s%s\n' "$C_DIM" "${compose#"$PROJECT_ROOT"/}" "$C_RESET"
-    else
-      mark_ok "generated ($(file_size "$compose"))"
+  # --- Generated example scripts -------------------------------------------
+  say "${C_BOLD}Generated example scripts${C_RESET}"
+  local script_name image_repo script_path
+  while IFS='|' read -r script_name image_repo; do
+    script_path="$GENERATED_SCRIPTS_DIR/$script_name"
+    if [ ! -f "$script_path" ]; then
+      mark_missing "$script_name not generated yet"
+      continue
     fi
-  else
-    mark_missing "not generated yet"
-  fi
+    # Find the image line for this repository and require the version to appear
+    # on it. Matching the whole line rather than just the version keeps other
+    # versions mentioned elsewhere in the file from satisfying the check.
+    #
+    # The version is not necessarily adjacent to the repository name: the
+    # compose files wrap both in shell default expansions, as in
+    #   image: "${INCEPTION_IMAGE:-<repo>}:${INCEPTION_VERSION:-<version>}"
+    # while kubernetes.yml writes "<repo>:<version>" directly. Anchoring on the
+    # repository name and then looking for the version covers both.
+    #
+    # `|| true` because a non-matching grep must not abort the script: this
+    # whole block runs under `set -e`.
+    local image_line
+    image_line="$(grep -F "$image_repo" "$script_path" | head -1 || true)"
+    if [ -z "$image_line" ]; then
+      mark_missing "$script_name has no $image_repo image line"
+      printf '            %s%s%s\n' \
+        "$C_DIM" "${script_path#"$PROJECT_ROOT"/}" "$C_RESET"
+    elif grep -qF "$version" <<<"$image_line"; then
+      mark_ok "$script_name pins $version"
+    else
+      mark_missing "$script_name does not pin $version"
+      # Showing the actual line distinguishes an unsubstituted placeholder from
+      # a file left over from an earlier version's build.
+      printf '            %sfound: %s%s\n' \
+        "$C_DIM" "$(sed 's/^[[:space:]]*//' <<<"$image_line")" "$C_RESET"
+      printf '            %s%s%s\n' \
+        "$C_DIM" "${script_path#"$PROJECT_ROOT"/}" "$C_RESET"
+    fi
+  done < <(generated_scripts)
   say ""
 
   # --- GitHub release ------------------------------------------------------
@@ -234,6 +287,54 @@ cmd_status() {
   fi
   say ""
 
+  # --- GitHub Pages --------------------------------------------------------
+  # Both checks read the Pages repository through the API, so they need no
+  # credentials beyond the `gh` login that `status` already requires.
+  say "${C_BOLD}GitHub Pages${C_RESET} ${C_DIM}($PAGES_REPO)${C_RESET}"
+  local releases_yml
+  if releases_yml="$(gh api "repos/$PAGES_REPO/contents/$PAGES_RELEASES_YML" \
+        --jq '.content' 2>/dev/null | base64 -d 2>/dev/null)" \
+     && [ -n "$releases_yml" ]; then
+    # Recent entries quote the version (- version: "41.2"), older ones do not
+    # (- version: 0.4.0), so accept either. Commented-out entries do not count:
+    # the file keeps disabled snapshot/beta blocks around permanently.
+    if grep -Eq "^-[[:space:]]+version:[[:space:]]+\"?${version//./\\.}\"?[[:space:]]*$" \
+         <<<"$releases_yml"; then
+      mark_ok "$PAGES_RELEASES_YML lists $version"
+    else
+      mark_missing "$PAGES_RELEASES_YML does not list $version"
+    fi
+  else
+    mark_note "could not read $PAGES_RELEASES_YML"
+  fi
+
+  # The per-release documentation copy. Checking for a guide inside the docs
+  # directory rather than the directory itself, so a half-finished upload does
+  # not read as done.
+  local docs_path="releases/$version/docs"
+  local docs_listing
+  if docs_listing="$(gh api "repos/$PAGES_REPO/contents/$docs_path" \
+        --jq '.[].name' 2>/dev/null)" && [ -n "$docs_listing" ]; then
+    if grep -qx 'user-guide.html' <<<"$docs_listing"; then
+      mark_ok "release documentation uploaded ($docs_path)"
+    else
+      mark_missing "$docs_path exists but has no user-guide.html"
+    fi
+  else
+    mark_missing "no release documentation at $docs_path"
+  fi
+  say ""
+
+  # --- Manual steps --------------------------------------------------------
+  # Listed explicitly and never marked ok: these cannot be verified from here,
+  # and omitting them would let a clean run read as "release complete".
+  say "${C_BOLD}Not checked by this script${C_RESET}"
+  mark_note "all issues and PRs resolved/merged"
+  mark_note "release announcement written and added to the GitHub release"
+  mark_note "stable / community / demo instances updated"
+  mark_note "announcement sent to the mailing list"
+  say ""
+
   # --- Docker image --------------------------------------------------------
   say "${C_BOLD}Docker image${C_RESET}"
   local image="ghcr.io/inception-project/inception:$version"
@@ -269,8 +370,12 @@ Usage:
   release.sh status <version>    Show what is done and what is still missing
   release.sh --help             Show this help
 
-Every subcommand is safe to re-run. State is derived from the file system and
-from the GitHub release, so steps performed by hand are recognized too.
+Every subcommand is safe to re-run. State is derived from the file system, from
+the GitHub release and from the GitHub Pages site, so steps performed by hand
+are recognized too.
+
+`status` does not cover every item of the release checklist; the steps it cannot
+verify are listed under "Not checked by this script" in its output.
 
 Examples:
   release.sh status 41.2
