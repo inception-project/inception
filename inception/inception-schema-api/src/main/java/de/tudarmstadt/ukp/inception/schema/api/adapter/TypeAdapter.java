@@ -28,6 +28,7 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
@@ -75,6 +77,84 @@ public interface TypeAdapter
     default Optional<Type> getAnnotationType(CAS aCas)
     {
         return Optional.ofNullable(aCas.getTypeSystem().getType(getAnnotationTypeName()));
+    }
+
+    /**
+     * Checks whether the type of this {@link TypeAdapter} is declared in the given CAS. This may
+     * not be the case if the CAS has not been upgraded to the current version of the project type
+     * system.
+     *
+     * @param aCas
+     *            the CAS.
+     * @return whether the type is declared in the CAS.
+     */
+    default boolean isTypeDeclared(CAS aCas)
+    {
+        return getAnnotationType(aCas).isPresent();
+    }
+
+    /**
+     * Get the CAS feature with the given name on the type of this {@link TypeAdapter}.
+     *
+     * @param aCas
+     *            the CAS.
+     * @param aFeatureName
+     *            the short name of the feature.
+     * @return the CAS feature or empty if either the type or the feature is not declared in the
+     *         CAS.
+     */
+    default Optional<Feature> getFeature(CAS aCas, String aFeatureName)
+    {
+        return getAnnotationType(aCas).map(type -> type.getFeatureByBaseName(aFeatureName));
+    }
+
+    /**
+     * Get the CAS feature corresponding to the given layer feature on the type of this
+     * {@link TypeAdapter}.
+     *
+     * @param aCas
+     *            the CAS.
+     * @param aFeature
+     *            the layer feature.
+     * @return the CAS feature or empty if either the type or the feature is not declared in the
+     *         CAS.
+     */
+    default Optional<Feature> getFeature(CAS aCas, AnnotationFeature aFeature)
+    {
+        return getFeature(aCas, aFeature.getName());
+    }
+
+    /**
+     * Get the CAS feature corresponding to the given layer feature on the type of the given feature
+     * structure. Note that this resolves the feature against the actual type of the feature
+     * structure which may be a sub-type of the type of this {@link TypeAdapter}.
+     *
+     * @param aFS
+     *            the feature structure.
+     * @param aFeature
+     *            the layer feature.
+     * @return the CAS feature or empty if the feature is not declared on the type of the feature
+     *         structure.
+     */
+    default Optional<Feature> getFeature(FeatureStructure aFS, AnnotationFeature aFeature)
+    {
+        return FeatureUtil.getFeature(aFS, aFeature);
+    }
+
+    /**
+     * Checks whether the given layer feature is declared on the type of the given feature
+     * structure. This may not be the case if the CAS has not been upgraded to the current version
+     * of the project type system.
+     *
+     * @param aFS
+     *            the feature structure.
+     * @param aFeature
+     *            the layer feature.
+     * @return whether the feature is declared on the type of the feature structure.
+     */
+    default boolean isFeatureDeclared(FeatureStructure aFS, AnnotationFeature aFeature)
+    {
+        return getFeature(aFS, aFeature).isPresent();
     }
 
     /**

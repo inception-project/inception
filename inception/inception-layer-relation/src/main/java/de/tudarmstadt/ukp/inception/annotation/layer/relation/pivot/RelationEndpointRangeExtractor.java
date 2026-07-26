@@ -24,6 +24,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.AnnotationExtractor_ImplBase;
 import de.tudarmstadt.ukp.inception.pivot.api.extractor.ContextualizedFS;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil;
 
 public class RelationEndpointRangeExtractor
     extends AnnotationExtractor_ImplBase<AnnotationFS, String>
@@ -57,7 +58,7 @@ public class RelationEndpointRangeExtractor
                 return false;
             }
 
-            return type.getFeatureByBaseName(feature.getName()) != null;
+            return FeatureUtil.getFeature(type, feature).isPresent();
         }
 
         return false;
@@ -67,8 +68,12 @@ public class RelationEndpointRangeExtractor
     public String extract(ContextualizedFS<AnnotationFS> aAnn)
     {
         var ann = aAnn.fs();
-        var f = ann.getType().getFeatureByBaseName(feature.getName());
-        var a = (AnnotationFS) ann.getFeatureValue(f);
+        var f = FeatureUtil.getFeature(ann, feature);
+        if (f.isEmpty()) {
+            return null;
+        }
+
+        var a = (AnnotationFS) ann.getFeatureValue(f.get());
         return a != null ? a.getBegin() + "-" + a.getEnd() : null;
     }
 

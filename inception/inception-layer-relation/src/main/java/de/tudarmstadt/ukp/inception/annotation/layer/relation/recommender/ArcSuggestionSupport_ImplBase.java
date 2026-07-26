@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil;
 
 public abstract class ArcSuggestionSupport_ImplBase
     extends SuggestionSupport_ImplBase
@@ -121,14 +122,16 @@ public abstract class ArcSuggestionSupport_ImplBase
         }
 
         for (var feature : schemaService.listSupportedFeatures(aLayer)) {
-            var feat = type.getFeatureByBaseName(feature.getName());
+            var maybeFeat = FeatureUtil.getFeature(type, feature);
 
-            if (feat == null) {
+            if (maybeFeat.isEmpty()) {
                 // The feature does not exist in the type system of the CAS. Probably it has not
                 // been upgraded to the latest version of the type system yet. If this is the case,
                 // we'll just skip this feature.
                 continue;
             }
+
+            var feat = maybeFeat.get();
 
             for (var group : groupedSuggestions) {
                 if (!feature.getName().equals(group.getFeature())) {

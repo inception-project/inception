@@ -169,6 +169,10 @@ public interface Renderer
                 continue;
             }
 
+            if (!adapter.isFeatureDeclared(aFS, feature)) {
+                continue;
+            }
+
             if (evaluator.isHiddenConditionalFeature(constraits, aFS, feature)) {
                 continue;
             }
