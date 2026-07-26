@@ -86,6 +86,7 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil;
 import de.tudarmstadt.ukp.inception.support.text.TrimUtils;
 
 public class SpanSuggestionSupport
@@ -242,14 +243,16 @@ public class SpanSuggestionSupport
                 aDataOwner, aLayer);
 
         for (var feature : schemaService.listSupportedFeatures(aLayer)) {
-            var feat = type.getFeatureByBaseName(feature.getName());
+            var maybeFeat = FeatureUtil.getFeature(type, feature);
 
-            if (feat == null) {
+            if (maybeFeat.isEmpty()) {
                 // The feature does not exist in the type system of the CAS. Probably it has not
                 // been upgraded to the latest version of the type system yet. If this is the case,
                 // we'll just skip this feature.
                 continue;
             }
+
+            var feat = maybeFeat.get();
 
             // Reduce the suggestions to the ones for the given feature. We can use the tree here
             // since we only have a single SuggestionGroup for every position

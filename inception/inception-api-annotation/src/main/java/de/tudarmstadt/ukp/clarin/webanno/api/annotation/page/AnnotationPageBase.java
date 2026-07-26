@@ -419,8 +419,13 @@ public abstract class AnnotationPageBase
         var evaluator = new ConstraintsEvaluator();
         var constraints = getModelObject().getConstraints();
 
+        var maybeLayerType = aAdapter.getAnnotationType(editorCas);
+        if (maybeLayerType.isEmpty()) {
+            return;
+        }
+
         // Check each feature structure of this layer
-        var layerType = aAdapter.getAnnotationType(editorCas).get();
+        var layerType = maybeLayerType.get();
         var annotationFsType = editorCas.getAnnotationType();
         try (var fses = editorCas.select(layerType)) {
             for (var fs : fses) {
@@ -428,6 +433,11 @@ public abstract class AnnotationPageBase
                     if (!f.isRequired()) {
                         continue;
                     }
+
+                    if (!aAdapter.isFeatureDeclared(fs, f)) {
+                        continue;
+                    }
+
                     if (evaluator.isHiddenConditionalFeature(constraints, fs, f)) {
                         continue;
                     }

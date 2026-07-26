@@ -25,6 +25,7 @@ This guide provides an overview of the available commands and their usage.
 To access the {product-name} CLI, you can just add command line arguments to the Java command that starts {product-name}.
 For example:
 
+[source,shell,subs="+attributes"]
 ----
 $ java -Dinception.home="/srv/inception" -jar inception-app-webapp-{revnumber}-standalone.jar --help
 ----
@@ -32,8 +33,9 @@ $ java -Dinception.home="/srv/inception" -jar inception-app-webapp-{revnumber}-s
 If you are using Docker, you can pass the command line arguments via the `APP_ARGS` environment variable.
 For example:
 
+[source,shell,subs="+attributes"]
 ----
-$ docker run -e APP_ARGS="--help" inception/inception:{revnumber}
+$ docker run -e APP_ARGS="--help" ghcr.io/inception-project/inception:{revnumber}
 ----
 
 Note that if you usually pass other parameters startup, make sure you also pass them when you want to use the CLI - in particular the `inception.home` system property, database-related properties/variables or volume mounts.
