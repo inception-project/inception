@@ -101,6 +101,21 @@ public interface CurationDocumentService
     boolean isCurationFinished(SourceDocument aDocument);
 
     /**
+     * Records that curation has started on the given document by moving it to
+     * {@link de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState#CURATION_IN_PROGRESS
+     * CURATION_IN_PROGRESS}. A document whose curation was already finished is left untouched -
+     * finishing curation is not silently undone by somebody opening or merging the document again.
+     * <p>
+     * Callers are responsible for ensuring that the curation target actually is the curation user.
+     * When a regular user curates into their own annotation document, the source document state is
+     * none of our business and this method must not be called.
+     *
+     * @param aDocument
+     *            the source document.
+     */
+    void markCurationInProgress(SourceDocument aDocument);
+
+    /**
      * @param aDocument
      *            a document
      * @return if there already is a curation CAS for the given document

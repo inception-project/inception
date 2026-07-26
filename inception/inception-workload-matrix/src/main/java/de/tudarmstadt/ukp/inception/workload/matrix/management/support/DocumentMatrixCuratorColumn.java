@@ -18,16 +18,19 @@
 package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CONTEXTMENU_EVENT;
 import static de.tudarmstadt.ukp.inception.workload.matrix.management.MatrixWorkloadManagementPage.CSS_CLASS_STATE_TOGGLE;
 import static de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey.CURATION_STATE;
+import static de.tudarmstadt.ukp.inception.workload.ui.WorkloadCssClasses.CSS_CLASS_CURATION_NOT_READY;
 import static org.apache.wicket.ajax.AjaxEventBehavior.onEvent;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.util.Set;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -41,6 +44,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameApp
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxEventBehavior;
+import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.MatrixWorkloadManagementPage;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColumnCellClickEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColumnCellOpenContextMenuEvent;
@@ -49,6 +53,7 @@ public class DocumentMatrixCuratorColumn
     extends LambdaColumn<DocumentMatrixRow, DocumentMatrixSortKey>
 {
     private static final long serialVersionUID = 8324173231787296215L;
+
     private IModel<Set<AnnotationSet>> selectedUsers;
 
     public DocumentMatrixCuratorColumn(IModel<Set<AnnotationSet>> aSelectedUsers)
@@ -80,6 +85,16 @@ public class DocumentMatrixCuratorColumn
                 new CssClassNameAppender(aRowModel.map(this::isSelected).orElse(false).getObject()
                         ? MatrixWorkloadManagementPage.CSS_CLASS_SELECTED
                         : ""));
+
+        // Mark documents that are in curation although annotation on them is not (or no longer)
+        // complete. This is the triage mechanism for finding documents on which curation was
+        // started
+        // prematurely - it does not change their state or editability.
+        if (CURATION_DOCUMENT_STATES.contains(state) && !row.isReadyForCuration()) {
+            stateLabel.add(new CssClassNameAppender(CSS_CLASS_CURATION_NOT_READY));
+            stateLabel.add(
+                    new AttributeModifier("title", Strings.getString("curation-not-ready.hint")));
+        }
         stateLabel.add(onEvent(CLICK_EVENT, //
                 _target -> stateLabel.send(stateLabel, BUBBLE,
                         new CuratorColumnCellClickEvent(_target, row.getSourceDocument()))));

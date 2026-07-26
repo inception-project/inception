@@ -115,7 +115,6 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
-import de.tudarmstadt.ukp.inception.support.wicket.SymbolLambdaColumn;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.AnnotatorColumn;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorColumnCellClickEvent;
@@ -125,6 +124,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueItem
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.DateSelection;
+import de.tudarmstadt.ukp.inception.workload.dynamic.support.DocumentStateColumn;
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
@@ -225,8 +225,7 @@ public class DynamicWorkloadManagementPage
 
         // Columns of the table
         var columns = new ArrayList<IColumn<AnnotationQueueItem, AnnotationQueueSortKeys>>();
-        columns.add(new SymbolLambdaColumn<>(new ResourceModel("DocumentState"), STATE,
-                item -> item.getState()));
+        columns.add(new DocumentStateColumn(new ResourceModel("DocumentState"), STATE));
         columns.add(new LambdaColumn<>(new ResourceModel("Document"), DOCUMENT,
                 AnnotationQueueItem::getSourceDocumentName));
         columns.add(new LambdaColumn<>(new ResourceModel("Assigned"), ASSIGNED,

@@ -22,8 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNM
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
@@ -102,6 +100,7 @@ import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.ui.curation.readiness.CurationReadinessBadgePanel;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -198,6 +197,7 @@ public class LegacyCurationPage
         centerArea.add(splitter);
 
         splitter.add(new DocumentNamePanel("documentNamePanel", getModel()));
+        splitter.add(new CurationReadinessBadgePanel("documentStatusBadges", getModel()));
         splitter.add(new ActionBar("actionBar"));
 
         splitter.add(new SplitterBehavior("#" + splitter.getMarkupId(),
@@ -509,12 +509,6 @@ public class LegacyCurationPage
             state.setUser(userRepository.getCurationUser());
             state.reset();
 
-            // Update source document state to CURRATION_INPROGRESS, if it was not CURATION_FINISHED
-            if (!CURATION_FINISHED.equals(state.getDocument().getState())) {
-                documentService.transitionSourceDocumentState(state.getDocument(),
-                        ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
-            }
-
             // Load constraints
             state.setConstraints(constraintsService.getMergedConstraints(project));
 
@@ -558,34 +552,110 @@ public class LegacyCurationPage
         throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
         var state = getModelObject();
+        var document = state.getDocument();
 
-        var curatableUsers = curationDocumentService.listCuratableUsers(state.getDocument());
+        var curatableUsers = curationDocumentService.listCuratableUsers(document);
 
-        if (curatableUsers.isEmpty()) {
-            getSession().error("This document has the state " + state.getDocument().getState()
-                    + " but there are no finished annotation documents! This "
-                    + "can for example happen when curation on a document has already started "
-                    + "and afterwards all annotators have been removed from the project, have been "
-                    + "disabled or if all were put back into " + AnnotationDocumentState.IN_PROGRESS
-                    + " mode. It can "
-                    + "also happen after importing a project when the users and/or permissions "
-                    + "were not imported (only admins can do this via the projects page in the) "
-                    + "administration dashboard and if none of the imported users have been "
-                    + "enabled via the users management page after the import (also something "
-                    + "that only administrators can do).");
-            var pageParameters = new PageParameters();
-            setProjectPageParameter(pageParameters, getProject());
-            throw new RestartResponseException(LegacyCurationPage.class, pageParameters);
+        // Mind the order: an existing merge CAS is enough to open the document, even if there are
+        // no curatable users (anymore). The curator's work must remain accessible and editable -
+        // the annotators panel then simply shows no comparison columns. We refuse only if there is
+        // neither a merge CAS to show nor any annotation data to build one from.
+        if (curatableUsers.isEmpty() && !curationDocumentService.existsCurationCas(document)) {
+            refuseCuration(document);
         }
 
-        var casses = documentService.readAllCasesSharedNoUpgrade(state.getDocument(),
-                curatableUsers);
+        // A re-merge deletes the existing curation CAS and rebuilds it from the annotation data of
+        // the curatable users. Without any curatable users that would destroy the curator's work
+        // without being able to produce anything in its place.
+        if (aForceRecreateCas && curatableUsers.isEmpty()) {
+            throw new AnnotationException("Cannot re-create the curation document for ["
+                    + document.getName() + "]: there are no finished annotation documents to merge "
+                    + "from. Re-creating it would irrevocably discard the existing curation "
+                    + "results. Set at least one annotation document back to "
+                    + AnnotationDocumentState.FINISHED + " first.");
+        }
 
-        var templateUser = curatableUsers.get(0);
-        var curationCas = readCurationCas(state, state.getDocument(), casses,
-                templateUser.getUsername(), true, aMergeStrategy, aForceRecreateCas);
+        var casses = documentService.readAllCasesSharedNoUpgrade(document, curatableUsers);
+
+        // With no curatable users there is no annotation document to use as a template for a new
+        // merge CAS - but we established above that a merge CAS already exists, so none is needed.
+        var templateUser = curatableUsers.isEmpty() ? null : curatableUsers.get(0).getUsername();
+        var curationCas = readCurationCas(state, document, casses, templateUser, true,
+                aMergeStrategy, aForceRecreateCas);
 
         return curationCas;
+    }
+
+    private void refuseCuration(SourceDocument aDocument)
+    {
+        getSession().error("Document [" + aDocument.getName() + "] has the state "
+                + aDocument.getState() + " but there are no finished annotation documents and no "
+                + "curation data! This can for example happen when curation on a document has "
+                + "already started and afterwards all annotators have been removed from the "
+                + "project, have been disabled or if all were put back into "
+                + AnnotationDocumentState.IN_PROGRESS + " mode. It can also happen after importing "
+                + "a project when the users and/or permissions were not imported (only admins can "
+                + "do this via the projects page in the administration dashboard) and if none of "
+                + "the imported users have been enabled via the users management page after the "
+                + "import (also something that only administrators can do). Use the monitoring "
+                + "page to reset the curation state of this document.");
+
+        var pageParameters = new PageParameters();
+        setProjectPageParameter(pageParameters, getProject());
+
+        // Skip to the next curatable document rather than ejecting the curator to the project page
+        var nextDocument = findNextCuratableDocument(aDocument);
+        if (nextDocument.isPresent()) {
+            pageParameters.set(PAGE_PARAM_DOCUMENT, nextDocument.get().getName());
+        }
+
+        throw new RestartResponseException(LegacyCurationPage.class, pageParameters);
+    }
+
+    /**
+     * @return the first document after the given one that can actually be opened for curation, if
+     *         any (skipping any that are not openable).
+     */
+    private Optional<SourceDocument> findNextCuratableDocument(SourceDocument aDocument)
+    {
+        try {
+            var docs = getListOfDocs();
+            var index = docs.indexOf(aDocument);
+            if (index < 0) {
+                return Optional.empty();
+            }
+
+            // Skip over all following documents that are not openable for curation and return the
+            // first
+            for (var candidate : docs.subList(index + 1, docs.size())) {
+                if (isOpenableForCuration(candidate)) {
+                    return Optional.of(candidate);
+                }
+            }
+        }
+        catch (Exception e) {
+            LOG.warn("Unable to determine the next curatable document after {}", aDocument, e);
+        }
+
+        return Optional.empty();
+    }
+
+    /**
+     * @return whether the given document has something to curate - either existing curation data or
+     *         at least one curatable annotation document to build it from. Mirrors the refusal
+     *         condition in {@link #readOrCreateCurationCas}.
+     */
+    private boolean isOpenableForCuration(SourceDocument aDocument)
+    {
+        try {
+            return !curationDocumentService.listCuratableUsers(aDocument).isEmpty()
+                    || curationDocumentService.existsCurationCas(aDocument);
+        }
+        catch (IOException e) {
+            LOG.warn("Unable to determine whether {} can be opened for curation - assuming it can",
+                    aDocument, e);
+            return true;
+        }
     }
 
     @Override
@@ -756,6 +826,13 @@ public class LegacyCurationPage
         CAS mergeCas;
 
         if (aForceRecreateCas || !curationDocumentService.existsCurationCas(aDocument)) {
+            if (aTemplateUser == null) {
+                // Guarded by readOrCreateCurationCas which refuses to open a document that has
+                // neither a curation CAS nor any curatable user to serve as a template.
+                throw new IllegalStateException("Cannot create a curation document for ["
+                        + aDocument.getName() + "] without a template annotation document");
+            }
+
             // We need a modifiable copy of some annotation document which we can use to initialize
             // the curation CAS. This is an exceptional case where UNMANAGED_ACCESS is the correct
             // choice
@@ -774,6 +851,12 @@ public class LegacyCurationPage
                 curationDocumentService.writeCurationCas(mergeCas, aDocument, true);
             }
         }
+
+        // Only now that a merge CAS has actually been written do we record that curation on
+        // this document has started. A failed merge leaves the previous state untouched.
+        // This page always curates as the curation user (see setUser calls above), so unlike the
+        // other curation entry points it does not have to check the curation target first.
+        curationDocumentService.markCurationInProgress(aDocument);
 
         curationDocumentService.getCurationCasTimestamp(aState.getDocument())
                 .ifPresent(aState::setAnnotationDocumentTimestamp);

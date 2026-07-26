@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.workload.extension;
 
+import java.util.Optional;
+
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
@@ -97,14 +100,52 @@ public interface WorkloadManagerExtension<T>
     /**
      * @return whether the current user can access documents in any order or if the workload manager
      *         assigns the order.
-     * 
+     *
      *         <b>NOTE:</b> This is currently used to control the visibiltiy of the activities
      *         dashlet on on the project dashboard. A better approach would be to modularize the
      *         dashboard and then have some factory in the workload modules inject the dashlet
      *         instead.
-     * 
+     *
      * @param aProject
      *            a project
      */
     boolean isDocumentRandomAccessAllowed(Project aProject);
+
+    /**
+     * Whether the workload manager would consider annotation on the given document complete enough
+     * for the document to be curated. This is an <b>entry condition</b> for curation, not a
+     * continuous invariant: the predicate is non-monotone (e.g. adding an annotator to a project
+     * raises the bar for every document at once), so it may be used to inform the user, but it must
+     * never drive an automatic transition out of a curation state - see {@link CurationReadiness}.
+     * <p>
+     * <b>Implementations MUST be side-effect free.</b> This method is called from render paths (the
+     * curation page, the workload management pages). It must not write document or project states.
+     *
+     * @param aDocument
+     *            a source document.
+     * @return whether the document is ready for curation. Extensions that have no notion of
+     *         readiness report {@code true} so that no warning is shown.
+     */
+    default boolean isReadyForCuration(SourceDocument aDocument)
+    {
+        return true;
+    }
+
+    /**
+     * A human-readable description of why the given document is not ready for curation - e.g. "2 of
+     * 5 annotators have neither finished nor locked the document". Used to warn a curator that they
+     * are about to curate incomplete data.
+     * <p>
+     * <b>Implementations MUST be side-effect free</b> for the same reason as
+     * {@link #isReadyForCuration}.
+     *
+     * @param aDocument
+     *            a source document.
+     * @return the warning, or {@link Optional#empty()} if the document is ready for curation (or if
+     *         the extension has no notion of readiness).
+     */
+    default Optional<CurationReadinessWarning> getCurationReadinessWarning(SourceDocument aDocument)
+    {
+        return Optional.empty();
+    }
 }

@@ -24,8 +24,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTA
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.inception.workload.extension.CurationReadiness.allRequiredWarning;
+import de.tudarmstadt.ukp.inception.workload.extension.CurationReadinessWarning;
+import static de.tudarmstadt.ukp.inception.workload.extension.CurationReadiness.isReadyForCurationAllRequired;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -221,6 +225,33 @@ public class MatrixWorkloadExtensionImpl
         setSourceDocumentStateBasedOnStats(aDocument, aAnnotatorCount, stats);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isReadyForCuration(SourceDocument aDocument)
+    {
+        return getCurationReadinessWarning(aDocument).isEmpty();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<CurationReadinessWarning> getCurationReadinessWarning(SourceDocument aDocument)
+    {
+        // getAnnotationDocumentStats scopes the counts to the users currently holding the ANNOTATOR
+        // role and counts those without an annotation document as NEW, so the counts sum up to
+        // exactly the annotator count.
+        var annotatorCount = projectService
+                .listUsersWithRoleInProject(aDocument.getProject(), ANNOTATOR).size();
+        var stats = documentService.getAnnotationDocumentStats(aDocument);
+        var finishedCount = stats.get(AnnotationDocumentState.FINISHED);
+        var ignoreCount = stats.get(AnnotationDocumentState.IGNORE);
+
+        if (isReadyForCurationAllRequired(finishedCount, ignoreCount, annotatorCount)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(allRequiredWarning(finishedCount, ignoreCount, annotatorCount));
+    }
+
     /**
      * If the SOURCE document is already in curation, we do not touch the state anymore
      */
@@ -238,7 +269,7 @@ public class MatrixWorkloadExtensionImpl
         var newCount = stats.get(AnnotationDocumentState.NEW);
 
         // If all documents are ignored or finished, we set the source document to finished
-        if ((finishedCount + ignoreCount) == aAnnotatorCount) {
+        if (isReadyForCurationAllRequired(finishedCount, ignoreCount, aAnnotatorCount)) {
             documentService.setSourceDocumentState(aDocument, ANNOTATION_FINISHED);
         }
         // ... or we set it to new if there is at least one new document and the others are ignored

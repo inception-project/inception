@@ -36,17 +36,30 @@ public class ResetCurationConfirmationDialogContentPanel
 
     public ResetCurationConfirmationDialogContentPanel(String aId)
     {
-        this(aId, Model.of(Collections.emptyList()));
+        this(aId, Model.of(Collections.emptyList()), 0);
     }
 
+    /**
+     * @param aId
+     *            a markup ID.
+     * @param aAffectedDocuments
+     *            the documents that will actually be reset - i.e. already filtered down to those in
+     *            a curation state. Mind that this must be the same set the confirm action operates
+     *            on, otherwise the dialog misreports what is about to happen.
+     * @param aDocumentsWithCurationDataCount
+     *            how many of the affected documents carry curation data that will be deleted.
+     */
     public ResetCurationConfirmationDialogContentPanel(String aId,
-            IModel<? extends Collection<SourceDocument>> aAffectedDocuments)
+            IModel<? extends Collection<SourceDocument>> aAffectedDocuments,
+            long aDocumentsWithCurationDataCount)
     {
         super(aId, new ResourceModel("title"));
 
         if (aAffectedDocuments.map(c -> c.size() > 1).orElse(false).getObject()) {
-            queue(new Label("message", new StringResourceModel("message.multiple")
-                    .setParameters(aAffectedDocuments.map(Collection::size))));
+            queue(new Label("message",
+                    new StringResourceModel("message.multiple").setParameters(
+                            aAffectedDocuments.map(Collection::size),
+                            Model.of(aDocumentsWithCurationDataCount))));
             queue(new Label("challenge", new ResourceModel("challenge.multiple")));
         }
         else {

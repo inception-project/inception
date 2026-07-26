@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentServiceImpl;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import jakarta.persistence.EntityManager;
 
@@ -40,9 +41,9 @@ public class CurationDocumentServiceAutoConfiguration
     @Bean(CurationDocumentService.SERVICE_NAME)
     public CurationDocumentService curationDocumentService(CasStorageService aCasStorageService,
             AnnotationSchemaService aAnnotationService, CurationProperties aCurationProperties,
-            EntityManager aEntityManager)
+            EntityManager aEntityManager, DocumentService aDocumentService)
     {
         return new CurationDocumentServiceImpl(aCasStorageService, aAnnotationService,
-                aCurationProperties, aEntityManager);
+                aCurationProperties, aEntityManager, aDocumentService);
     }
 }

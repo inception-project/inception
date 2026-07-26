@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static java.util.Comparator.comparing;
@@ -52,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument_;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.config.CurationProperties;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import jakarta.persistence.EntityManager;
 
@@ -70,16 +72,18 @@ public class CurationDocumentServiceImpl
     private final EntityManager entityManager;
     private final CasStorageService casStorageService;
     private final AnnotationSchemaService annotationService;
+    private final DocumentService documentService;
 
     @Autowired
     public CurationDocumentServiceImpl(CasStorageService aCasStorageService,
             AnnotationSchemaService aAnnotationService, CurationProperties aCurationProperties,
-            EntityManager aEntityManager)
+            EntityManager aEntityManager, DocumentService aDocumentService)
     {
         casStorageService = aCasStorageService;
         annotationService = aAnnotationService;
         entityManager = aEntityManager;
         curationProperties = aCurationProperties;
+        documentService = aDocumentService;
     }
 
     @Override
@@ -294,6 +298,23 @@ public class CurationDocumentServiceImpl
                 .getSingleResult();
 
         return CURATION_FINISHED.equals(d.getState());
+    }
+
+    @Override
+    @Transactional
+    public void markCurationInProgress(SourceDocument aDocument)
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+
+        // Mind that the transition itself is an unconditional state assignment - it does not
+        // inspect the current state. Guarding here is what keeps a finished curation from being
+        // silently reopened.
+        if (CURATION_FINISHED.equals(aDocument.getState())) {
+            return;
+        }
+
+        documentService.transitionSourceDocumentState(aDocument,
+                ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
     }
 
     @Override

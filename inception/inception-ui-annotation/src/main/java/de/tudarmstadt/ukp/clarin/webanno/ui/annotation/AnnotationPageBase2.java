@@ -25,9 +25,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarStateChangedEvent.Side.LEFT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarStateChangedEvent.Side.RIGHT;
@@ -54,6 +51,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.Component;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LambdaModel;
@@ -122,6 +120,8 @@ public abstract class AnnotationPageBase2
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String MID_EDITOR = "editor";
+
+    protected static final String MID_DOCUMENT_STATUS_BADGES = "documentStatusBadges";
     private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
 
     private static final String LEFT_SIDEBAR_COLLAPSED_SIZE = "52px";
@@ -239,6 +239,8 @@ public abstract class AnnotationPageBase2
 
         centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
 
+        centerArea.add(createDocumentStatusBadges(MID_DOCUMENT_STATUS_BADGES));
+
         actionBar = new ActionBar("actionBar");
         actionBar.setOutputMarkupId(true);
         actionBar.add(AttributeModifier.append("class",
@@ -252,6 +254,25 @@ public abstract class AnnotationPageBase2
         centerArea.add(actionBarToggle);
 
         createAnnotationEditor(MID_EDITOR);
+    }
+
+    protected Component createDocumentStatusBadges(String aId)
+    {
+        return new EmptyPanel(aId);
+    }
+
+    /**
+     * Called during {@link #actionLoadDocument} once the document has been opened for editing -
+     * i.e. after the annotation CAS has been created/upgraded and written, and only if the document
+     * is editable. Subclasses use this to record that the document has been opened, e.g. to
+     * transition the source document into a curation state.
+     *
+     * @param aDocument
+     *            the document that was opened.
+     */
+    protected void onDocumentOpenedForEditing(SourceDocument aDocument)
+    {
+        // Nothing to do by default
     }
 
     private void persistSidebarSize(SidebarStateChangedEvent.Side aSide, double aSize)
@@ -718,16 +739,7 @@ public abstract class AnnotationPageBase2
                             AnnotationDocumentState.IN_PROGRESS, EXPLICIT_ANNOTATOR_USER_ACTION);
                 }
 
-                // We also use the SourceDocumentState to indicate the curation status
-                if (state.getUser().getUsername().equals(CURATION_USER)) {
-                    var sourceDoc = state.getDocument();
-                    var sourceDocState = sourceDoc.getState();
-                    if (sourceDocState != CURATION_IN_PROGRESS
-                            && sourceDocState != CURATION_FINISHED) {
-                        documentService.transitionSourceDocumentState(sourceDoc,
-                                ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
-                    }
-                }
+                onDocumentOpenedForEditing(state.getDocument());
             }
 
             // Reset the editor (we reload the page content below, so in order not to schedule

@@ -19,11 +19,13 @@ package de.tudarmstadt.ukp.inception.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
 import java.util.List;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
@@ -33,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
+import de.tudarmstadt.ukp.inception.ui.curation.readiness.CurationReadinessBadgePanel;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarBehavior;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
@@ -55,6 +58,24 @@ public class CurationPage
 
         var state = getModelObject();
         state.enableExtension(CurationEditorExtension.EXTENSION_ID);
+    }
+
+    @Override
+    protected Component createDocumentStatusBadges(String aId)
+    {
+        return new CurationReadinessBadgePanel(aId, getModel());
+    }
+
+    @Override
+    protected void onDocumentOpenedForEditing(SourceDocument aDocument)
+    {
+        // The curation target may also be a regular user curating into their own annotation
+        // document - in that case the source document state is none of our business.
+        if (!CURATION_USER.equals(getModelObject().getUser().getUsername())) {
+            return;
+        }
+
+        curationDocumentService.markCurationInProgress(aDocument);
     }
 
     @Override

@@ -44,6 +44,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.csv.CSVFormat.EXCEL;
@@ -597,7 +598,7 @@ public class MatrixWorkloadManagementPage
 
     private void actionBulkResetCuration(AjaxRequestTarget aTarget)
     {
-        var selectedDocuments = new ArrayList<>(selectedSourceDocuments());
+        var selectedDocuments = selectedSourceDocuments();
 
         if (selectedDocuments.isEmpty()) {
             info("No documents have been selected.");
@@ -605,23 +606,37 @@ public class MatrixWorkloadManagementPage
             return;
         }
 
-        var dialogContent = new ResetCurationConfirmationDialogContentPanel(ModalDialog.CONTENT_ID,
-                Model.ofList(selectedDocuments));
+        // Determine what will actually be reset *before* opening the dialog so that the dialog
+        // cannot overstate what is about to happen. The confirm action below operates on exactly
+        // this list.
+        var statesToReset = asList(CURATION_IN_PROGRESS, CURATION_FINISHED);
+        var documentsToReset = selectedDocuments.stream() //
+                .filter(d -> statesToReset.contains(d.getState())) //
+                .collect(toCollection(ArrayList::new));
 
-        if (selectedDocuments.size() == 1) {
-            var doc = selectedDocuments.get(0);
-            dialogContent.setExpectedResponseModel(Model.of(doc.getName()));
+        if (documentsToReset.isEmpty()) {
+            info("None of the selected documents is in curation.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        // How many of them actually carry curation data that would be lost? One existsCurationCas
+        // per selected document is acceptable for a confirmation dialog.
+        var documentsWithCurationData = documentsToReset.stream() //
+                .filter(this::existsCurationCas) //
+                .count();
+
+        var dialogContent = new ResetCurationConfirmationDialogContentPanel(ModalDialog.CONTENT_ID,
+                Model.ofList(documentsToReset), documentsWithCurationData);
+
+        if (documentsToReset.size() == 1) {
+            dialogContent.setExpectedResponseModel(Model.of(documentsToReset.get(0).getName()));
         }
         else {
             dialogContent.setExpectedResponseModel(Model.of(getProject().getName()));
         }
 
-        var statesToReset = asList(CURATION_IN_PROGRESS, CURATION_FINISHED);
         dialogContent.setConfirmAction(_target -> {
-            var documentsToReset = selectedDocuments.stream() //
-                    .filter(d -> statesToReset.contains(d.getState())) //
-                    .toList();
-
             documentService.bulkSetSourceDocumentState(documentsToReset, ANNOTATION_IN_PROGRESS);
 
             for (var doc : documentsToReset) {
@@ -639,6 +654,18 @@ public class MatrixWorkloadManagementPage
         });
 
         modalDialog.open(dialogContent, aTarget);
+    }
+
+    private boolean existsCurationCas(SourceDocument aDocument)
+    {
+        try {
+            return curationService.existsCurationCas(aDocument);
+        }
+        catch (IOException e) {
+            LOG.warn("Unable to determine whether curation data exists for {} - assuming it does",
+                    aDocument, e);
+            return true;
+        }
     }
 
     private void actionExportAnnotationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
