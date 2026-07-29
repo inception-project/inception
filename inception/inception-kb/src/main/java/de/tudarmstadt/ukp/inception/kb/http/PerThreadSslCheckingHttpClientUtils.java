@@ -21,31 +21,20 @@ import static java.lang.ThreadLocal.withInitial;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 import java.util.Deque;
 import java.util.LinkedList;
-import java.util.Objects;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpHost;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.UserTokenHandler;
-import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
-import org.apache.http.conn.ssl.DefaultHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.util.PublicSuffixMatcherLoader;
-import org.apache.http.impl.client.DefaultUserTokenHandler;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.ssl.SSLContextBuilder;
+import org.eclipse.rdf4j.http.client.spi.HttpRequest;
+import org.eclipse.rdf4j.http.client.spi.HttpResponse;
+import org.eclipse.rdf4j.http.client.spi.RDF4JHttpClient;
+import org.eclipse.rdf4j.http.client.spi.RDF4JHttpClientConfig;
+import org.eclipse.rdf4j.http.client.spi.RDF4JHttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,170 +78,80 @@ public class PerThreadSslCheckingHttpClientUtils
         return new SslCertificateCheckingContext(!aSkipChecks);
     }
 
-    private static String[] split(final String s)
-    {
-        if (StringUtils.isBlank(s)) {
-            return null;
-        }
-        return s.split(" *, *");
-    }
-
-    private static LayeredConnectionSocketFactory newCertCheckAwareSSLConnectionSocketFactory()
-    {
-        return new LayeredConnectionSocketFactory()
-        {
-            private SSLConnectionSocketFactory factoryWithChecks;
-            private SSLConnectionSocketFactory factoryWithoutSslChecks;
-
-            {
-                final String[] supportedProtocols = split(System.getProperty("https.protocols"));
-                final String[] supportedCipherSuites = split(
-                        System.getProperty("https.cipherSuites"));
-
-                HostnameVerifier defaultHostNameVerifier = new DefaultHostnameVerifier(
-                        PublicSuffixMatcherLoader.getDefault());
-
-                factoryWithChecks = new SSLConnectionSocketFactory(
-                        (SSLSocketFactory) SSLSocketFactory.getDefault(), supportedProtocols,
-                        supportedCipherSuites, defaultHostNameVerifier);
-
-                try {
-                    SSLContextBuilder builder = new SSLContextBuilder();
-                    builder.loadTrustMaterial(null,
-                            (X509Certificate[] chain, String authType) -> true);
-
-                    HostnameVerifier hostNameVerifier = (String hostname,
-                            SSLSession session) -> true;
-                    factoryWithoutSslChecks = new SSLConnectionSocketFactory(builder.build(),
-                            hostNameVerifier);
-                }
-                catch (Exception e) {
-                    // key management exception, etc.
-                    throw new RuntimeException(e);
-                }
-            }
-
-            @Override
-            public Socket createSocket(HttpContext aContext) throws IOException
-            {
-                LOG.trace("createSocket (SSL checks: {})", SSL_VERIFICATION_ENABLED.get().peek());
-                if (SSL_VERIFICATION_ENABLED.get().peek()) {
-                    return factoryWithChecks.createSocket(aContext);
-                }
-                else {
-                    return factoryWithoutSslChecks.createSocket(aContext);
-                }
-            }
-
-            @Override
-            public Socket connectSocket(int aConnectTimeout, Socket aSock, HttpHost aHost,
-                    InetSocketAddress aRemoteAddress, InetSocketAddress aLocalAddress,
-                    HttpContext aContext)
-                throws IOException
-            {
-                LOG.trace("connectSocket (SSL checks: {})", SSL_VERIFICATION_ENABLED.get().peek());
-                if (SSL_VERIFICATION_ENABLED.get().peek()) {
-                    return factoryWithChecks.connectSocket(aConnectTimeout, aSock, aHost,
-                            aRemoteAddress, aLocalAddress, aContext);
-                }
-                else {
-                    return factoryWithoutSslChecks.connectSocket(aConnectTimeout, aSock, aHost,
-                            aRemoteAddress, aLocalAddress, aContext);
-                }
-            }
-
-            @Override
-            public Socket createLayeredSocket(Socket aSocket, String aTarget, int aPort,
-                    HttpContext aContext)
-                throws IOException, UnknownHostException
-            {
-                LOG.trace("createLayeredSocket (SSL checks: {})",
-                        SSL_VERIFICATION_ENABLED.get().peek());
-                if (SSL_VERIFICATION_ENABLED.get().peek()) {
-                    return factoryWithChecks.createLayeredSocket(aSocket, aTarget, aPort, aContext);
-                }
-                else {
-                    return factoryWithoutSslChecks.createLayeredSocket(aSocket, aTarget, aPort,
-                            aContext);
-                }
-            }
-        };
-    }
-
-    private static UserTokenHandler newCertCheckAwareUserTokenHandler()
-    {
-        return new DefaultUserTokenHandler()
-        {
-            @Override
-            public Object getUserToken(HttpContext aContext)
-            {
-                LOG.trace("getUserToken (SSL checks: {})", SSL_VERIFICATION_ENABLED.get().peek());
-
-                if (SSL_VERIFICATION_ENABLED.get().peek()) {
-                    return super.getUserToken(aContext);
-                }
-                else {
-                    return new WrappedUserToken(super.getUserToken(aContext),
-                            SSL_VERIFICATION_ENABLED.get().peek());
-                }
-            }
-        };
-    }
-
     /**
-     * Return an {@link HttpClientBuilder} that can be used to build an {@link HttpClient} which
-     * trusts all certificates (particularly including self-signed certificates).
-     *
-     * @return a {@link HttpClientBuilder} for <i>SSL trust all</i>
+     * Return an {@link RDF4JHttpClient} that delegates each request to one of two underlying
+     * clients based on the per-thread SSL-verification flag controlled by
+     * {@link #pushSslVerification(boolean)}, {@link #suspendSslVerification()}, and
+     * {@link #restoreSslVerification()}. Allows untrusted certificates to be tolerated for specific
+     * user-initiated operations (e.g. KB connection tests) without weakening SSL for the rest of
+     * the application.
      */
-    public static HttpClientBuilder newPerThreadSslCheckingHttpClientBuilder()
+    public static RDF4JHttpClient newPerThreadSslCheckingHttpClient()
     {
-        return HttpClients.custom() //
-                // Need to inject the certificate checking state into the "user token" otherwise
-                // HTTP connections with checking and without checking will be considered as
-                // equivalent by the connection pool used by the HTTPClient
-                .setUserTokenHandler(newCertCheckAwareUserTokenHandler()) //
-                .setSSLSocketFactory(newCertCheckAwareSSLConnectionSocketFactory()) //
-                .useSystemProperties();
+        return new PerThreadSslCheckingRdf4jHttpClient();
     }
 
-    public static class WrappedUserToken
+    private static SSLContext newTrustAllSslContext()
     {
-        private final Object userToken;
-        private final boolean sslCheckSkipped;
+        try {
+            var ctx = SSLContext.getInstance("TLS");
+            ctx.init(null, new TrustManager[] { new X509TrustManager()
+            {
+                @Override
+                public void checkClientTrusted(X509Certificate[] aChain, String aAuthType)
+                {
+                }
 
-        public WrappedUserToken(Object aUserToken, boolean aSslCheckSkipped)
-        {
-            super();
-            userToken = aUserToken;
-            sslCheckSkipped = aSslCheckSkipped;
+                @Override
+                public void checkServerTrusted(X509Certificate[] aChain, String aAuthType)
+                {
+                }
+
+                @Override
+                public X509Certificate[] getAcceptedIssuers()
+                {
+                    return new X509Certificate[0];
+                }
+            } }, null);
+            return ctx;
         }
-
-        public Object getUserToken()
-        {
-            return userToken;
+        catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
         }
+    }
 
-        public boolean isSslCheckSkipped()
+    private static final class PerThreadSslCheckingRdf4jHttpClient
+        implements RDF4JHttpClient
+    {
+        private final RDF4JHttpClient strictClient;
+        private final RDF4JHttpClient trustAllClient;
+
+        PerThreadSslCheckingRdf4jHttpClient()
         {
-            return sslCheckSkipped;
+            strictClient = RDF4JHttpClients.newDefaultClient();
+            trustAllClient = RDF4JHttpClients.newDefaultClient(RDF4JHttpClientConfig.newBuilder() //
+                    .sslContext(newTrustAllSslContext()) //
+                    .disableHostnameVerification(true) //
+                    .build());
         }
 
         @Override
-        public boolean equals(final Object other)
+        public HttpResponse execute(HttpRequest aRequest) throws IOException
         {
-            if (!(other instanceof WrappedUserToken)) {
-                return false;
+            boolean checksEnabled = SSL_VERIFICATION_ENABLED.get().peek();
+            LOG.trace("execute (SSL checks: {})", checksEnabled);
+            return (checksEnabled ? strictClient : trustAllClient).execute(aRequest);
+        }
+
+        @Override
+        public void close()
+        {
+            try {
+                strictClient.close();
             }
-            WrappedUserToken castOther = (WrappedUserToken) other;
-            return Objects.equals(userToken, castOther.userToken)
-                    && Objects.equals(sslCheckSkipped, castOther.sslCheckSkipped);
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return Objects.hash(userToken, sslCheckSkipped);
+            finally {
+                trustAllClient.close();
+            }
         }
     }
 

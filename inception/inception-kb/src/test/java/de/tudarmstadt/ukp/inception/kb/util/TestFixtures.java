@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.kb.util;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_RDF4J_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.INCEPTION_NAMESPACE;
-import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClientBuilder;
+import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClient;
 import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
 import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -151,7 +151,7 @@ public class TestFixtures
                     + profile.getAccess().getAccessUrl() + "] is not reachable");
 
             var repo = new SPARQLRepository(profile.getAccess().getAccessUrl());
-            repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
+            repo.setHttpClient(newPerThreadSslCheckingHttpClient());
             repo.setAdditionalHttpHeaders(Map.of("User-Agent", "INCEpTION/0.0.1-SNAPSHOT"));
             repo.init();
             return repo;
@@ -264,7 +264,7 @@ public class TestFixtures
         }
 
         var r = new SPARQLRepository(aUrl);
-        r.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
+        r.setHttpClient(newPerThreadSslCheckingHttpClient());
         r.setAdditionalHttpHeaders(Map.of("User-Agent", "INCEpTION/0.0.1-SNAPSHOT"));
         r.init();
         try (var conn = r.getConnection()) {

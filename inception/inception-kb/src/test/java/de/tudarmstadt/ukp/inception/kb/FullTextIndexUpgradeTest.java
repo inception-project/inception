@@ -236,6 +236,21 @@ public class FullTextIndexUpgradeTest
     }
 
     @Test
+    void thatTooOldIndexVersionIsReportedAsSuch() throws Exception
+    {
+        copyDirectory(new File(REF_DIR, "lucene-8.11.3"), temp);
+
+        sut = new KnowledgeBaseServiceImpl(repoProperties, kbProperties, entityManager);
+
+        kb.setRepositoryId("pid-1-kbid-");
+        sut.reconfigureLocalKnowledgeBase(kb);
+
+        assertThat(sut.getIndexVersion(kb))
+                .hasValueSatisfying(v -> assertThat(v).startsWith("8.").contains("too old"));
+        assertThat(sut.isIndexUpgradeAvailable(kb)).isFalse();
+    }
+
+    @Test
     void thatRebuildRecoversFromIndexFormatTooOld() throws Exception
     {
         copyDirectory(new File(REF_DIR, "lucene-7.7.3"), temp);
