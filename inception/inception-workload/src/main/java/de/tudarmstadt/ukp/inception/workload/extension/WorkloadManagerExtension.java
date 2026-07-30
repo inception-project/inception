@@ -87,6 +87,17 @@ public interface WorkloadManagerExtension<T>
     ProjectState recalculate(Project aProject);
 
     /**
+     * Ask the workload manager to immediately recalculate the state of a single document and of the
+     * project itself. Use this instead of {@link #recalculate(Project)} when only one document has
+     * changed - it avoids walking every document in the project.
+     *
+     * @param aDocument
+     *            a source document (its state will be updated as a side-effect)
+     * @return the state of the project after the recalculation has been completed
+     */
+    ProjectState recalculate(SourceDocument aDocument);
+
+    /**
      * Ask the workload manager to immediately refresh the state of the documents and overall
      * project. This can be called immediately before fetching the project status in order to ensure
      * that the project status is reliable.
@@ -113,10 +124,8 @@ public interface WorkloadManagerExtension<T>
 
     /**
      * Whether the workload manager would consider annotation on the given document complete enough
-     * for the document to be curated. This is an <b>entry condition</b> for curation, not a
-     * continuous invariant: the predicate is non-monotone (e.g. adding an annotator to a project
-     * raises the bar for every document at once), so it may be used to inform the user, but it must
-     * never drive an automatic transition out of a curation state - see {@link CurationReadiness}.
+     * for the document to be curated - an entry condition, not a continuous invariant, so it must
+     * never drive an automatic transition out of a curation state.
      * <p>
      * <b>Implementations MUST be side-effect free.</b> This method is called from render paths (the
      * curation page, the workload management pages). It must not write document or project states.

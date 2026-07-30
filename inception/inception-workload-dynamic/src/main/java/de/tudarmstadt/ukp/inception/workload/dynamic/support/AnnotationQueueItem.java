@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTA
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.inception.workload.extension.CurationReadiness.isReadyForCurationEnoughRequired;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -40,7 +39,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.inception.workload.extension.CurationReadiness;
+import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicCurationReadiness;
 
 public class AnnotationQueueItem
     implements Serializable
@@ -56,10 +55,6 @@ public class AnnotationQueueItem
     private int finishedCount;
     private Date lastUpdated;
 
-    /**
-     * Retained because the required-annotation count is a constructor parameter rather than a field
-     * - see {@link #isReadyForCuration()}.
-     */
     private final boolean readyForCuration;
 
     public AnnotationQueueItem(SourceDocument aSourceDocument,
@@ -89,7 +84,8 @@ public class AnnotationQueueItem
             }
         }
 
-        readyForCuration = isReadyForCurationEnoughRequired(finishedCount, aRequiredAnnotations);
+        readyForCuration = DynamicCurationReadiness.isReadyForCuration(finishedCount,
+                aRequiredAnnotations);
 
         state = sourceDocument.getState();
         if (!(CURATION_IN_PROGRESS == state || CURATION_FINISHED == state)) {
@@ -111,19 +107,7 @@ public class AnnotationQueueItem
     }
 
     /**
-     * Whether the workload manager would consider annotation on this document complete enough for
-     * it to be curated. Computed in the constructor from the already-loaded annotation documents -
-     * no query.
-     * <p>
-     * Mind that this is the same rule as
-     * {@link de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtensionImpl#isReadyForCuration}
-     * - both delegate to {@link CurationReadiness} so the two cannot drift apart.
-     * <p>
-     * Note that a document that is <b>not</b> ready may still legitimately be in curation:
-     * readiness is an entry condition, not a continuous invariant. This flag exists to <b>mark</b>
-     * such rows for the admin, not to correct them.
-     *
-     * @return whether the document is ready for curation.
+     * @return whether the document is ready for curation - see {@link DynamicCurationReadiness}.
      */
     public boolean isReadyForCuration()
     {

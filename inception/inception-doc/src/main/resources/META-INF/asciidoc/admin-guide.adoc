@@ -132,6 +132,8 @@ include::{include-dir}settings_documentmetadata.adoc[leveloffset=+1]
 
 include::{include-dir}settings_concept-linking.adoc[leveloffset=+1]
 
+include::{include-dir}settings_curation.adoc[leveloffset=+1]
+
 include::{include-dir}settings_knowledgebase.adoc[leveloffset=+1]
 
 include::{include-dir}settings_scheduler.adoc[leveloffset=+1]

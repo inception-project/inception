@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.inception.workload.extension.CurationReadiness.isReadyForCurationAllRequired;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -32,7 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.inception.workload.extension.CurationReadiness;
+import de.tudarmstadt.ukp.inception.workload.matrix.MatrixCurationReadiness;
 
 public class DocumentMatrixRow
     implements Serializable
@@ -95,7 +94,8 @@ public class DocumentMatrixRow
         SourceDocumentState state = sourceDocument.getState();
 
         if (!(CURATION_IN_PROGRESS == state || CURATION_FINISHED == state)) {
-            if (isReadyForCurationAllRequired(finishedCount, ignoredCount, annotators.size())) {
+            if (MatrixCurationReadiness.isReadyForCuration(finishedCount, ignoredCount,
+                    annotators.size())) {
                 state = ANNOTATION_FINISHED;
             }
             else if (newCount == requiredCount) {
@@ -110,26 +110,15 @@ public class DocumentMatrixRow
     }
 
     /**
-     * Whether the workload manager would consider annotation on this document complete enough for
-     * it to be curated. Computed from the already-loaded annotation documents of this row - no
-     * query.
-     * <p>
-     * Mind that this is the same rule as
-     * {@link de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtensionImpl#isReadyForCuration}
-     * - both delegate to {@link CurationReadiness} so the two cannot drift apart.
-     * <p>
-     * Note that a document that is <b>not</b> ready may still legitimately be in curation:
-     * readiness is an entry condition, not a continuous invariant. This flag exists to <b>mark</b>
-     * such rows for the admin, not to correct them.
-     *
-     * @return whether the document is ready for curation.
+     * @return whether the document is ready for curation - see {@link MatrixCurationReadiness}.
+     *         Computed from the already-loaded annotation documents of this row, so no query.
      */
     public boolean isReadyForCuration()
     {
         var counts = countStates();
 
-        return isReadyForCurationAllRequired(counts.finishedCount(), counts.ignoredCount(),
-                annotators.size());
+        return MatrixCurationReadiness.isReadyForCuration(counts.finishedCount(),
+                counts.ignoredCount(), annotators.size());
     }
 
     /**

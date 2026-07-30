@@ -28,8 +28,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
-import static de.tudarmstadt.ukp.inception.workload.extension.CurationReadiness.enoughRequiredWarning;
-import static de.tudarmstadt.ukp.inception.workload.extension.CurationReadiness.isReadyForCurationEnoughRequired;
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
@@ -229,10 +227,28 @@ public class DynamicWorkloadExtensionImpl
             updateDocumentState(doc, traits.getDefaultNumberOfAnnotations());
         }
 
-        // Refresh the project stats and recalculate them
+        return recalculateProjectState(aProject);
+    }
+
+    @Override
+    @Transactional
+    public ProjectState recalculate(SourceDocument aDocument)
+    {
+        var project = aDocument.getProject();
+
+        updateDocumentState(aDocument, requiredAnnotatorCount(project));
+
+        return recalculateProjectState(project);
+    }
+
+    /**
+     * Refresh the project stats and recalculate the project state from them.
+     */
+    private ProjectState recalculateProjectState(Project aProject)
+    {
         var project = projectService.getProject(aProject.getId());
         var stats = documentService.getSourceDocumentStats(project);
-        projectService.setProjectState(aProject, stats.getProjectState());
+        projectService.setProjectState(project, stats.getProjectState());
 
         return project.getState();
     }
@@ -312,12 +328,7 @@ public class DynamicWorkloadExtensionImpl
             updateDocumentState(docSet.getKey(), traits.getDefaultNumberOfAnnotations());
         }
 
-        // Refresh the project stats and recalculate them
-        var project = projectService.getProject(aProject.getId());
-        var stats = documentService.getSourceDocumentStats(project);
-        projectService.setProjectState(aProject, stats.getProjectState());
-
-        return project.getState();
+        return recalculateProjectState(aProject);
     }
 
     @Override
@@ -339,7 +350,7 @@ public class DynamicWorkloadExtensionImpl
                 .count();
 
         // If enough documents are finished, mark as finished
-        if (isReadyForCurationEnoughRequired(finishedCount, aRequiredAnnotatorCount)) {
+        if (DynamicCurationReadiness.isReadyForCuration(finishedCount, aRequiredAnnotatorCount)) {
             documentService.setSourceDocumentState(aDocument, ANNOTATION_FINISHED);
         }
         // ... or if nobody has started yet, mark as new
@@ -365,11 +376,11 @@ public class DynamicWorkloadExtensionImpl
         var requiredAnnotatorCount = requiredAnnotatorCount(aDocument.getProject());
         var finishedCount = countAnnotatorsThatFinished(aDocument);
 
-        if (isReadyForCurationEnoughRequired(finishedCount, requiredAnnotatorCount)) {
+        if (DynamicCurationReadiness.isReadyForCuration(finishedCount, requiredAnnotatorCount)) {
             return Optional.empty();
         }
 
-        return Optional.of(enoughRequiredWarning(finishedCount, requiredAnnotatorCount));
+        return Optional.of(DynamicCurationReadiness.warning(finishedCount, requiredAnnotatorCount));
     }
 
     private int requiredAnnotatorCount(Project aProject)

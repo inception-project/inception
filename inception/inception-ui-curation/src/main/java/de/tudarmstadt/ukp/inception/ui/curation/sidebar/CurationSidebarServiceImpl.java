@@ -189,13 +189,8 @@ public class CurationSidebarServiceImpl
         // write back and update timestamp
         writeCurationCas(aTargetCas, aState, doc.getProject().getId());
 
-        // Record that curation on this document has started. In practice the annotation page has
-        // already done this when the document was opened for curation (see
-        // AnnotationPageBase2.actionLoadDocument) - both current callers merge from an open page.
-        // This is kept so that writing merge results is sufficient on its own rather than relying
-        // on that call order.
-        // Mind that the curation target may also be a regular user (curating into their own
-        // annotation document), in which case the source document state is none of our business.
+        // The target may also be a regular user curating into their own annotation document, in
+        // which case the source document state is none of our business.
         if (CURATION_USER.equals(aState.getUser().getUsername())) {
             curationDocumentService.markCurationInProgress(doc);
         }

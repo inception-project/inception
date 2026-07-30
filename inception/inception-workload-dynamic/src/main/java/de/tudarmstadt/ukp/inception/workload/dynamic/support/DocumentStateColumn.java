@@ -29,10 +29,9 @@ import de.tudarmstadt.ukp.inception.support.wicket.SymbolLambdaColumn;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
 
 /**
- * The document state column of the dynamic workload management page. In addition to rendering the
- * state symbol, it marks documents on which curation has been started although annotation on them
- * is not (or no longer) complete - the counterpart of the marker on the curation cell of the matrix
- * workload management page.
+ * The document state column of the dynamic workload management page. Besides the state symbol, it
+ * marks documents on which curation has been started although annotation on them is not (or no
+ * longer) complete.
  */
 public class DocumentStateColumn
     extends SymbolLambdaColumn<AnnotationQueueItem, AnnotationQueueSortKeys>
@@ -52,8 +51,7 @@ public class DocumentStateColumn
 
         var row = aRowModel.getObject();
 
-        // Marking only - the document keeps its state and stays editable. Readiness is an entry
-        // condition for curation, not a continuous invariant.
+        // Marking only - the document keeps its state and stays editable
         if (row.isInCuration() && !row.isReadyForCuration()) {
             var cell = aItem.get(aComponentId);
             cell.add(new CssClassNameAppender(CSS_CLASS_CURATION_NOT_READY));

@@ -63,7 +63,10 @@ public class ResetCurationConfirmationDialogContentPanel
             queue(new Label("challenge", new ResourceModel("challenge.multiple")));
         }
         else {
-            queue(new Label("message", new ResourceModel("message.single")));
+            queue(new Label("message",
+                    new ResourceModel(
+                            aDocumentsWithCurationDataCount > 0 ? "message.single.withData"
+                                    : "message.single")));
             queue(new Label("challenge", new ResourceModel("challenge.single")));
         }
     }

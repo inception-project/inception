@@ -606,9 +606,6 @@ public class MatrixWorkloadManagementPage
             return;
         }
 
-        // Determine what will actually be reset *before* opening the dialog so that the dialog
-        // cannot overstate what is about to happen. The confirm action below operates on exactly
-        // this list.
         var statesToReset = asList(CURATION_IN_PROGRESS, CURATION_FINISHED);
         var documentsToReset = selectedDocuments.stream() //
                 .filter(d -> statesToReset.contains(d.getState())) //
@@ -620,8 +617,6 @@ public class MatrixWorkloadManagementPage
             return;
         }
 
-        // How many of them actually carry curation data that would be lost? One existsCurationCas
-        // per selected document is acceptable for a confirmation dialog.
         var documentsWithCurationData = documentsToReset.stream() //
                 .filter(this::existsCurationCas) //
                 .count();
@@ -783,6 +778,8 @@ public class MatrixWorkloadManagementPage
             success(format("The curation of document [%s] has been set reset.",
                     aDocument.getName()));
             _target.addChildren(getPage(), IFeedback.class);
+
+            matrixWorkloadExtension.recalculate(aDocument);
 
             reloadMatrixData();
             _target.add(documentMatrix, stateIcon, projectDocumentStatsPanel);

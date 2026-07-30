@@ -32,18 +32,15 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.workload.extension.CurationReadinessWarning;
+import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**
  * A compact badge warning the curator that the workload manager would not consider the current
  * document ready for curation - e.g. because not all annotators have finished it. The badge shows
  * the shortfall (e.g. <code>1/3 incomplete</code>); the full explanation is available as a tooltip.
- * <p>
- * This is deliberately <b>advisory only</b>: the document remains editable. Readiness is an entry
- * condition for curation, not a continuous invariant, and a curator must not be locked out of a
- * document they are in the middle of curating just because an annotator was added to the project.
- * <p>
- * The readiness query is read-only - rendering this panel must never write document states.
+ *
+ * @see WorkloadManagerExtension#getCurationReadinessWarning
  */
 public class CurationReadinessBadgePanel
     extends Panel
@@ -52,11 +49,8 @@ public class CurationReadinessBadgePanel
 
     private @SpringBean WorkloadManagementService workloadManagementService;
 
-    /**
-     * Held as a field so that it is detached at the end of every request cycle - otherwise the
-     * readiness would be computed once and then served stale for the lifetime of the panel, e.g.
-     * after an annotator finishes the document.
-     */
+    // Held as a field so it is detached every request cycle - otherwise the readiness would be
+    // computed once and then served stale for the lifetime of the panel
     private final IModel<Optional<CurationReadinessWarning>> warning;
 
     public CurationReadinessBadgePanel(String aId, IModel<AnnotatorState> aModel)
@@ -67,15 +61,13 @@ public class CurationReadinessBadgePanel
 
         warning = LoadableDetachableModel.of(this::loadWarning);
 
-        // The full explanation rides along as a tooltip on the badge - the badge itself only shows
-        // the shortfall so that it stays compact enough for the document header.
         var badge = new WebMarkupContainer("badge");
         badge.add(new AttributeModifier("title",
-                warning.map(Optional::get).map(CurationReadinessWarning::message)));
+                warning.map(w -> w.map(CurationReadinessWarning::message).orElse(null))));
         queue(badge);
 
         queue(new Label("shortLabel",
-                warning.map(Optional::get).map(CurationReadinessWarning::shortLabel)));
+                warning.map(w -> w.map(CurationReadinessWarning::shortLabel).orElse(null))));
 
         add(visibleWhen(warning.map(Optional::isPresent).orElse(false)));
     }

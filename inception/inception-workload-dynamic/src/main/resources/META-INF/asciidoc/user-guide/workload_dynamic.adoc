@@ -34,6 +34,8 @@ needs from their documents. This data is represented by a unique row for each in
 columns with the respective data are displayed:
 
 1. *State:* state of the document within the project.
+   This column also indicates readiness for curation: if curation has been started on a document whose annotation is not yet complete, the cell is highlighted.
+   Under dynamic assignment, a document is considered ready for curation once the required number of annotators (see *Annotators per document* in the <<Dynamic workload settings>>) have marked it as *finished*.
 2. *Document:* document name.
 3. *Assigned:* number of annotators, who are working currently on the document.
 4. *Finished:* number of annotators, who have already finished their work on the document.

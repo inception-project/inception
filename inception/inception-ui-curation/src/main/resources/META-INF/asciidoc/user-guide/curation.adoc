@@ -31,7 +31,21 @@ When navigating to the *Curation Page*, the procedure for opening projects and d
 The navigation within the document is also equivalent to <<sect_annotation>>.
 
 The table reflects the state of the document.
-A document can be *in-progress*, *finished*, *curation-in-progress* or *curation-finished*. 
+A document can be *in-progress*, *finished*, *curation-in-progress* or *curation-finished*.
+
+Whether a document is *ready* for curation is decided by the workload strategy, and the exact rule depends on the workload strategy configured for the project:
+
+* Under <<sect_matrix_workload,static assignment>>, a document is ready once every annotator has either *finished* or *locked* it.
+* Under <<sect_dynamic_workload,dynamic assignment>>, a document is ready once the required number of annotators (as configured in the dynamic workload settings) have marked it as *finished*.
+
+A single annotator finishing their work is therefore usually *not* enough to make the document ready - that depends on the strategy and its configuration.
+Once a document is ready, it reaches the *annotation-finished* state at the document level.
+
+Curation that has already been *started* may always be continued.
+So if the annotation data of a document you are already curating later drops below the ready threshold - for example because finished annotation documents were put back into progress or their annotators were removed from the project - you are not locked out of the document.
+In this situation, a warning badge (e.g. *1/3 incomplete*) is shown in the document header.
+Hovering over the badge explains how many annotators still need to finish (or lock) the document.
+The document remains fully editable - the badge only warns that you are curating incomplete data.
 
 == Split curation mode
 

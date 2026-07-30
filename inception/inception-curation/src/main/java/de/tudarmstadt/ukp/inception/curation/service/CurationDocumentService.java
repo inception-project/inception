@@ -27,6 +27,7 @@ import org.apache.uima.cas.CAS;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface CurationDocumentService
@@ -70,6 +71,13 @@ public interface CurationDocumentService
     List<SourceDocument> listCuratableSourceDocuments(Project aProject);
 
     /**
+     * @param aDocument
+     *            the source document.
+     * @return whether the document may be opened for curation.
+     */
+    boolean isDocumentCuratable(SourceDocument aDocument);
+
+    /**
      * @param aSourceDocument
      *            the source document.
      * @return the users that have curatable annotation data for the given document. A user is
@@ -101,14 +109,8 @@ public interface CurationDocumentService
     boolean isCurationFinished(SourceDocument aDocument);
 
     /**
-     * Records that curation has started on the given document by moving it to
-     * {@link de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState#CURATION_IN_PROGRESS
-     * CURATION_IN_PROGRESS}. A document whose curation was already finished is left untouched -
-     * finishing curation is not silently undone by somebody opening or merging the document again.
-     * <p>
-     * Callers are responsible for ensuring that the curation target actually is the curation user.
-     * When a regular user curates into their own annotation document, the source document state is
-     * none of our business and this method must not be called.
+     * Marks a document as {@link SourceDocumentState#CURATION_IN_PROGRESS} unless it is already in
+     * a curation state.
      *
      * @param aDocument
      *            the source document.

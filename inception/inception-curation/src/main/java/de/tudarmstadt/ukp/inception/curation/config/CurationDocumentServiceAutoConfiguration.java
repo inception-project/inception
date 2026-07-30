@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.curation.config;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -35,7 +34,6 @@ import jakarta.persistence.EntityManager;
         "de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration",
         "de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration" })
 @ConditionalOnBean({ CasStorageService.class, AnnotationSchemaService.class })
-@EnableConfigurationProperties({ CurationPropertiesImpl.class })
 public class CurationDocumentServiceAutoConfiguration
 {
     @Bean(CurationDocumentService.SERVICE_NAME)

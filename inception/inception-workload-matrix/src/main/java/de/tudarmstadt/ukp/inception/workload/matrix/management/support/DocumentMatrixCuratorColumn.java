@@ -86,10 +86,6 @@ public class DocumentMatrixCuratorColumn
                         ? MatrixWorkloadManagementPage.CSS_CLASS_SELECTED
                         : ""));
 
-        // Mark documents that are in curation although annotation on them is not (or no longer)
-        // complete. This is the triage mechanism for finding documents on which curation was
-        // started
-        // prematurely - it does not change their state or editability.
         if (CURATION_DOCUMENT_STATES.contains(state) && !row.isReadyForCuration()) {
             stateLabel.add(new CssClassNameAppender(CSS_CLASS_CURATION_NOT_READY));
             stateLabel.add(
