@@ -27,6 +27,7 @@ import org.apache.uima.cas.CAS;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface CurationDocumentService
@@ -70,6 +71,13 @@ public interface CurationDocumentService
     List<SourceDocument> listCuratableSourceDocuments(Project aProject);
 
     /**
+     * @param aDocument
+     *            the source document.
+     * @return whether the document may be opened for curation.
+     */
+    boolean isDocumentCuratable(SourceDocument aDocument);
+
+    /**
      * @param aSourceDocument
      *            the source document.
      * @return the users that have curatable annotation data for the given document. A user is
@@ -99,6 +107,15 @@ public interface CurationDocumentService
     List<SourceDocument> listCuratedDocuments(Project project);
 
     boolean isCurationFinished(SourceDocument aDocument);
+
+    /**
+     * Marks a document as {@link SourceDocumentState#CURATION_IN_PROGRESS} unless it is already in
+     * a curation state.
+     *
+     * @param aDocument
+     *            the source document.
+     */
+    void markCurationInProgress(SourceDocument aDocument);
 
     /**
      * @param aDocument

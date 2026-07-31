@@ -18,11 +18,20 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/annotate/#{" + PAGE_PARAM_DOCUMENT + "}")
 public class AnnotationPage
@@ -30,8 +39,27 @@ public class AnnotationPage
 {
     private static final long serialVersionUID = 3894448797109813277L;
 
+    private @SpringBean DocumentService documentService;
+
     public AnnotationPage(PageParameters aPageParameters)
     {
         super(aPageParameters);
+    }
+
+    @Override
+    protected void transitionDocumentStateOnLoadDocument(AnnotatorState state,
+            AnnotationDocument annotationDocument)
+    {
+        if (isEditable()) {
+            if (SourceDocumentState.NEW == state.getDocument().getState()) {
+                documentService.transitionSourceDocumentState(state.getDocument(),
+                        NEW_TO_ANNOTATION_IN_PROGRESS);
+            }
+
+            if (AnnotationDocumentState.NEW == annotationDocument.getState()) {
+                documentService.setAnnotationDocumentState(annotationDocument,
+                        AnnotationDocumentState.IN_PROGRESS, EXPLICIT_ANNOTATOR_USER_ACTION);
+            }
+        }
     }
 }

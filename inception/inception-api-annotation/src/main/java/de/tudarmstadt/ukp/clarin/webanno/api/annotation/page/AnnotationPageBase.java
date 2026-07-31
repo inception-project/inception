@@ -533,6 +533,20 @@ public abstract class AnnotationPageBase
         }
     }
 
+    /**
+     * Discard the cached editability verdict so that the next {@link #isEditable()} or
+     * {@link #ensureIsEditable()} re-evaluates it.
+     * <p>
+     * Editability is resolved once per request and then cached until the models are detached. Call
+     * this after changing anything the verdict depends on - in particular after a source document
+     * state transition, since whether a curator may edit depends on the document having reached a
+     * curation state.
+     */
+    protected void clearIsEditableCache()
+    {
+        annotationNotEditableReason.detach();
+    }
+
     public boolean isEditable()
     {
         try {

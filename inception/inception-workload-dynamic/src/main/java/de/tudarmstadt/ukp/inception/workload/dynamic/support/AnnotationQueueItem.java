@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static java.util.concurrent.TimeUnit.DAYS;
@@ -38,6 +39,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicCurationReadiness;
 
 public class AnnotationQueueItem
     implements Serializable
@@ -52,6 +54,8 @@ public class AnnotationQueueItem
     private int inProgressCount;
     private int finishedCount;
     private Date lastUpdated;
+
+    private final boolean readyForCuration;
 
     public AnnotationQueueItem(SourceDocument aSourceDocument,
             List<AnnotationDocument> aAnnotationDocuments, int aRequiredAnnotations,
@@ -80,9 +84,12 @@ public class AnnotationQueueItem
             }
         }
 
+        readyForCuration = DynamicCurationReadiness.isReadyForCuration(finishedCount,
+                aRequiredAnnotations);
+
         state = sourceDocument.getState();
         if (!(CURATION_IN_PROGRESS == state || CURATION_FINISHED == state)) {
-            if (finishedCount >= aRequiredAnnotations) {
+            if (readyForCuration) {
                 state = ANNOTATION_FINISHED;
             }
             else if (finishedCount + inProgressCount == 0) {
@@ -97,6 +104,22 @@ public class AnnotationQueueItem
     public SourceDocumentState getState()
     {
         return state;
+    }
+
+    /**
+     * @return whether the document is ready for curation - see {@link DynamicCurationReadiness}.
+     */
+    public boolean isReadyForCuration()
+    {
+        return readyForCuration;
+    }
+
+    /**
+     * @return whether curation has been started on this document.
+     */
+    public boolean isInCuration()
+    {
+        return CURATION_DOCUMENT_STATES.contains(sourceDocument.getState());
     }
 
     private void updateLastUpdated(Date aDate)

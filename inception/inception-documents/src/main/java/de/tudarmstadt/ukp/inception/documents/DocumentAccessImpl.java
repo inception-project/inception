@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.curation.config.CurationProperties;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
@@ -61,13 +62,15 @@ public class DocumentAccessImpl
     private final UserDao userService;
     private final ProjectService projectService;
     private final DocumentService documentService;
+    private final CurationProperties curationProperties;
 
     public DocumentAccessImpl(ProjectService aProjectService, UserDao aUserService,
-            DocumentService aDocumentService)
+            DocumentService aDocumentService, CurationProperties aCurationProperties)
     {
         userService = aUserService;
         projectService = aProjectService;
         documentService = aDocumentService;
+        curationProperties = aCurationProperties;
     }
 
     @Override
@@ -221,8 +224,20 @@ public class DocumentAccessImpl
                 }
             }
 
-            // Annotators cannot start working if the document is already being curated or is done
-            if (annDoc == null || annDoc.getState() == AnnotationDocumentState.NEW) {
+            // Annotators cannot start working if the document is already being curated or is done.
+            // An annotator whose own annotation document is IN_PROGRESS is not affected - this can
+            // e.g. happen when a curator deliberately reopens the document for them to fix
+            // something.
+            //
+            // This does not apply under the legacy curatable-documents strategy: there, curation
+            // may start while the source document is still ANNOTATION_IN_PROGRESS (a single
+            // finished annotator is enough - see CurationDocumentServiceImpl#isDocumentCuratable),
+            // so other annotators may well have work assigned that they have legitimately not
+            // started yet. Locking them out based on the source document state would evict them
+            // from that work. Whether an annotator may still edit is decided by the state of their
+            // own annotation document instead - FINISHED and IGNORE are both rejected above.
+            if (!curationProperties.isLegacyCuratableDocumentsStrategy()
+                    && (annDoc == null || annDoc.getState() == AnnotationDocumentState.NEW)) {
                 if (Set.of(CURATION_IN_PROGRESS, CURATION_FINISHED)
                         .contains(aDocument.getState())) {
                     throw new AccessDeniedException(
