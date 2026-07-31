@@ -26,6 +26,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.inception.workload.extension.CurationReadinessWarning;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraitsEditor;
@@ -173,12 +175,25 @@ public class MatrixWorkloadExtensionImpl
             setSourceDocumentStateBasedOnStats(doc, annotators.size(), stats);
         }
 
-        // Refresh the project stats and recalculate them
-        var project = projectService.getProject(aProject.getId());
-        var stats = documentService.getSourceDocumentStats(project);
-        projectService.setProjectState(aProject, stats.getProjectState());
+        return recalculateProjectState(aProject);
+    }
 
-        return project.getState();
+    @Override
+    @Transactional
+    public ProjectState recalculate(SourceDocument aDocument)
+    {
+        var project = aDocument.getProject();
+
+        if (!isInCuration(aDocument)) {
+            var annotators = projectService.listUsersWithRoleInProject(project, ANNOTATOR);
+            var annDocs = documentService.listAnnotationDocuments(aDocument);
+
+            var stats = documentService.getAnnotationDocumentStats(aDocument, annDocs, annotators);
+
+            setSourceDocumentStateBasedOnStats(aDocument, annotators.size(), stats);
+        }
+
+        return recalculateProjectState(project);
     }
 
     @Override
@@ -200,10 +215,17 @@ public class MatrixWorkloadExtensionImpl
             setSourceDocumentStateBasedOnStats(doc, annotators.size(), stats);
         }
 
-        // Refresh the project stats and recalculate them
+        return recalculateProjectState(aProject);
+    }
+
+    /**
+     * Refresh the project stats and recalculate the project state from them.
+     */
+    private ProjectState recalculateProjectState(Project aProject)
+    {
         var project = projectService.getProject(aProject.getId());
         var stats = documentService.getSourceDocumentStats(project);
-        projectService.setProjectState(aProject, stats.getProjectState());
+        projectService.setProjectState(project, stats.getProjectState());
 
         return project.getState();
     }
@@ -219,6 +241,35 @@ public class MatrixWorkloadExtensionImpl
         var stats = documentService.getAnnotationDocumentStats(aDocument);
 
         setSourceDocumentStateBasedOnStats(aDocument, aAnnotatorCount, stats);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isReadyForCuration(SourceDocument aDocument)
+    {
+        return getCurationReadinessWarning(aDocument).isEmpty();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<CurationReadinessWarning> getCurationReadinessWarning(SourceDocument aDocument)
+    {
+        // getAnnotationDocumentStats scopes the counts to the users currently holding the ANNOTATOR
+        // role and counts those without an annotation document as NEW, so the counts sum up to
+        // exactly the annotator count.
+        var annotatorCount = projectService
+                .listUsersWithRoleInProject(aDocument.getProject(), ANNOTATOR).size();
+        var stats = documentService.getAnnotationDocumentStats(aDocument);
+        var finishedCount = stats.get(AnnotationDocumentState.FINISHED);
+        var ignoreCount = stats.get(AnnotationDocumentState.IGNORE);
+
+        if (MatrixCurationReadiness.isReadyForCuration(finishedCount, ignoreCount,
+                annotatorCount)) {
+            return Optional.empty();
+        }
+
+        return Optional
+                .of(MatrixCurationReadiness.warning(finishedCount, ignoreCount, annotatorCount));
     }
 
     /**
@@ -238,10 +289,16 @@ public class MatrixWorkloadExtensionImpl
         var newCount = stats.get(AnnotationDocumentState.NEW);
 
         // If all documents are ignored or finished, we set the source document to finished
-        if ((finishedCount + ignoreCount) == aAnnotatorCount) {
+        if (MatrixCurationReadiness.isReadyForCuration(finishedCount, ignoreCount,
+                aAnnotatorCount)) {
             documentService.setSourceDocumentState(aDocument, ANNOTATION_FINISHED);
         }
-        // ... or we set it to new if there is at least one new document and the others are ignored
+        // ... or we set it to new if nobody is working on it and nobody finished it - i.e. every
+        // annotator either has not started or has locked it. This covers the all-locked case too:
+        // IGNORE is a disposition, not a statement about whether annotation data exists. A locked
+        // document may have a CAS behind it that unlocking brings back, but while locked that data
+        // counts for nothing, so locked-by-everyone reads the same as untouched - hence NEW rather
+        // than ANNOTATION_IN_PROGRESS.
         else if ((newCount + ignoreCount) == aAnnotatorCount) {
             documentService.setSourceDocumentState(aDocument, SourceDocumentState.NEW);
         }

@@ -128,12 +128,58 @@ public class AeroCurationControllerTest
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE));
 
+        // Nobody ever annotated this document - only a curation was imported and then deleted - so
+        // it goes back to being untouched rather than claiming that annotation is under way. This
+        // used to assert ANNOTATION-IN-PROGRESS, which was the hard-coded guess the delete endpoint
+        // made before it started deriving the state from the annotation documents.
         adminActor.listDocuments(1l) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.body[0].id").value("1"))
                 .andExpect(jsonPath("$.body[0].name").value("test.txt"))
-                .andExpect(jsonPath("$.body[0].state").value("ANNOTATION-IN-PROGRESS"));
+                .andExpect(jsonPath("$.body[0].state").value("NEW"));
+    }
+
+    @Test
+    public void testCurationDeleteFallsBackToStateDerivedFromAnnotations() throws Exception
+    {
+        adminActor.grantProjectRole(1l, "user", "ANNOTATOR").andExpect(status().isOk());
+
+        // Every annotator finished the document, so with the curation gone it is
+        // annotation-complete
+        // again - not annotation-in-progress.
+        adminActor.createAnnotations(1l, 1l, "user", "This is a test.", "COMPLETE")
+                .andExpect(status().isCreated());
+        adminActor.createAnnotations(1l, 1l, "admin", "This is a test.", "COMPLETE")
+                .andExpect(status().isCreated());
+
+        adminActor.importCurations(1, 1, "This is a test.", "CURATION-COMPLETE")
+                .andExpect(status().isCreated());
+
+        adminActor.deleteCurations(1, 1) //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE));
+
+        adminActor.listDocuments(1l) //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body[0].state").value("ANNOTATION-COMPLETE"));
+    }
+
+    @Test
+    public void testCurationDeleteFallsBackToNewWithoutAnnotations() throws Exception
+    {
+        adminActor.grantProjectRole(1l, "user", "ANNOTATOR").andExpect(status().isOk());
+
+        adminActor.importCurations(1, 1, "This is a test.", "CURATION-COMPLETE")
+                .andExpect(status().isCreated());
+
+        adminActor.deleteCurations(1, 1) //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE));
+
+        adminActor.listDocuments(1l) //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body[0].state").value("NEW"));
     }
 
     @SpringBootConfiguration

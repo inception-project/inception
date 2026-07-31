@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -68,11 +69,13 @@ public class CurationSidebarServiceImpl
     private final CurationService curationService;
     private final CurationMergeService curationMergeService;
     private final CurationSessionService curationSessionService;
+    private final CurationDocumentService curationDocumentService;
 
     public CurationSidebarServiceImpl(DocumentService aDocumentService, UserDao aUserRegistry,
             CasStorageService aCasStorageService, CurationService aCurationService,
             CurationMergeService aCurationMergeService,
-            CurationSessionService aCurationSessionService)
+            CurationSessionService aCurationSessionService,
+            CurationDocumentService aCurationDocumentService)
     {
         documentService = aDocumentService;
         userRegistry = aUserRegistry;
@@ -80,6 +83,7 @@ public class CurationSidebarServiceImpl
         curationService = aCurationService;
         curationMergeService = aCurationMergeService;
         curationSessionService = aCurationSessionService;
+        curationDocumentService = aCurationDocumentService;
     }
 
     /**
@@ -184,6 +188,12 @@ public class CurationSidebarServiceImpl
 
         // write back and update timestamp
         writeCurationCas(aTargetCas, aState, doc.getProject().getId());
+
+        // The target may also be a regular user curating into their own annotation document, in
+        // which case the source document state is none of our business.
+        if (CURATION_USER.equals(aState.getUser().getUsername())) {
+            curationDocumentService.markCurationInProgress(doc);
+        }
 
         LOG.debug("Merge done");
         return factory;

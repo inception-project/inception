@@ -30,6 +30,9 @@
     .document-matrix col:has(.s), .document-matrix tr:has(.s) , .document-matrix td:has(.s) { background-color: var(--bs-primary); color: var(--bs-white) }
     .document-matrix .state-toggle { white-space: nowrap; cursor: pointer; }
     .document-matrix .state-diff::after { content: "🕒" }
+    /* Curation started although annotation is not complete - see WorkloadCssClasses. The dynamic
+       workload management page renders the same marker scoped to its own table. */
+    .document-matrix .curation-not-ready::after { content: "⚠️" }
   </style>
 </wicket:head>
 </head>

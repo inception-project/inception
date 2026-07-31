@@ -36,7 +36,10 @@
            style="padding-block: 0.75rem 1rem; box-sizing: border-box;">
         <div class="flex-content card overflow-hidden">
           <div class="card-header d-flex justify-content-between border-bottom-0">
-            <div wicket:id="documentNamePanel"/>
+            <div class="d-flex align-items-center gap-1">
+              <div wicket:id="documentNamePanel"/>
+              <span wicket:id="documentStatusBadges"/>
+            </div>
             <div class="d-flex">
               <div wicket:id="numberOfPages" class="small text-muted"/>
               <button wicket:id="toggleActionBar" class="btn btn-sm btn-outline-secondary border-0">
@@ -52,7 +55,7 @@
       </div>
       <div wicket:id="rightSidebar" class="flex-sidebar flex-v-container"
            style="padding-block: 0.75rem 1rem; box-sizing: border-box;">
-        <wicket:container wicket:id="annotationDetailEditorPanel"/>
+        <div wicket:id="annotationDetailEditorPanel" class="flex-content flex-v-container"/>
       </div>
     </div>
   </wicket:extend>

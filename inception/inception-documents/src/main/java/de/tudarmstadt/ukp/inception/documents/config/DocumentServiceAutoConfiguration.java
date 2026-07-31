@@ -23,11 +23,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.curation.config.CurationProperties;
+import de.tudarmstadt.ukp.inception.curation.config.CurationPropertiesAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.DocumentAccessImpl;
 import de.tudarmstadt.ukp.inception.documents.DocumentFootprintProvider;
 import de.tudarmstadt.ukp.inception.documents.DocumentServiceImpl;
@@ -47,6 +50,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 @Configuration
+@Import(CurationPropertiesAutoConfiguration.class)
 public class DocumentServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
@@ -71,9 +75,10 @@ public class DocumentServiceAutoConfiguration
 
     @Bean
     public DocumentAccess documentAccess(ProjectService aProjectService, UserDao aUserService,
-            DocumentService aDocumentService)
+            DocumentService aDocumentService, CurationProperties aCurationProperties)
     {
-        return new DocumentAccessImpl(aProjectService, aUserService, aDocumentService);
+        return new DocumentAccessImpl(aProjectService, aUserService, aDocumentService,
+                aCurationProperties);
     }
 
     @Bean

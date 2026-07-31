@@ -66,11 +66,16 @@ To change the curation state of a document, click on the table cell in the row f
 
 It is possible to discard all the curation for particular document by right-clicking on the table cell and choosing **Reset**. This is a permanent action that cannot be undone. The state is then set back to **new** and the curation process has to start over.
 
+The *Curation* column also indicates whether a document is ready to be curated.
+Under static assignment, a document is considered ready for curation once every annotator has either *finished* or *locked* it.
+If curation has been started on a document whose annotation is not yet complete, the cell is highlighted to make this visible, since curating now means curating incomplete data.
+Curation is still permitted in this case - the indicator is only a hint (see also the readiness badge described in <<sect_curation>>).
+
 .Curation state transitions
 |===
 | Current state | New state
 
-| Not started yet (new)           
+| Not started yet (new)
 | _(no change possible until curation starts)_
 
 | In progress        

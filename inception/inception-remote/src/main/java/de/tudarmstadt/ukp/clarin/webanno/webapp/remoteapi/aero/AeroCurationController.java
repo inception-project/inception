@@ -53,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoCo
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.remoteapi.Controller_ImplBase;
 import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -76,6 +77,7 @@ public class AeroCurationController
     private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired CurationDocumentService curationService;
+    private @Autowired WorkloadManagementService workloadManagementService;
 
     @Operation(summary = "Create curation for a document in a project")
     @PostMapping(//
@@ -223,13 +225,11 @@ public class AeroCurationController
         var doc = getDocument(project, aDocumentId);
         curationService.deleteCurationCas(doc);
 
-        // If we delete the curation, it cannot be any longer in-progress or finished. The best
-        // guess is that we set the state back to annotation-in-progress.
         switch (doc.getState()) {
         case CURATION_IN_PROGRESS: // Fall-through
         case CURATION_FINISHED:
-            doc.updateState(SourceDocumentState.ANNOTATION_IN_PROGRESS);
-            documentService.createSourceDocument(doc);
+            documentService.setSourceDocumentState(doc, SourceDocumentState.ANNOTATION_IN_PROGRESS);
+            workloadManagementService.getWorkloadManagerExtension(project).recalculate(doc);
             break;
         default:
             // Nothing to do

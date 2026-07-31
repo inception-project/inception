@@ -17,7 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.curation.config;
 
-public interface CurationProperties
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * <p>
+ * Provides {@link CurationProperties} unconditionally. This deliberately does not live in the
+ * curation implementation module: the curation entry rules also govern whether an annotator may
+ * still edit a document (see {@code DocumentAccessImpl}), so core modules need to be able to read
+ * these properties without depending on the curation implementation or on its autoconfiguration
+ * having been activated.
+ * </p>
+ */
+@Configuration
+@EnableConfigurationProperties({ CurationPropertiesImpl.class })
+public class CurationPropertiesAutoConfiguration
 {
-    boolean isLegacyCuratableDocumentsStrategy();
+    // No Beans
 }
