@@ -50,7 +50,7 @@ The examples in this guide are based on a recent Debian Linux. Most of them shou
 
 | DB Server
 | MariaDB version 10.11 or higher +
-  MySQL version 8.0 or higher +
+  MySQL version 8.4 or higher +
   MS SQL Server 2022 or higher (🧪 experimental) +
   PostgreSQL 16 or higher (🧪 experimental)
 
